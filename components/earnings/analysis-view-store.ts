@@ -8,7 +8,7 @@
  * Depo kapalıysa (gizli pencere, engelli site verisi) seçim bellekte
  * tutulur ve yalnız bu açılışta geçerli kalır.
  */
-export type AnalysisView = "cards" | "rows";
+type AnalysisView = "cards" | "rows";
 
 const VIEW_KEY = "az-analysis-view";
 const listeners = new Set<() => void>();

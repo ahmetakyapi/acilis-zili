@@ -18,7 +18,7 @@ import styles from "./Probabilities.module.css";
  * (`getProbabilityBoard`, istek içinde önbellekli), yani iki ekran aynı
  * sayıyı söyler.
  */
-export type FedOdds = { move: FedMove; p: number };
+type FedOdds = { move: FedMove; p: number };
 
 /** Takvimdeki toplantı gününün fiyatlaması ya da null (kurallar yukarıda). */
 export async function fedOddsFor(dateEt: string): Promise<FedOdds | null> {

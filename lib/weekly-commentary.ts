@@ -28,7 +28,7 @@ import type { DigestData } from "@/lib/weekly-digest";
  * Maliyet: Opus 5.5'te ~3K giriş + ~400 çıkış jetonu ≈ 0,02 $.
  */
 
-export type DigestCommentary = { past: string; ahead: string };
+type DigestCommentary = { past: string; ahead: string };
 
 const Schema = z.object({ past: z.string(), ahead: z.string() });
 

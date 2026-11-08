@@ -227,7 +227,7 @@ export const adminInput =
  */
 export type HealthTone = "ok" | "warn" | "down" | "idle" | "info";
 
-export function HealthDot({ tone }: { tone: HealthTone }) {
+function HealthDot({ tone }: { tone: HealthTone }) {
   return (
     <span
       aria-hidden
@@ -727,7 +727,7 @@ export function HealthRow({
    Sıralı liste — "en çok okunan sayfalar" gibi
    -------------------------------------------------------------------------- */
 
-export type RankRow = {
+type RankRow = {
   key: string;
   label: string;
   /** Satırın tıklanabilir olduğu yer — yoksa düz metin. */

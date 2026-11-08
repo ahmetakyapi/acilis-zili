@@ -74,7 +74,7 @@ const TOP_SECTORS = 3;
 const TOP_PAIRS_IN_NOTE = 3;
 
 /** Biçimlenmiş girdi — sayılar ekrandaki biçimle aynı (tek kaynak: aynı biçimlendiriciler). */
-export function noteInput(analysis: PortfolioAnalysis, locale: Locale): string | null {
+function noteInput(analysis: PortfolioAnalysis, locale: Locale): string | null {
   const risk = analysis.risk;
   if (!risk) return null;
   const plain = (value: number) => formatPercentPlain(value, locale, 1);
@@ -137,7 +137,7 @@ const failures = new Map<string, number>();
 const FAILURE_TTL = 20 * 60_000;
 
 /** Tek çağrı + iki denetim. Önbelleksiz: geçici test yolu ve önbellekli sarmal kullanır. */
-export async function writeAnalysisNote(analysis: PortfolioAnalysis, locale: Locale, client?: string): Promise<AnalysisNote> {
+async function writeAnalysisNote(analysis: PortfolioAnalysis, locale: Locale, client?: string): Promise<AnalysisNote> {
   const input = noteInput(analysis, locale);
   if (!input) throw new Error("no-measures");
   const out = await callClaude(SYSTEM[locale], Schema, input, client);

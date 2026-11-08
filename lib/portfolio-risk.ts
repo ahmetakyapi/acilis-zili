@@ -30,17 +30,17 @@
 import { formatPrice } from "@/lib/utils";
 
 /** Yıllıklaştırma: ABD borsasında yılda yaklaşık işlem günü. */
-export const TRADING_DAYS = 252;
+const TRADING_DAYS = 252;
 /** Pencere: son bir yılın günlük getirileri. */
 export const WINDOW_RETURNS = TRADING_DAYS;
 /** Risk ölçüsüne giren serinin, gösterge seanslarının en az bu payında kapanışı olmalı. */
-export const MIN_HISTORY_SHARE = 0.9;
+const MIN_HISTORY_SHARE = 0.9;
 /** Ölçünün basılması için kapsanan pozisyonların en az payı ("yarıdan azı okunuyorsa basılmaz"). */
-export const MIN_COVERAGE_SHARE = 0.5;
+const MIN_COVERAGE_SHARE = 0.5;
 /** Eksik sektör: S&P 500 ağırlığının en az bu kadar puan altında. */
 export const UNDERWEIGHT_GAP_PTS = 5;
 /** Eksik sektörde gösterilen en çok satır. */
-export const MAX_GAPS = 4;
+const MAX_GAPS = 4;
 /** Eksik sektör başına "inceleyebileceğin örnek" sayısı. */
 export const EXAMPLES_PER_SECTOR = 4;
 /** Senaryoda seçilebilen ek ağırlıklar (yüzde). */
@@ -49,9 +49,9 @@ export const DEFAULT_SCENARIO_WEIGHT = 10;
 /** Bilanço yoğunlaşmasının penceresi (gün). */
 export const EARNINGS_WINDOW_DAYS = 30;
 /** Korelasyon listesinde en çok birlikte hareket eden çift sayısı. */
-export const TOP_PAIRS = 5;
+const TOP_PAIRS = 5;
 /** En az birlikte hareket eden çift sayısı. */
-export const LOW_PAIRS = 2;
+const LOW_PAIRS = 2;
 /** Isı matrisi minyatüründe en büyük ağırlıklı kaç pozisyon (25 Ekim). */
 export const MATRIX_SIZE = 6;
 /** Temettü: son 12 ay. */
@@ -68,7 +68,7 @@ const DAYS_IN_WEEK = 7;
  * dağıtılır (fonun içi endeksin kendisi). Diğer fonlar ve endeks dışı
  * şirketler "sınıflanamayan" kovasına düşer; tahmin yok.
  */
-export const SP500_TRACKERS = new Set(["SPY", "VOO", "IVV", "SPLG"]);
+const SP500_TRACKERS = new Set(["SPY", "VOO", "IVV", "SPLG"]);
 
 export type DailyClose = { date: string; close: number };
 
@@ -188,7 +188,7 @@ function covariance(a: readonly number[], b: readonly number[]): number {
   return total / (n - 1);
 }
 
-export const stdev = (values: readonly number[]) => Math.sqrt(covariance(values, values));
+const stdev = (values: readonly number[]) => Math.sqrt(covariance(values, values));
 
 export function correlation(a: readonly number[], b: readonly number[]): number {
   const denominator = stdev(a) * stdev(b);
@@ -273,7 +273,7 @@ const addDays = (date: string, days: number) => new Date(new Date(`${date}T12:00
 
 /* -------------------------------------------------------------- hizalama */
 
-export type Aligned = {
+type Aligned = {
   dates: string[];
   benchmark: number[];
   /** Sembol → göstergenin tarih ızgarasında günlük getiri. */
@@ -523,7 +523,7 @@ export function sectorGaps(risk: PortfolioRisk, bench: BenchmarkSectors | null, 
 
 /* -------------------------------------------------------------- senaryo */
 
-export type ScenarioSide = {
+type ScenarioSide = {
   volatility: number;
   beta: number;
   sectorShare: number;
@@ -531,7 +531,7 @@ export type ScenarioSide = {
   largestWeight: number;
 };
 
-export type Scenario = { fund: string; sector: string; add: number; before: ScenarioSide; after: ScenarioSide };
+type Scenario = { fund: string; sector: string; add: number; before: ScenarioSide; after: ScenarioSide };
 
 export const isScenarioWeight = (value: number): value is (typeof SCENARIO_WEIGHTS)[number] =>
   (SCENARIO_WEIGHTS as readonly number[]).includes(value);

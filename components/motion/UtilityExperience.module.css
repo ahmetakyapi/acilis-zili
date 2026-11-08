@@ -20,7 +20,6 @@
 .archive a[aria-current] { box-shadow:inset 2px 0 var(--primary); }
 .compare table tbody tr { transition:background .2s var(--ease-brand); }
 .compare table tbody tr:hover { background:var(--primary-tint); }
-.compareIntro { border-color:var(--primary-faint); background:var(--premium-surface)!important; }
 .presets { gap:14px; }
 .preset { position:relative; overflow:hidden; border-radius:var(--radius-panel); padding:20px; background:var(--premium-surface); transition:border-color .3s var(--ease-brand),background-color .3s var(--ease-brand); }
 .preset > div:first-child p:first-child { font-size:16px; line-height:1.3; }

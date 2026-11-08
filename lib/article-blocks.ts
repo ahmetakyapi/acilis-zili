@@ -107,5 +107,3 @@ export const BLOKLAR = [
     en: "::: tanim Term\n**Term:** definition\n:::",
   },
 ] as const;
-
-export type ArticleBlockChip = (typeof BLOKLAR)[number];

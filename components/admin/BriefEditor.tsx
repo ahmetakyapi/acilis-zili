@@ -66,7 +66,7 @@ import { cn } from "@/lib/utils";
  * karşılaştırma bu yüzden manşet ve gövdenin kendisine bakıyor.
  */
 
-export type BriefDraft = {
+type BriefDraft = {
   date: string;
   locale: string;
   period: "daily" | "weekly";

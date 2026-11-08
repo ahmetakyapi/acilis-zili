@@ -185,9 +185,6 @@
 .rows { container-type:inline-size; }
 @container (min-width:560px) { .row { grid-template-columns:repeat(3,minmax(0,1fr)); } }
 .rowHead { grid-column:1 / -1; display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.rowTag { display:inline-flex; align-items:center; min-height:26px; padding:0 10px; border-radius:999px; font-size:12px; font-weight:700; }
-.rowTag[data-side="buy"] { background:var(--primary-tint); color:var(--primary-ink); }
-.rowTag[data-side="sell"] { background:var(--brass-wash); color:var(--brass-ink); }
 .remove { display:inline-grid; place-items:center; width:44px; height:44px; margin:-8px -10px -8px 0; border-radius:999px; color:var(--text-muted); transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand); }
 @media (hover:hover) and (pointer:fine) { .remove:hover { background:var(--down-wash); color:var(--down); } }
 
@@ -409,7 +406,6 @@ select.cell[data-side="sell"] { color:var(--brass-ink); }
    yerleşim hesaplanmadan kayar (--from ve --span 0-1 arası oran). */
 .flowTitle { margin:0 0 12px; font-size:14px; font-weight:700; color:var(--text-strong); }
 .flow { display:flex; flex-direction:column; gap:14px; margin:0; padding:0; list-style:none; }
-.flowRow { display:grid; grid-template-columns:minmax(0,1fr) auto; gap:4px 12px; align-items:baseline; }
 .flowName { font-size:13px; font-weight:600; color:var(--text-strong); }
 .flowValue { font-size:14px; font-weight:650; color:var(--text-strong); white-space:nowrap; }
 .flowNote { grid-column:1 / -1; font-size:12px; line-height:1.4; color:var(--text-muted); }

@@ -49,7 +49,7 @@ import type { PosterMove, PosterStock } from "./day-poster";
  * adı fonun Türkçe/İngilizce adından (`SECTOR_FUNDS`), değişimi ise fonun
  * fiyatından DEĞİL, mahallenin kendi hisselerinden (`districtsOf`).
  */
-export const GICS_SECTOR_FUND: Readonly<Record<string, string>> = {
+const GICS_SECTOR_FUND: Readonly<Record<string, string>> = {
   "Information Technology": "XLK",
   Financials: "XLF",
   "Health Care": "XLV",
@@ -75,7 +75,7 @@ export const OTHER_DISTRICT = "OTHER";
  */
 export const MIN_DISTRICT_SIZE = 5;
 
-export type SkyMember = { symbol: string; name: string; sector?: string };
+type SkyMember = { symbol: string; name: string; sector?: string };
 
 /** Siluetin bir binası. `cap` dolar; bilinmiyorsa `null` (taban genişlik). */
 export type SkyStock = { symbol: string; name: string; district: string; change: number; cap: number | null };
@@ -195,8 +195,8 @@ export const SKY_FLOOR = 1;
  * etiketinde ve ipucunda. Uç, dilimden ancak %25'ten fazla uzaksa kesiliyor:
  * yakın bir ucu kesmek bilgi kaybı, kazancı yok.
  */
-export const SKY_CLIP_QUANTILE = 0.98;
-export const SKY_CLIP_SLACK = 1.25;
+const SKY_CLIP_QUANTILE = 0.98;
+const SKY_CLIP_SLACK = 1.25;
 
 export type SkyDomain = { hi: number; maxUp: number; maxDown: number };
 
@@ -643,7 +643,7 @@ const ATTACH_LIFT = 2;
 const LABEL_PAD = 2;
 
 /** Düzenin etiket için ayırdığı ek kenar payı (birim). */
-export function labelSide(mode: Pick<SkyMode, "label" | "font" | "logo" | "maxShift">): number {
+function labelSide(mode: Pick<SkyMode, "label" | "font" | "logo" | "maxShift">): number {
   if (mode.label === "none") return 0;
   return Math.max(0, labelBox(mode.label, "", mode).w / 2 - (mode.maxShift ?? LABEL_MAX_SHIFT));
 }
@@ -679,7 +679,7 @@ function segmentHits(s: Segment, box: Box): boolean {
   return t1 - t0 > 1e-9;
 }
 
-export function placeLabels(
+function placeLabels(
   buildings: readonly SkyBuilding[],
   picks: readonly number[],
   stocks: readonly SkyStock[],
@@ -1142,7 +1142,7 @@ export function placeSigns(items: readonly { center: number; w: number }[], lo: 
  * sınıfıyla (`SIGN_EM_*`) ve bugünün yüzdesiyle; ölçülen adlarda tahmin
  * hep ölçümün üstünde (testli: `tests/day-skyline.test.ts`).
  */
-export const SIGN_PX = 12;
+const SIGN_PX = 12;
 const SIGN_PAD_PX = 6;
 export const PHONE_MIN_PX = 290;
 /** Harf sınıflarının eni (em): dar (i, l, t, ı, İ…), geniş (m, w), büyük
@@ -1311,7 +1311,7 @@ export function buildingPath(b: SkyBuilding): string {
 }
 
 /** Kesik binanın tavan işareti: binanın enince, uca yakın ince bir yarık. */
-export function clipMark(b: SkyBuilding): { x: number; y: number; w: number; h: number } {
+function clipMark(b: SkyBuilding): { x: number; y: number; w: number; h: number } {
   const gap = 1.6;
   const at = b.h - 7;
   return { x: b.x - 0.5, y: b.dir === -1 ? at : -at - gap, w: b.w + 1, h: gap };
@@ -1329,11 +1329,11 @@ export const WINDOW_MIN_H = 16;
 const WINDOW_INSET = 2;
 const WINDOW_ROOF = 5;
 /** Çatı ışığının kalınlığı (birim): binanın ucunda ince, açık bir şerit. */
-export const ROOF_LIGHT = 1.2;
+const ROOF_LIGHT = 1.2;
 /** Yansımanın boyu binanın kesri: suda kısalmış, sönen bir ikiz. */
 export const REFLECTION_SCALE = 0.42;
 
-export type SkyDistrictInk = {
+type SkyDistrictInk = {
   key: string;
   delay: number;
   /** Yön başına birleşik bina yolu: mahalle başına en çok üç öğe. */
@@ -1414,16 +1414,4 @@ export function skylineSvg(layout: SkyLayout, ink: SkyInk): string {
   }
   const height = fixed(offset);
   return `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 ${layout.width} ${height}" width="${layout.width}" height="${height}">${parts.join("")}</svg>`;
-}
-
-/**
- * Günün uçları: en çok yükselen ve en çok düşen `n` hisse (`stocks`
- * dizinleri). Künye kartı ve paylaşım görseli.
- */
-export function skyExtremes(stocks: readonly SkyStock[], n = 3): { up: number[]; down: number[] } {
-  const all = stocks.map((_, i) => i);
-  return {
-    up: all.filter((i) => stocks[i].change > 0).sort((a, b) => stocks[b].change - stocks[a].change).slice(0, n),
-    down: all.filter((i) => stocks[i].change < 0).sort((a, b) => stocks[a].change - stocks[b].change).slice(0, n),
-  };
 }

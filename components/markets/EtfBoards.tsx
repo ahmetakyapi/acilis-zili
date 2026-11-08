@@ -50,7 +50,7 @@ import styles from "./MarketBoards.module.css";
  */
 
 const SECTOR_SORTS = ["g1", "h1", "a1", "a3", "ybb", "ad"] as const;
-export type SectorSort = (typeof SECTOR_SORTS)[number];
+type SectorSort = (typeof SECTOR_SORTS)[number];
 type SortDir = "asc" | "desc";
 
 export function parseSectorSort(

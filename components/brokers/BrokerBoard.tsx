@@ -72,7 +72,7 @@ import styles from "./BrokerBoard.module.css";
  *     anlamı başlığın yanında ("Taralı: Eşit Ücret").
  */
 
-export type BrokerBoardLabels = typeof brokerCardsTr.board & {
+type BrokerBoardLabels = typeof brokerCardsTr.board & {
   amountLabel: string;
   amountValue: string;
   ofTrade: string;

@@ -82,8 +82,6 @@ export type ImportResult = {
   skipped: SkippedLine[];
 };
 
-export const EMPTY_RESULT: ImportResult = { broker: null, trades: [], dividends: [], skipped: [] };
-
 /* --------------------------------------------------------------------------
    Sayılar — ekstre ve form alanı aynı kuralı kullanıyor (lib/decimal-input.ts)
    -------------------------------------------------------------------------- */
@@ -154,10 +152,6 @@ export function findDate(text: string): { date: string; index: number; length: n
     if (date && (best === null || m.index < best.index)) best = { date, index: m.index, length: m[0].length };
   }
   return best;
-}
-
-export function yearOf(date: string): number {
-  return date ? Number(date.slice(0, 4)) : Number.NaN;
 }
 
 /* --------------------------------------------------------------------------

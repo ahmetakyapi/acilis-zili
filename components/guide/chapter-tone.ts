@@ -41,7 +41,7 @@ export const CHAPTER_TONES = {
   makro: "var(--share-1)",
 } as const;
 
-export const CHAPTER_ICONS: Record<keyof typeof CHAPTER_TONES, Icon> = {
+const CHAPTER_ICONS: Record<keyof typeof CHAPTER_TONES, Icon> = {
   temel: BookOpenText,
   strateji: Scales,
   sirket: Buildings,
@@ -53,7 +53,7 @@ export function chapterTone(key: string): string {
   return CHAPTER_TONES[key as keyof typeof CHAPTER_TONES] ?? "var(--primary-soft)";
 }
 
-export function chapterIcon(key: string): Icon {
+function chapterIcon(key: string): Icon {
   return CHAPTER_ICONS[key as keyof typeof CHAPTER_ICONS] ?? BookOpenText;
 }
 

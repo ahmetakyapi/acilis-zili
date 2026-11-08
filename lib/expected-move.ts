@@ -18,7 +18,7 @@
 export const EXPECTED_MOVE_HORIZON_DAYS = 21;
 
 /** Geçmiş tabloda en fazla kaç rapor — iki yıl. */
-export const HISTORY_LIMIT = 8;
+const HISTORY_LIMIT = 8;
 
 /**
  * Ortalama için gereken en az ölçüm. Tek raporun "ortalaması" o raporun
@@ -35,7 +35,7 @@ export const MIN_MOVES_FOR_AVERAGE = 2;
  * 20 Kasım vadesinde başa baş kontratlarda aralık %0,3–4,3. %15 likit
  * isimleri rahat geçiriyor, aralığı fiyatın yarısı olan kontratı eliyor.
  */
-export const MAX_LEG_SPREAD = 0.15;
+const MAX_LEG_SPREAD = 0.15;
 
 /**
  * Kotasyonun en fazla yaşı. Opsiyonlar yalnızca ana seansta işlem görüyor:
@@ -43,7 +43,7 @@ export const MAX_LEG_SPREAD = 0.15;
  * doğru olan da o. Uzun bir hafta sonu + tatil 96 saate sığıyor; daha
  * eskisi başka bir haftanın fiyatı.
  */
-export const MAX_QUOTE_AGE_MS = 96 * 60 * 60 * 1000;
+const MAX_QUOTE_AGE_MS = 96 * 60 * 60 * 1000;
 
 /**
  * Başa baş sayılabilecek en uzak kullanım fiyatı (spot'a oranla). Zincirde
@@ -130,7 +130,7 @@ export function averageAbsMove(moves: readonly HistoricalMove[]): { avg: number;
    Opsiyonlar
    -------------------------------------------------------------------------- */
 
-export type OccParts = { root: string; expiry: string; type: "C" | "P"; strike: number };
+type OccParts = { root: string; expiry: string; type: "C" | "P"; strike: number };
 
 /** OCC sembolü: KÖK + YYMMDD + C/P + kullanım fiyatı × 1000 (8 hane). */
 export function parseOcc(symbol: string): OccParts | null {

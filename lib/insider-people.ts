@@ -81,7 +81,7 @@ export function parseForm4Owners(xml: string): OwnerRelationship[] {
 }
 
 /** Ad karşılaştırma anahtarı — büyük/küçük harf ve noktalama farkı sayılmaz. */
-export function ownerKey(name: string): string {
+function ownerKey(name: string): string {
   return name
     .toLocaleLowerCase("en-US")
     .replace(/[^\p{L}\p{N}]+/gu, " ")
@@ -200,7 +200,7 @@ function titleKey(part: string): string {
 }
 
 /** Unvan metni gerçekten bir unvan mı ("See Remarks" değil). */
-export function usableTitle(title: string | null): string | null {
+function usableTitle(title: string | null): string | null {
   if (!title) return null;
   const clean = title.replace(/\s+/g, " ").trim();
   return clean === "" || NON_TITLES.has(titleKey(clean)) ? null : clean;

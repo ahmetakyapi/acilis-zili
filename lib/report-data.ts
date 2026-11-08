@@ -51,9 +51,9 @@ export type BellReport = {
 };
 
 /** Rapordaki logo şeridinin tavanı: 390'da üç satır, fazlası "+N" ile /favoriler'e. */
-export const WATCH_STRIP_MAX = 12;
+const WATCH_STRIP_MAX = 12;
 /** Rapordaki yazı listesinin tavanı; tamamı profilde. */
-export const RECENT_POSTS_MAX = 3;
+const RECENT_POSTS_MAX = 3;
 
 export const loadBellReport = cache(
   async (userId: string, locale: Locale, otherSectorLabel: string): Promise<BellReport | null> => {

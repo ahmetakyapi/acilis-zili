@@ -33,12 +33,12 @@ export const SAME_REPORT_DAYS = 45;
 const CLOSE_AFTER_DAYS = 7;
 
 export type OverrideRow = typeof earningsOverrides.$inferSelect;
-export type DateSource = "provider" | "manual";
+type DateSource = "provider" | "manual";
 
 /** Birleştirmenin beklediği asgari satır — `earnings_calendar` ya da seçilmiş alt kümesi. */
 type ProviderLike = { symbol: string; reportDate: string; hour: string | null };
 
-export type MergedEarnings<T extends ProviderLike> = T & {
+type MergedEarnings<T extends ProviderLike> = T & {
   dateSource: DateSource;
   /** `conflict` durumunda sağlayıcının söylediği; yoksa null. */
   conflict: { providerDate: string | null; providerHour: string | null } | null;
@@ -91,7 +91,7 @@ export function mergeEarnings<T extends ProviderLike>(
  * Açık elle kayıtlar — aralığın ±45 gün genişletilmiş hâli (gerekçe
  * `mergeEarnings`). Tablo yoksa boş.
  */
-export async function loadOpenOverrides(
+async function loadOpenOverrides(
   from: string,
   to: string,
   symbols?: readonly string[],
@@ -114,7 +114,7 @@ export async function loadOpenOverrides(
 }
 
 /** Sağlayıcı satırı olmayan elle kayıt için `earnings_calendar` biçiminde satır. */
-export function synthCalendarRow(o: OverrideRow): typeof earningsCalendar.$inferSelect {
+function synthCalendarRow(o: OverrideRow): typeof earningsCalendar.$inferSelect {
   return {
     id: o.id,
     symbol: o.symbol,

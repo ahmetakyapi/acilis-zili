@@ -20,7 +20,7 @@ import { INVESTORS_TAG } from "./investor-data";
  */
 
 /** Ekranda gösterilen en fazla işlem günü. */
-export const ARK_DAYS = 5;
+const ARK_DAYS = 5;
 const REVALIDATE_SECONDS = 3_600;
 
 export type ArkActivity = {

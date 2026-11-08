@@ -121,10 +121,6 @@ export const TAX_YEARS: Record<number, TaxYearRules> = {
   },
 };
 
-export const TAX_YEAR_LIST = Object.keys(TAX_YEARS)
-  .map(Number)
-  .sort((a, b) => b - a);
-
 /**
  * Koddaki yıllar + GİB'den otomatik okunan yeni yıllar (28 Eylül).
  *
@@ -221,7 +217,7 @@ export type MatchedLot = {
   proceedsUsd: number;
 };
 
-export type Shortfall = { sellId: string; symbol: string; date: string; quantity: number };
+type Shortfall = { sellId: string; symbol: string; date: string; quantity: number };
 
 /**
  * Satışları alışlarla İLK GİREN İLK ÇIKAR sırasıyla eşleştirir.
@@ -425,7 +421,7 @@ export function yearTotals(results: readonly LotResult[]): {
    Temettü
    -------------------------------------------------------------------------- */
 
-export type DividendInput = {
+type DividendInput = {
   id: string;
   symbol: string;
   date: string;
@@ -433,7 +429,7 @@ export type DividendInput = {
   withholdingPct: number;
 };
 
-export type DividendResult = DividendInput & {
+type DividendResult = DividendInput & {
   rate: number | null;
   grossTl: number | null;
   withheldTl: number | null;

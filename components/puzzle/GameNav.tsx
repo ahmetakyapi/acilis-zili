@@ -20,9 +20,9 @@ import styles from "./GameNav.module.css";
  * Eskiden yalnız arşivden "Bugünün Bulmacası"na dönüş vardı; dünün
  * bulmacasına gitmek arşiv ızgarasına inip kartı bulmak demekti.
  */
-export type GameKey = "stock" | "bigger" | "archive";
+type GameKey = "stock" | "bigger" | "archive";
 
-export type DayNav = {
+type DayNav = {
   number: number;
   /** Kısa tarih — "28 Eki". */
   dateLabel: string;

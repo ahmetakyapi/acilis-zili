@@ -24,7 +24,7 @@ export const MAX_GUESSES = 6;
 export const PUZZLE_ZONE = TR_ZONE;
 
 /** 1 numaralı bulmacanın günü — "#N" bu günden sayılır. */
-export const PUZZLE_EPOCH = "2026-10-24";
+const PUZZLE_EPOCH = "2026-10-24";
 
 /**
  * Havuzun tavanı: piyasa değeri sırasında ilk 200 endeks üyesi. 150'nin
@@ -85,7 +85,7 @@ export function stepOf(kind: ClueKind): number {
  * sektör ve temettü baştan açık; her yanlış yine bir basamak açar, dört
  * yanlıştan sonra bütün ipuçları ortada ve iki hak kalıyor.
  */
-export const START_STEPS = 2;
+const START_STEPS = 2;
 
 /** İpucunun açılması için gereken yanlış sayısı (0: baştan açık). */
 export function missesToOpen(kind: ClueKind): number {
@@ -271,7 +271,7 @@ export function hash32(text: string): number {
  */
 export type PuzzleRank = (symbol: string, cycle: number) => string;
 
-export const publicRank: PuzzleRank = (symbol, cycle) =>
+const publicRank: PuzzleRank = (symbol, cycle) =>
   hash32(`hisseyi-bil:${cycle}:${symbol}`).toString(16).padStart(8, "0");
 
 /**
@@ -378,10 +378,10 @@ export const TILE_KINDS = ["sector", "cap", "ipo", "growth"] as const;
 export type TileKind = (typeof TILE_KINDS)[number];
 
 /** Halka arzda "yakın": beş yıl içinde. */
-export const IPO_NEAR_YEARS = 5;
+const IPO_NEAR_YEARS = 5;
 /** Gelir büyümesinde "tutuyor": iki puan içinde; "yakın": on puan içinde. */
-export const GROWTH_MATCH_POINTS = 2;
-export const GROWTH_NEAR_POINTS = 10;
+const GROWTH_MATCH_POINTS = 2;
+const GROWTH_NEAR_POINTS = 10;
 
 const towardOf = (guess: number, answer: number): Toward => (answer > guess ? "up" : answer < guess ? "down" : null);
 
@@ -421,7 +421,7 @@ export function growthTile(guess: number | null, answer: number | null): GuessTi
   return { grade: gap <= GROWTH_NEAR_POINTS ? "near" : "far", toward: towardOf(guess, answer) };
 }
 
-export function sectorTile(guess: string | null, answer: string | null): GuessTile | null {
+function sectorTile(guess: string | null, answer: string | null): GuessTile | null {
   if (!guess || !answer) return null;
   return { grade: guess === answer ? "match" : "far", toward: null };
 }
@@ -498,7 +498,7 @@ export function isClose(feedback: Pick<GuessFeedback, "correct" | "tiles">): boo
 }
 
 /** "Saf Bilgi" rozeti: joker kullanmadan, ilk iki tahminde bildin. */
-export const PURE_MAX_GUESSES = 2;
+const PURE_MAX_GUESSES = 2;
 
 export function isPureWin(feedback: readonly Pick<GuessFeedback, "correct" | "symbol">[]): boolean {
   const hit = feedback.findIndex((row) => row.correct);
@@ -713,7 +713,7 @@ export type PoolOption = {
  * (tutuyor / yakın / uzak, yön). Bir şirketin verisi yoksa o ölçüde
  * elenmez — bilinmeyen "uymuyor" sayılmaz.
  */
-export function fitsClues(
+function fitsClues(
   option: PoolOption,
   clues: readonly Clue[],
   guesses: readonly Pick<GuessFeedback, "symbol" | "correct" | "tiles" | "values">[],
@@ -827,7 +827,7 @@ export function parseProgress(value: unknown): PuzzleProgress | null {
 const DAY_KEY = /^\d{4}-\d{2}-\d{2}$/;
 
 /** Gün anahtarının takvimde gerçek bir gün olduğu ("2026-02-31" değil). */
-export function isDayKey(value: string): boolean {
+function isDayKey(value: string): boolean {
   if (!DAY_KEY.test(value)) return false;
   const time = Date.parse(`${value}T00:00:00Z`);
   return Number.isFinite(time) && new Date(time).toISOString().slice(0, 10) === value;
@@ -842,7 +842,7 @@ export function isArchiveDay(day: string, today: string): boolean {
 }
 
 /** Gün anahtarını `n` gün kaydırır ("2026-10-29", -1 → "2026-10-28"). */
-export function shiftDay(day: string, n: number): string {
+function shiftDay(day: string, n: number): string {
   return new Date((dayNumberOf(day) + n) * DAY_MS).toISOString().slice(0, 10);
 }
 

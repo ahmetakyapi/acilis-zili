@@ -21,7 +21,7 @@ import type { GlossarySlug } from "./meta";
 
 export type GlossaryConcept = "curve-normal" | "curve-inverted" | "rsi-bands";
 
-export type GlossaryVisual =
+type GlossaryVisual =
   | { kind: "blocks"; tr: string; en: string }
   | { kind: "concept"; concept: GlossaryConcept; focus?: "high" | "low" };
 

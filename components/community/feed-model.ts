@@ -81,7 +81,7 @@ export function leadPreviewBlock(blocks: readonly Block[]): Block | null {
 
 type FeedPost = { author: { username: string }; symbols: readonly string[]; publishedAt: Date };
 
-export type FeedStats = {
+type FeedStats = {
   posts: number;
   authors: number;
   /** En yeni yayın anı; boş akışta null. */

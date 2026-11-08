@@ -301,7 +301,6 @@
 .mkMid { fill:var(--primary-soft); fill-opacity:.45; }
 .mkMidFill { fill:var(--primary-soft); }
 .mkWash { fill:var(--primary-wash); stroke:var(--primary-soft); stroke-opacity:.45; stroke-width:1; }
-.mkTrack { fill:none; stroke:var(--primary-faint); stroke-width:5; }
 .mkTrackArc { fill:none; stroke:var(--primary-wash); stroke-width:4.5; stroke-linecap:round; }
 .mkFrame { fill:var(--premium-surface); stroke:var(--primary-faint); stroke-width:1.6; }
 .mkPip { fill:var(--primary-faint); }

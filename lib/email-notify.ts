@@ -26,7 +26,7 @@ import { SITE_URL } from "@/lib/site";
 export type EmailKind = "alerts" | "weekly";
 
 /** Onay bağlantısının ömrü. */
-export const CONFIRM_TTL_MS = 48 * 3600_000;
+const CONFIRM_TTL_MS = 48 * 3600_000;
 
 /**
  * Bildirim postasının günlük tavanı. Resend'in ücretsiz katmanı günde 100;
@@ -41,7 +41,7 @@ export function dailyBudget(): number {
 }
 
 /** Bir kullanıcıya bir günde giden alarm postası tavanı — oynak günde kutuyu boğmasın. */
-export const ALERT_EMAILS_PER_USER_DAY = 12;
+const ALERT_EMAILS_PER_USER_DAY = 12;
 
 /**
  * ONAY POSTASI TAVANLARI (17 Ekim denetimi). Kayıtta adres doğrulanmıyor:
@@ -51,7 +51,7 @@ export const ALERT_EMAILS_PER_USER_DAY = 12;
  * onay postası yollayabiliyordu. Kullanıcı başına günde 3, bütün onaylar
  * için günde bütçenin dörtte biri.
  */
-export const CONFIRM_EMAILS_PER_USER_DAY = 3;
+const CONFIRM_EMAILS_PER_USER_DAY = 3;
 const confirmShare = () => Math.max(5, Math.floor(dailyBudget() / 4));
 
 /**
@@ -74,7 +74,7 @@ const confirmShare = () => Math.max(5, Math.floor(dailyBudget() / 4));
  */
 export const RESET_KIND = "reset";
 const providerDailyQuota = () => (emailProvider() === "brevo" ? 300 : 100);
-export const resetShare = () => Math.max(20, providerDailyQuota() - dailyBudget());
+const resetShare = () => Math.max(20, providerDailyQuota() - dailyBudget());
 
 export type EmailPrefsView = {
   /** false: tablo yok ya da e-posta servisi kapalı — panel basılmaz. */
@@ -246,7 +246,7 @@ export async function confirmEmail(token: string, now: Date = new Date()): Promi
   }
 }
 
-export type UnsubscribeScope = EmailKind | "all";
+type UnsubscribeScope = EmailKind | "all";
 
 export function isUnsubscribeScope(value: unknown): value is UnsubscribeScope {
   return value === "alerts" || value === "weekly" || value === "all";
@@ -357,7 +357,7 @@ export async function weeklyRecipients(): Promise<Recipient[] | null> {
 }
 
 /** Varsayılan açılışın defter işareti — bir kez yazılır, budanmaz, bütçeye sayılmaz. */
-export const ENROLL_KIND = "enroll";
+const ENROLL_KIND = "enroll";
 const enrollKey = (userId: string) => `weekly-default:${userId}`;
 
 async function markEnrolled(userId: string, now: Date): Promise<void> {
@@ -402,7 +402,7 @@ function startOfUtcDay(now: Date): Date {
   return new Date(Date.UTC(now.getUTCFullYear(), now.getUTCMonth(), now.getUTCDate()));
 }
 
-export type ClaimResult = "claimed" | "duplicate" | "budget" | "user-cap" | "unavailable";
+type ClaimResult = "claimed" | "duplicate" | "budget" | "user-cap" | "unavailable";
 
 /**
  * Gönderimi SAHİPLENİR: bütçe ve kullanıcı tavanı yetiyorsa defter satırını
@@ -477,11 +477,11 @@ export function unsubscribeUrl(recipient: Pick<Recipient, "unsubToken" | "locale
 }
 
 /** RFC 8058 tek tıkla çıkış ucu — posta istemcisinin "Abonelikten Çık" düğmesi. */
-export function oneClickUrl(recipient: Pick<Recipient, "unsubToken">, scope: UnsubscribeScope): string {
+function oneClickUrl(recipient: Pick<Recipient, "unsubToken">, scope: UnsubscribeScope): string {
   return `${SITE_URL}/api/e-posta/ayril?anahtar=${recipient.unsubToken}&kapsam=${scope}`;
 }
 
-export type SendStep = "sent" | "retry" | "release" | "keep";
+type SendStep = "sent" | "retry" | "release" | "keep";
 
 /**
  * Bir gönderim denemesinden sonra ne yapılacağı — saf karar (8 Kasım;

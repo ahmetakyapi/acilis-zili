@@ -43,7 +43,7 @@ function useCooldownLeft(until: number | null, serverNow: string) {
   return until === null ? 0 : Math.max(0, until - now);
 }
 
-export type LatestReport = { href: string; verdict: "buy" | "hold" | "sell" | "insufficient"; score: number | null; when: string };
+type LatestReport = { href: string; verdict: "buy" | "hold" | "sell" | "insufficient"; score: number | null; when: string };
 
 /** Son 60 kapanıştan kartın fiyat şeridi (viewBox 0–100 × 0–40). */
 function sparkPath(bars: FilmBar[]) {

@@ -16,7 +16,7 @@ import styles from "./BrokerMark.module.css";
  * Ne istemci ne sunucu bileşeni: ikisinden de çağrılıyor.
  */
 const SIZES = { xs: 20, sm: 24, md: 32, lg: 40, xl: 44 } as const;
-export type BrokerMarkSize = keyof typeof SIZES;
+type BrokerMarkSize = keyof typeof SIZES;
 
 export function BrokerMark({
   id,

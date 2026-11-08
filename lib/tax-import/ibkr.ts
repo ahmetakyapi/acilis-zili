@@ -113,7 +113,7 @@ export function parseIbkrCsv(text: string): ImportResult {
  * Tek bir işlem satırı → önerilen işlem ya da atlanan satır. CSV ve PDF
  * aynı yoldan geçiyor; fark yalnızca hücrelerin nereden geldiği.
  */
-export function ibkrTrade(cells: {
+function ibkrTrade(cells: {
   symbol: string;
   dateTime: string;
   quantity: string;
@@ -157,7 +157,7 @@ export function ibkrTrade(cells: {
 }
 
 /** "AAPL(US0378331005) Cash Dividend …" → "AAPL". */
-export function dividendSymbol(description: string): string | null {
+function dividendSymbol(description: string): string | null {
   const match = /^\s*([A-Z][A-Z0-9. ]{0,11}?)\s*\(/.exec(description);
   return match ? normalizeSymbol(match[1]) : null;
 }
@@ -167,7 +167,7 @@ export function dividendSymbol(description: string): string | null {
  * günde birden fazla satır (düzeltme, iade) toplanıyor. Kesinti satırı
  * bulunamayan temettünün kesintisi null — sıfır değil, bilinmiyor.
  */
-export function joinDividends(
+function joinDividends(
   dividends: { symbol: string; date: string; amount: number; currency: string; source: string }[],
   taxes: { symbol: string; date: string; amount: number }[],
 ): ImportedDividend[] {

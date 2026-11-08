@@ -28,7 +28,7 @@ import { earningsHref } from "@/lib/earnings-company";
    sunucuda çizilmiş durumda.
    -------------------------------------------------------------------------- */
 
-export type ReportingGroup = {
+type ReportingGroup = {
   label: string;
   tone: "pre" | "post" | "neutral";
   /** Yalnızca sembol ve takip bayrağı — çipin ihtiyacı olan her şey. */

@@ -40,9 +40,9 @@ export function withRead(list: readonly string[], slug: string): readonly string
   return [...list, slug].slice(-READ_LIST_CAP);
 }
 
-export type ProgressArticle = { slug: string; topic: string };
+type ProgressArticle = { slug: string; topic: string };
 
-export type TopicProgress = { topic: string; read: number; total: number };
+type TopicProgress = { topic: string; read: number; total: number };
 
 /** Konu başına okunan / toplam — konular müfredattaki ilk görünüş sırasıyla. */
 export function topicProgress(articles: readonly ProgressArticle[], read: ReadonlySet<string>): TopicProgress[] {

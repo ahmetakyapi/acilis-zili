@@ -28,7 +28,7 @@
  * `window`a her erişim fonksiyonların içinde.
  */
 
-export const BELL_SOUND_KEY = "az-bell-sound";
+const BELL_SOUND_KEY = "az-bell-sound";
 const BELL_SOUND_ON = "on";
 /** Aynı sekmedeki öteki anahtarlar (Ayarlar + hesap menüsü) eşlensin diye. */
 const CHANGE_EVENT = "az:bell-sound-change";

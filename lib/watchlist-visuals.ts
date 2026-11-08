@@ -34,9 +34,9 @@ export function yearRange(
   return { low, high, position: span > 0 ? (price - low) / span : 0.5 };
 }
 
-export type PulseQuote = { changePct: number | null; session: boolean };
+type PulseQuote = { changePct: number | null; session: boolean };
 
-export type ListPulse = {
+type ListPulse = {
   /** Listedeki tekil hisse sayısı (fiyatı gelmeyenler dahil). */
   total: number;
   /** "today": hepsi bu seansta; "partial": bir kısmı; "last": hiçbiri; "none": okunacak yüzde yok. */

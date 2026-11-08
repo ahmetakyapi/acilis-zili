@@ -88,7 +88,7 @@ export function readZipEntry(zip: Uint8Array, name: string): Uint8Array | null {
    Yıllık indeks
    -------------------------------------------------------------------------- */
 
-export type HouseFiling = { docId: string; filedAt: string; year: number };
+type HouseFiling = { docId: string; filedAt: string; year: number };
 
 function tagText(block: string, tag: string): string {
   return block.match(new RegExp(`<${tag}>([^<]*)</${tag}>`))?.[1]?.trim() ?? "";
@@ -150,7 +150,7 @@ type Piece = { x: number; y: number; str: string };
  * adı ve tutar iki satıra kırılıyor; hangi parçanın hangi sütuna ait
  * olduğunu boşluk genişliği değil başlığın konumu söylüyor. Saf.
  */
-export function pageLines(pieces: readonly Piece[]): string[] {
+function pageLines(pieces: readonly Piece[]): string[] {
   const rows: Piece[][] = [];
   for (const piece of [...pieces].sort((a, b) => b.y - a.y || a.x - b.x)) {
     const row = rows.find((candidate) => Math.abs(candidate[0].y - piece.y) <= ROW_TOLERANCE);
@@ -220,7 +220,7 @@ export async function pdfTextLines(data: Uint8Array): Promise<string[]> {
    Satırlar → işlemler
    -------------------------------------------------------------------------- */
 
-export type PtrTrade = {
+type PtrTrade = {
   rowNo: number;
   owner: string | null;
   asset: string;

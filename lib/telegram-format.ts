@@ -34,15 +34,15 @@ export const MESSAGE_LIMIT = 4096;
 export const CAPTION_LIMIT = 1024;
 
 /** Bülten özetinin ve Mercek girişinin mesajdaki tavanı (harf). */
-export const LEAD_MAX_CHARS = 600;
+const LEAD_MAX_CHARS = 600;
 /** Liste satırlarının (takvim, hareket edenler) tavanı. */
-export const LIST_MAX_ROWS = 8;
+const LIST_MAX_ROWS = 8;
 /** Kapanışta yükselen/düşen başına isim sayısı. */
 export const MOVERS_PER_SIDE = 5;
 /** Bilanço penceresinde adı yazılan şirket sayısı; fazlası "+N". */
 const EARNINGS_NAMES = 6;
 
-export type TelegramLabels = Dictionary["telegram"];
+type TelegramLabels = Dictionary["telegram"];
 
 /** Telegram HTML kipinin kaçışı — metin ve öznitelik için aynı. */
 export function tgEscape(value: string): string {
@@ -113,7 +113,7 @@ export function firstParagraph(bodyMd: string): string {
  * `head`in son öğesi (gövde metni) kelime sınırında kısalır — `shrink`
  * o öğenin DÜZ metnini ve onu yeniden saran işlevi verir.
  */
-export type MessageParts = {
+type MessageParts = {
   head: string[];
   lists: { title: string; rows: string[] }[];
   tail: string[];
@@ -173,7 +173,7 @@ function fill(template: string, values: Record<string, string | number>): string
 }
 
 /** Saat ve dilim künyesi: "16:30 TR" / "09:30 NY". */
-export function clockTag(at: Date, locale: Locale): string {
+function clockTag(at: Date, locale: Locale): string {
   return `${formatInZone(at, displayZone(locale))} ${zoneTag(locale).primary}`;
 }
 
@@ -183,7 +183,7 @@ export type CalendarRow =
   | { kind: "event"; at: Date | null; title: string }
   | { kind: "earnings"; at: Date | null; window: string; symbols: string[] };
 
-export type PreOpenInput = {
+type PreOpenInput = {
   locale: Locale;
   /** ET seans günü — başlığın tarihi. */
   date: string;
@@ -243,7 +243,7 @@ export function formatPreOpen(input: PreOpenInput, t: TelegramLabels): string {
 export type IndexClose = { label: string; symbol: string; close: number; changePct: number };
 export type Mover = { symbol: string; changePct: number };
 
-export type CloseInput = {
+type CloseInput = {
   locale: Locale;
   /** Tamamlanmış seansın ET günü. */
   date: string;
@@ -298,7 +298,7 @@ export function formatClose(input: CloseInput, t: TelegramLabels): string {
 
 /* ---- Mercek ---- */
 
-export type StoryInput = { title: string; lead: string; url: string };
+type StoryInput = { title: string; lead: string; url: string };
 
 /** Foto altyazısı ise `limit` 1024, düz mesaj ise 4096. */
 export function formatStory(input: StoryInput, t: TelegramLabels, limit: number = MESSAGE_LIMIT): string {
@@ -310,7 +310,7 @@ export function formatStory(input: StoryInput, t: TelegramLabels, limit: number 
 
 /* ---- Makro veri ---- */
 
-export type MacroInput = {
+type MacroInput = {
   locale: Locale;
   title: string;
   at: Date | null;

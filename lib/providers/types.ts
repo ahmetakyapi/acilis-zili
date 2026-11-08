@@ -51,7 +51,7 @@ export type DataSource =
   | "globalx"
   | "vaneck";
 
-export type FailReason =
+type FailReason =
   | "missing-key"
   | "rate-limited"
   | "not-found"

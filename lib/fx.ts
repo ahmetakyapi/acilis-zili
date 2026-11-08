@@ -72,7 +72,7 @@ export function isCurrencyMode(value: unknown): value is CurrencyMode {
 export const TCMB_MIN_DATE: IsoDate = "2005-01-03";
 
 /** Aylık ortalamanın ayın içindeki yeri — ortalama ayın ortasını temsil eder. */
-export const MONTHLY_ANCHOR_DAY = 15;
+const MONTHLY_ANCHOR_DAY = 15;
 
 const DAY_MS = 86_400_000;
 const ISO_DATE = /^(\d{4})-(\d{2})-(\d{2})$/;
@@ -104,7 +104,7 @@ export function dayNumber(date: IsoDate): number {
   return Math.round(Date.UTC(y, m - 1, d) / DAY_MS);
 }
 
-export function isoFromDayNumber(days: number): IsoDate {
+function isoFromDayNumber(days: number): IsoDate {
   return new Date(days * DAY_MS).toISOString().slice(0, 10);
 }
 

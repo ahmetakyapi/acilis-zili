@@ -8,7 +8,7 @@ import { formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils";
 import { planPositionLabel } from "./TechnicalCard";
 import { PlanAtlasView, type AtlasGroup, type AtlasRowView } from "./PlanAtlasView";
 
-export type PlanAtlasItem = {
+type PlanAtlasItem = {
   row: TechnicalAnalysisRow;
   quote: Quote | null;
   company: string | null;

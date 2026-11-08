@@ -20,7 +20,7 @@ import styles from "@/components/earnings/EarningsReport.module.css";
  * eşitliyor; sayı, işaret ve kısaltmalara dokunmuyor.
  */
 
-export type Metric = {
+type Metric = {
   label: string;
   value: string;
   note?: string | null;

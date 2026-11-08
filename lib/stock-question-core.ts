@@ -18,8 +18,8 @@ export const QUESTION_DAILY_LIMIT = 10;
  * denetimi, boş çıktı). Gerekçe aşağıda, "Okur kotası".
  */
 export const QUESTION_DAILY_MISSES = 5;
-export const QUESTION_MIN_CHARS = 3;
-export const QUESTION_MAX_CHARS = 300;
+const QUESTION_MIN_CHARS = 3;
+const QUESTION_MAX_CHARS = 300;
 
 /**
  * Yanıtın dayanabileceği veri blokları — sayfanın panelleriyle bire bir.
@@ -81,7 +81,7 @@ export function questionKey(question: string, locale: "tr" | "en"): string {
    en kötü çağrı sayısı böylece 10 + 5 = 15 ile sınırlı.
    --------------------------------------------------------------------------- */
 
-export type QuestionQuota = {
+type QuestionQuota = {
   /** Bugün kalan hak. */
   left(userId: string): number;
   /** Bir hak düşer; hak yoksa false. */
@@ -137,9 +137,9 @@ export function citedNews(indices: readonly number[], count: number, max = 3): n
   return [...new Set(indices)].filter((i) => Number.isInteger(i) && i >= 0 && i < count).slice(0, max);
 }
 
-export type ModelAnswer = { verdict: "answered" | "advice" | "not_in_data"; answer: string };
+type ModelAnswer = { verdict: "answered" | "advice" | "not_in_data"; answer: string };
 
-export type AnswerDecision =
+type AnswerDecision =
   | { kind: "answered" | "advice"; text: string; charge: true }
   | { kind: "unanswerable"; reason: "not-in-data" | "empty" | "ungrounded" | "advice-pattern"; missing?: string[]; charge: boolean };
 

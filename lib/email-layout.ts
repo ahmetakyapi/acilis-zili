@@ -96,7 +96,7 @@ export const C = {
 export const FONT = "'Schibsted Grotesk',-apple-system,'Segoe UI',Roboto,Arial,sans-serif";
 export const MONO = "ui-monospace,Menlo,Consolas,monospace";
 
-export type BrandedEmail = {
+type BrandedEmail = {
   lang: "tr" | "en";
   /** Gelen kutusunda konunun yanında görünen gizli önizleme satırı. */
   preheader: string;

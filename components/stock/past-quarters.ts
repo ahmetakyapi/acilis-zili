@@ -23,7 +23,7 @@ import { directionOf, formatPercent, formatPrice, SIGN_GAP, type Direction } fro
  * iki farklı sayı taşıyamıyor (CLAUDE.md "Veri dürüstlüğü" 3).
  */
 
-export type SurpriseRow = {
+type SurpriseRow = {
   period: string;
   epsEstimate: number | null;
   epsActual: number | null;
@@ -31,7 +31,7 @@ export type SurpriseRow = {
   year: number | null;
 };
 
-export type CalendarRow = {
+type CalendarRow = {
   reportDate: string;
   epsActual: number | null;
   revenueEstimate: number | null;
@@ -41,7 +41,7 @@ export type CalendarRow = {
 };
 
 /** Yayımlanmış analiz — adresin dönem parçası ve ham sayılar. */
-export type AnalysisRowLike = {
+type AnalysisRowLike = {
   period: string;
   reportDate: string;
   revenue: number | null;

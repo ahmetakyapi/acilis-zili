@@ -67,8 +67,3 @@ export async function requireAdmin(): Promise<AdminSession> {
   if (!admin) notFound();
   return admin;
 }
-
-/** Yönetici mi — yalnızca evet/hayır; menüde bağlantı gösterilecek mi. */
-export async function isAdmin(): Promise<boolean> {
-  return (await getAdmin()) !== null;
-}

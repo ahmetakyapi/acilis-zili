@@ -87,7 +87,7 @@ export function ogLocale(locale: Locale): string {
  *
  * `path` DİLSİZ yazılır; canonical ve hreflang o yoldan türetilir.
  */
-export type PageCopy = {
+type PageCopy = {
   title: string;
   description: string;
 };

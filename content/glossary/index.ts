@@ -36,7 +36,7 @@ export type GlossaryTerm = {
 
 const SLUG_SET: ReadonlySet<string> = new Set(GLOSSARY_META.map((entry) => entry.slug));
 
-export function isGlossarySlug(value: string): value is GlossarySlug {
+function isGlossarySlug(value: string): value is GlossarySlug {
   return SLUG_SET.has(value);
 }
 

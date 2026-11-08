@@ -39,7 +39,7 @@ import styles from "./Tax.module.css";
  * (`TAX_EXAMPLE`) çiziyor, yani okuyucu dolu kartın neye benzeyeceğini
  * boşken görüyor.
  */
-export type RibbonLabels = {
+type RibbonLabels = {
   title: string;
   gain: string;
   loss: string;

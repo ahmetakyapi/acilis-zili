@@ -149,7 +149,7 @@ function mergeSlivers(segments: LeaderSegment[], lo: number, hi: number): Leader
   return merged;
 }
 
-export type CrossTemplates = {
+type CrossTemplates = {
   /** {lo} {hi} {first} — aralık boyunca tek lider kümesi. */
   same: string;
   /** {to} {first} {from} {last} */

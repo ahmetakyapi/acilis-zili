@@ -110,8 +110,6 @@ export function datePattern(locale: DateLocale): string {
    Takvim aritmetiği — UTC öğlesinde, yaz saati bir günü kaydırmasın
    -------------------------------------------------------------------------- */
 
-const DAY_MS = 86_400_000;
-
 export function isoToUtc(iso: string): number {
   const [y, m, d] = iso.split("-").map(Number);
   return Date.UTC(y, m - 1, d, 12);
@@ -121,21 +119,12 @@ export function utcToIso(ms: number): string {
   return new Date(ms).toISOString().slice(0, 10);
 }
 
-export function addIsoDays(iso: string, n: number): string {
-  return utcToIso(isoToUtc(iso) + n * DAY_MS);
-}
-
 /** Ay ekler; hedef ayda o gün yoksa ayın son gününe iner (31 Oca + 1 ay = 28/29 Şub). */
 export function addIsoMonths(iso: string, n: number): string {
   const [y, m, d] = iso.split("-").map(Number);
   const first = new Date(Date.UTC(y, m - 1 + n, 1, 12));
   const last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0, 12)).getUTCDate();
   return utcToIso(Date.UTC(first.getUTCFullYear(), first.getUTCMonth(), Math.min(d, last), 12));
-}
-
-/** Pazartesi = 0 … Pazar = 6. */
-export function weekdayMon(iso: string): number {
-  return (new Date(isoToUtc(iso)).getUTCDay() + 6) % 7;
 }
 
 /** Değeri [min, max] aralığına sıkıştırır; sınır yoksa olduğu gibi. */

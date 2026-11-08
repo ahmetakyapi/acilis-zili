@@ -31,7 +31,7 @@ import { news } from "./schema";
 
 const SUMMARY_CLIP = 350;
 
-export type TranslateBackend = "deepl" | "claude" | null;
+type TranslateBackend = "deepl" | "claude" | null;
 
 export function activeTranslateBackend(): TranslateBackend {
   if (claudeKey()) return "claude";
@@ -54,7 +54,7 @@ type PendingItem = { id: string; headline: string; summary: string | null };
  * kapatmalı (0), yoksa ikinci deneme payı aşar. Günlük nöbet ikisini de
  * verir (app/api/cron/daily → 2c).
  */
-export type TranslateBudget = { deadline?: number; maxRetries?: number };
+type TranslateBudget = { deadline?: number; maxRetries?: number };
 
 /** Çevrilmemiş son haberleri çevirir; çevrilen kayıt sayısını döner. */
 export async function translatePendingNews(limit = 40, budget: TranslateBudget = {}): Promise<number> {
@@ -176,7 +176,7 @@ const inFlight = new Map<string, Promise<Map<string, Translated>>>();
  * Türkçe. Yetişmeyen iş `after` ile sürer, sonraki açılış Türkçe görür.
  * Aynı haber iki kez ücretlenmez (`inFlight`, boş çeviri sorgusu).
  */
-export const TRANSLATE_WAIT_MS = 3500;
+const TRANSLATE_WAIT_MS = 3500;
 
 export async function withTranslations<T extends TranslatableRow>(
   items: readonly T[],
@@ -223,7 +223,7 @@ async function isBotRequest(): Promise<boolean> {
 
 type Translated = { id: string; headlineTr: string; summaryTr: string | null };
 
-export type TranslatableRow = { id: string; headlineTr: string | null; summaryTr: string | null };
+type TranslatableRow = { id: string; headlineTr: string | null; summaryTr: string | null };
 
 /** Gelen çevirileri satırlara işler; çevirisi olan satıra dokunmaz, özet
     çevirisi boş gelirse eldeki özet çevirisi kalır. Saf (test edilir). */

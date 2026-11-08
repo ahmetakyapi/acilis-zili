@@ -172,7 +172,7 @@ type WeekAheadEvent = Pick<
  * 244 piksel kısa kalıyordu ve açılacak tek bir satır bile bulunmuyordu.
  * Haftaya bakış her okuyucuda var ve zaten kırpılmış bir liste.
  */
-export function WeekAheadList({
+function WeekAheadList({
   events,
   locale,
   t,

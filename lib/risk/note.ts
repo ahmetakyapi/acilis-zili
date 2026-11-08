@@ -71,7 +71,7 @@ const Schema = z.object({ paragraphs: z.array(z.string()) });
 const MAX_PARAGRAPHS = 4;
 const TOP_POSITIONS = 6;
 
-export type TriggeredRule = { rule: StoredRule; symbols: string[] };
+type TriggeredRule = { rule: StoredRule; symbols: string[] };
 
 /** Biçimlenmiş girdi — sayılar ekrandakiyle aynı biçimlendiricilerden. */
 export function noteInput(

@@ -18,7 +18,7 @@
  * olmayan "başka bir analiz sürüyor" hatasını alıyordu.
  */
 
-export type AccessPhase = "idle" | "running" | "expired" | "cooldown";
+type AccessPhase = "idle" | "running" | "expired" | "cooldown";
 
 /**
  * Sınır SQL'le aynı: `reserveAnalysis` `lock_until < now()` iken kilit alır,

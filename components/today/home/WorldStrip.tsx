@@ -87,7 +87,7 @@ export async function WorldStrip({ locale, t }: { locale: Locale; t: Dictionary 
   );
 }
 
-export type WorldRow = {
+type WorldRow = {
   symbol: string;
   flag: string;
   name: string;
@@ -128,7 +128,7 @@ export type WorldRow = {
  * - Yüzde hap (up/down wash), şeridin ucunda değer noktası (`HomeLane`).
  * Ölçümler HomeLanes.module.css başında.
  */
-export function WorldStripView({
+function WorldStripView({
   locale,
   t,
   rows,

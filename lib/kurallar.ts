@@ -27,7 +27,7 @@ import path from "node:path";
  */
 
 export const KURAL_GOREVLERI = ["mercek", "bilanco", "gunluk", "haftalik"] as const;
-export type KuralGorevi = (typeof KURAL_GOREVLERI)[number];
+type KuralGorevi = (typeof KURAL_GOREVLERI)[number];
 
 export function isKuralGorevi(value: string | null): value is KuralGorevi {
   return value !== null && (KURAL_GOREVLERI as readonly string[]).includes(value);
@@ -36,7 +36,7 @@ export function isKuralGorevi(value: string | null): value is KuralGorevi {
 const DIR = path.join(process.cwd(), "content", "kurallar");
 const TASLAK = /^<!--\s*durum:\s*taslak\s*-->/;
 
-export type KurallarSonucu =
+type KurallarSonucu =
   | { ok: true; text: string; version: string; files: string[] }
   | { ok: false; reason: "draft" | "missing"; files: string[] };
 

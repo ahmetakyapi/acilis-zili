@@ -44,7 +44,7 @@ import { useAnalysisSearch } from "./AnalysisSearch";
  * sütunu üst üste yığmak satırı bir kartın kötü taklidine çeviriyordu.
  */
 
-export type AnalysisTableLabels = {
+type AnalysisTableLabels = {
   /** Yatay kaydırılan kabın adı — klavyeyle odaklanınca duyurulur. */
   tableRegion: string;
   colSymbol: string;

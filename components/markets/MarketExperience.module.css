@@ -97,14 +97,6 @@
 /* Nasdaq before this pass: selected breadth began at y562 / y988
    (1440 / 390px). Selection and its reading now precede Treasury/VIX. */
 .breadthOverview { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); align-items:center; gap:32px; padding:22px 24px; }
-.breadthIdentity { min-width:0; }
-.breadthIdentity h2 { margin:7px 0 12px; font-size:30px; line-height:1.1; letter-spacing:-.05em; font-weight:600; color:var(--text-strong); }
-.breadthHeading { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 18px; }
-.breadthQuote { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; color:var(--text-body); font-size:13px; }
-.breadthLink { display:inline-flex; align-items:center; min-height:36px; gap:8px; color:var(--primary-ink); font-size:12px; font-weight:550; }
-.breadthVisual { min-width:0; padding-left:30px; border-left:1px solid var(--line); }
-.breadthRatio { display:flex; align-items:baseline; justify-content:space-between; gap:12px; color:var(--text-body); font-size:12px; }
-.breadthRatio strong { color:var(--text-strong); font-size:32px; font-weight:550; line-height:1; letter-spacing:-.045em; }
 /* Giriş: ray tek hamlede soldan süpürülerek açılır (gerekçe page.tsx →
    BreadthSummary). Kırpma yuvarlak köşeyi koruyor; JS yokken ve azaltılmış
    harekette son kare. */
@@ -122,7 +114,6 @@
 .breadthCounts dt { font-size:12px; color:var(--text-muted); }
 .breadthCounts dd { font-size:24px; font-weight:550; line-height:1.2; letter-spacing:-.035em; }
 .breadthCoverage { margin-top:10px; color:var(--text-muted); font-size:12px; line-height:1.6; }
-.breadthEmpty { padding-block:12px; color:var(--text-muted); font-size:13px; }
 .breadthStamp { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 16px; padding:10px 24px; border-top:1px solid var(--line); background:var(--primary-tint); }
 .movementScale { font-size:12px; line-height:1.6; color:var(--text-muted); }
 .moverLink { display:block; padding:12px 20px; transition:background 180ms var(--ease-brand); }
@@ -149,21 +140,15 @@
 .moverTrack > span:nth-child(2) { flex-basis:100%; padding-top:3px; }
 @media(max-width:1023px) {
  .breadthOverview { gap:22px; }
- .breadthVisual { padding-left:22px; }
  .breadthCounts > div { flex-direction:column; gap:3px; }
  .breadthCounts > div:nth-child(2) { align-items:center; }
  .breadthCounts > div:last-child { align-items:flex-end; }
 }
 @media(max-width:767px) {
  .breadthOverview { grid-template-columns:minmax(0,1fr); gap:14px; padding:18px; }
- .breadthIdentity h2 { font-size:26px; margin-block:6px 10px; }
- .breadthHeading { gap:0 10px; }
- .breadthLink { min-height:44px; }
- .breadthVisual { padding:16px 0 0; border-left:0; border-top:1px solid var(--line); }
  .breadthCounts > div, .breadthCounts > div:nth-child(2), .breadthCounts > div:last-child { flex-direction:row; flex-wrap:wrap; align-items:baseline; gap:4px 8px; }
  .breadthCounts { gap:8px; }
  .breadthCounts dd { font-size:23px; }
- .breadthRatio strong { font-size:28px; }
  .breadthStamp { padding:10px 18px; }
  .moverLink { padding-inline:16px; }
  .moverIdentity { gap:9px; }
@@ -195,7 +180,6 @@
    ısı haritası. Yükselenlerin payı sekme satırının sağına çıktı
    (`.tabsAside`). Aşağıdaki kurallar önceki blokları eziyor. */
 .breadthOverview { grid-template-columns:minmax(220px, .7fr) minmax(0, 2fr); align-items:start; }
-.breadthIdentity .breadthCoverage { margin-top:8px; }
 .breadthOverview > .heat { padding:0 0 0 30px; border-top:0; border-left:1px solid var(--line); }
 
 .tabsAside { flex:1 1 360px; min-width:0; max-width:520px; margin-left:auto; }
@@ -227,11 +211,8 @@
    Endeks kimliği seçicinin üstündeki boşluğa taşındı. Harita tüm paneli
    kullanır: genişte 15×2, tablette 10×3, telefonda 5×6. */
 .toolbarLayout { display:grid; grid-template-columns:minmax(0,1.7fr) minmax(280px,1fr); align-items:center; gap:24px; }
-.indexControls { display:flex; min-width:0; flex-direction:column; gap:10px; }
 .toolbarIdentity { display:flex; align-items:center; justify-content:space-between; flex-wrap:wrap; gap:8px 16px; }
 .toolbarIdentity h2 { margin:3px 0 0; font-size:24px; font-weight:650; line-height:1.15; letter-spacing:-.035em; }
-.toolbarIdentity .breadthLink { min-height:28px; }
-.toolbarIdentity .breadthQuote { gap:6px 10px; font-size:12px; }
 .tabsAside { width:100%; max-width:none; margin:0; }
 .breadthOverview { display:block; padding:16px 20px; }
 .breadthOverview > .heat { padding:0; border:0; }
@@ -250,15 +231,10 @@
 .heatCoverage { color:var(--text-muted); font-size:12px; line-height:1.5; }
 .heatEmpty { padding:0 20px 16px; color:var(--text-body); }
 .breadthStamp { padding:8px 20px; }
-@media(max-width:1199px) {
-  .toolbarIdentity .breadthQuote { flex-basis:100%; }
-}
 @media(max-width:767px) {
   .toolbarLayout { grid-template-columns:minmax(0,1fr); gap:12px; }
-  .indexControls { gap:12px; }
   .toolbarIdentity { gap:6px; }
   .toolbarIdentity h2 { font-size:22px; }
-  .toolbarIdentity .breadthQuote { flex-basis:auto; }
   .breadthOverview { padding:14px; }
   .heatHead { grid-template-columns:minmax(0,1fr) auto; gap:6px 10px; }
   .heatHead .heatHint { grid-column:1; grid-row:2; font-size:12px; }
@@ -314,11 +290,8 @@
    Üç seçenek ve seçilinin kotasyonu artık tek yatay grupta; etiket,
    fiyat ve değişim aynı göz hizasında. Bileşen tablosu oku kaldırıldı. */
 .toolbarLayout { grid-template-columns:auto minmax(300px,1fr); gap:24px; }
-.indexControls { flex-direction:row; align-items:center; justify-content:flex-start; gap:24px; }
 .indexChoices { min-width:0; flex-shrink:0; }
 .toolbarIdentity { flex:none; display:flex; flex-direction:column; align-items:flex-start; justify-content:center; gap:8px; padding-left:20px; border-left:1px solid var(--line); }
-.selectedIndexLabel { display:flex; align-items:center; gap:8px; color:var(--text-body); font-size:12px; line-height:1.2; font-weight:550; }
-.proxySymbol { padding:4px 7px; border-radius:5px; background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:750; letter-spacing:.03em; }
 .selectedIndexReading { display:flex; align-items:center; gap:10px; white-space:nowrap; }
 .selectedIndexReading > .medianPill { font-size:14px; font-weight:700; padding:4px 8px; }
 .selectedIndexEmpty { color:var(--text-muted); font-size:12px; }
@@ -333,15 +306,12 @@
 }
 @media(min-width:768px) and (max-width:1199px) {
  .toolbarLayout { grid-template-columns:minmax(0,1fr); gap:14px; }
- .indexControls { justify-content:space-between; }
  .tabsAside { width:100%; }
 }
 @media(max-width:767px) {
  .toolbarLayout { grid-template-columns:minmax(0,1fr); gap:12px; }
- .indexControls { flex-direction:column; align-items:stretch; gap:12px; }
  .indexChoices { width:100%; }
  .toolbarIdentity { flex-direction:row; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:8px; padding:12px 0 0; border-left:0; border-top:1px solid var(--line); }
- .selectedIndexLabel { gap:6px; font-size:12px; }
  .selectedIndexReading { gap:8px; }
  .selectedIndexReading > .medianPill { font-size:13px; padding:3px 6px; }
  .reading > p.indexChange { font-size:12px; }
@@ -563,7 +533,6 @@
    dolgusu karolar arasında 4 piksellik oluk bırakıyor; kap iki yana 2
    piksel taşıyor ki dış karolar panelin içerik kenarına otursun. */
 .heatMap { position:relative; width:calc(100% + 4px); margin:-2px; aspect-ratio:var(--aspect); }
-.heatSkeletonTile { position:absolute; padding:2px; }
 .heatTile:focus-visible { z-index:3; }
 @media(hover:hover) and (pointer:fine) {
  /* Üzerine gelinen karo öne çıkıyor, ötekiler bir ton geri çekiliyor —

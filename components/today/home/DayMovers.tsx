@@ -180,7 +180,7 @@ export async function DayMovers({ locale, t }: { locale: Locale; t: Dictionary }
   );
 }
 
-export type MoverRow = { symbol: string; changePct: number; name: string; logoUrl: string | null };
+type MoverRow = { symbol: string; changePct: number; name: string; logoUrl: string | null };
 
 /**
  * Panelin çizimi — veriden ayrı (önizleme ve sunucu aynı ağacı basıyor).
@@ -206,7 +206,7 @@ export type MoverRow = { symbol: string; changePct: number; name: string; logoUr
  *   seansta işlem görenler, sıralamanın süzgeciyle aynı küme).
  * - Yüzde hap (up/down wash), şeridin ucunda değer noktası (`HomeLane`).
  */
-export function DayMoversView({
+function DayMoversView({
   locale,
   t,
   title,

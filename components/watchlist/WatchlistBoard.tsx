@@ -46,8 +46,8 @@ import visualStyles from "@/components/watchlist/WatchlistVisuals.module.css";
  *   sonrası kimlik eşlemesiyle birleşir (efektsiz, deterministik).
  */
 
-export type BoardItem = { id: string; symbol: string; note?: string | null };
-export type BoardList = {
+type BoardItem = { id: string; symbol: string; note?: string | null };
+type BoardList = {
   id: string;
   name: string;
   color: string;

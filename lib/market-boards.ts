@@ -75,7 +75,7 @@ export const CRYPTO_ETFS: readonly EtfEntry[] = [
 ];
 
 /** Nabzın momentum ve güvenli liman bileşenleri. */
-export const SENTIMENT_BAR_SYMBOLS = ["SPY", "TLT"] as const;
+const SENTIMENT_BAR_SYMBOLS = ["SPY", "TLT"] as const;
 
 const BOARD_QUOTE_SYMBOLS = [
   ...SECTOR_ETFS,

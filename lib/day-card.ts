@@ -17,7 +17,7 @@ import {
  */
 
 /** Adresin "bugün" takma adı — `/gun/bugun/kart` her gün günün kartı. */
-export const TODAY_ALIAS = "bugun";
+const TODAY_ALIAS = "bugun";
 
 /** Kabul edilen tarih penceresi: bugünden bu kadar gün geri ve ileri. */
 const CARD_PAST_DAYS = 400;
@@ -49,14 +49,14 @@ export function parseCardDate(raw: string, today: string): string | null {
    Günün olayları
    -------------------------------------------------------------------------- */
 
-export type CardEconomicInput = {
+type CardEconomicInput = {
   title: string;
   /** "HH:mm" ET; saati ilan edilmemişse null. */
   timeEt: string | null;
   importance: string;
 };
 
-export type CardEarningsInput = {
+type CardEarningsInput = {
   symbol: string;
   name: string | null;
   /** Takvimin penceresi: bmo | amc | dmh; bilinmiyorsa null. */
@@ -147,7 +147,7 @@ export const CARD_INDEX_NAMES: Readonly<Record<string, string>> = {
   IWM: "Russell 2000",
 };
 
-export type CardQuote = {
+type CardQuote = {
   symbol: string;
   changePct: number | null;
   tradedAt: Date | null;

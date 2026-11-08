@@ -13,9 +13,9 @@
  */
 
 /** "En Yüksek Getiri" listesinde en çok bu kadar ödeme. */
-export const TOP_YIELD_ROWS = 6;
+const TOP_YIELD_ROWS = 6;
 /** "Takip Listendekiler"de en çok bu kadar ödeme. */
-export const WATCHED_ROWS = 8;
+const WATCHED_ROWS = 8;
 
 type Row = { dividend: { symbol: string; exDate: string }; yieldPct: number | null };
 

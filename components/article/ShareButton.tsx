@@ -32,7 +32,7 @@ import { cn } from "@/lib/utils";
    `/en/mercek/...` paylaşıyor.
    -------------------------------------------------------------------------- */
 
-export type ShareLabels = {
+type ShareLabels = {
   /** Düğmenin kendi metni — "Paylaş". */
   action: string;
   /** Panelin başlığı — "Bu Yazıyı Paylaş". */

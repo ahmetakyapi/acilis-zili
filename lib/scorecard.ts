@@ -16,8 +16,8 @@ import { bandFiyatiKapsiyorMu } from "@/lib/utils";
  * endeks üyeleri için biliyoruz, yani skor kartı da yalnızca onlarda.
  */
 
-export const SCORE_AXES = ["valuation", "growth", "profitability", "health", "momentum"] as const;
-export type ScoreAxis = (typeof SCORE_AXES)[number];
+const SCORE_AXES = ["valuation", "growth", "profitability", "health", "momentum"] as const;
+type ScoreAxis = (typeof SCORE_AXES)[number];
 
 /**
  * Bir yüzdeliğin anlamlı olması için gereken en az SEKTÖR KOMŞUSU (kendisi
@@ -106,7 +106,7 @@ export type ScoreSubject = {
 
 type Direction = "higher" | "lower";
 
-export type MetricKey =
+type MetricKey =
   | "earningsYield"
   | "salesYield"
   | "revenueGrowth"
@@ -131,7 +131,7 @@ export type MetricKey =
  * konuyor. Aynı şirkette ROE de iki eksinin bölümü (artı ve büyük), o yüzden
  * ROE hiç kullanılmıyor.
  */
-export const METRICS: { key: MetricKey; axis: ScoreAxis; better: Direction }[] = [
+const METRICS: { key: MetricKey; axis: ScoreAxis; better: Direction }[] = [
   { key: "earningsYield", axis: "valuation", better: "higher" },
   { key: "salesYield", axis: "valuation", better: "higher" },
   { key: "revenueGrowth", axis: "growth", better: "higher" },
@@ -144,7 +144,7 @@ export const METRICS: { key: MetricKey; axis: ScoreAxis; better: Direction }[] =
   { key: "momentum", axis: "momentum", better: "higher" },
 ];
 
-export function metricValue(subject: ScoreSubject, key: MetricKey): number | null {
+function metricValue(subject: ScoreSubject, key: MetricKey): number | null {
   const m = subject.metrics;
   const negativeEquity = m.debtToEquity !== null && m.debtToEquity < 0;
   switch (key) {
@@ -190,7 +190,7 @@ export function percentileOf(value: number, peers: readonly number[], better: Di
   return (score / peers.length) * 100;
 }
 
-export type AxisScore = {
+type AxisScore = {
   axis: ScoreAxis;
   /** 0–100, tam sayıya yuvarlanmış. */
   percentile: number;

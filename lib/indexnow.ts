@@ -22,7 +22,7 @@ import { INDEXABLE, SITE_URL } from "@/lib/site";
  * bildirim yanıtı beklemez (`after`), düşerse yazma işini etkilemez.
  */
 export const INDEXNOW_KEY = "39163b52df27297ab6cfce66231be6e2";
-export const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
+const INDEXNOW_ENDPOINT = "https://api.indexnow.org/indexnow";
 
 /** Dil öneksiz yollar × diller → mutlak adresler (tekrarsız, sıralı). */
 export function indexNowUrls(paths: readonly string[], locales: readonly Locale[]): string[] {

@@ -48,7 +48,7 @@ export function percentileRank(sorted: readonly number[], value: number): number
 
 export type SwarmScale = "linear" | "log";
 
-export type SwarmDomain = {
+type SwarmDomain = {
   lo: number;
   hi: number;
   scale: SwarmScale;
@@ -146,7 +146,7 @@ export function fitSwarm(
    Pay dağılımı (sektör şeritleri)
    ------------------------------------------------------------------------- */
 
-export type ShareSlice<K extends string = string> = {
+type ShareSlice<K extends string = string> = {
   key: K;
   count: number;
   value: number;
@@ -250,7 +250,7 @@ export function sharePercent(share: number): number {
    Tepe cümleleri — şablon + veri
    ------------------------------------------------------------------------- */
 
-export type ScreenerSentenceCopy = {
+type ScreenerSentenceCopy = {
   /** "Süzgeçten {n} hisse geçti" */
   filtered: string;
   /** "Evrende {n} hisse var" */
@@ -266,7 +266,7 @@ export type ScreenerSentenceCopy = {
 };
 
 /** Ortanca F/K'nın yazılması için gereken en az ölçü — azında ortanca gürültü. */
-export const MEDIAN_FK_MIN = 5;
+const MEDIAN_FK_MIN = 5;
 
 export function screenerSentence(
   input: {
@@ -308,7 +308,7 @@ export const SCORE_BAND_FLOORS = { strong: 80, worth: 65, mixed: 50 } as const;
 
 /** Bir kulvar etiketinin yeri: `row` satırı (0 üstte yakın, 1 altta yakın,
     2 üstte uzak, 3 altta uzak), `shift` noktadan yatay kayma (piksel). */
-export type LaneLabelPlace = { row: number; shift: number };
+type LaneLabelPlace = { row: number; shift: number };
 
 /**
  * KULVAR ETİKETLERİ ÇAKIŞMASIZ (6 Kasım). Önceki çözüm (`labelRows`)

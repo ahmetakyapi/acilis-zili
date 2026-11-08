@@ -24,7 +24,7 @@ export type PendingAlert = {
   target: number;
 };
 
-export type AlertHit = PendingAlert & { price: number };
+type AlertHit = PendingAlert & { price: number };
 
 /** Elimizdeki fiyatlarla hedefi geçen bekleyen alarmlar. Fiyatı olmayan atlanır. */
 export function findHits(alerts: readonly PendingAlert[], prices: Record<string, number | undefined>): AlertHit[] {
@@ -68,7 +68,7 @@ export type PendingPercentAlert = {
   thresholdPct: number;
 };
 
-export type PercentHit = PendingPercentAlert & { changePct: number };
+type PercentHit = PendingPercentAlert & { changePct: number };
 
 /**
  * Eşiği geçen bekleyen yüzde alarmları. `changePct`i null olan sembol

@@ -34,12 +34,12 @@ import type { IsoMonth, MonthlyValue } from "@/lib/fx";
 
 const BASE = "https://evds3.tcmb.gov.tr/igmevdsms-dis/";
 
-export const EVDS_SERIES = {
+const EVDS_SERIES = {
   cpi: "TP.TUKFIY2025.GENEL",
   ppi: "TP.TUFE1YI.T1",
 } as const;
 
-export type EvdsSeriesKind = keyof typeof EVDS_SERIES;
+type EvdsSeriesKind = keyof typeof EVDS_SERIES;
 
 /** Yeni ay ayda bir kez geliyor (TÜİK, ayın 3'ü); yarım gün yeterince taze. */
 const REVALIDATE_SECONDS = 12 * 3600;

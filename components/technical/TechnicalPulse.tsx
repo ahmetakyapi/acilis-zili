@@ -343,17 +343,10 @@ export function TechnicalPulse({
           .filter((group) => group.rows.length > 0)
           .map((group) => (
             <div key={group.verdict} className={styles.pulseRow}>
-              {filterable ? (
-                <label htmlFor={stanceFilterId(group.verdict)} className={cn(styles.pulseStance, verdictTextClass(group.verdict))}>
-                  {verdictLabel(group.verdict, t)}
-                  <b>{group.rows.length}</b>
-                </label>
-              ) : (
-                <span className={cn(styles.pulseStance, styles.pulseStanceStatic, verdictTextClass(group.verdict))}>
-                  {verdictLabel(group.verdict, t)}
-                  <b>{group.rows.length}</b>
-                </span>
-              )}
+              <span className={cn(styles.pulseStance, styles.pulseStanceStatic, verdictTextClass(group.verdict))}>
+                {verdictLabel(group.verdict, t)}
+                <b>{group.rows.length}</b>
+              </span>
               {/* BALON BURADA, KARTTA DEĞİL. Kimlik balonu 22 Eylül'e kadar
                   /teknik kartlarının başlığında açılıyordu; kart kimliği zaten
                   gösteriyor ve balon aynı bilgiyi ikinci kez veriyordu. Logo
@@ -377,7 +370,7 @@ export function TechnicalPulse({
                       aria-label={`${row.symbol} · ${company?.name ?? row.symbol} · ${verdictLabel(group.verdict, t)}`}
                       data-cc={cardKey(row.symbol, CARD_SET)}
                     >
-                      <LogoTile symbol={row.symbol} logoUrl={company?.logoUrl ?? null} size={filterable ? "md" : "sm"} />
+                      <LogoTile symbol={row.symbol} logoUrl={company?.logoUrl ?? null} size="sm" />
                     </Link>
                   );
                 })}
@@ -405,7 +398,7 @@ export function TechnicalPulse({
                   aria-label={`${symbol} · ${meta[symbol]?.name ?? symbol} · ${t.technical.pendingLabel}`}
                   data-cc={cardKey(symbol, CARD_SET)}
                 >
-                  <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl ?? null} size={filterable ? "md" : "sm"} />
+                  <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl ?? null} size="sm" />
                 </Link>
               ))}
             </div>

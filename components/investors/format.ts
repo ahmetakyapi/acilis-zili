@@ -54,21 +54,6 @@ export function moveTone(move: Move | null): MoveTone {
   return move === "new" || move === "increased" ? "up" : move === "decreased" || move === "soldOut" ? "down" : "flat";
 }
 
-/**
- * Haritadaki ton: yeni pozisyon en koyu yeşil, artış ve azalış adet
- * değişiminin büyüklüğüyle kademeli, aynı kalan nötr. Isı ölçeğinin
- * (Themes.module.css → `.heat`) aynı dokuz kademesi; eşikler burada
- * yüzde değil adet değişimi: 10 ve 50.
- */
-const HEAT_STEPS = [10, 50] as const;
-export function moveHeat(move: Move | null, changePct: number | null): { tone: MoveTone; level: 0 | 1 | 2 | 3 | 4 } {
-  if (move === "new") return { tone: "up", level: 4 };
-  if (move !== "increased" && move !== "decreased") return { tone: "flat", level: 0 };
-  const size = Math.abs(changePct ?? 0);
-  const level = size < HEAT_STEPS[0] ? 1 : size < HEAT_STEPS[1] ? 2 : 3;
-  return { tone: move === "increased" ? "up" : "down", level };
-}
-
 /** Hisse adedi: 400.000.000 → "400 Mn", 12.345 → "12.345". */
 export function formatShares(amount: number, locale: string): string {
   const LARGE = 1e6;
@@ -237,10 +222,3 @@ export function quarterLean(card: FundCard | CongressCard, period: string | null
   if (buy + sell === 0) return null;
   return buy > sell ? "up" : sell > buy ? "down" : "flat";
 }
-
-/** Kadroda ve karoda kısa ad: soyadı; kısa adın tamamı ("Li Lu"). */
-export function shortName(name: string): string {
-  const SHORT = 8;
-  return name.length <= SHORT ? name : (name.split(" ").at(-1) ?? name);
-}
-

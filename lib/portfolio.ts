@@ -238,7 +238,7 @@ export type DayMove = {
   changePct: number | null;
 };
 
-export type DayTotals = {
+type DayTotals = {
   changeUsd: number;
   /** Değişimin önceki değere oranı (yalnızca kapsanan pozisyonlar). */
   changePct: number | null;

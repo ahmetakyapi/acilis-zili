@@ -75,7 +75,7 @@ const MAX_EVENT_GAP_SECONDS = 10 * 86400;
  * hesaplayıp sonucu yine "olaydan bugüne" diye yazıyordu, yani künye sayının
  * ne olduğu konusunda yanılıyordu. `MAX_EVENT_GAP_SECONDS` bunu engelliyor.
  */
-export function sinceEventReturn(
+function sinceEventReturn(
   bars: readonly { time: number; close: number }[] | undefined,
   eventDate: string,
 ): number | null {

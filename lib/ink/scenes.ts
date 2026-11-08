@@ -103,7 +103,7 @@ const SMILE: Point[] = path(
 );
 const PIVOT = { x: 0, y: -50 };
 
-export type BellPose = {
+type BellPose = {
   x: number;
   y: number;
   s: number;
@@ -133,7 +133,7 @@ function placeOne(pt: Point, p: BellPose) {
   return place([pt], p)[0];
 }
 
-export function drawBell(ctx: Ctx, pal: InkPalette, p: BellPose) {
+function drawBell(ctx: Ctx, pal: InkPalette, p: BellPose) {
   const outline = p.outline ?? 1;
   const wash = p.wash ?? 1;
 
@@ -1324,7 +1324,7 @@ const ringing: InkScene = {
    kenarlığı altta soluk kalıyor; JavaScript yokken kart çerçevesiz olmuyor. */
 const FRAME_RADIUS = 22;
 /** Tuval kartın kenarından bu kadar taşıyor; hat tam kenarın üstünde. */
-export const FRAME_INSET = 3;
+const FRAME_INSET = 3;
 /** Kapanışta başlangıcı geçen pay (piksel). */
 const FRAME_OVERLAP = 34;
 

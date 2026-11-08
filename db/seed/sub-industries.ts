@@ -6,7 +6,7 @@
  * etiketinin Türkçesini verir ("Semiconductors" → "Yarı İletkenler").
  */
 
-export type SubIndustryInfo = {
+type SubIndustryInfo = {
   /** Alt sektörün Türkçe adı. */
   tr: string;
 };

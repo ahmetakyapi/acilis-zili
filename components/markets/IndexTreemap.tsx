@@ -1,6 +1,6 @@
 import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { LogoTile, Skeleton } from "@/components/ui/primitives";
+import { LogoTile } from "@/components/ui/primitives";
 import themeStyles from "@/components/themes/Themes.module.css";
 import { TreemapStage } from "@/components/themes/TreemapStage";
 import type { Locale } from "@/lib/i18n";
@@ -79,7 +79,7 @@ type Labels = {
 type Tone = { tone: HeatTone; level: 0 | 1 | 2 | 3 | 4 };
 
 /** Lejantla karoyu eşleyen anahtar — `down-3`, `flat-0`, `up-4`. */
-export function heatKey(heat: Tone): string {
+function heatKey(heat: Tone): string {
   return `${heat.tone}-${heat.level}`;
 }
 
@@ -266,36 +266,5 @@ export function IndexTreemap({
         );
       })}
     </TreemapStage>
-  );
-}
-
-/** Yer tutucunun ağırlıkları — gerçek haritanın kaba biçimi (birkaç dev,
-    uzun bir kuyruk). Yapı eşleşsin diye: aynı oran, aynı karo dili. */
-const SKELETON_WEIGHTS = [10, 8, 7, 5, 4, 3, 2.6, 2.2, 1.8, 1.5, 1.3, 1.1, 1];
-
-/**
- * Harita yüklenirken — aynı üç yerleşim, aynı `--aspect`. Sekme değişince
- * harita bölümü düz bir plaka değil, haritanın kendi geometrisiyle bekliyor
- * (DetailSkeleton'ın kuralı: yer tutucu yükseklikle değil YAPIYLA eşleşir).
- */
-export function HeatSkeleton() {
-  return (
-    <>
-      {LAYOUTS.map((layout) => (
-        <div key={layout.key} className={styles.heatLayout} data-layout={layout.key}>
-          <div className={styles.heatMap} style={{ "--aspect": layout.aspect } as CSSProperties}>
-            {squarify(SKELETON_WEIGHTS, layout.aspect).map((rect) => (
-              <span
-                key={rect.index}
-                className={styles.heatSkeletonTile}
-                style={{ left: `${rect.x}%`, top: `${rect.y}%`, width: `${rect.w}%`, height: `${rect.h}%` }}
-              >
-                <Skeleton className="size-full rounded-[8px]" />
-              </span>
-            ))}
-          </div>
-        </div>
-      ))}
-    </>
   );
 }

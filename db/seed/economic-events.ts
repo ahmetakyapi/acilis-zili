@@ -32,7 +32,7 @@
 
 import { todayEt } from "../../lib/market-hours";
 
-export type EconomicEventSeed = {
+type EconomicEventSeed = {
   eventDate: string;
   eventTimeEt: string | null;
   slug: string;
@@ -293,7 +293,7 @@ export function economicEventSeeds(
 /** Bu kadar günün altına inince tohum uyarı basar. */
 export const COVERAGE_WARN_DAYS = 90;
 
-export type SeriesCoverage = {
+type SeriesCoverage = {
   label: string;
   /** Elle işlenen son tarih; seri hiç yoksa null. */
   lastDate: string | null;

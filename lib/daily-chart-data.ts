@@ -18,9 +18,9 @@ import { isIsoDay } from "@/lib/date-input";
    (`getDailyChartHealth` → `available`).
    ========================================================================== */
 
-export type DailyChartRecord = DailyChartRow;
+type DailyChartRecord = DailyChartRow;
 
-export type DailyChartIssue = {
+type DailyChartIssue = {
   /** İstenen dildeki kayıt; yoksa orijinali — sayfa "TR" notunu basar. */
   row: DailyChartRecord;
   /** Kaydın GERÇEKTEN yazıldığı diller — hreflang ve og:locale için. */
@@ -51,7 +51,7 @@ export async function getDailyChart(date: string, locale: Locale): Promise<Daily
   };
 }
 
-export type DailyChartIndexRow = Pick<
+type DailyChartIndexRow = Pick<
   DailyChartRecord,
   "chartDate" | "locale" | "title" | "chartMd" | "bodyMd" | "updatedAt"
 >;

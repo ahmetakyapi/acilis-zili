@@ -170,7 +170,7 @@ export async function ogFonts() {
  * `size` KARONUN boyu: görüş kutusu zili karonun içine kendisi yerleştiriyor
  * (BELL_VIEWBOX), çağıran ayrıca oran hesaplamıyor.
  */
-export function BellGlyph({ size = 56 }: { size?: number }) {
+function BellGlyph({ size = 56 }: { size?: number }) {
   return (
     <svg width={size} height={size} viewBox={BELL_VIEWBOX} fill={MARK.ink}>
       <rect {...BELL_HANGER} />

@@ -35,7 +35,7 @@
  * ölçüyor.
  */
 
-export type AutoLinkTerm = {
+type AutoLinkTerm = {
   slug: string;
   /** O dildeki yüzey biçimleri — `content/glossary` → `match`. */
   forms: readonly string[];

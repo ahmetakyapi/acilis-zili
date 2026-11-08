@@ -52,9 +52,8 @@ import { ScrollEdges } from "@/components/ui/ScrollEdges";
  */
 
 /* Seri tipi `lib/compare.ts`te: aynı şekli sunucu sayfası, toplu bar ucu ve
-   bu bileşen birlikte kullanıyor ve üçü ayrı tanım tutamaz. Eski çağıranlar
-   için buradan da dışa aktarılıyor. */
-export type { CompareSeries };
+   bu bileşen birlikte kullanıyor ve üçü ayrı tanım tutamaz. (Eski çağıranlar
+   için buradan yapılan yeniden dışa aktarım, okuyanı kalmadığı için kalktı.) */
 
 /* Seri renkleri ve desenleri `lib/chart-series.ts`te — sunucu bileşenleri
    de aynı sabitleri okuyor, gerekçesi orada. */

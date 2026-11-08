@@ -154,7 +154,7 @@ type StoreEntry = { series: CompareSeries[] } | { failed: true };
 type FxEntry = { path: FxPath; monthlyAvailable: boolean } | { failed: true };
 
 /** Görünen para biriminin kur bağlamı — künye ve bileşenler buradan okunur. */
-export type CompareFx = {
+type CompareFx = {
   path: FxPath;
   anchors: FxPoint[];
   monthlyAvailable: boolean;
@@ -667,7 +667,7 @@ export function CompareRangeControl({ labels }: { labels: CompareLabels }) {
    şeritte.
    -------------------------------------------------------------------------- */
 
-export type CompareStripRow = {
+type CompareStripRow = {
   symbol: string;
   name: string | null;
   logoUrl: string | null;
@@ -1008,7 +1008,7 @@ export function ComparePeriodValue({ symbol }: { symbol: string }) {
    yolunun tamamı `lib/fx.ts` başında.
    -------------------------------------------------------------------------- */
 
-export function CompareCurrencyControl({ labels }: { labels: CompareLabels }) {
+function CompareCurrencyControl({ labels }: { labels: CompareLabels }) {
   const { symbols, range, currency, setCurrency, realAvailable } = useCompare();
   /* Aralık denetimiyle aynı kural: sığ güncelleme uçuştaki gezinmeyi
      öldürüyor, gezinme sürerken denetim kapalı (`useRouteNavigating`). */

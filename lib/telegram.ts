@@ -48,7 +48,7 @@ export function telegramChannels(): Channel[] {
  * BİLİNMİYOR: zaman aşımı, ağ hatası ya da 5xx; istek Telegram'a ulaşıp
  * teslim edilmiş olabilir. Çağıran bu ikisini ayırır (route.ts → deliver).
  */
-export type SendResult = { ok: true; messageId: number | null } | { ok: false; error: string; rejected: boolean };
+type SendResult = { ok: true; messageId: number | null } | { ok: false; error: string; rejected: boolean };
 
 async function call(method: "sendMessage" | "sendPhoto", body: Record<string, unknown>): Promise<SendResult> {
   const key = token();
@@ -172,7 +172,7 @@ export async function releasePost(key: string): Promise<void> {
   }
 }
 
-export type TelegramPostRow = typeof telegramPosts.$inferSelect;
+type TelegramPostRow = typeof telegramPosts.$inferSelect;
 
 /** Yönetim ekranı: son gönderimler. `null` = tablo yok ya da okunamadı. */
 export async function recentTelegramPosts(limit: number): Promise<TelegramPostRow[] | null> {

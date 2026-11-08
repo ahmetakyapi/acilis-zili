@@ -5,7 +5,7 @@
  * earlyCloseEt dolu olan günlerde borsa açıktır ama erken kapanır.
  */
 
-export type HolidaySeed = {
+type HolidaySeed = {
   date: string;
   nameTr: string;
   nameEn: string;

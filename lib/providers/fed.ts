@@ -21,7 +21,7 @@ const FED_TIMEOUT_MS = 6000;
 /** Sayfanın Fed'i bekleme sınırı — aşarsa olay o turda bekler, sonraki yoklamada gelir. */
 export const FED_WAIT_MS = 4000;
 
-export type FomcRelease = {
+type FomcRelease = {
   /** Kararın yayım anı (RSS `pubDate`). */
   statementAt: string;
   /** Kalıp okunamadıysa null — bülten var, sayı yok. */

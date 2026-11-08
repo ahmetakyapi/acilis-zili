@@ -28,7 +28,7 @@ import {
 
 const HOUR_MS = 3_600_000;
 
-export type ErrorInput = {
+type ErrorInput = {
   kind: ErrorKind;
   route: string;
   digest: string | null;

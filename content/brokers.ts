@@ -671,7 +671,7 @@ export const BROKERS: readonly Broker[] = [
    yüzdelik kurumlarınki değişmez — sayfa bunu da söylüyor.
    ========================================================================== */
 
-export const SCENARIO_TRADES_USD = [1_000, 10_000] as const;
+const SCENARIO_TRADES_USD = [1_000, 10_000] as const;
 export const SCENARIO_SHARE_PRICE = 100;
 
 /** Sent yuvarlaması: tarife sentten küçük birim yazmıyor. */
@@ -710,7 +710,7 @@ export function commissionFor(
   return Math.round(fee * CENTS) / CENTS;
 }
 
-export type ScenarioRow = {
+type ScenarioRow = {
   broker: Broker;
   /** `SCENARIO_TRADES_USD` sırasıyla; hesaplanamıyorsa null. */
   fees: (number | null)[];

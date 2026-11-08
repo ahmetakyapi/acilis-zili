@@ -9,7 +9,7 @@
  * QQQ, Nasdaq 100'ün kendisi değil onu izleyen fondur.
  */
 
-export type SymbolSeed = {
+type SymbolSeed = {
   symbol: string;
   name: string;
   isIndexProxy?: boolean;
@@ -18,7 +18,7 @@ export type SymbolSeed = {
   indexLabelEn?: string;
 };
 
-export const INDEX_PROXIES: SymbolSeed[] = [
+const INDEX_PROXIES: SymbolSeed[] = [
   {
     symbol: "QQQ",
     name: "Invesco QQQ Trust",
@@ -49,7 +49,7 @@ export const INDEX_PROXIES: SymbolSeed[] = [
   },
 ];
 
-export const POPULAR_SYMBOLS: SymbolSeed[] = [
+const POPULAR_SYMBOLS: SymbolSeed[] = [
   /* Yeni halka arzlar — henüz endeks üyesi değiller.
      S&P 500 ve Nasdaq-100 üyeliği listelenmeden hemen sonra gelmiyor
      (S&P'de olağan koşul bir yıllık işlem geçmişi, Nasdaq-100'de yıllık
@@ -160,7 +160,7 @@ export const INDEX_STRIP = ["QQQ", "SPY", "DIA", "IWM"] as const;
  * yönü gösterir ama birebir aynı yüzdeyi vermez (kur etkisi + seans farkı).
  * Ekranda bu açıkça yazılır — vekil olduğu gizlenmez.
  */
-export type WorldMarket = {
+type WorldMarket = {
   symbol: string;
   /** Fonun resmî adı — sağlayıcı ETF profili döndürmediği için elle tutulur. */
   fundName: string;
@@ -251,7 +251,7 @@ export const WORLD_MARKETS: WorldMarket[] = [
  * EWJ hepsi `{}`. Bu yüzden ad, ülke ve izlenen endeks bilgisi burada elle
  * tutulur; hisse detayında şirket profili yerine bu künye gösterilir.
  */
-export type FundMeta = {
+type FundMeta = {
   symbol: string;
   /** Fonun resmî adı. */
   name: string;

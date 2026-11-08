@@ -26,7 +26,7 @@ import { parseStoredMetrics, storedMetricsFrom, type StoredMetrics } from "@/lib
  * edilebilir. Sayfa ziyareti kendi satırını ayrıca tazeliyor ve kota
  * dolarsa (429) paket o anda kesiliyor.
  */
-export const SYMBOL_METRICS_BATCH = 15;
+const SYMBOL_METRICS_BATCH = 15;
 
 /**
  * Sayfa ziyaretinin kendi satırını yeniden yazması için gereken yaş. Sayfa
@@ -37,7 +37,7 @@ export const SYMBOL_METRICS_BATCH = 15;
 const SELF_REFRESH_MS = 24 * 60 * 60 * 1000;
 
 /** Skor kartının evreni: GICS sektörü bilinen, birincil sınıf endeks üyeleri. */
-export function scorecardUniverse(): { symbol: string; sector: string }[] {
+function scorecardUniverse(): { symbol: string; sector: string }[] {
   return primaryOnly(ALL_MEMBERS)
     .filter((member): member is typeof member & { sector: string } => Boolean(member.sector))
     .map((member) => ({ symbol: member.symbol, sector: member.sector }));

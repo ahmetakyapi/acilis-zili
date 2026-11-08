@@ -83,7 +83,7 @@ export function pricePath(done: readonly Bar[]) {
   };
 }
 
-export type NewsCandidate = { headline: string; summary: string | null; url: string; publishedAt: Date };
+type NewsCandidate = { headline: string; summary: string | null; url: string; publishedAt: Date };
 /** Rapor başına en çok bu kadar "yalnız özette geçen" haber: başlıkta adı geçmeyen çoğu zaman yan konu. */
 const SUMMARY_ONLY_LIMIT = 3;
 const SIMILAR_HEADLINE = 0.6;
@@ -126,7 +126,7 @@ export function selectNews<T extends NewsCandidate>(items: readonly T[], symbol:
 }
 export type PricePath = NonNullable<ReturnType<typeof pricePath>>;
 
-export type ScenarioStatus = "aboveBull" | "between" | "belowBear";
+type ScenarioStatus = "aboveBull" | "between" | "belowBear";
 /** Şu anki fiyat tetiklere göre nerede. Gün içi fiyattır; senaryo günlük KAPANIŞLA teyit edilir (ekran bunu yazar). */
 export function scenarioStatus(price: number, bull: number | null | undefined, bear: number | null | undefined): ScenarioStatus | null {
   if (typeof bull === "number" && price > bull) return "aboveBull";
@@ -158,7 +158,7 @@ export function triggerMath(price: number, bull: number | null | undefined, bear
  * - Hisse seçimi (3–6 ay) bilanço, oranlar ve 7 günlük haberle çalışır; bu
  *   veri gün gün değişir.
  */
-export const RECOMMENDED_GAP_MINUTES = { technical: 60, selection: 24 * 60 } as const;
+const RECOMMENDED_GAP_MINUTES = { technical: 60, selection: 24 * 60 } as const;
 
 export type NextReport = { lastAt: string; at: string; gapMinutes: number; reason: "gap" | "market-closed" };
 

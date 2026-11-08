@@ -43,5 +43,3 @@ export const db: Database = new Proxy({} as Database, {
     return Reflect.get(instance, prop, instance);
   },
 });
-
-export { schema };

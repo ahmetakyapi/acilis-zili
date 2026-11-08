@@ -26,9 +26,9 @@ import { bandFiyatiKapsiyorMu } from "./utils";
  * karşılığıdır — böylece toplam piyasa değerine ihtiyaç kalmaz.
  */
 
-export type ComplianceVerdict = "pass" | "review" | "fail";
+type ComplianceVerdict = "pass" | "review" | "fail";
 
-export type ComplianceResult = {
+type ComplianceResult = {
   verdict: ComplianceVerdict;
   /** Elenen faaliyet alanı — "fail" ise dolu. */
   businessReasonKey: BusinessReasonKey | null;
@@ -63,7 +63,7 @@ export type ComplianceResult = {
   businessKnown: boolean;
 };
 
-export type BusinessReasonKey =
+type BusinessReasonKey =
   | "banking"
   | "insurance"
   | "alcohol"
@@ -114,7 +114,7 @@ const REVIEW_SUBS = new Set([
   "Interactive Media & Services",
 ]);
 
-export type ComplianceInputs = {
+type ComplianceInputs = {
   symbol: string;
   /** Son işlem fiyatı — hisse başına piyasa değeri. */
   price: number | null;

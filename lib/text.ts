@@ -46,7 +46,7 @@ const VARLIKLAR: Record<string, string> = {
  *   3. Sonuçta değiştirme karakteri (U+FFFD) belirdiyse tahmin tutmamış
  *      demektir; özgün metin korunuyor.
  */
-export function kodlamayiOnar(metin: string): string {
+function kodlamayiOnar(metin: string): string {
   if (!/Ã[-¿]|â€/.test(metin)) return metin;
   for (let i = 0; i < metin.length; i += 1) {
     if (metin.charCodeAt(i) > 0xff) return metin;
@@ -62,7 +62,7 @@ export function kodlamayiOnar(metin: string): string {
  * "&#39;" hâline getirip bırakıyordu. İkiden fazlası gereksiz ve
  * "&amp;amp;" gibi KASITLI yazılmış metni bozma riski taşıyor.
  */
-export function varliklariCoz(metin: string): string {
+function varliklariCoz(metin: string): string {
   let sonuc = metin;
   for (let tur = 0; tur < 2; tur += 1) {
     const oncesi = sonuc;

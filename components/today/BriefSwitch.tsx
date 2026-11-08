@@ -46,7 +46,7 @@ export type BriefView = {
   archiveHref: string;
 };
 
-export type BriefSwitchLabels = {
+type BriefSwitchLabels = {
   tabs: Record<BriefPeriod, string>;
   titles: Record<BriefPeriod, string>;
   empty: Record<BriefPeriod, string>;

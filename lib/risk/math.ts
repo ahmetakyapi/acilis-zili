@@ -11,7 +11,7 @@ import { percentileRank } from "@/lib/sentiment";
 import { beta as betaOf } from "@/lib/portfolio-risk";
 import { BAND_Z, EWMA_LAMBDA, FORECAST_HORIZON } from "./thresholds";
 
-export const TRADING_DAYS = 252;
+const TRADING_DAYS = 252;
 const PERCENT = 100;
 /** EWMA varyansının tohumu: ilk bu kadar getirinin örnek varyansı. */
 const EWMA_SEED = 30;

@@ -26,7 +26,7 @@ import type { Locale } from "@/lib/i18n/config";
  * rozet yalnız en son günü prop olarak alır (`LATEST_CHANGE_DATE`).
  */
 
-export { CHANGE_AREAS, CHANGE_KINDS, CHANGE_SCREENS, type ChangeArea, type ChangeKind, type ChangeScreen };
+export { CHANGE_KINDS, type ChangeArea, type ChangeKind, type ChangeScreen };
 
 export type ChangeItem = {
   kind: ChangeKind;
@@ -53,9 +53,6 @@ export type ChangeEntry = {
 
 /** En yeni girişin günü — "Yeni" rozeti bununla okurun son gördüğünü kıyaslar. */
 export const LATEST_CHANGE_DATE: string = CHANGELOG_TR[0].date;
-
-/** Sitede kaç giriş var — künye ve testler için. */
-export const CHANGE_ENTRY_COUNT: number = CHANGELOG_TR.length;
 
 /**
  * Bağlantı çözümü. `TELEGRAM_HREF` yer tutucusu kanal adresine döner; kanal
@@ -218,7 +215,7 @@ export function kindCounts(entries: readonly ChangeEntry[]): Record<ChangeKind |
   return counts;
 }
 
-export type DigestColumn = { kind: ChangeKind; items: ChangeItem[] };
+type DigestColumn = { kind: ChangeKind; items: ChangeItem[] };
 
 /**
  * SON GÜNCELLEMEDE (6 Kasım; sahibinin sözü: "son güncellemeyle ne geldi,

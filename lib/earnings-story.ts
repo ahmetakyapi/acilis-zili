@@ -9,7 +9,6 @@ import {
   historicalMoves,
   type DailyClose,
   type ReportEvent,
-  type ReportTiming,
 } from "@/lib/expected-move";
 
 /**
@@ -32,8 +31,8 @@ import {
  */
 
 /** Adresteki kart adları — sıra hikâyenin sırası. */
-export const STORY_KINDS = ["beklenti", "rehberlik", "tepki", "ozet", "skor"] as const;
-export type StoryKind = (typeof STORY_KINDS)[number];
+const STORY_KINDS = ["beklenti", "rehberlik", "tepki", "ozet", "skor"] as const;
+type StoryKind = (typeof STORY_KINDS)[number];
 
 export function isStoryKind(value: unknown): value is StoryKind {
   return typeof value === "string" && (STORY_KINDS as readonly string[]).includes(value);
@@ -43,10 +42,10 @@ export function isStoryKind(value: unknown): value is StoryKind {
 export const STORY_MIN_CARDS = 3;
 
 /** Özet kartında ilk cümlenin altında en fazla kaç madde daha. */
-export const STORY_SUMMARY_MORE = 2;
+const STORY_SUMMARY_MORE = 2;
 
 /** Rehberlik kartında en fazla kaç satır — dikey kartın 1350 pikseline sığan. */
-export const STORY_GUIDANCE_MAX = 3;
+const STORY_GUIDANCE_MAX = 3;
 
 /* ---------------------------------------------------------------------------
    Tek çizgi — beklenti ve gerçekleşen aynı eksende
@@ -65,7 +64,7 @@ export const STORY_GUIDANCE_MAX = 3;
  * yapışmasın. Fark sıfırsa (denk) pencere değerin %10'u kadar açılır,
  * değer de sıfırsa birim pencere — sıfıra bölme yok.
  */
-export const STORY_RAIL_PAD = 0.75;
+const STORY_RAIL_PAD = 0.75;
 
 export function railPositions(estimate: number, actual: number): { estimate: number; actual: number } {
   const lo = Math.min(estimate, actual);
@@ -137,7 +136,7 @@ export type StoryReaction = {
 };
 
 /** Tepki kartında listelenen önceki rapor sayısı — son bir yıl. */
-export const STORY_REACTION_HISTORY = 4;
+const STORY_REACTION_HISTORY = 4;
 
 /**
  * KAPANMIŞ seansların barları. Açık seansın barı o anın fiyatı; tepki
@@ -384,5 +383,3 @@ export function surpriseText(
       ? labels.vote.outcomeMiss
       : labels.vote.outcomeInline;
 }
-
-export type { ReportTiming };

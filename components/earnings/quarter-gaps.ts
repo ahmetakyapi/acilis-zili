@@ -14,7 +14,7 @@
 const QUARTER_LABEL = /(?:([1-4])\s?Ç|Q([1-4]))\s?'?\s?(?:FY)?\s?(\d{4}|\d{2})/i;
 
 /** Etiketin çeyrek sırası (yıl × 4 + çeyrek) ya da çözülemezse `null`. */
-export function quarterOrdinal(label: string): number | null {
+function quarterOrdinal(label: string): number | null {
   const match = label.match(QUARTER_LABEL);
   if (!match) return null;
   const quarter = Number(match[1] ?? match[2]);

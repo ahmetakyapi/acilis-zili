@@ -14,7 +14,7 @@
 /** Şeritte adıyla duran en fazla kaç pozisyon; kalanı "Diğer" diliminde. */
 export const STRIP_MAX = 7;
 
-export type StripSegment = { key: string; symbol: string | null; weight: number };
+type StripSegment = { key: string; symbol: string | null; weight: number };
 
 /**
  * Pozisyonların yüzde yüzlük şeridi. Satırlar ağırlık sırasında gelir
@@ -33,7 +33,7 @@ export function weightStrip(rows: readonly { symbol: string; weight: number }[])
 /* ------------------------------------------------------ ölçek yardımcısı */
 
 /** Ölçeğin, iki değerin büyüğünden bir tık fazlası: uç çubuğa yapışmasın. */
-export const SCALE_HEADROOM = 1.15;
+const SCALE_HEADROOM = 1.15;
 
 /**
  * Aynı ölçekte iki büyüklük (portföy ve S&P 500): her biri ölçeğin oranı.
@@ -70,7 +70,7 @@ export function heatOf(value: number): number {
 
 /* ------------------------------------------------- tepedeki kısa okumalar */
 
-export type LeadFacts = {
+type LeadFacts = {
   count: number;
   effective: number;
   largest: { symbol: string; weight: number };
@@ -80,7 +80,7 @@ export type LeadFacts = {
   volatility: { portfolio: number; benchmark: number } | null;
 };
 
-export type LeadTemplates = {
+type LeadTemplates = {
   /** "{sector}: portföyde {share}, S&P 500'de {bench}." */
   sector: string;
   /** "{count} pozisyon, eşit ağırlıklı {effective} pozisyon gibi dağılıyor." */
@@ -189,7 +189,7 @@ export function heaviestSector(
 
 /* ------------------------------------------------ kart panosu (25 Ekim) */
 
-export type SectorShare = { sector: string; portfolio: number; benchmark: number; diff: number };
+type SectorShare = { sector: string; portfolio: number; benchmark: number; diff: number };
 
 /**
  * Sektör kartının iki bölümü. Eski panel on bir sektörü tam genişlik

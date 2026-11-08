@@ -45,14 +45,14 @@ export function dailyChartRevisionKey(date: string): string {
 export type DailyChartBlock = Extract<Block, { kind: "bars" | "share" | "shift" }>;
 
 /** Rutinin yazdığı anahtar kelime → ayrıştırılmış tür. */
-export const DAILY_CHART_KINDS = { bar: "bars", pay: "share", oncesi: "shift" } as const;
+const DAILY_CHART_KINDS = { bar: "bars", pay: "share", oncesi: "shift" } as const;
 
 /** Çubuk sayısı: ikiden az karşılaştırma değil; on ikiden fazlası telefonda okunmuyor. */
-export const BAR_LIMITS = { min: 2, max: 12 } as const;
+const BAR_LIMITS = { min: 2, max: 12 } as const;
 /** Pay: ayrıştırıcı zaten altıda kesiyor (`parse-blocks.ts`). */
-export const SHARE_LIMITS = { min: 2, max: 6 } as const;
+const SHARE_LIMITS = { min: 2, max: 6 } as const;
 
-export type ChartBlockCheck =
+type ChartBlockCheck =
   | { ok: true; block: DailyChartBlock }
   | { ok: false; reason: string };
 
@@ -183,7 +183,7 @@ export function lastCompletedSession(now: Date, holidays: MarketHoliday[]): stri
    Hareket ve biçim — bağlam paketinin sayıları
    -------------------------------------------------------------------------- */
 
-export type Move = {
+type Move = {
   close: number;
   base: number;
   base_date: string;
@@ -212,7 +212,7 @@ export function moveOver(bars: readonly Bar[], day: string, back: number): Move 
 }
 
 /** Yüzde ve fiyat iki ondalık — sitedeki endeks kartlarıyla aynı. */
-export const CONTEXT_DIGITS = 2;
+const CONTEXT_DIGITS = 2;
 
 const NUMBER_FORMAT = {
   tr: (digits: number) => new Intl.NumberFormat("tr-TR", { minimumFractionDigits: digits, maximumFractionDigits: digits }),
@@ -255,7 +255,7 @@ export function moveFields(move: Move | null) {
   };
 }
 
-export type BreadthRow = { symbol: string; pct: number | null };
+type BreadthRow = { symbol: string; pct: number | null };
 
 /**
  * `DataStamp` kaynağı — DÜZ ETİKET, "alpaca" anahtarı DEĞİL (25 Ekim).
@@ -271,7 +271,7 @@ export const DAILY_CHART_STAMP_SOURCE = "Alpaca · SIP";
  * ile aynı kural. Kapsam eşiğin altındaysa null: 500 üyenin 40'ından
  * "piyasanın %70'i yükseldi" denmez.
  */
-export const BREADTH_MIN_COVERAGE = 0.8;
+const BREADTH_MIN_COVERAGE = 0.8;
 
 /**
  * Evrenin yeterince okunup okunmadığı — genişlik ve öne çıkanlar İKİSİ DE
@@ -323,7 +323,7 @@ export function recentSessions(last: string, n: number, holidays: MarketHoliday[
   return days;
 }
 
-export type ChartGap = { day: string; missing: "chart" | "en" };
+type ChartGap = { day: string; missing: "chart" | "en" };
 
 /**
  * Pencerede eksik olanlar: hiç yazılmamış gün ve İngilizcesi olmayan gün.

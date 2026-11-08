@@ -199,7 +199,7 @@ export function formatDeviation(
 }
 
 /** Künyenin sözcükleri — `calendarVisuals.released` ad alanının alt kümesi. */
-export type DeviationWords = {
+type DeviationWords = {
   aboveForecast: string;
   belowForecast: string;
   inlineForecast: string;

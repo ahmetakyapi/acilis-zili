@@ -27,7 +27,7 @@ const BANDS = [
   { max: Infinity, key: "panic", tone: "down" },
 ] as const;
 
-export type VixBand = (typeof BANDS)[number];
+type VixBand = (typeof BANDS)[number];
 
 /** Eşikler tek yerde: ana sayfa ve piyasalar aynı bandı okuyor. */
 export function vixBand(level: number): VixBand {

@@ -6,7 +6,7 @@ import { db } from "@/lib/db";
 import { requireAdmin } from "@/lib/admin";
 import { aiAnalysisAccess, aiAnalysisAudit, users } from "@/lib/schema";
 
-export type AccessState = { ok: boolean; message: string };
+type AccessState = { ok: boolean; message: string };
 export async function setAnalysisAccess(_state: AccessState, form: FormData): Promise<AccessState> {
   const admin = await requireAdmin();
   const parsed = z.uuid().safeParse(form.get("userId"));

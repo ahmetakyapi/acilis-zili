@@ -31,7 +31,7 @@ export type PeerMetric = (typeof PEER_METRICS)[number];
  * geri kalan herkesi bir uca sıkıştırıyordu. Uçların dışına düşen şirket
  * ucun üstünde durur ve `clipped` taşır; ekran onu açık noktayla çizer.
  */
-export const SPREAD_TAIL = 0.05;
+const SPREAD_TAIL = 0.05;
 
 /** Bir şirketin ölçüsü — tablo satırından ve CANLI fiyattan. */
 export function peerValue(subject: ScoreSubject, metric: PeerMetric): number | null {

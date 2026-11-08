@@ -149,7 +149,7 @@ export function parseMidasText(lines: readonly string[]): ImportResult {
  * Tek emir satırı. Dönüş: işlem, atlanan satır ya da null (iptal edilmiş,
  * hiç dolmamış emir — atlanan listesine bile girmez, çünkü işlem değil).
  */
-export function midasTradeRow(row: string): ImportedTrade | SkippedLine | null {
+function midasTradeRow(row: string): ImportedTrade | SkippedLine | null {
   const date = findDate(row);
   const tokens = row.split(" ").filter(Boolean);
   const sideIndex = tokens.findIndex((t) => SIDE_WORDS[t.toLocaleLowerCase("tr-TR")] !== undefined);
@@ -212,7 +212,7 @@ export function midasTradeRow(row: string): ImportedTrade | SkippedLine | null {
 }
 
 /** Tek temettü satırı: "15/05/26 AAPL - Apple Inc. 12,50 1,88 10,62". */
-export function midasDividendRow(row: string): ImportedDividend | SkippedLine | null {
+function midasDividendRow(row: string): ImportedDividend | SkippedLine | null {
   const date = findDate(row);
   if (!date) return null;
   const rest = row.slice(date.index + date.length).trim();

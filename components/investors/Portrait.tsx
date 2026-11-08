@@ -52,7 +52,7 @@ const EMBLEMS: Record<InvestorEmblem, Icon> = {
 };
 /** Simgenin karonun kenarına oranı — harflere ve künyeye yer kalsın. */
 const EMBLEM_SCALE = 0.46;
-export type PortraitSize = "chip" | "sm" | "cast" | "detail";
+type PortraitSize = "chip" | "sm" | "cast" | "detail";
 
 const PIXELS: Record<PortraitSize, number> = { chip: 24, sm: 36, cast: 48, detail: 72 };
 

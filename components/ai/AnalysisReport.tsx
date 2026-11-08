@@ -18,12 +18,12 @@ import { InView } from "./InView";
 import { CompanyScorecard, ReturnBars, RsiDial, ScenarioAxis, ScoreCards, TrendChecks } from "./AnalysisVisuals";
 import styles from "./Analysis.module.css";
 
-export type CurrentQuote = { price: number; at: string | null; realtime: boolean } | null;
+type CurrentQuote = { price: number; at: string | null; realtime: boolean } | null;
 const CONFIDENCE_STEPS = ["low", "medium", "high"] as const;
 /** Teknik odakta bu kadar günden eski raporun seviyeleri eskimiş sayılır. */
 const TECHNICAL_STALE_DAYS = 3;
 
-export function analysisDate(value: string, locale: Locale) {
+function analysisDate(value: string, locale: Locale) {
   return new Date(value).toLocaleString(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "Europe/Istanbul", dateStyle: "medium", timeStyle: "short" });
 }
 

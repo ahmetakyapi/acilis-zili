@@ -59,7 +59,7 @@ export const SIGN_UP_LIMIT = 5;
 export const DELETE_ACCOUNT_LIMIT = 5;
 export const AUTH_WINDOW_MS = 10 * 60_000;
 
-export type RateLimitResult = {
+type RateLimitResult = {
   allowed: boolean;
   /** Pencerede kalan hak. */
   remaining: number;

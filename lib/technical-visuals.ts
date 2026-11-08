@@ -26,9 +26,9 @@ import { planPosition } from "@/lib/technical";
  *  arasında (25 Ekim, canlı kayıt) — 1,6 hepsini kırpmadan alıyor. */
 export const ATLAS_DOMAIN = { min: -0.2, max: 1.6 } as const;
 /** "Bölgeye yakın" eşiği — pano künyesiyle AYNI sayı ve aynı yuvarlama. */
-export const NEAR_ZONE_PCT = 1;
+const NEAR_ZONE_PCT = 1;
 /** "Stopa yakın" eşiği: fiyatın stopa uzaklığı fiyatın %3'ünden az. */
-export const NEAR_STOP_PCT = 3;
+const NEAR_STOP_PCT = 3;
 /** İki seviye bu oranda yakınsa aynı çentik sayılır (ikinci kez çizilmez). */
 const SAME_LEVEL = 0.002;
 
@@ -42,7 +42,7 @@ export type AtlasTickKind =
   | "sell2"
   | "level";
 
-export type AtlasInput = {
+type AtlasInput = {
   verdict: VerdictKey;
   price: number | null;
   entryLow: number | null;
@@ -262,7 +262,7 @@ export function figuresIn(text: string, lang: Locale): number[] {
 const matchesLevel = (value: number, level: number) =>
   Math.abs(value - level) <= Math.max(0.005, Math.abs(level) * 1e-4);
 
-export type ScenarioPath = {
+type ScenarioPath = {
   /** Senaryonun ilk seviyesi (tetik ya da en yakın seviye). */
   trigger: number;
   /** "text": metinde geçen ve kayıtta olan seviye; "nearest": metinden çıkmadı. */
@@ -309,7 +309,7 @@ export function scenarioPath(
 
 /** Dağılımda satır başına en çok logo: 1440'ta satır ~410 piksel, 44
     piksellik karo + 8 aralık. */
-export const LOGOS_PER_ROW = 8;
+const LOGOS_PER_ROW = 8;
 
 /**
  * Logo ızgarasının sütun sayısı — satırlar EŞİT dolsun: 11 → 6 (6 + 5),

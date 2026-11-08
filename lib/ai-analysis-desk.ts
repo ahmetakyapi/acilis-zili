@@ -15,8 +15,8 @@
  * Öncelik: hata > sürüyor > hak bitti > soğuma > önerilen bekleme; hata
  * satırı görünürken de düğme soğuma bitene dek kilitli kalır.
  */
-export type DeskNote = "error" | "running" | "quota" | "cooldown" | "early" | null;
-export type DeskLabel = "start" | "startAnyway" | "retry";
+type DeskNote = "error" | "running" | "quota" | "cooldown" | "early" | null;
+type DeskLabel = "start" | "startAnyway" | "retry";
 
 /** Hata kodunda yeniden deneme anlamlı mı: kota ve bağlantı belirsizliği hariç. */
 export const RETRYABLE = new Set(["busy", "data-unavailable", "analysis-failed"]);

@@ -31,7 +31,7 @@ export const WEEK_MAX_NAMES = 30;
  * Takvimin görünür katmanı 100 milyar $'dan başlıyor (`HERO_MIN_CAP`) ama
  * o eşik sezon dışı bir haftada görseli boş bırakırdı.
  */
-export const NOTABLE_MIN_CAP = 10e9;
+const NOTABLE_MIN_CAP = 10e9;
 
 /**
  * Açılış öncesi bilançoların TEMSİLİ saati: ana seanstan 90 dakika önce,
@@ -44,8 +44,8 @@ export const NOTABLE_MIN_CAP = 10e9;
  * TR karşılığı ABD yaz saatiyle kayıyor (yazın 15:00, kışın 16:00); o
  * yüzden sabit yazılmıyor, `timePair` o günün tarihiyle çeviriyor.
  */
-export const BMO_LEAD_MINUTES = 90;
-export const BMO_TYPICAL_MINUTES = SESSION_BOUNDS.regularOpen - BMO_LEAD_MINUTES;
+const BMO_LEAD_MINUTES = 90;
+const BMO_TYPICAL_MINUTES = SESSION_BOUNDS.regularOpen - BMO_LEAD_MINUTES;
 
 /** Pazartesi–Cuma: işlem haftası. */
 export const WEEK_DAYS = 5;
@@ -115,7 +115,7 @@ export function currentWeekStart(todayEt: string): string {
 }
 
 /** Pazartesiden cumaya beş gün. */
-export function weekDates(monday: string): string[] {
+function weekDates(monday: string): string[] {
   return Array.from({ length: WEEK_DAYS }, (_, index) => addEtDays(monday, index));
 }
 
@@ -329,8 +329,8 @@ export function allocateSlots(counts: readonly number[], budget: number): number
  * büyüklüğü karonun altındaki çizgi taşıyor (haftanın en büyüğüne göre
  * uzunluk — CLAUDE.md "karşılaştırılan her büyüklük bir de çizgi").
  */
-export const TILE_XL_CAP = 500e9;
-export const TILE_LG_CAP = 100e9;
+const TILE_XL_CAP = 500e9;
+const TILE_LG_CAP = 100e9;
 
 export type TileTier = "xl" | "lg" | "md";
 
@@ -350,7 +350,7 @@ export function tileTier(marketCap: number | null): TileTier {
  * katlamasında; tek bir karo için katlama açılmaz ("+1" bir karodan daha
  * çok yer tutardı), o zaman hepsi görünür.
  */
-export const LANE_VISIBLE_CELLS = 6;
+const LANE_VISIBLE_CELLS = 6;
 
 export function splitLane<T extends { marketCap: number | null }>(
   rows: readonly T[],
@@ -379,10 +379,10 @@ export function splitLane<T extends { marketCap: number | null }>(
  * ondalıkla geliyor (0,4444). 0,44 açıklayan şirkete "beklentinin altında"
  * demek, yuvarlamanın ürettiği bir kaybı olay gibi göstermek olurdu.
  */
-export const EPS_INLINE_TOLERANCE = 0.005;
+const EPS_INLINE_TOLERANCE = 0.005;
 
 /** Yüzde sapma için beklentinin en küçük mutlak değeri: bir sent. */
-export const EPS_RATIO_MIN_BASE = 0.01;
+const EPS_RATIO_MIN_BASE = 0.01;
 
 export type Surprise = {
   direction: "beat" | "miss" | "inline";
@@ -420,7 +420,7 @@ export function epsSurprise(
  * ürettiği bir farkı olay gibi göstermek olurdu. EPS'nin yarım sent
  * toleransının gelirdeki karşılığı bu.
  */
-export const REVENUE_INLINE_RATIO = 0.0005;
+const REVENUE_INLINE_RATIO = 0.0005;
 
 /**
  * Gelir sürprizi — `epsSurprise`in gelir karşılığı.
@@ -464,7 +464,7 @@ export type ScheduleRow = WeekCandidate & {
  * haftası: 96 satırın 31'inde EPS beklentisi). 1 milyar doların altı
  * günün açılır listesine iniyor — kaybolmuyor, sembolüyle orada.
  */
-export const SCHEDULE_MIN_CAP = 1e9;
+const SCHEDULE_MIN_CAP = 1e9;
 
 /**
  * Bir günde adıyla listelenen en fazla şirket. On iki satır ~620 piksel;

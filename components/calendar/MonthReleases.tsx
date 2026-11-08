@@ -25,7 +25,7 @@ export type MonthItem = {
 };
 
 /** Telefonda (ve JavaScript kapalıyken) açık satır sayısı. */
-export const MONTH_BASE_ROWS = 5;
+const MONTH_BASE_ROWS = 5;
 
 /**
  * Kapağın sol kolonu: bu ayın önemli veri açıklamaları (18 Ekim).

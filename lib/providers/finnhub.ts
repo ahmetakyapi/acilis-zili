@@ -347,7 +347,7 @@ type RawIpo = {
   }[];
 };
 
-export type IpoEntry = {
+type IpoEntry = {
   date: string;
   symbol: string;
   name: string;
@@ -406,7 +406,7 @@ type RawSurprise = {
   year: number | null;
 };
 
-export type EarningsSurprise = {
+type EarningsSurprise = {
   /** Çeyreğin bittiği tarih (YYYY-MM-DD). */
   period: string;
   epsEstimate: number | null;

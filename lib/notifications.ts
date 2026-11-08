@@ -20,7 +20,7 @@ import type { AlertEmailInput } from "@/lib/notify-emails";
 
 export type NotificationKind = "alert" | "percent" | "earnings" | "post_approved" | "post_rejected";
 
-export type NotificationText = {
+type NotificationText = {
   title: string;
   body: string;
   /** Dilsiz yerel yol — "/hisse/NVDA". */
@@ -29,7 +29,7 @@ export type NotificationText = {
   tag?: string;
 };
 
-export type InboxItem = {
+type InboxItem = {
   id: string;
   kind: NotificationKind;
   title: string;
@@ -40,7 +40,7 @@ export type InboxItem = {
 };
 
 /** Gelen kutusu tavanı — liste ve 90 günlük temizlik birlikte boyu sınırlar. */
-export const INBOX_LIMIT = 50;
+const INBOX_LIMIT = 50;
 const RETENTION_DAYS = 90;
 
 async function accountLocale(userId: string): Promise<Locale> {

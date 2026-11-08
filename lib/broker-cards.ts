@@ -35,8 +35,6 @@ export const CARD_FEATURES = [
   "options",
 ] as const satisfies readonly BrokerColumn[];
 
-export type CardFeature = (typeof CARD_FEATURES)[number];
-
 /** Var/yok sorusu olan kalemler; ötekiler bir tutar ya da koşul. */
 const TOGGLE_FEATURES: ReadonlySet<BrokerColumn> = new Set(["fractional", "w8ben", "options"]);
 
@@ -249,7 +247,7 @@ export function pctDigits(pct: number): number {
 
 /* ------------------------------------------------------------ tepe cümlesi */
 
-export type BrokersLeadFacts = {
+type BrokersLeadFacts = {
   amount: number;
   min: number | null;
   max: number | null;

@@ -160,7 +160,7 @@ export function CongressBody({
   );
 }
 
-export function TradeTable({
+function TradeTable({
   trades,
   known,
   locale,

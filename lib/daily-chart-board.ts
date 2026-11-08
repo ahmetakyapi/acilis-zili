@@ -38,7 +38,7 @@ type BarsBlock = Extract<DailyChartBlock, { kind: "bars" }>;
 export type TileDir = "up" | "down" | "flat";
 
 /** Grafiğin yönü: kalemlerin hepsi aynı taraftaysa künye onu anlatır. */
-export type BoardTrend = "mixed" | "allUp" | "allDown";
+type BoardTrend = "mixed" | "allUp" | "allDown";
 
 /**
  * Bir ucun okura söylenen adı — kartın küçük etiketi ve künye başlığı aynı
@@ -80,7 +80,7 @@ export type BoardTile = {
   emphasis: boolean;
 };
 
-export type BoardTiles = {
+type BoardTiles = {
   tiles: BoardTile[];
   /** İşaretli blokta iki yönlü ölçek (ölçek künyesi de bunu çizer). */
   scale: DivergingScale | null;
@@ -94,7 +94,7 @@ export type BoardTiles = {
 const dirOf = (value: number): TileDir => (value > 0 ? "up" : value < 0 ? "down" : "flat");
 
 /** Bloğun yönü — sıfır bir kalem "hepsi eksi" demeyi bozar (o karışık). */
-export function boardTrend(values: readonly number[]): BoardTrend {
+function boardTrend(values: readonly number[]): BoardTrend {
   if (values.length === 0) return "mixed";
   if (values.every((value) => value < 0)) return "allDown";
   if (values.every((value) => value > 0)) return "allUp";
@@ -111,7 +111,7 @@ const BARE_NUMBER = /^([+\-−])?\s*(\d[\d.,]*)$/u;
  * iki ayrı birim gibi okunuyordu. Etiket "%" taşıyor ve her değer birimsiz
  * bir sayıysa kart yazılışa "%" ekler; sayı aynı kalır, yalnız birim gelir.
  */
-export function isPercentBlock(block: BarsBlock): boolean {
+function isPercentBlock(block: BarsBlock): boolean {
   if (block.unscaled || !block.label.includes("%")) return false;
   return block.items.every((item) => BARE_NUMBER.test(item.display.trim()));
 }
@@ -204,9 +204,9 @@ export function boardTiles(block: BarsBlock, locale = "tr"): BoardTiles {
    -------------------------------------------------------------------------- */
 
 /** Kabın enine göre en çok sütun: <520 · 520 · 680 · 980 (ChartBoard.module.css). */
-export const TILE_TIERS = [2, 3, 4, 6] as const;
+const TILE_TIERS = [2, 3, 4, 6] as const;
 
-export type TileTier = { cols: number; /** Ölçek künyesi ızgaranın boş hücresinde mi. */ legendInGrid: boolean };
+type TileTier = { cols: number; /** Ölçek künyesi ızgaranın boş hücresinde mi. */ legendInGrid: boolean };
 
 /**
  * Her genişlik basamağında kaç sütun (31 Ekim). Eskiden sütun sayısı
@@ -339,9 +339,9 @@ export function boardKeys(block: DailyChartBlock, locale = "tr"): BoardKey[] {
    -------------------------------------------------------------------------- */
 
 /** Pay paleti: ilk dört dilim kendi tonunda, gerisi tek "diğer" tonunda. */
-export const SHARE_TONES = 4;
+const SHARE_TONES = 4;
 
-export type RingSlice = {
+type RingSlice = {
   name: string;
   display: string;
   /** Bütünün yüzdesi (0–100) ve halkadaki başlangıcı. */
@@ -388,7 +388,7 @@ export function ringGradient(slices: readonly RingSlice[], gapDeg = 1.5): string
    Arşiv kartının mozaiği
    -------------------------------------------------------------------------- */
 
-export type MosaicCell = { dir: TileDir; /** 0–1, grubun en büyüğüne göre. */ weight: number };
+type MosaicCell = { dir: TileDir; /** 0–1, grubun en büyüğüne göre. */ weight: number };
 
 /** Mozaik hücresinin en soluk tonu: en küçük değer de görünür kalsın. */
 const MOSAIC_FLOOR = 0.22;

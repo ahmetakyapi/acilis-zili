@@ -32,7 +32,7 @@ import styles from "./ChartReading.module.css";
  */
 
 /** Grafiğin canlı yoklamasından gelen kotasyon (3 Ekim). */
-export type LiveQuote = {
+type LiveQuote = {
   price: number | null;
   change: number | null;
   changePct: number | null;

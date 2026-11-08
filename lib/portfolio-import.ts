@@ -33,14 +33,14 @@ export type ImportTradeInput = {
   priceUsd: number;
 };
 
-export type ImportLot = {
+type ImportLot = {
   symbol: string;
   date: string;
   quantity: number;
   costUsd: number;
 };
 
-export type SymbolPlan = {
+type SymbolPlan = {
   symbol: string;
   status: "open" | "closed" | "incomplete";
   /** Kalan alışlar, eskiden yeniye. `incomplete`te boş. */
@@ -140,7 +140,7 @@ export function collapseLots(lots: readonly ImportLot[]): ImportLot[] {
 
 export type ExistingPosition = { symbol: string; quantity: number; costUsd: number; boughtAt: string };
 
-export type SymbolImport = {
+type SymbolImport = {
   symbol: string;
   /** Eklenecek lotlar (portföyde birebir aynısı olanlar ayıklanmış). */
   lots: ImportLot[];

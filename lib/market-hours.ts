@@ -151,7 +151,7 @@ const WEEKDAY_INDEX: Record<string, number> = {
   Sat: 6,
 };
 
-export type EtParts = {
+type EtParts = {
   year: number;
   month: number;
   day: number;
@@ -207,7 +207,7 @@ function etOffsetMs(date: Date): number {
  * New York yerel saatini UTC anına çevirir.
  * Yaz saati sınırlarında ikinci bir düzeltme turu yapılır.
  */
-export function etToUtc(
+function etToUtc(
   year: number,
   month: number,
   day: number,
@@ -470,7 +470,7 @@ export function getMarketStatus(
 export const FEED_DELAY_MINUTES = 15;
 
 /** Beslemenin ŞU AN verebileceği en yeni an. */
-export function feedCutoff(now: Date = new Date()): Date {
+function feedCutoff(now: Date = new Date()): Date {
   return new Date(now.getTime() - FEED_DELAY_MINUTES * 60_000);
 }
 
@@ -505,9 +505,10 @@ export function feedCutoff(now: Date = new Date()): Date {
  * 16:00 dakikasında topluyor (ölçüm: SPY 23 Ekim, 20:00Z dakikası 759,99,
  * 20:01Z 759,97 = gün barının kapanışı). Beş dakika bu kuyruğu rahat kapsıyor.
  *
- * (Günün Posteri'nden taşındı, 8 Kasım; `POSTER_SETTLE_MINUTES` bunun adı.)
+ * (Günün Posteri'nden taşındı, 8 Kasım; posterdeki geriye uyum adı
+ * `POSTER_SETTLE_MINUTES` okuyanı kalmadığı için kaldırıldı.)
  */
-export const SETTLE_MARGIN_MINUTES = 5;
+const SETTLE_MARGIN_MINUTES = 5;
 
 /**
  * Seansın veri açısından evresi:
@@ -520,7 +521,7 @@ export const SETTLE_MARGIN_MINUTES = 5;
  *                 hâlâ YARIM (kapanış → kapanış + gecikme + pay)
  *   `settled`     günün barı kesin; akşam seansı sürse de gün barına girmez
  */
-export type SessionPhase = "closed" | "pre-market" | "regular" | "settling" | "settled";
+type SessionPhase = "closed" | "pre-market" | "regular" | "settling" | "settled";
 
 /** Bir işlem gününün barının kesinleştiği an: kendi kapanışı (yarım gün
  *  dahil) + besleme gecikmesi + pay. */

@@ -15,7 +15,7 @@ import css from "./CompanyEarnings.module.css";
  * hücrelerden çıkıyor (`beatQuarters`), ikisi ayrışamaz.
  */
 
-export type BeatCell = {
+type BeatCell = {
   key: string;
   period: string;
   outcome: VoteOutcome;

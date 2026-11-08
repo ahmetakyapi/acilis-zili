@@ -36,7 +36,7 @@ const FEAR_HISTORY = FEAR_MA_DAYS + SENTIMENT_LOOKBACK + 40;
 /** ICE BofA ABD yüksek getirili tahvil opsiyon düzeltmeli farkı (puan). */
 const HY_SPREAD = { seriesId: "BAMLH0A0HYM2", slug: "hy-spread", units: "lin" };
 
-export type SentimentSnapshot = {
+type SentimentSnapshot = {
   readings: SentimentReading[];
   missing: SentimentKey[];
   overall: number | null;

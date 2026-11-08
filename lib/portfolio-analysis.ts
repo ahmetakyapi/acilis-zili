@@ -52,7 +52,7 @@ import { canonicalSymbol } from "@/lib/symbols";
  * "ölçülemedi" diye kapatır, gerisi çizilir.
  */
 
-export const BENCHMARK = "SPY";
+const BENCHMARK = "SPY";
 
 /** Senaryo ve eksik sektör paneli için sektör fonları (GICS sektörü → fon). */
 export const SECTOR_FUND_LIST: readonly SectorFund[] = Object.entries(SECTOR_ETF).map(([sector, symbol]) => ({ symbol, sector }));
@@ -133,7 +133,7 @@ export function mergeLots(positions: readonly AnalysisHolding[]): AnalysisHoldin
   return [...merged].map(([symbol, quantity]) => ({ symbol, quantity })).sort((a, b) => a.symbol.localeCompare(b.symbol));
 }
 
-export const fingerprintOf = (holdings: readonly AnalysisHolding[]) =>
+const fingerprintOf = (holdings: readonly AnalysisHolding[]) =>
   createHash("sha256")
     .update(holdings.map((h) => `${h.symbol}:${h.quantity}`).join("|"))
     .digest("hex")

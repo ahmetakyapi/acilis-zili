@@ -36,7 +36,7 @@ export function earningsHref(symbol: string): string {
   return `/bilancolar/${symbol.toLowerCase()}`;
 }
 
-export type ReportWindow = "amc" | "bmo" | "dmh" | "unknown";
+type ReportWindow = "amc" | "bmo" | "dmh" | "unknown";
 
 export function reportWindowOf(hour: string | null | undefined): ReportWindow {
   const value = hour?.trim().toLowerCase();
@@ -56,9 +56,9 @@ export function dayMonth(dateEt: string, locale: Locale): string {
   return format.format(new Date(`${dateEt}T12:00:00Z`));
 }
 
-export type WindowNames = { afterClose: string; beforeOpen: string; duringMarket: string };
+type WindowNames = { afterClose: string; beforeOpen: string; duringMarket: string };
 
-export type CompanyWhen = {
+type CompanyWhen = {
   window: ReportWindow | "none";
   /** Tarih pencere bilinmediği için tahmini mi. */
   estimated: boolean;

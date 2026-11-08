@@ -104,7 +104,7 @@ function salt(): string {
  * Aynı ziyaretçi gün içinde aynı özeti üretir, ertesi gün başkasını.
  * Tarih girdide olduğu için tuz değişmese bile özet her gün döner.
  */
-export function visitorHash(
+function visitorHash(
   ip: string,
   userAgent: string,
   dayEt: string,
@@ -119,10 +119,10 @@ export function visitorHash(
    Cihaz ve yönlendiren
    -------------------------------------------------------------------------- */
 
-export type Device = "mobile" | "tablet" | "desktop";
+type Device = "mobile" | "tablet" | "desktop";
 
 /** Tarayıcı künyesinden yalnızca üç değerden biri türetilir, metin saklanmaz. */
-export function deviceOf(userAgent: string): Device {
+function deviceOf(userAgent: string): Device {
   const ua = userAgent.toLowerCase();
   if (/ipad|tablet|playbook|silk|(android(?!.*mobile))/.test(ua)) return "tablet";
   if (/mobi|iphone|ipod|android|blackberry|iemobile|opera mini/.test(ua)) {
@@ -137,7 +137,7 @@ export function deviceOf(userAgent: string): Device {
  * kısmında taşınıyor — saklamak istemediğimiz tam olarak orası.
  * Site içi gezinme null döner; kendi kendimizin kaynağı değiliz.
  */
-export function referrerHostOf(
+function referrerHostOf(
   referrer: string | null,
   selfHost: string | null,
 ): string | null {
@@ -190,7 +190,7 @@ export function isBot(userAgent: string): boolean {
    Yazma
    -------------------------------------------------------------------------- */
 
-export type ViewInput = {
+type ViewInput = {
   path: string;
   referrer: string | null;
   locale: string;

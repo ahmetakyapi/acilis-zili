@@ -19,7 +19,7 @@ import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/li
 import type { PortfolioLabels } from "./PortfolioWorkbench";
 import styles from "./Workbench.module.css";
 
-export type SellLot = { quantity: number; costUsd: number; boughtAt: string };
+type SellLot = { quantity: number; costUsd: number; boughtAt: string };
 
 const SUGGEST_DEBOUNCE_MS = 250;
 const PRICE_DECIMALS = 6;

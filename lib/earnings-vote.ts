@@ -57,7 +57,7 @@ export function votePeriodKey(row: PeriodSource): string {
 }
 
 /** Tarih anahtarının tarihi ("d2026-11-19" → "2026-11-19"); çeyrek anahtarında null. */
-export function periodDate(period: string): string | null {
+function periodDate(period: string): string | null {
   return /^d(\d{4}-\d{2}-\d{2})$/.exec(period)?.[1] ?? null;
 }
 
@@ -228,7 +228,7 @@ export function voteAccuracy(
  * Oran ancak bu kadar puanlanmış oyda yüzde olarak yazılır. Tek oyun
  * "%100 isabet"i bir başarı değil bir yazı-tura; sayı (1/1) yine yazılı.
  */
-export const ACCURACY_MIN_FOR_PERCENT = 5;
+const ACCURACY_MIN_FOR_PERCENT = 5;
 
 export function accuracyPercent(accuracy: VoteAccuracy): number | null {
   if (accuracy.scored < ACCURACY_MIN_FOR_PERCENT) return null;
@@ -371,7 +371,7 @@ export function buildVoteView(input: {
  * Gerçekleşeni ya da beklentisi eksik satır atlanır; `marks` eskiden
  * yeniye (çizgide soldan sağa okunur).
  */
-export const BEAT_RECORD_QUARTERS = 4;
+const BEAT_RECORD_QUARTERS = 4;
 
 type BeatRow = { period: string; epsEstimate: number | null; epsActual: number | null };
 

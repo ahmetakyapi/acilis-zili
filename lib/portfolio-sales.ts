@@ -8,7 +8,7 @@
  */
 
 /** Adet sütununun ölçeği `numeric(20,8)` — karşılaştırmada bu kadar pay. */
-export const QTY_EPSILON = 1e-8;
+const QTY_EPSILON = 1e-8;
 
 export type SaleLot = {
   id: string;
@@ -18,7 +18,7 @@ export type SaleLot = {
   note: string | null;
 };
 
-export type FifoStep = {
+type FifoStep = {
   lot: SaleLot;
   /** Bu partiden düşülen adet. */
   take: number;
@@ -26,7 +26,7 @@ export type FifoStep = {
   exhausted: boolean;
 };
 
-export type FifoPlan =
+type FifoPlan =
   | { ok: true; steps: FifoStep[] }
   | { ok: false; reason: "noLots" | "tooMany"; available: number };
 
@@ -60,7 +60,7 @@ export function planFifoSale(lots: readonly SaleLot[], quantity: number, soldAt:
 /** Partinin kimliği alış günü ve maliyet — geri alma bu ikisiyle eşleştiriyor. */
 type LotKey = { costUsd: number; boughtAt: string };
 
-export type UndoPlan<P> = {
+type UndoPlan<P> = {
   /** Hâlâ duran partiye eklenecek adet, parti başına TEK toplam. */
   restore: { lotId: string; quantity: number }[];
   /** Eşi kalmamış parçalar: parti yeniden açılır. */

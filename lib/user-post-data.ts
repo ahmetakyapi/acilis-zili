@@ -161,7 +161,7 @@ export const getPublishedPost = cache(async (slug: string): Promise<PublishedPos
 });
 
 /** Gövdesiz yazı satırı — listeler için. */
-export type PostSummary = Omit<OwnPost, "bodyMd" | "reviewNote">;
+type PostSummary = Omit<OwnPost, "bodyMd" | "reviewNote">;
 
 /**
  * Bir üyenin yayındaki yazıları — profil sayfasının Yazılar bloğu.
@@ -200,10 +200,10 @@ export const getPublishedPostsByUser = cache(async (userId: string): Promise<Pos
   }
 });
 
-export type QueuePost = OwnPost & { author: string };
+type QueuePost = OwnPost & { author: string };
 
 /** Kuyruğun bir satırı — listede basılan kadarı. */
-export type QueueRow = {
+type QueueRow = {
   id: string;
   title: string;
   dek: string;

@@ -12,9 +12,9 @@ export const fill = (template: string, values: Record<string, string | number>) 
   template.replace(/\{(\w+)\}/g, (_, key: string) => String(values[key] ?? ""));
 
 /* Bant sınırları yuvarlak sayılar: "75,0 Mr $" değil "75 Mr $". */
-export const capText = (value: number, locale: Locale) => formatMoneyCompact(value, locale).replace(/[.,]0+(?!\d)/, "");
+const capText = (value: number, locale: Locale) => formatMoneyCompact(value, locale).replace(/[.,]0+(?!\d)/, "");
 
-export function capBandText(band: number, locale: Locale, labels: StockPuzzleLabels): string {
+function capBandText(band: number, locale: Locale, labels: StockPuzzleLabels): string {
   const lower = CAP_BANDS[band];
   const upper = CAP_BANDS[band + 1];
   if (band === 0 && upper !== undefined) return fill(labels.capBelow, { v: capText(upper, locale) });

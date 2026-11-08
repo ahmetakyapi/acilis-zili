@@ -45,7 +45,7 @@ export type FallbackContext = {
   movers: { gainers: readonly FallbackMover[]; losers: readonly FallbackMover[] } | null;
 };
 
-export type FallbackDraft = {
+type FallbackDraft = {
   locale: "tr" | "en";
   title: string;
   chart_md: string;

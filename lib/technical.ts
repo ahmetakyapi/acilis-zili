@@ -78,7 +78,7 @@ export const TECHNICAL_SYMBOLS = [
   "ONDS",
 ] as const;
 
-export type TechnicalSymbol = (typeof TECHNICAL_SYMBOLS)[number];
+type TechnicalSymbol = (typeof TECHNICAL_SYMBOLS)[number];
 
 const SYMBOL_SET: ReadonlySet<string> = new Set(TECHNICAL_SYMBOLS);
 
@@ -365,7 +365,7 @@ function emaSeries(values: readonly number[], period: number): number[] {
 }
 
 /** MACD (12, 26, 9). 35 seanstan kısa geçmişte null. */
-export function macdOf(closes: readonly number[]): MacdReading | null {
+function macdOf(closes: readonly number[]): MacdReading | null {
   const fast = emaSeries(closes, 12);
   const slow = emaSeries(closes, 26);
   if (slow.length === 0) return null;
@@ -393,7 +393,7 @@ export function macdOf(closes: readonly number[]): MacdReading | null {
 }
 
 /** RSI (14), Wilder yumuşatması. 15 kapanıştan kısa geçmişte null. */
-export function rsiOf(closes: readonly number[], period = 14): number | null {
+function rsiOf(closes: readonly number[], period = 14): number | null {
   if (closes.length < period + 1) return null;
   let gain = 0;
   let loss = 0;
@@ -414,7 +414,7 @@ export function rsiOf(closes: readonly number[], period = 14): number | null {
 }
 
 /** ATR (14), Wilder yumuşatması — günlük ortalama fiyat aralığı. */
-export function atrOf(bars: readonly Bar[], period = 14): number | null {
+function atrOf(bars: readonly Bar[], period = 14): number | null {
   if (bars.length < period + 1) return null;
   const ranges: number[] = [];
   for (let i = 1; i < bars.length; i++) {
@@ -434,7 +434,7 @@ export function atrOf(bars: readonly Bar[], period = 14): number | null {
  * Gün içi işlemcilerin ortak dili; seviye uydurmak değil, herkesin aynı
  * formülle aynı sayıyı bulduğu bir referans.
  */
-export function pivotsOf(bar: Bar): Pivots {
+function pivotsOf(bar: Bar): Pivots {
   const p = (bar.high + bar.low + bar.close) / 3;
   const range = bar.high - bar.low;
   return {
@@ -450,7 +450,7 @@ export function pivotsOf(bar: Bar): Pivots {
  * 50 ile 200 günlük ortalamanın son kesişmesi — son 30 seans içinde.
  * Daha eskisi "yeni bir sinyal" değil, zaten fiyatlanmış bir durum.
  */
-export function crossOf(closes: readonly number[], lookback = 30): MaCross | null {
+function crossOf(closes: readonly number[], lookback = 30): MaCross | null {
   const n = closes.length;
   if (n < 201) return null;
   const diffAt = (end: number) => {
@@ -477,7 +477,7 @@ export function crossOf(closes: readonly number[], lookback = 30): MaCross | nul
  * birbirine %1,5'ten yakın olanlar tek seviye sayılıyor, yoksa aynı bölge
  * üç ayrı "direnç" gibi görünürdü.
  */
-export function swingLevels(
+function swingLevels(
   bars: readonly Bar[],
   price: number,
   { lookback = 120, wing = 3, count = 3 } = {},
@@ -780,7 +780,7 @@ export function planPosition(
   return { kind: "inZone" };
 }
 
-export type RsiZone = "overbought" | "oversold" | "neutral";
+type RsiZone = "overbought" | "oversold" | "neutral";
 
 /** 70 ve 30 — göstergenin kendi tanımındaki eşikler, burada seçilmedi. */
 export function rsiZone(rsi: number | null): RsiZone | null {
@@ -869,7 +869,7 @@ export function ladderOf(source: LevelSource): Level[] {
    cümlenin kaynağı.
    -------------------------------------------------------------------------- */
 
-export type RiskReward = {
+type RiskReward = {
   /** Getiri / risk — "1 : 2,4" diye yazılır. */
   ratio: number;
   /** Ölçümün başladığı fiyat: alım bölgesinin üst ucu. */
@@ -945,7 +945,7 @@ export function riskReward(
    -------------------------------------------------------------------------- */
 
 /** Fiyat seviyeye bundan yakınsa "seviyede" sayılır (yüzde; `ladderOf`taki `same`). */
-export const LEVEL_AT_PCT = 0.25;
+const LEVEL_AT_PCT = 0.25;
 
 export type OpenSide = {
   /** `toward`: seviyeye doğru; `at`: seviyede; `beyond`: bütün seviyeler geçilmiş. */
@@ -1021,7 +1021,7 @@ export function openPlan(
 }
 
 /** Bölgesiz görüşte fiyatın iki tarafa göre yeri — durumun adı ve cümlesi buradan. */
-export type OpenWhere =
+type OpenWhere =
   | "between"
   | "atSupport"
   | "belowSupport"
@@ -1173,7 +1173,7 @@ export function planReading(
    olurdu.
    -------------------------------------------------------------------------- */
 
-export type TrendSignal = {
+type TrendSignal = {
   tone: "up" | "down" | "mixed";
   /** Fiyat 50 günlüğün üstünde mi; 50 günlük yoksa null. */
   above50: boolean | null;
@@ -1181,16 +1181,16 @@ export type TrendSignal = {
   above200: boolean | null;
 };
 
-export type MomentumSignal = {
+type MomentumSignal = {
   tone: "strong" | "weak" | "overbought" | "oversold";
   rsi: number;
   /** MACD histogramı sıfırın üstünde mi; MACD yoksa null. */
   macdAbove: boolean | null;
 };
 
-export type VolumeSignal = { tone: "heavy" | "normal" | "light"; ratio: number };
+type VolumeSignal = { tone: "heavy" | "normal" | "light"; ratio: number };
 
-export type IndicatorSignals = {
+type IndicatorSignals = {
   trend: TrendSignal | null;
   momentum: MomentumSignal | null;
   volume: VolumeSignal | null;
@@ -1372,7 +1372,7 @@ export type PlanHistoryEntry = {
 };
 
 /** Art arda aynı kalan yayınların tek satırı: en yeni kayıt ve yayınların sırası. */
-export type PlanHistoryRun<T extends PlanHistoryEntry> = {
+type PlanHistoryRun<T extends PlanHistoryEntry> = {
   entry: T;
   /** Grubun yayın dilimleri, ESKİDEN yeniye ("premarket", "midsession"…). */
   slots: string[];

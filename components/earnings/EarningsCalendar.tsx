@@ -159,7 +159,7 @@ function cardFigures(
   return { headline, rest, capNote };
 }
 
-export type CalendarProps = {
+type CalendarProps = {
   rows: EarningsRow[];
   meta: Record<string, SymbolMeta>;
   watchSet: Set<string>;

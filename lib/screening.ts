@@ -47,7 +47,7 @@ export const CATEGORY_WEIGHTS: Record<Exclude<ScreenCategory, "gate">, number> =
 export const ELIMINATED_CAP = 45;
 
 /** Bunun altında ölçülebilen kural oranında bant hüküm vermiyor (`limited`). */
-export const MIN_COVERAGE = 50;
+const MIN_COVERAGE = 50;
 
 /** Eşikler — ekranda da aynı sayılar yazıyor (sözlükteki şablonlara giriyor). */
 export const THRESHOLDS = {

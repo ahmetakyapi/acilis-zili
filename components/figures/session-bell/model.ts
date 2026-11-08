@@ -153,7 +153,7 @@ export function durationOf(ms: number, units: BellText["units"]) {
  * `nextOpen`/`nextClose`u: tatil ve yarım gün orada çözülmüş. Asıl seanstayken
  * kapanış zili, değilse açılış zili.
  */
-export function nextBellOf(nowMs: number, minutes: number, day: BellDay, nextOpenMs: number, nextCloseMs: number) {
+function nextBellOf(nowMs: number, minutes: number, day: BellDay, nextOpenMs: number, nextCloseMs: number) {
   const regular = liveSessionAt(minutes, day) === "regular";
   return { bell: regular ? ("close" as const) : ("open" as const), ms: (regular ? nextCloseMs : nextOpenMs) - nowMs };
 }
@@ -198,7 +198,7 @@ export function moveLeg(from: number, to: number): Leg {
 }
 
 /** Zilli yürüyüş: süre seansın uzunluğuyla 2–6 sn. */
-export function walkLeg(from: number, to: number, max = 4.2): Leg {
+function walkLeg(from: number, to: number, max = 4.2): Leg {
   return { from, to, dur: Math.min(max, Math.max(2, 1.4 + ((to - from) / 60) * 0.36)), ring: true };
 }
 

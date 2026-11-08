@@ -147,7 +147,7 @@ export function ledgerMove(
  * Taban posterinkiyle aynı gerekçe (`POSTER_SCALE_FLOOR`): ±%0,2'lik sakin
  * günün şeridi %3'lük günün şeridi kadar uzun durmasın.
  */
-export const LEDGER_SCALE_FLOOR = 1;
+const LEDGER_SCALE_FLOOR = 1;
 
 export function ledgerScale(moves: readonly LedgerMove[], useSteps: boolean): number {
   const values = moves.flatMap((move) =>
@@ -207,7 +207,7 @@ export function metricFromObservations(
    Veriden tek cümle
    -------------------------------------------------------------------------- */
 
-export type LedgerStory =
+type LedgerStory =
   | { kind: "allUp" | "allDown"; symbol: string; change: number }
   | { kind: "mixed"; up: string[]; down: string[]; flat: string[] }
   | {
@@ -223,7 +223,7 @@ export type LedgerStory =
     };
 
 /** Yatay bandı posterin cümlesiyle aynı (±0,1 puan). */
-export const LEDGER_FLAT_BAND = STORY_FLAT_BAND;
+const LEDGER_FLAT_BAND = STORY_FLAT_BAND;
 
 /** Cümlenin çapası — bültenin de en çok andığı endeks. */
 export const LEDGER_ANCHOR = "SPY";
@@ -284,7 +284,7 @@ export function ledgerStory(moves: readonly LedgerMove[], period: LedgerPeriod):
   };
 }
 
-export type LedgerStoryLabels = {
+type LedgerStoryLabels = {
   allUp: string;
   allDown: string;
   someUp: string;
@@ -343,9 +343,9 @@ export function ledgerStoryText(story: LedgerStory, labels: LedgerStoryLabels, f
    Bültende geçen hisseler
    -------------------------------------------------------------------------- */
 
-export type MentionCandidate = { symbol: string; name: string };
+type MentionCandidate = { symbol: string; name: string };
 
-export type StockMention = {
+type StockMention = {
   symbol: string;
   /** Metinde geçtiği biçim ("American Express", "AMD") — bağ için. */
   alias: string;
@@ -354,7 +354,7 @@ export type StockMention = {
 };
 
 /** Şeritte en çok bu kadar hisse — bir bakışta okunacak kadar. */
-export const MAX_LEDGER_STOCKS = 8;
+const MAX_LEDGER_STOCKS = 8;
 
 /**
  * Çıplak büyük harfle yazıldığında sembol SAYILMAYAN kısaltmalar.
@@ -592,7 +592,7 @@ export const METRIC_ALIASES: Readonly<Record<LedgerMetricKey, readonly string[]>
   usdtry: ["dolar/TL", "Dolar/TL", "USD/TRY", "dolar/lira"],
 };
 
-export type RefPiece = string | { key: string; text: string };
+type RefPiece = string | { key: string; text: string };
 
 /** Geçişin hemen ardındaki yüzde de bağa dahil: "SPY %0,52", "IWM 0.33%". */
 const NUMBER_TAIL = /^\s?(?:[+\-−]?%\s?\d+(?:[.,]\d+)?|[+\-−]?\d+(?:[.,]\d+)?\s?%)/u;

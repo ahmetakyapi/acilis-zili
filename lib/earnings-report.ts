@@ -190,9 +190,9 @@ export function splitLeadingDate(point: string): { date: string; text: string } 
  * bir fark bir çelişki değil. Yüzde birin üstü öyle: eliminasyon ya da
  * "diğer" satırı tabloda yok demektir ve künye bunu söylüyor.
  */
-export const SEGMENT_TOTAL_TOLERANCE = 0.01;
+const SEGMENT_TOTAL_TOLERANCE = 0.01;
 
-export type SegmentShare = AnalysisSegment & { share: number };
+type SegmentShare = AnalysisSegment & { share: number };
 
 /**
  * Segmentlerin payları — BÜYÜKTEN KÜÇÜĞE ve SEGMENT TOPLAMI üzerinden.

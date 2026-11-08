@@ -93,7 +93,7 @@ export type CompanyCardRecord = {
   foot?: string;
 };
 
-export type CompanyCardLabels = { sector: string; marketCap: string; price: string };
+type CompanyCardLabels = { sector: string; marketCap: string; price: string };
 
 /* ---- Kayıt defteri (modül düzeyi) ---- */
 

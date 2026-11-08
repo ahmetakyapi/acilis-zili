@@ -14,7 +14,7 @@ import type { EconomicEventRow } from "@/lib/schema";
 /** Panelin geriye baktığı gün sayısı (bugün dahil değil). */
 export const RELEASED_WINDOW_DAYS = 10;
 /** Panelde en çok kaç açıklama. */
-export const RELEASED_LIMIT = 4;
+const RELEASED_LIMIT = 4;
 
 const PLAIN = /^-?\d+(\.\d+)?$/;
 

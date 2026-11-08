@@ -81,7 +81,7 @@ export type AskAnswer = {
   session: string;
 };
 
-export type AskResult =
+type AskResult =
   | { ok: true; answer: AskAnswer; remaining: number }
   | { ok: false; reason: "quota" | "busy" | "budget" | "error"; remaining: number };
 

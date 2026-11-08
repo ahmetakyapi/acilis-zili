@@ -97,7 +97,7 @@ export type InvestorEmblem =
    Fotoğrafı hiç bulunamayan kişi için fotoğraf uydurulmuyor, üretilmiyor.
    -------------------------------------------------------------------------- */
 
-export type PortraitCredit = {
+type PortraitCredit = {
   /** `public/investors/` altındaki dosya. */
   src: string;
   author: string;
