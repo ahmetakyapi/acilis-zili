@@ -25,13 +25,14 @@ set +a
 status() {
 node --input-type=module - "$MODE" <<'JS'
 import { readFileSync } from "node:fs";
+import { createHash } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
 const mode = process.argv[2];
 const sql = neon(process.env.DATABASE_URL);
 const journal = JSON.parse(readFileSync("drizzle/meta/_journal.json", "utf8")).entries;
 let applied;
 try {
-  applied = await sql`select created_at from drizzle.__drizzle_migrations order by created_at`;
+  applied = await sql`select hash, created_at from drizzle.__drizzle_migrations order by created_at`;
 } catch (error) {
   console.log("KAYIT TABLOSU YOK (drizzle.__drizzle_migrations):", error.message);
   process.exit(2);
@@ -42,6 +43,18 @@ const tables = await sql`select to_regclass('public.email_prefs') as email_prefs
 console.log(`depoda ${journal.length} migration, kayıtta ${applied.length} satır; son uygulanan: ${journal.find((e) => e.when === last)?.tag ?? "(depoda yok!)"}`);
 console.log(`bekleyen: ${pending.length ? pending.map((e) => e.tag).join(", ") : "yok"}`);
 console.log("tablolar:", JSON.stringify(tables[0]));
+/* TEŞHİS (8 Kasım): kayıtta depoyla eşleşmeyen satırları tarih ve içerik
+   özetiyle bas. drizzle her satıra dosya içeriğinin SHA-256'sını yazıyor
+   (drizzle-orm/migrator.js); özet depodaki bir dosyayla eşleşiyorsa satır
+   o dosyanın başka bir `when` ile uygulanmış hâli, eşleşmiyorsa depoda
+   hiç olmayan bir migration (ör. commit'lenmemiş yerel dosyayla
+   `db:migrate`). Sahibinin elle sorgu koşması gerekmesin. */
+const byHash = new Map(journal.map((e) => [createHash("sha256").update(readFileSync(`drizzle/${e.tag}.sql`, "utf8")).digest("hex"), e.tag]));
+const stray = applied.filter((row) => !journal.some((e) => e.when === Number(row.created_at)));
+for (const row of stray) {
+  const when = new Date(Number(row.created_at)).toISOString();
+  console.log(`eşleşmeyen kayıt: ${when} · özet ${String(row.hash).slice(0, 12)} · ${byHash.has(row.hash) ? `içerik ${byHash.get(row.hash)} ile AYNI` : "içerik depodaki hiçbir dosyaya uymuyor"}`);
+}
 if (last && !journal.some((e) => e.when === last)) { console.log("DUR: kayıttaki son migration depoda yok"); process.exit(3); }
 if (mode === "apply" && pending.length === 0) console.log("uygulanacak bir şey yok");
 process.exit(0);

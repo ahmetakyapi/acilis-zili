@@ -26,7 +26,10 @@ paths:
 - **Migration'lar deploy'da UYGULANMAZ.** Üretim adresi yalnız sunucuda;
   uygulama yolu GitHub Actions → "Migrate DB" (`migrate.yml`, elle
   tetiklenir, `deploy/remote-migrate.sh`): önce `check` (salt okunur,
-  bekleyenleri adıyla basar), sonra `apply`. Kod migration'dan önce yayına
+  bekleyenleri ve depoyla eşleşmeyen kayıtları adıyla basar, HER ZAMAN
+  yeşil biter; güvenlik durdurması uyarı + koşu özeti), sonra YALNIZ check
+  temizse `apply` (8 Kasım: durdurmayı görmeden tetiklenen check kırmızı
+  koşu üretmişti). Check "DUR" diyorsa apply tetiklenmez, sahibine sorulur. Kod migration'dan önce yayına
   inebilir: yeni özellik mümkünse var olan tabloya (özellikle `users`) sütun
   eklemez, kendi tablosunu açar ve tablo yokken sessizce düşer
   (`lib/avatar-data.ts`). Migration'ı unutmak da sessiz hatadır (0042 bir gün
