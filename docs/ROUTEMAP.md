@@ -59,11 +59,13 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       `docs/claude-rutinler.md` § 7. İlk koşu 27 Ekim Salı 09:15 TR.
 - [x] **Görev Kontrolü (eski adıyla Koşu Bekçisi, 25 Ekim'de yeniden
       adlandırıldı) Günün Grafiği'ni de izliyor** (düşerse yeniden çalıştırır).
-- [ ] **Mercek rutininin prompt'u yeniden yapıştırılmalı — sahibi claude.ai'de
-      (8 Kasım).** `docs/claude-rutinler.md` § 3, adım 4'e "Aramada ve Yapay
-      Zekâ Cevaplarında Bulunmak" kuralları ve adım 6'ya üç kontrol maddesi
-      eklendi (başlığın başı aranan ad, ilk iki cümlede tarihli cevap, alt
-      sorular aynı yazıda).
+- [x] **Mercek'e arama ve yapay zekâ görünürlüğü kuralları (8 Kasım):**
+      `content/kurallar/mercek.md` → "Aramada ve Yapay Zekâ Cevaplarında
+      Bulunmak". Rutin kuralları her koşuda `/api/kurallar` ile okuyor;
+      claude.ai'de yapıştırma gerekmedi.
+- [ ] **`docs/claude-rutinler.md` § 3 canlı Mercek talimatından geride.**
+      Canlı talimat (Genel Özet kutusu, ≤1100 kelime, kurallar ucu) depoya
+      anahtarsız olarak taşınmalı.
 - [ ] **Bing Webmaster Tools'a site eklenmeli — sahibi (8 Kasım).** IndexNow
       bildirimleri canlı (`lib/indexnow.ts`); Bing'in "AI Performance"
       raporu Copilot atıflarını yalnız doğrulanmış sitede gösteriyor.
