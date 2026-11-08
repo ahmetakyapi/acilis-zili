@@ -3,7 +3,15 @@
 # Açılış Zili — sunucuda migration durumu / uygulaması (16 Ekim).
 # Uygulama kullanıcısı olarak, CANLI sürümün dizininde çalışır:
 #
-#   sudo -u acilis -H bash -s -- check|apply|diagnose [kabul-ozeti] < deploy/remote-migrate.sh
+#   sudo -u acilis -H bash -s -- check|apply|diagnose|cleanup [kabul-ozeti] < deploy/remote-migrate.sh
+#
+# `cleanup` (8 Kasım, sahibinin isteği: "içinde başka projeden bir şey
+# kalmasın"): veritabanı 8 Kasım'a dek sek-sek (`memleket_*`), oxxo
+# (`app_state*`) ve sahipsiz boş `oyz_*` tablolarıyla ORTAKTI; projeler
+# kendi veritabanlarına taşındıktan sonra bu tabloları ve oxxo'nun
+# kayıttaki migration satırını tek işlemde siler. Yalnız sabit ad kalıbına
+# uyan VE depodaki şemada OLMAYAN tablolar; satırı ancak özeti verilirse ve
+# depodaki hiçbir dosyaya uymuyorsa.
 #
 # `diagnose` (8 Kasım, salt okunur): üretim şemasını depodaki son şema
 # anlık görüntüsüyle (drizzle/meta/<son>_snapshot.json) karşılaştırır,
@@ -23,6 +31,7 @@
 set -euo pipefail
 MODE="${1:-check}"
 ACCEPT="${2:-}"
+[[ "$MODE" =~ ^(check|apply|diagnose|cleanup)$ ]] || { echo "geçersiz mod" >&2; exit 1; }
 [[ -z "$ACCEPT" || "$ACCEPT" =~ ^[0-9a-f]{12,64}$ ]] || { echo "geçersiz kabul özeti" >&2; exit 1; }
 cd /srv/acilis-zili/current
 set -a
@@ -65,15 +74,49 @@ for (const row of stray) {
   const when = new Date(Number(row.created_at)).toISOString();
   console.log(`eşleşmeyen kayıt: ${when} · özet ${String(row.hash).slice(0, 12)} · ${byHash.has(row.hash) ? `içerik ${byHash.get(row.hash)} ile AYNI` : "içerik depodaki hiçbir dosyaya uymuyor"}`);
 }
+const snapTag = journal[journal.length - 1];
+const snap = JSON.parse(readFileSync(`drizzle/meta/${String(snapTag.idx).padStart(4, "0")}_snapshot.json`, "utf8"));
+const expected = new Map();
+for (const table of Object.values(snap.tables)) {
+  if ((table.schema || "public") !== "public") continue;
+  expected.set(table.name, new Set(Object.keys(table.columns)));
+}
+/* cleanup: başka projelerin artığını sil (bkz. baş yorum). Kalıp SABİT;
+   girdiden tablo adı alınmaz. */
+if (mode === "cleanup") {
+  const FOREIGN = /^(memleket_[a-z_]+|oyz_[a-z_]+|app_state|app_state_history)$/;
+  /* oxxo verisi 1 Kasım 11:29:34.700 UTC'deki hâliyle yeni veritabanına
+     kopyalandı; eski tabloya sonradan yazılmışsa (taşıma sırasında açık
+     kalan sekme) silmek veri kaybıdır — dur, önce yeniden kopyala. */
+  const OXXO_COPIED_AT = Date.parse("2026-11-01T11:29:34.700Z");
+  const present = (await sql`select table_name from information_schema.tables where table_schema = 'public' and table_type = 'BASE TABLE' order by table_name`).map((r) => r.table_name);
+  const targets = present.filter((name) => FOREIGN.test(name) && !expected.has(name));
+  if (targets.includes("app_state")) {
+    const [row] = await sql.query(`select max(updated_at) as m from "app_state"`);
+    if (row?.m && new Date(row.m).getTime() > OXXO_COPIED_AT) {
+      console.log(`DUR: app_state kopyadan sonra güncellenmiş (${new Date(row.m).toISOString()}); önce oxxo'ya yeniden kopyala`);
+      process.exit(3);
+    }
+  }
+  const foreignRows = stray.filter((row) => !byHash.has(row.hash));
+  if (stray.length !== foreignRows.length) { console.log("DUR: eşleşmeyen kayıtlardan biri depodaki bir dosyayla aynı; silinmez"); process.exit(3); }
+  if (foreignRows.length && !(accept && foreignRows.length === 1 && String(foreignRows[0].hash).startsWith(accept))) {
+    console.log("DUR: kayıttaki yabancı satırın özeti accept_stray ile verilmeli");
+    process.exit(3);
+  }
+  for (const name of targets) {
+    const [c] = await sql.query(`select count(*)::int as n from "${name}"`);
+    console.log(`silinecek tablo: ${name} (${c.n} satır)`);
+  }
+  const queries = targets.map((name) => sql.query(`drop table "${name}"`));
+  if (foreignRows.length) queries.push(sql.query("delete from drizzle.__drizzle_migrations where hash = $1", [foreignRows[0].hash]));
+  if (!queries.length) { console.log("temizlenecek bir şey yok"); process.exit(0); }
+  await sql.transaction(queries);
+  console.log(`TEMİZLENDİ: ${targets.length} tablo${foreignRows.length ? ", 1 kayıt satırı" : ""}`);
+  process.exit(0);
+}
 /* diagnose salt okunur: durdurmadan önce şemayı karşılaştırıp çıkar. */
 if (mode === "diagnose") {
-  const snapTag = journal[journal.length - 1];
-  const snap = JSON.parse(readFileSync(`drizzle/meta/${String(snapTag.idx).padStart(4, "0")}_snapshot.json`, "utf8"));
-  const expected = new Map();
-  for (const table of Object.values(snap.tables)) {
-    if ((table.schema || "public") !== "public") continue;
-    expected.set(table.name, new Set(Object.keys(table.columns)));
-  }
   const cols = await sql`select table_name, column_name from information_schema.columns where table_schema = 'public' order by table_name, ordinal_position`;
   const actual = new Map();
   for (const row of cols) {

@@ -54,14 +54,11 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       (`memleket_*`, `oyz_*`, `app_state*` tabloları) ve o projelerden biri
       kaydını aynı `drizzle.__drizzle_migrations` tablosuna yazmış. 0043
       `accept_stray` ile uygulandı, yabancı kayıt silinmedi.
-- [ ] **Ortak veritabanında migration kaydı ayrılmalı — sahibi (8 Kasım).**
-      Öteki projeler (Memleket, OYZ oyunu, app_state'i kullanan uygulama)
-      `drizzle.config.ts`'de kendi kayıt tablosunu kullanmalı
-      (`migrations: { table: "__drizzle_migrations_<proje>" }`); yoksa her
-      migration'ları bu projenin kontrolünü durdurur ve damgası bizimkinden
-      yeniyse Drizzle bizim yeni migration'ımızı uygulanmış sanıp ATLAR
-      (koruma: remote-migrate.sh durdurması). Uzun vadede proje başına ayrı
-      Neon veritabanı/şubesi en temizi.
+- [x] **Veritabanı artık yalnız Açılış Zili'nin (8 Kasım).** sek-sek
+      (`seksek_*`) ve oxxo (`app_state*`) kendi Neon veritabanlarına ve
+      kendi kayıt tablolarına taşındı; buradaki `memleket_*`, `app_state*`,
+      sahipsiz boş `oyz_*` tabloları ve oxxo'nun kayıt satırı "Migrate DB"
+      `cleanup` moduyla silindi.
 - [x] **Migration 0040–0042 üretimde uygulandı:** `probability_snapshots`,
       risk masası tabloları, `puzzle_players` + `puzzle_runs` (0042, 29 Ekim
       "Migrate DB" iş akışıyla; öncesinde oyun sıralaması canlıda sessizce

@@ -9,13 +9,13 @@ on:
   workflow_dispatch:
     inputs:
       mode:
-        description: "check: yalnız durum · diagnose: şemayı depoyla karşılaştır (salt okunur) · apply: bekleyenleri uygula"
+        description: "check: yalnız durum · diagnose: şemayı depoyla karşılaştır (salt okunur) · apply: bekleyenleri uygula · cleanup: başka projelerin artık tablolarını sil (8 Kasım)"
         required: true
         default: check
         type: choice
-        options: [check, diagnose, apply]
+        options: [check, diagnose, apply, cleanup]
       accept_stray:
-        description: "Yalnız apply: kayıtta depoda olmayan TEK satırın içerik özeti (check/diagnose çıktısındaki 12+ hex). Boş = durdurma geçilmez."
+        description: "Yalnız apply/cleanup: kayıtta depoda olmayan TEK satırın içerik özeti (check/diagnose çıktısındaki 12+ hex). Boş = durdurma geçilmez."
         required: false
         default: ""
         type: string
@@ -46,8 +46,8 @@ jobs:
           ACCEPT: ${{ inputs.accept_stray }}
         run: |
           set -euo pipefail
-          [[ "$MODE" == check || "$MODE" == diagnose || "$MODE" == apply ]] || { echo "geçersiz mod"; exit 1; }
-          [[ -z "$ACCEPT" || ( "$MODE" == apply && "$ACCEPT" =~ ^[0-9a-f]{12,64}$ ) ]] || { echo "accept_stray yalnız apply ile ve 12-64 hex"; exit 1; }
+          [[ "$MODE" == check || "$MODE" == diagnose || "$MODE" == apply || "$MODE" == cleanup ]] || { echo "geçersiz mod"; exit 1; }
+          [[ -z "$ACCEPT" || ( ( "$MODE" == apply || "$MODE" == cleanup ) && "$ACCEPT" =~ ^[0-9a-f]{12,64}$ ) ]] || { echo "accept_stray yalnız apply/cleanup ile ve 12-64 hex"; exit 1; }
           [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || { echo "geçersiz host"; exit 1; }
           strict=accept-new
           mkdir -p ~/.ssh
@@ -70,10 +70,10 @@ jobs:
           # bir daha yaşanmasın"). `check` salt okunur bir durum raporu; kayıt
           # tablosunun yokluğu (2) ya da depoda olmayan kayıt (3) bir BULGU,
           # iş akışının hatası değil. Kırmızı koşu gerçek hatayla karışıyordu.
-          # Bulgu uyarı + özet olarak görünür, koşu yeşil biter. `apply`
-          # reddedilirse kırmızı kalır: istenen iş yapılmadı. SSH/ağ hataları
+          # Bulgu uyarı + özet olarak görünür, koşu yeşil biter. `apply` ya da
+          # `cleanup` reddedilirse kırmızı kalır: istenen iş yapılmadı. SSH/ağ hataları
           # (255 vb.) her iki modda kırmızı.
-          if [[ "$MODE" != apply && ( $code -eq 2 || $code -eq 3 ) ]]; then
+          if [[ ( "$MODE" == check || "$MODE" == diagnose ) && ( $code -eq 2 || $code -eq 3 ) ]]; then
             echo "::warning title=Migrate DB::Güvenlik durdurması (kod $code) — apply uygulanamaz; ayrıntı koşu özetinde."
             exit 0
           fi

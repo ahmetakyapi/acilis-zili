@@ -33,7 +33,8 @@ koşu da sayılır.
   sahibine sorulur.
 - Ders (8 Kasım): eşleşmeyen kayıt bir hata değil, ORTAK veritabanındaki
   başka bir projenin migration'ıydı (diagnose: `memleket_*`, `oyz_*`,
-  `app_state*`). Önce diagnose, sonra karar; kör apply ya da kayıt silme yok.
+  `app_state*`). Önce diagnose, sonra karar; kör apply ya da elle kayıt
+  silme yok — projeler ayrıldı, artık `cleanup` moduyla temizlendi.
 
 ## 3. Rutinler (claude.ai)
 

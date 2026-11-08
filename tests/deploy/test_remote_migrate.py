@@ -46,17 +46,25 @@ class RemoteMigrateStatusTest(unittest.TestCase):
     def tearDown(self):
         self.tmp.cleanup()
 
-    def run_status(self, rows, mode="check", accept="", columns=None):
+    def run_status(self, rows, mode="check", accept="", columns=None, tables=None, app_state_max=None):
         fake = self.root / "node_modules/@neondatabase/serverless"
         fake.mkdir(parents=True, exist_ok=True)
         (fake / "package.json").write_text('{"name":"@neondatabase/serverless","type":"module","main":"index.js"}')
         (fake / "index.js").write_text(
             "const rows = " + json.dumps(rows) + ";\n"
             "const columns = " + json.dumps(columns or []) + ";\n"
-            "export function neon() { return (strings) => { const q = strings.join('');"
+            "const tables = " + json.dumps(tables or []) + ";\n"
+            "const appStateMax = " + json.dumps(app_state_max) + ";\n"
+            "export function neon() { const fn = (strings) => { const q = strings.join('');"
             " if (q.includes('to_regclass')) return Promise.resolve([{}]);"
+            " if (q.includes('information_schema.tables')) return Promise.resolve(tables.map((t) => ({ table_name: t })));"
             " if (q.includes('information_schema')) return Promise.resolve(columns);"
-            " return Promise.resolve(rows); }; }\n"
+            " return Promise.resolve(rows); };"
+            " fn.query = (q, p) => { if (q.startsWith('drop') || q.startsWith('delete')) return { q, p };"
+            " if (q.includes('max(updated_at)')) return Promise.resolve([{ m: appStateMax }]);"
+            " return Promise.resolve([{ n: 7 }]); };"
+            " fn.transaction = (qs) => { for (const x of qs) console.log('SQL', x.q, JSON.stringify(x.p || [])); return Promise.resolve([]); };"
+            " return fn; }\n"
         )
         return subprocess.run(
             ["node", "status.mjs", mode, accept],
@@ -122,6 +130,46 @@ class RemoteMigrateStatusTest(unittest.TestCase):
         rows = [{"hash": self.sha("0000_a"), "created_at": "1000"}, {"hash": self.sha("0001_b"), "created_at": "1001"}]
         res = self.run_status(rows, "diagnose", "", cols)
         self.assertIn("şema depoyla aynı", res.stdout)
+
+
+    def clean_rows(self):
+        return [{"hash": self.sha("0000_a"), "created_at": "1000"}, {"hash": self.sha("0001_b"), "created_at": "1001"}, {"hash": "ab" * 32, "created_at": "1000.5"}]
+
+    FOREIGN = ["a", "app_state", "app_state_history", "b", "memleket_scores", "oyz_rooms", "users_extra"]
+
+    def test_cleanup_yalniz_kaliba_uyan_yabanci_tablolari_ve_satiri_siler(self):
+        res = self.run_status(self.clean_rows(), "cleanup", "abababababab", tables=self.FOREIGN, app_state_max="2026-11-01T11:29:34.700Z")
+        self.assertEqual(res.returncode, 0, res.stderr)
+        for t in ["app_state", "app_state_history", "memleket_scores", "oyz_rooms"]:
+            self.assertIn(f'SQL drop table "{t}"', res.stdout)
+        self.assertNotIn('drop table "a"', res.stdout)
+        self.assertNotIn("users_extra", res.stdout.replace("silinecek", ""))
+        self.assertIn('SQL delete from drizzle.__drizzle_migrations where hash = $1 ["' + "ab" * 32 + '"]', res.stdout)
+        self.assertIn("TEMİZLENDİ: 4 tablo, 1 kayıt satırı", res.stdout)
+
+    def test_cleanup_ozetsiz_ya_da_yanlis_ozetle_durur(self):
+        for accept in ["", "cdcdcdcdcdcd"]:
+            res = self.run_status(self.clean_rows(), "cleanup", accept, tables=self.FOREIGN)
+            self.assertEqual(res.returncode, 3, res.stdout)
+            self.assertNotIn("SQL", res.stdout)
+
+    def test_cleanup_oxxo_kopyadan_sonra_yazildiysa_durur(self):
+        res = self.run_status(self.clean_rows(), "cleanup", "abababababab", tables=self.FOREIGN, app_state_max="2026-11-05T00:00:00Z")
+        self.assertEqual(res.returncode, 3)
+        self.assertIn("DUR: app_state kopyadan sonra", res.stdout)
+        self.assertNotIn("SQL", res.stdout)
+
+    def test_cleanup_depodaki_dosyanin_satirini_silmez(self):
+        rows = [{"hash": self.sha("0000_a"), "created_at": "1000"}, {"hash": self.sha("0001_b"), "created_at": "5000"}]
+        res = self.run_status(rows, "cleanup", self.sha("0001_b")[:12], tables=self.FOREIGN)
+        self.assertEqual(res.returncode, 3)
+        self.assertNotIn("SQL", res.stdout)
+
+    def test_cleanup_temizse_bir_sey_yapmaz(self):
+        rows = [{"hash": self.sha("0000_a"), "created_at": "1000"}, {"hash": self.sha("0001_b"), "created_at": "1001"}]
+        res = self.run_status(rows, "cleanup", "", tables=["a", "b"])
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn("temizlenecek bir şey yok", res.stdout)
 
 
 if __name__ == "__main__":
