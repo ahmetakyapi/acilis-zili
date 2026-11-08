@@ -51,11 +51,27 @@ a.thumbRow:focus-visible { outline: 2px solid var(--line-focus); outline-offset:
 .thumbValue[data-tone="up"] { color: var(--up); }
 .thumbValue[data-tone="down"] { color: var(--down); }
 .thumbRow > .lane { grid-area: lane; }
-.lane { position: relative; height: 5px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
-.bar { position: absolute; inset-block: 0; border-radius: 999px; background: var(--up); transform-origin: left center; animation: thumb-bar 520ms var(--ease-brand) both; animation-delay: calc(80ms + var(--i, 0) * 40ms); }
-.bar[data-tone="down"] { background: var(--down); }
-.bar[data-tone="neutral"] { background: var(--primary-soft); }
+/* ŞERİT AÇIK TON, UCU TAM TON (8 Kasım, sahibinin itirazı: "kalın dolu
+   kırmızı bloklar"). Ölçüldü, 420'lik kolonda tek yönlü düşüş listesi: beş
+   çubuğun boyu 77–100% (değerler −17…−22), yani beş satır boyunca kesintisiz
+   kırmızı bir duvar — fark çubuğun ucunda, ama göz kütleyi okuyordu. Boy
+   aynı ölçekten kaldı (CLAUDE.md "çubuk büyüklüktür"); dolgu yön renginin
+   açık karışımı, karşılaştırılan büyüklük UÇTAKİ 3 piksellik tam ton çentikte
+   (`::after`, kulvardan 3'er piksel taşar). Kulvar bu yüzden `overflow`
+   kesmiyor; çubuk zaten kulvarın içinde ve yuvarlak. */
+.lane { position: relative; height: 5px; border-radius: 999px; background: var(--line-soft); }
+.bar {
+  --tone: var(--up);
+  position: absolute; inset-block: 0; border-radius: 999px;
+  background: color-mix(in oklab, var(--tone) 34%, transparent);
+  transform-origin: left center;
+  animation: thumb-bar 520ms var(--ease-brand) both; animation-delay: calc(80ms + var(--i, 0) * 40ms);
+}
+.bar::after { content: ""; position: absolute; top: -3px; bottom: -3px; right: 0; width: 3px; border-radius: 2px; background: var(--tone); }
+.bar[data-tone="down"] { --tone: var(--down); }
+.bar[data-tone="neutral"] { --tone: var(--primary-soft); }
 .bar[data-from="right"] { transform-origin: right center; }
+.bar[data-from="right"]::after { right: auto; left: 0; }
 /* İki yönlü küçük hâlde sıfır çizgisi (25 Ekim): kulvar `overflow: hidden`
    olduğu için çizgi kulvarın içinde, çubuğun üstünde. */
 .lane[data-zero]::after { content: ""; position: absolute; inset-block: 0; left: var(--zero); width: 1.5px; translate: -50% 0; background: var(--line-strong); }

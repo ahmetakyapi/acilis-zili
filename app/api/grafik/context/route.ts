@@ -15,6 +15,12 @@ import { loadDailyChartContext } from "@/lib/daily-chart-context";
  * `complete: false` → endeks barları gelmedi; rutin YAZMAZ (POST zaten 503
  * döner). `existing_locales` o günün hangi dillerde yazıldığını söylüyor:
  * "tr" varsa ve "en" yoksa rutin yalnız çeviriyi yazar.
+ *
+ * SİTENİN YEDEĞİ SAYILMAZ (8 Kasım). Rutin geç kalırsa ya da düşerse
+ * `/api/cron/grafik` o günü şablonla doldurur (`generatedBy: "auto"`,
+ * `lib/daily-chart-fallback.ts`). Yedek `existing_locales`e girseydi rutin
+ * ["tr","en"] görüp PAS derdi ve günün yorumu hiç yazılmazdı; o diller
+ * `auto_locales`ta ayrıca listeleniyor, rutin onların üstüne yazar.
  */
 
 function authorized(request: Request): AuthOutcome {
@@ -49,7 +55,8 @@ export async function GET(request: Request) {
     date,
     last_completed_session: last,
     complete,
-    existing_locales: existing?.locales ?? [],
+    existing_locales: (existing?.locales ?? []).filter((locale) => !existing?.autoLocales.includes(locale)),
+    auto_locales: existing?.autoLocales ?? [],
     ...context,
   });
 }

@@ -33,7 +33,13 @@ import type { Bar } from "@/lib/providers/types";
       Kapanmış bir günün barı değişmez; GET ile POST arasında da değişmez.
       Barlar `allowCache: false` ile isteniyor — sağlayıcı düşerse Neon
       önbelleğindeki ESKİ seri bugünün diye gelmesin; o sembol pakette
-      `null` olur ve `missing` listesinde adıyla yazar.
+      `null` olur ve `missing` listesinde adıyla yazar. Bir de `fresh: true`
+      (8 Kasım): gün artık kapanıştan 20 dakika sonra "tamamlanmış"
+      (`lastCompletedSession`) ve o saatte Next'in paylaşımlı veri
+      önbelleğinde kapanıştan ÖNCE çekilmiş bir yanıt durabilir — akşam
+      seansında günlük barın TTL'i yarım saat, yani 15:55'te çekilmiş yarım
+      gün barı 16:20'de "güncel" geçerdi ve paket altı saat önbellekte
+      kalırdı. Paket gün başına bir kez kuruluyor; taze istek ucuz.
    2. SAYILAR BİÇİMLENMİŞ OLARAK DA VERİLİYOR (`tr` / `en`). Model metne
       onları kopyalıyor; ham `1.2345`ten "%1,2" türetmesi sayı denetimini
       düşürürdü (gerekçe `lib/daily-chart.ts` → `formatted`).
@@ -47,6 +53,9 @@ import type { Bar } from "@/lib/providers/types";
    FRED'den çekip YAZIYOR (`fillEventActuals`); bu uç salt okur. Rutin
    bültenden sonra koştuğu için açıklanmış veri o saatte zaten yazılmış
    oluyor; yazılmamışsa `actual: null` ve rutin o sayıyı kullanmıyor.
+   8 Kasım'dan beri rutin aynı gün kapanıştan sonra koşuyor: bülten (08:55
+   NY) yine önce, ama 10:00 NY'de açıklanan bir veri o güne yazılmamış
+   olabilir — `actual: null` kuralı bunu da kapsıyor, sayı uydurulmuyor.
    ========================================================================== */
 
 /** Hareket ufukları — seans sayısı. 21 seans ≈ bir takvim ayı. */
@@ -104,8 +113,8 @@ async function build(day: string) {
   const universe = primaryOnly(ALL_MEMBERS);
 
   const [groupBars, universeBars, events, earnings, macro, recent] = await Promise.all([
-    getChartBarsMulti(groupSymbols, "3M", status, { allowCache: false }),
-    getChartBarsMulti(universe.map((member) => member.symbol), "1M", status, { allowCache: false }),
+    getChartBarsMulti(groupSymbols, "3M", status, { allowCache: false, fresh: true }),
+    getChartBarsMulti(universe.map((member) => member.symbol), "1M", status, { allowCache: false, fresh: true }),
     getEventsBetween(day, day),
     getEarningsWithOverrides(day, day).catch(() => []),
     getMacroRows(),

@@ -25,6 +25,9 @@ export type DailyChartIssue = {
   row: DailyChartRecord;
   /** Kaydın GERÇEKTEN yazıldığı diller — hreflang ve og:locale için. */
   locales: Locale[];
+  /** Bunlardan sitenin YEDEĞİ olanlar (8 Kasım, `generatedBy: "auto"`):
+      rutin onları "yazılmış" saymaz, üstüne yazar. */
+  autoLocales: Locale[];
 };
 
 const chartRowsForDay = cache(async function chartRowsForDay(date: string): Promise<DailyChartRecord[]> {
@@ -41,7 +44,11 @@ export async function getDailyChart(date: string, locale: Locale): Promise<Daily
   const rows = await chartRowsForDay(date);
   const row = rows.find((entry) => entry.locale === locale) ?? rows.find((entry) => entry.locale === "tr") ?? rows[0];
   if (!row) return null;
-  return { row, locales: rows.map((entry) => entry.locale).filter(isLocale) };
+  return {
+    row,
+    locales: rows.map((entry) => entry.locale).filter(isLocale),
+    autoLocales: rows.filter((entry) => entry.generatedBy === "auto").map((entry) => entry.locale).filter(isLocale),
+  };
 }
 
 export type DailyChartIndexRow = Pick<
