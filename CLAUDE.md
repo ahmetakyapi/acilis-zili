@@ -94,6 +94,10 @@ npm run build:email              # posta bant GIF'i (public/email/hero.gif, elle
 - **Oturumda iki-üç commit**, konu başına bir tane. Tek başlıkta
   özetlenebiliyorsa tek commit; "görsel iyileştirme" ve "performans" gibi iki
   alan varsa iki. Her mikro düzeltmeye ya da ekrana ayrı commit YOK.
+  **Commit BÜTÜN hâlinde, parça parça değil** (sahibinin isteği, 8 Kasım
+  2026): bir iş alanı bitmeden ara commit atılmaz; dalda ara commit
+  oluştuysa (ör. durdurma kancası istedi) `main`e gitmeden konu başına
+  tek commit'e toplanır.
 - **İş sürerken yeni istek gelirse ya da arka planda ajan çalışıyorsa
   commit'i ERTELE**; kuyruk boşalınca topla (bu uyarı beş kez geldi). "Konu"
   ekran değil İŞ ALANI: büyük görsel turda bile 2–4 commit. Mesele sayı, detay değil: gövdede her değişikliğin
