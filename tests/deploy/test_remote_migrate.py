@@ -36,22 +36,30 @@ class RemoteMigrateStatusTest(unittest.TestCase):
             (self.root / f"drizzle/{tag}.sql").write_text(sql, encoding="utf-8")
             entries.append({"idx": idx, "tag": tag, "when": 1000 + idx})
         (self.root / "drizzle/meta/_journal.json").write_text(json.dumps({"entries": entries}), encoding="utf-8")
+        snapshot = {"tables": {
+            "public.a": {"name": "a", "schema": "", "columns": {"id": {}, "ad": {}}},
+            "public.b": {"name": "b", "schema": "", "columns": {"id": {}}},
+        }}
+        (self.root / "drizzle/meta/0001_snapshot.json").write_text(json.dumps(snapshot), encoding="utf-8")
         (self.root / "status.mjs").write_text(node_part(), encoding="utf-8")
 
     def tearDown(self):
         self.tmp.cleanup()
 
-    def run_status(self, rows):
+    def run_status(self, rows, mode="check", accept="", columns=None):
         fake = self.root / "node_modules/@neondatabase/serverless"
         fake.mkdir(parents=True, exist_ok=True)
         (fake / "package.json").write_text('{"name":"@neondatabase/serverless","type":"module","main":"index.js"}')
         (fake / "index.js").write_text(
             "const rows = " + json.dumps(rows) + ";\n"
-            "export function neon() { return (strings) => strings.join('').includes('to_regclass')"
-            " ? Promise.resolve([{}]) : Promise.resolve(rows); }\n"
+            "const columns = " + json.dumps(columns or []) + ";\n"
+            "export function neon() { return (strings) => { const q = strings.join('');"
+            " if (q.includes('to_regclass')) return Promise.resolve([{}]);"
+            " if (q.includes('information_schema')) return Promise.resolve(columns);"
+            " return Promise.resolve(rows); }; }\n"
         )
         return subprocess.run(
-            ["node", "status.mjs", "check"],
+            ["node", "status.mjs", mode, accept],
             cwd=self.root,
             capture_output=True,
             text=True,
@@ -82,6 +90,38 @@ class RemoteMigrateStatusTest(unittest.TestCase):
         res = self.run_status([{"hash": self.sha("0000_a"), "created_at": "1000"}, {"hash": self.sha("0001_b"), "created_at": "999999"}])
         self.assertEqual(res.returncode, 3, res.stderr)
         self.assertIn("içerik 0001_b ile AYNI", res.stdout)
+
+    def stray_rows(self):
+        return [{"hash": self.sha("0000_a"), "created_at": "1000"}, {"hash": "ab" * 32, "created_at": "1000.5"}]
+
+    def test_kabul_yalniz_apply_ve_dogru_ozetle(self):
+        self.assertEqual(self.run_status(self.stray_rows(), "apply", "abababababab").returncode, 0)
+        self.assertEqual(self.run_status(self.stray_rows(), "apply", "cdcdcdcdcdcd").returncode, 3)
+        self.assertEqual(self.run_status(self.stray_rows(), "check", "abababababab").returncode, 3)
+        self.assertEqual(self.run_status(self.stray_rows(), "apply", "").returncode, 3)
+        res = self.run_status(self.stray_rows(), "apply", "abababababab")
+        self.assertIn("KABUL", res.stdout)
+        self.assertIn("bekleyen: 0001_b", res.stdout)
+
+    def test_diagnose_fazla_ve_eksik_semayi_bulur_ve_durmaz(self):
+        cols = [
+            {"table_name": "a", "column_name": "id"},
+            {"table_name": "a", "column_name": "ad"},
+            {"table_name": "a", "column_name": "fazla"},
+            {"table_name": "yabanci", "column_name": "id"},
+        ]
+        res = self.run_status(self.stray_rows(), "diagnose", "", cols)
+        self.assertEqual(res.returncode, 0, res.stderr)
+        self.assertIn("FAZLA SÜTUN: a.fazla", res.stdout)
+        self.assertIn("FAZLA TABLO: yabanci", res.stdout)
+        self.assertIn("EKSİK TABLO: b (bekleyen: 0001_b)", res.stdout)
+        self.assertIn("şema farkı: 3", res.stdout)
+
+    def test_diagnose_esit_sema(self):
+        cols = [{"table_name": "a", "column_name": "id"}, {"table_name": "a", "column_name": "ad"}, {"table_name": "b", "column_name": "id"}]
+        rows = [{"hash": self.sha("0000_a"), "created_at": "1000"}, {"hash": self.sha("0001_b"), "created_at": "1001"}]
+        res = self.run_status(rows, "diagnose", "", cols)
+        self.assertIn("şema depoyla aynı", res.stdout)
 
 
 if __name__ == "__main__":

@@ -5,7 +5,8 @@ description: Biten işi iş alanı başına bütün commit'lere toplar, denetiml
 
 # Yayın
 
-Kurallar kök `CLAUDE.md` → Commit ve Yayın. Bu skill sırası:
+Kurallar kök `CLAUDE.md` → Commit ve Yayın. Önce `on-kontrol` (kırmızı
+koşu, bekleyen migration, dal artığı varsa önce onlar). Bu skill sırası:
 
 ## 1. Denetim
 
@@ -66,3 +67,10 @@ denmez.
 - Rutin promptu değiştiyse sahibine "claude.ai'de yeniden yapıştır" de ve
   ROUTEMAP'e açık iş yaz. Yazım kuralı değiştiyse `content/kurallar/*.md`
   yeterli: rutin her koşuda `/api/kurallar` ile okur.
+
+## 5. Ders
+
+Turda bir tuzak yaşandıysa (kırmızı koşu, çakışma, yanlış varsayım) ilgili
+skill'e tek satır ders ekle: tarih, ne oldu, kural. Örnekler bu dosyada:
+WIP'in `main`e sızması, Migrate DB check'in kırmızı bitmesi.
+

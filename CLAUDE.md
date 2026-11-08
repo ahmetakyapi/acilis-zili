@@ -24,7 +24,7 @@ yazılır. Bir kural değişince satırı güncelle, yanına yenisini ekleme.
 | Sunucu, deploy, geri dönüş | `docs/deploy-vps.md`, `deploy/update.sh` |
 | Video/kısa film (MP4: tanıtım, reklam, sosyal medya) — `cinecode` skill'i | `docs/film-kimligi.md` |
 | Alan kuralları (dosyaya dokununca yüklenir) | `.claude/rules/*.md` (aşağıda özet) |
-| Prosedürler: ölçüm, ajan dağıtımı, yayın | `.claude/skills/*/SKILL.md` |
+| Prosedürler: ön kontrol, ölçüm, ajan dağıtımı, yayın | `.claude/skills/*/SKILL.md` |
 | Eski tasarım devri ve denetim kayıtları (kural DEĞİL) | `docs/arsiv/` |
 
 ## Oturum Başı
@@ -163,9 +163,12 @@ dosyayı işe başlamadan OKUR. Kural değişince orada güncellenir.
 | Küçük ama kritik | `.claude/rules/kucuk-ama-kritik.md` | `scroll={false}`, katlama yerinde açılır, otomatik bağlantı, W-8BEN %20, iCloud kopyaları |
 
 **Prosedürler skill'lerde** (`.claude/skills/`, çağrılınca yüklenir):
-`olcum` (geçici önizleme rotasıyla görsel ölçüm), `ajan-dagitimi` (paralel
-worktree ajanları ve birleştirme), `yayin` (toplu commit, `main`, Deploy
-izleme).
+`on-kontrol` (kırmızı koşu, migration, rutin, dal artığı — işe ve yayına
+başlamadan), `olcum` (geçici önizleme rotasıyla görsel ölçüm),
+`ajan-dagitimi` (paralel worktree ajanları ve birleştirme), `yayin` (toplu
+commit, `main`, Deploy izleme). Bir tuzak yaşanınca ilgili skill'e tek
+satır ders yazılır; atıfların tazeliğini `tests/agentic-files.test.ts`
+denetler.
 
 ## Yerelde
 

@@ -3,7 +3,14 @@
 # Açılış Zili — sunucuda migration durumu / uygulaması (16 Ekim).
 # Uygulama kullanıcısı olarak, CANLI sürümün dizininde çalışır:
 #
-#   sudo -u acilis -H bash -s -- check|apply < deploy/remote-migrate.sh
+#   sudo -u acilis -H bash -s -- check|apply|diagnose [kabul-ozeti] < deploy/remote-migrate.sh
+#
+# `diagnose` (8 Kasım, salt okunur): üretim şemasını depodaki son şema
+# anlık görüntüsüyle (drizzle/meta/<son>_snapshot.json) karşılaştırır,
+# depoda tanımı olmayan ya da eksik tablo/sütunu basar. `apply`a ikinci
+# argüman olarak kayıttaki eşleşmeyen satırın içerik özeti (en az 12 hex)
+# verilirse güvenlik durdurması YALNIZ o tek satır için geçilir: kayıt
+# silinmez, durum bilinçli kabul edilir (bkz. teşhis satırı).
 #
 # Migration'lar deploy'da UYGULANMAZ (CLAUDE.md). Üretim DATABASE_URL'i
 # yalnız sunucuda (/etc/acilis-zili.env) duruyor; bu betik onu ortama alıp
@@ -15,6 +22,8 @@
 
 set -euo pipefail
 MODE="${1:-check}"
+ACCEPT="${2:-}"
+[[ -z "$ACCEPT" || "$ACCEPT" =~ ^[0-9a-f]{12,64}$ ]] || { echo "geçersiz kabul özeti" >&2; exit 1; }
 cd /srv/acilis-zili/current
 set -a
 # shellcheck disable=SC1091
@@ -23,11 +32,12 @@ set +a
 [[ -n "${DATABASE_URL:-}" ]] || { echo "DATABASE_URL tanımlı değil" >&2; exit 1; }
 
 status() {
-node --input-type=module - "$MODE" <<'JS'
+node --input-type=module - "$MODE" "$ACCEPT" <<'JS'
 import { readFileSync } from "node:fs";
 import { createHash } from "node:crypto";
 import { neon } from "@neondatabase/serverless";
 const mode = process.argv[2];
+const accept = process.argv[3] || "";
 const sql = neon(process.env.DATABASE_URL);
 const journal = JSON.parse(readFileSync("drizzle/meta/_journal.json", "utf8")).entries;
 let applied;
@@ -55,15 +65,56 @@ for (const row of stray) {
   const when = new Date(Number(row.created_at)).toISOString();
   console.log(`eşleşmeyen kayıt: ${when} · özet ${String(row.hash).slice(0, 12)} · ${byHash.has(row.hash) ? `içerik ${byHash.get(row.hash)} ile AYNI` : "içerik depodaki hiçbir dosyaya uymuyor"}`);
 }
-if (last && !journal.some((e) => e.when === last)) { console.log("DUR: kayıttaki son migration depoda yok"); process.exit(3); }
+/* diagnose salt okunur: durdurmadan önce şemayı karşılaştırıp çıkar. */
+if (mode === "diagnose") {
+  const snapTag = journal[journal.length - 1];
+  const snap = JSON.parse(readFileSync(`drizzle/meta/${String(snapTag.idx).padStart(4, "0")}_snapshot.json`, "utf8"));
+  const expected = new Map();
+  for (const table of Object.values(snap.tables)) {
+    if ((table.schema || "public") !== "public") continue;
+    expected.set(table.name, new Set(Object.keys(table.columns)));
+  }
+  const cols = await sql`select table_name, column_name from information_schema.columns where table_schema = 'public' order by table_name, ordinal_position`;
+  const actual = new Map();
+  for (const row of cols) {
+    if (!actual.has(row.table_name)) actual.set(row.table_name, new Set());
+    actual.get(row.table_name).add(row.column_name);
+  }
+  const pendingNote = pending.length ? ` (bekleyen: ${pending.map((e) => e.tag).join(", ")})` : "";
+  let diff = 0;
+  for (const [name, set] of actual) {
+    if (!expected.has(name)) { console.log(`FAZLA TABLO: ${name} (${[...set].join(", ")})`); diff++; continue; }
+    for (const c of set) if (!expected.get(name).has(c)) { console.log(`FAZLA SÜTUN: ${name}.${c}`); diff++; }
+  }
+  for (const [name, set] of expected) {
+    if (!actual.has(name)) { console.log(`EKSİK TABLO: ${name}${pendingNote}`); diff++; continue; }
+    for (const c of set) if (!actual.get(name).has(c)) { console.log(`EKSİK SÜTUN: ${name}.${c}${pendingNote}`); diff++; }
+  }
+  console.log(diff ? `şema farkı: ${diff}` : "şema depoyla aynı");
+  process.exit(0);
+}
+if (last && !journal.some((e) => e.when === last)) {
+  /* Bilinçli kabul: yalnız apply'da, tek eşleşmeyen satır ve özeti
+     verilen önekle başlıyorsa. Drizzle bekleyeni son kaydın damgasından
+     seçer; eşleşmeyen satır depodaki son migration'dan ESKİYSE bekleyenler
+     yine sırayla uygulanır. */
+  const ok = mode === "apply" && accept && stray.length === 1 && String(stray[0].hash).startsWith(accept);
+  if (!ok) { console.log("DUR: kayıttaki son migration depoda yok"); process.exit(3); }
+  console.log(`KABUL: eşleşmeyen kayıt (${accept}) bilinçli kabul edildi; kayıt silinmedi`);
+}
+
 if (mode === "apply" && pending.length === 0) console.log("uygulanacak bir şey yok");
 process.exit(0);
 JS
 }
 
+if [[ "$MODE" == "diagnose" ]]; then
+	status
+	exit 0
+fi
 status
 if [[ "$MODE" == "apply" ]]; then
 	npx --no-install drizzle-kit migrate
 	echo "--- sonrası ---"
-	MODE=check status
+	MODE=check ACCEPT="" status
 fi
