@@ -104,6 +104,20 @@ export const storyInputSchema = z.object({
 
 export type StoryInput = z.infer<typeof storyInputSchema>;
 
+/**
+ * Kayıtlı satır ile yazılacak değerler verilen alanlarda farklı mı —
+ * sürüm damgasının (`updatedAt`) ilerleme ölçüsü. Dizi ve nesne alanları
+ * (`symbols`, `sources`) içerikle karşılaştırılır; `undefined` ile `null`
+ * aynı sayılır (sütun boş).
+ */
+export function alanlarDegisti<T extends Record<string, unknown>>(
+  mevcut: Partial<T>,
+  yeni: Partial<T>,
+  alanlar: readonly (keyof T)[],
+): boolean {
+  return alanlar.some((alan) => JSON.stringify(mevcut[alan] ?? null) !== JSON.stringify(yeni[alan] ?? null));
+}
+
 /** Girdinin beklenen şekli — uç hata yanıtında bunu basıyor. */
 export const STORY_INPUT_SHAPE = {
   slug: "kebab-case (3-80)",
@@ -285,6 +299,14 @@ export async function saveStory(
       mevcut.title !== values.title ||
       mevcut.dek !== values.dek);
 
+  /* SÜRÜM DAMGASI HER ALAN DEĞİŞİMİNDE (8 Kasım, durum taraması). Damga
+     panelin sürüm denetimi (`beklenen`): yalnız metne bakarsa kaynak,
+     sembol ya da olay günü düzeltmesi damgayı ilerletmez ve açık kalmış
+     eski bir editör onu sessizce geri alır. Görünür "Güncellendi"
+     künyesi damgaya değil sürüm fotoğrafına bakıyor (`getStoryEditedAt`,
+     yalnız metin değişince), yani künye yine dürüst. */
+  const alanDegisti = !!mevcut && alanlarDegisti(mevcut, values, ["title", "dek", "bodyMd", "eventDate", "symbols", "sources"]);
+
   if (mevcut && degisti) {
     await fotografAl(values.slug, locale, mevcut, source);
   }
@@ -301,7 +323,7 @@ export async function saveStory(
          haritasının `lastModified`i ve yazıdaki "Güncellendi" künyesi
          değişmemiş metni yeni gösterirdi — tarih oynatmak Google'ın
          kaçınılacaklar listesinde. */
-      set: { ...values, ...(degisti ? { updatedAt: new Date() } : {}) },
+      set: { ...values, ...(alanDegisti ? { updatedAt: new Date() } : {}) },
     });
 
   /* Yeni ya da metni değişen yazı Bing'e bildirilir (`lib/indexnow.ts`);
@@ -568,6 +590,8 @@ export async function saveDailyChart(
   if (mevcut && chartChanged) {
     await fotografAl(dailyChartRevisionKey(input.date), locale, mevcut, source);
   }
+  /* Sürüm damgası kaynak değişiminde de ilerler (mercekteki gerekçe). */
+  const alanDegisti = !!mevcut && alanlarDegisti(mevcut, values, ["title", "chartMd", "bodyMd", "sources"]);
 
   /* Yedeğin üstüne gerçek kayıt gelince künye de değişir: `generatedBy`
      "yalnız ilk yazımda" kuralının tek istisnası, çünkü "auto" bir yazar
@@ -578,13 +602,28 @@ export async function saveDailyChart(
       ? { generatedBy: source, publishedAt: new Date() }
       : {};
 
+  /* YEDEK YARIŞI KAPATIR (8 Kasım, durum taraması). Yukarıdaki "kayıt var
+     mı" okuması ile bu yazma arasında rutin yazabilir; yedek
+     `onConflictDoUpdate` ile gelse rutinin metnini ezer ve künye "claude"
+     kalırdı. Yedek yalnız BOŞ satıra yazar: çakışmada hiçbir şey yapmaz. */
+  if (source === DAILY_CHART_AUTO) {
+    const eklenen = await db
+      .insert(dailyCharts)
+      .values({ ...values, generatedBy: source })
+      .onConflictDoNothing({ target: [dailyCharts.chartDate, dailyCharts.locale] })
+      .returning({ date: dailyCharts.chartDate });
+    if (eklenen.length === 0) return { date: input.date, locale, skipped: "exists" };
+    notifyIndexNow(indexNowUrls([dailyChartHref(input.date)], [locale as Locale]));
+    return { date: input.date, locale };
+  }
+
   await db
     .insert(dailyCharts)
     .values({ ...values, generatedBy: source })
     .onConflictDoUpdate({
       target: [dailyCharts.chartDate, dailyCharts.locale],
       /* `updatedAt` yalnız içerik değişince (mercekteki gerekçe). */
-      set: { ...values, ...takeover, ...(chartChanged || takeover.generatedBy ? { updatedAt: new Date() } : {}) },
+      set: { ...values, ...takeover, ...(alanDegisti || takeover.generatedBy ? { updatedAt: new Date() } : {}) },
     });
 
   if (!mevcut || chartChanged) {
