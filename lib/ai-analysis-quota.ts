@@ -2,6 +2,14 @@ import "server-only";
 import { sql } from "drizzle-orm";
 import { db } from "./db";
 import { istanbulDay } from "./ai-analysis-core";
+import { COOLDOWN_MS, LOCK_MS } from "./ai-analysis-lock";
+
+/* Süreler tek kaynaktan (`lib/ai-analysis-lock.ts`): kilit işin bütçesini
+   belirler, iş bütçesi kilitten türer. Sabit ondalıksız saniye; `sql.raw`
+   yalnız bu modülün kendi sayısını yazar (kullanıcı girdisi değil). Davranış
+   eskisiyle aynı: '240 seconds' = '4 minutes', '60 seconds' = '1 minute'. */
+const LOCK_INTERVAL = sql.raw(`interval '${Math.round(LOCK_MS / 1000)} seconds'`);
+const COOLDOWN_INTERVAL = sql.raw(`interval '${Math.round(COOLDOWN_MS / 1000)} seconds'`);
 
 /** Sunucu kapanmışsa süresi dolan iş kullanıcıya kalıcı kota kaybı bırakmaz. */
 export async function recoverExpiredAnalysis(userId: string) {
@@ -28,7 +36,7 @@ export async function reserveAnalysis(userId: string, id: string) {
   const result = await db.execute(sql`
     UPDATE ai_analysis_access SET
       used_count = CASE WHEN used_day = ${day}::date THEN used_count + 1 ELSE 1 END,
-      used_day = ${day}::date, lock_id = ${id}::uuid, lock_until = now() + interval '4 minutes'
+      used_day = ${day}::date, lock_id = ${id}::uuid, lock_until = now() + ${LOCK_INTERVAL}
     WHERE user_id = ${userId}::uuid AND enabled = true
       AND (lock_until IS NULL OR lock_until < now())
       AND (daily_limit IS NULL OR CASE WHEN used_day = ${day}::date THEN used_count ELSE 0 END < daily_limit)
@@ -39,7 +47,7 @@ export async function reserveAnalysis(userId: string, id: string) {
 export async function releaseAnalysis(userId: string, id: string, refund: boolean) {
   // used_count son rezervasyon gününe ait; gece yarısında biten başarısız iş de iade edilir.
   await db.execute(sql`UPDATE ai_analysis_access SET lock_id = NULL,
-    lock_until = CASE WHEN ${refund} THEN now() + interval '1 minute' ELSE NULL END,
+    lock_until = CASE WHEN ${refund} THEN now() + ${COOLDOWN_INTERVAL} ELSE NULL END,
     used_count = CASE WHEN ${refund} THEN GREATEST(0, used_count - 1) ELSE used_count END
     WHERE user_id = ${userId}::uuid AND lock_id = ${id}::uuid`);
 }
