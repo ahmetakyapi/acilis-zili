@@ -1,10 +1,11 @@
 import { Panel, PanelHeader } from "@/components/ui/primitives";
+import { HorizonWeekNav } from "./HorizonWeekNav";
 import { analysisHref } from "@/lib/analysis";
 import type { AnalysisBadge } from "@/lib/data";
 import { earningsHref } from "@/lib/earnings-company";
-import { capCell, horizonLead, laneSlots, peakCell, peakDay, tileScale, tileTierOf } from "@/lib/earnings-horizon";
+import { capCell, horizonLead, horizonWhen, laneSlots, peakCell, peakDay, tileScale, tileTierOf } from "@/lib/earnings-horizon";
 import { loadHorizonKarne } from "@/lib/earnings-horizon-data";
-import { dayLabel, epsSurprise, laneOf, WEEK_MAX_NAMES, weekRangeLabel, type ScheduleRow, type WeekLane } from "@/lib/earnings-week";
+import { currentWeekStart, dayLabel, epsSurprise, laneOf, WEEK_MAX_NAMES, weekRangeLabel, type ScheduleRow, type WeekLane } from "@/lib/earnings-week";
 import type { EarningsWeek } from "@/lib/earnings-week-data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { zoneTag } from "@/lib/session-clock";
@@ -40,6 +41,16 @@ import styles from "./EarningsHorizon.module.css";
  * Hafta HAFTALIK SEKMENİN haftası (`currentWeekStart`): iş günü içinde bu
  * hafta, hafta sonu gelecek hafta. Takvimin "Hafta/Ay" anahtarı listeyi
  * yönetiyor; ufuk her zaman bir iş haftası.
+ *
+ * HAFTA HAFTA GEZİNME (8 Kasım, sahibinin isteği: "buradaki şeyleri hafta
+ * hafta gezebilelim"). Başlığın sağında önceki/sonraki hafta okları ve
+ * aralık; adres `?hafta=YYYY-MM-DD` (Haftalık sekmenin parametresiyle aynı
+ * ad ve aynı ayrıştırıcı, `parseWeekParam`), bağlantılar `scroll={false}`.
+ * Seçilen hafta sunucuda okunuyor — karne, karolar ve cümle aynı kaynaktan.
+ * Kayda değer şirketi olmayan haftada panel düşmüyor (geri dönüş okları
+ * kaybolurdu): başlık + gezinme + tek satırlık boş durum. Gezinme
+ * `HORIZON_NAV_WEEKS` hafta ile sınırlı: takvim verisi ileride seyreliyor
+ * ve sonsuz `?hafta=` zinciri tarayıcılara boş sayfa üretiyordu.
  */
 export function EarningsHorizon({
   week,
@@ -47,10 +58,13 @@ export function EarningsHorizon({
   watchSet,
   badges,
   listedDays,
+  extraQuery = "",
   locale,
   t,
 }: {
   week: EarningsWeek;
+  /** Hafta bağlantılarına eklenen öteki parametreler ("aralik=ay"). */
+  extraQuery?: string;
   /** ET takvim günü. */
   today: string;
   /** Aynı sayfadaki listenin kapsadığı günler: "+N" çipi o günün
@@ -63,9 +77,29 @@ export function EarningsHorizon({
   locale: Locale;
   t: Dictionary;
 }) {
-  if (week.failed || week.picked === 0) return null;
   const h = t.calendarVisuals.horizon;
   const w = t.earningsExtra.week;
+  const thisMonday = currentWeekStart(today);
+  const range = weekRangeLabel(week.monday, locale);
+  const nav = (
+    <HorizonWeekNav
+      monday={week.monday}
+      thisMonday={thisMonday}
+      range={range}
+      extraQuery={extraQuery}
+      labels={{ prev: w.prevWeek, next: w.nextWeek, thisWeek: w.thisWeek, nav: h.weekNav }}
+    />
+  );
+  if (week.failed || week.picked === 0) {
+    /* Varsayılan haftada boşsa eski davranış: panel hiç basılmaz. */
+    if (week.monday === thisMonday) return null;
+    return (
+      <Panel className={styles.panel}>
+        <PanelHeader title={h.title} action={nav} />
+        <p className={styles.emptyWeek}>{h.emptyWeek}</p>
+      </Panel>
+    );
+  }
   const laneTitle: Record<WeekLane, string> = { bmo: w.beforeOpen, amc: w.afterClose, other: w.otherTime };
 
   const picked: ScheduleRow[] = week.days.flatMap((day) => [...day.bmo, ...day.amc, ...day.other]);
@@ -128,7 +162,12 @@ export function EarningsHorizon({
       peak: day.date === peakDate && day.closed === null,
       lanes: { bmo: cap(day.bmo, "bmo"), amc: cap(day.amc, "amc"), other: cap(day.other, "other") },
       more: { bmo: cut(day.bmo, "bmo").more, amc: cut(day.amc, "amc").more, other: cut(day.other, "other").more },
-      moreHref: listedDays?.has(day.date) ? `#earnings-day-${day.date}` : `/bilancolar/hafta#week-schedule-${day.date}`,
+      /* Liste yalnız bugünden ileriyi kapsıyor; gezilen başka haftanın
+         "+N"i Haftalık sekmede AYNI haftaya gider. */
+      moreHref:
+        week.monday === thisMonday && listedDays?.has(day.date)
+          ? `#earnings-day-${day.date}`
+          : `/bilancolar/hafta${week.monday === thisMonday ? "" : `?hafta=${week.monday}`}#week-schedule-${day.date}`,
       moreLabel: h.moreLabel.replace("{day}", label.weekday),
     };
   });
@@ -155,7 +194,8 @@ export function EarningsHorizon({
   const numberFormat = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US");
   const lead = horizonLead({
     count: week.total,
-    upcoming: today < week.monday,
+    when: horizonWhen(week.monday, thisMonday, today),
+    range,
     peak,
     weekday: peak ? dayLabel(peak.date, locale).weekday : null,
     words: h,
@@ -188,9 +228,12 @@ export function EarningsHorizon({
 
   return (
     <Panel className={styles.panel} data-motion-reveal>
-      <PanelHeader title={h.title} meta={<span className={styles.meta}>{weekRangeLabel(week.monday, locale)}</span>} />
+      <PanelHeader title={h.title} action={nav} />
       <p className={styles.lead}>{lead}</p>
+      {/* `key` hafta: gezinmede seçim durumu (karo, telefonun açık günü)
+          önceki haftadan taşınmasın; yeni hafta kısa bir girişle oturur. */}
       <HorizonGrid
+        key={week.monday}
         days={days}
         lanes={lanes}
         karne={karne}

@@ -23,7 +23,8 @@ import {
   getUserSymbols,
 } from "@/lib/data";
 import { getVoteBoard } from "@/lib/earnings-vote-data";
-import { currentWeekStart } from "@/lib/earnings-week";
+import { currentWeekStart, parseWeekParam } from "@/lib/earnings-week";
+import { HORIZON_NAV_WEEKS } from "@/lib/earnings-horizon";
 import { getEarningsWeek } from "@/lib/earnings-week-data";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { getI18n } from "@/lib/i18n";
@@ -72,6 +73,11 @@ type RangeKey = keyof typeof RANGES;
 /** Takvimin üstündeki "son yazılan analizler" şeridinin çip sayısı. */
 const RECENT_ANALYSES = 8;
 
+/** İki pazartesi arasındaki hafta sayısı (UTC günleri; yaz saati etkilemez). */
+function weeksBetween(from: string, to: string): number {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / (7 * 86_400_000));
+}
+
 export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   const search = await props.searchParams;
   const range: RangeKey = search.aralik === "ay" ? "ay" : "hafta";
@@ -85,6 +91,17 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
   const { locale, t } = await getI18n();
   const session = await auth();
   const today = todayEt();
+  /* UFKUN HAFTASI ADRESTEN (8 Kasım, sahibinin isteği: "hafta hafta
+     gezebilelim"). `?hafta=` Haftalık sekmeyle aynı parametre ve aynı
+     ayrıştırıcı; sınır dışındaki tarih (`HORIZON_NAV_WEEKS`) varsayılana
+     düşer. Liste ve oylama bugünden ileriye bakmaya devam ediyor — gezinme
+     yalnız ufku değiştirir. */
+  const thisMonday = currentWeekStart(today);
+  const askedWeek = typeof search.hafta === "string" ? parseWeekParam(search.hafta) : null;
+  const horizonMonday =
+    askedWeek && Math.abs(weeksBetween(thisMonday, askedWeek)) <= HORIZON_NAV_WEEKS
+      ? askedWeek
+      : thisMonday;
 
   /* İki sorgu BİRBİRİNE BAĞLI DEĞİL ama sıralı bekleniyordu: takvim
      dönmeden takip listesi istenmiyordu ve sayfada Suspense sınırı da
@@ -114,7 +131,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
     getAnalyses(locale, { limit: RECENT_ANALYSES }),
     userId ? getVoteBoard(userId, today, rangeEnd) : Promise.resolve(null),
     userId ? getHolidays() : Promise.resolve([]),
-    getEarningsWeek(currentWeekStart(today), locale),
+    getEarningsWeek(horizonMonday, locale),
   ]);
 
   const meta = await getSymbolNames([
@@ -231,6 +248,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
         watchSet={new Set(userSymbols)}
         badges={badges}
         listedDays={new Set(rows.map((row) => row.reportDate))}
+        extraQuery={range === "ay" ? "aralik=ay" : ""}
         locale={locale}
         t={t}
       />

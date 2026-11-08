@@ -183,12 +183,31 @@ export function peakCell(
 export type LeadWords = {
   leadThis: string;
   leadNext: string;
+  leadPast: string;
+  leadEarlier: string;
+  leadLater: string;
   peakMany: string;
   peakOne: string;
   windowBmo: string;
   windowAmc: string;
   windowOther: string;
 };
+
+export type HorizonWhen = "this" | "next" | "past" | "earlier" | "later";
+
+/** Haftanın bugüne göre yeri. `thisMonday` ufkun varsayılan haftası
+    (`currentWeekStart`: iş günü içinde bu hafta, hafta sonu gelecek hafta).
+    Hafta sonu varsayılan "Gelecek hafta"dır; biten hafta ise "Geçen hafta"
+    DEĞİL (pazar günü okur onu "bu hafta" diye de anıyor) — belirsiz kalmasın
+    diye tarih aralığıyla anlatılır (`earlier`). Uzak haftalar da aralıkla. */
+export function horizonWhen(monday: string, thisMonday: string, today: string): HorizonWhen {
+  const weeks = Math.round((Date.parse(`${monday}T00:00:00Z`) - Date.parse(`${thisMonday}T00:00:00Z`)) / (7 * 86_400_000));
+  const weekend = today < thisMonday;
+  if (weeks === 0) return weekend ? "next" : "this";
+  if (weeks === 1 && !weekend) return "next";
+  if (weeks === -1 && !weekend) return "past";
+  return weeks < 0 ? "earlier" : "later";
+}
 
 /**
  * Tepedeki tek cümle. "Bu hafta 963 bilanço var; en büyükleri Çarşamba
@@ -201,7 +220,8 @@ export type LeadWords = {
  */
 export function horizonLead({
   count,
-  upcoming,
+  when,
+  range = "",
   peak,
   weekday,
   words,
@@ -209,8 +229,12 @@ export function horizonLead({
   formatCount,
 }: {
   count: number;
-  /** Hafta bugünden sonra mı başlıyor. */
-  upcoming: boolean;
+  /** Haftanın bugüne göre yeri (`horizonWhen`): ufuk hafta hafta gezildiği
+      için (8 Kasım) cümle geçmiş haftayı "açıklandı", uzak haftayı tarih
+      aralığıyla anlatıyor. */
+  when: HorizonWhen;
+  /** "9–13 Kasım" — yalnız uzak haftalarda cümleye girer. */
+  range?: string;
   peak: PeakCell | null;
   /** Zirve hücresinin gün adı ("Çarşamba"). */
   weekday: string | null;
@@ -218,7 +242,8 @@ export function horizonLead({
   listFormat: (items: string[]) => string;
   formatCount: (value: number) => string;
 }): string {
-  const head = (upcoming ? words.leadNext : words.leadThis).replace("{count}", formatCount(count));
+  const template = { this: words.leadThis, next: words.leadNext, past: words.leadPast, earlier: words.leadEarlier, later: words.leadLater }[when];
+  const head = template.replace("{count}", formatCount(count)).replace("{range}", range);
   if (!peak || !weekday || peak.symbols.length === 0) return `${head}.`;
   const window =
     peak.lane === "bmo" ? words.windowBmo : peak.lane === "amc" ? words.windowAmc : words.windowOther;
@@ -300,3 +325,8 @@ export async function runKarneRound(
   }
   return { marks, complete, limited, calls };
 }
+
+/** Ufkun hafta gezinmesi bugünün haftasından en çok bu kadar ileri ve geri
+    gider (8 Kasım). Takvim verisi birkaç haftadan sonra seyreliyor; sınırsız
+    `?hafta=` zinciri tarayıcılara boş sayfa üretirdi. */
+export const HORIZON_NAV_WEEKS = 8;

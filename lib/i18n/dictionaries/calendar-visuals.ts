@@ -33,6 +33,13 @@ export const calendarVisualsTr = {
     /** Başlığın sağındaki künye: "26–30 Ekim". */
     leadThis: "Bu hafta {count} bilanço var",
     leadNext: "Gelecek hafta {count} bilanço var",
+    leadPast: "Geçen hafta {count} bilanço açıklandı",
+    leadEarlier: "{range} haftasında {count} bilanço açıklandı",
+    leadLater: "{range} haftasında {count} bilanço var",
+    /** Hafta gezinmesi (8 Kasım): seçilen haftada kayda değer şirket yok. */
+    emptyWeek: "Seçilen haftanın takviminde henüz kayda değer bilanço yok.",
+    /** Hafta adımının ekran okuyucu etiketi. */
+    weekNav: "Ufkun haftası",
     peakMany: "; en büyükleri {day} {window}: {symbols}.",
     peakOne: "; en büyüğü {day} {window}: {symbols}.",
     /** Cümle içindeki pencere adları (cümle düzeni). */
@@ -103,6 +110,11 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     title: "The Week's Earnings Horizon",
     leadThis: "{count} reports this week",
     leadNext: "{count} reports next week",
+    leadPast: "{count} companies reported last week",
+    leadEarlier: "{count} companies reported in the week of {range}",
+    leadLater: "{count} reports in the week of {range}",
+    emptyWeek: "No notable reports on the selected week's calendar yet.",
+    weekNav: "Horizon week",
     peakMany: "; the largest come {day} {window}: {symbols}.",
     peakOne: "; the largest comes {day} {window}: {symbols}.",
     windowBmo: "before the open",

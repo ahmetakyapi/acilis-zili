@@ -2,7 +2,7 @@ import test from "node:test";
 import assert from "node:assert/strict";
 
 import { DEVIATION_REACH, deviationSpans, formatDeviation, releaseDeviation, roundedDiff, seriesKey } from "../lib/release-deviation";
-import { horizonLead, KARNE_CONCURRENCY, karneMarks, peakCell, runKarneRound, tileScale, type KarneFetch } from "../lib/earnings-horizon";
+import { horizonLead, horizonWhen, KARNE_CONCURRENCY, karneMarks, peakCell, runKarneRound, tileScale, type KarneFetch } from "../lib/earnings-horizon";
 import { buyWindowPassed, dividendHighlights, firstBuyableDay, orderDayRows } from "../lib/dividend-groups";
 import { calendarVisualsEn, calendarVisualsTr } from "../lib/i18n/dictionaries/calendar-visuals";
 
@@ -113,17 +113,40 @@ test("tepe cümlesi: şablon + veri, iki dil", () => {
   const listEn = (items: string[]) => new Intl.ListFormat("en-US", { type: "conjunction" }).format(items);
   const peak = peakCell(ROWS);
   assert.equal(
-    horizonLead({ count: 963, upcoming: false, peak, weekday: "Çarşamba", words: calendarVisualsTr.horizon, listFormat: listTr, formatCount: (n) => n.toLocaleString("tr-TR") }),
+    horizonLead({ count: 963, when: "this", peak, weekday: "Çarşamba", words: calendarVisualsTr.horizon, listFormat: listTr, formatCount: (n) => n.toLocaleString("tr-TR") }),
     "Bu hafta 963 bilanço var; en büyükleri Çarşamba kapanış sonrası: MSFT, GOOGL ve META.",
   );
   assert.equal(
-    horizonLead({ count: 34, upcoming: true, peak: { date: "2026-10-27", lane: "bmo", symbols: ["KO"] }, weekday: "Tuesday", words: calendarVisualsEn.horizon, listFormat: listEn, formatCount: String }),
+    horizonLead({ count: 34, when: "next", peak: { date: "2026-10-27", lane: "bmo", symbols: ["KO"] }, weekday: "Tuesday", words: calendarVisualsEn.horizon, listFormat: listEn, formatCount: String }),
     "34 reports next week; the largest comes Tuesday before the open: KO.",
   );
   assert.equal(
-    horizonLead({ count: 1200, upcoming: false, peak: null, weekday: null, words: calendarVisualsTr.horizon, listFormat: listTr, formatCount: (n) => n.toLocaleString("tr-TR") }),
+    horizonLead({ count: 1200, when: "this", peak: null, weekday: null, words: calendarVisualsTr.horizon, listFormat: listTr, formatCount: (n) => n.toLocaleString("tr-TR") }),
     "Bu hafta 1.200 bilanço var.",
   );
+  assert.equal(
+    horizonLead({ count: 1120, when: "past", peak: null, weekday: null, words: calendarVisualsTr.horizon, listFormat: listTr, formatCount: (n) => n.toLocaleString("tr-TR") }),
+    "Geçen hafta 1.120 bilanço açıklandı.",
+  );
+  assert.equal(
+    horizonLead({ count: 40, when: "later", range: "23–27 Kasım", peak: null, weekday: null, words: calendarVisualsTr.horizon, listFormat: listTr, formatCount: String }),
+    "23–27 Kasım haftasında 40 bilanço var.",
+  );
+});
+
+test("ufkun haftası bugüne göre: bu, gelecek, geçen, uzak", () => {
+  /* Salı: varsayılan bu hafta. */
+  assert.equal(horizonWhen("2026-11-09", "2026-11-09", "2026-11-10"), "this");
+  assert.equal(horizonWhen("2026-11-16", "2026-11-09", "2026-11-10"), "next");
+  assert.equal(horizonWhen("2026-11-02", "2026-11-09", "2026-11-10"), "past");
+  assert.equal(horizonWhen("2026-10-26", "2026-11-09", "2026-11-10"), "earlier");
+  assert.equal(horizonWhen("2026-11-23", "2026-11-09", "2026-11-10"), "later");
+  /* Pazar: varsayılan gelecek hafta; biten hafta tarih aralığıyla. */
+  assert.equal(horizonWhen("2026-11-09", "2026-11-09", "2026-11-08"), "next");
+  assert.equal(horizonWhen("2026-11-02", "2026-11-09", "2026-11-08"), "earlier");
+  assert.equal(horizonWhen("2026-11-16", "2026-11-09", "2026-11-08"), "later");
+  /* Yaz saati geçişini kapsayan aralık da tam hafta sayılır (UTC günleri). */
+  assert.equal(horizonWhen("2026-11-02", "2026-10-26", "2026-10-27"), "next");
 });
 
 const div = (symbol: string, exDate: string, yieldPct: number | null) => ({ dividend: { symbol, exDate }, yieldPct });

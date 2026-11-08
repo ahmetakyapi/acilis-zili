@@ -357,7 +357,9 @@ function Tile({
         onClick={onSelect}
       >
         <span className={styles.karo}>
-          <LogoTile symbol={tile.symbol} logoUrl={tile.logoUrl} size="md" className={styles.logo} />
+          {/* `lg` kaynağı (44 px, 2× yoğunlukta 88): geniş ekranda karo 52'ye
+              kadar büyüyor, 32'lik görsel bulanıklaşırdı. Boy CSS'ten. */}
+          <LogoTile symbol={tile.symbol} logoUrl={tile.logoUrl} size="lg" className={styles.logo} />
           {tile.watched && (
             <span aria-hidden className={styles.star}>
               ★

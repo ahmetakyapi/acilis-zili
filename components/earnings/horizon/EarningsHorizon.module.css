@@ -30,7 +30,6 @@
    ========================================================================== */
 
 .panel { overflow: clip; }
-.meta { font-size: 12px; color: var(--text-muted); white-space: nowrap; }
 
 /* Tepedeki tek cümle — veriden (`horizonLead`). */
 .lead {
@@ -474,8 +473,17 @@
      kırpılması 0, yatay taşma 0; 1280'de kart 43×78,
      1180–1399'da logo 28 → 34. */
   .tiles { grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 5px 4px; }
-  .tiles .logo { width: 40px; height: 40px; border-radius: 10px; }
-  .tile { gap: 5px; padding: 7px 3px 8px; }
+  /* LOGO KARTI DOLDURUR (8 Kasım, sahibinin isteği: "logolar bir tık daha
+     büyüyebiliyorsa büyütelim; ekrana oturacak şekilde kalıyorsa"). Sabit
+     40 yerine kartın iç genişliği, tavan 52: geniş ekranda boşa kalan alan
+     logoya gidiyor, sütun sayısı (ve satır sayısı) değişmiyor. Yan dolgu
+     3 → 2. Ölçüldü (TR, açık/koyu, 9–13 Kasım örnek haftası, dört kart
+     sırası): logo 1440'ta 40 → 44, 1920'de 40 → 52; ufuk paneli 1440'ta
+     649 → 667 (+18; 1440×900'de alt kenar ~861, piyasa şeridinin üstünde),
+     1920'de 649 → 697. 1180–1399 aralığı 34'te kaldı (aşağıda): 1280×800'de
+     +18 piksel okuma şeridini ilk ekranın dışına itiyordu. Yatay taşma 0. */
+  .tiles .logo { width: min(100%, 52px); height: auto; aspect-ratio: 1; border-radius: 10px; }
+  .tile { gap: 5px; padding: 7px 2px 8px; }
   .tileSymbol { font-size: 12.5px; }
   .lane { padding-block: 5px; }
   .dayHead { gap: 4px 8px; padding: 6px 8px 5px; }
@@ -496,6 +504,9 @@
    Sütun ~45 piksel: "GOOGL" 12,5 puntoda 43 piksel tutup kırpılıyordu,
    bu aralıkta sembol 12 ve harf aralığı sıkı. */
 @media (min-width: 1180px) and (max-width: 1399px) {
+  /* 34'te SABİT (8 Kasım): yukarıdaki büyütme 800 piksellik yükseklikte
+     sığmıyor. Yan dolgu 2'ye inince 1280'de "TTWO", "CRWV" kırpılması
+     2 → 0 (ölçüldü). */
   .tiles .logo { width: 34px; height: 34px; border-radius: 9px; }
   .tileSymbol { font-size: 12px; letter-spacing: -0.035em; }
 }
@@ -655,3 +666,87 @@
   .readoutLogo { width: 32px; height: 32px; }
   .readoutWhen { flex-wrap: nowrap; }
 }
+
+/* ==========================================================================
+   HAFTA ADIMI (8 Kasım, sahibinin isteği: "hafta hafta gezebilelim").
+   Gerekçe `HorizonWeekNav.tsx`. Ray `--surface-sunken` + `--shadow-well`
+   (alan ve ray dili, globals.css "GÖLGE MERDİVENİ"); oklar 30 piksellik
+   yuvarlak, dokunma alanı `.tap-44`. Aralık sabit en küçük genişlikte ki
+   "2–6 Kasım" ile "26–30 Ekim" arasında oklar yer değiştirmesin.
+   ========================================================================== */
+.weekNav { display: inline-flex; align-items: center; gap: 8px; }
+.weekRail {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  padding: 3px;
+  border-radius: 999px;
+  background: var(--surface-sunken);
+  box-shadow: var(--shadow-well);
+}
+.weekStep {
+  position: relative;
+  display: inline-grid;
+  width: 30px;
+  height: 30px;
+  place-items: center;
+  border-radius: 999px;
+  color: var(--text-body);
+  transition: background-color .2s var(--ease-brand), color .2s var(--ease-brand), box-shadow .2s var(--ease-brand);
+}
+a.weekStep { background: var(--surface-solid); box-shadow: var(--shadow-raised); }
+@media (hover: hover) {
+  a.weekStep:hover { color: var(--primary-ink); }
+  a.weekStep:hover .weekIcon { translate: var(--nudge, 0) 0; }
+}
+a.weekStep[aria-label]:first-child { --nudge: -2px; }
+a.weekStep[aria-label]:last-child { --nudge: 2px; }
+a.weekStep:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.weekStep[aria-disabled="true"] { color: var(--text-muted); opacity: .45; }
+.weekIcon { display: inline-grid; place-items: center; transition: translate .2s var(--ease-brand); }
+@media (prefers-reduced-motion: no-preference) {
+  .weekIcon[data-pending] { animation: weekPulse .9s var(--ease-brand) infinite alternate; }
+}
+@keyframes weekPulse { from { opacity: 1; } to { opacity: .3; } }
+.weekRange {
+  min-width: 9.5em;
+  padding-inline: 8px;
+  font-size: 13px;
+  font-weight: 700;
+  color: var(--text-strong);
+  text-align: center;
+  white-space: nowrap;
+}
+.weekHome {
+  position: relative;
+  font-size: 12.5px;
+  font-weight: 650;
+  color: var(--primary-ink);
+  white-space: nowrap;
+}
+@media (hover: hover) { .weekHome:hover { color: var(--primary-hover); } }
+@media (max-width: 379px) { .weekRange { min-width: 0; padding-inline: 4px; font-size: 12px; } }
+
+/* Gezinmede yeni hafta kısa bir girişle oturur (`key` hafta). Yalnız
+   saydamlık + 4 piksel: ızgara yüksekliği değişmez, CLS yok. */
+@media (prefers-reduced-motion: no-preference) {
+  .grid { animation: weekIn .32s var(--ease-brand) both; }
+}
+@keyframes weekIn { from { opacity: 0; translate: 0 4px; } }
+
+/* Boş hafta: tek satır, ama ızgaranın yerini tutan çukur bir alanda —
+   gezinirken panel 600 piksellikten 90 pikselliğe çökmesin, oklar elin
+   altından kaçmasın (sahne yok: panel içi tek satırlık boş durum kuralı). */
+.emptyWeek {
+  display: grid;
+  min-height: 240px;
+  margin: 0 20px 20px;
+  padding: 24px;
+  place-items: center;
+  border-radius: var(--radius-lg);
+  background: var(--surface-sunken);
+  font-size: var(--text-small);
+  color: var(--text-muted);
+  text-align: center;
+}
+@media (max-width: 639px) { .emptyWeek { min-height: 180px; margin-inline: 16px; } }
