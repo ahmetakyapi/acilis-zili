@@ -5,7 +5,8 @@ import { db } from "@/lib/db";
 import { getDictionary } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import type { MarketStatus } from "@/lib/market-hours";
-import { notifyUser } from "@/lib/notifications";
+import { alertPhase } from "@/lib/alert-phase";
+import { logNotifyFailure, notifyUser } from "@/lib/notifications";
 import { alertCrossed, sessionReadings, type PriceAlert, type SessionQuote } from "@/lib/price-alerts";
 import { priceAlerts } from "@/lib/schema";
 
@@ -43,7 +44,8 @@ export async function settleAlerts(
   const now = new Date();
   const hits = alerts.filter((alert) => {
     const price = prices[alert.symbol];
-    return !alert.triggeredAt && price != null && price > 0 && alertCrossed(alert, price);
+    /* Evre tek kaynaktan (lib/alert-phase.ts) — tarama ve düğme de aynısını okur. */
+    return alertPhase(alert, now) === "armed" && price != null && price > 0 && alertCrossed(alert, price);
   });
   if (hits.length === 0) return alerts;
 
@@ -79,7 +81,7 @@ export async function settleAlerts(
           },
           withLocale,
           { alertId: alert.id, kind: "price", symbol: alert.symbol, direction: alert.direction, target: alert.target, price, firedAt: now },
-        ).catch(() => 0);
+        ).catch(logNotifyFailure);
       }
     });
   }

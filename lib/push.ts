@@ -182,6 +182,7 @@ const PUSH_TIMEOUT_MS = 10_000;
 export async function deliverPush(
   subscription: { endpoint: string; keys: { p256dh: string; auth: string } },
   body: string,
+  timeoutMs: number = PUSH_TIMEOUT_MS,
 ): Promise<number> {
   if (!pushEndpointAllowed(subscription.endpoint)) return 410;
   if (!pushKeysValid(subscription.keys.p256dh, subscription.keys.auth)) return 410;
@@ -203,7 +204,7 @@ export async function deliverPush(
       body: details.body ? new Uint8Array(details.body) : undefined,
       redirect: "manual",
       cache: "no-store",
-      signal: AbortSignal.timeout(PUSH_TIMEOUT_MS),
+      signal: AbortSignal.timeout(timeoutMs),
     });
     await response.body?.cancel().catch(() => undefined);
     return response.status;
@@ -240,12 +241,17 @@ export async function sendToUser(
   const delivered: string[] = [];
   const bodyFor = (locale: string) =>
     JSON.stringify(typeof payload === "function" ? payload(locale === "en" ? "en" : "tr") : payload);
+  let failed = 0;
   await Promise.all(
     rows.map(async (row) => {
-      const status = await deliverPush(
-        { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } },
-        bodyFor(row.locale),
-      );
+      const subscription = { endpoint: row.endpoint, keys: { p256dh: row.p256dh, auth: row.auth } };
+      const body = bodyFor(row.locale);
+      let status = await deliverPush(subscription, body);
+      if (pushRetryable(status)) {
+        await new Promise((resolve) => setTimeout(resolve, PUSH_RETRY_DELAY_MS));
+        status = await deliverPush(subscription, body, PUSH_RETRY_TIMEOUT_MS);
+      }
+      if (status === 0 || pushRetryable(status)) failed += 1;
       if (status >= 200 && status < 300) delivered.push(row.id);
       else if (status === 404 || status === 410) dead.push(row.id);
       /* 401/403 KALICI RET (17 Ekim denetimi): VAPID anahtarı değişince FCM
@@ -265,8 +271,26 @@ export async function sendToUser(
   } catch {
     // Bakım yazması düşerse bir sonraki gönderim yeniden dener.
   }
+  /* Uç adres ve kullanıcı günlüğe yazılmaz (adres okuyucudan gelir). */
+  if (failed > 0) console.error(`[push] ${failed}/${rows.length} cihaza geçici hatayla ulaşılamadı`);
   return delivered.length;
 }
+
+/**
+ * GEÇİCİ HATADA BİR KEZ DAHA (8 Kasım). Alarm tetiği `triggeredAt` ile
+ * kapanıyor; bildirim o an gitmezse sonraki tarama alarmı bir daha okumaz.
+ * Yalnız 5xx yeniden denenir: push servisi isteği AÇIKÇA kabul etmedi.
+ * Zaman aşımı ve ağ hatası (0) DENENMEZ — istek servise ulaşmış olabilir
+ * ve `public/sw.js` etiketli bildirimi `renotify` ile yeniden çaldırır:
+ * telefon aynı alarm için iki kez öterdi (e-postadaki ilke, lib/email.ts →
+ * EmailResult). İkinci deneme kısa süreli: tarama tavanının hesabı
+ * app/api/cron/alarmlar/route.ts → SWEEP_BUDGET_MS.
+ */
+export function pushRetryable(status: number): boolean {
+  return status >= 500 && status < 600;
+}
+const PUSH_RETRY_DELAY_MS = 1_000;
+const PUSH_RETRY_TIMEOUT_MS = 4_000;
 
 /**
  * Kullanıcı başına cihaz TAVANI. Öteki yazma yollarının hepsi tavanlı

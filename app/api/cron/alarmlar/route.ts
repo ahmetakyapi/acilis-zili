@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
-import { and, eq, inArray, isNull, lte } from "drizzle-orm";
+import { and, eq, inArray, isNull } from "drizzle-orm";
+import { alertPhase } from "@/lib/alert-phase";
 import { checkBearer } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { percentAlerts, priceAlerts, symbols as symbolsTable } from "@/lib/schema";
@@ -18,7 +19,7 @@ import {
 } from "@/lib/alert-sweep";
 import { getDictionary } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
-import { notifyUser } from "@/lib/notifications";
+import { logNotifyFailure, notifyUser } from "@/lib/notifications";
 
 /**
  * Alarm taraması — `deploy/cron-alerts.sh` seans boyunca beş dakikada bir
@@ -50,6 +51,9 @@ import { notifyUser } from "@/lib/notifications";
  * - Yüzde alarmı `createdAt <= şimdi` olunca bakılır: aynı seansta yeniden
  *   kurulan alarm ertesi seansa ertelenir (app/actions/alerts.ts →
  *   rearmPercentAlert), aynı hareket için ikinci bildirim gitmez.
+ *   8 Kasım: bu kural SQL'de (`lte`) değil `alertPhase`te (lib/alert-phase.ts)
+ *   — alarm düğmesinin "Sonraki Seansta Devreye Girer" künyesi aynı
+ *   fonksiyondan okuyor, iki hesap ayrışamaz.
  */
 
 export const dynamic = "force-dynamic";
@@ -59,9 +63,13 @@ export const maxDuration = 60;
  * Tetik kuyruğunun eşzamanlı işçisi ve yeni tetik sahiplenme tavanı —
  * gerekçe GET içinde. 55 sn: tavanda başlamış en uzun tetik (push 10 +
  * posta 10 + 2 + 10 ≈ 32 sn) de biterse yanıt betiğin 90 sn'sine yetişir.
+ * 8 Kasım: 50 sn. Bildirim kanalları geçici hatada bir kez daha deniyor
+ * (gelen kutusu 0,5 sn arayla, push 5xx'te 1 + 4 sn — lib/notifications.ts,
+ * lib/push.ts → pushRetryable); en uzun tetik push 10 + 1 + 4 + posta
+ * 10 + 2 + 10 ≈ 38 sn, 50 + 38 yine 90'ın altında.
  */
 const SWEEP_WORKERS = 6;
-const SWEEP_BUDGET_MS = 55_000;
+const SWEEP_BUDGET_MS = 50_000;
 
 export async function GET(request: Request) {
   const auth = checkBearer(request, process.env.CRON_SECRET);
@@ -82,11 +90,15 @@ export async function GET(request: Request) {
         symbol: priceAlerts.symbol,
         direction: priceAlerts.direction,
         target: priceAlerts.target,
+        createdAt: priceAlerts.createdAt,
+        triggeredAt: priceAlerts.triggeredAt,
       })
       .from(priceAlerts)
       .where(isNull(priceAlerts.triggeredAt));
-    pending = rows.flatMap((row) =>
-      isDirection(row.direction) && Number.isFinite(Number(row.target))
+    pending = rows.flatMap(({ createdAt, triggeredAt, ...row }) =>
+      alertPhase({ createdAt, triggeredAt }, now) === "armed" &&
+      isDirection(row.direction) &&
+      Number.isFinite(Number(row.target))
         ? [{ ...row, direction: row.direction, target: Number(row.target) }]
         : [],
     );
@@ -109,11 +121,16 @@ export async function GET(request: Request) {
         symbol: percentAlerts.symbol,
         direction: percentAlerts.direction,
         thresholdPct: percentAlerts.thresholdPct,
+        createdAt: percentAlerts.createdAt,
+        triggeredAt: percentAlerts.triggeredAt,
       })
       .from(percentAlerts)
-      .where(and(isNull(percentAlerts.triggeredAt), lte(percentAlerts.createdAt, now)));
-    pendingPct = rows.flatMap((row) =>
-      isPercentDirection(row.direction) && Number.isFinite(Number(row.thresholdPct))
+      .where(isNull(percentAlerts.triggeredAt));
+    /* Uyuyan alarm (createdAt ileride) burada elenir — gerekçe başlıkta. */
+    pendingPct = rows.flatMap(({ createdAt, triggeredAt, ...row }) =>
+      alertPhase({ createdAt, triggeredAt }, now) === "armed" &&
+      isPercentDirection(row.direction) &&
+      Number.isFinite(Number(row.thresholdPct))
         ? [{ ...row, direction: row.direction, thresholdPct: Number(row.thresholdPct) }]
         : [],
     );
@@ -219,7 +236,7 @@ export async function GET(request: Request) {
       },
       withLocale,
       { alertId: hit.id, kind: "price", symbol: hit.symbol, direction: hit.direction, target: hit.target, price: hit.price, firedAt: now },
-    ).catch(() => 0);
+    ).catch(logNotifyFailure);
     delivered += sent;
   });
   for (const hit of pctHits) enqueue(hit.userId, async () => {
@@ -244,7 +261,7 @@ export async function GET(request: Request) {
       },
       withLocale,
       { alertId: hit.id, kind: "percent", symbol: hit.symbol, direction: hit.direction, thresholdPct: hit.thresholdPct, changePct: hit.changePct, firedAt: now },
-    ).catch(() => 0);
+    ).catch(logNotifyFailure);
     delivered += sent;
   });
 

@@ -569,8 +569,12 @@ export async function requestPasswordResetAction(
     if (claim !== "claimed" && claim !== "unavailable") return;
     const token = await issueResetToken(found.id);
     const link = token ? `${SITE_URL}${withLocale("/sifre-sifirla", locale)}?anahtar=${token}` : null;
-    const ok = link !== null && (await sendEmail(resetEmail({ to: found.email, username: found.username, link, lang: locale === "en" ? "en" : "tr", requestedAt: new Date(), copy: R.mail })));
-    if (!ok && claim === "claimed") await releaseSend(key);
+    const result = link !== null ? await sendEmail(resetEmail({ to: found.email, username: found.username, link, lang: locale === "en" ? "en" : "tr", requestedAt: new Date(), copy: R.mail })) : null;
+    /* Belirsiz sonuçta da (zaman aşımı, 5xx) satır geri alınır (8 Kasım,
+       lib/email.ts → EmailResult): bu satır yalnız sıfırlama PAYINI sayıyor,
+       tekrarsızlık işi görmüyor — anahtar her istekte yeni. Okuyucu "posta
+       gelmedi" deyip yeniden isterse payından bir kez daha yememeli. */
+    if ((result === null || !result.ok) && claim === "claimed") await releaseSend(key);
   });
   return sent;
 }

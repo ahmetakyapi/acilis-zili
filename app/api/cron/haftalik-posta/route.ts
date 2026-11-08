@@ -219,7 +219,7 @@ async function run(request: Request): Promise<NextResponse> {
     }),
   );
 
-  const counts = { sent: 0, duplicate: 0, failed: 0, skipped: 0 };
+  const counts = { sent: 0, duplicate: 0, failed: 0, unknown: 0, skipped: 0 };
   let budgetHit = false;
 
   for (const [index, recipient] of recipients.entries()) {
@@ -238,6 +238,9 @@ async function run(request: Request): Promise<NextResponse> {
     if (result === "sent") counts.sent += 1;
     else if (result === "duplicate") counts.duplicate += 1;
     else if (result === "failed") counts.failed += 1;
+    /* Sonucu belirsiz posta (lib/email-notify.ts → sendStep): satır kalır,
+       sonraki koşu yeniden göndermez — sayı yanıtta görünsün. */
+    else if (result === "unknown") counts.unknown += 1;
     else if (result === "budget") {
       budgetHit = true;
       unsent += recipients.length - index;

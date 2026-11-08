@@ -20,7 +20,7 @@ export async function sendAlertEmail(userId: string, alert: AlertEmailInput & { 
     `alert:${alert.alertId}:${alert.firedAt.toISOString()}`,
     (r) => alertEmailMessage(r, alert, copy),
   );
-  if (result === "budget" || result === "failed") {
+  if (result === "budget" || result === "failed" || result === "unknown") {
     console.error(`[e-posta] alarm postası gitmedi: ${result}`);
   }
 }

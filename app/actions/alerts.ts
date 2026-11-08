@@ -266,6 +266,9 @@ export async function deletePercentAlert(formData: FormData) {
  * tamamlandığı ana (`sessionEnd`) çekiliyor; tarama `createdAt <= şimdi`
  * şartıyla o ana kadar ona bakmıyor. Satır "Sonraki Seansta Devreye
  * Girer" der. Migration gerekmiyor.
+ *
+ * O "uykuda" evresinin tek tanımı lib/alert-phase.ts → alertPhase (8 Kasım):
+ * tarama, sayfadaki değerlendirme ve satırın künyesi aynı fonksiyonu okur.
  */
 export async function rearmPercentAlert(formData: FormData) {
   const session = await auth();
