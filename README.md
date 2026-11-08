@@ -35,14 +35,16 @@ yazılar, bilanço analizleri ve günde üç kez yenilenen teknik analizler.
 İki dil (TR/EN), açık ve koyu tema, telefondan geniş ekrana tam uyum.
 Ücretsiz, reklamsız, açık kaynak.
 
+<!-- Sayılar 8 Kasım 2026'da kaynaktan sayıldı; yeniden saymanın komutları
+     docs/ROUTEMAP.md → "Canlıda Ne Var". Sahne sayısı: lib/ink/scenes.ts → INK_SCENES. -->
 <table>
 <tr>
-<td align="center"><b>62</b><br><sub>sayfa rotası</sub></td>
-<td align="center"><b>25</b><br><sub>API ucu</sub></td>
-<td align="center"><b>32</b><br><sub>veritabanı tablosu</sub></td>
-<td align="center"><b>5</b><br><sub>veri sağlayıcısı</sub></td>
-<td align="center"><b>5</b><br><sub>içerik rutini</sub></td>
-<td align="center"><b>17</b><br><sub>mürekkep sahnesi</sub></td>
+<td align="center"><b>87</b><br><sub>sayfa rotası</sub></td>
+<td align="center"><b>55</b><br><sub>API ucu</sub></td>
+<td align="center"><b>55</b><br><sub>veritabanı tablosu</sub></td>
+<td align="center"><b>14</b><br><sub>veri sağlayıcısı</sub></td>
+<td align="center"><b>6</b><br><sub>içerik rutini</sub></td>
+<td align="center"><b>21</b><br><sub>mürekkep sahnesi</sub></td>
 <td align="center"><b>2</b><br><sub>dil, her sayfada</sub></td>
 </tr>
 </table>
@@ -79,10 +81,10 @@ Sekiz konu başlığı var ve her biri ayrı bir soruya cevap veriyor.
 | 📈 | **Piyasa bugün nerede?** Endeksler (S&P 500, Nasdaq 100, Dow, Russell 2000), açılışa geri sayım ve seans şeridi, günün en çok yükselen ve düşenleri, piyasa genişliği ve bileşenlerin ısı haritası, tahvil faizleri ve getiri eğrisi, VIX, dünya piyasaları. Bileşenleri ekranda açık duran bir Piyasa Nabzı, on bir SPDR fonuyla sektör performansı, emtia ve kripto fonları. | `/` · `/piyasalar` |
 | 🏢 | **Bu şirket nasıl gidiyor?** Gün içinden beş yıla grafik (alan ya da mum; USD, TL ya da Reel TL), profil, değerleme ve risk ölçüleri, sektör yüzdelikli skor kartı, 52 hafta bandı, analist dağılımı ve aydan aya değişimi, içeriden işlemler, bilanço öncesi beklenen hareket, temettü, haberler, geçmiş bilanço sürprizleri. 1.000'i aşkın şirket sektör şeridiyle ve sıralanabilir bir dizinde; iki ile dört hisse **aynı ölçekte** yan yana, yirmi hazır çift ve on tematik liste. | `/sirketler` · `/hisse/NVDA` · `/karsilastir` · `/tema` |
 | 🧾 | **Kim ne zaman bilanço açıklıyor?** Açılış öncesi mi kapanış sonrası mı, analist EPS ve gelir beklentisi ne, gerçekleşen ne çıktı. Takvim `.ics` olarak kendi takvimine eklenebiliyor, haftası paylaşılabilir bir görsel olarak iniyor. Açıklanan çeyrekler için skorlu uzun analizler, başında "30 Saniyede" özeti, segment ve KPI verisi. | `/bilancolar` · `/bilancolar/hafta` |
-| 🎯 | **Teknik olarak nereden alınır, nerede vazgeçilir?** On beş hissenin her işlem günü üç kez yenilenen analizi: görüş (Al/Tut/Sat), alım bölgesi, hedefler, stop, destek ve direnç, senaryolar. Listede olmayan hisselerde yorumsuz bir teknik fotoğraf. | `/teknik` |
+| 🎯 | **Teknik olarak nereden alınır, nerede vazgeçilir?** Takip listesindeki hisselerin (`lib/technical.ts` → `TECHNICAL_SYMBOLS`) her işlem günü üç kez yenilenen analizi: görüş (Al/Tut/Sat), alım bölgesi, hedefler, stop, destek ve direnç, senaryolar. Listede olmayan hisselerde yorumsuz bir teknik fotoğraf. | `/teknik` |
 | 🧭 | **Ünlü yatırımcılar ne alıp satıyor?** Buffett, Burry, Ackman, Cathie Wood, Dalio ve on bir ismin SEC 13F bildirimlerinden portföyü, bu çeyrek yeni aldıkları, artırdıkları, azalttıkları ve tamamen sattıkları (adet farkıyla, bölünme ayıklanarak); Nancy Pelosi'nin Kongre işlem bildirimleri tutar aralığıyla. Hisse sayfasında "bu hisseyi kim tutuyor". | `/yatirimcilar` |
 | 🏛️ | **Ekonomi ne diyor?** CPI, FOMC, istihdam, PCE; takvimde saatleriyle, beklenti ve gerçekleşenle. On bir FRED serisi, sonraki FOMC kararı, halka arz ve temettü takvimi. | `/makro` · `/takvim` |
-| 📰 | **Bugün ne konuşuluyor, neden?** Siteden çıkmadan okunan haber akışı, her gün yazılan bülten, olayın **mekanizmasını** anlatan Mercek yazıları, borsayı sıfırdan öğreten sıralı bir rehber ve yüz elli terimlik bir sözlük. | `/haberler` · `/bulten` · `/mercek` · `/rehber` · `/sozluk` |
+| 📰 | **Bugün ne konuşuluyor, neden?** Siteden çıkmadan okunan haber akışı, her gün yazılan bülten, olayın **mekanizmasını** anlatan Mercek yazıları, her işlem günü tek grafikle anlatan Günün Grafiği, borsayı sıfırdan öğreten sıralı bir rehber ve yüz elli terimlik bir sözlük. | `/haberler` · `/bulten` · `/mercek` · `/gunun-grafigi` · `/rehber` · `/sozluk` |
 | 🇹🇷 | **Türkiye'den yatırım yapınca lirada ne kaldı?** TCMB kuruyla TL ve (EVDS anahtarı varsa) enflasyondan arındırılmış Reel TL getirisi; yurt dışı hisse vergisi hesaplayıcısı (satış kazancı, Yİ-ÜFE endekslemesi, temettü ve stopaj mahsubu) ve TL maliyetli portföy. | `/vergi` · `/portfoy` |
 
 Bir de kişisel taraf var: çoklu takip listeleri, renkli etiketler, ana sayfada
@@ -107,10 +109,12 @@ hesaplanıyor.
 | Saat (TR, yaz · kış) | Ne oluyor | Nereye bakarsın |
 |---|---|---|
 | **08:30 · 09:30** | Dün açıklanan bilançoların analizleri yayında: skor, görüş, hedef fiyat, güçlü yönler ve riskler. | Bilançolar → Analizler |
+| **09:15 · 09:15** | Dünkü seansın Günün Grafiği: tek grafik ve ~100 kelime (rutin kapanıştan hemen sonraya alınınca 23:25 · 00:25). | Günün Grafiği |
 | **11:30 · 12:30** | Günün ilk Mercek yazısı: bir olayın arkasındaki mekanizma, metinden çizilen grafik ve rakam bloklarıyla. | Mercek |
-| **15:45 · 16:45** | Açılış öncesi teknik analiz: on beş hissenin planı güncellendi. | Teknik Analiz |
+| **15:45 · 16:45** | Açılış öncesi teknik analiz: takip listesindeki hisselerin planı güncellendi. | Teknik Analiz |
 | **16:00 · 17:00** | Günün bülteni: bugün neye bakmalı, takvimde ne var. | Ana sayfa → Günün Özeti |
 | **16:30 · 17:30** | 🔔 **Açılış zili.** Geri sayım sıfırlanır ve zil çalar; endeks kartları, hareket paneli ve gün akışı canlıya geçer. | Ana sayfa |
+| **19:30 · 20:30** | Açılış öncesi açıklanan bilançoların ilk analizleri. | Bilançolar → Analizler |
 | **19:45 · 20:45** | Seans içi teknik analiz. | Teknik Analiz |
 | **21:45 · 22:45** | Kapanışa doğru teknik analiz. | Teknik Analiz |
 | **23:00 · 00:00** | Kapanış zili. Kapanış sonrası bilançolar bu pencerede açıklanır. | Bilançolar |
@@ -201,13 +205,13 @@ flowchart LR
   subgraph Sunucu["Next.js 16 · kendi sunucusu"]
     PL["Sağlayıcı katmanı<br/>canlı → yedek → son bilinen"]
     RSC["Sunucu bileşenleri<br/>istek başına çizim"]
-    API["Korumalı yazma uçları<br/>/api/brief · mercek · analiz · teknik"]
+    API["Korumalı yazma uçları<br/>/api/brief · mercek · analiz · teknik · grafik"]
     CW["lib/content-write.ts<br/>tek doğrulama + tek yazma yolu"]
     CRON["/api/cron/daily<br/>takvim · haber · FRED · profil"]
   end
 
   DB[(Neon PostgreSQL<br/>Drizzle ORM)]
-  RT["claude.ai rutinleri<br/>bülten · mercek · analiz · teknik"]
+  RT["claude.ai rutinleri<br/>bülten · mercek · analiz · teknik · grafik"]
   U((Okuyucu))
 
   AL & FH & FR & TC --> PL
@@ -221,7 +225,7 @@ flowchart LR
 ### Sunucuda İçerik Üreten Model Çağrısı Yok
 
 Sitenin yazılı içeriğini (bülten, Mercek yazıları, bilanço ve teknik
-analizler) claude.ai üzerindeki zamanlanmış rutinler üretir ve korumalı
+analizler, Günün Grafiği) claude.ai üzerindeki zamanlanmış rutinler üretir ve korumalı
 uçlara **yazar**. Sunucu yalnızca veritabanından okur. Yayın gecikirse ekran
 en son yazılanı gösterir ve yenisinin ne zaman geleceğini söyler.
 
@@ -241,7 +245,9 @@ günlük bütçe `lib/claude-budget.ts`; çıktıdaki her sayı girdide geçmek 
 Doğrulama şeması, sürüm fotoğrafı ve upsert `lib/content-write.ts`te.
 Rutinlerin uçları da yönetim panelinin editörleri de oradan geçer. Panelden
 yeni kayıt üretilmez, yalnızca var olan düzeltilir; üzerine yazılan hâlin
-fotoğrafı `story_revisions`a düşer.
+fotoğrafı `story_revisions`a düşer. Yeni ya da değişen Mercek, bülten ve
+Günün Grafiği adresi aynı yoldan IndexNow ile Bing/Yandex'e bildirilir
+(`lib/indexnow.ts`; yalnız dizine açık üretimde, yanıt beklenmez).
 
 ### Üç Katmanlı Veri
 
@@ -455,11 +461,20 @@ FOMC/CPI/istihdam takvimi, sembol listesi ve endeks bileşimleri.
 | Mercek yazısı | her gün 04:30 ve 16:30 NY | `POST /api/mercek` → `/mercek` |
 | Bilanço analizi | her gün 01:30, 12:30, 16:30, 18:30 NY | `POST /api/analiz` → `/bilancolar/analizler` |
 | Teknik analiz | işlem günleri 08:45, 12:45, 14:45 NY | `POST /api/teknik` → `/teknik` |
+| Günün Grafiği | şimdilik Salı–Cumartesi 09:15 TR (önceki seans); hedef işlem günleri 16:25 NY | `POST /api/grafik` → `/gunun-grafigi` |
 
-Beşi de `BRIEF_SECRET` ile korunuyor ve her uç yazdığını geri okuyabiliyor
-(`?slug=`, `?symbol=&period=`, `?symbol=`). Ayrıca dört `context` ucu rutine
-ham veri ve aday listesi veriyor. Prompt'ların tamamı `docs/claude-rutinler.md`
-içinde. Rutinler koddan kurulmaz, claude.ai arayüzünden elle kurulur.
+Uçların hepsi `BRIEF_SECRET` ile korunuyor ve yazdığını geri okuyabiliyor
+(`?date=`, `?slug=`, `?symbol=&period=`, `?symbol=&date=&slot=`); her yazma
+ucunun `/context` eşi rutine ham veri ve aday listesi veriyor. Dört yazı
+rutini ortak yazım kurallarını her koşunun başında `/api/kurallar` ile okur
+(`content/kurallar/*.md`): kural değişikliği bir sonraki koşuda geçerli olur,
+prompt'u yeniden yapıştırmak gerekmez. İki rutin içerik yazmaz: Görev
+Kontrolü düşen koşuyu bir kez yeniden çalıştırır ve yayın boşluğunu
+bildirir, Haftalık Kalite Denetimi geçen haftanın çıktısını kurallara göre
+denetler. Prompt'ların canlı kopyası, cron'ları ve modelleri
+`docs/claude-rutinler.md` içinde. Rutinler koddan kurulmaz, claude.ai
+arayüzünden elle kurulur. Günün Grafiği rutini düşerse sunucunun yedeği
+(`/api/cron/grafik`) o seansı şablonla yazar.
 
 Bilanço rutininin gövdesi dört isteğe bağlı alan taşıyor ve bunlar
 `earnings_analysis_extras`e yazılıyor: `takeaways` (sayfanın başındaki
@@ -567,8 +582,9 @@ saklanmıyor (`private, no-store`).
 
 ## Ekranlar
 
-Rota listesinin **tek kaynağı** burası. 61 sayfa var: 50'si herkese açık
-(ikisi başka sitelere gömülen parça), 11'i yönetim. Hepsi istek başına sunucuda çiziliyor. Her sayfa `/en/...` önekiyle
+Rota listesinin **tek kaynağı** burası. Sayfalar istek başına sunucuda
+çiziliyor; kaç tane olduklarını kaynak söyler (`find app -name page.tsx`,
+yönetim için `find app/admin -name page.tsx`). Her sayfa `/en/...` önekiyle
 İngilizce de açılıyor; önek sunucuda sökülüyor ve adres çubuğunda kalıyor.
 
 ### Ana Akış
@@ -619,7 +635,7 @@ Başlıkta Piyasalar'dan hemen sonra; mobilde Menü'den.
 
 | Rota | Soru |
 |---|---|
-| `/teknik` | On beş hisse bugün teknik olarak nerede: görüş halkası, plan şeridi, risk/getiri rayı |
+| `/teknik` | Takip listesindeki hisseler (`TECHNICAL_SYMBOLS`) bugün teknik olarak nerede: görüş halkası, plan şeridi, risk/getiri rayı |
 | `/teknik/[symbol]` | Nereden alınır, nerede satılır, nerede vazgeçilir: plan, fiyat haritası, gösterge panelleri, senaryolar, görüş geçmişi |
 
 ### Okuma
@@ -639,7 +655,7 @@ açarsa yayımlanır ve kapattığı an adres yeniden 404 olur.
 
 | Rota | Soru |
 |---|---|
-| `/u/[kullanici]` | Bu üye kim: profil karosu, rozetler (Erken Üye, üyelik yılı, Yazar), tanıtım, yayındaki yazıları; sahibi açtıysa takip listeleri (notlar asla) ve tutar içermeyen portföy dağılımı — ağırlık yüzdeleri, sitenin alış günlerinden kendisi hesapladığı Doğrulanmış Getiri ve aynı dönemde SPY kıyası |
+| `/u/[username]` | Bu üye kim: profil karosu, rozetler (Erken Üye, üyelik yılı, Yazar), tanıtım, yayındaki yazıları; sahibi açtıysa takip listeleri (notlar asla) ve tutar içermeyen portföy dağılımı — ağırlık yüzdeleri, sitenin alış günlerinden kendisi hesapladığı Doğrulanmış Getiri ve aynı dönemde SPY kıyası |
 | `/topluluk` | Üyeler ne yazdı: moderasyondan geçmiş yazıların akışı, yazar künyesiyle |
 | `/topluluk/[slug]` | Tek topluluk yazısı: Mercek'le aynı ::: blok çizimi, yazar imzası, sorumluluk notu ve bildirim bağlantısı |
 
@@ -647,7 +663,7 @@ açarsa yayımlanır ve kapattığı an adres yeniden 404 olur.
 
 `/giris` · `/kayit` · `/sifremi-unuttum` · `/sifre-sifirla` (e-postayla tek kullanımlık, 30 dakikalık bağlantı; yalnızca e-posta servisi bağlıyken — `lib/email.ts`, `lib/password-reset.ts`) · `/e-posta/onay` (bildirim postaları için adres onayı, 48 saatlik tek kullanımlık bağlantı; onay düğmeyle verilir) · `/e-posta/ayril` (girişsiz abonelikten çıkış: alarm postası, pazar özeti ya da ikisi; ikisi de dizine girmez) · `/favoriler` (fiyatlar USD ya da TL; Fiyat ve yüzde alarmları paneli — hisse sayfasındaki zil düğmesiyle kurulur (hedef fiyat ya da günlük değişim eşiği), siteyi açtığında ve seans boyunca beş dakikada bir sunucuda güncel fiyatla kontrol edilir, ana sayfada "Hedefe Ulaştı" şeridi; `lib/price-alerts.ts`, `lib/alert-sweep.ts`) · `/ayarlar` (profil
 ikonu ve rengi, herkese açık profil — tanıtım + görünürlük anahtarları,
-varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri ve hesap genelinde bilanço hatırlatması — `lib/push.ts`, `public/sw.js`, `app/api/cron/bilanco` —, e-posta bildirimleri (alarm postası ve pazar özeti; varsayılan kapalı, adres çift onaylı — `lib/email-notify.ts`), Verilerimi İndir, hesap silme) · `/bildirimler` (bildirim kutusu: alarm, bilanço ve moderasyon bildirimleri; başlıktaki zil okunmamışları sayar, push kapalı cihazda da kayıt kalır. Oturum ister, dizine girmez) · `/yazilarim` (topluluk yazıların: taslak, kuyruk, yayın; editör şablonlarla açılır (`?sablon=`), ::: blokları ve yanında canlı önizleme — `/yazilarim/yeni` ve `/yazilarim/[id]`. Oturum ister, dizine girmez) · `/raporum` (Zil Raporu: üyelik, seans sayısı, takip, alarm, portföy getirisi vs SPY ve yazılar — bölüm bölüm kayan kişisel özet, her sayı hesabın kendi verisinden; tutar yok. Oturum ister, dizine girmez) · `/analizlerim` (Claude ile üretilen kayıtlı raporlar; görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, satır raporu `/claude/[symbol]?rapor=` ile açar; yalnız analiz erişimi olan hesaplarda menüde, dizine girmez) · `/menu` · `/kvkk` ·
+varsayılan gizli —, tema, dil, şifre değiştirme, cihaz başına Web Push bildirimleri ve hesap genelinde bilanço hatırlatması — `lib/push.ts`, `public/sw.js`, `app/api/cron/bilanco` —, e-posta bildirimleri (alarm postası ve pazar özeti; varsayılan kapalı, adres çift onaylı — `lib/email-notify.ts`), Verilerimi İndir, hesap silme) · `/bildirimler` (bildirim kutusu: alarm, bilanço ve moderasyon bildirimleri; başlıktaki zil okunmamışları sayar, push kapalı cihazda da kayıt kalır. Oturum ister, dizine girmez) · `/yazilarim` (topluluk yazıların: taslak, kuyruk, yayın; editör şablonlarla açılır (`?sablon=`), ::: blokları ve yanında canlı önizleme — `/yazilarim/yeni` ve `/yazilarim/[id]`. Oturum ister, dizine girmez) · `/raporum` (Zil Raporu: üyelik, seans sayısı, takip, alarm, portföy getirisi vs SPY ve yazılar — bölüm bölüm kayan kişisel özet, her sayı hesabın kendi verisinden; tutar yok. Oturum ister, dizine girmez) · `/analizlerim` (kendi topluluk yazıların ve Claude ile ürettiğin kayıtlı raporlar; rapor kartında görüş, puan, vade ve Rapordan Bugüne fiyat değişimi, kart raporu `/claude/[symbol]?rapor=` ile açar; menüde yalnız analiz erişimi olan hesaplarda, dizine girmez) · `/risk` (Risk Masası: kişiye özel portföy ve rejim ekranı — rejim kartı, pozisyon kartları, ana göstergeler, geriye dönük test ve kullanıcının kendi kuralları; kural tetiklenince Web Push (`/api/cron/risk`). Erişimi olmayana başlık dahil 404, menüde yalnız erişimi olana görünür, dizine ve site haritasına girmez; al/sat demez) · `/menu` · `/kvkk` ·
 `/hakkinda` (Hakkında ve Metodoloji: kim yapıyor, sayılar nereden geliyor,
 yazıları kim yazıyor; gömme kodları da burada)
 
@@ -671,11 +687,16 @@ yazıları kim yazıyor; gömme kodları da burada)
 | `/gomulu/bilancolar` | Haftanın öne çıkan altı bilançosu; satırlar sitede yeni sekmede açılır |
 | `/gun/[tarih]/kart` | Günün paylaşılabilir kartı (1200×630; `?bicim=dikey` 1080×1350; `/gun/bugun/kart`). `/api` altında değil, çünkü `robots.txt` onu engelliyor ve kart botları ona uyuyor |
 | `/bilancolar/hafta/gorsel` | Haftalık bilanço takviminin görseli (`?boyut=yatay\|dikey&hafta=`) |
+| `/gun/[tarih]/gorsel` · `/gun/[tarih]/minyatur/[tema]` | Günün Posteri'nin paylaşım görseli (1200×630; `?bicim=dikey` 1080×1350) ve arşiv kartının metinsiz SVG minyatürü (`/acik`, `/koyu`) |
+| `/gunun-grafigi/[tarih]/gorsel` | Günün Grafiği'nin paylaşım görseli (`?boyut=yatay\|dikey`) |
+| `/bilancolar/[symbol]/[period]/hikaye/gorsel` | Analiz hikâyesinin kart görselleri (dikey ve yatay) |
+| `/feed.xml` · `/yenilikler/feed.xml` | Mercek ve bülten RSS akışı; Yenilikler'in ayrı akışı |
 
 ### API Uçları
 
-Yazma uçları (`brief`, `mercek`, `analiz`, `teknik` ve `context`
-eşleri) `BRIEF_SECRET`, cron `CRON_SECRET`, Verilerimi İndir oturum ister;
+Rutin uçları (`brief`, `mercek`, `analiz`, `teknik`, `grafik`, `hedef`,
+`takvim/beklenti`, `takvim/bilanco`, `kurallar` ve `context` eşleri)
+`BRIEF_SECRET`, cron `CRON_SECRET`, Verilerimi İndir oturum ister;
 genel okuma uçları herkese açık ve IP başına oran sınırlı. AI analizin okuma
 ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlük kota ister.
 
@@ -690,6 +711,7 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 | `/api/ai/analysis` | GET: kendi analiz geçmişi ve kota; POST: güncel verilerle yeni Claude raporu. Günlük varsayılan 5, başarısız işte iade, aynı requestId için tek iş |
 | `/api/olcum` | Çerezsiz sayfa ölçümü |
 | `/api/brief` · `/api/mercek` · `/api/analiz` · `/api/teknik` (+ `/context`) | İçerik rutinlerinin yazma ve geri okuma uçları; `/api/brief/list?from=&to=` yazılmış bültenlerin listesi |
+| `/api/hedef` (+ `/context`) | Ortalama analist hedef fiyatı: günlük bülten rutini kaynağıyla toplu yazar, her kalem doğrulanır (`lib/analyst-targets.ts`); GET `?symbol=` son on kayıt |
 | `/api/takvim/beklenti` · `/api/takvim/bilanco` | Rutinin takvime yazdığı düzeltmeler: ekonomik olay beklentisi; bilanço tarihi ve penceresi (elle kayıt sağlayıcının önüne geçer, sağlayıcı aynısını söyleyince kapanır — `lib/earnings-overrides.ts`) |
 | `/api/kurallar?gorev=` | Rutinlerin ortak kuralları + göreve özgü ek (`content/kurallar/*.md`), `text/markdown`, sürüm `X-Kurallar-Surum` başlığında |
 | `/api/cron/daily` · `/api/auth/[...nextauth]` · `/api/debug/providers` | Günlük cron, oturum, sağlayıcı anahtar kontrolü (yalnızca geliştirmede; üretimde 404) |
@@ -697,14 +719,18 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 | `/api/cron/haftalik-posta` | Pazar özeti postası: pazar 07:00–11:00 UTC (ilk koşu 10:00 TR) saatte bir, göndermeden önce geçen haftanın bilanço gerçekleşenlerini tazeler; geçen haftanın endeksleri, bilançoları ve öne çıkanları, bu haftanın bilanço ve veri takvimi. Her alıcı defterle sahiplenilir, ikinci koşu yalnız eksikleri tamamlar; günlük bütçe `EMAIL_DAILY_BUDGET` (UTC günü — pazar bütçeye takılanları pazartesi 07:00 UTC telafi koşusu, bütçenin en çok yarısıyla gönderir; tek koşu kilitli) (`CRON_SECRET`) |
 | `/api/ai/hisse-notu` | Hisse sayfasının Claude notları: `?sembol=&tur=hareket` (Bu Hafta Neden Hareket Etti — son beş tamamlanmış seans, S&P 500 ve haberler) ve `tur=bilanco` (son 10 günde açıklanan bilançonun kısa notu). Panel görünüme girince istemci ister; botlar ve bilinmeyen sembol geri çevrilir, not sembol + seans anahtarıyla 36 saat önbellekte, günlük çağrı tavanı `INSIGHT_DAILY_CAP` (`lib/stock-insights.ts`) |
 | `/api/cron/haberler` | Haber tazeleme + Türkçeleştirme: her gün 05:35, 11:35, 17:35 UTC; piyasa haberlerini çeker, çevrilmemişleri Claude ile çevirir (`ANTHROPIC_API_KEY`, yoksa `CLAUDE_ANALYSIS_API_KEY`; DeepL anahtarı varsa önce o). Çeviri tabloda kalır (`CRON_SECRET`) |
+| `/api/ai/haber-notu` · `/api/ai/veri-notu` · `/api/ai/karsilastirma-notu` · `/api/ai/portfoy-notu` | Öteki Claude notları: Günün Gündemi ve Bu Haber Ne Anlatıyor (`?tur=gundem`, `?id=`), takvimdeki açıklanmış verinin notu, karşılaştırma ekranının notu, portföy notu (oturum ister, önbelleğe alınmaz). Panel görünüme girince istemci ister; botlara kapalı, IP başına sınırlı, ortak Claude bütçesinden düşer |
 | `/api/ai/tarama-cumlesi` · `/api/ai/takip-notu` · `/api/ai/hisse-sor` · `/api/ai/portfoy-analizi` | Sayfanın içindeki Claude: düz cümleyle tarama (köken denetimi, 2 KB gövde tavanı), Takip Listem Bugün, Bu Hisseye Sor, portföy risk okuması. Botlara kapalı, oran ve günlük sınırlı, ortak Claude bütçesinden düşer |
 | `/api/bulmaca` | Hisseyi Bil: GET günün siluetini, POST tahmini değerlendirip açılan ipucunu döndürür; cevap yalnız oyun bitince |
 | `/api/bulmaca/siralama` | Hisseyi Bil günün sıralaması: GET tablo ve okurun sırası; POST saati başlatır (`start`) ya da takma adı yazar (`nickname`); oturum ister |
 | `/api/grafik` (+ `/context`) | Günün Grafiği'nin yazma ve geri okuma ucu (`BRIEF_SECRET`); POST yalnız tamamlanmış seansı (kapanış + 20 dk) ve bağlamda geçen sayıları kabul eder |
 | `/api/cron/grafik` | Günün Grafiği yedeği: hafta içi 22:30 UTC ve her sabah 11:45 UTC (`deploy/cron-grafik.sh`); son tamamlanmış seansın hiç kaydı yoksa bağlam paketinden şablonla iki dilde yazar (`generatedBy: "auto"`, model yok — `lib/daily-chart-fallback.ts`), rutin gelince üstüne yazılır (`CRON_SECRET`) |
 | `/api/cron/telegram` | Telegram kanalı: beş dakikada bir; açılış öncesi bülten ve takvim, kapanış özeti, yeni Mercek, büyük makro veri. Tekrarı `telegram_posts` defteri önler; `TELEGRAM_BOT_TOKEN` ve `TELEGRAM_CHANNEL_ID` yoksa uyur (`CRON_SECRET`) |
+| `/api/bildirimler/sayi` | Başlıktaki zilin okunmamış sayısı; görünürlük ve sayfa değişince, beş dakikada bir sorulur (oturum) |
+| `/api/push/yenile` | Service worker'ın `pushsubscriptionchange` olayında aboneliği yenilemesi (oturum çereziyle) |
 | `/api/e-posta/ayril` | Tek tıkla çıkış (RFC 8058, `List-Unsubscribe-Post`): yalnız POST, girişsiz, IP başına sınırlı |
 | `/api/cron/bilanco` | "Bilanço yarın" hatırlatması: günde bir, tercihi açan hesaplara takip listelerindeki yarınki bilançoları tek bildirimde gönderir (`CRON_SECRET`) |
+| `/api/cron/risk` | Risk Masası kuralları: 21:40 UTC (kapanıştan sonra) ve 11:15 UTC (FRED gelince) aynı tamamlanmış seansı değerlendirir; kural yalnız tetiklendiği gün Web Push gönderir, e-posta yok (`CRON_SECRET`) |
 | `/api/cron/olasiliklar` | Olasılıkların günlük anlık görüntüsü: saatte bir çağrılır (`deploy/cron-olasiliklar.sh`), günde bir yazar; seçim gecesi ve Fed saatinde sıklaşır. `KALSHI_API_BASE` isteğe bağlı (`CRON_SECRET`) |
 
 ### Yönetim
@@ -712,7 +738,10 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 Kabuğun dışında: `/admin`, `/admin/trafik`, `/admin/uyeler`,
 `/admin/icerik`, `/admin/moderasyon` ve detayı `/admin/moderasyon/[id]`
 (topluluk yazılarının onay kuyruğu: gövde yayındaki çizimle okunur, onay
-okunan sürüme bağlanır, red gerekçe ister), `/admin/ai` (Claude analiz erişimi, kotalar ve token kullanımı), `/admin/sistem` (verinin durumu ve son 30 günün hata
+okunan sürüme bağlanır, red gerekçe ister), `/admin/ai` (Claude analiz erişimi, kotalar ve token kullanımı),
+`/admin/onizleme` (yayındaki bir sayfanın telefonda ve masaüstünde yan yana
+önizlemesi; durum adreste, `?yol=&tema=&dil=` — çerçeve yasağı yalnız aynı
+köke ve yalnız yöneticiye gevşer, `lib/preview.ts`), `/admin/sistem` (verinin durumu ve son 30 günün hata
 kaydı), `/admin/yazilar`, `/admin/yazilar/bulten` ve iki editör
 (`/admin/yazilar/mercek/[slug]`, `/admin/yazilar/bulten/[tarih]`). Panel
 sekmelerinden **İçerik ölçer, Yazılar değiştirir.** Yetki veritabanında;
@@ -753,7 +782,8 @@ npm run dev
 | `FRED_API_KEY` | makro için | [fred.stlouisfed.org](https://fred.stlouisfed.org/docs/api/api_key.html) |
 | `CRON_SECRET` | üretimde | `openssl rand -hex 32`; cron ucunun `Bearer` anahtarı |
 | `VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` | bildirim için | `npx web-push generate-vapid-keys`; ücretsiz, üçüncü taraf hesap yok. Yoksa Ayarlar'daki bildirim paneli "bu sunucuda kapalı" der. Anahtar değişirse eski abonelikler geçersizleşir |
-| `RESEND_API_KEY` + `EMAIL_FROM` | şifre sıfırlama için | [resend.com](https://resend.com) ücretsiz katman (ayda 3.000, günde 100 e-posta); `EMAIL_FROM` doğrulanmış alan adından, ör. `"Açılış Zili <hesap@alanadi.com>"`. Yoksa "Şifremi Unuttum" hiç görünmez |
+| `RESEND_API_KEY` + `EMAIL_FROM` | şifre sıfırlama ve bildirim postası için | [resend.com](https://resend.com) ücretsiz katman (ayda 3.000, günde 100 e-posta); `EMAIL_FROM` doğrulanmış alan adından, ör. `"Açılış Zili <hesap@alanadi.com>"`. Yoksa "Şifremi Unuttum" hiç görünmez |
+| `BREVO_API_KEY` · `EMAIL_PROVIDER` | isteğe bağlı | ikinci e-posta servisi (Brevo, günde 300); anahtar tanımlıysa ve `EMAIL_PROVIDER=brevo` ya da Resend anahtarı yoksa posta Brevo'dan gider (`lib/email.ts`) |
 | `VAPID_SUBJECT` | isteğe bağlı | `mailto:` adresi; bildirim servisinin sorun olduğunda yazacağı yer. Yoksa site adresi |
 | `BRIEF_SECRET` | içerik için | `openssl rand -hex 32`; rutin uçlarının kapısı |
 | `NEXT_PUBLIC_SITE_URL` | üretimde | yayın adresi (OG görselleri, sitemap) |
@@ -761,7 +791,12 @@ npm run dev
 | `SITE_INDEXABLE` | ikinci kopyada | canlıda `true`, ikinci kopyada `false` |
 | `SEC_USER_AGENT` | isteğe bağlı | `"Ad e-posta"`; boşsa koddaki varsayılan (`lib/investors.ts` → `secUserAgent`) — 13F, Form 4 ve anlık bilanço bildirimi |
 | `DEEPL_API_KEY` | opsiyonel | haber başlığı çevirisi (önce bu denenir) |
-| `ANTHROPIC_API_KEY` | opsiyonel | haber başlığı çevirisinde yedek |
+| `ANTHROPIC_API_KEY` | opsiyonel | site içi Claude notları ve haber başlığı çevirisi (yoksa `CLAUDE_ANALYSIS_API_KEY`; `lib/claude-key.ts`) |
+| `TRANSLATE_MODEL` | opsiyonel | çeviri modeli (varsayılan `claude-haiku-5-5`, `lib/translate.ts`) |
+| `CLAUDE_INSIGHT_MODEL` · `INSIGHTS_DISABLED` | opsiyonel | hisse sayfası notlarının modeli ve acil durdurma (`lib/stock-insights.ts`); günlük tavan `INSIGHT_DAILY_CAP` |
+| `WATCHLIST_NOTE_CAP` | opsiyonel | pazar özetindeki takip notlarının koşu başına Claude tavanı (varsayılan 60, `lib/watchlist-note.ts`) |
+| `TELEGRAM_BOT_TOKEN` · `TELEGRAM_CHANNEL_ID` · `TELEGRAM_CHANNEL_ID_EN` | opsiyonel | Telegram kanalı; ilk ikisinden biri boşsa gönderici uyur, EN kanalı isteğe bağlı |
+| `NEXT_PUBLIC_TELEGRAM_URL` | opsiyonel | sitedeki "Telegram Kanalı" bağlantısı; boşsa basılmaz, derleme zamanında gömülür |
 | `CLAUDE_ANALYSIS_API_KEY` | AI analiz için | sunucuda saklanan ayrı Claude anahtarı; erişim yalnız admin atamasıyla. Kurulum ve prompt: `docs/claude-analysis.md` |
 | `CLAUDE_ANALYSIS_MODEL` · `CLAUDE_ANALYSIS_DISABLED` | opsiyonel | varsayılan `claude-sonnet-5-5`; `DISABLED=1` analiz üretimini kapatır |
 | `ANALYTICS_SALT` | opsiyonel | ziyaretçi özetinin tuzu; yoksa `AUTH_SECRET` |
@@ -781,7 +816,7 @@ secret boşsa açıktır; **üretimde secret yoksa uç 503 döner.**
 ```bash
 npm run dev            # geliştirme (3000 doluysa 3001)
 npm run build          # üretim derlemesi
-npm run typecheck      # tsc --noEmit
+npm run typecheck      # tsc --noEmit (önce iCloud kopyalarını temizler)
 npm run lint           # eslint
 npm test               # birim testleri (tsx --test)
 npm run check          # typecheck + lint + test (build'den sonra)
@@ -789,8 +824,10 @@ npm run smoke          # duman testi: çalışan bir kopyayı başsız Chrome'la
 npm run db:generate    # şema değişti → YENİ migration dosyası
 npm run db:migrate     # migration'ları uygula
 npm run db:seed        # idempotent tohum (kullanıcı verisine dokunmaz)
+npm run db:seed:events # yalnız ekonomik takvim — takvimi tazelemek için
 npm run db:studio      # Drizzle Studio
 npm run build:favicon  # .ico ve PWA ikonlarını marka işaretinden üret
+npm run build:email    # posta bant GIF'i (public/email/hero.gif)
 ```
 
 </details>
@@ -835,7 +872,10 @@ Tam yol `docs/deploy-vps.md`'de, sunucu dosyaları `deploy/` altında.
 1. `main`'e her push **GitHub Actions**'ı tetikler
    (`.github/workflows/deploy.yml`): runner'da build + typecheck + lint +
    birim testleri.
-2. Geçerse sunucuda `deploy/update.sh` çalışır: yeni sürüm
+2. Geçerse sunucuda `deploy/update.sh` çalışır. Derlemeden önce
+   `deploy/disk-guard.sh` yer açar (Turbopack önbellekleri, ortak
+   `fetch-cache`in büyük kayıtları, npm önbelleği); yetmezse neyin yer
+   kapladığını basıp derlemeye girmeden durur. Yeni sürüm
    `releases/<zaman>-<sha>` altına derlenir, `current` bağı ancak sağlık
    kontrolü geçince çevrilir. Derleme sürerken canlı sürüm ayakta kalır,
    sağlık geçmezse bağ öncekine döner.
@@ -869,9 +909,8 @@ app/
                      #   takvim, bilançolar, teknik, mercek, rehber, bülten, haberler, hesap
   admin/             # yönetim: kabuğun dışında, yetkisizde 404
   actions/           # sunucu eylemleri: auth, takip listesi, içerik, profil ikonu
-  api/               # chart, day-flow, endeks, karsilastir, search, takvim, olcum,
-                     #   kur (+ yol, endeks), health, hata, hesap/verilerim,
-                     #   brief, mercek, analiz, teknik (+ context), cron, auth, debug
+  api/               # okuma, rutin (brief, mercek, analiz, teknik, grafik, hedef,
+                     #   kurallar + context), ai notları, cron; liste: § API Uçları
   gomulu/            # başka sitelere gömülen parçalar: kabuğun dışında, dizine kapalı
   gun/[tarih]/kart/  # günün paylaşılabilir görseli
 components/
@@ -906,7 +945,8 @@ content/glossary/    # sözlük: meta + tr/ + en/ (kategori başına dosya)
 content/themes.ts    # tematik listeler (elle bakılır)
 content/compare-pairs.ts  # küratörlü karşılaştırma çiftleri (elle bakılır)
 db/seed/             # tatiller, ekonomik takvim, semboller, endeks bileşimleri
-docs/                # rutin prompt'ları, deploy, tasarım notları
+content/kurallar/    # rutinlerin ortak yazım kuralları (/api/kurallar okur)
+docs/                # rutin prompt'ları (canlı kopya), deploy, durum, arşiv
 drizzle/             # migration'lar: elle düzenlenmez, yenisi eklenir
 tests/               # birim testleri (tsx --test)
 scripts/smoke.mjs    # duman testi (npm run smoke)
@@ -926,9 +966,11 @@ scripts/smoke.mjs    # duman testi (npm run smoke)
   vadeli sözleşme ya da fiziki varlık taşıdığı için yüzdesi spottan
   ayrışabilir (özellikle USO ve UNG'de vade yenileme maliyeti). Panel künyesi
   bunu yazar.
-- **Tek tek analist not değişiklikleri ve hedef fiyat yok.** Finnhub'ın
-  ilgili uçları ücretsiz katmanda 403 dönüyor; ekranda yalnızca aylık dağılım
-  ve değişimi var, tek tek notlar uydurulmuyor.
+- **Tek tek analist not değişiklikleri yok.** Finnhub'ın ilgili uçları
+  ücretsiz katmanda 403 dönüyor; ekranda aylık dağılım ve değişimi var, tek
+  tek notlar uydurulmuyor. Ortalama hedef fiyat sağlayıcıdan değil, günlük
+  bülten rutininin kaynağıyla yazdığı değerden gelir (`/api/hedef`,
+  `lib/analyst-targets.ts`).
 - **Opsiyon verisi gösterge beslemesi** (`indicative`): OPRA'nın kendisi
   değil, ondan türetilmiş kotasyon. Beklenen hareket bu yüzden geniş alış-satış
   aralıklı kontratları eler ve künyesinde bunu söyler.
