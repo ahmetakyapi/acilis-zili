@@ -29,7 +29,12 @@ paths:
   bekleyenleri ve depoyla eşleşmeyen kayıtları adıyla basar, HER ZAMAN
   yeşil biter; güvenlik durdurması uyarı + koşu özeti), sonra YALNIZ check
   temizse `apply` (8 Kasım: durdurmayı görmeden tetiklenen check kırmızı
-  koşu üretmişti). Check "DUR" diyorsa apply tetiklenmez, sahibine sorulur. Kod migration'dan önce yayına
+  koşu üretmişti). Check "DUR" diyorsa apply tetiklenmez: önce `diagnose`
+  (salt okunur şema karşılaştırması). **Neon veritabanı başka projelerle
+  ORTAK** (`memleket_*`, `oyz_*`, `app_state*`; 8 Kasım): yabancı tabloya
+  dokunulmaz, öteki projenin `drizzle.__drizzle_migrations` kaydı durdurma
+  üretir; şema farkı yalnız bekleyen migration'ın tablolarıysa `apply` +
+  `accept_stray=<özet>`, değilse sahibine sorulur. Kod migration'dan önce yayına
   inebilir: yeni özellik mümkünse var olan tabloya (özellikle `users`) sütun
   eklemez, kendi tablosunu açar ve tablo yokken sessizce düşer
   (`lib/avatar-data.ts`). Migration'ı unutmak da sessiz hatadır (0042 bir gün
