@@ -7,18 +7,16 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { GuideHint } from "@/components/article/GuideHint";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { RollingFigure } from "@/components/themes/RollingFigure";
-import styles from "@/components/themes/Themes.module.css";
-import { LogoGroup, SpreadStrip } from "@/components/themes/ThemeVisuals";
-import { ThemeRanking } from "@/components/themes/ThemeRanking";
+import { ThemeBoard } from "@/components/themes/ThemeBoard";
+import styles from "@/components/themes/ThemeBoard.module.css";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { DataStamp, LogoTile } from "@/components/ui/primitives";
-import { themeDek, themeTitle } from "@/content/themes";
+import { themeTitle } from "@/content/themes";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
-import { loadThemeBoard, themePlaceholders, type ThemeBoard, type ThemeCard } from "@/lib/theme-board";
-import { KATILIM_MAX } from "@/lib/themes-data";
-import { cn, directionOf, directionText, formatPercent, NO_VALUE } from "@/lib/utils";
+import { loadThemeBoard, themePlaceholders, type ThemeCard } from "@/lib/theme-board";
+import { themeRow } from "@/lib/themes-data";
+import { cn, directionOf, directionText, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
 
 export const generateMetadata = pageMetadata({
   path: "/tema",
@@ -35,46 +33,51 @@ export const generateMetadata = pageMetadata({
 });
 
 /**
- * Temalar dizini — bir tema galerisi.
+ * Temalar dizini — günün sıralaması.
  *
  * TEK KOTASYON ÇAĞRISI: bütün temaların üyeleri tek anahtarda soruluyor
  * (`getQuotes` sıralı sembol dizesiyle önbellekli). NVDA üç temada birden
  * duruyor; üç ayrı çağrı üç ayrı fiyat anı demekti ve aynı hisse aynı
- * ekranda üç medyana üç farklı yüzdeyle girebilirdi. Kapaktaki sıralama ve
- * galeri iki ayrı Suspense sınırı ama ikisi de aynı `loadThemeBoard`u okuyor
+ * ekranda üç medyana üç farklı yüzdeyle girebilirdi. Kapaktaki özet ve
+ * pano iki ayrı Suspense sınırı ama ikisi de aynı `loadThemeBoard`u okuyor
  * (`cache`, istek içinde tek hesap). Hesap lib/theme-board.ts'te; ana
  * sayfanın temalar bandı da oradan okuyor.
  *
- * GÖRSEL DİL (28 Eylül). Önceki dizin on eşit kutuydu: başlık, bir cümle,
- * köşede küçük bir yüzde. Sahibi "görsel olarak çok zayıf" dedi. Kart artık
- * üç şeyi GÖSTERİYOR, yazmıyor: kimlerden oluştuğunu (logo yığını ya da
- * mozaiği), günün medyanını (büyük rakam) ve medyanın altındaki yayılımı
- * (her üye bir çentik). Kapaktaki sıralama "bugün hangi tema önde" sorusunu
- * uzunlukla cevaplıyor; kartlardaki eski ölçek çubuğu onun yerine geçti.
+ * GÖRSEL DİL (28 Eylül → 10 Kasım 2026). 28 Eylül'de on eşit kutu, üç şeyi
+ * GÖSTEREN kartlara dönmüştü (logolar, büyük medyan, dağılım şeridi) ve
+ * kapağa bir sıralama gelmişti. 10 Kasım'da sahibi Temalar'ın da ana sayfa,
+ * Piyasalar ve şirket ekranlarının çıtasına çekilmesini istedi ("mercek ve
+ * temaları da böyle ele alalım"; "AI slop gibi durmasın"). Bulgular (canlı,
+ * 1440/1024/390, iki tema): (1) aynı medyan kapaktaki sıralamada ve kartta
+ * iki kez; (2) on kart on ayrı kutu, her şerit kendi kutusunda ve kendi
+ * etiketiyle (otuz ölçek etiketi), temalar ARASI fark hiçbir yerde uzunluk
+ * olarak okunmuyor; (3) kartlar editoryal sırada, günün hikâyesi (kim önde,
+ * kim geride) kartlarda yok; (4) asimetrik ızgarada dar kartın komşusunda
+ * 81 piksele varan ölü boşluk; (5) 390'da sayfa 5.787 piksel, on dev rakam
+ * alt alta.
  *
- * Izgara ASİMETRİK ama VERİDEN BAĞIMSIZ: geniş ve dar kartlar sabit bir
- * ritimle diziliyor (`CARD_SPANS`). Kartların boyu ya da sırası medyana göre
- * değişseydi yedek ile canlı ızgara farklı olur, akışla gelen veri kartları
- * yerinden oynatırdı. Günün öne çıkanı yerini değil KÜNYESİNİ değiştiriyor.
+ * Şimdi ekran tek bir okuma: KAPAK günün özeti (kaç tema artıda, iki uç ve
+ * aralarındaki fark), GÖVDE tek pano (`ThemeBoard`): temalar medyana göre
+ * sıralı satırlar, bütün dağılım şeritleri aynı eksende alt alta. Kapaktaki
+ * sıralama listesi KALKTI (pano onun kendisi); kartlardaki dev rakam,
+ * tekrarlanan ölçek etiketleri ve ayrı oran çubuğu satırın sütunlarına
+ * indi. Eski "ızgara veriden bağımsız" kararı (akışla gelen veri kartları
+ * oynatmasın) eş boylu satırlarda kendiliğinden sağlanıyor: yedek aynı on
+ * satırı editoryal sırayla basıyor (gerekçe ThemeBoard.tsx).
+ *
+ * `ThemeRanking` ve `SpreadStrip` ana sayfanın "Sektörler ve Temalar"
+ * bandında yaşamaya devam ediyor; bu sayfa artık onları kullanmıyor.
  */
-/* SIRALAMA TELEFONDA DÖRT SATIR (25 Ekim). Kapak 390'da 1.004 piksel
-   ölçüldü ve on satırlık sıralama onun en büyük payıydı: tema galerisi,
-   yani ekranın asıl işi, 1.109'da başlıyordu. Sıralamanın bilgisi uçlarda
-   (en güçlü iki, en zayıf iki); ortası katlı ve "Tümünü Göster" yerinde
-   açıyor (`FoldToggle`, `ExpandInPlace`). Ana sayfanın temalar bandıyla
-   aynı kural. 640 ve üstünde liste tam. */
-const RANK_PHONE_ENDS = 2;
-
 export default async function ThemesIndexPage() {
   const { locale, t } = await getI18n();
 
   /* SAYFA KOTASYONU BEKLEMİYOR (28 Eylül, ölçüldü). Dizin önce bütün
      temaların medyanını hesaplayıp sonra çiziyordu: soğuk önbellekte
      yaklaşık 150 sembolün kotasyonu ve Katılım havuzunun Finnhub taraması
-     bitmeden tek bayt gitmiyordu, ilk bayt 1,5 saniye. Kartların metni ve
+     bitmeden tek bayt gitmiyordu, ilk bayt 1,5 saniye. Satırların metni ve
      elle seçilmiş temaların logoları durağan (content/themes.ts, depodaki
-     logo dosyaları); yalnızca sayılar veriye bağlı. Yedek AYNI ızgarayı
-     sayısız basıyor, sayılar akışla iniyor ve kartlar yerinden oynamıyor. */
+     logo dosyaları); yalnızca sayılar veriye bağlı. Yedek AYNI panoyu
+     sayısız basıyor, sayılar akışla iniyor ve pano yerinden oynamıyor. */
   const placeholders = themePlaceholders();
 
   return (
@@ -85,26 +88,28 @@ export default async function ThemesIndexPage() {
         description={t.themes.subtitle}
         share={<PageShare path="/tema" title={t.themes.title} locale={locale} t={t} />}
         visual={
-          <Suspense fallback={<ThemeRanking cards={placeholders} locale={locale} t={t} phoneEnds={RANK_PHONE_ENDS} />}>
-            <LiveRanking locale={locale} t={t} />
+          <Suspense fallback={<HeroSummary part="ends" summary={null} locale={locale} t={t} />}>
+            <LiveHeroSummary part="ends" locale={locale} t={t} />
           </Suspense>
         }
       >
-        <Suspense fallback={<HeroSummary summary={null} locale={locale} t={t} />}>
-          <LiveHeroSummary locale={locale} t={t} />
+        <Suspense fallback={<HeroSummary part="breadth" summary={null} locale={locale} t={t} />}>
+          <LiveHeroSummary part="breadth" locale={locale} t={t} />
         </Suspense>
       </DirectoryHeader>
 
       <Suspense
         fallback={
-          <ThemeGallery
+          <ThemeBoard
             board={{ cards: placeholders, scale: null, leader: null, laggard: null, phase: null }}
+            basis={null}
+            benches={{}}
             locale={locale}
             t={t}
           />
         }
       >
-        <LiveGallery locale={locale} t={t} />
+        <LiveBoard locale={locale} t={t} />
       </Suspense>
 
       <GuideHint
@@ -116,32 +121,32 @@ export default async function ThemesIndexPage() {
   );
 }
 
-async function LiveRanking({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const { board, scaleBasis } = await loadThemeBoard();
-  return <ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} phoneEnds={RANK_PHONE_ENDS} />;
-}
-
 /**
- * Kapağın sol yarısındaki günün özeti (28 Eylül).
+ * Kapağın günün özeti (28 Eylül; 10 Kasım'da iki sütuna bölündü: yön oranı
+ * solda başlığın altında, iki uç ve aralarındaki fark sağda).
  *
- * Sağdaki on satırlık sıralama kapağı uzatıyordu ve sol yarıda başlık ile
- * tek cümlenin altında büyük bir boşluk kalıyordu (sahibinin geri
- * bildirimi). Boşluk esnetilmiyor, sıralamanın zaten söylediğinin ÖZETİYLE
- * doluyor: kaç tema yükseldi, kaç tema düştü, en güçlü ve en zayıf hangisi.
+ * 28 Eylül'de sağdaki on satırlık sıralama kapağı uzatıyor, sol yarıda
+ * başlığın altında boşluk kalıyordu; boşluk sıralamanın ÖZETİYLE dolmuştu
+ * (kaç tema yükseldi, kaç tema düştü, en güçlü ve en zayıf hangisi). 10
+ * Kasım'da sıralama gövdeye (pano) indi; özetin tamamı önce sağ sütuna
+ * kondu ve sol sütunda "Paylaş"ın altında ~110 piksel boş kaldı (1440,
+ * ölçüldü). Yön oranı sola alındı: iki sütun aynı boyda bitiyor, kapak
+ * 376 → 277 piksel ve pano ilk ekranda.
  * Veri `loadThemeBoard`dan, istek içinde önbellekli; yeni bir istek yok.
  *
- * En güçlü ve en zayıf YALNIZCA canlı seansta (galerideki künyeyle aynı
- * kural); son kapanışa kalmış günde sayılar nötr basılıyor ve "Son Kapanış"
- * diyor: dünü bugün diye anlatmıyor.
+ * En güçlü ve en zayıf YALNIZCA ortak seans kümesi varken (panodaki
+ * çiplerle aynı kural, lib/theme-board.ts); yoksa iki kutu tireyle, aynı
+ * boyda basılıyor (veri inince kapak oynamıyor). Son kapanışa kalmış günde
+ * künye "Son Kapanış" diyor ve sayılar nötr: dünü bugün diye anlatmıyor.
  *
  * DÖRT KUTU YERİNE TEK YÜZEY (29 Eylül, sahibinin isteği: "görselliği daha
- * üst seviyeye"). Dört eşit kutu sağdaki sıralamanın sayılarını ikinci kez
- * YAZIYORDU. Özet artık sıralamanın söylemediğini gösteriyor: yükselen ve
- * düşen tema sayısı tek bir ORAN ÇUBUĞU (sıralama her temayı ayrı ayrı
- * çiziyor, kaç tanesinin artıda olduğunu okutmuyor) ve iki uç temanın
- * kimlerden oluştuğu (logolar). Hepsi aynı `comparable` kümesinden; çubuk
- * sayılarla aynı üç parçayı (yükselen, yatay, düşen) orantılı çiziyor.
- * Kutu değil ton: tek çukur yüzey, bölümler hairline ile ayrılıyor.
+ * üst seviyeye"). Dört eşit kutu sıralamanın sayılarını ikinci kez
+ * YAZIYORDU. Özet panonun söylemediğini gösteriyor: yükselen ve düşen tema
+ * sayısı tek bir ORAN ÇUBUĞU (pano her temayı ayrı ayrı çiziyor, kaç
+ * tanesinin artıda olduğunu okutmuyor), iki uç tema ve (10 Kasım) ikisinin
+ * ARASINDAKİ FARK: aynı eksende iki nokta, aralarında çizgi, yanında puan.
+ * Kapağın en büyük puntosu iki ucun medyanında. Hepsi aynı `comparable`
+ * kümesinden. Kutu değil ton: tek çukur yüzey, bölümler hairline ile.
  */
 type HeroSummaryData = {
   rising: number;
@@ -155,17 +160,22 @@ type HeroSummaryData = {
   laggard: ThemeCard | null;
 };
 
-/** Uç temanın yanında gösterilen logo sayısı. 1440'ta satır 262 piksel:
-    dört 22'lik logo (100) + ad + yüzde sığıyor; beşincide "Nükleer,
-    Elektrik ve Şebeke" gibi uzun ad iki harfe iniyordu. */
+/** Uç temanın yanında gösterilen logo sayısı. 1440'ta uç kutusu 273 piksel:
+    dört 22'lik logo (97) + ad sığıyor; beşincide "Kilo İlaçları (GLP-1)"
+    gibi uzun ad kesiliyordu. Telefonda iki logo (ThemeBoard.module.css). */
 const EXTREME_LOGOS = 4;
+/** Fark çizgisinde uç noktanın eksenin yarısından aldığı pay, yüzde. */
+const GAP_REACH = 44;
 
-async function LiveHeroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
+type HeroPart = "breadth" | "ends";
+
+async function LiveHeroSummary({ part, locale, t }: { part: HeroPart; locale: Locale; t: Dictionary }) {
   const { board, scaleBasis } = await loadThemeBoard();
   const comparable = board.cards.filter((card) => card.basis === scaleBasis && card.median !== null);
   const bySlug = (slug: string | null) => board.cards.find((card) => card.theme.slug === slug) ?? null;
   return (
     <HeroSummary
+      part={part}
       summary={{
         rising: comparable.filter((card) => card.median! > 0).length,
         falling: comparable.filter((card) => card.median! < 0).length,
@@ -182,49 +192,56 @@ async function LiveHeroSummary({ locale, t }: { locale: Locale; t: Dictionary })
   );
 }
 
-function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; locale: Locale; t: Dictionary }) {
+function HeroSummary({ part, summary, locale, t }: { part: HeroPart; summary: HeroSummaryData | null; locale: Locale; t: Dictionary }) {
   const tone = (kind: "up" | "down") =>
     summary === null ? "text-muted" : summary.session ? (kind === "up" ? "text-up" : "text-down") : "text-body";
+  const neutral = !summary?.session;
   const total = summary?.total ?? 0;
   const flat = total - (summary?.rising ?? 0) - (summary?.falling ?? 0);
-  const neutral = !summary?.session;
-
-  const extreme = (card: ThemeCard | null, label: string) =>
+  const leader = summary?.leader ?? null;
+  const laggard = summary?.laggard ?? null;
+  const end = (card: ThemeCard | null, label: string) =>
     card && card.median !== null ? (
-      <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.heroExtreme}>
-        <span className={styles.heroExtremeHead}>
-          <span className={styles.heroLabel}>{label}</span>
-          <b className={cn("numeral", styles.heroExtremePct, directionText(directionOf(card.median)))}>
-            {formatPercent(card.median, locale)}
-          </b>
+      <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.end}>
+        <span className={styles.endLabel}>
+          <span className={styles.label}>{label}</span>
+          <ArrowUpRight weight="bold" size={13} className={styles.endArrow} aria-hidden />
         </span>
-        <span className={styles.heroExtremeBody}>
-          <span className={styles.heroLogos} aria-hidden>
+        <b className={cn("numeral", styles.endFig, directionText(directionOf(card.median)))}>
+          {formatPercent(card.median, locale)}
+        </b>
+        <span className={styles.endBody}>
+          <span className={styles.endLogos} aria-hidden>
             {card.members.slice(0, EXTREME_LOGOS).map((member) => (
               <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="xs" />
             ))}
           </span>
-          <span className={styles.heroExtremeName}>{themeTitle(card.theme, locale)}</span>
+          <span className={styles.endName}>{themeTitle(card.theme, locale)}</span>
         </span>
       </Link>
     ) : (
-      /* Yedekte ve seans dışında aynı iki satır: veri inince kapak oynamıyor. */
-      <div className={styles.heroExtreme}>
-        <span className={styles.heroExtremeHead}>
-          <span className={styles.heroLabel}>{label}</span>
-          <b className={cn("numeral text-muted", styles.heroExtremePct)}>{NO_VALUE}</b>
+      /* Yedek aynı üç satır: veri inince kapak oynamıyor. */
+      <div className={styles.end}>
+        <span className={styles.endLabel}>
+          <span className={styles.label}>{label}</span>
         </span>
-        <span className={styles.heroExtremeBody}>
-          <span className={cn(styles.heroExtremeName, "text-muted")}>{NO_VALUE}</span>
+        <b className={cn("numeral text-muted", styles.endFig)}>{NO_VALUE}</b>
+        <span className={styles.endBody}>
+          <span className={cn(styles.endName, "text-muted")}>{NO_VALUE}</span>
         </span>
       </div>
     );
 
-  return (
-    <div className={styles.heroSummary}>
-      <div className={styles.heroBreadth}>
-        <div className={styles.heroBreadthHead}>
-          <span className={styles.heroLabel}>
+  const peak = leader?.median != null && laggard?.median != null
+    ? Math.max(Math.abs(leader.median), Math.abs(laggard.median))
+    : 0;
+  const at = (value: number) => 50 + (peak > 0 ? (value / peak) * GAP_REACH : 0);
+
+  if (part === "breadth") return (
+    <div className={cn(styles.summary, styles.summaryLead)}>
+      <div className={styles.breadth}>
+        <div className={styles.breadthHead}>
+          <span className={styles.label}>
             {t.themes.themesBreadth}
             {summary && (!summary.session || summary.lastClose)
               ? ` · ${t.themes.medianLastClose}`
@@ -232,10 +249,10 @@ function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; 
                 ? ` · ${t.themes.medianPreMarket}`
                 : ""}
           </span>
-          <span className={styles.heroCounts}>
+          <span className={styles.counts}>
             <b className={cn("numeral", tone("up"))}>{summary ? summary.rising : NO_VALUE}</b>
             {t.themes.up}
-            <span aria-hidden className={styles.breadthSep} />
+            <span aria-hidden className={styles.countSep} />
             <b className={cn("numeral", tone("down"))}>{summary ? summary.falling : NO_VALUE}</b>
             {t.themes.down}
           </span>
@@ -243,58 +260,88 @@ function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; 
         {/* Oranın çizgisi: yükselen soldan, düşen sağdan; yatay kalan
             ortada. Nötr kümede yön rengi yok ama iki parça iki tonda
             kalıyor — oran son kapanışta da okunur. */}
-        <span className={styles.ratio} aria-hidden>
+        <span className={styles.bar} aria-hidden>
           {total > 0 && (
             <>
               {summary!.rising > 0 && (
-                <i
-                  data-tone={neutral ? "neutral-up" : "up"}
-                  data-motion-draw="line"
-                  style={{ flexGrow: summary!.rising, transformOrigin: "left center" }}
-                />
+                <i data-tone={neutral ? "neutral-up" : "up"} data-motion-draw="line" style={{ flexGrow: summary!.rising, transformOrigin: "left center" }} />
               )}
               {flat > 0 && <i data-tone="flat" style={{ flexGrow: flat }} />}
               {summary!.falling > 0 && (
-                <i
-                  data-tone={neutral ? "neutral-down" : "down"}
-                  data-motion-draw="line"
-                  style={{ flexGrow: summary!.falling, transformOrigin: "right center" }}
-                />
+                <i data-tone={neutral ? "neutral-down" : "down"} data-motion-draw="line" style={{ flexGrow: summary!.falling, transformOrigin: "right center" }} />
               )}
             </>
           )}
         </span>
       </div>
-      <div className={styles.heroExtremes}>
-        {extreme(
-          summary?.leader ?? null,
-          summary?.preMarket ? t.themes.strongestPre : summary?.lastClose ? t.themes.strongestClose : t.themes.strongest,
-        )}
-        {extreme(
-          summary?.laggard ?? null,
-          summary?.preMarket ? t.themes.weakestPre : summary?.lastClose ? t.themes.weakestClose : t.themes.weakest,
-        )}
-      </div>
+    </div>
+  );
+
+  return (
+    <div className={styles.summary}>
+          <div className={styles.ends}>
+            {end(
+              leader,
+              summary?.preMarket ? t.themes.strongestPre : summary?.lastClose ? t.themes.strongestClose : t.themes.strongest,
+            )}
+            {end(
+              laggard,
+              summary?.preMarket ? t.themes.weakestPre : summary?.lastClose ? t.themes.weakestClose : t.themes.weakest,
+            )}
+          </div>
+          {/* ARADAKİ FARK bir de çizgi: iki ucun medyanı aynı eksende iki
+              nokta. Çizgi yargı değil, mesafe (nötr ton); renk noktalarda,
+              işaretten. */}
+          <div className={styles.gap}>
+            <span className={styles.label}>{t.themes.gapLabel}</span>
+            <span className={styles.gapTrack} aria-hidden>
+              {peak > 0 && (
+                <>
+                  <i
+                    className={styles.gapSpan}
+                    data-motion-draw="line"
+                    style={{ left: `${at(laggard!.median!)}%`, right: `${100 - at(leader!.median!)}%` }}
+                  />
+                  <i className={styles.gapZero} style={{ left: "50%" }} />
+                  <i className={styles.gapDot} data-tone={directionOf(laggard!.median!)} style={{ left: `${at(laggard!.median!)}%` }} />
+                  <i className={styles.gapDot} data-tone={directionOf(leader!.median!)} style={{ left: `${at(leader!.median!)}%` }} />
+                </>
+              )}
+            </span>
+            <b className={cn("numeral", styles.gapValue, peak > 0 ? undefined : "text-muted")}>
+              {peak > 0
+                ? t.themes.gapPoints.replace("{points}", formatPrice(leader!.median! - laggard!.median!, locale))
+                : NO_VALUE}
+            </b>
+          </div>
     </div>
   );
 }
 
-async function LiveGallery({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const { board, quotesResult, names, status } = await loadThemeBoard();
+async function LiveBoard({ locale, t }: { locale: Locale; t: Dictionary }) {
+  const { board, scaleBasis, quotesResult, names, status } = await loadThemeBoard();
+  /* ÖLÇÜT FONU ŞERİTTE BİR İM. Kotasyonu zaten aynı pakette (`themeUniverse`
+     ölçütleri de soruyor); yeni çağrı yok. Kıyas ancak tema ile fon AYNI
+     SEANSI anlatıyorsa (detaydaki kıyasla aynı kural, `ThemeReading`): iki
+     ayrı günden bir fark üretmek, fark göstermemekten kötü. */
+  const quotes = quotesResult.ok ? quotesResult.data : {};
+  const benches: Record<string, number> = {};
+  for (const card of board.cards) {
+    const benchmark = card.theme.benchmark;
+    if (!benchmark || !quotesResult.ok || card.basis === null) continue;
+    const row = themeRow(benchmark.symbol, quotes, names, status);
+    if (row.changePct === null || row.basis === null) continue;
+    if ((card.basis === "session") !== (row.basis !== "lastClose")) continue;
+    benches[card.theme.slug] = row.changePct;
+  }
   return (
     <>
-      <ThemeGallery board={board} locale={locale} t={t} />
-      {/* Kart kaydı yalnızca GÖRÜNEN logolar için; fiyat galerinin kendi
-          paketinden. Görünen sayı `LogoGroup`un kuralıyla: tam bir fazla
-          üye varsa "+1" yerine o üyenin logosu basılıyor, yani dokuz
-          üyeli temada dokuz logo. Kayıt `MOSAIC_MAX`ta kesildiğinde
-          dokuzuncu logo (Uzay'da KTOS) kart açmıyordu (28 Eylül denetimi). */}
+      <ThemeBoard board={board} basis={scaleBasis} benches={benches} locale={locale} t={t} />
+      {/* Kart kaydı yalnızca GÖRÜNEN logolar için (satır başına en çok altı:
+          beş logo, tam bir fazla üye varsa "+1" yerine onun logosu —
+          ThemeBoard → ROW_LOGOS); fiyat panonun kendi paketinden. */}
       <CompanyCards
-        symbols={board.cards.flatMap((card) =>
-          card.members
-            .slice(0, card.members.length === MOSAIC_MAX + 1 ? MOSAIC_MAX + 1 : MOSAIC_MAX)
-            .map((member) => member.symbol),
-        )}
+        symbols={board.cards.flatMap((card) => card.members.slice(0, 6).map((member) => member.symbol))}
         quotes={quotesResult.ok ? quotesResult.data : null}
         stale={quotesResult.ok && Boolean(quotesResult.stale)}
         names={names}
@@ -312,172 +359,5 @@ async function LiveGallery({ locale, t }: { locale: Locale; t: Dictionary }) {
         <p className="text-small text-muted">{t.themes.quotesUnavailable}</p>
       )}
     </>
-  );
-}
-
-/** Kart genişlikleri, 12 sütunlu ızgarada (1024 ve üstü). Dar ekranda
-    hepsi tek ya da iki sütuna iniyor; sıra her zaman aynı. Yan yana iki
-    kart her satırda 12'ye tamamlanıyor, eşit üçlü satır yok. */
-const CARD_SPANS = [7, 5, 5, 7, 8, 4, 4, 8, 6, 6] as const;
-/** Geniş kartta mozaik, dar kartta yığın — kaç logo sığıyor. */
-const MOSAIC_MAX = 8;
-/* DAR KARTTA DA IZGARA (28 Eylül). Dar kartlar üst üste binen bir yığın
-   kullanıyordu; logoların ayırıcı halkası kart zemininden farklı tondaydı
-   ve karolar birbirine karışıp kırpılmış gibi okunuyordu ("+14" komşu
-   logonun üstüne biniyordu). Dar kart artık dört sütunlu, iki satırlık
-   ızgara: yedi logo ve "+N". */
-const NARROW_MOSAIC_MAX = 7;
-const WIDE_SPAN = 7;
-
-function ThemeGallery({ board, locale, t }: { board: ThemeBoard; locale: Locale; t: Dictionary }) {
-  return (
-    <ul className={styles.gallery} data-motion-stagger>
-      {board.cards.map((card, index) => {
-        const span = CARD_SPANS[index % CARD_SPANS.length];
-        const wide = span >= WIDE_SPAN;
-        const neutral = card.basis !== "session";
-        const pre = board.phase === "pre-market";
-        const closed = board.phase === "lastClose";
-        const flag =
-          card.theme.slug === board.leader
-            ? pre ? t.themes.strongestPre : closed ? t.themes.strongestClose : t.themes.strongest
-            : card.theme.slug === board.laggard
-              ? pre ? t.themes.weakestPre : closed ? t.themes.weakestClose : t.themes.weakest
-              : null;
-        const katilim = card.theme.symbols === "katilim";
-        return (
-          <li key={card.theme.slug} className={styles.galleryItem} data-span={span}>
-            <Link
-              href={`/tema/${card.theme.slug}`}
-              prefetch={false}
-              className={styles.card}
-              data-wide={wide || undefined}
-            >
-              <div className={styles.cardHead}>
-                <h2 className={styles.cardTitle}>{themeTitle(card.theme, locale)}</h2>
-                <ArrowUpRight weight="bold" size={16} className={styles.cardArrow} aria-hidden />
-              </div>
-              <p className={styles.cardDek}>{themeDek(card.theme, locale)}</p>
-
-              <div className={styles.cardBody}>
-                <div className={styles.cardFigure}>
-                  {/* UÇ TEMADA ETİKETİN YERİNE ÇİP (10 Kasım). "Açılış Öncesi
-                      Medyanı" + "Açılış Öncesi En Zayıf" yan yana 270 piksel
-                      tutuyordu: dar kartta (4/12, içerik 380) rakam bloğu
-                      logo ızgarasını alt satıra itiyor, kart 60 piksel
-                      uzuyor ve aynı satırdaki geniş komşunun (canlıda Kilo
-                      İlaçları) açıklamasıyla rakamı arasında ölü boşluk
-                      açılıyordu (1440: 81 piksel; öteki kartlarda 12–27.
-                      Sonra en çok 29). Çip dönemi zaten
-                      söylüyor ("Açılış Öncesi En Zayıf"); rakamın medyan
-                      olduğu öteki kartlardan ve erişilebilir addan
-                      okunuyor. */}
-                  <span className={styles.figureLabel}>
-                    {flag ? (
-                      <>
-                        <span className="sr-only">
-                          {card.basis === "lastClose" ? t.themes.medianClose : pre ? t.themes.medianPre : t.themes.median}
-                        </span>
-                        <span className={styles.flag}>{flag}</span>
-                      </>
-                    ) : (
-                      <span>
-                        {card.basis === "lastClose"
-                          ? t.themes.medianClose
-                          : pre
-                            ? t.themes.medianPre
-                            : t.themes.median}
-                      </span>
-                    )}
-                  </span>
-                  <span
-                    className={cn(
-                      "numeral",
-                      styles.figure,
-                      card.median === null
-                        ? "text-muted"
-                        : neutral
-                          ? "text-body"
-                          : directionText(directionOf(card.median)),
-                    )}
-                  >
-                    {card.median === null ? (
-                      NO_VALUE
-                    ) : (
-                      <RollingFigure value={formatPercent(card.median, locale)} />
-                    )}
-                  </span>
-                </div>
-                <LogoGroup
-                  members={card.members}
-                  variant="mosaic"
-                  max={wide ? MOSAIC_MAX : NARROW_MOSAIC_MAX}
-                  placeholder={katilim ? (wide ? MOSAIC_MAX : Math.min(NARROW_MOSAIC_MAX, KATILIM_MAX)) : 0}
-                  card
-                />
-              </div>
-
-              <SpreadStrip
-                points={card.points}
-                median={card.median}
-                basis={card.basis}
-                scale={board.scale}
-                locale={locale}
-                label={
-                  card.up === null
-                    ? t.themes.spreadMissing
-                    : t.themes.spreadLabel
-                        .replace("{count}", String(card.points.length))
-                        .replace("{up}", String(card.up))
-                        .replace("{down}", String(card.down))
-                }
-              />
-
-              {/* YÖN ORANI ÇİZGİ OLARAK (29 Eylül). "2 Yükselen · 15 Düşen"
-                  yalnızca metindi; iki sayıyı kafada orana çevirmek
-                  gerekiyordu. Çubuk aynı iki sayıyı (ve sıfırda kalanları)
-                  uzunluk olarak çiziyor, şeridin çentikleriyle AYNI küme
-                  (`card.points`). Yedekte ray boş ama yerinde: sayılar inince
-                  dip satırı oynamıyor. */}
-              <div className={styles.cardFoot}>
-                <span>
-                  {card.count === null
-                    ? NO_VALUE
-                    : t.themes.companies.replace("{count}", String(card.count))}
-                </span>
-                <span className={cn(styles.ratio, styles.cardRatio)} aria-hidden>
-                  {card.up !== null && card.points.length > 0 && (
-                    <>
-                      {card.up > 0 && (
-                        <i data-tone={neutral ? "neutral-up" : "up"} style={{ flexGrow: card.up }} />
-                      )}
-                      {card.points.length - card.up - card.down! > 0 && (
-                        <i data-tone="flat" style={{ flexGrow: card.points.length - card.up - card.down! }} />
-                      )}
-                      {card.down! > 0 && (
-                        <i data-tone={neutral ? "neutral-down" : "down"} style={{ flexGrow: card.down! }} />
-                      )}
-                    </>
-                  )}
-                </span>
-                <span className={styles.breadth}>
-                  {card.up === null ? (
-                    NO_VALUE
-                  ) : (
-                    <>
-                      <b className={cn("numeral", neutral ? "text-body" : "text-up")}>{card.up}</b>{" "}
-                      {t.themes.up}
-                      <span aria-hidden className={styles.breadthSep} />
-                      <b className={cn("numeral", neutral ? "text-body" : "text-down")}>{card.down}</b>{" "}
-                      {t.themes.down}
-                    </>
-                  )}
-                </span>
-              </div>
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
   );
 }

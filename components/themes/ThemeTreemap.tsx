@@ -7,7 +7,6 @@ import { heatOf, splitSmall, squarify, type HeatTone } from "@/lib/theme-view";
 import type { ThemeRow } from "@/lib/themes-data";
 import { cn, formatMoneyCompact, formatPercent, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./Themes.module.css";
-import { TreemapStage } from "./TreemapStage";
 
 /**
  * Temanın kare haritası — her üye piyasa değeriyle orantılı bir karo,
@@ -101,7 +100,8 @@ export function ThemeTreemap({
 }: {
   rows: ThemeRow[];
   moves: MoveSet | null;
-  /** Yanında ölçüt sütunu yok: geniş yerleşim daha yatık. */
+  /** Yanında ölçüt sütunu yok: geniş yerleşim daha yatık. 10 Kasım'dan
+      beri sayfa hep `solo` çağırıyor (ölçüt kıyası kapakta). */
   solo: boolean;
   locale: Locale;
   labels: Labels;
@@ -124,7 +124,11 @@ export function ThemeTreemap({
   const pctOf = (row: ThemeRow) => (row.changePct === null ? NO_VALUE : formatPercent(row.changePct, locale));
 
   return (
-    <TreemapStage className={styles.stage}>
+    /* Giriş koreografisi sitenin çizim kapısıyla (`data-draw`): ekranın
+       altındaki harita son karede bekler, girince baştan oynar. Eski
+       istemci yaprağı `TreemapStage` 10 Kasım'da kalktı (gerekçe
+       Themes.module.css → "Giriş koreografisi"). */
+    <div className={styles.stage} data-draw>
       {LAYOUTS.map((layout) => {
         const weights = sized.map(({ row }) => row.marketCap!);
         const minShare = (layout.min.w * layout.min.h) / (layout.box.w * layout.box.h);
@@ -137,6 +141,10 @@ export function ThemeTreemap({
           solo ? layout.soloAspect : layout.aspect,
         );
         const rosterId = `theme-small-${layout.key}`;
+        /* "Diğer N" karosu telefonda tabloya, geniş ekranda haritanın
+           altındaki ad listesine götürür: telefonda liste basılmıyor
+           (Themes.module.css → `.roster`), tablo hemen altta. */
+        const groupTarget = layout.key === "narrow" ? "tema-uyeleri" : rosterId;
         return (
           <div key={layout.key} className={styles.mapLayout} data-layout={layout.key}>
             <div className={styles.map}>
@@ -157,7 +165,7 @@ export function ThemeTreemap({
                   return (
                     <a
                       key="group"
-                      href={`#${rosterId}`}
+                      href={`#${groupTarget}`}
                       className={cn(styles.tile, styles.groupTile)}
                       style={place}
                       aria-label={`${label}: ${members.map((row) => row.symbol).join(", ")}`}
@@ -193,6 +201,8 @@ export function ThemeTreemap({
                     className={styles.tile}
                     style={place}
                     data-cc={row.symbol}
+                    /* Yazısı sığmayan karoda (yalnız renk) kimlik ipucunda. */
+                    title={`${row.symbol} ${pct}`}
                     aria-label={[
                       row.symbol,
                       row.name ?? row.symbol,
@@ -250,7 +260,7 @@ export function ThemeTreemap({
           items={unsized.map(({ row, index }) => ({ row, heat: tone(index), muted: !colored(index), pct: pctOf(row) }))}
         />
       )}
-    </TreemapStage>
+    </div>
   );
 }
 

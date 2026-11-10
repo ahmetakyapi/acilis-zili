@@ -1,64 +1,83 @@
 "use client";
 
-import { EASE_BRAND_POINTS } from "@/lib/motion";
-
-import { Fragment, useMemo, useState } from "react";
-import { motion } from "motion/react";
-import { ArrowDown } from "@phosphor-icons/react/dist/ssr";
+import { useMemo, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { CaretDown, CaretUp, CaretUpDown } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ScaleBar } from "@/components/markets/CompareScale";
-import { useMotionPreference } from "@/components/motion/useMotionPreference";
+import { RowFlip } from "@/components/markets/RowFlip";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { LogoTile } from "@/components/ui/primitives";
-import { scaleRatios } from "@/lib/compare";
 import type { MoveSet } from "@/lib/theme-stats";
 import type { ThemeRow } from "@/lib/themes-data";
 import {
   cn,
   directionOf,
-  directionText,
   formatMoneyCompact,
   formatPercent,
   formatPrice,
   NO_VALUE,
 } from "@/lib/utils";
-import styles from "./Themes.module.css";
+import styles from "./ThemeTable.module.css";
 
 /**
- * Tema tablosu — şirket, son fiyat, günlük değişim, piyasa değeri.
+ * Tema tablosu — şirket, günlük değişim, son fiyat, piyasa değeri.
  *
- * Kurallar karşılaştırma tablosundan (`/karsilastir`):
+ * TEK KATLI SATIR, TABLO AİLESİ (10 Kasım 2026, yeniden tasarım). Satır iki
+ * katlıydı (sembol üstte, ad altta; sayının ALTINDA 96 piksellik ölçek
+ * çubuğu): 21 üyeli Yarı İletkenler'de 55 piksel × 21 = 1.160 piksellik bir
+ * duvar, Şirket adı ile Son Fiyat arasında ~440 piksel boş (1440, canlı).
+ * Şimdi Piyasalar'ın Endeks Bileşenleri (components/markets/MembersTable)
+ * ve Şirketler tablosuyla (components/companies/CompanyTable.module.css)
+ * AYNI dil: 46 piksellik tek katlı satır, sembol ve ad aynı hatta, 40
+ * piksellik batık başlık, değişim sayısının YANINDA sütunun esnek
+ * genişliğini kaplayan ayrışan şerit (sıfır ortada; sıralı listede şeritler
+ * alt alta tek bir dağılım çiziyor), piyasa değeri onluk eksende nokta
+ * (`capAxis`, lib/market-scales.ts — doğrusal çubukta devin yanında on
+ * dokuz üye 3 pikselin altında kalıyordu). Sütun sırası da aile ile aynı:
+ * Değişim fiyattan önce. Stil kendi modülünde (ThemeTable.module.css);
+ * ortak modüle terfi ana oturumun kararı.
  *
- *   - Karşılaştırılan büyüklük bir de ÇİZGİ: günlük değişim ve piyasa
- *     değerinin altında ölçek çubuğu. Son fiyatta çubuk YOK — farklı
+ * Kurallar (karşılaştırma tablosundan, değişmedi):
+ *   - Karşılaştırılan büyüklük bir de ÇİZGİ. Son fiyatta çizgi YOK — farklı
  *     şirketlerin hisse fiyatı karşılaştırılabilir bir ölçü değil.
- *   - Kaydırma saklanmaz: tabloya taban genişlik veriliyor, dar ekranda
- *     kap kayıyor ve şirket sütunu yapışkan kalıyor.
+ *   - Kaydırma saklanmaz: 390'da Şirket sütunu yapışkan, Değişim ve Fiyat
+ *     kaydırmadan okunuyor, piyasa değeri sağdaki solma kuşağında başlıyor.
  *
- * GÜNLÜK DEĞİŞİMİN SEANSI (Veri dürüstlüğü 4): yüzde bu seansa ait değilse
- * yön rengini bırakıyor ve altında "Son Kapanış" künyesi duruyor — ana
- * sayfanın dünya piyasaları satırlarıyla aynı dil. Çubuk yalnızca medyana
- * giren (aynı günü anlatan) satırlara basılıyor.
+ * GÜNLÜK DEĞİŞİMİN SEANSI (Veri dürüstlüğü 4). Şerit yalnızca medyana giren
+ * (aynı günü anlatan) satırlara basılıyor. Yüzdesi son kapanışa ait satırda
+ * şeridin yerinde "Son Kapanış" yazıyor (640+); telefonda yazı sığmadığı
+ * için kulvar KESİKLİ ve tablonun dibinde bir satır künye var. Renk son
+ * kapanışta da işaretten (15 Ekim, sahibinin isteği).
  *
  * SIRALAMA İSTEMCİDE (28 Eylül). Yirmi satırlık bir tablo için sunucuya
  * dönmek ve adrese bir parametre eklemek gereksiz: adres ve arama motoruna
- * giden HTML aynı kalıyor (piyasa değerine göre), başlıktaki düğme yalnızca
- * satırların sırasını değiştiriyor. Ölçek oranları sıralamadan ÖNCE
- * hesaplanıp satıra bağlanıyor; sıra değişince çubuk kendi sayısıyla
- * birlikte taşınıyor. Satırlar yerlerine kayarak geçiyor (`layout`), hareket
- * azaltılmışsa tek karede.
+ * giden HTML aynı kalıyor (piyasa değerine göre), başlık yalnızca satırların
+ * sırasını değiştiriyor. Ölçek oranları sıralamadan ÖNCE hesaplanıp satıra
+ * bağlanıyor. 10 Kasım: satır kayması `motion` `layout` yerine sitenin
+ * ortak FLIP yaprağıyla (`components/markets/RowFlip.tsx`): başlıktaki
+ * bağlantıya basış anında satır konumlarını kaydediyor (`thead a`), yeni
+ * sıra boyanmadan önce yalnız `translate` oynatıyor. Başlık bu yüzden bir
+ * BAĞLANTI (`role="button"`; JS yokken tabloya çapa).
+ *
+ * KALABALIK TEMA KATLI (10 Kasım). On beşten fazla üyede ilk on iki satır
+ * açık, kalanı JS'siz anahtarla (`FoldToggle`) yerinde açılıyor: satırlar
+ * sunucuda yine çiziliyor. Dilim SIRALAMADAN SONRA: "En çok düşen on iki"
+ * de okunur.
+ *
+ * ÖLÇÜT FONU SATIRI KALKTI (10 Kasım). Tablonun dibinde ayrı bir grup
+ * olarak duruyordu (ölçeğe ve sıralamaya girmeden: bir fon ile şirketleri
+ * aynı şeritte sıralamak, fonu sepetin bir üyesi gibi gösterirdi). Fon
+ * artık kapakta, medyanın yanında ve şeritte bir im olarak (`ThemeReading`;
+ * adı fonun sayfasına bağlantı): aynı yüzde sayfada iki kez yazılmıyor.
  */
 
-/** Şirket sütununun sabit genişliği ve bir sayı sütununun en darı —
-    `/karsilastir` tablosunun ölçüleriyle aynı mantık: 390 pikselde üç
-    sayı sütunu kaba sığıyor, altında kayıyor. */
-const LABEL_COL_PX = 148;
-const VALUE_COL_PX = 76;
-const VALUE_COLS = 3;
-/** Satır kayma süresi, saniye. */
-const ROW_LAYOUT_S = 0.45;
+/** Katlama eşiği ve açık satır sayısı. Yarı İletkenler 21 → 12 açık
+    (966 → 552 piksel); 14 üyeli Bulut ve Yazılım katlanmıyor. */
+const FOLD_OVER = 15;
+const FOLD_ROWS = 12;
+const SCOPE = "tema-uyeleri";
 
-type SortKey = "company" | "price" | "day" | "cap";
+type SortKey = "company" | "day" | "price" | "cap";
 type SortDir = "asc" | "desc";
 
 /** İlk tıklamada hangi yön: sayılarda büyükten küçüğe, adda A'dan Z'ye. */
@@ -66,14 +85,15 @@ const FIRST_DIR: Record<SortKey, SortDir> = { company: "asc", price: "desc", day
 
 export function ThemeTable({
   rows,
-  benchmark,
   moves,
+  token,
   locale,
   labels,
 }: {
   rows: ThemeRow[];
-  benchmark: (ThemeRow & { displayName: string }) | null;
   moves: MoveSet | null;
+  /** Temanın kimliği: satır kayması başka temanın kaydıyla oynamasın. */
+  token: string;
   locale: string;
   labels: {
     region: string;
@@ -81,34 +101,29 @@ export function ThemeTable({
     price: string;
     day: string;
     cap: string;
-    benchmark: string;
     lastClose: string;
+    lastCloseNote: string;
     sortBy: string;
+    showAll: string;
+    showLess: string;
   };
 }) {
-  const reduced = useMotionPreference();
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "cap", dir: "desc" });
 
-  const scaled = useMemo(() => {
-    const dayScale = scaleRatios(rows.map((row, i) => (moves?.included[i] ? row.changePct : null)));
-    const capScale = scaleRatios(rows.map((row) => row.marketCap));
-    return rows.map((row, i) => ({
-      row,
-      dayRatio: dayScale.ratios[i],
-      daySigned: dayScale.signed,
-      capRatio: capScale.ratios[i],
-    }));
+  const { scaled, signed, anyStale } = useMemo(() => {
+    const inScale = rows.map((row, i) => (moves?.included[i] && row.changePct !== null ? row.changePct : null));
+    const peak = Math.max(0.01, ...inScale.map((value) => Math.abs(value ?? 0)));
+    return {
+      scaled: rows.map((row, i) => ({ row, ratio: inScale[i] === null ? null : Math.min(1, Math.abs(inScale[i]!) / peak) })),
+      /* Listede eksi var mı — şeridin sıfırı ortada mı. */
+      signed: inScale.some((value) => value !== null && value < 0),
+      anyStale: rows.some((row, i) => row.changePct !== null && inScale[i] === null),
+    };
   }, [rows, moves]);
 
   const sorted = useMemo(() => {
     const value = (row: ThemeRow): number | string | null =>
-      sort.key === "company"
-        ? row.symbol
-        : sort.key === "price"
-          ? row.price
-          : sort.key === "day"
-            ? row.changePct
-            : row.marketCap;
+      sort.key === "company" ? row.symbol : sort.key === "price" ? row.price : sort.key === "day" ? row.changePct : row.marketCap;
     const factor = sort.dir === "asc" ? 1 : -1;
     /* Değeri olmayan satır yön ne olursa olsun sonda kalır. */
     return [...scaled].sort((a, b) => {
@@ -124,158 +139,158 @@ export function ThemeTable({
 
   const toggle = (key: SortKey) =>
     setSort((current) =>
-      current.key === key
-        ? { key, dir: current.dir === "asc" ? "desc" : "asc" }
-        : { key, dir: FIRST_DIR[key] },
+      current.key === key ? { key, dir: current.dir === "asc" ? "desc" : "asc" } : { key, dir: FIRST_DIR[key] },
     );
 
-  const header = (key: SortKey, label: string, className: string) => {
+  const header = (key: SortKey, label: string, className?: string, extra?: ReactNode) => {
     const active = sort.key === key;
+    const Icon = active ? (sort.dir === "desc" ? CaretDown : CaretUp) : CaretUpDown;
     return (
       <th
         scope="col"
-        className={className}
+        className={cn(styles.sortCell, className)}
+        data-active={active || undefined}
         aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
       >
-        <button
-          type="button"
-          className={styles.sortButton}
-          data-active={active || undefined}
-          data-dir={active ? sort.dir : undefined}
-          aria-label={labels.sortBy.replace("{column}", label)}
-          onClick={() => toggle(key)}
-        >
-          {label}
-          {active && <ArrowDown weight="bold" size={11} className={styles.sortIcon} aria-hidden />}
-        </button>
+        <span className={styles.sortWrap}>
+          <a
+            href={`#${SCOPE}`}
+            role="button"
+            className={styles.sortLink}
+            aria-label={labels.sortBy.replace("{column}", label)}
+            onClick={(event: MouseEvent) => {
+              event.preventDefault();
+              toggle(key);
+            }}
+            onKeyDown={(event: KeyboardEvent) => {
+              if (event.key !== " ") return;
+              event.preventDefault();
+              (event.currentTarget as HTMLElement).click();
+            }}
+          >
+            {label}
+            <Icon aria-hidden size={12} weight={active ? "fill" : "bold"} className={styles.sortIcon} />
+          </a>
+          {extra}
+        </span>
       </th>
     );
   };
 
-  const renderDay = (row: ThemeRow, ratio: number | null | undefined, signed: boolean) => {
-    if (row.changePct === null) return NO_VALUE;
-    const lastClose = row.basis === "lastClose";
-    return (
-      <>
-        <span
-          className={cn(
-            "numeral font-semibold",
-            /* Renk son kapanışta da işaretten (15 Ekim, sahibinin isteği);
-               "Son Kapanış" alt satırı dönemi söylemeye devam ediyor. */
-            directionText(directionOf(row.changePct)),
-          )}
-        >
-          {formatPercent(row.changePct, locale)}
+  const company = (row: ThemeRow) => (
+    <th scope="row" className={styles.company}>
+      {/* Bağlantı hücreyi dolduruyor: dokunma hedefi satır yüksekliği kadar.
+          Şirket kartı: components/ui/CompanyCard.tsx. */}
+      <Link href={`/hisse/${row.symbol}`} prefetch={false} className={styles.companyLink} data-cc={row.symbol}>
+        <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" className={styles.logo} />
+        <span className={styles.companyText}>
+          <span className={cn("numeral", styles.symbol)}>{row.symbol}</span>
+          <span className={styles.name} title={row.name ?? undefined}>
+            {row.name ?? NO_VALUE}
+          </span>
         </span>
-        {lastClose && (
-          <span className="block text-nano leading-tight text-muted">{labels.lastClose}</span>
-        )}
-        {ratio != null && <ScaleBar ratio={ratio} signed={signed} tone="signal" />}
-      </>
+      </Link>
+    </th>
+  );
+
+  const change = (row: ThemeRow, ratio: number | null, inScale: boolean) => {
+    const tone = directionOf(row.changePct);
+    return (
+      <td className={styles.changeCell}>
+        <span className={styles.change}>
+          {row.changePct === null ? (
+            <span />
+          ) : inScale && ratio !== null ? (
+            <span className={styles.lane} data-motion-track aria-hidden>
+              {/* Tam %0: ray ve sıfır çizgisi var, dolgu yok — "değişmedi"
+                  bir uzunluk değil. */}
+              {row.changePct !== 0 && (
+                <i
+                  className={styles.fill}
+                  data-tone={tone}
+                  data-motion-draw="line"
+                  style={{
+                    width: `${(signed ? ratio * 50 : ratio * 100).toFixed(2)}%`,
+                    transformOrigin: row.changePct < 0 ? "right center" : "left center",
+                  }}
+                />
+              )}
+            </span>
+          ) : (
+            <span className={styles.stale}>
+              <span className={styles.staleText}>{labels.lastClose}</span>
+              <span className={styles.staleLane} aria-hidden />
+            </span>
+          )}
+          <span
+            className={cn(
+              "numeral",
+              styles.changeNum,
+              row.changePct === null ? "text-muted" : tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-muted",
+            )}
+          >
+            {row.changePct === null ? NO_VALUE : formatPercent(row.changePct, locale)}
+          </span>
+        </span>
+      </td>
     );
   };
 
-  const nameCell = (row: ThemeRow, displayName?: string) => (
-    <Link
-      href={`/hisse/${row.symbol}`}
-      prefetch={false}
-      /* Telefonda 44 piksel: satırın tek bağlantısı 38-41 pikseldi (390, ölçüldü). */
-      className="flex min-h-11 min-w-0 items-center gap-2.5 py-0.5 transition-colors hover:text-primary sm:min-h-0"
-      /* Şirket kartı (components/ui/CompanyCard.tsx); ölçüt ETF'inin kaydı
-         yok, onda kart açılmıyor. */
-      data-cc={row.symbol}
-    >
-      <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
-      <span className="min-w-0">
-        <span className="numeral block text-small font-bold text-strong">{row.symbol}</span>
-        <span className="block truncate text-tiny text-muted">
-          {displayName ?? row.name ?? NO_VALUE}
-        </span>
-      </span>
-    </Link>
-  );
-
-  const sticky =
-    "sticky left-0 z-10 bg-(--panel-fixed) sm:static sm:z-auto sm:bg-transparent";
+  const hidden = rows.length > FOLD_OVER ? rows.length - FOLD_ROWS : 0;
 
   return (
-    <ScrollEdges
-      className="scroll-x-hint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
-      tabIndex={0}
-      role="region"
-      aria-label={labels.region}
-      fixedStart
-    >
-      <table
-        className="w-full text-sm"
-        style={{ minWidth: `${LABEL_COL_PX + VALUE_COLS * VALUE_COL_PX}px` }}
+    <div id={SCOPE} className={styles.wrap}>
+      <RowFlip scope={SCOPE} token={token} order={`${sort.key}:${sort.dir}`} />
+      <FoldToggle
+        id="tema-uyeleri-kat"
+        narrow={false}
+        hiddenCount={hidden}
+        more={labels.showAll.replace("{count}", String(rows.length))}
+        less={labels.showLess}
       >
-        <thead>
-          <tr className="border-y border-line-soft text-left text-nano text-muted">
-            {header("company", labels.company, cn(sticky, "px-4 py-2.5 font-semibold sm:px-5"))}
-            {header("price", labels.price, "px-2 py-2.5 text-right font-semibold sm:px-4")}
-            {header("day", labels.day, "px-2 py-2.5 text-right font-semibold sm:px-4")}
-            {header("cap", labels.cap, "py-2.5 pl-2 pr-4 text-right font-semibold sm:pl-4 sm:pr-5")}
-          </tr>
-        </thead>
-        <tbody className="divide-y divide-line-soft">
-          {sorted.map(({ row, dayRatio, daySigned, capRatio }) => (
-            <motion.tr
-              key={row.symbol}
-              layout={reduced ? false : "position"}
-              transition={{ duration: ROW_LAYOUT_S, ease: EASE_BRAND_POINTS }}
-            >
-              <th scope="row" className={cn(sticky, "max-w-[220px] px-4 py-2 text-left font-normal sm:px-5")}>
-                {nameCell(row)}
-              </th>
-              <td className="px-2 py-2 text-right align-top text-small sm:px-4 sm:text-base">
-                <span className="numeral font-bold text-strong">
-                  {row.price !== null ? formatPrice(row.price, locale) : NO_VALUE}
-                </span>
-              </td>
-              <td className="px-2 py-2 text-right align-top text-small sm:px-4 sm:text-base">
-                {renderDay(row, dayRatio, daySigned)}
-              </td>
-              <td className="py-2 pl-2 pr-4 text-right align-top text-small text-body sm:pl-4 sm:pr-5 sm:text-base">
-                <span className="numeral">{formatMoneyCompact(row.marketCap, locale)}</span>
-                {capRatio != null && <ScaleBar ratio={capRatio} signed={false} />}
-              </td>
-            </motion.tr>
-          ))}
-          {benchmark && (
-            <Fragment>
+        <ScrollEdges
+          fixedStart
+          className={cn("scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)", styles.scroller)}
+          tabIndex={0}
+          role="region"
+          aria-label={labels.region}
+        >
+          <table className={styles.table} data-signed={signed || undefined}>
+            <thead>
               <tr>
-                <th
-                  scope="colgroup"
-                  colSpan={VALUE_COLS + 1}
-                  className="bg-surface px-4 py-1.5 text-left sm:px-5"
-                >
-                  <span className="plate sticky left-4 text-nano">{labels.benchmark}</span>
-                </th>
+                <th scope="col" className={styles.rankHead}>#</th>
+                {header("company", labels.company, styles.companyHead)}
+                {header("day", labels.day, styles.changeHead)}
+                {header("price", `${labels.price} ($)`)}
+                {/* PİYASA DEĞERİ DOĞRUDAN (10 Kasım, birleştirme): onluk eksendeki
+                    nokta kalktı — sahibinin Endeks Bileşenleri kararı ("piyasa değerini
+                    direkt yazsak daha doğru olacak"); aile tek dil konuşuyor. */}
+                {header("cap", labels.cap, styles.capHead)}
               </tr>
-              <tr>
-                <th scope="row" className={cn(sticky, "max-w-[220px] px-4 py-2 text-left font-normal sm:px-5")}>
-                  {nameCell(benchmark, benchmark.displayName)}
-                </th>
-                <td className="px-2 py-2 text-right align-top text-small sm:px-4 sm:text-base">
-                  <span className="numeral font-bold text-strong">
-                    {benchmark.price !== null ? formatPrice(benchmark.price, locale) : NO_VALUE}
-                  </span>
-                </td>
-                <td className="px-2 py-2 text-right align-top text-small sm:px-4 sm:text-base">
-                  {/* Ölçüt satırı ölçeğe ve sıralamaya girmiyor: bir fon ile
-                      şirketleri aynı çubukta sıralamak, fonu sepetin bir
-                      üyesi gibi gösterirdi. */}
-                  {renderDay(benchmark, null, false)}
-                </td>
-                <td className="py-2 pl-2 pr-4 text-right align-top text-small text-muted sm:pl-4 sm:pr-5 sm:text-base">
-                  {NO_VALUE}
-                </td>
-              </tr>
-            </Fragment>
-          )}
-        </tbody>
-      </table>
-    </ScrollEdges>
+            </thead>
+            <tbody>
+              {sorted.map(({ row, ratio }, index) => (
+                <tr key={row.symbol} data-row={row.symbol} data-fold={hidden > 0 && index >= FOLD_ROWS ? "" : undefined}>
+                  <td className={cn("numeral", styles.rank)}>{index + 1}</td>
+                  {company(row)}
+                  {change(row, ratio, ratio !== null)}
+                  <td className={cn("numeral", styles.price)}>
+                    {row.price !== null ? formatPrice(row.price, locale) : NO_VALUE}
+                  </td>
+                  <td className={styles.capCell}>
+                    <span className={styles.cap}>
+                      <span className={cn("numeral", row.marketCap ? styles.capValue : "text-muted")}>
+                        {row.marketCap ? formatMoneyCompact(row.marketCap, locale) : NO_VALUE}
+                      </span>
+                    </span>
+                  </td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </ScrollEdges>
+      </FoldToggle>
+      {anyStale && <p className={styles.note}>{labels.lastCloseNote}</p>}
+    </div>
   );
 }

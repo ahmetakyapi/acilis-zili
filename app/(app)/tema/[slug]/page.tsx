@@ -8,11 +8,13 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { GuideHint } from "@/components/article/GuideHint";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import detail from "@/components/themes/ThemeDetail.module.css";
+import { ThemeReading, type ReadingLabels } from "@/components/themes/ThemeReading";
 import { ThemeStats } from "@/components/themes/ThemeStats";
 import { ThemeTable } from "@/components/themes/ThemeTable";
 import { ThemeTreemap } from "@/components/themes/ThemeTreemap";
 import styles from "@/components/themes/Themes.module.css";
-import { HeatLegend, LogoGroup } from "@/components/themes/ThemeVisuals";
+import { HeatLegend } from "@/components/themes/ThemeVisuals";
 import { ThemeTimelineChart, type ThemeTimelineView } from "@/components/themes/ThemeTimelineChart";
 import { evenTicks } from "@/lib/duo-chart";
 import { gapVerdict } from "@/lib/return-timeline";
@@ -22,6 +24,7 @@ import { CompanyCards } from "@/components/ui/CompanyCards";
 import {
   ButtonLink,
   DataStamp,
+  LogoTile,
   Panel,
   PanelHeader,
   Skeleton,
@@ -43,7 +46,7 @@ import { logoSrc } from "@/lib/logos";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { getQuotes } from "@/lib/providers";
 import { pageAlternates } from "@/lib/site";
-import { median, sameSessionMoves, themePhase, type MoveSet } from "@/lib/theme-stats";
+import { sameSessionMoves, themePhase } from "@/lib/theme-stats";
 import {
   byMarketCap,
   KATILIM_MAX,
@@ -52,29 +55,28 @@ import {
   katilimPool,
   themeRow,
   themeUniverse,
-  type ThemeRow,
 } from "@/lib/themes-data";
-import {
-  cn,
-  directionOf,
-  directionText,
-  formatPercent,
-  formatPercentPlain,
-  formatPrice,
-  NO_VALUE,
-} from "@/lib/utils";
+import { cn, formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils";
 
 /**
  * Tematik liste — "yapay zekâ hisseleri hangileri, bugün ne yaptılar".
  *
- * Ekran sırası sitenin kuralı:
- *   1. Kapak: ad, tek cümle, üye logolarının kümesi.
- *   2. Ana görsel: kare haritası (piyasa değeriyle boyutlanmış karolar,
- *      günün hareketiyle boyanmış) ve yanında temanın ölçüt ETF'i.
- *   3. Ölçü ızgarası: medyan, yükselen/düşen, en güçlü ve en zayıf üye.
- *   4. Sıralanabilir tablo, dibinde karşılaştırma bağlantısı.
- *   5. Metin (neden bu şirketler) ve künyeler panelin içinde.
- *   6. Diğer temalar, veri damgası, rehber.
+ * Ekran sırası (10 Kasım 2026, yeniden tasarım; önceki sıra kapak → harita
+ * → ölçü ızgarası → zaman çizgisi → tablo idi):
+ *   1. Kapak: ad, tek cümle ve GÜNÜN OKUMASI — medyan (sayfanın en büyük
+ *      puntosu), üyelerin dağılım şeridi, ölçüt fonuyla kıyas
+ *      (`ThemeReading`). Logo kümesi kalktı: sabit 184 piksellik kutuydu,
+ *      beş üyeli temada içi boş duruyordu ve günü söylemiyordu.
+ *   2. Ölçü ızgarası "Temanın Günü": yükselen/düşen, en güçlü, en zayıf ve
+ *      en büyük üye. Kapaktaki medyanın açılımı, hemen altında.
+ *   3. Ana görsel: kare haritası, panelin tam genişliğinde (ölçüt sütunu
+ *      kapağa taşındı; harita 1440'ta 1.006 → 1.278 piksel).
+ *   4. Sıralanabilir tablo (tek katlı satır), dibinde karşılaştırma
+ *      bağlantısı. Haritanın hemen altında: "hangisi" sorusunun kesin
+ *      sayıları.
+ *   5. Zaman çizgisi (ikinci görsel, 1A/3A/YBB) — bugünden geçmişe.
+ *   6. Metin (neden bu şirketler) ve künyeler panelin içinde.
+ *   7. Diğer temalar, veri damgası, rehber.
  *
  * Kotasyon TEK ÇAĞRI ve dizinle AYNI ANAHTAR: bütün temaların üyeleri ve
  * ölçütleri (`themeUniverse`, gerekçesi orada). Ana sayfada okunan medyan
@@ -106,11 +108,7 @@ export async function generateMetadata(props: PageProps<"/tema/[slug]">) {
   };
 }
 
-/** Kapak kümesinde en fazla kaç logo — tavan temaların üye tavanıyla aynı. */
-const CLUSTER_MAX = 20;
-/** Bu farkın altında "aynı yerde" denir: iki basamaklı yazımda 0,00. */
-const EVEN_POINTS = 0.005;
-/** Diğer temalar satırındaki logo yığını. */
+/** Diğer temalar satırındaki logo sayısı; fazlası "+N". */
 const OTHER_STACK_MAX = 4;
 
 const loadTheme = cache(async function loadTheme(slug: string) {
@@ -150,10 +148,19 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
   if (!theme) notFound();
 
   const title = themeTitle(theme, locale);
-  const symbols = theme.symbols;
-  const katilim = symbols === "katilim";
-  const staticMembers =
-    symbols === "katilim" ? [] : symbols.map((symbol) => ({ symbol, logoUrl: logoSrc(symbol, null) }));
+  const katilim = theme.symbols === "katilim";
+  const readingLabels: ReadingLabels = {
+    median: t.themes.median,
+    coverage: t.themes.coverage,
+    medianMissing: t.themes.medianMissing,
+    spreadLabel: t.themes.spreadLabel,
+    spreadMissing: t.themes.spreadMissing,
+    lastClose: t.themes.lastClose,
+    benchAbove: t.themes.benchAbove,
+    benchBelow: t.themes.benchBelow,
+    benchEven: t.themes.benchEven,
+    benchMixed: t.themes.benchMixed,
+  };
 
   return (
     <MotionExperience className={polish.page}>
@@ -176,15 +183,13 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
         description={themeDek(theme, locale)}
         share={<PageShare path={`/tema/${theme.slug}`} title={`${title} · ${t.themes.eyebrow}`} locale={locale} t={t} />}
         visual={
-          katilim ? (
-            <Suspense
-              fallback={<LogoGroup members={[]} variant="cluster" size="lg" max={CLUSTER_MAX} placeholder={KATILIM_MAX} />}
-            >
-              <LiveCluster slug={theme.slug} />
-            </Suspense>
-          ) : (
-            <LogoGroup members={staticMembers} variant="cluster" size="lg" max={CLUSTER_MAX} card />
-          )
+          <Suspense
+            fallback={
+              <ThemeReading data={null} hasBenchmark={theme.benchmark !== null} locale={locale} labels={readingLabels} />
+            }
+          >
+            <LiveReading slug={theme.slug} locale={locale} t={t} labels={readingLabels} />
+          </Suspense>
         }
       >
         <p className={styles.heroMeta}>
@@ -244,9 +249,30 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
   );
 }
 
-async function LiveCluster({ slug }: { slug: string }) {
-  const { rows } = await loadTheme(slug);
-  return <LogoGroup members={rows} variant="cluster" size="lg" max={CLUSTER_MAX} card />;
+async function LiveReading({
+  slug,
+  locale,
+  t,
+  labels,
+}: {
+  slug: string;
+  locale: Locale;
+  t: Dictionary;
+  labels: ReadingLabels;
+}) {
+  const { theme, rows, moves, phase, benchmark } = await loadTheme(slug);
+  return (
+    <ThemeReading
+      data={{ rows, moves, benchmark }}
+      hasBenchmark={theme.benchmark !== null}
+      locale={locale}
+      labels={{
+        ...labels,
+        /* Künye pencereye göre tek ifade ("Açılış Öncesi Medyanı"). */
+        median: phase === "pre-market" ? t.themes.medianPre : phase === "lastClose" ? t.themes.medianClose : t.themes.median,
+      }}
+    />
+  );
 }
 
 async function LiveStamp({ slug, locale, t }: { slug: string; locale: Locale; t: Dictionary }) {
@@ -300,14 +326,35 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
             ]),
         )}
       />
-      {/* Panel kırpmıyor: karoların künye kartı haritanın dışına taşabiliyor. */}
+      <ThemeStats
+        rows={rows}
+        moves={moves}
+        locale={locale}
+        labels={{
+          title: t.themes.todayTitle,
+          medianSession:
+            phase === "pre-market" ? t.themes.medianPreMarket : phase === "lastClose" ? t.themes.medianLastClose : t.themes.medianSession,
+          coverage: t.themes.coverage,
+          medianLastClose: t.themes.medianLastClose,
+          medianMissing: t.themes.medianMissing,
+          breadth: t.themes.breadth,
+          best: t.themes.best,
+          worst: t.themes.worst,
+          largest: t.themes.largest,
+          share: t.themes.mapShare,
+        }}
+      />
+
+      {/* Panel kırpmıyor: karoların künye kartı haritanın dışına taşabiliyor.
+          10 Kasım: ölçüt kıyası haritanın yanındaki 272 piksellik sütundan
+          KAPAĞA taşındı (`ThemeReading`); harita panelin tam genişliğinde. */}
       <Panel className={styles.mapPanel}>
         <PanelHeader
           title={t.themes.mapTitle}
           action={rows.length > 0 ? <HeatLegend locale={locale} label={t.themes.mapHint} /> : undefined}
         />
         {rows.length > 0 ? (
-          <div className={styles.mapBody} data-bench={benchmark ? "" : undefined}>
+          <div className={styles.mapBody}>
             <div className={styles.mapMain}>
               <p className={styles.mapHint}>
                 {moves?.basis === "lastClose" ? t.themes.mapLastClose : t.themes.mapHint}
@@ -315,7 +362,7 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
               <ThemeTreemap
                 rows={rows}
                 moves={moves}
-                solo={!benchmark}
+                solo
                 locale={locale}
                 labels={{
                   unsized: t.themes.mapUnsized,
@@ -327,15 +374,6 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
                 }}
               />
             </div>
-            {benchmark && <BenchmarkAside
-                benchmark={benchmark}
-                moves={moves}
-                sessionLabel={
-                  phase === "pre-market" ? t.themes.medianPreMarket : phase === "lastClose" ? t.themes.medianLastClose : t.themes.medianSession
-                }
-                locale={locale}
-                t={t}
-              />}
           </div>
         ) : (
           <p className="border-t border-line px-4 py-4 text-small text-muted sm:px-5">
@@ -349,47 +387,13 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
         )}
       </Panel>
 
-      <ThemeStats
-        rows={rows}
-        moves={moves}
-        locale={locale}
-        labels={{
-          title: t.themes.todayTitle,
-          median: phase === "pre-market" ? t.themes.medianPre : phase === "lastClose" ? t.themes.medianClose : t.themes.median,
-          medianSession:
-            phase === "pre-market" ? t.themes.medianPreMarket : phase === "lastClose" ? t.themes.medianLastClose : t.themes.medianSession,
-          coverage: t.themes.coverage,
-          medianLastClose: t.themes.medianLastClose,
-          medianMissing: t.themes.medianMissing,
-          breadth: t.themes.breadth,
-          best: t.themes.best,
-          worst: t.themes.worst,
-        }}
-      />
-
-      {/* ZAMAN İÇİNDE (25 Ekim): ölçü ızgarası bugünü söylüyor; çizgi
-          temanın 1A/3A/YBB seyrini ölçüt fonuyla. Ana görsel harita,
-          ikinci görsel ölçü ızgarasının altında (CLAUDE.md ekran düzeni 3).
-          Barlar ayrı istek: kendi Suspense'inde, iskelet aynı boyda. */}
-      {rows.length >= 2 && (
-        <Suspense fallback={<TimelineSkeleton title={t.personalVisuals.themeChart.title} />}>
-          <ThemeTimeline
-            symbols={rows.map((row) => row.symbol)}
-            benchmark={benchmark ? { symbol: benchmark.symbol } : null}
-            path={`/tema/${slug}`}
-            title={themeTitle(theme, locale)}
-            locale={locale}
-            t={t}
-          />
-        </Suspense>
-      )}
-      <Panel>
-        <PanelHeader title={t.themes.tableTitle} />
+      <Panel className={styles.tablePanel}>
+        <PanelHeader title={t.themes.tableTitle} meta={t.themes.companies.replace("{count}", String(rows.length))} />
         {rows.length > 0 ? (
           <ThemeTable
             rows={rows}
-            benchmark={benchmark}
             moves={moves}
+            token={slug}
             locale={locale}
             labels={{
               region: t.themes.tableRegion,
@@ -397,9 +401,11 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
               price: t.themes.colPrice,
               day: t.themes.colDay,
               cap: t.themes.colCap,
-              benchmark: t.themes.benchmark,
               lastClose: t.themes.lastClose,
+              lastCloseNote: t.themes.tableLastCloseNote,
               sortBy: t.themes.sortBy,
+              showAll: t.themes.tableAll,
+              showLess: t.compact.showLess,
             }}
           />
         ) : (
@@ -416,6 +422,24 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
           </div>
         )}
       </Panel>
+      {/* ZAMAN İÇİNDE (25 Ekim): ölçü ızgarası bugünü söylüyor; çizgi
+          temanın 1A/3A/YBB seyrini ölçüt fonuyla. Ana görsel harita,
+          ikinci görsel ölçü ızgarasının altında (CLAUDE.md ekran düzeni 3).
+          Barlar ayrı istek: kendi Suspense'inde, iskelet aynı boyda.
+          10 Kasım: tablonun ALTINA indi — ekran önce bugünü bitiriyor
+          (kapak, ızgara, harita, tablo), sonra geçmişe bakıyor. */}
+      {rows.length >= 2 && (
+        <Suspense fallback={<TimelineSkeleton title={t.personalVisuals.themeChart.title} />}>
+          <ThemeTimeline
+            symbols={rows.map((row) => row.symbol)}
+            benchmark={benchmark ? { symbol: benchmark.symbol } : null}
+            path={`/tema/${slug}`}
+            title={themeTitle(theme, locale)}
+            locale={locale}
+            t={t}
+          />
+        </Suspense>
+      )}
     </>
   );
 }
@@ -533,131 +557,36 @@ function TimelineSkeleton({ title }: { title: string }) {
 }
 
 /**
- * Ölçüt kıyası — temanın medyanı ile temayı izleyen ETF'in günü, ortak
- * sıfırdan iki yana açılan iki çubukla.
- *
- * Kıyas ancak ikisi AYNI SEANSI anlatıyorsa kuruluyor: açılış öncesinde
- * ETF bu sabah işlem görmüş, üyeler görmemiş olabilir (ya da tersi). O
- * hâlde iki sayı yine yazılıyor ama çubuk ve "kaç puan üstünde" cümlesi
- * yok; iki ayrı günden bir fark üretmek, fark göstermemekten kötü.
- */
-function BenchmarkAside({
-  benchmark,
-  moves,
-  sessionLabel,
-  locale,
-  t,
-}: {
-  benchmark: ThemeRow & { displayName: string };
-  moves: MoveSet | null;
-  sessionLabel: string;
-  locale: Locale;
-  t: Dictionary;
-}) {
-  const mid = moves ? median(moves.values) : null;
-  const themeSession = moves?.basis === "session";
-  const benchSession = benchmark.basis !== null && benchmark.basis !== "lastClose";
-  const comparable =
-    mid !== null && benchmark.changePct !== null && moves !== null && themeSession === benchSession;
-  const peak = comparable ? Math.max(Math.abs(mid), Math.abs(benchmark.changePct!)) : 0;
-  const diff = comparable ? mid - benchmark.changePct! : null;
-
-  const bar = (value: number | null, session: boolean) => {
-    if (!comparable || value === null || peak === 0 || value === 0) return null;
-    const ratio = value / peak;
-    return (
-      <i
-        className={styles.rankBar}
-        data-tone={session ? (ratio > 0 ? "up" : "down") : "flat"}
-        data-motion-draw="line"
-        style={
-          ratio > 0
-            ? { left: "50%", width: `${ratio * 50}%`, transformOrigin: "left center" }
-            : { right: "50%", width: `${-ratio * 50}%`, transformOrigin: "right center" }
-        }
-      />
-    );
-  };
-  const tone = (value: number | null, session: boolean) =>
-    value === null ? "text-muted" : session ? directionText(directionOf(value)) : "text-body";
-
-  return (
-    <aside className={styles.bench} aria-labelledby="theme-bench-title">
-      <h3 id="theme-bench-title" className={styles.benchTitle}>
-        {t.themes.benchTitle}
-      </h3>
-      <div className={styles.benchRow}>
-        <span className={styles.benchLabel}>
-          <b>{t.themes.benchMedian}</b>
-          {moves ? (themeSession ? sessionLabel : t.themes.medianLastClose) : NO_VALUE}
-        </span>
-        <span className={cn("numeral", styles.benchValue, tone(mid, themeSession))}>
-          {mid === null ? NO_VALUE : formatPercent(mid, locale)}
-        </span>
-        <span className={styles.benchTrack} aria-hidden>
-          {bar(mid, themeSession)}
-        </span>
-      </div>
-      <div className={styles.benchRow}>
-        <span className={styles.benchLabel}>
-          <b className="numeral">{benchmark.symbol}</b>
-          {benchmark.displayName}
-        </span>
-        <span className={cn("numeral", styles.benchValue, tone(benchmark.changePct, benchSession))}>
-          {benchmark.changePct === null ? NO_VALUE : formatPercent(benchmark.changePct, locale)}
-        </span>
-        <span className={styles.benchTrack} aria-hidden>
-          {bar(benchmark.changePct, benchSession)}
-        </span>
-      </div>
-      <p className={styles.benchNote}>
-        {diff === null
-          ? t.themes.benchMixed
-          : Math.abs(diff) < EVEN_POINTS
-            ? t.themes.benchEven
-            : (diff > 0 ? t.themes.benchAbove : t.themes.benchBelow).replace(
-                "{diff}",
-                formatPrice(Math.abs(diff), locale),
-              )}
-      </p>
-    </aside>
-  );
-}
-
-/**
- * Akış sürerken yerini tutan iskelet — haritanın kabı aynı oranda, tablo
- * aynı satır sayısında (Katılım'da tavan kadar). Harita ilk ekranda
- * duruyor; oranı tuttuğu için veri inince altındaki hiçbir şey kaymıyor.
+ * Akış sürerken yerini tutan iskelet — canlı sırayla aynı üç panel: ölçü
+ * ızgarası, haritanın kabı aynı oranda, tablo aynı satır sayısında
+ * (Katılım'da tavan kadar; kalabalık temada katlı hâlinin on iki satırı).
+ * Harita oranı tuttuğu için veri inince altındaki hiçbir şey kaymıyor.
  */
 function LiveSkeleton({ theme, t }: { theme: ThemeEntry; t: Dictionary }) {
-  const rowCount = theme.symbols === "katilim" ? KATILIM_MAX : theme.symbols.length;
+  /* Tabloda katlama eşiği ThemeTable ile aynı: 15'ten fazla üyede 12 satır. */
+  const members = theme.symbols === "katilim" ? KATILIM_MAX : theme.symbols.length;
+  const rowCount = members > 15 ? 12 : members;
   return (
     <>
       <Panel aria-busy>
+        <PanelHeader title={t.themes.todayTitle} />
+        <div className={detail.metrics} data-cells={4}>
+          {Array.from({ length: 4 }, (_, i) => (
+            <div key={i} className={detail.metric}>
+              <Skeleton className="h-4 w-24" />
+              <Skeleton className="h-11 w-28" />
+              <Skeleton className="h-7 w-36" />
+            </div>
+          ))}
+        </div>
+      </Panel>
+      <Panel aria-busy>
         <PanelHeader title={t.themes.mapTitle} />
-        <div className={styles.mapBody} data-bench={theme.benchmark ? "" : undefined}>
+        <div className={styles.mapBody}>
           <div className={styles.mapMain}>
             <p className={styles.mapHint}>{t.themes.mapHint}</p>
             <div className={cn("skeleton rounded-xl", styles.mapSkeleton)} />
           </div>
-          {theme.benchmark && (
-            <div className={styles.bench}>
-              <Skeleton className="h-4 w-28" />
-              <Skeleton className="h-16 w-full" />
-              <Skeleton className="h-16 w-full" />
-            </div>
-          )}
-        </div>
-      </Panel>
-      <Panel aria-busy>
-        <PanelHeader title={t.themes.todayTitle} />
-        <div className={styles.metrics}>
-          {Array.from({ length: 4 }, (_, i) => (
-            <div key={i} className={styles.metric}>
-              <Skeleton className="h-4 w-24" />
-              <Skeleton className="h-11 w-28" />
-            </div>
-          ))}
         </div>
       </Panel>
       <Panel aria-busy>
@@ -673,8 +602,8 @@ function LiveSkeleton({ theme, t }: { theme: ThemeEntry; t: Dictionary }) {
 }
 
 /**
- * Diğer temalara geçiş — iki sütunlu satırlar, her satırda temanın ilk
- * logoları. Durağan: sayılar yok, akış beklemiyor.
+ * Diğer temalara geçiş — satırlar (1024+ üç, 768+ iki sütun), her satırda
+ * temanın ilk logoları. Durağan: sayılar yok, akış beklemiyor.
  */
 function OtherThemes({ current, locale, t }: { current: string; locale: Locale; t: Dictionary }) {
   const others = THEMES.filter((theme) => theme.slug !== current);
@@ -687,18 +616,20 @@ function OtherThemes({ current, locale, t }: { current: string; locale: Locale; 
             <Link href={`/tema/${theme.slug}`} prefetch={false} className={styles.otherLink}>
               {/* Katılım'ın üyeleri sayfa açılınca seçiliyor; burada logosu
                   yok ama sütun yerinde, adlar aynı hatta başlasın. */}
-              <LogoGroup
-                members={
-                  theme.symbols === "katilim"
-                    ? []
-                    : theme.symbols.map((symbol) => ({ symbol, logoUrl: logoSrc(symbol, null) }))
-                }
-                variant="stack"
-                size="sm"
-                max={OTHER_STACK_MAX}
-                className={styles.otherStack}
-                card
-              />
+              <span className={styles.otherLogos} aria-hidden>
+                {theme.symbols !== "katilim" && (
+                  <>
+                    {/* Tek bir üye artıyorsa "+1" yerine onun logosu (28 Eylül
+                        kuralı: yer varken göster). */}
+                    {theme.symbols.slice(0, theme.symbols.length === OTHER_STACK_MAX + 1 ? OTHER_STACK_MAX + 1 : OTHER_STACK_MAX).map((symbol) => (
+                      <LogoTile key={symbol} symbol={symbol} logoUrl={logoSrc(symbol, null)} size="xs" card />
+                    ))}
+                    {theme.symbols.length > OTHER_STACK_MAX + 1 && (
+                      <span className={cn("numeral", styles.otherMore)}>+{theme.symbols.length - OTHER_STACK_MAX}</span>
+                    )}
+                  </>
+                )}
+              </span>
               <span className={styles.otherText}>
                 <b>{themeTitle(theme, locale)}</b>
                 <small>

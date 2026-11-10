@@ -1,0 +1,214 @@
+/* ==========================================================================
+   Temalar panosu ve dizin kapağının özeti — `/tema` (10 Kasım 2026)
+
+   Karar kaydı components/themes/ThemeBoard.tsx başında. Dil, Piyasalar ve
+   Şirketler tablolarıyla aynı aile: batık 36 piksellik başlık, tek katlı
+   satır, 5 piksellik kulvar (`--line-soft`), satır cevabı ton + sol kenarda
+   3 piksel mavi, hareket yalnız okta. Derinlik tonla; gölge, cam yok.
+
+   ÖLÇÜM (gerçek sayfa + sahte sağlayıcı, on tema, iki tema rengi; önce =
+   canlı 78ad602 aynı genişlikte, 10 Kasım açılış öncesi):
+   - 1440: sayfa 2.869 → 1.872 piksel; kapak 376 → 277; pano y=452'de
+     başlıyor ve 1440×900 ilk ekranda on satırın 6'sı tam görünüyor (önce:
+     ilk ekranda iki kartın üst yarısı). Satır 68 piksel; sütunlar: sıra 26 ·
+     tema 376 · logolar 160 · şerit 391 · medyan 89 · oran 100 · ok 15.
+     Sıfır çizgisi on satırda aynı x'te (899), medyan sayıları aynı sağ
+     kenarda (1203).
+   - 1280: tema 317 · şerit 330. 1024 (logolar gizli): tema 267 · şerit 347;
+     sayfa 3.003 → 1.894. 768: tema 155 · şerit 202; sayfa 2.104.
+   - 390: sayfa 5.787 → 3.532; satır 142 piksel (ad + sayı / şerit /
+     logolar + oran); yatay taşma 0; satırın tamamı bağlantı (≥ 44).
+   - Yatay taşma 0, 12 pikselin altında yazı 0, kırpılan metin 0
+     (390/768/1024/1280/1440 × iki tema).
+   Medyan sayısı 54 → 22 punto: on dev rakam yerine sayılar tek sütunda,
+   ondalıkları alt alta; büyüklüğü artık şeritteki KONUM taşıyor.
+   ========================================================================== */
+
+.panel.panel { overflow:clip; }
+
+.board {
+  --pad:20px;
+  display:grid; column-gap:20px; padding-inline:var(--pad); border-top:1px solid var(--line);
+  grid-template-columns:[pos] 26px [id] minmax(0,1.25fr) [logos] max-content [strip] minmax(200px,1.3fr) [fig] max-content [split] max-content [arrow] 16px;
+}
+.head, .rows, .item, .row { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; }
+.rows { margin:0; padding:0; list-style:none; }
+
+/* ---- Başlık: ölçeğin etiketi BİR KEZ ---- */
+.head { position:relative; align-items:center; height:36px; color:var(--text-body); font-size:12px; font-weight:600; }
+.head::before { content:""; position:absolute; inset:0 calc(var(--pad) * -1); background:var(--surface-sunken); box-shadow:inset 0 -1px var(--line); }
+.head > * { position:relative; }
+.headTheme { grid-column:id; }
+.axis { grid-column:strip; display:flex; justify-content:space-between; color:var(--text-muted); font-weight:400; }
+.axis > span { flex:1; white-space:nowrap; }
+.axis > span:nth-child(2) { text-align:center; }
+.axis > span:last-child { text-align:right; }
+.headFig { grid-column:fig; text-align:right; }
+.headSplit { grid-column:split; text-align:center; }
+
+/* ---- Satır ---- */
+.row { position:relative; align-items:center; height:68px; color:inherit; isolation:isolate; }
+/* Ton, üst hairline ve sol kenardaki 3 piksellik im tek katmanda: satır
+   panelin dolgusunun DIŞINA, kenardan kenara uzar. */
+.row::before {
+  content:""; position:absolute; inset:0 calc(var(--pad) * -1); z-index:-1;
+  box-shadow:inset 0 1px var(--line-soft); transition:background-color .18s var(--ease-brand);
+}
+.item:first-child .row::before { box-shadow:none; }
+.row:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; border-radius:6px; }
+@media(hover:hover) {
+  .row:hover::before { background:var(--primary-tint); box-shadow:inset 0 1px var(--line-soft), inset 3px 0 var(--primary); }
+  .item:first-child .row:hover::before { box-shadow:inset 3px 0 var(--primary); }
+  .row:hover .name { color:var(--primary-ink); }
+  .row:hover .arrow { transform:translate(2px,-2px); }
+}
+.row:active::before { background:var(--primary-tint); }
+
+.pos { grid-column:pos; color:var(--text-muted); font-family:var(--font-mono); font-size:12px; }
+.id { grid-column:id; display:flex; flex-direction:column; gap:3px; min-width:0; }
+.name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:16px; line-height:1.25; font-weight:700; letter-spacing:-.015em; transition:color .18s var(--ease-brand); }
+.sub { display:flex; align-items:center; gap:8px; min-width:0; height:22px; }
+/* Etiket çipi 22/12/600, dolgu 8 (ortak ölçü). */
+.flag { flex:none; display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:999px; background:var(--surface-sunken); color:var(--text-strong); font-size:12px; font-weight:600; white-space:nowrap; }
+.dek { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted); font-size:13px; line-height:1.4; }
+
+.logos { grid-column:logos; display:flex; align-items:center; gap:4px; }
+.logoGhost { width:22px; height:22px; border-radius:6px; }
+.more { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; margin-left:2px; padding:0 5px; border-radius:6px; background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; }
+
+/* ---- Şerit: ortak eksen (çizim ThemeStrip.module.css) ----
+   Sıfır çizgisi şeridi satırın boyunca aşar (68 − 32 = 36, iki yana 18):
+   on satırda tek, kesintisiz bir eksen. */
+.strip { grid-column:strip; --strip-h:32px; --axis-over:18px; }
+
+.fig { grid-column:fig; min-width:6.4ch; font-size:22px; line-height:1; font-weight:700; letter-spacing:-.03em; text-align:right; white-space:nowrap; }
+.split { grid-column:split; display:grid; grid-template-columns:2ch 52px 2ch; align-items:center; gap:8px; font-size:13px; }
+.split > b { font-weight:700; }
+.split > b:first-child { text-align:right; }
+.ratio { display:flex; gap:2px; height:var(--lane-h,5px); overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.ratio > i { display:block; flex-basis:0; min-width:3px; height:100%; }
+.ratio > i[data-tone="up"] { background:var(--up); }
+.ratio > i[data-tone="down"] { background:var(--down); }
+.ratio > i[data-tone="flat"] { background:transparent; }
+.arrow { grid-column:arrow; color:var(--primary); transition:transform .2s var(--ease-brand); }
+
+/* ---- Künye ---- */
+.legend { display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin:0; padding:11px 20px 12px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; line-height:1.5; }
+.legend > span { display:inline-flex; align-items:center; gap:7px; }
+.legendNote { flex:1 1 260px; }
+.keyTick { display:block; width:2px; height:12px; border-radius:1px; background:var(--flat); }
+.keyKnob { display:block; width:9px; height:9px; border-radius:50%; background:var(--text-strong); }
+.keyBench { display:block; width:8px; height:8px; margin-inline:1px; border:1.5px solid var(--text-strong); border-radius:2px; rotate:45deg; }
+
+@media(prefers-reduced-motion:reduce) { .row::before, .name, .arrow { transition:none; } .row:hover .arrow { transform:none; } }
+
+/* ---- 768–1199: logolar çıkar ----
+   Uç temada çipin yanında açıklamaya 1–2 harf kalıyordu ("M…", 768 ve 390,
+   ölçüldü): çip varken açıklama basılmaz. */
+@media(max-width:1199px) {
+  .sub[data-flag] .dek { display:none; }
+  .board { grid-template-columns:[pos] 26px [id] minmax(0,1fr) [strip] minmax(180px,1.3fr) [fig] max-content [split] max-content [arrow] 16px; column-gap:18px; }
+  .logos { display:none; }
+}
+
+/* ---- Telefon (<768): satır üç kat ----
+   Üstte sıra, ad ve medyan; ortada tam genişlikte şerit; altta logolar ve
+   oran. Başlıkta yalnız ölçek etiketi kalır (şeritle aynı genişlikte). */
+@media(max-width:767px) {
+  .board { --pad:16px; display:block; }
+  .head { display:block; height:auto; padding-block:8px; }
+  .headTheme, .headFig, .headSplit { display:none; }
+  .rows, .item { display:block; }
+  .row {
+    grid-template-columns:22px minmax(0,1fr) auto 15px; grid-template-areas:"pos id fig arrow" "strip strip strip strip" "logos logos split split";
+    align-items:center; gap:10px; height:auto; padding-block:14px 13px;
+  }
+  .pos { grid-area:pos; align-self:start; padding-top:3px; }
+  .id { grid-area:id; }
+  .fig { grid-area:fig; align-self:start; font-size:20px; line-height:20px; min-width:0; }
+  .arrow { grid-area:arrow; align-self:start; margin-top:3px; }
+  .strip { grid-area:strip; --strip-h:28px; --axis-over:2px; }
+  .logos { grid-area:logos; display:flex; }
+  .split { grid-area:split; justify-self:end; }
+  .legend { padding-inline:16px; }
+}
+
+/* ==========================================================================
+   Dizin kapağının özeti (sağ sütun) — gerekçe app/(app)/tema/page.tsx →
+   HeroSummary. Tek çukur yüzey: yön oranı, iki uç tema, aralarındaki fark.
+   ========================================================================== */
+.summary { display:flex; flex-direction:column; min-width:0; border-radius:14px; background:var(--surface-sunken); container-type:inline-size; }
+.summaryLead { margin-top:22px; }
+.label { color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.3; }
+.breadth { display:flex; flex-direction:column; gap:10px; padding:14px 16px 15px; }
+.breadthHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
+.counts { display:inline-flex; align-items:baseline; gap:5px; color:var(--text-muted); font-size:12px; }
+.counts b { font-size:20px; font-weight:700; line-height:1; letter-spacing:-.03em; }
+.countSep { display:inline-block; width:1px; height:10px; margin:0 6px; background:var(--line-strong); }
+.bar { display:flex; gap:2px; height:var(--lane-h,5px); overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.bar > i { display:block; flex-basis:0; min-width:3px; height:100%; }
+.bar > i[data-tone="up"] { background:var(--up); }
+.bar > i[data-tone="down"] { background:var(--down); }
+.bar > i[data-tone="neutral-up"] { background:var(--flat); }
+.bar > i[data-tone="neutral-down"] { background:var(--line-strong); }
+.bar > i[data-tone="flat"] { background:transparent; }
+
+.ends { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.ends > :first-child { border-top-left-radius:14px; }
+.ends > :last-child { border-top-right-radius:14px; }
+.end { display:flex; flex-direction:column; gap:6px; min-width:0; padding:13px 16px 14px; color:inherit; transition:background-color .18s var(--ease-brand); }
+.end + .end { border-left:1px solid var(--line-soft); }
+a.end:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+@media(hover:hover) { a.end:hover { background:var(--primary-tint); } a.end:hover .endName { color:var(--primary-ink); } a.end:hover .endArrow { transform:translate(2px,-2px); } }
+.endLabel { display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0; }
+.endLabel .label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.endArrow { flex:none; color:var(--primary); transition:transform .2s var(--ease-brand); }
+/* Display sayı 700 / −0,03em (ortak ölçü). Kapağın en büyük puntosu günün
+   iki ucunda: sayfanın söylediği ilk şey "kim önde, kim geride". */
+.endFig { font-size:clamp(28px,2.6vw,36px); line-height:1.1; font-weight:700; letter-spacing:-.03em; }
+.endBody { display:flex; align-items:center; gap:10px; min-width:0; min-height:22px; }
+.endLogos { display:flex; flex:none; gap:3px; }
+.endName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:14px; font-weight:700; transition:color .18s var(--ease-brand); }
+
+/* Aradaki fark: iki ucun medyanı aynı eksende iki nokta, aralarında çizgi. */
+.gap { display:grid; grid-template-columns:max-content minmax(0,1fr) max-content; align-items:center; gap:14px; padding:11px 16px 12px; border-top:1px solid var(--line-soft); }
+.gapValue { color:var(--text-strong); font-size:13px; font-weight:700; white-space:nowrap; }
+.gapTrack { position:relative; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
+.gapZero { position:absolute; top:-4px; bottom:-4px; width:1px; margin-left:-.5px; background:var(--line-strong); }
+.gapSpan { position:absolute; top:0; bottom:0; border-radius:999px; background:var(--text-muted); transform-origin:left center; }
+.gapDot { position:absolute; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%; background:var(--flat); box-shadow:0 0 0 2px var(--surface-sunken); }
+.gapDot[data-tone="up"] { background:var(--up); }
+.gapDot[data-tone="down"] { background:var(--down); }
+
+/* 1280'de sağ sütun 480 piksel: dört logoyla "Kilo İlaçları (GLP-1)" 106
+   piksele sıkışıp kesiliyordu (128 istiyor, ölçüldü); üç logo kalır. */
+@container (max-width:520px) { .endLogos > :nth-child(n+4) { display:none; } }
+/* DAR KUTUDA UÇLAR ALT ALTA (kapsayıcı sorgusu: 390'da ve 768–1023'te
+   kapağın sağ sütunu 275–330 piksel). Yan yana ~150 piksellik kutuda künye
+   "Açılış Öncesi En …" diye kesiliyor, hangisinin güçlü hangisinin zayıf
+   olduğu okunmuyordu (390 ve 768, ilk tur ölçümü; aynı kusur 10 Kasım'da
+   eski kapakta da kayıtlıydı). Kutu tam genişlikte: künye tam, sayı solda,
+   logolar ve ad sayının yanında. */
+@container (max-width:400px) {
+  .ends { grid-template-columns:minmax(0,1fr); }
+  .ends > :first-child { border-top-right-radius:14px; }
+  .ends > :last-child { border-top-right-radius:0; }
+  .end { display:grid; grid-template-columns:max-content minmax(0,1fr); grid-template-areas:"label label" "fig body"; align-items:center; gap:6px 14px; padding:12px 14px 13px; }
+  .end + .end { border-left:0; border-top:1px solid var(--line-soft); }
+  .endLabel { grid-area:label; }
+  .endFig { grid-area:fig; font-size:26px; }
+  .endBody { grid-area:body; justify-content:flex-end; }
+  .endLogos > :nth-child(n+3) { display:none; }
+}
+/* 768'de sağ sütun 275 piksel: sayı (104) + logolar adı "Ki…"ye indiriyordu
+   (ölçüldü). Orada logolar çıkar, ad tam okunur. */
+@container (max-width:300px) { .endLogos { display:none; } }
+@media(max-width:639px) {
+  .summaryLead { margin-top:16px; }
+  .breadth { padding:12px 14px 13px; }
+  .gap { padding-inline:14px; }
+}
+@media(prefers-reduced-motion:reduce) { .end, .endName, .endArrow { transition:none; } a.end:hover .endArrow { transform:none; } }
+/* 390'da kutu 326 piksel: iki logoyla "Kilo İlaçları (GLP-1)" 122 piksele
+   sıkışıyordu (128 istiyor, ikinci tur ölçümü); tek logo kalır. */
+@container (max-width:340px) { .endLogos > :nth-child(n+2) { display:none; } }

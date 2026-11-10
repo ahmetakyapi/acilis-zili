@@ -2679,6 +2679,18 @@ const tr = {
     best: "En Güçlü Üye",
     worst: "En Zayıf Üye",
     otherThemes: "Diğer Temalar",
+    /* YENİDEN TASARIM (10 Kasım): dizin panosu, kapaktaki fark çizgisi,
+       detayın kapak okuması ve tek katlı tablo. */
+    boardTheme: "Tema",
+    boardMedian: "Medyan",
+    boardKeyMember: "Üye",
+    boardKeyBench: "Ölçüt Fonu",
+    boardNote: "Bütün şeritler aynı ölçekte; ölçeği aşan üye şeridin ucunda durur.",
+    gapLabel: "Aradaki Fark",
+    gapPoints: "{points} Puan",
+    largest: "En Büyük Üye",
+    tableAll: "Tümünü Göster · {count}",
+    tableLastCloseNote: "Kesikli kulvar: yüzde son kapanışa ait, günün ölçeğine girmiyor.",
     sortBy: "{column} sütununa göre sırala",
   },
   pairs: {
