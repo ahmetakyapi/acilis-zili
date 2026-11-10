@@ -51,6 +51,11 @@
   /* 120 → 110: EN başlıkları ("Net Margin", "Market Cap") 768'de 5 piksel
      taşırıyordu (ölçüldü). */
   .panel .table { --name-max:110px; }
+  /* SIRA NUMARASI DÜŞER (10 Kasım gece, canlı veriyle): sahte veride sığan
+     tablo canlıda 768'de 7 piksel kaydı (sütunlar # 36 · Şirket 190 · F/K 77
+     · Büyüme 89 · Marj 89 · ROE 88 · Piyasa Değeri 155 = 724 > kap 718).
+     Endeks Bileşenleri'nin 768–1023 kararıyla aynı: sıra numarası düşer. */
+  .table :is(th, td):first-child { display:none; }
 }
 @media(min-width:820px) and (max-width:1023px) {
   .panel .table { --name-max:150px; }
