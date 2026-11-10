@@ -1,22 +1,16 @@
 "use client";
 
-import { useMemo, useState, type KeyboardEvent, type MouseEvent, type ReactNode } from "react";
+import { useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { CaretDown, CaretUp, CaretUpDown } from "@phosphor-icons/react/dist/ssr";
-import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { RowFlip } from "@/components/markets/RowFlip";
+import { CompanyCell, MoveFigure, board, rowStep } from "@/components/markets/BoardTable";
+import { RowFlip, RowTap } from "@/components/markets/RowFlip";
 import { FoldToggle } from "@/components/ui/FoldToggle";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
-import { LogoTile } from "@/components/ui/primitives";
+import type { Locale } from "@/lib/i18n";
+import { DAY_LANE_SPAN, laneOver, laneSpan } from "@/lib/market-scales";
 import type { MoveSet } from "@/lib/theme-stats";
 import type { ThemeRow } from "@/lib/themes-data";
-import {
-  cn,
-  directionOf,
-  formatMoneyCompact,
-  formatPercent,
-  formatPrice,
-  NO_VALUE,
-} from "@/lib/utils";
+import { cn, formatMoneyCompact, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./ThemeTable.module.css";
 
 /**
@@ -37,6 +31,30 @@ import styles from "./ThemeTable.module.css";
  * Değişim fiyattan önce. Stil kendi modülünde (ThemeTable.module.css);
  * ortak modüle terfi ana oturumun kararı.
  *
+ * ORTAK PARÇAYA GEÇTİ (10 Kasım gece, ana oturumun kararı). Yukarıdaki
+ * "terfi" yapıldı: başlık, sıralama imi, kimlik hücresi, kalın çubuk, sayı
+ * ölçüleri, satır cevabı ve künye artık `components/markets/BoardTable`ın
+ * parçaları (`board` sınıfları, `CompanyCell`, `MoveFigure`); bu tablonun
+ * kopya CSS'i silindi (195 satır → sütun düzeni). Aile ölçüleri: satır 62
+ * (telefonda 56), logo 40 / 32, sembol 16/700, ad 14 gövde, yüzde 19/700,
+ * fiyat 16/700, piyasa değeri 15/600. Değişenler:
+ *   - Fiyat 15/600 → 16/700, piyasa değeri 15/700 → 15/600 (ailenin
+ *     hiyerarşisi: yüzde > fiyat > değer).
+ *   - Şerit ölçeği: üyelerin EN BÜYÜK hareketi → `laneSpan` (üyelerin 90.
+ *     yüzdeliğinin basamağı, taban ±%3; Endeks Bileşenleri'yle aynı
+ *     fonksiyon). En büyüğe göre ölçekte tek bir %12'lik üye öteki yirmisini
+ *     çizgiye indiriyordu; şimdi o üye kola dayanır, ucu kesik. Ölçek
+ *     tablonun dibindeki künyede yazıyor. Sıralama istemcide ve ölçek
+ *     sıralamaya bağlı DEĞİL (hep "body"): başlığa basınca çubuklar yeniden
+ *     çizilmez, yalnız satırlar kayar.
+ *   - Sıfır HER ZAMAN ortada (ailenin kuralı; önce listede eksi yoksa şerit
+ *     soldan başlıyordu ve aynı %1 temadan temaya başka yere düşüyordu).
+ *   - Satırın tamamı hisse sayfasına gider (`RowTap`), sıralı sütun gövdede
+ *     de tonlu (`data-sorted`), çizim kapısı satırda (`data-draw`).
+ * Şerit yine sütunun ESNEK genişliğinde (tabloda dört sütun var; ailenin
+ * 72–120 piksellik sabit kulvarıyla Şirket ile Değişim arasında ~600 piksel
+ * boş kalırdı): `--day-lane` burada `minmax(…,1fr)`.
+ *
  * Kurallar (karşılaştırma tablosundan, değişmedi):
  *   - Karşılaştırılan büyüklük bir de ÇİZGİ. Son fiyatta çizgi YOK — farklı
  *     şirketlerin hisse fiyatı karşılaştırılabilir bir ölçü değil.
@@ -47,17 +65,18 @@ import styles from "./ThemeTable.module.css";
  * (aynı günü anlatan) satırlara basılıyor. Yüzdesi son kapanışa ait satırda
  * şeridin yerinde "Son Kapanış" yazıyor (640+); telefonda yazı sığmadığı
  * için kulvar KESİKLİ ve tablonun dibinde bir satır künye var. Renk son
- * kapanışta da işaretten (15 Ekim, sahibinin isteği).
+ * kapanışta da işaretten (15 Ekim, sahibinin isteği). (`MoveFigure note`.)
  *
  * SIRALAMA İSTEMCİDE (28 Eylül). Yirmi satırlık bir tablo için sunucuya
  * dönmek ve adrese bir parametre eklemek gereksiz: adres ve arama motoruna
  * giden HTML aynı kalıyor (piyasa değerine göre), başlık yalnızca satırların
- * sırasını değiştiriyor. Ölçek oranları sıralamadan ÖNCE hesaplanıp satıra
- * bağlanıyor. 10 Kasım: satır kayması `motion` `layout` yerine sitenin
- * ortak FLIP yaprağıyla (`components/markets/RowFlip.tsx`): başlıktaki
+ * sırasını değiştiriyor. 10 Kasım: satır kayması `motion` `layout` yerine
+ * sitenin ortak FLIP yaprağıyla (`components/markets/RowFlip.tsx`): başlıktaki
  * bağlantıya basış anında satır konumlarını kaydediyor (`thead a`), yeni
  * sıra boyanmadan önce yalnız `translate` oynatıyor. Başlık bu yüzden bir
- * BAĞLANTI (`role="button"`; JS yokken tabloya çapa).
+ * BAĞLANTI (`role="button"`; JS yokken tabloya çapa) ve ortak parçanın
+ * `BoardSortHead`i değil: o bir adrese gider, bu durumu değiştirir. Sınıfları
+ * ortak (`board.sortCell`…), görünüm aynı.
  *
  * KALABALIK TEMA KATLI (10 Kasım). On beşten fazla üyede ilk on iki satır
  * açık, kalanı JS'siz anahtarla (`FoldToggle`) yerinde açılıyor: satırlar
@@ -72,7 +91,8 @@ import styles from "./ThemeTable.module.css";
  */
 
 /** Katlama eşiği ve açık satır sayısı. Yarı İletkenler 21 → 12 açık
-    (966 → 552 piksel); 14 üyeli Bulut ve Yazılım katlanmıyor. */
+    (966 → 552 piksel; gece turunda satır 62: 744); 14 üyeli Bulut ve
+    Yazılım katlanmıyor. */
 const FOLD_OVER = 15;
 const FOLD_ROWS = 12;
 const SCOPE = "tema-uyeleri";
@@ -94,7 +114,7 @@ export function ThemeTable({
   moves: MoveSet | null;
   /** Temanın kimliği: satır kayması başka temanın kaydıyla oynamasın. */
   token: string;
-  locale: string;
+  locale: Locale;
   labels: {
     region: string;
     company: string;
@@ -103,6 +123,9 @@ export function ThemeTable({
     cap: string;
     lastClose: string;
     lastCloseNote: string;
+    /** "Şeridin tam boyu …{day}" — tablonun gerçek ölçeği. */
+    scaleNote: string;
+    overNote: string;
     sortBy: string;
     showAll: string;
     showLess: string;
@@ -110,14 +133,15 @@ export function ThemeTable({
 }) {
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir }>({ key: "cap", dir: "desc" });
 
-  const { scaled, signed, anyStale } = useMemo(() => {
-    const inScale = rows.map((row, i) => (moves?.included[i] && row.changePct !== null ? row.changePct : null));
-    const peak = Math.max(0.01, ...inScale.map((value) => Math.abs(value ?? 0)));
+  /* Ölçeğe yalnız medyana giren (aynı seansı anlatan) satırlar girer. */
+  const { scaled, span, anyStale, anyOver } = useMemo(() => {
+    const inScale = rows.map((row, i) => Boolean(moves?.included[i]) && row.changePct !== null);
+    const full = laneSpan(rows.map((row, i) => (inScale[i] ? row.changePct : null)), DAY_LANE_SPAN);
     return {
-      scaled: rows.map((row, i) => ({ row, ratio: inScale[i] === null ? null : Math.min(1, Math.abs(inScale[i]!) / peak) })),
-      /* Listede eksi var mı — şeridin sıfırı ortada mı. */
-      signed: inScale.some((value) => value !== null && value < 0),
-      anyStale: rows.some((row, i) => row.changePct !== null && inScale[i] === null),
+      scaled: rows.map((row, i) => ({ row, inScale: inScale[i] })),
+      span: full,
+      anyStale: rows.some((row, i) => row.changePct !== null && !inScale[i]),
+      anyOver: rows.some((row, i) => inScale[i] && laneOver(row.changePct!, full)),
     };
   }, [rows, moves]);
 
@@ -142,21 +166,21 @@ export function ThemeTable({
       current.key === key ? { key, dir: current.dir === "asc" ? "desc" : "asc" } : { key, dir: FIRST_DIR[key] },
     );
 
-  const header = (key: SortKey, label: string, className?: string, extra?: ReactNode) => {
+  const header = (key: SortKey, label: string, className?: string) => {
     const active = sort.key === key;
     const Icon = active ? (sort.dir === "desc" ? CaretDown : CaretUp) : CaretUpDown;
     return (
       <th
         scope="col"
-        className={cn(styles.sortCell, className)}
+        className={cn(board.sortCell, className)}
         data-active={active || undefined}
         aria-sort={active ? (sort.dir === "asc" ? "ascending" : "descending") : "none"}
       >
-        <span className={styles.sortWrap}>
+        <span className={board.sortWrap}>
           <a
             href={`#${SCOPE}`}
             role="button"
-            className={styles.sortLink}
+            className={cn(board.sortLink, styles.sortButton)}
             aria-label={labels.sortBy.replace("{column}", label)}
             onClick={(event: MouseEvent) => {
               event.preventDefault();
@@ -169,78 +193,20 @@ export function ThemeTable({
             }}
           >
             {label}
-            <Icon aria-hidden size={12} weight={active ? "fill" : "bold"} className={styles.sortIcon} />
+            <Icon aria-hidden size={12} weight={active ? "fill" : "bold"} className={board.sortIcon} />
           </a>
-          {extra}
         </span>
       </th>
     );
   };
 
-  const company = (row: ThemeRow) => (
-    <th scope="row" className={styles.company}>
-      {/* Bağlantı hücreyi dolduruyor: dokunma hedefi satır yüksekliği kadar.
-          Şirket kartı: components/ui/CompanyCard.tsx. */}
-      <Link href={`/hisse/${row.symbol}`} prefetch={false} className={styles.companyLink} data-cc={row.symbol}>
-        <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="md" className={styles.logo} />
-        <span className={styles.companyText}>
-          <span className={cn("numeral", styles.symbol)}>{row.symbol}</span>
-          <span className={styles.name} title={row.name ?? undefined}>
-            {row.name ?? NO_VALUE}
-          </span>
-        </span>
-      </Link>
-    </th>
-  );
-
-  const change = (row: ThemeRow, ratio: number | null, inScale: boolean) => {
-    const tone = directionOf(row.changePct);
-    return (
-      <td className={styles.changeCell}>
-        <span className={styles.change}>
-          {row.changePct === null ? (
-            <span />
-          ) : inScale && ratio !== null ? (
-            <span className={styles.lane} data-motion-track aria-hidden>
-              {/* Tam %0: ray ve sıfır çizgisi var, dolgu yok — "değişmedi"
-                  bir uzunluk değil. */}
-              {row.changePct !== 0 && (
-                <i
-                  className={styles.fill}
-                  data-tone={tone}
-                  data-motion-draw="line"
-                  style={{
-                    width: `${(signed ? ratio * 50 : ratio * 100).toFixed(2)}%`,
-                    transformOrigin: row.changePct < 0 ? "right center" : "left center",
-                  }}
-                />
-              )}
-            </span>
-          ) : (
-            <span className={styles.stale}>
-              <span className={styles.staleText}>{labels.lastClose}</span>
-              <span className={styles.staleLane} aria-hidden />
-            </span>
-          )}
-          <span
-            className={cn(
-              "numeral",
-              styles.changeNum,
-              row.changePct === null ? "text-muted" : tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-muted",
-            )}
-          >
-            {row.changePct === null ? NO_VALUE : formatPercent(row.changePct, locale)}
-          </span>
-        </span>
-      </td>
-    );
-  };
-
   const hidden = rows.length > FOLD_OVER ? rows.length - FOLD_ROWS : 0;
+  const leadSort = sort.key === "day";
 
   return (
     <div id={SCOPE} className={styles.wrap}>
       <RowFlip scope={SCOPE} token={token} order={`${sort.key}:${sort.dir}`} />
+      <RowTap scope={SCOPE} />
       <FoldToggle
         id="tema-uyeleri-kat"
         narrow={false}
@@ -250,18 +216,18 @@ export function ThemeTable({
       >
         <ScrollEdges
           fixedStart
-          className={cn("scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)", styles.scroller)}
+          className={cn("scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)", board.scroller)}
           tabIndex={0}
           role="region"
           aria-label={labels.region}
         >
-          <table className={styles.table} data-signed={signed || undefined}>
+          <table className={cn(board.table, styles.table)}>
             <thead>
               <tr>
-                <th scope="col" className={styles.rankHead}>#</th>
-                {header("company", labels.company, styles.companyHead)}
+                <th scope="col" className={board.rankHead}>#</th>
+                {header("company", labels.company, board.companyHead)}
                 {header("day", labels.day, styles.changeHead)}
-                {header("price", `${labels.price} ($)`)}
+                {header("price", `${labels.price} ($)`, styles.priceHead)}
                 {/* PİYASA DEĞERİ DOĞRUDAN (10 Kasım, birleştirme): onluk eksendeki
                     nokta kalktı — sahibinin Endeks Bileşenleri kararı ("piyasa değerini
                     direkt yazsak daha doğru olacak"); aile tek dil konuşuyor. */}
@@ -269,20 +235,32 @@ export function ThemeTable({
               </tr>
             </thead>
             <tbody>
-              {sorted.map(({ row, ratio }, index) => (
-                <tr key={row.symbol} data-row={row.symbol} data-fold={hidden > 0 && index >= FOLD_ROWS ? "" : undefined}>
-                  <td className={cn("numeral", styles.rank)}>{index + 1}</td>
-                  {company(row)}
-                  {change(row, ratio, ratio !== null)}
-                  <td className={cn("numeral", styles.price)}>
+              {sorted.map(({ row, inScale }, index) => (
+                <tr
+                  key={row.symbol}
+                  data-row={row.symbol}
+                  data-fold={hidden > 0 && index >= FOLD_ROWS ? "" : undefined}
+                  /* İlk üç yalnız değişime göre sıralıyken; çizim kapısı ve
+                     kademe satırda — gerekçeleri MembersTable.tsx'te. */
+                  data-lead={leadSort && index < 3 ? "" : undefined}
+                  data-draw
+                  style={rowStep(index)}
+                >
+                  <td className={cn("numeral", board.rank)}>{index + 1}</td>
+                  <CompanyCell symbol={row.symbol} name={row.name ?? NO_VALUE} logoUrl={row.logoUrl} />
+                  <td className={styles.changeCell} data-sorted={sort.key === "day" || undefined}>
+                    <MoveFigure
+                      value={row.changePct}
+                      span={span}
+                      note={row.changePct !== null && !inScale ? labels.lastClose : undefined}
+                      locale={locale}
+                    />
+                  </td>
+                  <td className={cn("numeral", board.price, styles.priceCell, row.price === null && board.none)} data-sorted={sort.key === "price" || undefined}>
                     {row.price !== null ? formatPrice(row.price, locale) : NO_VALUE}
                   </td>
-                  <td className={styles.capCell}>
-                    <span className={styles.cap}>
-                      <span className={cn("numeral", row.marketCap ? styles.capValue : "text-muted")}>
-                        {row.marketCap ? formatMoneyCompact(row.marketCap, locale) : NO_VALUE}
-                      </span>
-                    </span>
+                  <td className={cn("numeral", board.strong, styles.capCell, !row.marketCap && board.none)} data-sorted={sort.key === "cap" || undefined}>
+                    {row.marketCap ? formatMoneyCompact(row.marketCap, locale) : NO_VALUE}
                   </td>
                 </tr>
               ))}
@@ -290,7 +268,13 @@ export function ThemeTable({
           </table>
         </ScrollEdges>
       </FoldToggle>
-      {anyStale && <p className={styles.note}>{labels.lastCloseNote}</p>}
+      {/* KÜNYE: şeridin gerçek ölçeği; taşan varsa kesik ucun anlamı; son
+          kapanış satırı varsa (telefonda yazısı yok) onun cümlesi. */}
+      <p className={board.note}>
+        {labels.scaleNote.replace("{day}", `±${formatPercentPlain(span, locale, 0)}`)}
+        {anyOver && ` ${labels.overNote}`}
+        {anyStale && <span className={styles.staleNote}>{` ${labels.lastCloseNote}`}</span>}
+      </p>
     </div>
   );
 }

@@ -5,7 +5,7 @@ import { LogoTile, Panel, PanelHeader, Skeleton } from "@/components/ui/primitiv
 import { themeTitle } from "@/content/themes";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { ThemeBoard as ThemeBoardData, ThemeCard } from "@/lib/theme-board";
-import { heatOf } from "@/lib/theme-view";
+import { boardAxis, heatOf } from "@/lib/theme-view";
 import { cn, directionOf, directionText, formatPercent, NO_VALUE } from "@/lib/utils";
 import { RollingFigure } from "./RollingFigure";
 import styles from "./ThemeBoard.module.css";
@@ -62,19 +62,22 @@ import styles from "./ThemeBoard.module.css";
  * UÇ TEMALAR TONLA AYRIŞIR: günün en güçlü ve en zayıf temasının satırı
  * yönünün renginde çok hafif yıkanır (%5–6; çip yok, renk duvarı yok).
  * Sabahki "Günün En Güçlüsü" çipi satırda kalktı: aynı bilgi kapakta ve
- * sıranın kendisinde (01 ve son satır).
+ * sıranın kendisinde (01 ve son satır). Gece kapaktaki iki uç kutusu da
+ * kalktı (app/(app)/tema/page.tsx → HeroSummary): uçları artık YALNIZ bu ton
+ * ve sıra söylüyor.
  *
  * SIRA VERİYE BAĞLI AMA KUTU OYNAMIYOR. Eski galeri sırayı veriye
  * bağlamıyordu ("yedek ile canlı ızgara farklı olur, akışla gelen veri
  * kartları yerinden oynatırdı" — 28 Eylül). O kaygı eş boylu satırlarda
  * yok: yedek aynı sayıda satırı editoryal sırayla ve sayısız basıyor, veri
- * inince satırların İÇİ değişiyor, panonun boyu değil (`ThemeRanking` aynı
- * kuralla çalışıyor).
+ * inince satırların İÇİ değişiyor, panonun boyu değil (ana sayfa bandının
+ * sıralaması aynı kuralla çalışıyor: `RankBars`; sabah `ThemeRanking`di,
+ * aynı gün silindi).
  *
  * Ortak kümenin DIŞINDA kalan tema (yüzdesi başka seansı anlatan) dipte,
  * sayısız ve çubuksuz: bir önceki günün medyanını bugünün ekseninde
- * göstermek onu bugünün en zayıfı gibi okuturdu (28 Eylül denetimi,
- * `ThemeRanking` ile aynı kural).
+ * göstermek onu bugünün en zayıfı gibi okuturdu (28 Eylül denetimi; ana
+ * sayfa bandında aynı kural — MarketTexture.tsx → `themeRows`).
  *
  * HAREKET (≤ ~900 ms, opaklık 0'dan başlayan yok): çubuk sıfırdan uzar
  * (`bar-fill`, 700 ms; satır kademesi en çok 5 × `--step`), ısı karoları
@@ -89,26 +92,8 @@ import styles from "./ThemeBoard.module.css";
 const ROW_LOGOS = 6;
 /** Isı karolarının kademe tavanı: 10 × `--step` (40 ms) = 400 ms. */
 const HEAT_STAGGER = 10;
-/** Eksenin en dar aralığı, yüzde puan: sakin günde ±%0,05'lik medyanlar
-    sütunun ucuna kadar uzayıp büyük bir gün gibi görünmesin. */
-const MIN_SPAN = 0.5;
-
-/**
- * Panonun ekseni: sıfırın sütundaki yeri ve bir puanın genişliği (yüzde).
- * Simetrik ±ölçek yerine günün aralığı: bütün medyanlar artıdaysa sıfır
- * sol kenarda ve sütunun tamamı çubuğa kalıyor.
- */
-export function boardAxis(medians: readonly number[]): { zero: number; unit: number; neg: boolean; pos: boolean } {
-  const pos = medians.reduce((max, value) => Math.max(max, value), 0);
-  const neg = medians.reduce((max, value) => Math.max(max, -value), 0);
-  const total = pos + neg;
-  return {
-    zero: total === 0 ? 50 : (neg / total) * 100,
-    unit: 100 / Math.max(total, MIN_SPAN),
-    neg: neg > 0,
-    pos: pos > 0,
-  };
-}
+/* Panonun ekseni (`boardAxis`, taban aralık `BOARD_MIN_SPAN`) 10 Kasım
+   gecesi lib/theme-view.ts'e taşındı; testi tests/theme-view.test.ts. */
 
 export function ThemeBoard({
   board,
@@ -129,7 +114,8 @@ export function ThemeBoard({
         return (b.median ?? 0) - (a.median ?? 0);
       })
     : board.cards;
-  const axis = board.scale === null ? null : boardAxis(board.cards.filter(inScale).map((card) => card.median!));
+  /* Eksen ortak seans kümesi varken (yedekte `basis` yok: sayısız pano). */
+  const axis = basis === null ? null : boardAxis(board.cards.filter(inScale).map((card) => card.median!));
   const pre = board.phase === "pre-market";
   const closed = board.phase === "lastClose";
   const pct = (value: number) => formatPercent(value, locale);

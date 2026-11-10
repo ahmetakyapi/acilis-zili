@@ -3,7 +3,7 @@ import { CaretDown, CaretUp, CaretUpDown } from "@phosphor-icons/react/dist/ssr"
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile, Panel, Skeleton } from "@/components/ui/primitives";
 import type { Locale } from "@/lib/i18n";
-import { BIG_MOVE, DAY_LANE_SPAN, WEEK_LANE_SPAN, drawStep, laneArm, rangeShare } from "@/lib/market-scales";
+import { BIG_MOVE, DAY_LANE_SPAN, WEEK_LANE_SPAN, drawStep, laneArm, laneOver, rangeShare } from "@/lib/market-scales";
 import { cn, directionOf, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./BoardTable.module.css";
 
@@ -86,22 +86,38 @@ export function BoardSortHead({
 }
 
 /**
- * Sıfır ortalı KALIN çubuk: artı sağa, eksi sola; ölçek SABİT (`laneArm`,
- * lib/market-scales.ts — gerekçe orada). 8 piksellik dolu çubuk (haftalık
- * 6), arkasında 5 piksellik kulvar (sahibinin sözü: "yatayda uzun kalın
- * çizgi"). Çizim globals'ın `bar-fill` sınıfıyla dolar (modülde animasyon
- * ADI yazılmaz, `.claude/rules/hareket.md` → Tuzaklar); kapı satırın
- * `data-draw`ında. Tam %0: kulvar ve sıfır çizgisi var, dolgu yok —
- * "değişmedi" bir uzunluk değil.
+ * Sıfır ortalı KALIN çubuk: artı sağa, eksi sola (`laneArm`,
+ * lib/market-scales.ts). 8 piksellik dolu çubuk (haftalık 6), arkasında 5
+ * piksellik kulvar (sahibinin sözü: "yatayda uzun kalın çizgi"). Çizim
+ * globals'ın `bar-fill` sınıfıyla dolar (modülde animasyon ADI yazılmaz,
+ * `.claude/rules/hareket.md` → Tuzaklar); kapı satırın `data-draw`ında.
+ * Tam %0: kulvar ve sıfır çizgisi var, dolgu yok — "değişmedi" bir uzunluk
+ * değil.
+ *
+ * ÖLÇEK ÇAĞIRANDAN (`span`, 10 Kasım gece). Sabah ölçek SABİTTİ (±%3 / ±%8):
+ * "en çok düşen" sıralamasında eşiği aşan bütün satırlar aynı dolu kolu
+ * çiziyordu. Çağıran artık listesinin ölçeğini verir (`laneSpan`, gerekçe
+ * orada); vermeyen eski sabiti (tabanı) alır — sözleşme geriye uyumlu.
+ * Ölçeği aşan çubuk kola dayanır ve ucunda KESİK taşır (`data-over`): eksen
+ * kırığı, "bu çubuk burada bitmiyor". Kesik bir veri imi değil, çubuğun
+ * kendi ucu; büyüklüğü yanındaki sayı söyler.
  */
-export function ZeroBar({ value, weight = "day", className }: { value: number; weight?: "day" | "week"; className?: string }) {
-  const arm = laneArm(value, weight === "week" ? WEEK_LANE_SPAN : DAY_LANE_SPAN);
+export function ZeroBar({ value, weight = "day", span, className }: {
+  value: number;
+  weight?: "day" | "week";
+  /** Kulvarın tam kolu, yüzde. Verilmezse taban (`DAY_LANE_SPAN` / `WEEK_LANE_SPAN`). */
+  span?: number;
+  className?: string;
+}) {
+  const full = span ?? (weight === "week" ? WEEK_LANE_SPAN : DAY_LANE_SPAN);
+  const arm = laneArm(value, full);
   return (
     <span className={cn(styles.lane, className)} data-weight={weight} aria-hidden>
       {arm > 0 && (
         <i
           className={cn("bar-fill", styles.fill)}
           data-tone={value < 0 ? "down" : "up"}
+          data-over={laneOver(value, full) ? "" : undefined}
           style={{ width: `${arm.toFixed(2)}%` }}
         />
       )}
@@ -117,8 +133,21 @@ export function ZeroBar({ value, weight = "day", className }: { value: number; w
  * (14/600, çubuk 6 piksel). Yön İŞARETLE söylenir, ok yok — `formatPercent`
  * zaten +/− basıyor. Değer bilinmiyorsa çubuk HİÇ çizilmez: sıfır genişlik
  * "hareket yok" demek olurdu ve o da bir iddia.
+ *
+ * `note` (10 Kasım gece, Temalar tablosu ortak parçaya geçerken): değer var
+ * ama listenin ölçeğine GİRMİYOR (yüzdesi başka seansı anlatıyor, veri
+ * dürüstlüğü 4). Çubuğun yerinde sakin künye durur ("Son Kapanış"); telefonda
+ * yazı sığmadığı için kesikli kulvar (künye tablonun dibinde).
  */
-export function MoveFigure({ value, weight = "day", locale }: { value: number | null | undefined; weight?: "day" | "week"; locale: Locale }) {
+export function MoveFigure({ value, weight = "day", span, note, locale }: {
+  value: number | null | undefined;
+  weight?: "day" | "week";
+  /** Listenin ölçeği (`laneSpan`); verilmezse taban. */
+  span?: number;
+  /** Ölçek dışı satırın künyesi; verilirse çubuk çizilmez. */
+  note?: string;
+  locale: Locale;
+}) {
   if (value === null || value === undefined) {
     return (
       <span className={styles.move} data-weight={weight}>
@@ -130,7 +159,14 @@ export function MoveFigure({ value, weight = "day", locale }: { value: number | 
   const tone = directionOf(value);
   return (
     <span className={styles.move} data-weight={weight}>
-      <ZeroBar value={value} weight={weight} />
+      {note ? (
+        <span className={styles.moveNote}>
+          <span>{note}</span>
+          <i aria-hidden />
+        </span>
+      ) : (
+        <ZeroBar value={value} weight={weight} span={span} />
+      )}
       <span
         className={cn("numeral", styles.pct, tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-muted")}
         data-big={weight === "day" && Math.abs(value) >= BIG_MOVE ? tone : undefined}

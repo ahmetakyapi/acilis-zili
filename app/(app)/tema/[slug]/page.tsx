@@ -11,6 +11,7 @@ import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import detail from "@/components/themes/ThemeDetail.module.css";
 import { ThemeReading, type ReadingLabels } from "@/components/themes/ThemeReading";
 import { ThemeStats } from "@/components/themes/ThemeStats";
+import { board } from "@/components/markets/BoardTable";
 import { ThemeTable } from "@/components/themes/ThemeTable";
 import { ThemeTreemap } from "@/components/themes/ThemeTreemap";
 import styles from "@/components/themes/Themes.module.css";
@@ -70,7 +71,9 @@ import { cn, formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils"
  *      Akşam (ikinci tur): logolar sol sütuna TEK SIRA olarak döndü (44
  *      piksel, sabit boy — `HeroLogos`), kıyas iki kalın çubuk oldu
  *      (`ThemeStrip`); harita uzadı (oran 2,6 → 2,15), tabloda kimlik
- *      büyüdü (satır 60, logo 36 — ThemeTable.module.css).
+ *      büyüdü (satır 60, logo 36 — ThemeTable.module.css). Gece: tablo
+ *      ortak parçaya geçti (`components/markets/BoardTable`; satır 62,
+ *      logo 40), paneli `board.panel` + `data-fit="lg"`.
  *   2. Ölçü ızgarası "Temanın Günü": yükselen/düşen, en güçlü, en zayıf ve
  *      en büyük üye. Kapaktaki medyanın açılımı, hemen altında.
  *   3. Ana görsel: kare haritası, panelin tam genişliğinde (ölçüt sütunu
@@ -424,7 +427,9 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
         )}
       </Panel>
 
-      <Panel className={styles.tablePanel}>
+      {/* `board.panel` + `data-fit="lg"`: ortak tablo parçasının paneli; tablo
+          1024'ten itibaren kaba sığar, başlık oradan belgeye yapışır. */}
+      <Panel className={cn(board.panel, styles.tablePanel)} data-fit="lg">
         <PanelHeader title={t.themes.tableTitle} meta={t.themes.companies.replace("{count}", String(rows.length))} />
         {rows.length > 0 ? (
           <ThemeTable
@@ -440,6 +445,8 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
               cap: t.themes.colCap,
               lastClose: t.themes.lastClose,
               lastCloseNote: t.themes.tableLastCloseNote,
+              scaleNote: t.themes.tableScaleNote,
+              overNote: t.markets.laneOverNote,
               sortBy: t.themes.sortBy,
               showAll: t.themes.tableAll,
               showLess: t.compact.showLess,

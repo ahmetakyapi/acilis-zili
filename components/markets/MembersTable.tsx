@@ -7,7 +7,7 @@ import type { CompanyCardExtra } from "@/lib/company-card";
 import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { quoteBasis, type MarketStatus } from "@/lib/market-hours";
-import { DAY_LANE_SPAN, WEEK_LANE_SPAN, capShares, rangeShare } from "@/lib/market-scales";
+import { DAY_LANE_SPAN, WEEK_LANE_SPAN, capShares, laneModeOf, laneOver, laneSpan, rangeShare } from "@/lib/market-scales";
 import type { Quote } from "@/lib/providers/types";
 import { sectorLabel } from "@/lib/sectors";
 import {
@@ -128,7 +128,18 @@ export function MembersTable({
      Şerit artık sayının yanında 56 piksellik bir yardımcı ve tam kolu
      `DAY_LANE_SPAN` (±%3; ısı haritasının doyduğu eşik): dar kulvarda
      "en büyüğe göre" ölçek tek bir uç satır yüzünden herkesi 1 piksele
-     indirirdi (gerekçe ve test: lib/market-scales.ts → `laneArm`). */
+     indirirdi (gerekçe ve test: lib/market-scales.ts → `laneArm`).
+     10 Kasım (gece): ÖLÇEK LİSTEYE GÖRE AÇILIR, ±%3 / ±%8 TABAN. Sabit
+     ölçekte "en çok düşen" sıralamasının ilk satırları aynı dolu kolu
+     çiziyordu (−%9,34, −%3,88, −%3,01; farkı yalnız sayı söylüyordu).
+     Ölçek sekmenin BÜTÜN üyelerinden (`rows`; yalnız açık satırlardan
+     değil): "Daha Fazla Göster" çubukları yeniden çizdirmez. İki okuma (`laneSpan`): olağan sırada üyelerin 90.
+     yüzdeliği, liste o değişime göre sıralıyken o YÖNÜN ucunun eşiği
+     (azalan sırada yükselenlerin, artanda düşenlerin). "En büyüğe
+     göre ölçek" yasağı duruyor: tek uç değer ölçeği belirlemez, kola
+     dayanır ve ucunda kesik taşır. Künye gerçek ölçeği yazar. */
+  const daySpan = laneSpan(rows.map((row) => row.quote?.changePct), DAY_LANE_SPAN, laneModeOf(sort === "degisim", dir));
+  const weekSpan = laneSpan(rows.map((row) => row.week), WEEK_LANE_SPAN, laneModeOf(sort === "hafta", dir));
   /* PİYASA DEĞERİ BİR DE ÇİZİM (26 Eylül). "Karşılaştırılan her büyüklük bir
      de çizgi olarak okunur" (CLAUDE.md); sütun yalnızca sayıydı ve "hangisi
      ne kadar büyük" basamak basamak okunuyordu.
@@ -192,6 +203,11 @@ export function MembersTable({
   const sorted = ordered.slice(0, limit);
   const hasMore = ordered.length > sorted.length;
   const moreHref = `${basePath}?endeks=${tab}&sirala=${sort}&yon=${dir}&adet=${limit + PAGE_STEP}`;
+
+  /* Künyenin "kesik uç" cümlesi yalnız GÖRÜNEN satırlarda taşan varsa. */
+  const anyOver = sorted.some(
+    (row) => (row.quote?.changePct != null && laneOver(row.quote.changePct, daySpan)) || (showWeek && row.week !== null && laneOver(row.week, weekSpan)),
+  );
 
   const fresh = sorted.filter((row) => !cards.skip.has(row.member.symbol));
   const shownShare = (sorted.length / ordered.length) * 100;
@@ -448,14 +464,14 @@ export function MembersTable({
                       yukarıda, "PANO SATIRI". */}
                   {showSector && <td className={cn(board.tag, styles.sector)}>{sectorLabel(row.member.sector, locale) ?? ""}</td>}
                   <td className={styles.changeCell} data-sorted={sort === "degisim" || undefined}>
-                    <MoveFigure value={quote ? change : null} locale={locale} />
+                    <MoveFigure value={quote ? change : null} span={daySpan} locale={locale} />
                   </td>
                   <td className={cn("numeral", board.price, styles.priceCell, !quote && board.none)} data-sorted={sort === "fiyat" || undefined}>
                     {quote ? formatPrice(quote.price, locale) : NO_VALUE}
                   </td>
                   {showWeek && (
                     <td className={styles.weekCell} data-sorted={sort === "hafta" || undefined}>
-                      <MoveFigure value={row.week} weight="week" locale={locale} />
+                      <MoveFigure value={row.week} weight="week" span={weekSpan} locale={locale} />
                     </td>
                   )}
                   {showRange && (
@@ -516,14 +532,16 @@ export function MembersTable({
       )}
 
       {/* KÜNYE (10 Kasım): tablonun kendi söylemediği üç şey tek düz
-          paragrafta — şeridin ölçeği (sabit, tam boyu yazılı), haftalığın
-          tanımı (5 işlem günü, takvim haftası değil) ve payın resmî ağırlık
-          OLMADIĞI. Sütun yoksa cümlesi de yok. */}
+          paragrafta — şeridin ölçeği (tam boyu yazılı; gece turundan beri
+          listenin GERÇEK ölçeği, `laneSpan`), haftalığın tanımı (5 işlem
+          günü, takvim haftası değil) ve payın resmî ağırlık OLMADIĞI. Sütun
+          yoksa cümlesi de yok; taşan çubuk yoksa kesik cümlesi de. */}
       <p className={board.note}>
         {(showWeek
-          ? t.markets.laneScaleNote.replace("{week}", `±${formatPercentPlain(WEEK_LANE_SPAN, locale, 0)}`)
+          ? t.markets.laneScaleNote.replace("{week}", `±${formatPercentPlain(weekSpan, locale, 0)}`)
           : t.markets.laneScaleNote.replace(/,[^,]*\{week\}/, "")
-        ).replace("{day}", `±${formatPercentPlain(DAY_LANE_SPAN, locale, 0)}`)}
+        ).replace("{day}", `±${formatPercentPlain(daySpan, locale, 0)}`)}
+        {anyOver && ` ${t.markets.laneOverNote}`}
         {showWeek && ` ${t.markets.weekNote}`}
         {shareOf && ` ${t.markets.capShareNote}`}
       </p>

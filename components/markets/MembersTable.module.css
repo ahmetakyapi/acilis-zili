@@ -169,3 +169,22 @@
    - İskelet (`BoardTableSkeleton`): başlık 57 + 40, satır 62 / 56 — gerçek
      tabloyla aynı (önce 46 / 48 piksellik satır, 28 piksellik logo).
    -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM 4 — gece turu, ölçek listeye göre (10 Kasım 2026)
+   Gerçek sayfa + sahte sağlayıcı, Nasdaq 100 (102 üye, 60 satır açık), iki
+   tema; önce = ÖLÇÜM 3 (sabit ±%3 / ±%8). Yerleşim değişmedi (sütunlar,
+   satır 62 / 56, kap = içerik aynı); değişen çubuk boyları ve künye.
+   - "En çok düşen" (1440, kol 60 piksel): −%3,88 · −%3,01 önce 60 · 60
+     (ikisi de dolu kol); şimdi ±%5'te 46,5 · 36,1. "En çok artan": +%4,61 ·
+     +%3,48 önce 60 · 60; şimdi 55,3 · 41,7.
+   - Durumlar: sakin gün (hepsi ±%1 içinde) ±%3, en uzun çubuk 32 / 60;
+     sert gün piyasa değeri sırasında ±%10 (dört satır kesik uçlu); tek uç
+     değer ±%3'te kalıyor.
+   - Sabitlik (`getBoundingClientRect`, satır başına çubuk eni): aynı
+     sıralamada 60 → 120 satır ("Daha Fazla Göster") ortak 60 satırın 60'ında
+     çubuk aynı; piyasa değeri sırasında da aynı. Künye her durumda gerçek
+     ölçeği yazıyor ("Değişim ±%5, Haftalık ±%8"); taşan varsa kesik cümlesi.
+   - Kesik uç: 2 piksel, uçtan 4 piksel içeride; koyu ve açık temada panel
+     zemininde. Hücresinden taşan öğe 0, yatay taşma 0.
+   -------------------------------------------------------------------------- */

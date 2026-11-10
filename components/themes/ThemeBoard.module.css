@@ -216,87 +216,54 @@
 }
 
 /* ==========================================================================
-   Dizin kapağının özeti (sağ sütun) — gerekçe app/(app)/tema/page.tsx →
-   HeroSummary. Tek çukur yüzey: yön oranı, iki uç tema, aralarındaki fark.
+   Dizin kapağının özeti — gerekçe app/(app)/tema/page.tsx → HeroSummary.
+
+   TARİHÇE: 29 Eylül tek çukur yüzey (yön oranı, iki uç tema, aralarındaki
+   fark; iki uç kutusunda 28–36 puntoluk medyan, logolar, ad; kapsayıcı
+   sorgularıyla 400 / 340 / 300 pikselde logo eleme). 10 Kasım akşamı fark
+   iki noktadan 8 piksellik çubuğa döndü. 10 Kasım GECE (ana oturumun
+   kararı): iki uç kutusu ve fark çubuğu KALKTI — pano aynı iki temayı 01 ve
+   son satırda tonla gösteriyor, kapak ilk ekranın üçte birini tutuyordu
+   (ölçüm aşağıda, "ÖLÇÜM 3"). Kalan: kompakt bandın sağında TEK özet, iki
+   satır — yön oranı (etiket + sayılar, altında 8 piksellik oran çubuğu) ve
+   iki uç arasındaki fark (tek sayı). Kutu yok, zemin yok: bandın kendi
+   yüzeyinde, solundaki ince çizgiyle ayrılıyor (`compactVisual`).
    ========================================================================== */
-.summary { display:flex; flex-direction:column; min-width:0; border-radius:14px; background:var(--surface-sunken); container-type:inline-size; }
-.summaryLead { margin-top:22px; }
+.pulse { display:grid; gap:7px; width:clamp(300px, 30vw, 400px); min-width:0; }
 .label { color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.3; }
-.breadth { display:flex; flex-direction:column; gap:10px; padding:14px 16px 15px; }
-.breadthHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
-.counts { display:inline-flex; align-items:baseline; gap:5px; color:var(--text-muted); font-size:12px; }
-.counts b { font-size:20px; font-weight:700; line-height:1; letter-spacing:-.03em; }
+.pulseHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
+.counts { display:inline-flex; align-items:baseline; gap:5px; color:var(--text-body); font-size:12px; }
+.counts b { font-size:18px; font-weight:700; line-height:1; letter-spacing:-.03em; }
 .countSep { display:inline-block; width:1px; height:10px; margin:0 6px; background:var(--line-strong); }
 /* Oran çubuğu 8 piksel (10 Kasım akşamı; sabah 5): yükselen/düşen oranı
-   kalın, iki renkli tek şerit. */
+   kalın, iki renkli tek şerit. Parçalar `bar-fill` ile dolar; düşen parça
+   sağdan (modülde yalnız `transform-origin`). */
 .bar8 { display:flex; gap:2px; height:8px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
 .bar8 > i { display:block; flex-basis:0; min-width:3px; height:100%; }
 .bar8 > i[data-tone="up"] { background:var(--up); }
-.bar8 > i[data-tone="down"] { background:var(--down); }
+.bar8 > i[data-tone="down"] { background:var(--down); transform-origin:right center; }
 .bar8 > i[data-tone="neutral-up"] { background:var(--flat); }
-.bar8 > i[data-tone="neutral-down"] { background:var(--line-strong); }
+.bar8 > i[data-tone="neutral-down"] { background:var(--line-strong); transform-origin:right center; }
 .bar8 > i[data-tone="flat"] { background:transparent; }
+.pulseGap { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0; }
+.pulseGap b { color:var(--text-strong); font-size:13px; font-weight:700; white-space:nowrap; }
+/* < 1024: özet başlığın altına iner (kompakt bandın kendi kırılımı) ve tam
+   genişliktedir. */
+@media(max-width:1023px) { .pulse { width:auto; } }
 
-.ends2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
-.ends2 > :first-child { border-top-left-radius:14px; }
-.ends2 > :last-child { border-top-right-radius:14px; }
-.hEnd { display:flex; flex-direction:column; gap:6px; min-width:0; padding:13px 16px 14px; color:inherit; transition:background-color .18s var(--ease-brand); }
-.hEnd + .hEnd { border-left:1px solid var(--line-soft); }
-a.hEnd:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
-@media(hover:hover) { a.hEnd:hover { background:var(--primary-tint); } a.hEnd:hover .endName { color:var(--primary-ink); } a.hEnd:hover .endArrow { transform:translate(2px,-2px); } }
-.endLabel { display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0; }
-.endLabel .label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.endArrow { flex:none; color:var(--primary); transition:transform .2s var(--ease-brand); }
-/* Display sayı 700 / −0,03em (ortak ölçü). Kapağın en büyük puntosu günün
-   iki ucunda: sayfanın söylediği ilk şey "kim önde, kim geride". */
-.endFig { font-size:clamp(28px,2.6vw,36px); line-height:1.1; font-weight:700; letter-spacing:-.03em; }
-.endBody { display:flex; align-items:center; gap:10px; min-width:0; min-height:26px; }
-.endLogos { display:flex; flex:none; gap:4px; }
-.endName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:15px; font-weight:700; transition:color .18s var(--ease-brand); }
-
-/* ARADAKİ FARK KALIN ÇUBUK (10 Kasım akşamı). Sabah iki nokta ve aralarında
-   ince çizgiydi; sahibinin aynı günkü itirazı ("nokta nokta ne anlatıyor
-   anlamıyorum; yatayda uzun kalın çizgi seviyorum") buraya da uygulandı:
-   en zayıftan en güçlüye 8 piksellik dolu çubuk, sıfırın solu düşüş,
-   sağı yükseliş renginde. */
-.gap { display:grid; grid-template-columns:max-content minmax(0,1fr) max-content; align-items:center; gap:14px; padding:11px 16px 12px; border-top:1px solid var(--line-soft); }
-.gapValue { color:var(--text-strong); font-size:13px; font-weight:700; white-space:nowrap; }
-.gapTrack { position:relative; height:8px; border-radius:999px; background:var(--line-soft); }
-.gapZero { position:absolute; top:-4px; bottom:-4px; width:1px; margin-left:-.5px; background:var(--line-strong); }
-.gapBar { position:absolute; top:0; bottom:0; }
-.gapBar[data-tone="up"] { border-radius:0 999px 999px 0; background:var(--up); }
-.gapBar[data-tone="down"] { border-radius:999px 0 0 999px; background:var(--down); transform-origin:right center; }
-
-/* 1280'de sağ sütun 480 piksel: dört logoyla "Kilo İlaçları (GLP-1)" 106
-   piksele sıkışıp kesiliyordu (128 istiyor, ölçüldü); üç logo kalır. */
-@container (max-width:520px) { .endLogos > :nth-child(n+4) { display:none; } }
-/* DAR KUTUDA UÇLAR ALT ALTA (kapsayıcı sorgusu: 390'da ve 768–1023'te
-   kapağın sağ sütunu 275–330 piksel). Yan yana ~150 piksellik kutuda künye
-   "Açılış Öncesi En …" diye kesiliyor, hangisinin güçlü hangisinin zayıf
-   olduğu okunmuyordu (390 ve 768, ilk tur ölçümü; aynı kusur 10 Kasım'da
-   eski kapakta da kayıtlıydı). Kutu tam genişlikte: künye tam, sayı solda,
-   logolar ve ad sayının yanında. */
-@container (max-width:400px) {
-  .ends2 { grid-template-columns:minmax(0,1fr); }
-  .ends2 > :first-child { border-top-right-radius:14px; }
-  .ends2 > :last-child { border-top-right-radius:0; }
-  .hEnd { display:grid; grid-template-columns:max-content minmax(0,1fr); grid-template-areas:"label label" "fig body"; align-items:center; gap:6px 14px; padding:12px 14px 13px; }
-  .hEnd + .hEnd { border-left:0; border-top:1px solid var(--line-soft); }
-  .endLabel { grid-area:label; }
-  .endFig { grid-area:fig; font-size:26px; }
-  .endName { font-size:14px; }
-  .endBody { grid-area:body; justify-content:flex-end; }
-  .endLogos > :nth-child(n+3) { display:none; }
-}
-/* 768'de sağ sütun 275 piksel: sayı (104) + logolar adı "Ki…"ye indiriyordu
-   (ölçüldü). Orada logolar çıkar, ad tam okunur. */
-@container (max-width:300px) { .endLogos { display:none; } }
-@media(max-width:639px) {
-  .summaryLead { margin-top:16px; }
-  .breadth { padding:12px 14px 13px; }
-  .gap { padding-inline:14px; }
-}
-@media(prefers-reduced-motion:reduce) { .hEnd, .endName, .endArrow { transition:none; } a.hEnd:hover .endArrow { transform:none; } }
-/* 390'da kutu 326 piksel: iki logoyla "Kilo İlaçları (GLP-1)" 122 piksele
-   sıkışıyordu (128 istiyor, ikinci tur ölçümü); tek logo kalır. */
-@container (max-width:340px) { .endLogos > :nth-child(n+2) { display:none; } }
+/* --------------------------------------------------------------------------
+   ÖLÇÜM 3 — gece turu, kompakt kapak (10 Kasım 2026)
+   Gerçek sayfa + sahte sağlayıcı, on tema, TR ve EN, iki tema rengi; önce =
+   aynı gün akşam turu (cd7e83b), aynı sahte veri.
+   - Kapak: 1440'ta 280 → 114 piksel · 1280: 277 → 107 · 1024: 286 → 98 ·
+     768: 177 · 390: 482 → 196. İlk satırın tepesi 1440'ta 492 → 326,
+     390'da 646 → 360.
+   - İlk ekrana sığan TAM satır: 1440×900 3 → 5 (hedef ≥ 5) · 1280×800
+     2 → 4 · 1024×768 1 → 3 · 768×1024 4 · 390×844 1 → 2 (hedef ≥ 2).
+     Satır boyu değişmedi (110 / 156 / 186).
+   - Sayfa: 1440'ta 2.295 → 2.128, 390'da 3.963 → 3.677.
+   - Yatay taşma 0, kırpılan metin 0, 12 pikselin altında yazı 0, telefonda
+     44 pikselin altında dokunma hedefi 1 → 0 (Paylaş 74 × 34 → 44'lük ikon).
+   - Hareket: kapakta 2 `bar-fill` (oran çubuğu, 700 ms), başlığın kendi
+     yükselişi; opaklığı 0'dan başlayan 0; hareketi azaltanda çalışan 0.
+   -------------------------------------------------------------------------- */

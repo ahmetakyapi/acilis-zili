@@ -35,7 +35,27 @@
      pikselde (390: 217, 1440: 1203); uç noktası kulvardan taşmıyor;
      hap sıkışması 0; yatay taşma 0; kutudan taşan öğe 0
      (390/700/768/1024/1440, TR/EN, iki tema).
-   Kolon dengesi `FillColumn`da. */
+   Kolon dengesi `FillColumn`da.
+
+   10 KASIM (gece) — BANDIN DİLİ: KALIN ÇUBUK, GÜÇLÜ YÜZDE, HAP VE NOKTA YOK
+   (ana oturumun kararı; gerekçe HomeLane.tsx). Yerleşim aynı iki kat, aynı
+   ızgara; değişen çizim ve hiyerarşi:
+     [işaret 32 | Ad 15/600 · sembol · künye        | +%1,24  17/700]
+     [          | ————————————|████████████—————————————————————————]
+   · ÇUBUK 10 piksel dolu (kulvar 5; ortak ölçü 8, satırın tek çizimi
+     olduğu için bandın 12'sine yakın; 350 piksellik rayda 12 kulvarı
+     boğuyordu). Uçtaki 9 piksellik NOKTA kalktı.
+   · YÜZDE hapsız, yön renginde 17/700 (önce wash zeminli 12/700 hap): satırın
+     en güçlü sayısı; en anlamlı değer en büyük puntoda. %0,00 ve çubuksuz
+     satır soluk.
+   · AD 15/600 (ülke), SEMBOL 15/700 + ad 13 gövde (hisse): önce 14/600 ve
+     14/700 + 12 soluk.
+   · SON KAPANIŞ satırı (bu seansta işlem görmeyen ülke fonu, ötekiler
+     görürken): çubuk YOK, kulvarın yerinde "Son Kapanış" künyesi, yüzde
+     soluk ve ölçeğe girmez — bandın kararının aynısı (`RankBars` → `bar:
+     false`; önce `--flat` renginde %60 opak çubuktu). Hepsi son kapanıştaysa
+     çubuklar çizilir, dönemi dipnot söyler.
+   Ölçüm dosyanın sonunda, "ÖLÇÜM 2". */
 
 .desk { container-type: inline-size; }
 
@@ -45,7 +65,7 @@
   grid-template-columns: var(--lead-w) minmax(0, 1fr) auto;
   grid-template-rows: auto auto;
   column-gap: 12px;
-  row-gap: 7px;
+  row-gap: 5px;
   align-items: center;
 }
 
@@ -59,7 +79,7 @@
 }
 .main { grid-column: 2; grid-row: 1; min-width: 0; }
 .value { grid-column: 3; grid-row: 1; align-self: start; justify-self: end; display: flex; }
-/* Hap kimliğin İLK satırına hizalı: künye alta sardığında (390, Çin)
+/* Yüzde kimliğin İLK satırına hizalı: künye alta sardığında (390, Çin)
    bloğun ortasında yüzmüyor. */
 .laneCell { grid-column: 2 / -1; grid-row: 2; }
 
@@ -96,10 +116,12 @@
      de kutunun içinde. Kırpma yalnız soldaki 12 piksel; üst, alt ve sağ
      4 piksel açık (Ü/Ç imleri, g/ş kuyrukları). */
   clip-path: inset(-4px -4px -4px 12px);
-  line-height: 20px;
+  line-height: 22px;
 }
 .ident > :first-child { padding-left: 12px; }
 .ident > .symbol { padding-left: 6px; }
+/* Ülke adı 15/600 (gece; önce 14/600). */
+.name { color: var(--text-strong); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
 .identMeta {
   position: relative;
   padding-left: 12px;
@@ -114,16 +136,19 @@
 }
 
 /* Hareketler: sembol + ad tek satırda, ad kesilebilir (tam adı satırın
-   `aria-label`ında) — şirket adları 40 harfi bulabiliyor. */
+   `aria-label`ında) — şirket adları 40 harfi bulabiliyor. Sembol 15/700,
+   ad 13 gövde mürekkebi (gece; önce 14/700 ve 12 soluk). */
 .identTight {
   display: flex;
   align-items: baseline;
   gap: 8px;
   min-width: 0;
-  line-height: 20px;
+  line-height: 22px;
 }
+.ticker { flex-shrink: 0; color: var(--text-strong); font-size: 15px; font-weight: 700; letter-spacing: -0.015em; }
+.company { min-width: 0; overflow: hidden; color: var(--text-body); font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
 
-/* Fonun / hissenin sembolü — mono künye (CLAUDE.md "Tek font"). */
+/* Fonun sembolü — mono künye (CLAUDE.md "Tek font"). */
 .symbol {
   flex-shrink: 0;
   color: var(--text-muted);
@@ -133,80 +158,65 @@
   letter-spacing: 0.02em;
 }
 
-/* Yüzde hapı. Renk sınıfı çağıranda (`directionWash`). */
-.pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 2px 8px;
-  border-radius: 999px;
-  font-size: var(--text-small);
+/* YÜZDE: hapsız, yön renginde, satırın en güçlü sayısı (gece; önce wash
+   zeminli 12/700 hap). Renk sınıfı çağıranda (`directionText`); çubuksuz
+   satırda soluk (`data-quiet`). */
+.pct {
+  font-size: 17px;
   font-weight: 700;
-  line-height: 18px;
+  line-height: 22px;
+  letter-spacing: -0.025em;
   white-space: nowrap;
 }
+.pct[data-quiet] { opacity: 0.72; font-weight: 600; }
 
-/* ---- Şerit ---- */
+/* ---- Şerit: 5 piksellik kulvar, üstünde 10 piksellik dolu çubuk ---- */
 .track {
   position: relative;
   display: block;
+  height: 10px;
+}
+.track::before {
+  content: "";
+  position: absolute;
+  inset: 50% 0 auto 0;
   height: var(--lane-h, 5px);
+  translate: 0 -50%;
   border-radius: 999px;
   background: var(--line-soft);
-  --lane-c: var(--flat);
 }
-.track[data-dir="up"] { --lane-c: var(--up); }
-.track[data-dir="down"] { --lane-c: var(--down); }
-.track[data-muted] { --lane-c: var(--flat); }
-/* Sıfır çizgisi kulvarın üstüne ve altına 3 piksel taşar. */
+/* Sıfır çizgisi çubuğun üstüne ve altına 3 piksel taşar. */
 .track::after {
   content: "";
   position: absolute;
+  z-index: 1;
   inset: -3px auto -3px 50%;
-  width: 1.5px;
-  translate: -50% 0;
+  width: 1px;
+  margin-left: -0.5px;
   background: var(--line-strong);
 }
-.fill {
+/* Eksen tarafı düz, uzak ucu yuvarlak (bandın çubuğu). Modülde yalnız
+   gecikme ve kaynak; animasyon globals'ın `bar-fill` sınıfı. */
+.bar {
   position: absolute;
-  inset-block: 0;
-  width: max(1.5px, var(--len));
-  border-radius: 999px;
-  background: var(--lane-c);
-  /* Süre ve kademe ana sayfanın merdiveninden (TodayExperience.module.css
-     → "HAREKET MERDİVENİ"); önce 45 ms adım, uç noktası 300 ms. */
-  animation: lane-grow var(--draw, 700ms) var(--ease-brand) both;
-  animation-delay: calc(80ms + var(--i, 0) * var(--step, 40ms));
+  top: 0;
+  left: 50%;
+  height: 10px;
+  min-width: 3px;
+  border-radius: 2px 999px 999px 2px;
+  background: var(--up);
+  animation-delay: calc(var(--i, 0) * var(--step, 40ms));
 }
-.track[data-dir="up"] .fill { left: 50%; transform-origin: left center; }
-.track[data-dir="down"] .fill { right: 50%; transform-origin: right center; }
-/* Uç noktası: değerin bittiği yer. Çubuk büyüdükten sonra 0,85'ten gelir
-   (nesne yoktan var olmaz — design-tokens AI-slop yasakları). */
-.dot {
-  position: absolute;
-  top: 50%;
-  width: 9px;
-  height: 9px;
-  border-radius: 999px;
-  background: var(--lane-c);
-  translate: -50% -50%;
-  animation: lane-dot var(--mark, 200ms) var(--ease-brand) both;
-  animation-delay: calc(520ms + var(--i, 0) * var(--step, 40ms));
+.bar[data-dir="down"] {
+  left: auto;
+  right: 50%;
+  border-radius: 999px 2px 2px 999px;
+  background: var(--down);
+  transform-origin: right center;
 }
-/* Nokta kulvarın İÇİNDE kalır: en büyük değerde merkezi kulvarın ucuna
-   otursaydı 4,5 piksel hapların sağ hattını aşıyordu (ölçüldü). */
-.track[data-dir="up"] .dot { left: clamp(4.5px, calc(50% + var(--len)), calc(100% - 4.5px)); }
-.track[data-dir="down"] .dot { left: clamp(4.5px, calc(50% - var(--len)), calc(100% - 4.5px)); }
-.track[data-muted] .fill,
-.track[data-muted] .dot { opacity: 0.6; }
-
-@keyframes lane-grow {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
-@keyframes lane-dot {
-  from { opacity: 0; scale: 0.85; }
-  to { opacity: 1; scale: 1; }
-}
+/* Çubuksuz satırın künyesi ("Son Kapanış"): kulvarın yerinde, aynı boyda
+   bir kat (satır boyu öteki satırlarla aynı kalır). */
+.laneNote { display: block; color: var(--text-muted); font-size: 12px; font-weight: 600; line-height: 10px; white-space: nowrap; }
 
 /* ---- Eksen ---- */
 .axisRow { grid-template-rows: auto; }
@@ -232,9 +242,9 @@
   position: absolute;
   left: 50%;
   bottom: 0;
-  width: 1.5px;
+  width: 1px;
   height: 4px;
-  translate: -50% 0;
+  margin-left: -0.5px;
   background: var(--line-strong);
 }
 
@@ -255,9 +265,24 @@
   .value { grid-column: 4; align-self: center; }
   .axis { grid-column: 3; }
   .groupLabel { grid-column: 2 / 4; }
+  .laneNote { line-height: 16px; }
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .fill,
-  .dot { animation: none; }
-}
+/* ÖLÇÜM 2 — 10 Kasım 2026 gece (gerçek sayfa + sahte sağlayıcı, TR ve EN,
+   iki tema; önce = aynı gün akşam turu cd7e83b, aynı sahte veri):
+     çubuk             5 piksel şerit + 9 piksel nokta → 10 piksel dolu çubuk,
+                       nokta 15 → 0; kulvar 264 (1024+) / 276 (390), aynı
+     yüzde             12/700 wash zeminli hap → 17/700 hapsız (hap 15 → 0);
+                       sağ kenarı her satırda tek x (390: 355, 1440: 1359)
+     Dünya satırı      55 → 53 · panel 463 → 453
+     Hareketler satırı 50 → 51 · panel 512 → 518 (3 + 3 satır)
+     son kapanış       karışık günde o satır çubuksuz + künye, panel boyu aynı
+                       (künye kulvarın yerinde); ölçeğe girmiyor
+     kolon dipleri     (ana − yan) 1024: +4 → +8 · 1280: −19 → −15 ·
+                       1440: −17 → −13; EN 1024: +21 · 1280: +15 · 1440: −31
+     geniş kap (768)   tek kat düzen korunuyor, satır 53 / 51
+   Yatay taşma 0, kırpılan metin 0, kutusundan taşan öğe 0 (390/768/1024/
+   1280/1440). Hareket (`getAnimations()`, 1440): Dünya 5, Hareketler 6
+   `bar-fill`, 700 ms, gecikme 0–280 ms (`--i` × `--step`), yalnız
+   `transform`; panel ekranın altındayken kapı kurulu, girince oynuyor;
+   hareketi azaltanda kapı 0, animasyon 0, çubuk son karede. */

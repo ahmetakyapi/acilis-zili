@@ -1815,7 +1815,8 @@ const tr = {
     capShare: "Pay",
     capShareNote:
       "Pay, şirketin piyasa değerinin bu endeksteki şirketlerin toplam piyasa değerine oranıdır; resmî endeks ağırlığı değildir.",
-    laneScaleNote: "Şeritlerin tam boyu: Değişim {day}, Haftalık {week}.",
+    laneScaleNote: "Şeritlerin tam boyu bu listeye göre: Değişim {day}, Haftalık {week}.",
+    laneOverNote: "Ölçeği aşan çubuk kola dayanır, ucu kesiktir.",
     weekNote: "Haftalık, son 5 işlem gününe göre değişimdir; takvim haftası değil, seans sayısı.",
   },
 
@@ -2660,15 +2661,6 @@ const tr = {
        başlık satırını ikiye kırıyordu (ölçüldü). */
     rankMeta: "Üye Medyanı",
     rankTitleClose: "Son Kapanış Sıralaması",
-    strongest: "Günün En Güçlüsü",
-    weakest: "Günün En Zayıfı",
-    strongestPre: "Açılış Öncesi En Güçlü",
-    weakestPre: "Açılış Öncesi En Zayıf",
-    strongestClose: "Son Kapanışta En Güçlü",
-    weakestClose: "Son Kapanışta En Zayıf",
-    /* Kapaktaki günün özeti (28 Eylül). */
-    themesRising: "Yükselen Tema",
-    themesFalling: "Düşen Tema",
     /* Kapaktaki oran çubuğunun başlığı (29 Eylül). */
     themesBreadth: "Temaların Yönü",
     up: "Yükselen",
@@ -2697,17 +2689,16 @@ const tr = {
     /* YENİDEN TASARIM (10 Kasım): dizin panosu, kapaktaki fark çizgisi,
        detayın kapak okuması ve tek katlı tablo. */
     boardTheme: "Tema",
-    boardMedian: "Medyan",
-    boardKeyMember: "Üye",
-    boardKeyBench: "Ölçüt Fonu",
     boardNote: "Çubuk sıfırdan temanın medyanına uzanır, bütün çubuklar aynı ölçekte. Her karo bir üye: rengi günlük değişimi, üstüne gelince sembolü ve yüzdesi.",
     /* GÖRSEL SIRALAMA (10 Kasım akşamı): üye ısı şeridinin künyesi. */
     boardKeyHeat: "Üyeler, Zayıftan Güçlüye",
-    gapLabel: "Aradaki Fark",
+    /* Gece (10 Kasım): iki uç kutusu kapaktan kalktı; etiket tek başına okunur oldu. */
+    gapLabel: "En Güçlü ile En Zayıf Arası",
     gapPoints: "{points} Puan",
     largest: "En Büyük Üye",
     tableAll: "Tümünü Göster · {count}",
     tableLastCloseNote: "Kesikli kulvar: yüzde son kapanışa ait, günün ölçeğine girmiyor.",
+    tableScaleNote: "Şeridin tam boyu bu temaya göre: {day}.",
     sortBy: "{column} sütununa göre sırala",
   },
   pairs: {

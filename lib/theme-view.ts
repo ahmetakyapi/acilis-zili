@@ -63,6 +63,32 @@ export function barScale(values: readonly number[]): number {
   return BAR_STEPS.find((step) => peak <= step) ?? BAR_STEPS[BAR_STEPS.length - 1];
 }
 
+/** Pano ekseninin en dar aralığı, yüzde puan: sakin günde ±%0,05'lik
+    medyanlar sütunun ucuna kadar uzayıp büyük bir gün gibi görünmesin. */
+export const BOARD_MIN_SPAN = 0.5;
+
+/**
+ * Temalar panosunun ekseni (`components/themes/ThemeBoard.tsx`): sıfırın
+ * sütundaki yeri ve bir puanın genişliği (ikisi de sütunun yüzdesi).
+ * Simetrik ±ölçek yerine günün aralığı: bütün medyanlar artıdaysa sıfır sol
+ * kenarda ve sütunun tamamı çubuğa kalıyor; −%0,35 … +%0,83'lük günde sıfır
+ * soldan üçte birde, en uzun çubuk sütunun ucuna dayanıyor.
+ *
+ * 10 Kasım (gece): `ThemeBoard.tsx`ten buraya taşındı (bileşen dosyasından
+ * dışa aktarılan saf hesap testsizdi; çizim hesaplarının yeri burası).
+ */
+export function boardAxis(medians: readonly number[]): { zero: number; unit: number; neg: boolean; pos: boolean } {
+  const pos = medians.reduce((max, value) => Math.max(max, value), 0);
+  const neg = medians.reduce((max, value) => Math.max(max, -value), 0);
+  const total = pos + neg;
+  return {
+    zero: total === 0 ? 50 : (neg / total) * 100,
+    unit: 100 / Math.max(total, BOARD_MIN_SPAN),
+    neg: neg > 0,
+    pos: pos > 0,
+  };
+}
+
 /** Değerin şeritteki yeri, 0-100 (50 sıfır). Tavanı aşan uca yapışır. */
 export function spreadPosition(value: number, scale: number): number {
   const clamped = Math.max(-scale, Math.min(scale, value));

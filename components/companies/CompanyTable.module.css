@@ -50,10 +50,17 @@
    Fiyat; Haftalık, Piyasa Değeri ve Hacim kaydırınca. Sayı sütunları
    içeriği kadar. ---- */
 @media(max-width:639px) {
-  .changeCell, .changeHead, .priceCell, .priceHead { width:1%; }
+  .changeCell, .changeHead, .priceCell, .priceHead, .capPhone { width:1%; }
+  /* Piyasa değeri telefonda Fiyat'ın ÖNÜNDE (gerekçe page.tsx, başlıkta):
+     asıl yerindeki kopya gizli. Başlık iki satır; bağlantı 44 piksellik
+     hedefini korur. */
+  .table .capWide { display:none; }
+  .table thead .capPhone { white-space:normal; line-height:14px; }
+  .table thead .capPhone a { max-width:6.4ch; text-align:right; }
 }
 @media(min-width:640px) {
   .compareBar { display:none; }
+  .table .capPhone { display:none; }
 }
 @media(min-width:768px) {
   .sectorHead, .sector { display:table-cell; }
@@ -65,7 +72,10 @@
    NEREYE"). ---- */
 @media(min-width:1024px) {
   .table :is(.changeCell, .changeHead, .priceCell, .priceHead, .weekCell, .weekHead, .capCell, .capHead, .volume, .volumeHead, .sectorHead, .sector) { width:1%; }
-  .panel .table { --cell-pad:10px; --name-max:160px; --tag-max:120px; --day-lane:64px; --week-lane:40px; }
+  /* `--tag-max` 120 → 108 (10 Kasım gece, ölçüldü): dört haneli fiyatların
+     ("1.070,08") öne geldiği sıralamada Fiyat sütunu 74 → 82 piksele çıkıyor,
+     içerik 977 > kap 974 olup kap 3 piksel kayıyordu. */
+  .panel .table { --cell-pad:10px; --name-max:160px; --tag-max:108px; --day-lane:64px; --week-lane:40px; }
 }
 @media(min-width:1280px) {
   .panel .table { --cell-pad:14px; --name-max:220px; --tag-max:170px; --day-lane:88px; --week-lane:56px; }
@@ -105,4 +115,22 @@
      0–320 ms, 700 ms, yalnız `transform`; hareketi azaltanda 0. Sıralamada
      `RowFlip` görünen ortak satırları kaydırıyor (piyasa değeri → fiyat:
      4 satır); satırın tamamı hisse sayfasına gidiyor (`RowTap`).
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM 3 — gece turu, ölçek ve telefon sütun sırası (10 Kasım 2026)
+   Gerçek sayfa + sahte sağlayıcı, 60 satır, iki tema; önce = ÖLÇÜM 2.
+   - 390: sütun sırası Şirket 136 · Değişim 85 · PİYASA DEĞERİ 74–78 · Fiyat
+     66–74 · Haftalık 118 · Hacim 75; ilk ekranda Şirket + Değişim + Piyasa
+     Değeri (sağ kenarı 295–299, solma kuşağının solu 318), Fiyat kuşakta
+     başlıyor. İçerik 590 → 554–566, kap 352 (kayar, Şirket sabit).
+   - Ölçek (`laneSpan`): piyasa değeri sırasında günlük ±%3 (sakin) / ±%10
+     (sert gün); değişime göre sıralıyken o yönün ucundan — "en çok düşen"
+     −%9,34 · −%3,88 · −%3,01: önce üçü de 60 piksel (dolu kol), şimdi ±%5'te
+     60 (kesik uçlu) · 46,5 · 36,1 piksel (1440). Sert günde "en çok artan"
+     ±%15, en uzun çubuk 47,8. Tek uç değerli sakin günde ölçek ±%3'te
+     kalıyor, yalnız o satır kola dayanıyor.
+   - 1024: `--tag-max` 120 → 108; dört haneli fiyatlı sıralamada içerik 977
+     → 974 = kap (3 piksellik kayma kalktı).
+   - Yatay taşma 0, hücresinden taşan öğe 0 (390/768/1024/1280/1440).
    -------------------------------------------------------------------------- */

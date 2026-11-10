@@ -13,7 +13,7 @@ import { SESSION_BOUNDS, etParts, isSessionTrade } from "@/lib/market-hours";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { MOVERS_LANE_FLOOR, sharedLaneScale } from "@/lib/home-figures";
 import { TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
-import { cn, directionOf, directionText, directionWash, formatPercent, formatPercentPlain } from "@/lib/utils";
+import { cn, directionOf, directionText, formatPercent, formatPercentPlain } from "@/lib/utils";
 import { HomeLane, LaneAxis } from "@/components/today/home/HomeLane";
 import styles from "./HomeLanes.module.css";
 import { indexSnapshot } from "@/components/today/home/index-snapshot";
@@ -205,6 +205,11 @@ type MoverRow = { symbol: string; changePct: number; name: string; logoUrl: stri
  *   ilk üç–beşi gösteriyor, sayaç o yöne gidenlerin tamamını (yalnız bu
  *   seansta işlem görenler, sıralamanın süzgeciyle aynı küme).
  * - Yüzde hap (up/down wash), şeridin ucunda değer noktası (`HomeLane`).
+ *
+ * ÜÇÜNCÜ TUR (10 Kasım gece, ana oturumun kararı): bandın dili — 10
+ * piksellik dolu çubuk, nokta yok; yüzde hapsız, yön renginde 17/700;
+ * sembol 15/700, ad 13 gövde mürekkebi (gerekçe HomeLane.tsx,
+ * HomeLanes.module.css).
  */
 function DayMoversView({
   locale,
@@ -296,29 +301,27 @@ function DayMoversView({
                     .replace("{name}", row.name || row.symbol)
                     .replace("{symbol}", row.symbol)
                     .replace("{value}", value)}
-                  className={cn(styles.row, "px-4 py-2 transition-colors hover:bg-primary-tint sm:px-5")}
+                  className={cn(styles.row, "px-4 py-[7px] transition-colors hover:bg-primary-tint sm:px-5")}
                 >
                   <span className={styles.lead}>
                     <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="md" />
                   </span>
                   <span className={styles.main}>
                     <span className={styles.identTight}>
-                      <span className="numeral shrink-0 text-read font-bold text-strong">
-                        {row.symbol}
-                      </span>
-                      <span className="min-w-0 truncate text-tiny text-muted">{row.name}</span>
+                      <span className={cn("numeral", styles.ticker)}>{row.symbol}</span>
+                      <span className={styles.company}>{row.name}</span>
                     </span>
                   </span>
                   {/* YÜZDE HAP (8 Kasım). Burada "yüzde ÇIPLAK, rozet değil"
                       kararı vardı: rozetin zemini 167 piksellik sütunda
                       satırın yarısını kaplıyordu. Panel artık tek sütun ve
                       hap 390'da 62 piksel (satırın beşte biri, ölçüldü);
-                      yön zemini şeridin rengini sayıya da taşıyor. */}
+                      yön zemini şeridin rengini sayıya da taşıyor.
+                      10 Kasım gece: HAP KALKTI — yön renginde 17/700 sayı
+                      (bandın yüzdesi; hap 12 puntoyu aşamıyordu ve satırın
+                      en anlamlı değeri en küçük yazıydı). */}
                   <span aria-hidden className={styles.value}>
-                    <span
-                      data-pill=""
-                      className={cn("numeral", styles.pill, directionWash(directionOf(row.changePct)))}
-                    >
+                    <span className={cn("numeral", styles.pct, directionText(directionOf(row.changePct)))}>
                       {value}
                     </span>
                   </span>
@@ -341,7 +344,7 @@ function DayMoversView({
         tone="title"
         action={<PanelLink href="/piyasalar">{t.common.showAll}</PanelLink>}
       />
-      <div className={styles.desk}>
+      <div className={styles.desk} data-draw>
         <LaneAxis
           scale={scale}
           locale={locale}
