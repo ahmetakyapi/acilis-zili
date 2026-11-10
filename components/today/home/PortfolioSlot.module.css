@@ -4,7 +4,14 @@
    başlık 16/700, display sayı 700 / −0,03em, metin tabanı 12, kalın şerit
    12, değer çubuğu 8 (kulvar 5). Ölçüm sonuçları TSX'teki yorumlarda. */
 
-.panel { display:flex; flex-direction:column; gap:18px; padding:16px; }
+.panel { display:flex; flex-direction:column; gap:18px; padding:16px; container-type:inline-size; }
+/* GENİŞ KAP: iki sarmal dar kapta akışa karışır (`display:contents`);
+   ≥ 680'de iki sütun — özet 5, pozisyonlar 7 pay, aralık 28. */
+.body, .summaryCol, .positionsCol { display:contents; }
+@container (min-width:680px) {
+  .body { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); column-gap:28px; align-items:start; }
+  .summaryCol, .positionsCol { display:flex; min-width:0; flex-direction:column; gap:18px; }
+}
 @media (min-width: 640px) { .panel { padding:20px; } }
 
 .head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-block:-6px; }

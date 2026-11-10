@@ -16,7 +16,7 @@ const keepSigns = (text: string) => tieFigures(text.replace(/([\u2212+])(?=[%\d]
 
 /**
  * Claude'un risk okuması (24 Ekim) — gerekçe lib/portfolio-analysis-note.ts.
- * Portföy notunun kalıbı (components/portfolio/PortfolioNote.tsx): panel
+ * Portföy notunun kalıbı (components/portfolio/PortfolioScan.tsx): panel
  * görünüme yaklaşınca istenir, iskelet metnin boyunda, yazılamazsa tek
  * cümle; ölçüler panelin üstünde zaten eksiksiz.
  */

@@ -4,6 +4,7 @@ paths:
   - "lib/ai-*.ts"
   - "lib/claude-*.ts"
   - "lib/advice-guard.ts"
+  - "lib/portfolio-scan*.ts"
   - "lib/translate.ts"
   - "lib/weekly-commentary.ts"
   - "app/api/ai/**"
@@ -31,6 +32,13 @@ Rutinlerden ayrı, sunucunun kendi Claude çağrıları. Anahtar
   risk, takip, Bu Hisseye Sor) bir de tavsiye denetiminden geçer
   (`lib/advice-guard.ts`: al/sat yönlendirmesi = SPK'ya göre yatırım
   danışmanlığı). Not istemciden istenir, botlara açılmaz.
+- **Tek istisna: site sahibinin Kişisel Planı** (10 Kasım, sahibinin isteği:
+  "bu sadece bana özgü… buradan kâr al, buradan zarar kes"). Günlük portföy
+  taramasında (`lib/portfolio-scan.ts`) yalnız `role = admin` oturumunda
+  model al/sat/azalt görüşü ve kâr al / zarar kes seviyesi yazar; tavsiye
+  denetimi orada kapalı, sayı denetimi açık, seviyeler YALNIZ sunucunun
+  verdiği listeden (teknik analiz seviyeleri, üç aylık bant, maliyet —
+  `planLevels`). Üyelere asla açılmaz; önbellek anahtarı ayrı ("plan").
 - **Claude analizi** (`/claude/[symbol]`, `lib/ai-analysis*.ts`,
   `/admin/ai`): yetki + günlük kota + tek eşzamanlı iş kilidi, başarısız işte
   hak iadesi, Zod şemalı JSON çıktı. Ayrıntı ve model notları

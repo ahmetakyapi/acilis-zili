@@ -14,7 +14,7 @@ import styles from "./WatchlistToday.module.css";
 
 /**
  * Takip Listem Bugün (24 Ekim) — gerekçe lib/watchlist-today.ts. Portföy
- * notunun kalıbı (components/portfolio/PortfolioNote.tsx): görünüme
+ * notunun kalıbı (components/portfolio/PortfolioScan.tsx): görünüme
  * yaklaşınca istenir, sayfanın sunucu çizimi beklemez.
  *
  * İKİ BİÇİM. `compact` ana sayfadaki takip listesi panelinin İÇİNDE, liste

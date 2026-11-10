@@ -1,0 +1,119 @@
+/* Günlük portföy taraması (10 Kasım). Derinlik tonla (`surface-sunken`
+   karolar), gölge yok; renk yalnız yönde (up/down) ve teknik görüşte.
+   Ölçüler ortak kural setinden (`.claude/rules/arayuz.md` → "Ortak
+   ölçüler"): kart başlığı 14/700, metin tabanı 12, değer çubuğu 8 (kulvar
+   5), yarıçap 12. Ölçüm TSX başındaki yorumda. */
+
+.panel { display:flex; flex-direction:column; gap:18px; padding:16px; scroll-margin-top:120px; }
+@media (min-width:640px) { .panel { padding:22px; } }
+.spark { color:var(--primary); }
+.loading { color:var(--text-muted); font-size:var(--text-small); line-height:1.55; }
+.skeleton { display:flex; flex-direction:column; gap:10px; }
+
+/* ---- Baş: başlık + özet solda, portföyün nabzı sağda ---- */
+.lead { display:grid; gap:14px; container-type:inline-size; }
+@container (min-width:620px) { .lead { grid-template-columns:minmax(0,1fr) auto; column-gap:28px; align-items:start; } }
+.headline { color:var(--text-strong); font-size:clamp(19px, 2vw, 23px); font-weight:700; letter-spacing:-.025em; line-height:1.22; text-wrap:balance; }
+.summary { margin-top:8px; max-width:68ch; color:var(--text-body); font-size:var(--text-read); line-height:1.65; }
+.pulse { display:flex; flex-wrap:wrap; gap:10px; }
+.pulse > div { display:flex; flex-direction:column; gap:6px; min-width:132px; padding:11px 12px; border-radius:12px; background:var(--surface-sunken); }
+.pulse dt { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+
+/* ---- Tema karoları ---- */
+.themes { display:grid; gap:10px; }
+@media (min-width:640px) { .themes { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+.theme { display:flex; flex-direction:column; gap:6px; padding:14px; border-radius:12px; background:var(--surface-sunken); }
+.themeKind { display:inline-flex; align-items:center; gap:6px; color:var(--primary-ink); font-size:var(--text-nano); font-weight:700; }
+.theme[data-kind="risk"] .themeKind { color:var(--down); }
+.themeTitle { color:var(--text-strong); font-size:14px; font-weight:700; line-height:1.3; }
+.themeDetail { color:var(--text-body); font-size:var(--text-small); line-height:1.6; }
+
+/* ---- Pozisyonlar ---- */
+.sectionTitle, .planHead h3 { color:var(--text-strong); font-size:14px; font-weight:700; }
+.planHead { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; }
+.planBadge { display:inline-flex; align-items:center; height:20px; padding:0 8px; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); font-size:var(--text-nano); font-weight:700; }
+/* Sütun başlığı yalnız geniş kapta (satır içi etiketler orada gizli). */
+.colHead { display:none; }
+.positions { display:flex; flex-direction:column; gap:8px; margin-top:10px; container-type:inline-size; }
+.position { display:flex; flex-direction:column; gap:9px; padding:13px 14px; border-radius:12px; background:var(--surface-sunken); }
+/* Dar kap: kimlik, beş seanslık şerit (tam satır, yanında yüzdesi), üç
+   ölçü eşit sütunda. Şerit önce ölçülerle aynı satırdaydı ve 358'lik
+   telefonda ~60 piksele iniyordu (ölçüldü). */
+.positionTop {
+  display:grid; grid-template-columns:repeat(3, minmax(0,1fr));
+  grid-template-areas:"id id id" "five five five" "day month cost"; gap:8px 14px; align-items:center;
+}
+.identity { grid-area:id; display:flex; min-width:0; align-items:baseline; gap:8px; }
+.identity:hover .symbol { color:var(--primary); }
+.symbol { color:var(--text-strong); font-size:15px; font-weight:700; transition:color 180ms var(--ease-brand); }
+.name { overflow:hidden; color:var(--text-muted); font-size:var(--text-tiny); white-space:nowrap; text-overflow:ellipsis; }
+.five { grid-area:five; display:flex; min-width:0; align-items:center; gap:10px; }
+.fiveLane { position:relative; display:block; flex:1 1 auto; min-width:0; }
+.fiveValue { flex:none; min-width:52px; font-size:var(--text-small); font-weight:700; text-align:right; white-space:nowrap; }
+.fiveZero { position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; background:var(--line-strong); }
+.metric { display:flex; flex-direction:column; align-items:flex-start; gap:1px; font-size:var(--text-small); white-space:nowrap; }
+.metricDay { grid-area:day; }
+.metricMonth { grid-area:month; }
+.metricCost { grid-area:cost; }
+.metricLabel { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.metric b { font-weight:700; }
+
+/* Geniş kap (≥ 700): tek satır, sütun başlığı bir kez. */
+@container (min-width:700px) {
+  .positionTop { grid-template-columns:minmax(0,1.2fr) minmax(170px,1.1fr) repeat(3, 84px); grid-template-areas:"id five day month cost"; }
+  .metric { align-items:flex-end; }
+  .metricLabel { display:none; }
+}
+@media (min-width:900px) {
+  .colHead {
+    display:grid; grid-template-columns:minmax(0,1.2fr) minmax(170px,1.1fr) repeat(3, 84px); column-gap:14px;
+    margin-top:10px; padding:0 14px; color:var(--text-muted); font-size:var(--text-nano); font-weight:600; text-align:right;
+  }
+  .colHead > span:nth-child(2) { text-align:center; }
+}
+
+.flags { display:flex; flex-wrap:wrap; gap:6px; }
+.flag {
+  display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:999px;
+  background:var(--surface-solid); color:var(--text-body); font-size:var(--text-nano); font-weight:600;
+}
+.flag[data-kind="earnings"] { background:var(--primary-tint); color:var(--primary-ink); }
+.flag[data-stance="buy"], .flag[data-kind="nearHigh"] { color:var(--up); }
+.flag[data-stance="sell"], .flag[data-kind="nearLow"] { color:var(--down); }
+.note { color:var(--text-body); font-size:var(--text-small); line-height:1.6; }
+
+/* Kişisel plan: tonlu iç yüzey, sol kenarda mavi şerit (yalnız sahibin). */
+.plan { display:flex; flex-direction:column; gap:8px; padding:11px 12px; border-left:3px solid var(--primary); border-radius:8px; background:var(--surface-solid); }
+.planRow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.level { display:inline-flex; gap:5px; height:22px; align-items:center; padding:0 8px; border-radius:999px; background:var(--surface-sunken); color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.level b { color:var(--text-strong); font-size:var(--text-tiny); font-weight:700; }
+.level[data-kind="tp"] b { color:var(--up); }
+.level[data-kind="sl"] b { color:var(--down); }
+.planText { color:var(--text-strong); font-size:var(--text-small); line-height:1.6; }
+
+.foot { display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:var(--text-tiny); line-height:1.55; }
+
+/* ---- Ana sayfa kartındaki özet ---- */
+.brief { display:flex; flex-direction:column; gap:10px; padding:14px; border:1px solid var(--primary-faint); border-radius:12px; background:var(--premium-surface); }
+.briefHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 10px; }
+.briefTitle { display:inline-flex; align-items:center; gap:6px; color:var(--text-strong); font-size:14px; font-weight:700; }
+.briefMeta { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.briefHeadline { color:var(--text-strong); font-size:16px; font-weight:700; letter-spacing:-.02em; line-height:1.3; text-wrap:balance; }
+.briefSummary { color:var(--text-body); font-size:var(--text-small); line-height:1.6; }
+.briefThemes { display:flex; flex-direction:column; gap:6px; }
+.briefThemes li { display:flex; min-width:0; align-items:center; gap:6px; color:var(--primary-ink); font-size:var(--text-tiny); }
+.briefThemeKind { flex:none; font-weight:700; }
+.briefThemeTitle { overflow:hidden; color:var(--text-body); font-weight:600; white-space:nowrap; text-overflow:ellipsis; }
+.briefPlans { display:flex; flex-direction:column; gap:8px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.briefPlansHead { display:inline-flex; align-items:center; gap:8px; color:var(--text-strong); font-size:var(--text-tiny); font-weight:700; }
+.briefPlans ul { display:flex; flex-direction:column; gap:6px; }
+.briefPlans li { display:grid; grid-template-columns:48px max-content minmax(0,1fr); align-items:center; gap:8px; }
+.briefPlanSymbol { color:var(--text-strong); font-size:var(--text-small); font-weight:700; }
+.briefLevels { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:2px 10px; color:var(--text-muted); font-size:var(--text-nano); font-weight:600; white-space:nowrap; }
+.briefLevels b { font-size:var(--text-tiny); font-weight:700; }
+.briefLevels [data-kind="tp"] b { color:var(--up); }
+.briefLevels [data-kind="sl"] b { color:var(--down); }
+.briefLink { display:inline-flex; min-height:44px; align-items:center; gap:4px; margin-block:-10px -12px; color:var(--primary); font-size:var(--text-small); font-weight:600; }
+.briefLink:hover { color:var(--primary-hover); }
+.briefLink svg { transition:translate 200ms var(--ease-brand); }
+.briefLink:hover svg { translate:3px 0; }

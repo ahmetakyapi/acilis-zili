@@ -15,7 +15,7 @@ import { formatPercentPlain, formatPercentText } from "@/lib/utils";
 /**
  * CLAUDE'UN RİSK OKUMASI (24 Ekim) — /portfoy/analiz'in metin paneli.
  *
- * Portföy notunun (lib/portfolio-note.ts — ağırlık, son beş seans,
+ * Portföy notunun (lib/portfolio-scan.ts — ağırlık, son beş seans,
  * yaklaşan bilanço) TEKRARI DEĞİL: bu metin risk tarafını anlatır —
  * oynaklık ve beta, yoğunlaşma, korelasyonun anlamı, S&P 500'e göre eksik
  * sektörlerin çeşitlendirmeye etkisi, kur etkisi. Girdi YALNIZ sunucunun

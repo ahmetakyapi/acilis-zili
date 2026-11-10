@@ -33,7 +33,7 @@ import {
  * kısa not: son TAMAMLANMIŞ seansta en çok hareket edenler, S&P 500'e göre
  * konumları, hareketin bilinen nedenleri ve önümüzdeki günlerde bilançosu
  * olanlar. Pazar postasındaki haftalık takip notunun (lib/watchlist-note.ts)
- * günlük, sayfadaki karşılığı; portföy notunun (lib/portfolio-note.ts)
+ * günlük, sayfadaki karşılığı; portföy notunun (lib/portfolio-scan.ts)
  * kalıbıyla kuruldu.
  *
  * YAZMA KATMANI (CLAUDE.md "Claude'un site içi notları", veri dürüstlüğü 4):

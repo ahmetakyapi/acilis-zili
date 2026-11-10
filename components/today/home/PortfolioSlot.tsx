@@ -4,6 +4,7 @@ import { auth } from "@/auth";
 import { SentimentPulse } from "@/components/markets/SentimentPulse";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Money } from "@/components/portfolio/Money";
+import { PortfolioScanBrief } from "@/components/portfolio/PortfolioScan";
 import { PrivacyToggle } from "@/components/portfolio/PrivacyToggle";
 import { ButtonLink, ChangePill, DataStamp, LogoTile, Panel, PanelLink } from "@/components/ui/primitives";
 import { formatLira } from "@/lib/fx";
@@ -161,6 +162,12 @@ function PortfolioSummary({
         </div>
       </div>
 
+      {/* GENİŞ KAP (10 Kasım, kart sol kolona geçti — page.tsx): ≥ 680
+          piksellik kapta iki sütun, özet (değer, K/Z, dağılım) solda,
+          pozisyonlar sağda; günün taraması altta tam genişlik. Dar kapta
+          (ray, telefon) iki sarmal da alt alta akar. */}
+      <div className={styles.body}>
+      <div className={styles.summaryCol}>
       {/* KAHRAMAN: toplam değer panelin en büyük puntosu; bugünün değişimi
           altında, yalnız seansı KANITLANAN kotasyondan (kanıt yoksa satır
           hiç basılmaz). Lira karşılığı ve pozisyon sayısı en altta künye. */}
@@ -238,6 +245,9 @@ function PortfolioSummary({
         </div>
       )}
 
+      </div>
+
+      <div className={styles.positionsCol}>
       {/* POZİSYONLAR — karo satırlar, sütun başlığı yok. Satırın sağında
           değer ve bugünün hapı (`ChangePill`, yalnız kanıtlı seans; yoksa
           hap basılmaz), altında pay çubuğu (8 piksel, şeritteki rengiyle —
@@ -309,6 +319,16 @@ function PortfolioSummary({
           );
         })}
       </ul>
+      </div>
+      </div>
+
+      {/* GÜNÜN TARAMASI (10 Kasım, sahibinin isteği: "her gün portföye AI
+          taraması… ana sayfadaki kısımda da gözüksün"). Claude'un o günkü
+          taraması: başlık, özet, üç tema; site sahibinde Kişisel Plan
+          hapları. İstemciden, kart görünüme yaklaşınca istenir; tarama o
+          günün ilk açılışında yazılır (lib/portfolio-scan.ts). Yazılamazsa
+          bölüm hiç basılmaz. */}
+      <PortfolioScanBrief locale={locale} labels={t.portfolioScan} />
 
       {/* KÜNYE SADELEŞTİ (10 Kasım, sahibinin sorusu: "kartın altındaki
           bilgilere gerek var mı"). Burada iki ikonlu cümle vardı: "bugün

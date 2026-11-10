@@ -13,7 +13,7 @@ import {
   ImportButton,
   PortfolioWorkbench,
 } from "@/components/portfolio/PortfolioWorkbench";
-import { PortfolioNote } from "@/components/portfolio/PortfolioNote";
+import { PortfolioScanPanel } from "@/components/portfolio/PortfolioScan";
 import { Money } from "@/components/portfolio/Money";
 import { PrivacyToggle } from "@/components/portfolio/PrivacyToggle";
 import { getPrivacy } from "@/lib/privacy-server";
@@ -428,10 +428,12 @@ async function PortfolioBody({
         </div>
       </Panel>
 
-      {/* Claude'un portföy okuması (18 Ekim) — metin, ölçülerin altında
-          (CLAUDE.md "ekran düzeni" 5). Son seansın kapanışından; canlı kâr/zarar
-          notta yok (lib/portfolio-note.ts). */}
-      <PortfolioNote locale={locale} labels={t.portfolioNote} />
+      {/* Claude'un günlük portföy taraması (10 Kasım; 18 Ekim'in kısa
+          okumasının yerine) — metin, ölçülerin altında (ekran düzeni 5). Son
+          seansın kapanışından; canlı kâr/zarar taramada yok
+          (lib/portfolio-scan.ts). Ana sayfa kartındaki "Taramanın Tamamı"
+          buraya iner (`#tarama`). */}
+      <PortfolioScanPanel locale={locale} labels={t.portfolioScan} />
 
       <RealizedPanel data={realized} names={realizedNames} locale={locale} t={t} />
 

@@ -9,7 +9,7 @@ import { insightsConfigured } from "@/lib/stock-insights";
  * Claude'un portföy risk okuması (24 Ekim) — `?dil=tr|en`. Gerekçe,
  * sayı ve tavsiye denetimi lib/portfolio-analysis-note.ts. Oturum ister
  * (okurun kendi pozisyonları), botlara kapalı; okur başına dakikada 6.
- * Yanıt kişisel: önbelleğe alınmaz. Kalıp `/api/ai/portfoy-notu`.
+ * Yanıt kişisel: önbelleğe alınmaz. Kalıp `/api/ai/portfoy-taramasi`.
  */
 export const dynamic = "force-dynamic";
 export const maxDuration = 90;
