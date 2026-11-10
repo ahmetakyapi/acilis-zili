@@ -10,9 +10,9 @@
    ThemeTable.module.css (üyeler tablosu). Kalkan kuralların karar notları
    (dar kartta ızgara, dengeli küme satırları, telefonda tek satır uç tema)
    o bileşenlerle birlikte geçersiz; gerekçeleri yeni bileşenlerin başında.
-   ANA SAYFA BANDI buradan şunları okuyor, sözleşmeleri değişmedi:
-   `.roll*` (RollingFigure), `.rank*` (ThemeRanking), `.spread*` / `.tick*`
-   (SpreadStrip), `.heat` (HeatScale, piyasalar).
+   ANA SAYFA BANDI buradan yalnız `.roll*` (RollingFigure) okuyor;
+   `.rank*` ve `.spread*` / `.tick*` 10 Kasım'da kalktı (aşağıda kaydı).
+   `.heat` (HeatScale, piyasalar) yerinde.
 
    Derinlik TONLA: kartlar düz panel yüzeyinde, hover `.panel-hover` ile
    aynı dil (kenar `--primary-faint`, zemin `--primary-tint`). Gölge, ışıma,
@@ -50,77 +50,24 @@
 .rollStrip::before { content:"0\A 1\A 2\A 3\A 4\A 5\A 6\A 7\A 8\A 9"; display:block; white-space:pre; line-height:1.1em; text-align:center; }
 
 /* --------------------------------------------------------------------------
-   Kapak sıralaması
+   Kapak sıralaması ve dağılım şeridi — KALKTI (10 Kasım 2026, ana sayfa
+   bandı yeniden kuruldu). `.rank*` (ThemeRanking) ve `.spread*` / `.tick*`
+   (SpreadStrip) yalnız ana sayfanın "Sektörler ve Temalar" bandında
+   yaşıyordu; bant artık kendi çizimini kullanıyor
+   (components/today/home/RankBars.tsx, MarketTexture.module.css → `.rb*`,
+   `.split*`). Kalkan kuralların kaydı:
+   · 10 Ekim — sıralama çubuğu 9 → 5 piksel + sönük kulvar (sahibi: "çizgi
+     çubukları çok kötü duruyor"; küçük değer nokta gibi duruyordu).
+   · 12 Ekim — telefonda satır iki kat (üstte ad + rakam, altta tam
+     genişlik kulvar; "okunaklılık çok kötü"). İki katlı satır yeni çizimde
+     de 1024'ün altında geçerli.
+   · 30 Eylül — telefonda satır gerçek yükseklikle dokunma hedefi (bitişik
+     satırda `tap-44` komşuyu kapatır). Yeni satır 49 piksel.
+   · 10 Kasım — sahibinin sözü: "nokta nokta ne anlatıyor anlamıyorum;
+     yatayda uzun kalın çizgi seviyorum": çentik şeridi (üye başına 2
+     piksellik çentik + medyan imi + ölçek künyesi) yerine yükselen/düşen
+     kalın şerit; sıralama çubuğu 5 → 10 piksel.
    -------------------------------------------------------------------------- */
-.rank { display:flex; flex-direction:column; gap:12px; min-width:0; }
-.rankHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:6px 12px; }
-/* 14 → 16 (9 Ekim): sıralamanın başlığı satırlarının (13) yalnızca bir
-   piksel üstündeydi ve bir satır gibi okunuyordu. */
-.rankHead :is(h2,h3,h4) { font-size:var(--text-lead); font-weight:700; letter-spacing:-.015em; color:var(--text-strong); }
-.rankHead span { font-size:12px; color:var(--text-muted); }
-.rankList { display:flex; flex-direction:column; gap:1px; }
-.rankRow {
-  display:grid; grid-template-columns:minmax(0,10.5rem) minmax(0,1fr) 4.9rem; align-items:center; gap:12px;
-  min-height:28px; margin-inline:-8px; padding:0 8px; border-radius:8px;
-  font-size:13px; color:var(--text-body); transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand);
-}
-.rankRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
-@media(hover:hover) { .rankRow:hover { background:var(--primary-tint); color:var(--primary-ink); } }
-.rankName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-weight:600; }
-@media(hover:hover) { .rankRow:hover .rankName { color:var(--primary-ink); } }
-/* ÇUBUK İNCE BİR ŞERİT, ALTINDA KULVAR (10 Ekim, sahibinin isteği:
-   "çizgi çubukları çok kötü duruyor"). 9 piksellik, 4 piksel yuvarlak
-   çubuk küçük değerlerde bir NOKTA gibi duruyordu (+%0,15 bir yeşil
-   damlaydı) ve boşta kalan iz hiç görünmediği için çubuklar havada
-   asılıydı. Şimdi 5 piksel, köşe 1,5; her satırın tam genişlikte sönük
-   bir kulvarı var, kısa çubuk da bir ölçeğin üstünde okunuyor. */
-/* 5 → 6 piksel, köşe 3 (12 Ekim, sahibinin itirazı: "okunaklılık çok
-   kötü"): telefonda ince şerit ve gri adlar sönük duruyordu. */
-/* Kulvar 6/3 → 5/999 (10 Kasım, ekranlar arası denetim): sitenin tek şerit
-   ölçüsü — kulvar `--line-soft` üstünde 5 piksel, tam yuvarlak uç. */
-.rankTrack { position:relative; height:5px; border-radius:999px; background:var(--line-soft); }
-.rankTrack::before { content:""; position:absolute; left:50%; top:-4px; bottom:-4px; width:1px; background:var(--line-strong); }
-.rankBar { position:absolute; top:0; bottom:0; border-radius:999px; background:var(--flat); transition:filter .2s var(--ease-brand); }
-@media(hover:hover) { .rankRow:hover .rankBar { filter:saturate(1.25) brightness(1.06); } }
-.rankBar[data-tone="up"] { background:var(--up); }
-.rankBar[data-tone="down"] { background:var(--down); }
-/* 750/13,5 → 700/14 (10 Kasım, ortak ölçüler: ağırlık merdiveni 400/600/700). */
-.rankValue { text-align:right; font-weight:700; font-size:14px; }
-/* TELEFONDA SATIR 40 PİKSEL (30 Eylül). 28 piksellik satırlar 1 piksel
-   arayla üst üste duruyordu (390 genişlikte ölçüldü: satırın ortasından
-   komşu satıra 15 piksel). Parmak ıskalayınca dokunuş boşa gitmiyor, BAŞKA
-   bir temanın sayfasına gidiyordu. `tap-44` burada işe yaramaz — satırlar
-   bitişik, görünmez alan komşuyu kapatırdı (globals.css) — o yüzden gerçek
-   yükseklik. İmleçli ekranda 28 kalıyor. */
-/* TELEFONDA SATIR İKİ KAT (12 Ekim, sahibinin itirazı: "alttaki bilgi ve
-   okunaklılık çok kötü"). Üç sütunda ad 8,5 rem'e, kulvar ~100 piksele
-   sıkışıyordu: ad kesiliyor, çubuk nokta gibi kalıyordu. Şimdi üstte ad ve
-   rakam (15 punto), altta tam genişlikte kulvar; satır 52 piksel ve
-   dokunma hedefi yine gerçek yükseklik. */
-@media(max-width:767px) {
-  .rankList { gap:2px; }
-  .rankRow {
-    grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"name value" "track track";
-    gap:7px 12px; min-height:52px; padding-block:7px; font-size:14px;
-  }
-  .rankName { grid-area:name; white-space:normal; line-height:1.25; }
-  .rankValue { grid-area:value; font-size:15px; }
-  .rankTrack { grid-area:track; }
-}
-
-/* Dağılım şeridi */
-.spreadWrap { min-width:0; }
-.spread { position:relative; height:28px; container-type:inline-size; }
-.spread::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line); }
-.spreadZero { position:absolute; left:50%; top:3px; bottom:3px; width:1px; background:var(--line-strong); }
-.tick {
-  position:absolute; top:7px; bottom:7px; width:2px; margin-left:-1px; border-radius:1px;
-  background:var(--flat); opacity:.9;
-}
-.tick[data-tone="up"] { background:var(--up); }
-.tick[data-tone="down"] { background:var(--down); }
-.tickMedian { position:absolute; top:0; bottom:0; width:3px; margin-left:-1.5px; border-radius:2px; background:var(--text-strong); }
-.spreadScale { display:flex; justify-content:space-between; margin-top:3px; font-size:12px; line-height:1.3; color:var(--text-muted); }
 
 /* --------------------------------------------------------------------------
    Detay: kapak künyesi
@@ -147,8 +94,9 @@
    indiriyordu; 1,9 karoları dikeyde en fazla %37 geriyor, alanların
    birbirine oranı değişmiyor (yerleşim yüzde). */
 .map, .mapSkeleton { position:relative; width:100%; aspect-ratio:1.9 / 1; }
+/* 10 Kasım akşamı: 2,6 → 2,15 (gerekçe ThemeTreemap → LAYOUTS). */
 @media(min-width:1200px) {
-  .map, .mapSkeleton { aspect-ratio:2.6 / 1; }
+  .map, .mapSkeleton { aspect-ratio:2.15 / 1; }
 }
 @media(max-width:639px) {
   .mapLayout[data-layout="wide"] { display:none; }
@@ -199,8 +147,14 @@
   .tileSymbol { font-size:13px; }
   .tilePct { font-size:14px; }
 }
+/* 10 Kasım akşamı: bu kademede logo 28 → 32, sembol 13 → 15, yüzde 14 →
+   16; büyük karoda logo 36 → 40, sembol 17 → 19, ad 13 → 14 ("şirketlerin
+   adı ve logolar az daha büyüyebilir"). Eşikler aynı: 118 piksellik karoda
+   logo 32 + 8 + beş harfli sembol (15 puntoda ≈ 52) = 92, dolgu 20 ile 112. */
 @container tile (min-width:118px) and (min-height:80px) {
-  .tileLogo { width:28px; height:28px; border-radius:8px; }
+  .tileLogo { width:32px; height:32px; border-radius:9px; }
+  .tileSymbol { font-size:15px; }
+  .tilePct { font-size:16px; }
   .tileName { display:block; }
 }
 /* Büyük karo: yüzde karonun ortasında ve karoyla büyüyor. İlk hâlde
@@ -209,10 +163,10 @@
    payı ve piyasa değeri: karonun alanının hangi sayıdan geldiği. */
 @container tile (min-width:170px) and (min-height:128px) {
   .tileFace { padding:14px 16px 12px; }
-  .tileLogo { width:36px; height:36px; border-radius:10px; }
+  .tileLogo { width:40px; height:40px; border-radius:11px; }
   .tileHead { gap:10px; }
-  .tileSymbol { font-size:17px; }
-  .tileName { font-size:13px; }
+  .tileSymbol { font-size:19px; }
+  .tileName { font-size:14px; }
   .tilePct { display:flex; flex:1; align-items:center; font-size:clamp(22px, 13cqmin, 56px); font-weight:700; line-height:1; letter-spacing:-.03em; }
   .tileFoot {
     display:none; align-items:baseline; justify-content:space-between; gap:8px; padding-top:8px;

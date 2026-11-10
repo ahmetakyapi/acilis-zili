@@ -1,12 +1,7 @@
-import type { CSSProperties } from "react";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { RollingFigure } from "@/components/themes/RollingFigure";
-import { ThemeRanking } from "@/components/themes/ThemeRanking";
-import { SpreadStrip } from "@/components/themes/ThemeVisuals";
 import { CompanyCards } from "@/components/ui/CompanyCards";
-import { FoldToggle } from "@/components/ui/FoldToggle";
-import { PlayOnView } from "@/components/motion/PlayOnView";
 import { DataStamp, LogoTile, PanelLink, Skeleton } from "@/components/ui/primitives";
 import { themeTitle } from "@/content/themes";
 import { getStatus } from "@/lib/data";
@@ -14,9 +9,10 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { SECTOR_ETFS, loadBoardQuotes } from "@/lib/market-boards";
 import { quoteBasis } from "@/lib/market-hours";
 import { loadThemeBoard, themePlaceholders, type ThemeCard } from "@/lib/theme-board";
-import { heatOf } from "@/lib/theme-view";
+import type { ThemePhase } from "@/lib/theme-stats";
 import { cn, directionOf, directionText, formatPercent, NO_VALUE } from "@/lib/utils";
 import styles from "./MarketTexture.module.css";
+import { RankBars, type RankRow } from "./RankBars";
 
 /**
  * Sektörler ve Temalar — ana sayfanın iki kolonunun altındaki tam
@@ -44,53 +40,67 @@ import styles from "./MarketTexture.module.css";
  * `/tema`nın AYNI hesabından (`loadThemeBoard`). Yeni bir anahtar yok; iki
  * ekran aynı yüzdeyi yazıyor. İkisi de kendi Suspense sınırında akıyor ve
  * yedekleri gerçek ızgarayla aynı şekli basıyor (CLS 0).
+ *
+ * 10 KASIM 2026 — BANT TEK DİLDE YENİDEN KURULDU (sahibinin sözü: "ana
+ * sayfadaki seans zili ve sektörler temaları da iyileştirebilir misin";
+ * aynı gün: "böyle nokta nokta ne anlatıyor anlamıyorum; yatayda uzun
+ * KALIN çizgi seviyorum", "logolar az daha büyüyebilir", "AI slop gibi
+ * durmasın"). Önce: üstte on bir DİKEY soluk sütun ve üstlerinde dev
+ * yüzdeler (10 Ekim silueti), sağında kopuk bir "Son Kapanış" adası; altta
+ * 5 piksellik ince çubuklu tema sıralaması ve iki uç kartında ÜYE
+ * ÇENTİKLERİ (`SpreadStrip`) — üç ayrı çizim dili. Şimdi:
+ *   · SEKTÖRLER ve TEMALAR yan yana iki sıralama, ikisi de `RankBars`: ad,
+ *     ortak sıfır ekseninden uzanan 12 piksellik dolu çubuk, yüzde. İki
+ *     liste aynı satır ızgarasında, uçlar (en güçlü / en zayıf) tonlu.
+ *   · SON KAPANIŞTAKİ FON ayrı bir ada değil: sıralamanın dibinde, çubuğun
+ *     yerinde sakin "Son Kapanış" künyesi, yüzdesi soluk.
+ *   · İKİ UÇ TEMA sıralamaların altında yan yana iki kart: ad, display
+ *     medyan, öne çıkan üyeler (36 piksellik logo + sembol + günlük
+ *     yüzdesi, bindirmesiz) ve çentiklerin yerinde KALIN iki renkli şerit:
+ *     kaç üye yükseliyor, kaç üye düşüyor.
+ * Yerleşim ölçülerek seçildi; ölçüm MarketTexture.module.css → "ÖLÇÜM 10
+ * KASIM". Silinen parçalar: `components/themes/ThemeRanking.tsx`,
+ * `ThemeVisuals.tsx` → `SpreadStrip`, `Themes.module.css` → `.rank*`,
+ * `.spread*`, `.tick*` (yalnız bu bant kullanıyordu; /tema ekranları
+ * `ThemeBoard` ve `ThemeStrip`e geçmişti).
  */
 
 /* ==========================================================================
-   Sektör silueti
+   Sektörler
    ========================================================================== */
 
 /**
- * ÖLÇEĞİN TABANI (yüzde puan, 10 Ekim). Sütunlar günün en büyük
+ * ÖLÇEĞİN TABANI (yüzde puan, 10 Ekim). Çubuklar günün en büyük
  * hareketine göre ölçekleniyor; taban olmasa ±%0,2'lik sakin bir günün
- * en uzun sütunu %3'lük bir günün sütunuyla aynı boyda dururdu. Bir
- * puanın altındaki günlerde sütunlar alanın tamamına uzanmıyor ve şekil
+ * en uzun çubuğu %3'lük bir günün çubuğuyla aynı boyda dururdu. Bir
+ * puanın altındaki günlerde çubuklar kulvarın tamamına uzanmıyor ve şekil
  * günün sakinliğini kendisi söylüyor.
  */
 const SECTOR_SCALE_FLOOR = 1;
+/** Tema medyanları için aynı gerekçe, aynı taban. */
+const THEME_SCALE_FLOOR = 1;
 
 /**
- * TELEFONDA ALTI SEKTÖR (14 Ekim, sahibinin isteği: "6 tane gözüksün,
- * neden boşluk?"). 12 Ekim'de "maks 5" ile 3+2 olmuştu ama katlı ızgara
- * iki kolon × üç satır: beşinci fon sol sütunu doldururken sağ altta boş
- * bir hücre kalıyordu. Üç + üç ızgarayı tam dolduruyor ve uçları simetrik
- * yapıyor. Şeridin bilgisi uçlarda: en güçlü üç ve en zayıf üç fon açık,
- * ortası katlı (tema sıralamasının `phoneEnds` kuralıyla aynı dil). İki
- * kolonda sol sütun yükselenler, sağ sütun düşenler gibi okunuyor. Son
- * kapanıştaki fonlar sıralamanın dışında, uç sayılmıyor.
+ * TELEFONDA ALTI SEKTÖR (14 Ekim, sahibinin isteği: "6 tane gözüksün").
+ * Sıralamanın bilgisi uçlarda: en güçlü üç ve en zayıf üç fon açık, ortası
+ * katlı (tema sıralamasının iki ucuyla aynı dil). Son kapanıştaki fonlar
+ * sıralamanın dışında, uç sayılmıyor. 10 Kasım: karolar satıra döndü
+ * (`RankBars`), sayı aynı.
  */
-const SECTOR_PHONE_TOP = 3;
-const SECTOR_PHONE_BOTTOM = 3;
+const SECTOR_PHONE_ENDS = 3;
+/** Telefonda temaların iki ucundan açık satır (9 Ekim: bant 1.217 pikseldi). */
+const THEME_PHONE_ENDS = 2;
 
 /**
- * On bir sektör fonu, günün hareketine göre SIRALI bir siluet (10 Ekim,
- * sahibinin isteği: "çok daha iyi duracak, sınırları zorlayan bir
- * tasarım"). Önceki şerit on bir ısı karosuydu: sıralamayı tonla
- * veriyordu ama büyüklüğü vermiyordu, "Gayrimenkul +%1,93" ile "Finans
- * +%0,99" arasındaki iki katlık fark iki benzer yeşil karoydu. Ekran
- * kuralı (karşılaştırılan her büyüklük bir de ÇİZGİ olarak okunur) artık
- * burada da geçerli: her fon sıfır çizgisinden iki yana açılan bir sütun,
- * boyu yüzdeyle orantılı, tonu `/piyasalar` ve tema haritasının AYNI ısı
- * eşiğinden (`heatOf`).
+ * On bir sektör fonu, günün hareketine göre SIRALI (10 Ekim, sahibinin
+ * isteği). Ekran kuralı — karşılaştırılan her büyüklük bir de ÇİZGİ olarak
+ * okunur — burada kalın yatay çubukla (10 Kasım; önce dikey siluet,
+ * gerekçe dosyanın başında ve `RankBars`ta).
  *
- * Rakamlar tek hatta, sütunların üstünde (ekran düzeni 4: yan yana duran
- * ölçüler aynı hatta biter); düşen fonun sütunu sıfırın altına sarkıyor
- * ama rakamı komşularıyla aynı satırda. 1180'in altında aynı veri yatay
- * satır grafiğine dönüyor (CSS notu).
- *
- * Bu seansta işlem görmeyen fonun yüzdesi son kapanışı anlatıyor: sütun
- * nötr tonda kalıyor ve sıralamanın dışında, sonda (Veri dürüstlüğü 4,
- * `quoteBasis`). Hepsi son kapanıştaysa künye bunu söylüyor.
+ * Bu seansta işlem görmeyen fonun yüzdesi son kapanışı anlatıyor: satır
+ * sıralamanın dışında, sonda, çubuksuz ve künyeli (Veri dürüstlüğü 4,
+ * `quoteBasis`). Hepsi son kapanıştaysa künye bunu başlıkta söylüyor ve
+ * çubuklar çiziliyor (hepsi aynı günü anlatıyor).
  */
 export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionary }) {
   const status = await getStatus();
@@ -121,169 +131,122 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
 
 export type SectorEntry = { symbol: string; name: string; change: number | null; lastClose: boolean };
 
-/** Siluetin saf görünümü — veri `SectorRibbon`da (`olcum` skill'i: yükleyici ile çizim ayrı). */
+/** Sıralamanın saf görünümü — veri `SectorRibbon`da (`olcum` skill'i: yükleyici ile çizim ayrı). */
 export function SectorRibbonView({ entries, locale, t }: { entries: readonly SectorEntry[]; locale: Locale; t: Dictionary }) {
   const x = t.marketExtras;
-  const rows = [...entries].sort((a, b) => {
+  const sorted = [...entries].sort((a, b) => {
     if (a.change === null || b.change === null) return a.change === null ? 1 : -1;
     /* Son kapanıştaki fon sıralamanın DIŞINDA, sonda (28 Eylül denetimi).
-       Siluet soldan sağa bu seansın en güçlüden en zayıfa dizilişi; dünün
-       yüzdesiyle araya girmesi, iki ayrı günü tek sıraya koymaktı. Tema
-       sıralaması aynı kuralı izliyor (ThemeRanking). */
+       Sıra bu seansın en güçlüden en zayıfa dizilişi; dünün yüzdesiyle
+       araya girmesi, iki ayrı günü tek sıraya koymaktı. Tema sıralaması
+       aynı kuralı izliyor. */
     if (a.lastClose !== b.lastClose) return a.lastClose ? 1 : -1;
     return b.change - a.change;
   });
-  const allLastClose = rows.every((row) => row.change === null || row.lastClose);
+  const allLastClose = sorted.every((row) => row.change === null || row.lastClose);
   /* Ölçek ve sayım aynı kümeden: karışık günde yalnızca bu seansın
      fonları, hepsi son kapanıştaysa hepsi (künye o zaman bunu söylüyor). */
-  const counted = rows.filter((row) => row.change !== null && (allLastClose || !row.lastClose));
-  const changes = counted.map((row) => row.change!);
-  /* İKİ GRUP, İKİ ÖLÇEK (10 Kasım, görsel tur). 31 Ekim'de ölçek SON
-     KAPANIŞ grubunu da kapsamıştı (grup ölçek dışında kalınca XLK'nın
-     +%2,63'ü sütunun tepesini aşıp sayının üstüne biniyordu, 1440). Bedeli
-     canlıda görüldü (10 Kasım, açılış öncesi): bu seansın dokuz fonu
-     ±%0,7 içinde, son kapanıştaki iki fon +%2,45 / +%1,45; ortak ölçekte
-     seansın en uzun sütunu 96 pikselin 9'uydu, dokuz sütun dokuz çizgi
-     gibi okunuyordu ("hepsi çizgi gibi"). İki grup zaten kesik çizgi ve
-     künyeyle ayrı ve iki AYRI günü anlatıyor; aynı cetvele koymak dünün
-     hareketini bugününkini ezmek için kullanmaktı. Artık her grup kendi
-     ölçeğinde (taban yine `SECTOR_SCALE_FLOOR`) ve kendi sıfır çizgisinde:
-     hiçbir sütun alanı aşamaz, seansın sütunları günün kendi aralığını
-     doldurur. Ölçüm (canlıdaki veriyle sahte önizleme, 1440, alan 96
-     piksel): −%0,68 sütunu 21 → 65, +%0,30 sütunu 9 → 29 piksel; son
-     kapanış grubu kendi ölçeğinde 96 ve 57 (alanı aşmıyor). */
-  const scaleOf = (values: number[]) => {
-    const up = Math.max(0, ...values);
-    const down = Math.max(0, ...values.map((change) => -change));
-    const span = Math.max(up + down, SECTOR_SCALE_FLOOR);
-    /* Sıfır çizgisi düşüşün payı kadar yukarıda: hepsi yükselen bir günde
-       sütunlar zeminden kalkıyor, alanın yarısı boş bir eksi bölgeye gitmiyor. */
-    return { up, down, span, zero: (down / span) * 100 };
-  };
-  const session = scaleOf(changes);
-  const stale = scaleOf(
-    rows.filter((row) => row.change !== null && row.lastClose && !allLastClose).map((row) => row.change!),
-  );
-  const { zero } = session;
-  /* KARONUN ÇUBUĞU (12 Ekim, telefon ve tablet): sıfırdan iki yana değil,
-     büyüklük olarak soldan; tek karoda eksen yok, yön rengin ve işaretin.
-     Ölçek günün en büyük hareketi, tabanı yine `SECTOR_SCALE_FLOOR`. */
-  /* Karo çubuğu da satırın kendi grubunun tepesine göre (10 Kasım): seansın
-     tepesiyle ölçülen son kapanış çubuğu kulvarı %245 aşıyordu (768, ölçüldü). */
-  const peakOf = (scale: { up: number; down: number }) => Math.max(scale.up, scale.down, SECTOR_SCALE_FLOOR);
-  const risers = changes.filter((change) => change > 0).length;
-  const fallers = changes.filter((change) => change < 0).length;
-  const ranked = counted.length;
-  const phoneShown = (index: number) =>
-    index < SECTOR_PHONE_TOP || (index >= ranked - SECTOR_PHONE_BOTTOM && index < ranked);
-  const phoneHidden = rows.filter((_, index) => !phoneShown(index)).length;
+  /* İKİ GRUP, TEK CETVEL DEĞİL (31 Ekim → 10 Kasım). 31 Ekim'de ölçek son
+     kapanış grubunu da kapsıyordu; canlıda (10 Kasım, açılış öncesi) bu
+     seansın dokuz fonu ±%0,7 içindeyken son kapanıştaki iki fon +%2,45 /
+     +%1,45'ti ve ortak ölçekte seansın sütunları çizgiye iniyordu. Önce
+     iki ayrı ölçekle (iki sıfır çizgisi, kesik ayraç) çözülmüştü; yatay
+     sıralamada aynı kulvarda iki ölçek yalan söylerdi. Son kapanıştaki fon
+     artık çubuksuz: başka bir günün hareketi bugünün cetveline konmuyor
+     (ekran kuralı), yüzdesi soluk ve yanında künyesi var. */
+  const rows: RankRow[] = sorted.map((row) => {
+    const stale = row.lastClose && !allLastClose;
+    return {
+      key: row.symbol,
+      href: `/hisse/${row.symbol}`,
+      name: row.name,
+      sub: row.symbol,
+      value: row.change,
+      bar: row.change !== null && !stale,
+      /* RENK SON KAPANIŞTA DA İŞARETTEN (15 Ekim, sahibinin isteği:
+         "eksiyse kırmızı artıysa yeşil olmalı"). Dönemi künye söylüyor
+         ("Son Kapanış" başlıkta, karışık günde satırda); renk yalnız yönü
+         taşıyor — tazelik iddiası yok. */
+      showValue: stale,
+      note: stale ? t.market.lastClose : undefined,
+    };
+  });
+  const counted = rows.filter((row) => row.bar);
+  const risers = counted.filter((row) => row.value! > 0).length;
+  const fallers = counted.filter((row) => row.value! < 0).length;
 
   return (
     <SectorFrame
       t={t}
       meta={allLastClose ? `${x.sectorsMeta} · ${t.market.lastClose}` : `${x.sectorsMeta} · ${t.today.sectorsWeight}`}
       breadth={
-        /* Genişlik künyesi yalnızca METİN (10 Ekim). 9 Ekim'de yanında
-           72 piksellik bölünmüş bir çubuk vardı; siluetin kendisi aynı
-           bilgiyi çiziyor ve bant çubuk kalabalığına dönüyordu (sahibi:
-           "çizgi çubukları çok kötü duruyor"). */
-        <span
-          className={styles.breadth}
-          role="img"
-          aria-label={t.today.sectorsBreadthLabel.replace("{up}", String(risers)).replace("{down}", String(fallers))}
-        >
-          <span aria-hidden>
-            {t.today.sectorsBreadth.split(/(\{up\}|\{down\})/).map((part, i) =>
-              part === "{up}" ? (
-                <b key={i} className="numeral text-up">{risers}</b>
-              ) : part === "{down}" ? (
-                <b key={i} className="numeral text-down">{fallers}</b>
-              ) : (
-                part
-              ),
-            )}
-          </span>
-        </span>
+        /* Genişlik künyesi yalnızca METİN (10 Ekim; yanındaki 72 piksellik
+           bölünmüş çubuk kalkmıştı: sıralamanın kendisi aynı bilgiyi
+           çiziyor). */
+        <Breadth
+          t={t}
+          up={risers}
+          down={fallers}
+          label={t.today.sectorsBreadthLabel.replace("{up}", String(risers)).replace("{down}", String(fallers))}
+        />
       }
     >
-      <FoldToggle id="sektor-siralamasi" hiddenCount={phoneHidden} more={t.compact.showAll} less={t.compact.showLess} phone>
-      {/* Sütunlar GÖRÜNÜNCE büyüyor (14 Ekim). `sector-grow` düz CSS
-          animasyonu ve öğe DOM'a girdiği an başlıyordu; bant ise kahraman +
-          akış + Seans Zili'nin altında, 1440×900'de ilk ekranın dışında —
-          0,9 saniyelik kademeli büyüme kimse görmeden oynayıp bitiyordu.
-          `PlayOnView` sarmalı ekran altındaysa ilk karede duraklatıyor
-          (aşağıda .ribbonPlay), görününce bırakıyor. JS yokken, azaltılmış
-          harekette ve ilk ekranda davranış değişmiyor. */}
-      <PlayOnView className={styles.ribbonPlay}>
-      <ol className={styles.ribbon} style={{ "--zero": `${zero}%` } as CSSProperties}>
-        {rows.map((row, i) => {
-          const inScale = row.change !== null && (allLastClose || !row.lastClose);
-          /* RENK SON KAPANIŞTA DA İŞARETTEN (15 Ekim, sahibinin isteği:
-             "eksiyse kırmızı artıysa yeşil olmalı"). Son kapanış kipinde
-             ton nötrleniyordu ve açılış öncesi bütün panel gri kalıyordu;
-             dönemi künye zaten söylüyor ("Son Kapanış" başlıkta ve karışık
-             günde satırda), renk yalnız yönü taşıyor — tazelik iddiası yok. */
-          const heat = row.change === null ? { tone: "flat", level: 0 } : heatOf(row.change);
-          /* Karışık günde son kapanıştaki fon künyesini kendi taşıyor: nötr
-             sütun tek başına "hareket yok" gibi okunurdu. */
-          const marked = row.lastClose && !allLastClose;
-          /* Ölçek satırın KENDİ grubundan (yukarıda "İKİ GRUP, İKİ ÖLÇEK"). */
-          const scale = marked ? stale : session;
-          const size = row.change === null ? 0 : (Math.abs(row.change) / scale.span) * 100;
-          const start = row.change === null || row.change >= 0 ? scale.zero : scale.zero - size;
-          /* SON KAPANIŞ GRUBU (31 Ekim). Karışık günde bu fonlar çubuksuz,
-             yalnız sayıydı ve her birinin altında mono "XLK · Son Kapanış"
-             iki satıra kırılıyordu; sıra da "pozitifler, negatifler, yine
-             pozitif" diye bozuk okunuyordu. Artık grup kesik bir çizgiyle
-             ayrılıyor, başında tek künye var ve çubuklar soluk çiziliyor
-             (aynı ölçek, ama bu seansın değil). */
-          const groupStart = marked && i > 0 && !rows[i - 1]!.lastClose;
-          return (
-            <li
-              key={row.symbol}
-              data-fold={phoneShown(i) ? undefined : ""}
-              data-stale={marked || undefined}
-              data-stale-start={groupStart || undefined}
-              data-stale-label={groupStart ? t.market.lastClose : undefined}
-              className={styles.col}
-              style={
-                {
-                  ...(marked ? { "--zero": `${scale.zero}%` } : null),
-                  "--start": `${start}%`,
-                  "--size": `${inScale || marked ? size : 0}%`,
-                  "--mag": `${(inScale || marked) && row.change !== null ? (Math.abs(row.change) / peakOf(scale)) * 100 : 0}%`,
-                  "--i": i,
-                } as CSSProperties
-              }
-            >
-              <Link
-                href={`/hisse/${row.symbol}`}
-                prefetch={false}
-                className={styles.colLink}
-                data-tone={heat.tone}
-                data-level={heat.level}
-                data-sign={row.change !== null && row.change < 0 ? "down" : "up"}
-              >
-                <b className={cn("numeral", styles.colPct)}>
-                  {row.change === null ? NO_VALUE : formatPercent(row.change, locale)}
-                </b>
-                <span aria-hidden className={styles.colTrack}>
-                  {(inScale || marked) && size > 0 && <i className={styles.colBar} />}
-                </span>
-                <span className={styles.colLabel}>
-                  <span className={styles.colName}>{row.name}</span>
-                  <span className={styles.colSym}>
-                    {row.symbol}
-                  </span>
-                </span>
-              </Link>
-            </li>
-          );
-        })}
-      </ol>
-      </PlayOnView>
-      </FoldToggle>
+      <RankBars
+        rows={rows}
+        floor={SECTOR_SCALE_FLOOR}
+        locale={locale}
+        foldId="sektor-siralamasi"
+        phoneEnds={SECTOR_PHONE_ENDS}
+        more={t.compact.showAll}
+        less={t.compact.showLess}
+      />
     </SectorFrame>
+  );
+}
+
+/** "4 Yükselen · 7 Düşen": sayılar yön renginde, kalanı künye. */
+function Breadth({ t, up, down, label }: { t: Dictionary; up: number; down: number; label?: string }) {
+  return (
+    <span className={styles.breadth} role={label ? "img" : undefined} aria-label={label}>
+      <span aria-hidden={label ? true : undefined}>
+        {t.today.sectorsBreadth.split(/(\{up\}|\{down\})/).map((part, i) =>
+          part === "{up}" ? (
+            <b key={i} className="numeral text-up">{up}</b>
+          ) : part === "{down}" ? (
+            <b key={i} className="numeral text-down">{down}</b>
+          ) : (
+            part
+          ),
+        )}
+      </span>
+    </span>
+  );
+}
+
+/* BÖLÜM BAŞI İKİ SATIR (10 Kasım). Tek satırdı: ad, künye, genişlik ve
+   bağlantı yan yana; iki sıralama yan yana gelince 1024'te 451 piksellik
+   kolonda dört öğe üç satıra kırılıyordu (ölçüldü). Üstte ad ve bağlantı,
+   altında künye ile genişlik: iki kolonda aynı iki hat. */
+function PartHead({
+  title,
+  meta,
+  breadth,
+  link,
+}: {
+  title: string;
+  meta: string;
+  breadth?: React.ReactNode;
+  link: React.ReactNode;
+}) {
+  return (
+    <div className={styles.partHead}>
+      <h3 data-rise>{title}</h3>
+      {link}
+      <p className={styles.partMeta}>
+        <span>{meta}</span>
+        {breadth}
+      </p>
+    </div>
   );
 }
 
@@ -299,29 +262,42 @@ function SectorFrame({
   children: React.ReactNode;
 }) {
   return (
-    <div className={styles.part}>
-      <div className={styles.partHead}>
-        <h3 data-rise>{t.today.sectorsHeading}</h3>
-        <span className={styles.partMeta}>{meta}</span>
-        {breadth}
-        <PanelLink href="/piyasalar#sektor-performansi" className={styles.partLink}>
-          {t.today.sectorsLink}
-        </PanelLink>
-      </div>
+    <div className={cn(styles.part, styles.partSectors)}>
+      <PartHead
+        title={t.today.sectorsHeading}
+        meta={meta}
+        breadth={breadth}
+        link={
+          <PanelLink href="/piyasalar#sektor-performansi" className={styles.partLink}>
+            {t.today.sectorsLink}
+          </PanelLink>
+        }
+      />
       {children}
     </div>
   );
 }
 
-/** Siluetin yedeği: aynı başlık, aynı on bir sütun kutusu. */
-export function SectorRibbonSkeleton({ t }: { t: Dictionary }) {
+/** Sıralamanın yedeği: aynı başlık, aynı on bir satır (adlar durağan), sayısız. */
+export function SectorRibbonSkeleton({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <SectorFrame t={t} meta={t.marketExtras.sectorsMeta}>
-      <div aria-hidden className={cn(styles.ribbon, styles.ribbonSkeleton)}>
-        {SECTOR_ETFS.map((entry) => (
-          <Skeleton key={entry.symbol} className={styles.colSkeleton} />
-        ))}
-      </div>
+      <RankBars
+        rows={SECTOR_ETFS.map((entry) => ({
+          key: entry.symbol,
+          href: `/hisse/${entry.symbol}`,
+          name: locale === "tr" ? entry.nameTr : entry.nameEn,
+          sub: entry.symbol,
+          value: null,
+          bar: false,
+        }))}
+        floor={SECTOR_SCALE_FLOOR}
+        locale={locale}
+        foldId="sektor-siralamasi"
+        phoneEnds={SECTOR_PHONE_ENDS}
+        more={t.compact.showAll}
+        less={t.compact.showLess}
+      />
     </SectorFrame>
   );
 }
@@ -330,66 +306,68 @@ export function SectorRibbonSkeleton({ t }: { t: Dictionary }) {
    Temalar
    ========================================================================== */
 
-/* UÇ KARTININ LOGOLARI BİR KADEME BÜYÜDÜ (28 Eylül, sahibinin isteği):
-   `sm` (26) → `md` (32), "+N" çipi de 32. Logo başına 36 piksel (karo +
-   4 boşluk), çip ~32. Satırın sığacağı yer ölçüldü (başsız Chrome, kart
-   içi eksi rakam ve 14'lük aralık, zayıf tema kartı — rakamı daha geniş):
-   - 1440: 418, 1280: 373, 1024: 284 → altı logo + çip = 248. Yedi logo
-     284 eder ve 1024'te sıfır pay bırakır; rakam "−10,25 %" gibi
-     uzadığında taşardı.
-   - 768: 175, 900: 241 → üç logo + çip = 140.
-   - 390: satır kartın iç genişliği, 147 → üç logo + çip = 140; dört 176.
-   - 640–767: 119–131 piksel kalıyordu, üç logo bile sığmıyor; bu aralık
-     telefon düzenine geçti (rakam başlığın altında, CSS notu).
-   Ölçüm aynı zamanda eski bir hatayı gösterdi: 26 piksellik sekiz logo
-   640–900 arasında 14–147 piksel TAŞIYOR ve "+N" çipi `overflow:hidden`
-   altında görünmüyordu. */
-/* BİR KADEME DAHA: 32 → 40 (8 Kasım, sahibinin isteği: "logolar bir tık
-   daha büyük olmalı"). Karo `lg` (44) olarak isteniyor, CSS 40'a indiriyor
-   (görsel 44'lük kaynaktan, büyütülmüş değil); köşe `--radius-md`. Logo
-   başına 44 piksel (karo + 4 boşluk), "+N" çipi 40. Yer YENİDEN ölçüldü
-   (başsız Chrome, sahte veri, zayıf tema kartı "−%10,25" — bağlayıcı olan
-   o; "yer" = rakamın solu eksi satırın solu eksi 14'lük aralık):
-   - 1440: 348 → altı logo + çip = 304. Yedi + çip 348 eder, sıfır pay.
-   - 1280: 311 → altı logo + çip = 304 (7 pay).
-   - 1024: 237 → dört logo + çip = 216. Beş + çip 260, taşar.
-   - 768: 154 → üç logo + çip 160 isterdi; karolar −4 piksel bindirmeyle
-     yığılıyor (telefondaki portre yığınının dili) ve 148'e iniyor.
-   - ≤767 (telefon): karo 32'de KALDI. Kart 153 piksel genişlikte ve 40'lık
-     üç karo + çip 390'da −11, 320'de −22 piksel bindirme isterdi: logolar
-     yarı yarıya örtülürdü. Telefon bindirme ölçüleri CSS notunda.
-   Eski ölçümün gizli hatası: 1024'te 32'lik altı logo + çip satırı
-   rakamın 3 piksel soluna kadar uzanıyordu; 14'lük aralığın 11 pikseli
-   `overflow:hidden` altında kesiliyor, "+N" çipi kırpılıyordu. */
-/** ≥1280 uç kartındaki logo sayısı. */
-const EXTREME_LOGOS = 6;
-/** 1024–1279 arası logo sayısı (MarketTexture.module.css). */
-const EXTREME_LOGOS_MID = 4;
-/** 1024'ün altında kalan logo sayısı (MarketTexture.module.css). */
-const EXTREME_LOGOS_NARROW = 3;
+/* UÇ KARTININ ÜYELERİ (10 Kasım). Kartta logolar yan yana, altlarında bir
+   şey yoktu ve hangi üyenin temayı taşıdığı okunmuyordu; dağılımı çentik
+   şeridi söylemeye çalışıyordu. Şimdi her üye bir hücre: 36 piksellik logo
+   (sahibinin isteği: "logolar az daha büyüyebilir"; 28 Eylül 26 → 32,
+   8 Kasım 32 → 40 ama telefonda 32 ve bindirmeli), sembol ve o günkü
+   yüzdesi. En güçlü temada en çok yükselenler, en zayıfta en çok düşenler
+   önde: kart "kim taşıdı" sorusunu cevaplıyor. Hücreler tek satır ızgara,
+   sığmayan hücre satırın dışında kalır (CSS, bindirme yok); sayılar CSS
+   notunda. Sunucu en çok sekiz hücre basar. */
+const EXTREME_MEMBERS = 8;
+
+/** Pencereye göre sıralama künyesi — `ThemeRanking`in başlığıydı (lib/theme-stats.ts → themePhase). */
+const rankTitleOf = (phase: ThemePhase | null, t: Dictionary) =>
+  phase === "pre-market" ? t.themes.rankTitlePre : phase === "lastClose" ? t.themes.rankTitleClose : t.themes.rankTitle;
 
 /**
- * Temaların günü: solda `/tema`nın kapağındaki sıralamanın AYNISI
- * (`ThemeRanking`), sağda iki uç — en güçlü ve en zayıf tema — logolarıyla,
- * büyük medyanıyla ve üyelerin dağılım şeridiyle.
+ * Temaların sırası — medyana göre, `/tema`nın AYNI hesabından. Çubuk
+ * yalnızca aynı seansı anlatan medyanlara basılıyor; ortak kümenin DIŞINDA
+ * kalan tema (bu seansta hiç işlem görmemiş, yüzdesi son kapanışı anlatan)
+ * listenin dibinde SAYISIZ duruyor: bir önceki günün medyanını bugünün
+ * sıralamasının dibine künyesiz koymak, onu bugünün en zayıfı gibi
+ * okutuyordu (28 Eylül denetimi).
+ */
+function themeRows(cards: readonly ThemeCard[], basis: "session" | "lastClose" | null, locale: Locale): RankRow[] {
+  const inScale = (card: ThemeCard) => basis !== null && card.basis === basis && card.median !== null;
+  const sorted = basis
+    ? [...cards].sort((a, b) => {
+        if (inScale(a) !== inScale(b)) return inScale(a) ? -1 : 1;
+        return (b.median ?? 0) - (a.median ?? 0);
+      })
+    : cards;
+  return sorted.map((card) => ({
+    key: card.theme.slug,
+    href: `/tema/${card.theme.slug}`,
+    name: themeTitle(card.theme, locale),
+    value: inScale(card) ? card.median : null,
+    bar: inScale(card),
+  }));
+}
+
+/**
+ * Temaların günü: sıralama (`RankBars`, sektörlerin yanında) ve iki uç —
+ * en güçlü ve en zayıf tema — adıyla, büyük medyanıyla, öne çıkan
+ * üyeleriyle ve yükselen/düşen şeridiyle.
  *
  * Açılış öncesinde künye "Açılış Öncesi En Güçlü Tema" (`board.phase`,
  * gerekçesi lib/theme-stats.ts → themePhase).
  *
  * "Günün En Güçlüsü" YALNIZCA canlı seansta (dizindeki kuralın aynısı,
  * `board.leader`). Son kapanışa kalmış bir günde uçlar yine gösteriliyor
- * ama künyesi "Son Kapanışta En Güçlü" ve rakam nötr: dünü bugün diye
- * anlatmıyor, ekran da boş kalmıyor.
+ * ama künyesi "Son Kapanışta En Güçlü": dünü bugün diye anlatmıyor, ekran
+ * da boş kalmıyor.
  */
 export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Dictionary }) {
   const [{ board, scaleBasis, comparable, quotesResult, names, status }, sectorQuotes] = await Promise.all([
     loadThemeBoard(),
     getStatus().then(loadBoardQuotes),
   ]);
-  /* BANDIN TEK DAMGASI. Şerit ve temalar ayrı iki kotasyon turundan
+  /* BANDIN TEK DAMGASI. Sektörler ve temalar ayrı iki kotasyon turundan
      geliyor ama ikisi de aynı sağlayıcıdan; iki özdeş damga alt alta
      duruyordu. Damga ESKİ olanın anını ve iki turdan birinin bayatlığını
-     yazıyor: tazeyi yazmak geride kalanı gizlemek olurdu. Şeridin
+     yazıyor: tazeyi yazmak geride kalanı gizlemek olurdu. Sektörlerin
      kotasyonu burada yeniden istenmiyor, `getQuotes` istek içinde aynı
      anahtarla önbellekli. */
   const stamps = [quotesResult, sectorQuotes].filter((result) => result.ok);
@@ -405,23 +383,48 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
   const sorted = [...comparable].sort((a, b) => b.median! - a.median!);
   const top = session ? bySlug(board.leader) : sorted.length >= 2 ? sorted[0] : null;
   const bottom = session ? bySlug(board.laggard) : sorted.length >= 2 ? sorted[sorted.length - 1] : null;
+  const rows = themeRows(board.cards, scaleBasis, locale);
+  const counted = rows.filter((row) => row.bar);
+  const topMembers = extremeMembers(top ?? null, "top");
+  const bottomMembers = extremeMembers(bottom ?? null, "bottom");
 
   return (
     <ThemeFrame
-      ranking={<ThemeRanking cards={board.cards} basis={scaleBasis} phase={board.phase} locale={locale} t={t} heading="h4" phoneEnds={2} />}
+      meta={`${rankTitleOf(board.phase, t)} · ${t.themes.rankMeta}`}
+      breadth={
+        counted.length > 0 ? (
+          <Breadth
+            t={t}
+            up={counted.filter((row) => row.value! > 0).length}
+            down={counted.filter((row) => row.value! < 0).length}
+          />
+        ) : undefined
+      }
+      ranking={
+        <RankBars
+          rows={rows}
+          floor={THEME_SCALE_FLOOR}
+          locale={locale}
+          foldId="tema-siralamasi"
+          phoneEnds={THEME_PHONE_ENDS}
+          more={t.compact.showAll}
+          less={t.compact.showLess}
+        />
+      }
       extremes={
         <>
           {/* Logoların üzerine gelince açılan şirket kartı (components/ui/
               CompanyCards) — bandın kendi kotasyon paketiyle, ek istek yok. */}
           <CompanyCards
-            symbols={[top, bottom].flatMap((c) => c?.members.slice(0, EXTREME_LOGOS + 1).map((m) => m.symbol) ?? [])}
+            symbols={[...topMembers, ...bottomMembers].map((member) => member.symbol)}
             quotes={quotesResult.ok ? quotesResult.data : null}
             stale={quotesResult.ok && Boolean(quotesResult.stale)}
             names={names}
             status={status}
           />
           <ExtremeCard
-            card={top}
+            card={top ?? null}
+            members={topMembers}
             label={
               !session || board.phase === "lastClose"
                 ? t.today.strongestLastClose
@@ -429,12 +432,12 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
                   ? t.today.strongestPreMarket
                   : t.today.strongestTheme
             }
-            scale={board.scale}
             locale={locale}
             t={t}
           />
           <ExtremeCard
-            card={bottom}
+            card={bottom ?? null}
+            members={bottomMembers}
             label={
               !session || board.phase === "lastClose"
                 ? t.today.weakestLastClose
@@ -442,7 +445,6 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
                   ? t.today.weakestPreMarket
                   : t.today.weakestTheme
             }
-            scale={board.scale}
             locale={locale}
             t={t}
           />
@@ -467,135 +469,178 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
   );
 }
 
+type ExtremeMember = { symbol: string; logoUrl: string | null; change: number | null };
+
+/**
+ * Kartın üyeleri: medyana giren (aynı seansı anlatan) üyeler, en güçlü
+ * temada en çok yükselenden, en zayıfta en çok düşenden başlayarak. Hareketi
+ * bilinmeyen tema üyelerini editoryal sırayla ve yüzdesiz basar: eksik veri
+ * "–" duvarı olmaz, satır sessizleşir.
+ */
+function extremeMembers(card: ThemeCard | null, end: "top" | "bottom"): ExtremeMember[] {
+  if (!card) return [];
+  const logos = new Map(card.members.map((member) => [member.symbol, member.logoUrl]));
+  if (card.points.length === 0) {
+    return card.members.slice(0, EXTREME_MEMBERS).map((member) => ({ ...member, change: null }));
+  }
+  return [...card.points]
+    .sort((a, b) => (end === "top" ? b.change - a.change : a.change - b.change))
+    .slice(0, EXTREME_MEMBERS)
+    .map((point) => ({ symbol: point.symbol, logoUrl: logos.get(point.symbol) ?? null, change: point.change }));
+}
+
 function ThemeFrame({
+  meta,
+  breadth,
   ranking,
   extremes,
   stamp,
   t,
 }: {
+  meta: string;
+  breadth?: React.ReactNode;
   ranking: React.ReactNode;
   extremes: React.ReactNode;
   stamp: React.ReactNode;
   t: Dictionary;
 }) {
+  /* `display: contents` (CSS): sıralama sektörlerin YANINA, uç kartları ve
+     damga iki kolonun altına tam genişlikte iner. Temalar tek Suspense
+     sınırı (tek `loadThemeBoard`), bant ızgarası üç öğe görür. */
   return (
-    <div className={styles.part}>
-      <div className={styles.partHead}>
-        <h3 data-rise>{t.today.themesHeading}</h3>
-        <span className={styles.partMeta}>{t.today.themesMeta}</span>
-        <PanelLink href="/tema" className={styles.partLink}>
-          {t.today.themesLink}
-        </PanelLink>
+    <div className={styles.themesPart}>
+      <div className={cn(styles.part, styles.partThemes)}>
+        <PartHead
+          title={t.today.themesHeading}
+          meta={meta}
+          breadth={breadth}
+          link={
+            <PanelLink href="/tema" className={styles.partLink}>
+              {t.today.themesLink}
+            </PanelLink>
+          }
+        />
+        {ranking}
       </div>
-      <div className={styles.themes}>
-        <div className={styles.rankCol}>{ranking}</div>
-        <div className={styles.extremes}>{extremes}</div>
-      </div>
-      {stamp}
+      <div className={styles.extremes}>{extremes}</div>
+      <div className={styles.stampRow}>{stamp}</div>
     </div>
   );
 }
 
 function ExtremeCard({
   card,
+  members,
   label,
-  scale,
   locale,
   t,
 }: {
   card: ThemeCard | null;
+  members: readonly ExtremeMember[];
   label: string;
-  scale: number | null;
   locale: Locale;
   t: Dictionary;
 }) {
   if (!card || card.median === null) {
     return (
-      <div className={cn(styles.extreme, styles.extremeEmpty)}>
+      <div className={cn(styles.extreme, styles.extremeEmpty)} data-tone="flat">
         <span className={styles.extremeLabel}>{label}</span>
         <strong className={cn("numeral text-muted", styles.extremeFigure)}>{NO_VALUE}</strong>
       </div>
     );
   }
-  /* TEK ARTAN ÜYE ÇİP DEĞİL LOGO (28 Eylül): "+1" çipi bir logo kadar yer
-     (32 piksel; 8 Kasım'dan beri 40) kaplıyor; yedinci logo satırı
-     büyütmüyor, çip yerine üyenin kendisi görünüyor. */
-  const members = card.members.slice(
-    0,
-    card.members.length === EXTREME_LOGOS + 1 ? EXTREME_LOGOS + 1 : EXTREME_LOGOS,
-  );
-  const rest = card.members.length - members.length;
-  /* Renk son kapanışta da işaretten — gerekçe yukarıda (SectorRibbon).
+  /* Renk son kapanışta da işaretten — gerekçe yukarıda (SectorRibbonView).
      Kartın başlığı dönemi zaten söylüyor ("Son Kapanışta En Güçlü Tema"). */
   const tone = directionOf(card.median);
+  const up = card.up ?? 0;
+  const down = card.down ?? 0;
+  const flat = Math.max(0, card.points.length - up - down);
+  const split = card.up !== null && card.points.length > 0;
   return (
-    <Link
-      href={`/tema/${card.theme.slug}`}
-      prefetch={false}
-      className={styles.extreme}
-      data-tone={tone ?? "flat"}
-    >
-      <span className={styles.extremeTop}>
-        <span className={styles.extremeLabel}>{label}</span>
-        <ArrowUpRight weight="bold" size={15} className={styles.extremeArrow} aria-hidden />
-      </span>
-      <span className={styles.extremeMain}>
-        <span className={styles.extremeText}>
-          <h3 className={styles.extremeTitle}>{themeTitle(card.theme, locale)}</h3>
-          <span aria-hidden className={styles.extremeLogos} data-motion-stagger>
-            {members.map((member, i) => (
-              <span key={member.symbol} className={styles.extremeLogo} style={{ "--i": i } as CSSProperties}>
-                {/* `lg` (44) kaynak, CSS 40'a (telefonda 32'ye) indiriyor —
-                    ölçüm `EXTREME_LOGOS` üstünde. */}
-                <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="lg" card />
-              </span>
-            ))}
-            {/* "+N" ekranda GÖRÜNMEYEN üye sayısı: logo sayısı genişliğe göre
-                üç kademe (6 / 4 / 3) ve her kademede sayı başka, üç rozet var. */}
-            {rest > 0 && <span className={styles.extremeRest} data-at="wide">+{rest}</span>}
-            {card.members.length > EXTREME_LOGOS_MID && (
-              <span className={styles.extremeRest} data-at="mid">
-                +{card.members.length - EXTREME_LOGOS_MID}
-              </span>
-            )}
-            {card.members.length > EXTREME_LOGOS_NARROW && (
-              <span className={styles.extremeRest} data-at="narrow">
-                +{card.members.length - EXTREME_LOGOS_NARROW}
-              </span>
-            )}
+    <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.extreme} data-tone={tone}>
+      <span className={styles.extremeHead}>
+        <span className={styles.extremeId}>
+          <span className={styles.extremeTop}>
+            <span className={styles.extremeLabel}>{label}</span>
+            <ArrowUpRight weight="bold" size={13} className={styles.extremeArrow} aria-hidden />
           </span>
+          <h3 className={styles.extremeTitle}>{themeTitle(card.theme, locale)}</h3>
         </span>
-        <span className={cn("numeral", styles.extremeFigure, tone ? directionText(tone) : "text-body")}>
+        <span className={cn("numeral", styles.extremeFigure, directionText(tone))}>
           <RollingFigure value={formatPercent(card.median, locale)} />
         </span>
       </span>
-      <SpreadStrip
-        points={card.points}
-        median={card.median}
-        basis={card.basis}
-        scale={scale}
-        locale={locale}
-        label={
-          card.up === null
-            ? t.themes.spreadMissing
-            : t.themes.spreadLabel
-                .replace("{count}", String(card.points.length))
-                .replace("{up}", String(card.up))
-                .replace("{down}", String(card.down))
-        }
-      />
+      {members.length > 0 && (
+        <span className={styles.members} aria-hidden>
+          {members.map((member) => (
+            <span key={member.symbol} className={styles.member}>
+              {/* `lg` (44) kaynak, CSS 36'ya indiriyor (büyütülmüş değil). */}
+              <span className={styles.memberLogo}>
+                <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="lg" card />
+              </span>
+              <span className={styles.memberSym}>{member.symbol}</span>
+              {member.change !== null && (
+                <b className={cn("numeral", styles.memberPct, directionText(directionOf(member.change)))}>
+                  {formatPercent(member.change, locale, 1)}
+                </b>
+              )}
+            </span>
+          ))}
+        </span>
+      )}
+      {/* YÜKSELEN / DÜŞEN ŞERİDİ. Çentik şeridinin (`SpreadStrip`) yerinde:
+          her üye tek tek bir çentik değil, iki dolu parça — yeşil kaç üye
+          yükseliyor, kırmızı kaç üye düşüyor (parça eni üye sayısıyla
+          orantılı, 12 piksel). Medyan tek sayı olarak "tema ne yaptı" diyor
+          ama yayılımı söylemiyor; şerit "kaçı aynı yöne gitti"yi tek bakışta
+          veriyor. Ölçek, eksen, im yok: okurun çözeceği bir şey yok. */}
+      {split && (
+        <span
+          className={styles.split}
+          role="img"
+          aria-label={t.themes.spreadLabel
+            .replace("{count}", String(card.points.length))
+            .replace("{up}", String(up))
+            .replace("{down}", String(down))}
+        >
+          <span className={styles.splitBar} data-draw aria-hidden>
+            {up > 0 && <i className="bar-fill" data-part="up" style={{ flexGrow: up }} />}
+            {flat > 0 && <i data-part="flat" style={{ flexGrow: flat }} />}
+            {down > 0 && <i className="bar-fill" data-part="down" style={{ flexGrow: down }} />}
+          </span>
+          <span className={styles.splitLegend} aria-hidden>
+            <span>
+              <b className="numeral text-up">{up}</b> {t.today.membersUp}
+            </span>
+            <span>
+              <b className="numeral text-down">{down}</b> {t.today.membersDown}
+            </span>
+          </span>
+        </span>
+      )}
     </Link>
   );
 }
 
 /**
- * Temaların yedeği: sıralama on satırıyla ve editoryal sırayla (dizinin
- * kapağındaki yedekle aynı), uç kartları gerçek kartın sabit boyunda.
+ * Temaların yedeği: sıralama on iki satırıyla ve editoryal sırayla (adlar
+ * durağan), uç kartları gerçek kartın taban boyunda.
  */
 export function ThemeSpotlightSkeleton({ locale, t }: { locale: Locale; t: Dictionary }) {
   return (
     <ThemeFrame
-      ranking={<ThemeRanking cards={themePlaceholders()} locale={locale} t={t} heading="h4" />}
+      meta={`${t.themes.rankTitle} · ${t.themes.rankMeta}`}
+      ranking={
+        <RankBars
+          rows={themeRows(themePlaceholders(), null, locale)}
+          floor={THEME_SCALE_FLOOR}
+          locale={locale}
+          foldId="tema-siralamasi"
+          phoneEnds={THEME_PHONE_ENDS}
+          more={t.compact.showAll}
+          less={t.compact.showLess}
+        />
+      }
       extremes={
         <>
           <Skeleton className={styles.extremeSkeleton} />

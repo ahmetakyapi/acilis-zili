@@ -182,7 +182,7 @@ export function ThemeTable({
       {/* Bağlantı hücreyi dolduruyor: dokunma hedefi satır yüksekliği kadar.
           Şirket kartı: components/ui/CompanyCard.tsx. */}
       <Link href={`/hisse/${row.symbol}`} prefetch={false} className={styles.companyLink} data-cc={row.symbol}>
-        <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" className={styles.logo} />
+        <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="md" className={styles.logo} />
         <span className={styles.companyText}>
           <span className={cn("numeral", styles.symbol)}>{row.symbol}</span>
           <span className={styles.name} title={row.name ?? undefined}>

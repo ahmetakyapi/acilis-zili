@@ -1,9 +1,34 @@
 /* Sektörler ve Temalar bandı (28 Eylül) — gerekçe MarketTexture.tsx.
 
    Derinlik TONLA: bant düz panel yüzeyinde, uç kartları çukur tonda,
-   gölge ve ışıma yok. Renkli olan yalnızca veri: karoların ısı tonu
-   `/piyasalar` ve tema haritasının formülünden (Themes.module.css `.heat`),
-   rakamların yön rengi işaretten. */
+   gölge ve ışıma yok. Renkli olan yalnızca veri: çubuğun, rakamın ve
+   şeridin yön rengi işaretten. */
+
+/* KARAR GEÇMİŞİ (silinen çizimlerin kaydı; yeni düzen 10 Kasım 2026,
+   gerekçe MarketTexture.tsx başında ve RankBars.tsx'te):
+   · 10 Ekim — sektörler on bir DİKEY sütun (silueti), rakamlar tek hatta
+     sütunların üstünde. İlk denemedeki dolu bloklar "bir tablo programının
+     çubuk grafiği gibi" durdu (sahibi: "çok kötü duruyor"); açık tonlu alan
+     + uçta 2 piksellik kapakla inceltildi.
+   · 12 Ekim — 1180'in altında satır grafiği yerine yön tonlu KAROLAR
+     (sahibinin telefondan itirazı: "görsel olarak çok kötü, okunaklılık çok
+     kötü": 110 piksellik sönük kulvar, 13 punto rakam). Ders bugün de
+     geçerli: çubuk opak ve kalın, rakam iri olmalı.
+   · 14 Ekim — fon sembolü 12 piksel ve gövde tonu (soluk ton en koyu
+     karoda 4,34:1 ölçülmüştü); telefonda altı fon (3 + 3).
+   · 31 Ekim — son kapanış grubu kesik ayraçlı ayrı ada; 10 Kasım sabahı
+     iki grup iki ölçek. Şimdi ada yok: satırda künye, çubuk yok.
+   · 10 Ekim / 31 Ekim — uç kartları tek çukur zeminde iki yarı, sonra
+     nötr zemin + tepede 3 piksellik yön şeridi (sitenin kart dili). Şerit
+     duruyor.
+   · 28 Eylül → 8 Kasım — uç kartı logoları 26 → 32 → 40; dar genişlikte
+     sığsın diye bindirme (768–1023: −4, telefon: −2 … −13) ve "+N" çipi.
+     Bugün bindirme ve çip yok: logolar 36, tek satır ızgara, sığmayan
+     hücre basılmıyor.
+   · 30 Eylül — telefonda iki kart yan yana, `subgrid` ile ortak satırlar
+     (ad iki satıra kırılınca rakamlar farklı hatta duruyordu). Kartlar
+     artık telefonda alt alta ve tam genişlikte: yan yana 153 piksellik
+     kartta logolar örtüşüyordu, ad iki satırdı. */
 
 /* BANT BAŞLIĞI (10 Ekim). Başlık bir kademe büyüdü (28 → 40 tavan): bant
    kahramanın hemen altındaki ilk tam genişlik satır ve sayfanın ikinci
@@ -12,7 +37,16 @@
 /* Yan dolgu 28 → 24 (10 Kasım, ikinci tur): tam genişlik dört yüzeyin
    (kahraman, gün akışı, bu bant, siluet) içerik sol kenarı aynı hatta —
    1440'ta 85 / 85 / 89 / 85 ölçüldü, şimdi dördü de 85. */
-.band { display:flex; flex-direction:column; gap:22px; padding:24px 24px 18px; }
+/* BANT IZGARA (10 Kasım): başlık, yan yana iki sıralama, altlarında iki uç
+   kartı, damga. 640'ın altında tek kolon. Kolon aralığı 40: iki sıralama
+   aynı satır hatlarında ama ayrı iki liste olarak okunsun. */
+.band { display:grid; grid-template-columns:minmax(0,1fr); gap:22px; padding:24px 24px 18px; }
+@media (min-width:640px) {
+  .band { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:32px; row-gap:24px; }
+  .bandHead, .extremes, .stampRow { grid-column:1 / -1; }
+}
+@media (min-width:1024px) { .band { column-gap:40px; } }
+@media (min-width:1280px) { .band { column-gap:56px; } }
 /* AÇIKLAMA BAŞLIĞIN TABAN ÇİZGİSİNDE (10 Ekim, sahibinin isteği:
    "başlıkların yanındaki alt başlıkları daha güzel hizala"). Satır taban
    çizgisine hizalıydı ama açıklama 4,8 piksel AŞAĞIDA duruyordu (1440,
@@ -32,385 +66,224 @@
 .bandHead h2 { width:fit-content; max-width:100%; color:var(--text-strong); font-size:var(--head); font-weight:600; letter-spacing:-.035em; line-height:1.1; }
 .bandHead p { max-width:56ch; color:var(--text-body); font-size:var(--text-read); line-height:1.5; }
 
-.part { display:flex; flex-direction:column; gap:14px; min-width:0; }
-.part + .part { padding-top:20px; border-top:1px solid var(--line); }
-.partHead { --head:var(--text-title); display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 14px; }
-/* Künyeler başlığın gerçek taban çizgisinde (gerekçe `.bandHead`, aynı
+/* `.themesPart` yalnız Suspense sınırının kabı: çocukları bant ızgarasına
+   iner (MarketTexture.tsx → ThemeFrame). */
+.themesPart { display:contents; }
+.part { display:flex; flex-direction:column; gap:10px; min-width:0; }
+/* Telefonda temalar sektörlerin altında, ince çizgiyle ayrı. */
+@media (max-width:639px) { .partThemes { padding-top:20px; border-top:1px solid var(--line); } }
+
+/* BÖLÜM BAŞI: üstte ad ve bağlantı, altında künye + genişlik (10 Kasım;
+   gerekçe MarketTexture.tsx → PartHead). */
+.partHead { --head:var(--text-title); display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:3px 14px; }
+/* Bağlantı başlığın gerçek taban çizgisinde (gerekçe `.bandHead`, aynı
    0,12em). */
-.partHead > :not(h3) { translate:0 calc(var(--head) * -.12); }
+.partHead > :not(h3):not(p) { translate:0 calc(var(--head) * -.12); }
 /* BÖLÜM BAŞLIKLARI BİR KADEME BÜYÜDÜ (9 Ekim, sahibinin isteği: "bazı
    başlıklar küçülmüş"). "Sektörler" ve "Temalar" 14 pikseldi, kendi
    içeriklerinin altında kalıyordu. Artık `--text-title` (19) ve önünde
-   2×16 piksellik işaret: panelde güncel sayfanın ve sayfa künyesinin aynı
+   3 piksellik işaret: panelde güncel sayfanın ve sayfa künyesinin aynı
    imi. */
 /* BAŞLIK BLOK, İM SATIR İÇİ (10 Ekim). `inline-flex` başlığın taban
    çizgisi metinden değil İLK öğeden, yani içi boş imden geliyordu: künye
    imin dibine hizalanıp metnin 8–10 piksel altına düşüyordu (ölçüldü). */
-.partHead h3 { color:var(--text-strong); font-size:var(--head); font-weight:650; letter-spacing:-.02em; line-height:1.2; }
+.partHead h3 { color:var(--text-strong); font-size:var(--head); font-weight:700; letter-spacing:-.02em; line-height:1.2; }
 .partHead h3::before { content:""; display:inline-block; width:3px; height:.84em; margin-right:9px; border-radius:2px; vertical-align:-.06em; background:var(--primary); }
-.partMeta { color:var(--text-muted); font-size:12.5px; }
-.partLink { margin-left:auto; }
-.breadth { color:var(--text-body); font-size:12.5px; font-weight:600; white-space:nowrap; }
-.breadth b { font-size:13.5px; font-weight:750; }
-/* TELEFONDA BAŞLIK VE BAĞLANTI AYNI SATIRDA (12 Ekim, sahibinin isteği:
-   "kaydır kaydır bitmiyor"). Bağlantı `margin-left:auto` ile künyenin
-   ardından kendi satırına düşüyordu; sektör başlığı dört satırdı (ad,
-   künye, bağlantı, genişlik). Bağlantı başlığın sağına çıkıyor, künye ve
-   genişlik alttaki satırlarda: sektörlerde üç, temalarda iki satır. */
-@media (max-width:639px) {
-  .partLink { order:1; }
-  .partMeta { order:2; flex-basis:100%; }
-  .breadth { order:3; flex-basis:100%; }
-}
+.partMeta { grid-column:1 / -1; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 12px; margin:0; color:var(--text-muted); font-size:12px; line-height:1.5; }
+.partLink { justify-self:end; }
+.breadth { color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
+.breadth b { font-size:13px; font-weight:700; }
 
-/* ---- Sektör silueti (10 Ekim) ----
-   Gerekçe MarketTexture.tsx → SectorRibbon. Her öğe dört satır: rakam,
-   çizim alanı, ad, sembol. Satır boyları SABİT, ad iki satıra sarsa da
-   siluet boyu değişmiyor ve yedekle aynı (CLS 0).
-   Çizim alanında sıfır çizgisi `--zero` (öğenin `ol`den aldığı), sütun
-   `--start`ten `--size` kadar. Aynı iki değişken dar ekranda yatay
-   satırı çiziyor; tek veri, iki yön.
-   11 SÜTUN 1180'DEN İTİBAREN. Altında sütun 70 pikselin altına iniyor ve
-   "Gayrimenkul" (12 punto, ~73 piksel) kelime ortasından bölünüyor —
-   ısı karolarında da aynı eşik ölçülmüştü. */
-/* KARO DÜZENİ 1180'İN ALTINDA (12 Ekim, sahibinin itirazı telefondan:
-   "görsel olarak çok kötü, okunaklılık çok kötü"). Satır düzeninde ad,
-   ~110 piksellik sönük bir kulvar ve 13 punto rakam yan yana sıkışıyordu;
-   çubuğun %40'lık karışımı açık temada neredeyse görünmüyordu. Şimdi her
-   fon kendi karosu: zemini yönün rengiyle ısı kademesi kadar tonlu (renk
-   anlam taşıyor, süs değil), üstte ad, altında 20 punto rakam, dipte
-   büyüklüğü soldan çizen 6 piksellik dolu çubuk. Sıra ve sayı aynı. */
-.ribbon { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; }
-.col { min-width:0; display:flex; }
-.colLink {
-  --tone:var(--flat); --mix:40%;
-  position:relative; display:grid; align-content:start; flex:1; min-width:0;
-  grid-template-columns:minmax(0,1fr);
-  grid-template-areas:"label" "pct" "track";
-  row-gap:6px; padding:11px 12px 12px; border-radius:14px;
-  background:color-mix(in oklab, var(--tone) calc(var(--mix) * .15), transparent);
-  color:inherit; transition:background-color 180ms var(--ease-brand);
+/* ---- Sıralı kalın çubuklar (10 Kasım) ----
+   Gerekçe RankBars.tsx. Satır üç parça: ad, kulvar, yüzde.
+   · ÇUBUK 12 piksel, dolu ve opak, yön renginde; eksen tarafı düz (2),
+     uzak ucu yuvarlak (999). Sahibinin tercihi "yatayda uzun KALIN çizgi";
+     ortak ölçü 8, satırın kahramanıysa 12–14 (arayuz.md → Görsel Dil):
+     burada satırın tek çizimi çubuk. İlk tur 10'du; tema panosu
+     (`ThemeBoard`) ve Seans Zili'nin gün şeridiyle aynı kalınlığa çıktı.
+   · KULVAR 5 piksel, `--line-soft` (ortak ölçü): çubuğun arkasında ince
+     bir ray, boş satırda da satırın yerini tutuyor.
+   · EKSEN 1 piksel `--line-strong`, `--zero`da; geniş düzende satır boyunca
+     uzayıp komşu satırınkiyle birleşir: listenin tek sıfır çizgisi.
+   · AD 15/600, YÜZDE 18/700 (−0,03em): dev yüzde + soluk sütun orantısızlığı
+     yerine satırda tek güçlü sayı.
+   Liste yanlardan 10 piksel taşar: uç satırın tonlu zemini ve üzerine
+   gelme zemini metni içeri itmeden başlıkla aynı hatta kalsın. */
+.rb { --zero:0%; display:flex; flex-direction:column; margin:0 -10px; padding:0; list-style:none; }
+.rbRow {
+  display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"name value" "track track";
+  align-items:baseline; gap:5px 12px; padding:6px 10px 9px; border-radius:10px; color:inherit;
+  transition:background-color 180ms var(--ease-brand);
 }
-.colLink[data-tone="flat"] { background:var(--surface-sunken); }
-.colLink[data-tone="up"] { --tone:var(--up); }
-.colLink[data-tone="down"] { --tone:var(--down); }
-/* Ton yoğunluğu ısı kademesinden: boy büyüklüğü, ton eşiği söylüyor.
-   Karışım saydamla yapılıyor, panelin kendi tonu altından görünsün. */
-.colLink[data-level="1"] { --mix:42%; }
-.colLink[data-level="2"] { --mix:62%; }
-.colLink[data-level="3"] { --mix:82%; }
-.colLink[data-level="4"] { --mix:100%; }
-.colLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
+.rbRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+/* UÇLAR: en güçlü ve en zayıf satır yönünün hafif tonunda. */
+.rbRow[data-end][data-sign="up"] { background:var(--up-wash); }
+.rbRow[data-end][data-sign="down"] { background:var(--down-wash); }
 @media (hover:hover) and (pointer:fine) {
-  .colLink:hover { background:color-mix(in oklab, var(--tone) calc(var(--mix) * .24), transparent); }
-  .colLink:hover .colName { color:var(--primary-ink); }
+  .rbRow:hover { background:var(--primary-tint); }
+  .rbRow:hover .rbName > span:first-child { color:var(--primary-ink); }
 }
-.colPct { grid-area:pct; justify-self:start; font-size:20px; font-weight:750; line-height:1.1; letter-spacing:-.035em; white-space:nowrap; color:var(--text-body); }
-.colLink[data-tone="up"] .colPct { color:var(--up); }
-.colLink[data-tone="down"] .colPct { color:var(--down); }
-.colLabel { grid-area:label; display:flex; align-items:baseline; gap:6px; min-width:0; }
-.colName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:14px; font-weight:650; line-height:1.25; transition:color 180ms var(--ease-brand); }
-/* FON SEMBOLÜ 12 PİKSEL VE GÖVDE TONU (14 Ekim). 11,5 piksel soluk ton
-   (`--text-muted`) en koyu karoda (`data-level="4"`) AA'nın altına
-   iniyordu: 768'de açık temada düşen sektörün pembe zemininde 4,34:1
-   (axe, canlı). Gövde tonu ve 12 piksel aynı karoda 4,5'i geçiyor; altı
-   genişlik × iki temada (390/768/1440) ihlal kalmadı. */
-.colSym { flex-shrink:0; color:var(--text-body); font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.02em; line-height:1.3; }
-.colTrack { grid-area:track; position:relative; align-self:end; height:6px; border-radius:3px; background:color-mix(in oklab, var(--line-soft) 70%, transparent); overflow:hidden; }
-.colTrack::before { content:none; }
-/* Son kapanış grubu (31 Ekim): soluk çubuk, kesik ayraç, tek künye. */
-.col[data-stale] .colBar { opacity:.4; }
-.col[data-stale] .colPct { opacity:.72; }
-.col[data-stale-start] { position:relative; margin-top:14px; }
-.col[data-stale-start]::before {
-  content:attr(data-stale-label); position:absolute; z-index:1; top:-14px; left:0;
-  font-size:12px; font-weight:650; letter-spacing:.02em; color:var(--text-muted); white-space:nowrap;
-}
-@media (min-width:1180px) {
-  .col[data-stale-start] { margin-top:0; border-left:1px dashed var(--line-strong); padding-left:10px; }
-  .col[data-stale-start]::before { top:-18px; left:10px; }
-}
-.colBar {
-  position:absolute; top:0; bottom:0; left:0; width:var(--mag); min-width:3px;
-  border-radius:3px; background:var(--tone);
-  transform-origin:left center; animation:sector-grow-x var(--draw,700ms) var(--ease-brand) both; animation-delay:calc(var(--i) * var(--step,40ms));
-}
-.colSkeleton { height:84px; border-radius:14px; }
-@keyframes sector-grow-x { from { scale:0 1; } }
-@keyframes sector-grow-y { from { scale:1 0; } }
-/* Ekranın altındayken İLK karede duraklat; `data-play` gelince süren
-   zaman kaldığı yerden (gecikmeler dahil) akar — kademe korunur.
-   Gerekçe MarketTexture.tsx → PlayOnView sarmalı. */
-.ribbonPlay[data-armed]:not([data-play]) .colBar { animation-play-state:paused; }
+.rbName { grid-area:name; display:flex; align-items:baseline; gap:8px; min-width:0; color:var(--text-strong); font-size:15px; font-weight:600; line-height:1.3; }
+/* Ad KESİLMEZ, gerekirse iki satıra iner (1024, EN: "Communication
+   Services" 177 > 172, "Weight-Loss Drugs (GLP-1)" 190 > 172 — üç nokta ile
+   kesiliyordu, ölçüldü). Satır 40 pikselde kalır: iki satır 36. */
+.rbName > span:first-child { min-width:0; line-height:1.2; text-wrap:balance; transition:color 180ms var(--ease-brand); }
+.rbRow[data-end] .rbName { font-weight:700; }
+.rbSub { flex:none; color:var(--text-muted); font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.02em; }
+.rbValue { grid-area:value; color:var(--text-muted); font-size:18px; font-weight:700; letter-spacing:-.03em; line-height:1.15; text-align:right; white-space:nowrap; }
+.rbRow[data-sign="up"] .rbValue { color:var(--up); }
+.rbRow[data-sign="down"] .rbValue { color:var(--down); }
+/* Son kapanıştaki fon: yüzde soluk (31 Ekim'deki .72), çubuk yok. */
+.rbRow[data-quiet] .rbValue { opacity:.72; font-weight:600; }
+.rbTrack { grid-area:track; position:relative; display:flex; align-items:center; min-height:12px; min-width:0; }
+.rbTrack::after { content:""; position:absolute; left:0; right:0; top:50%; height:5px; translate:0 -50%; border-radius:999px; background:var(--line-soft); }
+.rbTrack::before { content:""; position:absolute; z-index:2; left:min(var(--zero), calc(100% - 1px)); top:-2px; bottom:-2px; width:1px; background:var(--line-strong); }
+.rbBar { position:absolute; z-index:1; top:50%; height:12px; margin-top:-6px; min-width:4px; border-radius:2px 999px 999px 2px; background:var(--up); animation-delay:calc(var(--i) * var(--step, 40ms)); }
+.rbRow[data-sign="down"] .rbBar { border-radius:999px 2px 2px 999px; background:var(--down); transform-origin:right center; }
+/* Künyeli (çubuksuz) kulvar: ray yok, künye rayın yerinde. */
+.rbTrack[data-note]::after { display:none; }
+/* İki katlı satırda künyeli kulvarın ekseni de yok: altında yalnız künye
+   duruyor ve eksen yetim bir çentik olarak kalıyordu (768, bakıldı). */
+@media (max-width:1023px) { .rbTrack[data-note]::before { display:none; } }
+.rbNote { position:relative; color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.2; white-space:nowrap; }
 
-/* 640–1179: üç kolon, sıra sütun sütun (4 + 4 + 3). */
-@media (min-width:640px) and (max-width:1179px) {
-  .ribbon { grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:repeat(4,auto); grid-auto-flow:column; gap:10px; }
+/* ≥1024: TEK SATIR — ad | kulvar | yüzde. Ad sütunu sabit ki iki listenin
+   kulvarları kendi içinde aynı hatta başlasın; yüzde sütunu en uzun değere
+   ("−%10,25", 18 punto: 76 piksel) göre. Satır 40 piksel; eksen satırın
+   tamamını boyar (±14) ve komşusuyla birleşir. */
+@media (min-width:1024px) {
+  .rbRow { grid-template-columns:minmax(0,10.75rem) minmax(0,1fr) 5.25rem; grid-template-areas:"name track value"; align-items:center; gap:0 14px; min-height:40px; padding:0 10px; }
+  .rbTrack::before { top:-14px; bottom:-14px; }
+  .rbSub { display:none; }
 }
+/* 1280+: ad sütunu fon sembolünü de alır ("İletişim Hizmetleri XLC"). */
+@media (min-width:1280px) {
+  .rbRow { grid-template-columns:minmax(0,13.5rem) minmax(0,1fr) 5.5rem; gap:0 18px; }
+  .rbSub { display:inline; }
+}
+/* Telefonda sembol yok (bağlantının hedefinde; 14 Ekim). */
+@media (max-width:639px) { .rbSub { display:none; } }
 
-@media (min-width:1180px) {
-  .ribbon { grid-template-columns:repeat(11,minmax(0,1fr)); gap:2px; }
-  .col { display:block; }
-  .colLink {
-    display:grid; background:none; border-radius:10px; transition:background-color 180ms var(--ease-brand);
-    grid-template-columns:minmax(0,1fr);
-    grid-template-rows:22px 96px 48px;
-    grid-template-areas:"pct" "track" "label";
-    align-items:start; row-gap:8px; min-height:0; padding:10px 6px 10px;
-  }
-  .colPct { justify-self:start; font-size:18px; font-weight:700; line-height:22px; }
-  .colLabel { flex-direction:column; align-items:stretch; gap:1px; }
-  .colName { font-weight:650; }
-  .colSym { font-size:12px; }
-  .colName { white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:12px; line-height:15px; overflow-wrap:break-word; }
-  .colTrack { align-self:stretch; height:auto; border-radius:0; background:none; overflow:visible; }
-  .colTrack::before { content:""; position:absolute; top:auto; left:-4px; right:-4px; bottom:var(--zero); width:auto; height:1px; }
-  .colBar {
-    /* SÜTUN BİR ALAN VE BİR ÇİZGİ (10 Ekim). Dolu bloklar ilk denemede
-       bir tablo programının çubuk grafiği gibi duruyordu (sahibi: "çok
-       kötü duruyor"). Şimdi açık tonlu bir alan ve sıfırdan UZAK uçta 2
-       piksellik keskin bir kapak: değer çizginin hizasında okunuyor, alan
-       yalnızca büyüklüğü taşıyor. */
-    top:auto; left:0; right:0; bottom:var(--start); width:auto; height:var(--size); min-width:0; min-height:2px; transform-origin:center bottom;
-    border-radius:0; border-top:2px solid var(--tone);
-    background:color-mix(in oklab, var(--tone) calc(var(--mix) * .45), transparent); transform-origin:center bottom; animation-name:sector-grow-y;
-  }
-  .colLink[data-sign="down"] .colBar { border-top:0; border-bottom:2px solid var(--tone); transform-origin:center top; }
-  /* Komşu sütunların sıfır çizgileri birleşip tek bir eksen oluyor; ilk
-     ve son sütunda çizgi panelin içinde kalsın. */
-  .col:first-child .colTrack::before { left:0; }
-  .col:last-child .colTrack::before { right:0; }
-  .colSkeleton { height:202px; border-radius:10px; }
-}
-/* TELEFONDA İKİ KOLON KARO, altı fon (14 Ekim; 12 Ekim'deki beş, 2×3
-   ızgaranın sağ altında boş hücre bırakıyordu — gerekçe MarketTexture.tsx →
-   SECTOR_PHONE_TOP). Sol sütun en güçlü üç, sağ sütun en zayıf üç fon,
-   sütun sütun okunuyor. Sembol telefonda yok (bağlantının hedefinde). */
-@media (max-width:639px) {
-  .ribbon { grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(6,auto); grid-auto-flow:column; gap:8px; }
-  .colSym { display:none; }
-  .colName { white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:13.5px; line-height:17px; }
-  .colPct { font-size:19px; }
-  /* Katlıyken altı fon üç satırda (3 + 3): görünür satır sayısı kadar
-     ızgara satırı, yoksa hepsi sol sütuna dizilir. Yedek aynı şekil: altı
-     kutu ve katlama düğmesinin 44 pikseli. */
-  /* `.ribbon` artık PlayOnView sarmalının içinde (14 Ekim): doğrudan
-     kardeş seçicisi (`~ .ribbon`) eşleşmez olmuştu ve katlı durum altı
-     satıra düşüyordu — torun seçicisiyle aynı davranış. */
-  input:not(:checked) ~ .ribbonPlay .ribbon, .ribbonSkeleton { grid-template-rows:repeat(3,auto); }
-  .ribbonSkeleton > :nth-child(n+7) { display:none; }
-  .ribbonSkeleton { padding-bottom:44px; }
-}
 .ribbonError { padding:26px 0; color:var(--text-muted); font-size:var(--text-small); text-align:center; }
+.stampRow { display:flex; justify-content:flex-end; min-width:0; }
 .stamp { justify-content:flex-end; }
 .stampNote { color:var(--text-muted); font-size:var(--text-tiny); text-align:right; }
 /* Damga tek satır: 1280'de ve 390'da 17 piksel ölçüldü. */
-.stampSkeleton { align-self:flex-end; width:180px; height:17px; border-radius:4px; }
+.stampSkeleton { width:180px; height:17px; border-radius:4px; }
 
-/* ---- Temalar ----
-   Solda sıralama (on satır), sağda iki uç kartı. Kartların boyu sabit
-   (`.extreme` yüksekliği) ve iki kart + aradaki boşluk sıralamanın boyuna
-   yakın: 1280'de ölçüm yorumu page.tsx'te. */
-.themes { display:grid; gap:18px; }
-@media (min-width:1024px) { .themes { grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); gap:28px; align-items:start; } }
-.rankCol { display:flex; flex-direction:column; gap:10px; min-width:0; }
-/* UÇLAR TEK SKOR TABLOSU (10 Ekim). İki ayrı kutuydu; artık tek çukur
-   zeminde iki yarı, arada ince bir çizgi. İki uç aynı sorunun iki cevabı
-   (günün en güçlüsü, en zayıfı) ve tek kabın içinde karşılaştırma olarak
-   okunuyor. Boy değişmedi: 4 + 155 + 155 + 4 + kenar = 320, soldaki
-   sıralamanın boyu (155'in ölçümü aşağıda). Üzerine gelinen yarı kendi
-   köşesiyle tonlanıyor, bu yüzden kabın 4 piksellik iç payı var. */
-.extremes {
-  display:grid; gap:4px; min-width:0; padding:4px;
-  border:1px solid var(--line-soft); border-radius:20px; background:var(--surface-sunken);
-}
-@media (min-width:640px) and (max-width:1023px) { .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-
+/* ---- İki uç tema ----
+   Sıralamaların altında yan yana iki kart (≥768), telefonda alt alta.
+   Zemin çukur ton, tepede 3 piksellik yön şeridi (31 Ekim: nötr zemin +
+   şerit; pembe/yeşil dolgu değil). İçerik sırası: künye → ad ve display
+   medyan (bandın en iri sayısı: en anlamlı değer) → üyeler → yükselen /
+   düşen şeridi. */
+.extremes { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; min-width:0; }
+@media (min-width:768px) { .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; } }
 .extreme {
-  position:relative; display:flex; flex-direction:column; gap:6px; min-width:0; height:155px;
-  padding:13px 18px 10px; border-radius:16px; color:inherit;
-  transition:background-color 180ms var(--ease-brand), transform .2s var(--ease-brand);
+  position:relative; display:flex; flex-direction:column; gap:14px; min-width:0;
+  padding:19px 20px 18px; border-radius:16px; background:var(--surface-sunken); color:inherit;
+  transition:background-color 180ms var(--ease-brand), transform 200ms var(--ease-brand);
 }
-.extreme + .extreme::before { content:""; position:absolute; top:0; left:18px; right:18px; height:1px; background:var(--line); }
-@media (max-width:1023px) {
-  .extreme + .extreme::before { top:14px; bottom:14px; left:0; right:auto; width:1px; height:auto; }
-}
-.extreme:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
-.extreme:active { transform:scale(.992); }
-@media (hover:hover) { a.extreme:hover { background:var(--primary-tint); } }
-/* UÇLAR YÖNÜN RENGİYLE (12 Ekim, sahibinin isteği: "renkli, görsel").
-   Yarılar çukur zeminde gri ikizdi; artık en güçlü yarı yeşilin, en zayıf
-   yarı kırmızının hafif tonunda ve etiket o renkte. Son kapanışta ton
-   `flat`: dünün uçları bugünün rengini almıyor. */
-/* NÖTR ZEMİN, TEPEDE YÖN ŞERİDİ (31 Ekim). Yarılar yönün rengine
-   boyanıyordu (pembe/yeşil dolgu); sitenin kart dili artık nötr zemin +
-   tepede 3 piksellik şerit (bilanço, teknik, risk kartları). Renk yine
-   var — şerit, etiket, büyük sayı ve dağılım çizgisi yönü taşıyor —
-   ama zemin değil (görsel denetim, 31 Ekim). */
-.extreme[data-tone="up"], .extreme[data-tone="down"] { background:var(--surface-solid); }
-.extreme[data-tone="up"]::after, .extreme[data-tone="down"]::after {
-  content:""; position:absolute; top:0; left:18px; right:18px; height:3px; border-radius:0 0 3px 3px; background:var(--up);
-}
+.extreme::after { content:""; position:absolute; top:0; left:20px; right:20px; height:3px; border-radius:0 0 3px 3px; background:var(--flat); }
+.extreme[data-tone="up"]::after { background:var(--up); }
 .extreme[data-tone="down"]::after { background:var(--down); }
+.extreme:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
+a.extreme:active { transform:scale(.992); }
+@media (hover:hover) and (pointer:fine) { a.extreme:hover { background:color-mix(in oklab, var(--primary) 5%, var(--surface-sunken)); } }
+.extremeEmpty { justify-content:space-between; }
+/* BAŞ: solda künye ve ad alt alta, sağda display medyan (iki satırın
+   boyunda, adın taban çizgisinde). İlk denemede künye üstte tek satırdı ve
+   adla arasında 40 piksel boşluk kalıyordu (1440, ölçüldü): 50 puntoluk
+   rakam satırı açıyordu. */
+.extremeHead { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:4px 16px; min-width:0; }
+.extremeId { display:grid; gap:5px; min-width:0; }
+/* 1024'ün altında künye kendi satırında, tam genişlikte: 320 piksellik
+   kartta "Son Kapanışta En Güçlü Tema" rakamın yanında iki satıra
+   kırılıyordu (390, ölçüldü). Rakam orada 34 punto; adla aynı satırda. */
+@media (max-width:1023px) {
+  .extremeId { display:contents; }
+  .extremeTop { grid-column:1 / -1; }
+}
+.extremeTop { display:flex; align-items:center; gap:6px; min-width:0; }
+.extremeLabel { color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.4; }
 .extreme[data-tone="up"] .extremeLabel { color:var(--up); }
 .extreme[data-tone="down"] .extremeLabel { color:var(--down); }
-.extreme[data-tone="flat"] { background:var(--surface); }
-.extreme[data-tone] + .extreme[data-tone]::before { display:none; }
-.extremeEmpty { justify-content:space-between; }
-/* 155: iki kart + 12 aralık = 322, soldaki sıralamanın boyu (1440 ve
-   1024'te ölçüldü). 184'tü ve sağ sütun sıralamadan 58 piksel uzun
-   bitiyordu. */
-.extremeSkeleton { height:155px; border-radius:16px; }
-/* 155'E SIĞMA (8 Kasım, ölçüldü 1024 ve 1280). Kartın içi bu boya zaten
-   sığmıyordu: dağılım şeridinin ölçek künyesi ("−%12 · 0 · +%12",
-   `SpreadStrip` → ikinci çocuk) 32'lik logolarla alt dolgunun 15 piksel
-   altına iniyor, alttaki kartın altında yarısı kesik duruyordu; 40'lık
-   logolar bunu 23'e çıkardı. Künye kartta kalktı — ölçek /tema'nın
-   kartlarında ve şeridin `aria-label`ında; burada şerit sıfır çizgisi ve
-   medyanla okunuyor — ve iki aralık daraldı (kart 6 → 4, metin sütunu
-   8 → 6). İçerik artık alt dolgunun 2 piksel üstünde bitiyor; 155 ve
-   soldaki sıralamayla denge değişmedi. Telefon kendi kuralında (≤767). */
-@media (min-width:768px) {
-  .extreme { gap:4px; }
-  .extreme .extremeText { gap:6px; }
-  .extreme > div:last-child > :not(:first-child) { display:none; }
-}
-.extremeTop { display:flex; align-items:center; justify-content:space-between; gap:10px; }
-.extremeLabel { color:var(--text-muted); font-size:12.5px; font-weight:650; }
 /* Dış bağlantı oku ortak ölçüde: (2,−2), 200 ms. */
 .extremeArrow { flex-shrink:0; color:var(--primary); transition:transform 200ms var(--ease-brand); }
 @media (hover:hover) { .extreme:hover .extremeArrow { transform:translate(2px,-2px); } }
-.extremeMain { display:flex; align-items:flex-end; justify-content:space-between; gap:14px; min-width:0; }
-.extremeText { display:flex; flex-direction:column; gap:8px; min-width:0; }
-.extremeTitle { width:fit-content; max-width:100%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:21px; font-weight:700; letter-spacing:-.03em; line-height:1.2; }
-/* Rakam bandın en iri öğesi (10 Ekim, 40 → 54 tavan): skor tablosunun
-   işi bu iki sayı. */
-.extremeFigure { flex-shrink:0; font-size:clamp(32px,3.6vw,54px); font-weight:650; line-height:.92; letter-spacing:-.06em; }
-.extremeLogos { display:flex; align-items:center; gap:4px; min-width:0; overflow:hidden; }
-/* Logolar kalkmıyor (10 Kasım: "Hover'da kaldırma yok"); kartın geri
-   bildirimi zemin tonu ve ok. */
-.extremeLogo { display:inline-flex; flex-shrink:0; }
-.extremeRest[data-at="narrow"], .extremeRest[data-at="mid"] { display:none; }
-/* KARO 40, TELEFONDA 32 (8 Kasım). Karo `lg` (44, `rounded-lg`) olarak
-   basılıyor; boyu ve köşesi burada. Seçici `> span` ki Tailwind'in tek
-   sınıflık `size-11`/`rounded-lg`ını özgüllükle yensin (harf karosu da
-   görsel kutusu da span). Çip karoyla aynı boyda ve köşede; ölçüm ve
-   logo sayıları MarketTexture.tsx → `EXTREME_LOGOS`. */
-.extremeLogo > span { width:40px; height:40px; border-radius:var(--radius-md); }
-.extremeRest {
-  display:inline-flex; align-items:center; justify-content:center; flex-shrink:0;
-  height:40px; min-width:40px; padding:0 7px; border-radius:var(--radius-md);
-  background:var(--premium-surface); color:var(--text-body); font-size:var(--text-small); font-weight:700;
-}
-/* 1024–1279: dört logo ve orta rozet. */
-@media (min-width:1024px) and (max-width:1279px) {
-  .extremeLogo:nth-child(n+5), .extremeRest[data-at="wide"] { display:none; }
-  .extremeRest[data-at="mid"] { display:inline-flex; }
-}
-/* 1024'ün altında üç logo ve dar rozet (tablet ve telefon). */
-@media (max-width:1023px) {
-  .extremeLogo:nth-child(n+4), .extremeRest[data-at="wide"] { display:none; }
-  .extremeRest[data-at="narrow"] { display:inline-flex; }
-}
-/* 768–1023: üç 40'lık karo + çip 160 istiyor, 768'de yer 154 (ölçüldü);
-   karolar 4 piksel bindiriyor, kart tonunda 2 piksellik halkayla ayrı
-   okunuyor (telefondaki yığının dili). */
-@media (min-width:768px) and (max-width:1023px) {
-  .extremeLogos { gap:0; }
-  .extremeLogo, .extremeRest { position:relative; border-radius:var(--radius-md); box-shadow:0 0 0 2px var(--surface-solid); }
-  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-4px; }
-}
-@media (max-width:767px) {
-  .extremeLogo > span { width:32px; height:32px; }
-  .extremeRest { height:32px; min-width:32px; padding:0 6px; font-size:var(--text-tiny); }
-}
+.extremeTitle { min-width:0; color:var(--text-strong); font-size:22px; font-weight:700; letter-spacing:-.03em; line-height:1.15; text-wrap:balance; }
+/* Display sayı ortak ölçüde: 700, −0,03em (önce 650 / −0,06em). */
+.extremeFigure { flex-shrink:0; font-size:clamp(34px,3.5vw,50px); font-weight:700; line-height:.95; letter-spacing:-.03em; translate:0 -.04em; }
 
+/* ÜYELER: tek satır ızgara. `auto-fill` sığan kadar sütun açar; ikinci
+   satır sıfır boyda ve kap `overflow:hidden`: sığmayan üye basılmaz,
+   bindirme ve "+N" çipi yok. Hücre: 36 piksellik logo, sembol, yüzde. */
+.members { display:grid; grid-template-columns:repeat(auto-fill,minmax(62px,1fr)); grid-template-rows:auto; grid-auto-rows:0; column-gap:8px; overflow:hidden; min-width:0; }
+.member { display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; }
+.memberLogo { display:inline-flex; margin-bottom:5px; }
+/* Karo `lg` (44, `rounded-lg`) olarak basılıyor; boyu ve köşesi burada.
+   Seçici `> span` ki Tailwind'in tek sınıflık `size-11`ini özgüllükle
+   yensin (8 Kasım'daki 40'lık kuralın aynısı). */
+.memberLogo > span { width:36px; height:36px; border-radius:var(--radius-md); }
+.memberSym { color:var(--text-body); font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.02em; line-height:1.3; }
+.memberPct { font-size:13px; font-weight:700; letter-spacing:-.01em; line-height:1.3; white-space:nowrap; }
+
+/* YÜKSELEN / DÜŞEN ŞERİDİ: 12 piksel, parçalar üye sayısıyla orantılı,
+   arada 3 piksel; dış uçlar yuvarlak. Gerekçe MarketTexture.tsx. */
+.split { display:grid; gap:7px; min-width:0; margin-top:auto; }
+.splitBar { display:flex; gap:3px; height:12px; }
+.splitBar i { min-width:6px; flex-basis:0; border-radius:2px; background:var(--flat); }
+.splitBar i:first-child { border-top-left-radius:999px; border-bottom-left-radius:999px; }
+.splitBar i:last-child { border-top-right-radius:999px; border-bottom-right-radius:999px; }
+.splitBar i[data-part="up"] { background:var(--up); }
+.splitBar i[data-part="down"] { background:var(--down); transform-origin:right center; }
+.splitLegend { display:flex; justify-content:space-between; gap:12px; color:var(--text-body); font-size:12px; font-weight:600; line-height:1.3; }
+.splitLegend b { font-size:14px; font-weight:700; }
+
+/* Yedek, gerçek kartın boyunda (ölçüm dosyanın sonunda). */
+.extremeSkeleton { height:233px; border-radius:16px; }
 @media (max-width:767px) {
   .band { gap:18px; padding:18px 16px 16px; }
-  .extremeTitle { font-size:17px; }
-}
-/* TELEFONDA UÇLAR YAN YANA VE KISA. Alt alta iki 184 piksellik kart bandı
-   390'da 1239 piksele çıkarıyordu (ölçüldü). Uçlar zaten sıralamanın ilk
-   ve son satırı; telefonda yalnızca adları, rakamları ve üç logo kalıyor,
-   dağılım şeridi dizinin kartında.
-   767'YE KADAR (28 Eylül). Logolar 32 piksele büyüyünce 640–767 arasında
-   rakamın yanında logo satırına 119–131 piksel kalıyordu (ölçüldü), üç
-   logo ve çip 140 istiyor. Bu aralıkta rakam başlığın altına iniyor ve
-   satır kartın tam iç genişliğini alıyor. */
-@media (max-width:767px) {
-  .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:4px; }
-  .extreme, .extremeSkeleton { height:148px; }
-  .extreme { gap:8px; padding:12px 12px 12px; }
-  .extreme > div:last-child { display:none; }
-  .extremeMain { flex-direction:column; align-items:flex-start; gap:8px; }
-  .extremeTitle { width:auto; white-space:normal; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:15px; line-height:1.25; }
-  .extremeFigure { font-size:26px; }
-}
-
-/* TELEFONDA KART BOYU TABAN, SABİT DEĞİL (28 Eylül). 148 piksel sabitti
-   ve 640'ın altında içerik ona sığmıyordu: etiket ("Günün En Güçlü
-   Teması") okun yanında iki satıra, tema adı da iki satıra kırılınca kart
-   360–430'da 184, 320'de 202 piksel istiyor (ölçüldü); rakam kartın
-   dışına, damganın üstüne taşıyordu. Bu logolar büyümeden önce de böyleydi
-   (26 piksellik logolarla 178). Artık 184 taban ve içerik uzarsa kart
-   uzuyor; iki kart ızgarada yan yana, kısa olan uzuna geriliyor. Yedek
-   aynı taban: 320'deki 18 piksellik fark yalnızca üç satırlık etikette.
-   Bu blok ≤767 bloğunun ARDINDA durmak zorunda; öncesinde kalırsa oradaki
-   148 kazanıyor. */
-@media (max-width:639px) {
-  .extreme { height:auto; min-height:184px; }
-  .extremeSkeleton { height:184px; }
+  .extreme { gap:12px; padding:17px 16px 16px; }
+  .extreme::after { left:16px; right:16px; }
+  .extremeTitle { font-size:19px; }
+  .extremeSkeleton { height:234px; }
 }
 
 @media (prefers-reduced-motion:reduce) {
-  .colLink, .colName, .extreme, .extremeArrow, .extremeLogo { transition:none; }
-  .colBar { animation:none; }
-  .extreme:hover .extremeArrow, .extreme:hover .extremeLogo { transform:none; }
+  .rbRow, .rbName > span:first-child, .extreme, .extremeArrow { transition:none; }
+  .extreme:hover .extremeArrow, a.extreme:active { transform:none; }
 }
 
-/* İKİ KART ORTAK SATIRDA (30 Eylül, sahibinin isteği: "kartlar içindeki
-   değerlerle beraber aynı hizada, kaymadan dursun"). Her kart kendi
-   sütunuydu: "Nükleer, Elektrik ve Şebeke" iki satıra kırılınca o kartın
-   logoları ve rakamı 25 piksel aşağı kayıyor, iki rakam farklı hatta
-   duruyordu. Kartlar artık `.extremes` ızgarasının dört satırını
-   `subgrid` ile paylaşıyor — etiket, ad, logolar, rakam — ve her satır
-   iki karttaki uzun içeriğin boyunda: ad bir kartta iki satırsa ötekinde
-   de o satır iki satırlık; logolar ve rakamlar aynı hatta. Aradaki
-   sarmalayıcılar (`extremeMain`, `extremeText`) bu genişlikte `contents`.
-   Taban yükseklik kalktı: boy artık içerikten, iki kartta aynı.
-   Bu blok ≤639 bloğunun ARDINDA durmak zorunda. */
-@media (max-width:767px) {
-  .extremes { row-gap:4px; }
-  .extreme { display:grid; grid-row:span 4; grid-template-rows:subgrid; row-gap:8px; height:auto; min-height:0; }
-  .extremeMain, .extremeText { display:contents; }
-  .extremeTop { align-self:start; }
-  .extremeTitle { align-self:start; }
-  .extremeLogos { align-self:end; }
-  .extremeFigure { align-self:end; }
-  .extremeEmpty .extremeFigure { grid-row:4; }
-}
-
-/* LOGOLAR ÜST ÜSTE BİNİYOR (30 Eylül). Üç logo + çip 140 piksel istiyor,
-   kartın iç genişliği 390'da 131, 320'de 95: "+11" çipi ve 320'de üçüncü
-   logo kartın kenarında kesiliyordu. Karolar kart tonunda 2 piksellik bir
-   halkayla birbirinin üstüne biniyor (yatırımcı portre yığınıyla aynı dil).
-   Bindirme yalnızca GEREKTİĞİ kadar: 410+ yok, 390'da 2, 360'ta 8, 320'de 13 —
-   ilk denemede 390'da da 10'du ve yer varken logolar birbirini örtüyordu.
-   Ölçüldü: satır üç genişlikte de kartın iç kenarında bitiyor. */
-@media (max-width:767px) {
-  .extremeLogos { gap:0; overflow:visible; }
-  .extremeLogo, .extremeRest { position:relative; border-radius:var(--radius-md); box-shadow:0 0 0 2px var(--surface-sunken); }
-  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:4px; }
-}
-/* 409'un üstünde bindirme YOK (30 Eylül): 430'luk telefonda satıra 150
-   piksel kalıyor ve dört karo 4 piksel aralıkla sığıyor; −4 orada logoları
-   gereksiz yere örtüyordu (sahibinin ekran görüntüsü). */
-@media (max-width:409px) {
-  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-2px; }
-}
-@media (max-width:379px) {
-  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-8px; }
-}
-@media (max-width:339px) {
-  .extremeLogo + .extremeLogo, .extremeLogo + .extremeRest, .extremeRest + .extremeRest { margin-left:-13px; }
-}
+/* ÖLÇÜM 10 KASIM 2026 (gerçek sayfa + sahte sağlayıcı, reduced-motion;
+   durumlar: seans içi karışık + iki fon son kapanışta, açılış öncesi hepsi
+   ekside, hafta sonu hepsi artıda; TR ve EN; iki tema).
+   YERLEŞİM KARARI — iki sıralama yan yana mı, alt alta mı: yan yana.
+   Alt alta 1440'ta kulvar ~900 piksele çıkıyor (çubuklar seyrek, bant
+   21 satır = 840 + başlıklar); yan yana kulvar 267 (1440) / 207 (1280) /
+   159 (1024) ve iki liste aynı 40 piksellik satır hatlarında. 640–1023'te
+   yine iki kolon ama satır iki katlı (ad + yüzde üstte, kulvar tam
+   genişlikte altta, 319 piksel); 640'ın altında tek kolon.
+     bant boyu           1440: 794 → 913 · 1280: 909 · 1024: 949 → 900 ·
+                         768: 1.084 · 390: 1.181 → 1.481 (uç kartları yan
+                         yana 153 piksellik iki yarıdan alt alta iki tam
+                         karta çıktı: +300; okunaklılık için bilinçli)
+     sektör çizimi       dikey sütun (alan 96, kapak 2) + 18'lik yüzde →
+                         yatay 12 piksel çubuk + 18/700 yüzde
+     tema çubuğu         5 → 12 piksel; yüzde 14 → 18; ad 13 → 15
+     en uzun çubuk       1440: 150–267 · 1024: 89–159 · 390: 179–320
+                         (alt sınır karışık gün, üst sınır tek yönlü gün)
+     uç kartı            627 × 235 (1440) · 455 × 231 (1024) · 320 × 230–240
+                         (390); medyan 50 / 36 / 34 punto
+     üye hücresi         logo 40 (telefonda 32, bindirmeli) → 36, bindirme
+                         yok; hücre arası 35–40; satırda 8 (1440) / 7 (1280)
+                         / 6 (1024) / 4 (768, 390) üye
+     yükselen/düşen      çentik şeridi (28 piksel, üye başına 2'lik çentik)
+                         → 12 piksel iki parçalı şerit
+   Yatay taşma 0; kırpılan metin 0 (EN "Communication Services" dahil);
+   kutusundan taşan öğe 0; değer sütunu ve kulvar başlangıcı her listede
+   tek hatta. Hareket (`getAnimations()`, 1440): listelerde 21 `bar-fill`,
+   son çubuk 1.100 ms'de biter (gecikme ≤ 400); kartlarda 4 `bar-fill` +
+   rakam yuvarlanması; opaklığı 0'dan başlayan 0; reduced-motion'da son
+   kare. Ana kolon ile yan rayın dipleri değişmedi (bant kendi ızgara
+   satırında): 1440 −17, 1280 −19, 1024 +4 piksel. */

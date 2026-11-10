@@ -407,7 +407,7 @@ export default async function TodayPage() {
           <h2 id="sektor-ve-tema-baslik">{t.today.textureTitle}</h2>
           <p>{t.today.textureNote}</p>
         </div>
-        <Suspense fallback={<SectorRibbonSkeleton t={t} />}>
+        <Suspense fallback={<SectorRibbonSkeleton locale={locale} t={t} />}>
           <SectorRibbon locale={locale} t={t} />
         </Suspense>
         <Suspense fallback={<ThemeSpotlightSkeleton locale={locale} t={t} />}>

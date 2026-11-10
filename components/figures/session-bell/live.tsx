@@ -75,6 +75,11 @@ export type BellLabels = {
   playing: string;
   openBell: string;
   closeBell: string;
+  /** Şeritteki zil adları ve saatleri: "Açılış" · "17:30" (okuyucunun birincil saati). */
+  openShort: string;
+  closeShort: string;
+  openAt: string;
+  closeAt: string;
   note: string;
   closedNote: string | null;
   chipsLabel: string;
@@ -543,6 +548,19 @@ export function SessionBellLive({
           </svg>
           <span className="sb-back-label">{labels.back}</span>
         </button>
+        {/* "GÜNÜ OYNAT" BAŞTA (10 Kasım akşam): rozetin karşısında, içeriği
+            kadar bir buton. Şeridin altındaydı; telefonda 312 × 48 dolu mavi
+            şerit olarak panelin en ağır öğesiydi. Davranış aynı: ön
+            seanstan akşam seansının sonuna, iki zil sırayla. Seans yoksa
+            (çizelge boş) buton da yok. */}
+        {chips.length > 0 ? (
+          <button type="button" className="sb-play" data-play="" onClick={() => play("day", dayPlan(shown.current, day))}>
+            <svg viewBox="0 0 20 20" aria-hidden="true">
+              <path d="M6.5 4.6v10.8a.8.8 0 0 0 1.2.7l8.6-5.4a.8.8 0 0 0 0-1.4L7.7 3.9a.8.8 0 0 0-1.2.7Z" />
+            </svg>
+            <span data-play-label="">{labels.play}</span>
+          </button>
+        ) : null}
       </div>
 
       <div
@@ -583,7 +601,18 @@ export function SessionBellLive({
       {chips.length > 0 ? (
         <div className="sb-controls">
           {labels.previewHeading ? <p className="sb-preview">{labels.previewHeading}</p> : null}
-          <div className="sb-line" data-line="" role="group" aria-label={labels.chipsLabel}>
+          {/* TEK KALIN GÜN ŞERİDİ (10 Kasım akşam; gerekçe bell.css → "TEK
+              KALIN GÜN ŞERİDİ"). Sütun payı seansın süresi (`fr`), tabanı
+              etiketin eni (`--seg-min`, bell.css). Her seans tek buton: üstte etiket
+              (ad, iki saat), altta şeridin o seansa düşen parçası; içindeki
+              dolgu seansın geçen payı. */}
+          <div
+            className="sb-line"
+            data-line=""
+            role="group"
+            aria-label={labels.chipsLabel}
+            style={{ gridTemplateColumns: chips.map((chip) => `minmax(var(--seg-min), ${chip.to - chip.from}fr)`).join(" ") }}
+          >
             {chips.map((chip) => (
               <button
                 key={chip.kind}
@@ -602,33 +631,39 @@ export function SessionBellLive({
                     {chip.name}
                   </span>
                   <span className="sb-seg-time">{chip.tr}</span>
-                  <span className="sb-seg-sub">{chip.ny}</span>
+                  {/* İkinci saatin dilim eki ayrı parçada: telefonda düşer (bell.css). */}
+                  <span className="sb-seg-sub">
+                    {chip.ny.replace(/ [A-Z]+$/, "")}
+                    <i>{chip.ny.match(/ [A-Z]+$/)?.[0] ?? ""}</i>
+                  </span>
                 </span>
-                {/* Şerit kartın ALTINDA, kart genişliğinde: üç şerit yan yana
-                    günün rayı. İçindeki dolgu seansın geçen payı. */}
                 <span className="sb-seg-bar" aria-hidden="true">
                   <i className="sb-seg-fill" />
                 </span>
+                {/* ZİLLER ASIL SEANSIN İKİ UCUNDA, ADIYLA (10 Kasım): zil tam
+                    o sınırda çalar. Sabah iki seansın arasındaki boşluğa
+                    sabit yüzdeyle konuyorlardı; sütunlar artık süreyle
+                    orantılı, rozet ve adı asıl seansın kutusuna bağlı. */}
+                {chip.kind === "regular" ? (
+                  <>
+                    <i className="sb-mark" data-at="open" aria-hidden="true">
+                      <BellIcon />
+                    </i>
+                    <i className="sb-mark" data-at="close" aria-hidden="true">
+                      <BellIcon />
+                    </i>
+                    <span className="sb-cap" data-at="open" aria-hidden="true">
+                      {labels.openShort} <b className="numeral">{labels.openAt}</b>
+                    </span>
+                    <span className="sb-cap" data-at="close" aria-hidden="true">
+                      {labels.closeShort} <b className="numeral">{labels.closeAt}</b>
+                    </span>
+                  </>
+                ) : null}
               </button>
             ))}
-            {/* ZİL İMLERİ İKİ SEANSIN ARASINDA (10 Kasım): zil tam o sınırda
-                çalar. Asıl seansın şeridinin içindeydiler ve şeridin iki
-                ucunu örtüyorlardı; şimdi ön seans | asıl seans ve asıl
-                seans | akşam seansı boşluklarının ortasında. */}
-            <i className="sb-mark" data-at="open" aria-hidden="true">
-              <BellIcon />
-            </i>
-            <i className="sb-mark" data-at="close" aria-hidden="true">
-              <BellIcon />
-            </i>
             <span className="sb-marker" data-marker="" aria-hidden="true" />
           </div>
-          <button type="button" className="sb-play" data-play="" onClick={() => play("day", dayPlan(shown.current, day))}>
-            <svg viewBox="0 0 20 20" aria-hidden="true">
-              <path d="M6.5 4.6v10.8a.8.8 0 0 0 1.2.7l8.6-5.4a.8.8 0 0 0 0-1.4L7.7 3.9a.8.8 0 0 0-1.2.7Z" />
-            </svg>
-            <span data-play-label="">{labels.play}</span>
-          </button>
         </div>
       ) : null}
       <p className="sb-note">{labels.closedNote ?? labels.note}</p>

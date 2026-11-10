@@ -22,6 +22,18 @@
      başlıyor; sayfada yatay taşma 0.
    - Sıralama: başlığa basınca görünen satırlar 520 ms `translate` ile
      kayıyor (`getAnimations()`: 9 satır); hareketi azaltanda 0.
+
+   AKŞAM, KİMLİK BÜYÜDÜ (aynı gün, ikinci tur; sahibi: "şirketlerin adı ve
+   logolar az daha büyüyebilir, kolay okunabilir"). Piyasalar ve Şirketler
+   tablolarıyla ortak yeni ölçüler: satır 46 → 60 (telefon 48 → 56), logo
+   28 → 36 (telefon 32), sembol 14 → 16/700, ad 12–13 soluk → 14 `text-body`
+   ve HER genişlikte sembolün altında, değişim sayısı 14 → 18/700 (telefon
+   16), dolgu 5 → 8 piksel (kulvar 5 kaldı), fiyat ve piyasa değeri 14 → 15.
+   Ölçüm (Yarı İletkenler, 21 üye, iki tema): 1440'ta satır 60, logo 36,
+   sembol 16, ad 14, yüzde 18, dolgu 8 / kulvar 5 × 658; kap 1318 = içerik
+   1318; katlı on iki satır 552 → 720. 1024: kap 974 = içerik 974, kulvar
+   314. 390: satır 56, logo 32, sembol 15, yüzde 16; kap 352, içerik 560
+   (kayar, Şirket sabit); sayfada yatay taşma 0.
    -------------------------------------------------------------------------- */
 
 .wrap { --fold-inset:20px; scroll-margin-top:100px; border-top:1px solid var(--line); }
@@ -29,7 +41,7 @@
 .table { width:100%; min-width:560px; border-collapse:separate; border-spacing:0; font-size:var(--text-base); }
 .table th, .table td { padding:0 12px; vertical-align:middle; white-space:nowrap; }
 .table thead th { height:40px; border-bottom:1px solid var(--line); background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; text-align:right; }
-.table tbody :is(td, th) { height:48px; border-top:1px solid var(--line-soft); font-weight:400; }
+.table tbody :is(td, th) { height:56px; border-top:1px solid var(--line-soft); font-weight:400; }
 .table tbody tr:first-child :is(td, th) { border-top:0; }
 
 /* ---- Başlık ---- */
@@ -54,18 +66,19 @@
 .companyHead, .company { position:sticky; left:0; z-index:1; text-align:left !important; }
 .table thead .companyHead { z-index:3; padding-left:16px; }
 .company { padding:0 !important; background:var(--premium-surface); }
-.companyLink { display:flex; align-items:center; gap:10px; min-width:0; height:47px; padding:0 10px 0 16px; color:inherit; }
-.logo { width:28px !important; height:28px !important; }
+.companyLink { display:flex; align-items:center; gap:10px; min-width:0; height:55px; padding:0 10px 0 16px; color:inherit; }
+.logo { width:32px !important; height:32px !important; }
 .companyText { display:flex; flex-direction:column; min-width:0; }
-.symbol { color:var(--text-strong); font-size:14px; font-weight:700; line-height:17px; letter-spacing:-.01em; transition:color .18s var(--ease-brand); }
-.name { overflow:hidden; max-width:84px; color:var(--text-muted); font-size:12px; line-height:15px; text-overflow:ellipsis; }
+.symbol { color:var(--text-strong); font-size:15px; font-weight:700; line-height:19px; letter-spacing:-.01em; transition:color .18s var(--ease-brand); }
+.name { overflow:hidden; max-width:84px; color:var(--text-body); font-size:12px; line-height:16px; text-overflow:ellipsis; }
 .companyLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
 
 /* ---- Değişim: ayrışan şerit + sayı ---- */
-.change { display:grid; grid-template-columns:minmax(40px,1fr) 7.2ch; align-items:center; gap:8px; }
-.changeNum { font-size:14px; font-weight:700; text-align:right; letter-spacing:-.01em; }
+.change { display:grid; grid-template-columns:minmax(40px,1fr) 68px; align-items:center; gap:8px; }
+.changeNum { font-size:16px; font-weight:700; text-align:right; letter-spacing:-.02em; }
 .lane { position:relative; display:block; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
-.fill { position:absolute; top:0; bottom:0; left:0; min-width:2px; border-radius:999px; background:var(--flat); }
+/* Dolgu kulvardan KALIN: 8 piksel (kulvar 5), ortak şerit kuralı. */
+.fill { position:absolute; top:-1.5px; bottom:-1.5px; left:0; min-width:3px; border-radius:999px; background:var(--flat); }
 .fill[data-tone="up"] { background:var(--up); }
 .fill[data-tone="down"] { background:var(--down); }
 /* Sıfır ortada: artı sağa, eksi sola. Sıfır çizgisi rayı 3'er piksel aşar. */
@@ -78,13 +91,13 @@
 .staleText { display:none; color:var(--text-muted); font-size:12px; }
 .staleLane { display:block; width:100%; height:0; border-top:1px dashed var(--line-strong); }
 
-.price { width:1%; color:var(--text-strong); font-size:14px; font-weight:700; text-align:right; }
+.price { width:1%; color:var(--text-strong); font-size:15px; font-weight:600; text-align:right; }
 
 /* ---- Piyasa değeri: sayı + onluk eksende nokta ---- */
 .capCell, .capHead { width:auto; }
 .table .capHead, .table .capCell { padding-left:26px; }
 .cap { display:block; color:var(--text-body); text-align:right; }
-.capValue { font-size:14px; font-weight:600; color:var(--text-strong); }
+.capValue { font-size:15px; font-weight:700; color:var(--text-strong); }
 .capLane { position:relative; display:block; height:1px; background:var(--line); }
 .capTick { position:absolute; top:-3px; width:1px; height:7px; margin-left:-.5px; background:var(--line-strong); }
 .capDot { position:absolute; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%; background:var(--primary); opacity:.62; }
@@ -111,12 +124,15 @@
 /* ---- 640+: sıra numarası gelir, ad genişler ---- */
 @media(min-width:640px) {
   .table th, .table td { padding-inline:14px; }
-  .table tbody :is(td, th) { height:46px; }
+  .table tbody :is(td, th) { height:60px; }
   .rankHead, .rank { display:table-cell; width:1%; padding:0 2px 0 20px !important; color:var(--text-muted); font-size:12px; text-align:right !important; }
   .table thead .companyHead { padding-left:14px; }
-  .companyLink { height:45px; padding:0 14px; }
-  .name { max-width:150px; }
-  .change { grid-template-columns:minmax(72px,1fr) 7.2ch; gap:14px; }
+  .companyLink { gap:12px; height:59px; padding:0 14px; }
+  .logo { width:36px !important; height:36px !important; }
+  .symbol { font-size:16px; line-height:20px; }
+  .name { max-width:170px; font-size:14px; line-height:18px; }
+  .change { grid-template-columns:minmax(72px,1fr) 84px; gap:14px; }
+  .changeNum { font-size:18px; }
   .staleText { display:block; }
   .staleLane, .note { display:none; }
   .table tr > :last-child { padding-right:20px; }
@@ -131,7 +147,7 @@
    piksel için kap kayıyor, eksenin son noktası solma kuşağına giriyordu.
    Değişim kulvarı 72 → 48, eksen 112 → 88: 768'de tablo kaba sığar. ---- */
 @media(min-width:640px) and (max-width:1023px) {
-  .change { grid-template-columns:minmax(48px,1fr) 7.2ch; gap:12px; }
+  .change { grid-template-columns:minmax(48px,1fr) 84px; gap:12px; }
   .table .capHead, .table .capCell { padding-left:16px; }
   .capAxis { width:88px; }
 }
@@ -147,12 +163,13 @@
 }
 /* ---- 1024+: tek katlı kimlik, geniş şeritler ---- */
 @media(min-width:1024px) {
-  .companyText { flex-direction:row; align-items:baseline; gap:9px; }
-  .name { max-width:none; font-size:13px; line-height:17px; }
+  /* Kimlik İKİ KATLI kalır (10 Kasım akşamı; sabah burada sembol ve ad tek
+     hattaydı): 60 piksellik satırda sembol 16 üstte, ad 14 altta. */
+  .name { max-width:none; }
   .company { width:1%; max-width:300px; }
   .companyLink { max-width:300px; }
   .capAxis { width:132px; }
-  .change { grid-template-columns:minmax(96px,1fr) 7.2ch; gap:16px; }
+  .change { grid-template-columns:minmax(96px,1fr) 84px; gap:16px; }
 }
 @media(min-width:1280px) { .company, .companyLink { max-width:420px; } }
 
@@ -169,7 +186,7 @@
   .table thead .companyHead { padding-left:14px; }
   .name { max-width:66px; }
   .changeCell, .changeHead { width:1%; }
-  .change { grid-template-columns:36px 7.2ch; gap:6px; }
+  .change { grid-template-columns:36px 68px; gap:6px; }
 }
 
 @media(prefers-reduced-motion:reduce) {

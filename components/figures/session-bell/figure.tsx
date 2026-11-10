@@ -25,6 +25,13 @@ import "./bell.css";
  * yanında oynatma denetimleri, kart + günün rayı, dipte not), sahnenin
  * kolon boyuna gerilen kutusu. Gerekçe ve ölçüm bell.css → "SAĞ KOLON TEK
  * IZGARA", "KART + RAY", "ÖLÇÜM 10 KASIM"; markup live.tsx.
+ *
+ * 10 KASIM AKŞAM (sahibi: "seans zilini de iyileştirebilir misin"): üç
+ * kart + ince ray TEK KALIN GÜN ŞERİDİNE döndü (seanslar süreyle orantılı,
+ * zil anları adıyla: "Açılış 17:30", "Kapanış 00:00"); saat ve "kapanışa
+ * kalan" tek satır; "Günü Oynat" rozetin karşısında içeriği kadar. Gerekçe
+ * bell.css → "TEK KALIN GÜN ŞERİDİ". Kahramandaki `SessionRail` günün
+ * özeti, bu panel etkileşimli ayrıntı.
  */
 export function SessionBellFigure({ status, nowMs, locale, t }: { status: MarketStatus; nowMs: number; locale: Locale; t: Dictionary }) {
   const B = t.sessionBell;
@@ -64,7 +71,11 @@ export function SessionBellFigure({ status, nowMs, locale, t }: { status: Market
     kind: segment.kind,
     name: B.sessions[segment.kind],
     // Saat sırası sitenin kuralı: TR'de büyük satır İstanbul, EN'de New York.
-    tr: locale === "tr" ? range(segment.from, segment.to, chipOffset) : `${range(segment.from, segment.to, 0)} NY`,
+    /* Birincil satır EKSİZ (10 Kasım akşam): EN'de "04:00–09:30 NY" 20
+       puntoyla akşam seansının etiketinden 9 piksel taşıyordu (1440/1024/390,
+       ölçüldü). TR'de zaten eksizdi; iki dilde kural aynı — büyük satır
+       okuyucunun saati, alttaki öteki dilim ve eki. */
+    tr: locale === "tr" ? range(segment.from, segment.to, chipOffset) : range(segment.from, segment.to, 0),
     ny: locale === "tr" ? `${range(segment.from, segment.to, 0)} NY` : `${range(segment.from, segment.to, chipOffset)} TR`,
     from: segment.from,
     to: segment.to,
@@ -93,6 +104,10 @@ export function SessionBellFigure({ status, nowMs, locale, t }: { status: Market
         playing: B.playing,
         openBell: B.openBell,
         closeBell: B.closeBell,
+        openShort: B.openShort,
+        closeShort: B.closeShort,
+        openAt: primary(day.open),
+        closeAt: primary(day.close),
         note,
         closedNote,
         chipsLabel: B.chipsLabel,

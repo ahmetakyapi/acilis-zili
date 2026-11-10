@@ -15,7 +15,6 @@ import { themeTitle } from "@/content/themes";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
 import { loadThemeBoard, themePlaceholders, type ThemeCard } from "@/lib/theme-board";
-import { themeRow } from "@/lib/themes-data";
 import { cn, directionOf, directionText, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
 
 export const generateMetadata = pageMetadata({
@@ -67,6 +66,14 @@ export const generateMetadata = pageMetadata({
  *
  * `ThemeRanking` ve `SpreadStrip` ana sayfanın "Sektörler ve Temalar"
  * bandında yaşamaya devam ediyor; bu sayfa artık onları kullanmıyor.
+ *
+ * AKŞAM, GÖRSEL SIRALAMA (10 Kasım, ikinci tur; sahibi: "Temalar ekranını
+ * daha görsel yapmak için…"). Sabahki pano okunaklı ama kuruydu (68
+ * piksellik tablo satırı). Satır büyüdü ve üç şey gösteriyor: kim (ad 22,
+ * logolar 32), ne kadar (14 piksellik çubuk, sayı ucunda, eksen günün
+ * aralığı kadar) ve içeride ne var (üye ısı şeridi + iki uç üye adıyla).
+ * Ölçüt çentiği panodan kalktı, kapaktaki "Aradaki Fark" iki noktadan kalın
+ * çubuğa döndü. Karar kaydı ThemeBoard.tsx, ölçüm ThemeBoard.module.css.
  */
 export default async function ThemesIndexPage() {
   const { locale, t } = await getI18n();
@@ -103,7 +110,6 @@ export default async function ThemesIndexPage() {
           <ThemeBoard
             board={{ cards: placeholders, scale: null, leader: null, laggard: null, phase: null }}
             basis={null}
-            benches={{}}
             locale={locale}
             t={t}
           />
@@ -144,7 +150,8 @@ export default async function ThemesIndexPage() {
  * YAZIYORDU. Özet panonun söylemediğini gösteriyor: yükselen ve düşen tema
  * sayısı tek bir ORAN ÇUBUĞU (pano her temayı ayrı ayrı çiziyor, kaç
  * tanesinin artıda olduğunu okutmuyor), iki uç tema ve (10 Kasım) ikisinin
- * ARASINDAKİ FARK: aynı eksende iki nokta, aralarında çizgi, yanında puan.
+ * ARASINDAKİ FARK: aynı eksende iki nokta, aralarında çizgi, yanında puan
+ * (akşam: noktalar kalktı, en zayıftan en güçlüye 8 piksellik dolu çubuk).
  * Kapağın en büyük puntosu iki ucun medyanında. Hepsi aynı `comparable`
  * kümesinden. Kutu değil ton: tek çukur yüzey, bölümler hairline ile.
  */
@@ -162,8 +169,10 @@ type HeroSummaryData = {
 
 /** Uç temanın yanında gösterilen logo sayısı. 1440'ta uç kutusu 273 piksel:
     dört 22'lik logo (97) + ad sığıyor; beşincide "Kilo İlaçları (GLP-1)"
-    gibi uzun ad kesiliyordu. Telefonda iki logo (ThemeBoard.module.css). */
-const EXTREME_LOGOS = 4;
+    gibi uzun ad kesiliyordu. Telefonda iki logo (ThemeBoard.module.css).
+    10 Kasım akşamı: logolar 22 → 26 piksel ("logolar az daha büyüyebilir"),
+    dördüyle ad yine kesildi ("Kilo İlaçları (G…", 1440); üç logo (86). */
+const EXTREME_LOGOS = 3;
 /** Fark çizgisinde uç noktanın eksenin yarısından aldığı pay, yüzde. */
 const GAP_REACH = 44;
 
@@ -202,7 +211,7 @@ function HeroSummary({ part, summary, locale, t }: { part: HeroPart; summary: He
   const laggard = summary?.laggard ?? null;
   const end = (card: ThemeCard | null, label: string) =>
     card && card.median !== null ? (
-      <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.end}>
+      <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.hEnd}>
         <span className={styles.endLabel}>
           <span className={styles.label}>{label}</span>
           <ArrowUpRight weight="bold" size={13} className={styles.endArrow} aria-hidden />
@@ -213,7 +222,7 @@ function HeroSummary({ part, summary, locale, t }: { part: HeroPart; summary: He
         <span className={styles.endBody}>
           <span className={styles.endLogos} aria-hidden>
             {card.members.slice(0, EXTREME_LOGOS).map((member) => (
-              <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="xs" />
+              <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="sm" />
             ))}
           </span>
           <span className={styles.endName}>{themeTitle(card.theme, locale)}</span>
@@ -221,7 +230,7 @@ function HeroSummary({ part, summary, locale, t }: { part: HeroPart; summary: He
       </Link>
     ) : (
       /* Yedek aynı üç satır: veri inince kapak oynamıyor. */
-      <div className={styles.end}>
+      <div className={styles.hEnd}>
         <span className={styles.endLabel}>
           <span className={styles.label}>{label}</span>
         </span>
@@ -260,7 +269,7 @@ function HeroSummary({ part, summary, locale, t }: { part: HeroPart; summary: He
         {/* Oranın çizgisi: yükselen soldan, düşen sağdan; yatay kalan
             ortada. Nötr kümede yön rengi yok ama iki parça iki tonda
             kalıyor — oran son kapanışta da okunur. */}
-        <span className={styles.bar} aria-hidden>
+        <span className={styles.bar8} aria-hidden>
           {total > 0 && (
             <>
               {summary!.rising > 0 && (
@@ -279,7 +288,7 @@ function HeroSummary({ part, summary, locale, t }: { part: HeroPart; summary: He
 
   return (
     <div className={styles.summary}>
-          <div className={styles.ends}>
+          <div className={styles.ends2}>
             {end(
               leader,
               summary?.preMarket ? t.themes.strongestPre : summary?.lastClose ? t.themes.strongestClose : t.themes.strongest,
@@ -289,22 +298,32 @@ function HeroSummary({ part, summary, locale, t }: { part: HeroPart; summary: He
               summary?.preMarket ? t.themes.weakestPre : summary?.lastClose ? t.themes.weakestClose : t.themes.weakest,
             )}
           </div>
-          {/* ARADAKİ FARK bir de çizgi: iki ucun medyanı aynı eksende iki
-              nokta. Çizgi yargı değil, mesafe (nötr ton); renk noktalarda,
-              işaretten. */}
+          {/* ARADAKİ FARK KALIN ÇUBUK (10 Kasım akşamı; sabah iki nokta ve
+              aralarında ince çizgiydi — sahibinin itirazı: "nokta nokta ne
+              anlatıyor anlamıyorum; yatayda uzun kalın çizgi seviyorum"). En
+              zayıftan en güçlüye dolu çubuk; sıfırın solu düşüş, sağı
+              yükseliş renginde. İkisi de aynı yandaysa çubuk o yanda, en
+              zayıftan en güçlüye uzanır. */}
           <div className={styles.gap}>
             <span className={styles.label}>{t.themes.gapLabel}</span>
             <span className={styles.gapTrack} aria-hidden>
               {peak > 0 && (
                 <>
-                  <i
-                    className={styles.gapSpan}
-                    data-motion-draw="line"
-                    style={{ left: `${at(laggard!.median!)}%`, right: `${100 - at(leader!.median!)}%` }}
-                  />
+                  {laggard!.median! < 0 && (
+                    <i
+                      className={cn("bar-fill", styles.gapBar)}
+                      data-tone="down"
+                      style={{ left: `${at(laggard!.median!)}%`, right: `${100 - at(Math.min(leader!.median!, 0))}%` }}
+                    />
+                  )}
+                  {leader!.median! > 0 && (
+                    <i
+                      className={cn("bar-fill", styles.gapBar)}
+                      data-tone="up"
+                      style={{ left: `${at(Math.max(laggard!.median!, 0))}%`, right: `${100 - at(leader!.median!)}%` }}
+                    />
+                  )}
                   <i className={styles.gapZero} style={{ left: "50%" }} />
-                  <i className={styles.gapDot} data-tone={directionOf(laggard!.median!)} style={{ left: `${at(laggard!.median!)}%` }} />
-                  <i className={styles.gapDot} data-tone={directionOf(leader!.median!)} style={{ left: `${at(leader!.median!)}%` }} />
                 </>
               )}
             </span>
@@ -320,28 +339,18 @@ function HeroSummary({ part, summary, locale, t }: { part: HeroPart; summary: He
 
 async function LiveBoard({ locale, t }: { locale: Locale; t: Dictionary }) {
   const { board, scaleBasis, quotesResult, names, status } = await loadThemeBoard();
-  /* ÖLÇÜT FONU ŞERİTTE BİR İM. Kotasyonu zaten aynı pakette (`themeUniverse`
-     ölçütleri de soruyor); yeni çağrı yok. Kıyas ancak tema ile fon AYNI
-     SEANSI anlatıyorsa (detaydaki kıyasla aynı kural, `ThemeReading`): iki
-     ayrı günden bir fark üretmek, fark göstermemekten kötü. */
-  const quotes = quotesResult.ok ? quotesResult.data : {};
-  const benches: Record<string, number> = {};
-  for (const card of board.cards) {
-    const benchmark = card.theme.benchmark;
-    if (!benchmark || !quotesResult.ok || card.basis === null) continue;
-    const row = themeRow(benchmark.symbol, quotes, names, status);
-    if (row.changePct === null || row.basis === null) continue;
-    if ((card.basis === "session") !== (row.basis !== "lastClose")) continue;
-    benches[card.theme.slug] = row.changePct;
-  }
+  /* ÖLÇÜT FONU PANODAN KALKTI (10 Kasım akşamı). Sabah şeritte bir çentikti
+     (kural: ancak tema ile fon AYNI SEANSI anlatıyorsa); çubuğun üstünde tek
+     başına duran çentik okurun çözmesi gereken ikinci bir imdi. Kıyas detay
+     kapağında, iki kalın çubukla (`ThemeReading`); gerekçe ThemeBoard.tsx. */
   return (
     <>
-      <ThemeBoard board={board} basis={scaleBasis} benches={benches} locale={locale} t={t} />
-      {/* Kart kaydı yalnızca GÖRÜNEN logolar için (satır başına en çok altı:
-          beş logo, tam bir fazla üye varsa "+1" yerine onun logosu —
+      <ThemeBoard board={board} basis={scaleBasis} locale={locale} t={t} />
+      {/* Kart kaydı yalnızca GÖRÜNEN logolar için (satır başına en çok yedi:
+          altı logo, tam bir fazla üye varsa "+1" yerine onun logosu —
           ThemeBoard → ROW_LOGOS); fiyat panonun kendi paketinden. */}
       <CompanyCards
-        symbols={board.cards.flatMap((card) => card.members.slice(0, 6).map((member) => member.symbol))}
+        symbols={[...new Set(board.cards.flatMap((card) => card.members.slice(0, 7).map((member) => member.symbol)))]}
         quotes={quotesResult.ok ? quotesResult.data : null}
         stale={quotesResult.ok && Boolean(quotesResult.stale)}
         names={names}
