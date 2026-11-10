@@ -1,26 +1,23 @@
 import type { CSSProperties } from "react";
-import { CaretDown, CaretUp, CaretUpDown } from "@phosphor-icons/react/dist/ssr";
-import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { FoldToggle } from "@/components/ui/FoldToggle";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
-import { EmptyState, LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
+import { EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
 import type { CompanyCardExtra } from "@/lib/company-card";
 import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { quoteBasis, type MarketStatus } from "@/lib/market-hours";
-import { BIG_MOVE, DAY_LANE_SPAN, WEEK_LANE_SPAN, capShares, laneArm } from "@/lib/market-scales";
+import { DAY_LANE_SPAN, WEEK_LANE_SPAN, capShares, rangeShare } from "@/lib/market-scales";
 import type { Quote } from "@/lib/providers/types";
 import { sectorLabel } from "@/lib/sectors";
 import {
   cn,
-  directionOf,
   formatMoneyCompact,
-  formatPercent,
   formatPercentPlain,
   formatPrice,
   NO_VALUE,
 } from "@/lib/utils";
+import { BoardSortHead, CompanyCell, MoreBand, MoveFigure, RangeFigure, board, rowStep } from "./BoardTable";
 import {
   INDEX_TABS,
   PAGE_STEP,
@@ -53,85 +50,11 @@ function sortHref(
   return `${base}?endeks=${tab}&sirala=${key}&yon=${nextDir}${depth}`;
 }
 
-function SortHead({
-  label,
-  href,
-  active,
-  dir,
-  className,
-  align = "end",
-  children,
-}: {
-  label: string;
-  href: string;
-  active: boolean;
-  dir: SortDir;
-  className?: string;
-  align?: "start" | "end";
-  /** Başlığın yanındaki ek (piyasa değeri sütununda "Pay" alt başlığı). */
-  children?: React.ReactNode;
-}) {
-  const Icon = active ? (dir === "desc" ? CaretDown : CaretUp) : CaretUpDown;
-  return (
-    <th
-      scope="col"
-      /* Sıralı sütun rengi ve `aria-hidden` bir üçgenle anlatılıyordu; ikisi
-         de yardımcı teknolojiye ulaşmıyor. Gerekçe ikizinde yazılı:
-         app/(app)/sirketler/page.tsx */
-      aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : "none"}
-      className={cn(styles.sortCell, className)}
-      data-align={align}
-      data-active={active || undefined}
-    >
-      <span className={styles.sortWrap}>
-        {/* Dokunma alanı yazının kendisi kadardı (14px); negatif margin +
-            dikey dolgu tabloyu büyütmeden hedefi 32px'e çıkarır. */}
-        {/* scroll={false}: sıralama bir gezinme değil, aynı tablonun yeniden
-            dizilmesi. Varsayılan davranışta okuyucu tablonun ortasında bir
-            başlığa basınca sayfanın en üstüne fırlıyor ve aşağı geri kaydırmak
-            zorunda kalıyordu. */}
-        {/* MOBİLDE 44px. Sıralama başlığı tablonun ANA denetimi ama dokunma
-            hedefi 32 pikseldi. Negatif margin dolguyu emiyor, yani hedef
-            büyürken satır yüksekliği değişmiyor; masaüstünde imleç hassas,
-            orada 32px yeterli (`.sortLink`). */}
-        {/* SIRALAMA DURUMU ÜÇ HÂL (10 Kasım). Üçgen glifleri (▼ ▲ ▽) 8
-            piksellik `text-micro` ile basılıyordu: sıralı sütun ötekilerden
-            yalnız renkle ayrışıyor, sırasız sütunların içi boş üçgeni "açılır
-            menü" gibi okunuyordu. Şimdi ikon: sıralı sütunda yönü gösteren
-            dolu ok ve başlığın altında 2 piksellik mavi çizgi (`data-active`),
-            ötekilerde sönük çift ok; üzerine gelince koyulaşıyor. */}
-        <Link href={href} scroll={false} className={styles.sortLink}>
-          {label}
-          <Icon aria-hidden size={12} weight={active ? "fill" : "bold"} className={styles.sortIcon} />
-        </Link>
-        {children}
-      </span>
-    </th>
-  );
-}
-
-/**
- * Yön kulvarı: sıfır ortada, artı sağa, eksi sola; ölçek SABİT
- * (`laneArm`, lib/market-scales.ts — gerekçe orada). Çizim globals'ın
- * `bar-fill` sınıfıyla dolar (modülde animasyon ADI yazılmaz,
- * `.claude/rules/hareket.md` → Tuzaklar); kapı satırın `data-draw`ında.
- * Tam %0: kulvar ve sıfır çizgisi var, dolgu yok — "değişmedi" bir uzunluk
- * değil.
- */
-function Lane({ value, span, className }: { value: number; span: number; className?: string }) {
-  const arm = laneArm(value, span);
-  return (
-    <span className={cn(styles.lane, className)} aria-hidden>
-      {arm > 0 && (
-        <i
-          className={cn("bar-fill", styles.fill)}
-          data-tone={value < 0 ? "down" : "up"}
-          style={{ width: `${arm.toFixed(2)}%` }}
-        />
-      )}
-    </span>
-  );
-}
+/* SIRALAMA BAŞLIĞI ve KULVAR ortak parçada (10 Kasım, gece):
+   `BoardSortHead`, `ZeroBar` — components/markets/BoardTable.tsx. Buradaki
+   `SortHead` ve `Lane` oraya taşındı; karar yorumları (üç hâlli sıralama
+   imi, `aria-sort`, 44 piksellik hedef, sabit ölçek, tam %0'da dolgu yok)
+   onlarla birlikte. */
 
 export function MembersTable({
   tab,
@@ -244,11 +167,13 @@ export function MembersTable({
      (açılış öncesi) sütun da basılmaz; boşluk sayı sütunlarının arasına
      dağılır (kulvarlar tavanlı, şerit yeniden büyümez). */
   const rangeOf = (quote: Quote | undefined) =>
-    quote && quote.low !== null && quote.high !== null && quote.high > quote.low &&
+    quote && quote.low !== null && quote.high !== null && rangeShare(quote.low, quote.high, quote.price) !== null &&
     quoteBasis(quote, cards.status) !== "lastClose"
       ? { low: quote.low, high: quote.high }
       : null;
   const showRange = rows.some((row) => rangeOf(row.quote) !== null);
+  /** "İlk üç" vurgusu yalnız hareket sıralamalarında (gerekçe satırda). */
+  const leadSort = sort === "degisim" || sort === "hafta";
 
   const ordered = [...rows].sort((a, b) => {
     const va = valueOf(a);
@@ -274,7 +199,7 @@ export function MembersTable({
   return (
     <Panel
       id="market-members"
-      className={styles.panel}
+      className={cn(board.panel, styles.panel)}
       style={{ "--fold-inset": "16px" } as CSSProperties}
       data-range={showRange || undefined}
       data-week={showWeek || undefined}
@@ -344,7 +269,7 @@ export function MembersTable({
       >
       <ScrollEdges
         fixedStart
-        className={cn("scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)", styles.scroller)}
+        className={cn("scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)", board.scroller)}
         tabIndex={0}
         role="region"
         aria-label={t.markets.constituents}
@@ -379,19 +304,37 @@ export function MembersTable({
             zeminsiz kaldığı için renk duvarı olmaz. Sıra: Şirket · Değişim
             · Fiyat · Haftalık · Gün Aralığı · Piyasa Değeri (+Pay) · Katkı.
             Tabular rakam yok (tests/no-tabular-nums.test.ts): hiza sağa
-            yaslı sayı ve sabit `ch` genişliğinden. */}
-        <table className={styles.table}>
+            yaslı sayı ve sabit `ch` genişliğinden.
+
+            10 Kasım (gece), sahibinin aynı akşamki ikinci sözü: "Endeks
+            bileşenlerini de çok daha görsel yapalım; gerçek bir designer
+            tasarlamış gibi… şirketlerin adı ve logolar az daha büyüyebilir,
+            kolay okunabilir." PANO SATIRI. 46 piksellik tek katlı satır
+            okunuyordu ama "tablo programı" gibiydi: 28 piksellik logo, 14
+            piksellik sembol, soluk ad, 5 piksellik ince kulvarlar. Yoğunluk
+            kararı (sabah) geri alınmadı, DENGELENDİ: satır 62 piksel
+            (telefonda 56), kimlik yeniden iki katlı ama bu kez iri — logo
+            28 → 40, sembol 14 → 16/700, ad soluk 13 → gövde mürekkebi 14.
+            Çizimler KALIN (`arayuz.md` → "Büyüklük kalın yatay şeritle
+            okunur"): günlük ve haftalık değişim sıfırdan uzanan 8 / 6
+            piksellik dolu çubuk, gün aralığı dipten fiyata dolu şerit +
+            tek "şimdi" imi (önceki kapanış çentiği ve nokta kalktı). Punto:
+            yüzde 17 → 19, fiyat 15 → 16, piyasa değeri 14 → 15. Telefonda
+            günlük çubuk sayının ALTINDA (sabah kalkmıştı; iki katlı satırda
+            yeri var). Sıra aynı. Parçalar Şirketler tablosuyla ortak:
+            components/markets/BoardTable.tsx; ölçüm
+            MembersTable.module.css → "ÖLÇÜM 3". */}
+        <table className={cn(board.table, styles.table)}>
           <caption className="sr-only">{INDEX_TABS.find((entry) => entry.key === tab)?.label} · {t.markets.constituents}</caption>
           <thead>
             <tr>
-              <th scope="col" className={styles.rankHead}>#</th>
-              <SortHead
+              <th scope="col" className={board.rankHead}>#</th>
+              <BoardSortHead
                 label={t.companies.company}
                 href={sortHref(tab, "ad", sort, dir, limit, basePath)}
                 active={sort === "ad"}
                 dir={dir}
-                align="start"
-                className={styles.companyHead}
+                className={board.companyHead}
               />
               {/* SEKTÖR (10 Kasım akşam). Kulvarlar daralınca Şirket adı ile
                   Değişim arasında, gün aralığının basılmadığı kapalı piyasada
@@ -401,16 +344,16 @@ export function MembersTable({
                   da ikinci sütunu. Yalnız sığdığı yerde basılır (1280+ ve
                   gün aralığı ya da haftalık sütun yokken; CSS), hiçbir
                   üyede sektör yoksa hiç. */}
-              {showSector && <th scope="col" className={styles.sectorHead}>{t.companies.sector}</th>}
+              {showSector && <th scope="col" className={cn(board.tagHead, styles.sectorHead)}>{t.companies.sector}</th>}
               {/* Değişim fiyattan önce — bkz. /sirketler tablosu. */}
-              <SortHead
+              <BoardSortHead
                 label={t.companies.change}
                 href={sortHref(tab, "degisim", sort, dir, limit, basePath)}
                 active={sort === "degisim"}
                 dir={dir}
                 className={styles.changeHead}
               />
-              <SortHead
+              <BoardSortHead
                 label={`${t.companies.price} ($)`}
                 href={sortHref(tab, "fiyat", sort, dir, limit, basePath)}
                 active={sort === "fiyat"}
@@ -418,7 +361,7 @@ export function MembersTable({
                 className={styles.priceHead}
               />
               {showWeek && (
-                <SortHead
+                <BoardSortHead
                   label={t.companies.weekChange}
                   href={sortHref(tab, "hafta", sort, dir, limit, basePath)}
                   active={sort === "hafta"}
@@ -429,7 +372,7 @@ export function MembersTable({
               {showRange && (
                 <th scope="col" className={styles.rangeHead}>{t.markets.dayRange}</th>
               )}
-              <SortHead
+              <BoardSortHead
                 label={t.market.marketCap}
                 href={sortHref(tab, "cap", sort, dir, limit, basePath)}
                 active={sort === "cap"}
@@ -437,9 +380,9 @@ export function MembersTable({
                 className={cn(styles.capHead, shareOf && styles.capShared)}
               >
                 {shareOf && <span className={styles.shareHead}>{t.markets.capShare}</span>}
-              </SortHead>
+              </BoardSortHead>
               {showContribution && (
-                <SortHead
+                <BoardSortHead
                   label={t.markets.contribution}
                   href={sortHref(tab, "katki", sort, dir, limit, basePath)}
                   active={sort === "katki"}
@@ -452,46 +395,32 @@ export function MembersTable({
           <tbody data-motion-stagger>
             {sorted.map((row, index) => {
               const quote = row.quote;
-              const tone = directionOf(quote?.changePct);
               const change = quote?.changePct ?? null;
-              const weekTone = directionOf(row.week);
               const share = shareOf?.(row.marketCap) ?? null;
               const range = rangeOf(quote);
-              const at = (value: number) =>
-                range ? Math.min(100, Math.max(0, ((value - range.low) / (range.high - range.low)) * 100)) : 0;
-              const pricePos = range ? at(quote!.price) : 0;
-              const closePos = range && quote!.prevClose !== null ? at(quote!.prevClose) : null;
               return (
                 <tr
                   key={row.member.symbol}
                   data-row={row.member.symbol}
                   data-fold={index >= PHONE_ROWS || undefined}
+                  /* İLK ÜÇ, yalnız değişime göre sıralıyken: günün (ya da
+                     haftanın) en çok artan/düşen üçünde sıra numarası güçlü
+                     mürekkebe geçer. Süs yok; ada ya da piyasa değerine göre
+                     dizili listede "ilk üç" bir haber değil, vurgu da yok. */
+                  data-lead={leadSort && index < 3 ? "" : undefined}
                   /* Çizim kapısı satırda: ekranın altındaki satırın
                      kulvarları son karede bekler, satır görününce dolar
-                     (`components/motion/DrawGate.tsx`). */
+                     (`components/motion/DrawGate.tsx`). İlk on satır
+                     kademeli (`--i` × `--step`, toplam ≤ 400 ms). */
                   data-draw
+                  style={rowStep(index)}
                 >
                   {/* SIRA NUMARASI LOGOYLA AYNI HATTA (10 Kasım): hücre tepeye
                       yaslıyken "1" logonun 6 piksel üstünde duruyordu. Satır
-                      tek kat ve dikeyde ortalı; sayı sağa yaslı, tabular —
-                      "9" ile "10" aynı sağ kenarda. */}
-                  <td className={cn("numeral", styles.rank)}>{index + 1}</td>
-                  <th scope="row" className={styles.company}>
-                    <Link
-                      href={`/hisse/${row.member.symbol}`}
-                      prefetch={false}
-                      /* Bağlantı hücreyi dolduruyor: dokunma hedefi metnin
-                         kendi 20px'iyle sınırlıydı; satır yüksekliği kadar. */
-                      className={styles.companyLink}
-                      data-cc={row.member.symbol}
-                    >
-                      <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" className={styles.logo} />
-                      <span className={styles.companyText}>
-                        <span className={styles.symbol}>{row.member.symbol}</span>
-                        <span title={row.member.name} className={styles.name}>{row.member.name}</span>
-                      </span>
-                    </Link>
-                  </th>
+                      dikeyde ortalı; sayı sağa yaslı — "9" ile "10" aynı
+                      sağ kenarda. */}
+                  <td className={cn("numeral", board.rank)}>{index + 1}</td>
+                  <CompanyCell symbol={row.member.symbol} name={row.member.name} logoUrl={row.logoUrl} />
                   {/* Sayı + oran çubuğu birlikte: tablo yalnızca sayıdan
                       ibaretken "kim ne kadar oynamış" sorusu ancak yüzdeler
                       tek tek okunup kafada sıralanarak cevaplanıyordu.
@@ -513,70 +442,26 @@ export function MembersTable({
                       solunda 56 piksel, sabit ölçek, sıfır HER ZAMAN ortada
                       (listede eksi olmasa da: sabit ölçekte tek yönlü ray
                       aynı %1'i sekmeden sekmeye başka yere koyardı).
-                      Gerekçe yukarıda, "YÜZDE VE FİYAT KAHRAMAN". */}
-                  {showSector && <td className={styles.sector}>{sectorLabel(row.member.sector, locale) ?? ""}</td>}
+                      Gerekçe yukarıda, "YÜZDE VE FİYAT KAHRAMAN".
+                      10 Kasım (gece): çubuk KALIN — 5 piksellik kulvarın
+                      üstünde 8 piksellik dolu çubuk (`ZeroBar`); gerekçe
+                      yukarıda, "PANO SATIRI". */}
+                  {showSector && <td className={cn(board.tag, styles.sector)}>{sectorLabel(row.member.sector, locale) ?? ""}</td>}
                   <td className={styles.changeCell} data-sorted={sort === "degisim" || undefined}>
-                    <span className={styles.change}>
-                      {change !== null ? <Lane value={change} span={DAY_LANE_SPAN} className={styles.dayLane} /> : <span />}
-                      <span
-                        className={cn(
-                          "numeral",
-                          styles.changeNum,
-                          tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-muted",
-                        )}
-                        data-big={(change !== null && Math.abs(change) >= BIG_MOVE) ? tone : undefined}
-                      >
-                        {quote ? formatPercent(quote.changePct, locale) : NO_VALUE}
-                      </span>
-                    </span>
+                    <MoveFigure value={quote ? change : null} locale={locale} />
                   </td>
-                  <td className={cn("numeral", styles.price, !quote && styles.none)} data-sorted={sort === "fiyat" || undefined}>
+                  <td className={cn("numeral", board.price, styles.priceCell, !quote && board.none)} data-sorted={sort === "fiyat" || undefined}>
                     {quote ? formatPrice(quote.price, locale) : NO_VALUE}
                   </td>
                   {showWeek && (
                     <td className={styles.weekCell} data-sorted={sort === "hafta" || undefined}>
-                      {row.week !== null ? (
-                        <span className={styles.week}>
-                          <Lane value={row.week} span={WEEK_LANE_SPAN} className={styles.weekLane} />
-                          <span
-                            className={cn(
-                              "numeral",
-                              styles.weekNum,
-                              weekTone === "up" ? "text-up" : weekTone === "down" ? "text-down" : "text-muted",
-                            )}
-                          >
-                            {formatPercent(row.week, locale)}
-                          </span>
-                        </span>
-                      ) : (
-                        <span className={styles.none}>{NO_VALUE}</span>
-                      )}
+                      <MoveFigure value={row.week} weight="week" locale={locale} />
                     </td>
                   )}
                   {showRange && (
                     <td className={styles.rangeCell}>
                       {range ? (
-                        <span
-                          className={cn("numeral", styles.range)}
-                          role="img"
-                          aria-label={`${t.markets.dayRange}: ${formatPrice(range.low, locale)} – ${formatPrice(range.high, locale)}`}
-                        >
-                          <span aria-hidden>{formatPrice(range.low, locale)}</span>
-                          <i className={styles.rangeLane} aria-hidden>
-                            {closePos !== null && (
-                              <>
-                                <span
-                                  className={styles.rangeFill}
-                                  data-tone={tone}
-                                  style={{ left: `${Math.min(closePos, pricePos)}%`, width: `${Math.abs(pricePos - closePos)}%` }}
-                                />
-                                <span className={styles.rangeClose} style={{ left: `${closePos}%` }} />
-                              </>
-                            )}
-                            <span className={styles.rangeDot} data-tone={tone} style={{ left: `${pricePos}%` }} />
-                          </i>
-                          <span aria-hidden>{formatPrice(range.high, locale)}</span>
-                        </span>
+                        <RangeFigure low={range.low} high={range.high} price={quote!.price} label={t.markets.dayRange} locale={locale} />
                       ) : (
                         <span className={styles.rangeNone}>{NO_VALUE}</span>
                       )}
@@ -584,11 +469,11 @@ export function MembersTable({
                   )}
                   <td className={styles.capCell} data-sorted={sort === "cap" || undefined}>
                     <span className={styles.cap} data-share={shareOf ? "" : undefined}>
-                      <span className={cn("numeral", styles.capNum, !row.marketCap && styles.none)}>
+                      <span className={cn("numeral", board.strong, !row.marketCap && board.none)}>
                         {row.marketCap ? formatMoneyCompact(row.marketCap, locale) : NO_VALUE}
                       </span>
                       {shareOf && (
-                        <span className={cn("numeral", styles.share)}>
+                        <span className={cn("numeral", board.quiet)}>
                           {/* Onda birin altı iki ondalıkla: S&P 500'ün küçük
                               üyelerinde pay "%0,0" diye sıfırlanmasın. */}
                           {share !== null ? formatPercentPlain(share, locale, share >= 10 ? 1 : 2) : ""}
@@ -617,35 +502,24 @@ export function MembersTable({
           buton, 1320 piksellik bandın iki ucuna gerilmişti (`justify-between`
           yasağı) ve listenin ne kadarının açıldığı yalnız okunarak
           anlaşılıyordu. Şimdi sayaç, 5 piksellik ilerleme şeridi ve buton
-          tek grupta, solda; şerit açılan payı gösteriyor. */}
+          tek grupta, solda; şerit açılan payı gösteriyor.
+          10 Kasım (gece): bant ortak parça (`MoreBand`), şerit kalın. */}
       {hasMore && (
-        <div className={styles.more}>
-          <p className={cn("numeral", styles.moreCount)}>
-            {t.companies.showing
-              .replace("{n}", String(sorted.length))
-              .replace("{total}", String(ordered.length))}
-          </p>
-          <span className={styles.moreLane} aria-hidden data-draw>
-            <i className="bar-fill" style={{ width: `${shownShare.toFixed(1)}%` }} />
-          </span>
-          <Link
-            href={moreHref}
-            scroll={false}
-            /* 44px: sayfanın en altındaki tek eylem ve mobilde dokunma
-               eşiğinin altındaydı (40px). */
-            className={styles.moreButton}
-          >
-            {t.companies.showMore}
-            <CaretDown aria-hidden size={13} weight="bold" />
-          </Link>
-        </div>
+        <MoreBand
+          count={t.companies.showing
+            .replace("{n}", String(sorted.length))
+            .replace("{total}", String(ordered.length))}
+          share={shownShare}
+          href={moreHref}
+          label={t.companies.showMore}
+        />
       )}
 
       {/* KÜNYE (10 Kasım): tablonun kendi söylemediği üç şey tek düz
           paragrafta — şeridin ölçeği (sabit, tam boyu yazılı), haftalığın
           tanımı (5 işlem günü, takvim haftası değil) ve payın resmî ağırlık
           OLMADIĞI. Sütun yoksa cümlesi de yok. */}
-      <p className={styles.note}>
+      <p className={board.note}>
         {(showWeek
           ? t.markets.laneScaleNote.replace("{week}", `±${formatPercentPlain(WEEK_LANE_SPAN, locale, 0)}`)
           : t.markets.laneScaleNote.replace(/,[^,]*\{week\}/, "")
@@ -654,7 +528,7 @@ export function MembersTable({
         {shareOf && ` ${t.markets.capShareNote}`}
       </p>
       {showContribution && (
-        <p className={styles.note}>{t.markets.contributionHint}</p>
+        <p className={board.note}>{t.markets.contributionHint}</p>
       )}
     </Panel>
   );

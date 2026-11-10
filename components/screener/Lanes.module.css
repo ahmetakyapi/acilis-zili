@@ -41,22 +41,3 @@
   background: var(--text-strong);
   translate: -50% -50%;
 }
-
-/* Yön: sıfır ortada. */
-.direction { overflow: visible; }
-.zero {
-  position: absolute;
-  left: 50%;
-  top: -2px;
-  bottom: -2px;
-  width: 1px;
-  background: var(--line-strong);
-}
-.move {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-radius: 999px;
-}
-.move[data-dir="up"] { background: var(--up); }
-.move[data-dir="down"] { background: var(--down); }

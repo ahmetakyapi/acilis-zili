@@ -60,6 +60,7 @@ paths:
 | Uzayan panelde çizimler görünce oynasın | `components/today/home/DrawOnView.tsx` | `PlayOnView`ın %40 eşiği doldurucuyla uzayan panelde sağlanmayabiliyor |
 | Çizim ekrana girince oynasın (her yerde) | `data-draw` özniteliği + `components/motion/DrawGate.tsx` (kabukta bir kez) | Sarmalayıcı gerekmez; ekranın altındaki öğe son karede bekler, girince baştan oynar. Yeni çizimde İLK tercih |
 | Süre ve kademe | `--draw` (700 ms), `--mark` (200 ms), `--step` (40 ms) — globals.css "HAREKET MERDİVENİ" | Modülde elle süre yazma; kademe toplamı ~400 ms'yi aşmaz |
+| Şirket satırlı tablo (başlık, kimlik, kalın çubuk, devamı bandı, iskelet) | `components/markets/BoardTable.tsx` + `.module.css` | Değişkenle ayarlanır (`--row-h`, `--logo`…); satır kademesi `rowStep(index)`, ≤ 400 ms. Yeni tablo yazmadan önce bak |
 | Sayfa geçişi | `app/(app)/template.tsx` → `.page-enter` | Kabuk yerinde kalır |
 | Seçim imi (sekme, segment) | `SELECTION_TRANSITION` (`lib/motion.ts`) | Hedefinde durur, yaylanmaz |
 | JS'te eğri | `EASE_BRAND`, `EASE_BRAND_POINTS` (`lib/motion.ts`) | `element.animate` CSS değişkeni çözmez |

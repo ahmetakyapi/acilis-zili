@@ -55,38 +55,11 @@ export function UniverseLane({
   );
 }
 
-/**
- * Yön kulvarı — sıfır ortada, artı sağa (`--up`), eksi sola (`--down`).
- * Ölçek SABİT (`span` yüzde = tam kol): sayfalar arasında aynı uzunluk aynı
- * hareketi anlatsın; listenin en büyüğüne göre ölçeklemek "Daha Fazla"ya
- * basınca bütün çubukları yeniden boyutlandırırdı.
- */
-export function DirectionLane({
-  value,
-  span,
-  className,
-}: {
-  value: number;
-  span: number;
-  className?: string;
-}) {
-  const arm = Math.min(1, Math.abs(value) / span) * 50;
-  const down = value < 0;
-  return (
-    <span aria-hidden data-motion-track className={cn(styles.lane, styles.end, styles.direction, className)}>
-      <span className={styles.zero} />
-      {arm > 0 && (
-        <span
-          className={styles.move}
-          data-dir={down ? "down" : "up"}
-          data-motion-draw="line"
-          style={{
-            left: down ? `${50 - arm}%` : "50%",
-            width: `${arm}%`,
-            transformOrigin: down ? "right center" : "left center",
-          }}
-        />
-      )}
-    </span>
-  );
-}
+/* YÖN KULVARI BURADAN ÇIKTI (10 Kasım 2026, gece). `DirectionLane`in tek
+   kullanıcısı /sirketler tablosuydu; o tablo Endeks Bileşenleri'yle ortak
+   kalın çubuğa geçti (`ZeroBar`, components/markets/BoardTable.tsx). Kararı
+   yaşıyor: ölçek SABİT (`span` yüzde = tam kol), sayfalar arasında aynı
+   uzunluk aynı hareketi anlatsın — listenin en büyüğüne göre ölçeklemek
+   "Daha Fazla"ya basınca bütün çubukları yeniden boyutlandırırdı. Sabitler
+   lib/market-scales.ts'te (`DAY_LANE_SPAN`, `WEEK_LANE_SPAN`). /tarama'nın
+   kulvarları (`SizeBar`, `UniverseLane`) aynen duruyor. */
