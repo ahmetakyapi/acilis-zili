@@ -1935,6 +1935,16 @@ html.theme-switching::view-transition-new(root) {
   animation: ring-draw 0.9s var(--ease-brand) both;
 }
 
+/* ÇİZİM KAPISI (10 Kasım). `data-draw` taşıyan öğe ekranın altındayken
+   `components/motion/DrawGate.tsx` ona `data-armed` yazar: çizim SON KAREDE
+   bekler, öğe ekrana değince öznitelik kalkar ve animasyon baştan oynar.
+   Gerekçe ve ölçüm DrawGate.tsx başında. `!important`: modül CSS'inin
+   `animation` kısa yazımı özgüllükte bu kuralı geçebiliyor. */
+[data-draw][data-armed],
+[data-draw][data-armed] * {
+  animation-name: none !important;
+}
+
 /* PANELLER GİRERKEN BELİRİYOR — kaydırma güdümlü, JavaScript yok.
    Neden: 3–7 bin piksellik sayfalarda tempo; alt bölümler tek seferde
    yığılmak yerine kaydırdıkça geliyor.

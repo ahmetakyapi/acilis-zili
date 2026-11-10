@@ -42,16 +42,16 @@
 .indexCard :global(.spark-line) { animation-duration:1.1s; }
 /* Gün aralığı şeridi (17 Ekim) — 5 piksellik kulvar, fiyat noktası yön
    renginde; uçlarda günün dibi ve tepesi. Telefonda kart tek satır, gizli. */
-.dayRange { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; margin-top:10px; color:var(--text-muted); font-size:11px; font-weight:600; }
+.dayRange { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:8px; margin-top:10px; color:var(--text-muted); font-size:12px; font-weight:600; }
 .rangeLane { position:relative; height:5px; border-radius:3px; background:var(--rail-track); }
 .indexStamp { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:5px 12px; margin-top:9px; color:var(--text-muted); font-size:12px; }
 .indexSkeleton,.indexUnavailable { min-height:176px; border-radius:14px; }
 .indexUnavailable { display:grid; place-items:center; }
-.breadth { border-radius:20px; background:var(--premium-surface); overflow:hidden; }
+.breadth { border-radius:var(--radius-panel); background:var(--premium-surface); overflow:hidden; }
 .movers { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; }
-.mover { border-radius:18px; overflow:hidden; background:var(--premium-surface); }
+.mover { border-radius:var(--radius-panel); overflow:hidden; background:var(--premium-surface); }
 .mover > div:first-child { padding-block:12px; }
-.mover h2 { font-size:15px; letter-spacing:-.025em; }
+.mover h2 { font-size:16px; letter-spacing:-.015em; }
 .mover li a { padding-block:11px; }
 .mover li a > div:first-child > span:last-child { font-size:18px; letter-spacing:-.035em; }
 .members { border-radius:18px; overflow:hidden; scroll-margin-top:100px; }
@@ -349,7 +349,7 @@
 .page .masthead :global(.page-heading-copy) h1 { font-size:var(--heading-page); letter-spacing:-.045em; line-height:1.12; }
 .page .masthead > header > p { font-size:14px; line-height:1.6; max-width:32ch; }
 .indexGrid { gap:12px; }
-.indexCard { border-radius:16px; border-color:var(--line-soft); }
+.indexCard { border-radius:var(--radius-panel); border-color:var(--line-soft); }
 /* SEÇİLİ KART YALNIZ TONLA (6 Kasım, sahibinin isteği). Üst kenarda
    3 piksellik mavi şerit vardı (telefonda solda); üç kart ölçüde aynı
    hatta olduğu hâlde (1440: üçü de 110–284) şerit seçili kartı bir sekme
@@ -373,7 +373,7 @@
 .heatLegend { min-width:184px; }
 .heatLegendLabels { font-weight:600; }
 .heatSwatches { height:8px; gap:3px; }
-.mover { border-radius:16px; }
+.mover { border-radius:var(--radius-panel); }
 .moverHeading { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 12px; padding:14px 18px; border-bottom:1px solid var(--line-soft); }
 .moverHeading h2 { display:flex; align-items:center; gap:8px; font-size:16px; line-height:1.35; font-weight:700; letter-spacing:-.03em; }
 .moverHeadingIcon { display:grid; place-items:center; flex:none; width:28px; height:28px; border-radius:8px; }
@@ -383,8 +383,8 @@
 .moverLogo { width:28px; height:28px; }
 .moverLink:focus-visible { background:var(--primary-tint); outline-offset:-3px; }
 .moverLink:active { background:var(--primary-wash); }
-.members { border-radius:16px; }
-.members h2 { font-size:20px; letter-spacing:-.035em; }
+.members { border-radius:var(--radius-panel); }
+.members h2 { font-size:16px; letter-spacing:-.015em; }
 .members thead { background:var(--surface-sunken); }
 .members th { font-size:12px; color:var(--text-body); }
 .members tbody tr:nth-child(even) { background:color-mix(in srgb,var(--surface-sunken) 40%,transparent); }
@@ -468,7 +468,7 @@
    sağa yaslı, eğrinin son noktasının ters yanında. Zemini yarı saydam:
    gün içi çizgi künyenin arkasından geçtiğinde (768'de ölçüldü) künye
    okunur kalıyor ama çizgi SİLİNMİYOR — veri künyenin altında kaybolmaz. */
-.baseLabel { position:absolute; right:0; display:inline-flex; gap:4px; padding:0 4px; border-radius:4px; background:color-mix(in oklab, var(--premium-surface) 72%, transparent); color:var(--text-muted); font-size:11px; font-weight:550; line-height:1.3; white-space:nowrap; transform:translateY(calc(-100% - 2px)); pointer-events:none; }
+.baseLabel { position:absolute; right:0; display:inline-flex; gap:4px; padding:0 4px; border-radius:4px; background:color-mix(in oklab, var(--premium-surface) 72%, transparent); color:var(--text-muted); font-size:12px; font-weight:550; line-height:1.3; white-space:nowrap; transform:translateY(calc(-100% - 2px)); pointer-events:none; }
 .baseLabel[data-side="below"] { transform:translateY(3px); }
 .baseLabel b { color:var(--text-body); font-weight:650; }
 .dayRange { margin-top:12px; }
@@ -548,7 +548,10 @@
 .heatPct { font-size:12px; font-weight:600; line-height:1.2; letter-spacing:-.01em; color:inherit; }
 .heatCell:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .heatCell:is(:hover, :focus-visible) { z-index:5; }
-@media(hover:hover) and (pointer:fine) { .heatCell:hover { scale:1.06; box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); } }
+/* Hover'da BÜYÜME YOK (10 Kasım, tutarlılık denetimi: dört ekranda dört ayrı
+   hover dili vardı — kalkan logo, büyüyen karo, kayan satır, ton + kenar).
+   Karo yalnız halkasını alır; `.panel-hover` "zıplamaz" kararıyla aynı. */
+@media(hover:hover) and (pointer:fine) { .heatCell:hover { box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 3px var(--text-strong); } }
 .heatCell:active { scale:.97; }
 .heatCell { --heat-tone:var(--line); --heat-mix:0%; background:var(--surface-sunken); color:var(--text-strong); }
 .heatCell[data-heat-tone="up"] { --heat-tone:var(--up); }
@@ -634,7 +637,7 @@
 .nowLine { position:absolute; right:0; height:0; margin-top:-.75px; border-top:1.5px dotted var(--text-muted); opacity:.75; pointer-events:none; }
 .nowLine[data-tone="up"] { border-top-color:var(--up); }
 .nowLine[data-tone="down"] { border-top-color:var(--down); }
-.chartAxis { position:relative; height:14px; margin-top:3px; color:var(--text-muted); font-size:11px; font-weight:550; line-height:14px; }
+.chartAxis { position:relative; height:14px; margin-top:3px; color:var(--text-muted); font-size:12px; font-weight:550; line-height:14px; }
 .chartAxis > span { position:absolute; top:0; translate:-50% 0; white-space:nowrap; }
 .chartAxis > span::before { content:""; position:absolute; left:50%; top:-4px; width:1px; height:4px; background:var(--line-strong); }
 @media(prefers-reduced-motion:no-preference) {
@@ -659,7 +662,7 @@
 .distSlot > i[data-empty] { height:0; }
 .distMedian { position:absolute; top:-5px; bottom:-1px; width:0; margin-left:-.75px; border-left:1.5px solid var(--text-strong); }
 .distMedian::before { content:""; position:absolute; top:-3px; left:-3.75px; width:6px; height:6px; border-radius:50%; background:var(--text-strong); }
-.distAxis { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:4px; color:var(--text-muted); font-size:11px; font-weight:550; line-height:1.3; white-space:nowrap; }
+.distAxis { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:4px; color:var(--text-muted); font-size:12px; font-weight:550; line-height:1.3; white-space:nowrap; }
 @media(min-width:768px) and (max-width:1199px) { .toolbarIdentity[data-chart] .medianHint { max-width:36ch; } }
 @media(max-width:767px) {
  .toolbarIdentity[data-chart] { flex-wrap:wrap; gap:12px; }

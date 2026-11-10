@@ -1,7 +1,12 @@
 /* Sıfırı ortada ölçü şeridi (30 Ekim) — bilanço karnesinin üç ölçüsü
    (gelir, HBK sürprizi, tepki) her yerde bu çizimle. Kulvar ince, sıfır
    çizgisi koyu (sitenin grafik dili); dolgu işaretten renk alır. Ölçeği
-   aşan değer uçta durur, çentikle işaretlenir (`robustScale`). */
+   aşan değer uçta durur, çentikle işaretlenir (`robustScale`).
+
+   GÖRÜNÜNCE ÇİZİLİR (10 Kasım): dolgu yüklemede oynuyordu ve şeritlerin
+   hepsi ekranın altında — dört ekranda 31 şerit kimse görmeden doluyordu
+   (canlıda sayıldı). Şerit `data-draw` taşıyor; `DrawGate` ekrana girince
+   oynatıyor (components/motion/DrawGate.tsx). */
 .strip {
   position: relative;
   align-self: center;

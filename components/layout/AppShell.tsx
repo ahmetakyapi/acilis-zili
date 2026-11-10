@@ -8,6 +8,7 @@ import { BellMark, BrandWord } from "@/components/brand/BellMark";
 import type { Locale } from "@/lib/i18n/config";
 import { stripLocale, withLocale } from "@/lib/i18n/routing";
 import { cn } from "@/lib/utils";
+import { DrawGate } from "@/components/motion/DrawGate";
 import { MorphRecorder } from "@/components/motion/Morph";
 import { ChangelogBadge } from "@/components/changelog/ChangelogBadge";
 import { MastheadNav, type ChangelogNavLabels, type MastheadMoreItem, type MastheadStripItem } from "./MastheadNav";
@@ -210,6 +211,7 @@ export function AppShell({
       </Suspense>
       {/* Kartla sayfa arası uçuşun kaydı — gerekçe components/motion/Morph. */}
       <MorphRecorder />
+      <DrawGate />
 
       {/* Klavyeyle gezen biri her sayfada yedi sekmeyi geçmek zorunda
           kalmasın. Odaklanana kadar görünmez; odakta masthead'in üstüne

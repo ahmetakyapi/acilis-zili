@@ -6,7 +6,7 @@ import styles from "./MetricStrip.module.css";
 export function MetricStrip({ value, scale, className }: { value: number; scale: number; className?: string }) {
   const ratio = reactionRatio(value, scale);
   return (
-    <span aria-hidden className={cn(styles.strip, className)}>
+    <span aria-hidden data-draw className={cn(styles.strip, className)}>
       <span
         className={styles.fill}
         data-tone={ratio >= 0 ? "up" : "down"}
