@@ -19,6 +19,13 @@ python3 -m unittest discover -s tests/deploy   # deploy/ ya da iş akışı değ
 Staged diff'i sırlara karşı tara (depo herkese açık); rutin promptu
 kopyalandıysa `grep -rnE "[0-9a-f]{64}" docs README.md` boş dönmeli.
 
+Arayüz değiştiyse duman testini de YERELDE koş (CI'da kapı değil ama
+kırmızısı sahibine bildirim olarak gider): `npx next start -p 3000 &`,
+sonra `BASE_URL=http://localhost:3000 SMOKE_DEGRADED_OK=1 npm run smoke`.
+10 Kasım: telefon turunda çiplere eklenen `min-w-11` esnek kapta çipleri 44
+piksele büzdü; build, check ve taşma taraması temizdi, yalnız duman testinin
+"sıkışan öğe" ölçümü yakaladı ve `main`de kırmızı bir Smoke koşusu kaldı.
+
 ## 2. Commit'leri Topla
 
 Commit BÜTÜN hâlinde: iş alanı başına bir commit, gövdede her değişikliğin
