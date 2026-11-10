@@ -23,7 +23,8 @@
    (CLAUDE.md "Düzen: ölçmeden değiştirme"): yerleşim hareketi azaltma
    taklidiyle, animasyon `getAnimations()` ile ölçülür. */
 .fill > .ink {
-  animation: strip-fill 0.9s var(--ease-brand) 0.15s both;
+  /* Süre merdivenden (10 Kasım 2026; 900 ms + 150 ms gecikme idi). */
+  animation: strip-fill var(--draw) var(--ease-brand) both;
   /* `--strip-play` ile durdurulabiliyor (posterin perde düzeni, 25 Ekim kaldırıldı). */
   animation-play-state: var(--strip-play, running);
 }

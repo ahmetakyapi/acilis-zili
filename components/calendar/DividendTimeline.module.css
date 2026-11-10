@@ -3,12 +3,14 @@
    şerit, zaman çizelgesi. Hisse sayfasının temettü paneli ayrı dosyada
    (Dividends.module.css).
 
-   Derinlik ton farkıyla: yoğunluk basamakları `--primary-tint` →
-   `--primary`; son alım günü `--primary-wash` zeminde. Gölge ve ışıma yok.
+   Derinlik ton farkıyla; son alım günü `--primary-wash` zeminde. Gölge ve
+   ışıma yok. Şeridin yoğunluğu 10 Kasım 2026'ya dek dolu mavi basamaklardı
+   (`--primary-tint` → `--primary`); şimdi kulvar + 5 piksellik şerit
+   (gerekçe DividendCalendar.tsx → `DividendWeeks`).
    ========================================================================== */
 
 .panel {
-  border-radius: 18px;
+  border-radius: var(--radius-panel);
   background: var(--premium-surface);
 }
 
@@ -19,6 +21,14 @@
   gap: 0.8rem;
   min-width: 0;
   width: 100%;
+  container-type: inline-size;
+}
+
+.heroBody {
+  display: flex;
+  flex-direction: column;
+  gap: 0.8rem;
+  min-width: 0;
 }
 
 .heroTop {
@@ -60,29 +70,27 @@
   border-radius: 1rem;
   background: var(--primary-wash);
   color: var(--primary-ink);
-  transition:
-    background-color 0.25s var(--ease-brand),
-    transform 0.25s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand);
 }
 
+/* Hover yalnız ton (10 Kasım 2026: 1 piksel kalkıyordu). */
 @media (hover: hover) {
   .heroLastBuy:hover {
     background: var(--primary-soft);
-    transform: translateY(-1px);
   }
 }
 
 .heroLastBuyLabel {
   grid-column: 1;
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .heroLastBuyDate {
   grid-column: 1;
   color: var(--text-strong);
   font-size: clamp(1.25rem, 2.2vw, 1.5rem);
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.03em;
   line-height: 1.2;
 }
@@ -100,7 +108,7 @@
   background: var(--primary);
   color: var(--on-primary);
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight: 600;
   white-space: nowrap;
 }
 
@@ -111,7 +119,7 @@
 
 .heroEx strong {
   color: var(--text-body);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .heroLogos {
@@ -121,15 +129,17 @@
   gap: 0.4rem;
 }
 
+/* Hover'da büyüme ve kalkma yok (10 Kasım 2026; `.claude/rules/hareket.md`):
+   logo bir bağlantı, geri bildirimi soluk ton. */
 .heroLogo {
   display: block;
   border-radius: var(--radius-md);
-  transition: transform 0.3s var(--ease-brand);
+  transition: opacity 180ms var(--ease-brand);
 }
 
 @media (hover: hover) {
   .heroLogo:hover {
-    transform: translateY(-2px) scale(1.06);
+    opacity: 0.78;
   }
 }
 
@@ -142,35 +152,48 @@
   background: var(--surface-sunken);
   color: var(--text-body);
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight: 600;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes dividend-pop {
-    from {
-      opacity: 0;
-      transform: translateY(6px) scale(0.9);
-    }
+/* GENİŞ KOLONDA YATAY (10 Kasım 2026): kapak kartın yerini sol kolona,
+   başlığın altına aldı (page.tsx). 700 pikselden geniş kolonda dört kat
+   alt alta 260 piksel tutuyor ve sağı boş bırakıyordu; orada son alım günü
+   solda bir karo, hak kesim günü ve logolar ortada, pencerenin toplam
+   ödemesi sağda. Dar kolonda (telefon, tablet) eski dikey diziliş. */
+@container (min-width: 640px) {
+  .heroBody {
+    display: grid;
+    grid-template-columns: minmax(15rem, auto) minmax(0, 1fr) auto;
+    grid-template-areas:
+      "title title count"
+      "buy ex count"
+      "buy logos count";
+    align-items: center;
+    gap: 0.5rem 1.5rem;
   }
 
-  .heroLogos > li {
-    animation: dividend-pop 0.5s var(--ease-brand) both;
-    animation-delay: calc(0.2s + var(--i, 0) * 55ms);
-  }
+  .heroBody > .heroTop { display: contents; }
+  .heroTitle { grid-area: title; }
+  .heroCount { grid-area: count; align-self: end; justify-self: end; flex-direction: column; align-items: flex-end; gap: 0; }
+  .heroLastBuy { grid-area: buy; }
+  .heroEx { grid-area: ex; align-self: end; }
+  .heroLogos { grid-area: logos; align-self: start; }
 }
+
+/* 10 KASIM 2026'DA KALKTI: logolar opaklık 0'dan, 200 ms gecikme + 55 ms
+   kademeyle (dokuz öğe 640 ms) "patlayarak" giriyordu. Logo veri çizimi
+   değil ve açılış animasyonu opaklık 0'dan başlamaz
+   (`.claude/rules/hareket.md`). */
 
 /* ---- Dört haftalık şerit ---- */
+/* Kapağın sol kolonunda (10 Kasım 2026). Hücre nötr; yoğunluk kulvarda.
+   Ölçüm dosyanın sonunda. */
 .strip {
   display: flex;
   flex-direction: column;
   gap: 4px;
-  padding: 0 1rem 1.1rem;
-}
-
-@media (min-width: 640px) {
-  .strip {
-    padding-inline: 1.25rem;
-  }
+  min-width: 0;
+  container-type: inline-size;
 }
 
 .stripHead,
@@ -182,7 +205,7 @@
 
 .stripHead > span {
   min-height: 1rem;
-  padding-inline: 0.5rem;
+  padding-inline: 0.6rem;
   color: var(--text-muted);
   font-size: var(--text-nano);
   font-weight: 600;
@@ -190,25 +213,20 @@
 
 .cell {
   min-width: 0;
-  height: 2.9rem;
-  border-radius: 0.6rem;
+  height: 2.5rem;
+  border-radius: var(--radius-md);
   background: var(--surface-sunken);
 }
 
-.cell[data-heat="1"] {
-  background: var(--primary-tint);
+/* Ödemesiz gün kutusuz: yalnız soluk rakam (boş gün yer kaplamıyor gibi
+   okunur, ızgaranın hattı bozulmaz). */
+.cell[data-empty] {
+  background: none;
 }
 
-.cell[data-heat="2"] {
-  background: var(--primary-wash);
-}
-
-.cell[data-heat="3"] {
-  background: var(--primary-soft);
-}
-
-.cell[data-heat="4"] {
-  background: var(--primary);
+.cell[data-empty] .cellDay {
+  color: var(--text-muted);
+  font-weight: 400;
 }
 
 .cell[data-outside] {
@@ -216,42 +234,62 @@
 }
 
 .cell[data-today] {
-  box-shadow: inset 0 0 0 1.5px var(--primary);
+  box-shadow: inset 0 0 0 1px var(--primary-faint);
+}
+
+.cell[data-today] .cellDay {
+  color: var(--primary-ink);
 }
 
 .cellLink,
 .cellInner {
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: 0.25rem;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-content: space-between;
+  gap: 0 0.25rem;
   width: 100%;
   height: 100%;
-  padding: 0.4rem 0.5rem;
+  padding: 0.4rem 0.6rem 0.5rem;
   border-radius: inherit;
 }
 
-/* Telefonda hücre ~62 piksel: tarih ve sayı yan yana sığmıyor, "28 Eyl"
-   ile sayı çakışıyordu (390'da ölçüldü). Tarih üstte, sayı altta sağda. */
-@media (max-width: 639px) {
+.cellLink > .cellInner {
+  padding: 0;
+}
+
+/* Dar şeritte (telefon, tablette 340'lık kolon) hücre ~60 piksel: "23 Kas"
+   ile sayı yan yana sığmıyor (390'da ölçüldü: 48 piksellik içte 36 + 16).
+   Tarih üstte, sayı sağda altında, kulvar dipte. Ölçü şeridin KENDİ eni:
+   aynı şerit 440'lık kolonda da telefonda da duruyor. */
+@container (max-width: 400px) {
+  .cell {
+    height: 3.5rem;
+  }
+
   .cellLink,
   .cellInner {
-    flex-direction: column;
-    gap: 0;
-    padding: 0.3rem 0.4rem;
+    grid-template-columns: minmax(0, 1fr);
+    padding: 0.35rem 0.45rem 0.45rem;
   }
 
   .cellCount {
-    line-height: 1.1;
+    justify-self: end;
+  }
+
+  .cellLane {
+    grid-row: 3;
   }
 }
 
+/* Hover yalnız ton (10 Kasım 2026: hücre 1 piksel kalkıyordu). */
 .cellLink {
-  transition: transform 0.2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand);
 }
 
-.cellLink:hover {
-  transform: translateY(-1px);
+@media (hover: hover) {
+  .cellLink:hover {
+    background: var(--primary-tint);
+  }
 }
 
 .cellDay {
@@ -260,41 +298,43 @@
   gap: 0.2rem;
   color: var(--text-body);
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight: 600;
+  line-height: 1rem;
 }
 
 .cellMonth {
   color: var(--text-muted);
   font-size: var(--text-nano);
-  font-weight: 500;
+  font-weight: 400;
 }
 
 .cellCount {
-  align-self: flex-end;
   color: var(--text-strong);
-  font-size: var(--text-small);
-  font-weight: 750;
+  font-size: var(--text-base);
+  font-weight: 700;
+  line-height: 1rem;
 }
 
-/* İki koyu basamakta yazı zeminin karşıt tonunda: `--primary-soft` açık
-   temada orta mavi, koyu temada açık mavi ve iki durumda da gövde
-   mürekkebi üstünde okunmuyordu. `--on-primary` iki temada da karşıt. */
-.cell:is([data-heat="3"], [data-heat="4"]) :is(.cellDay, .cellMonth, .cellCount) {
-  color: var(--on-primary);
+/* Kulvar: ortak ölçü (5 piksel, uçlar 999, `--line-soft`, dolgu opak).
+   Dolgu globals'ın `.bar-fill`iyle çiziliyor (`--draw`); oranı satır içi
+   `--ratio`. Kademe hafta içi gün sırasıyla, beş gün 160 ms. */
+.cellLane {
+  grid-column: 1 / -1;
+  display: block;
+  height: 5px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: var(--line-soft);
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes dividend-cell {
-    from {
-      opacity: 0;
-      transform: scale(0.92);
-    }
-  }
-
-  .stripWeek > .cell {
-    animation: dividend-cell 0.45s var(--ease-brand) both;
-    animation-delay: calc(var(--i, 0) * 40ms);
-  }
+.cellLane .cellFill {
+  display: block;
+  height: 100%;
+  border-radius: inherit;
+  background: var(--primary);
+  transform: scaleX(var(--ratio, 1));
+  transform-origin: left center;
+  animation-delay: calc(var(--i, 0) * var(--step));
 }
 
 /* ---- Zaman çizelgesi ---- */
@@ -360,13 +400,13 @@
   padding: 0.45rem 0 0.4rem;
   border-radius: 0.9rem;
   background: var(--surface-sunken);
-  transition: background-color 0.3s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand);
 }
 
 .railDay {
   color: var(--text-strong);
   font-size: clamp(1.35rem, 2.4vw, 1.7rem);
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.04em;
   line-height: 1.05;
 }
@@ -401,13 +441,13 @@
 .dayTag {
   color: var(--text-muted);
   font-size: var(--text-nano);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .rel {
   color: var(--primary-ink);
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .lastBuy {
@@ -486,14 +526,9 @@
   min-width: 0;
 }
 
-.logo {
-  transition: transform 0.3s var(--ease-brand);
-}
-
+/* Logo hover'da büyümez (10 Kasım 2026: 1,08 ölçek); geri bildirim
+   sembolün rengi. */
 @media (hover: hover) {
-  .company:hover .logo {
-    transform: scale(1.08);
-  }
 
   .company:hover .symbol {
     color: var(--primary);
@@ -506,7 +541,7 @@
   font-size: var(--text-base);
   font-weight: 700;
   line-height: 1.2;
-  transition: color 0.2s var(--ease-brand);
+  transition: color 180ms var(--ease-brand);
 }
 
 .name {
@@ -554,7 +589,7 @@
   background: var(--brass-wash);
   color: var(--brass-ink);
   font-size: var(--text-nano);
-  font-weight: 650;
+  font-weight: 600;
   line-height: 17px;
 }
 
@@ -593,12 +628,14 @@
   font-weight: 700;
 }
 
+/* Ortak ölçü (10 Kasım 2026): 5 piksel, kulvar `--line-soft` (4 piksel ve
+   `--surface-sunken` idi). */
 .yieldBar {
   display: block;
-  height: 4px;
+  height: 5px;
   overflow: hidden;
   border-radius: 999px;
-  background: var(--surface-sunken);
+  background: var(--line-soft);
 }
 
 .yieldFill {
@@ -644,7 +681,7 @@
 }
 
 .meta b {
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-body);
 }
 
@@ -848,7 +885,7 @@
   padding: 0.25rem 0.35rem;
   margin-inline: -0.35rem;
   border-radius: 0.6rem;
-  transition: background-color 0.2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand);
 }
 
 @media (hover: hover) {
@@ -897,3 +934,8 @@
   font-size: var(--text-nano);
   line-height: 1.45;
 }
+
+/* ÖLÇÜM (10 Kasım 2026): şerit 1318×288 (panelin tepesi, 25 hücrenin çoğu
+   dolu mavi) → 440×238 (kapağın sağı; 1024'te 440, 768'de 340×318, 390'da
+   316×318 — dar kapta hücre 56 piksel, tarih üstte sayı altta). Kapak ve
+   hareket ölçüleri CalendarExperience.module.css sonunda. */

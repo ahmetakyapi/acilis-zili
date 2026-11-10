@@ -8,8 +8,8 @@
 /* ---- Skor şeridi ---- */
 .scores { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:.5rem; margin:0; }
 .score { display:flex; flex-direction:column; gap:.125rem; min-width:0; padding:.75rem 1rem; border-radius:var(--radius-lg); background:var(--surface-sunken); }
-.score dt { display:inline-flex; align-items:center; gap:.3125rem; color:var(--text-muted); font-size:var(--text-tiny); font-weight:650; }
-.score dd { margin:0; color:var(--text-strong); font-size:1.75rem; font-weight:800; line-height:1.1; letter-spacing:-.03em; }
+.score dt { display:inline-flex; align-items:center; gap:.3125rem; color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
+.score dd { margin:0; color:var(--text-strong); font-size:1.75rem; font-weight:700; line-height:1.1; letter-spacing:-.03em; }
 .score[data-kind="score"] { background:var(--primary-tint); }
 .score[data-kind="score"] dd { color:var(--primary-ink); }
 .trophy { color:var(--brass); }
@@ -31,13 +31,13 @@
 
 .identity { display:flex; align-items:center; gap:.875rem; min-width:0; }
 .names { min-width:0; }
-.name { margin:0; color:var(--text-strong); font-size:1.375rem; font-weight:800; line-height:1.2; letter-spacing:-.02em; overflow-wrap:anywhere; }
+.name { margin:0; color:var(--text-strong); font-size:1.375rem; font-weight:700; line-height:1.2; letter-spacing:-.02em; overflow-wrap:anywhere; }
 .meta { display:flex; flex-wrap:wrap; gap:.125rem .625rem; margin:.25rem 0 0; color:var(--text-muted); font-size:var(--text-small); }
 .symbol { font-family:var(--font-mono); font-weight:600; color:var(--text-body); }
 
 .figure { display:flex; flex-direction:column; gap:.375rem; }
-.figureLabel { color:var(--text-muted); font-size:var(--text-tiny); font-weight:650; }
-.value { color:var(--text-strong); font-size:2.25rem; font-weight:800; line-height:1.05; letter-spacing:-.035em; white-space:nowrap; }
+.figureLabel { color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
+.value { color:var(--text-strong); font-size:2.25rem; font-weight:700; line-height:1.05; letter-spacing:-.035em; white-space:nowrap; }
 .hiddenValue { color:var(--text-muted); }
 @media (prefers-reduced-motion: no-preference) {
   .value:not(.hiddenValue) { animation:value-in 420ms var(--ease-brand) both; }
@@ -47,7 +47,7 @@
 .lane { position:relative; display:block; height:5px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
 .fill { position:absolute; inset-block:0; left:0; border-radius:999px; background:var(--primary-soft); transition:width 520ms var(--ease-brand); }
 
-.vs { align-self:center; display:grid; place-items:center; width:3rem; height:3rem; border-radius:999px; background:var(--surface-elevated); color:var(--text-strong); font-size:var(--text-small); font-weight:800; letter-spacing:.02em; transition:background-color 240ms var(--ease-brand), color 240ms var(--ease-brand); }
+.vs { align-self:center; display:grid; place-items:center; width:3rem; height:3rem; border-radius:999px; background:var(--surface-elevated); color:var(--text-strong); font-size:var(--text-small); font-weight:700; letter-spacing:.02em; transition:background-color 180ms var(--ease-brand), color 180ms var(--ease-brand); }
 .vs[data-phase="right"] { background:var(--up-wash); color:var(--up); }
 .vs[data-phase="wrong"] { background:var(--down-wash); color:var(--down); }
 
@@ -59,10 +59,10 @@
 .question { grid-column:1 / -1; margin:0 0 .25rem; color:var(--text-body); font-size:var(--text-small); line-height:1.5; text-align:center; }
 .choice { justify-content:center; gap:.4375rem; min-height:3rem; }
 .choiceAlt { border:1px solid var(--line); }
-.verdict { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:.25rem; margin:0; padding:.75rem .875rem; text-align:center; border-radius:var(--radius-md); font-size:var(--text-read); font-weight:750; }
+.verdict { display:flex; flex-direction:column; justify-content:center; align-items:center; gap:.25rem; margin:0; padding:.75rem .875rem; text-align:center; border-radius:var(--radius-md); font-size:var(--text-read); font-weight:700; }
 .verdict[data-phase="right"] { background:var(--up-wash); color:var(--up); }
 .verdict[data-phase="wrong"] { background:var(--down-wash); color:var(--down); }
-.verdictNote { color:var(--text-body); font-size:var(--text-small); font-weight:500; }
+.verdictNote { color:var(--text-body); font-size:var(--text-small); font-weight:400; }
 
 /* ---- Oyun bitti ---- */
 .overBody { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem 1.25rem; padding:0 1rem 1rem; }

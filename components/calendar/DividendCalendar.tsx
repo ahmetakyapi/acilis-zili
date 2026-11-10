@@ -63,19 +63,9 @@ const loadCalendar = cache(getDividendCalendar);
 
 /** Kahramandaki logo mozaiğinde gösterilen en fazla şirket; fazlası "+N". */
 const HERO_LOGOS = 8;
-/** Şeridin yoğunluk basamakları: 1, 2–3, 4–6, 7 ve üstü ödeme. */
-const HEAT_STEPS = [1, 2, 4, 7] as const;
 /** Pazartesi–Cuma. */
 const WEEKDAYS = 5;
 const DAYS_IN_WEEK = 7;
-
-function heatLevel(count: number): number {
-  let level = 0;
-  HEAT_STEPS.forEach((step, index) => {
-    if (count >= step) level = index + 1;
-  });
-  return level;
-}
 
 function weekdayOf(date: string): number {
   return new Date(`${date}T12:00:00Z`).getUTCDay();
@@ -119,6 +109,7 @@ export async function DividendHero({ locale, t }: { locale: Locale; t: Dictionar
 
   return (
     <div className={styles.hero}>
+      <div className={styles.heroBody}>
       <div className={styles.heroTop}>
         <h2 className={styles.heroTitle}>{x.dividendNext}</h2>
         <p className={styles.heroCount}>
@@ -146,7 +137,7 @@ export async function DividendHero({ locale, t }: { locale: Locale; t: Dictionar
       <ul className={styles.heroLogos} aria-label={x.dividendNextCompanies}>
         {shown.map((row, index) => (
           <li key={`${row.dividend.symbol}-${row.dividend.rate}`} style={{ "--i": index } as CSSProperties}>
-            <Link href={`/hisse/${row.dividend.symbol}`} prefetch={false} title={row.name} className={styles.heroLogo}>
+            <Link href={`/hisse/${row.dividend.symbol}`} prefetch={false} title={row.name} className={`tap-44 ${styles.heroLogo}`}>
               <LogoTile symbol={row.dividend.symbol} logoUrl={row.logoUrl} size="md" />
               <span className="sr-only">{row.name}</span>
             </Link>
@@ -158,6 +149,7 @@ export async function DividendHero({ locale, t }: { locale: Locale; t: Dictionar
           </li>
         )}
       </ul>
+      </div>
     </div>
   );
 }
@@ -166,6 +158,7 @@ export async function DividendHero({ locale, t }: { locale: Locale; t: Dictionar
 export function DividendHeroSkeleton({ t }: { t: Dictionary }) {
   return (
     <div className={styles.hero} aria-hidden>
+      <div className={styles.heroBody}>
       <div className={styles.heroTop}>
         <p className={styles.heroTitle}>{t.marketExtras.dividendNext}</p>
         <Skeleton className="h-9 w-20" />
@@ -176,6 +169,7 @@ export function DividendHeroSkeleton({ t }: { t: Dictionary }) {
         {Array.from({ length: HERO_LOGOS }, (_, index) => (
           <Skeleton key={index} className="size-8 rounded-md" />
         ))}
+      </div>
       </div>
     </div>
   );
@@ -202,6 +196,8 @@ function DividendStrip({
   const today = todayEt();
   const until = addEtDays(today, DIVIDEND_WINDOW_DAYS);
   const counts = new Map(days.map((day) => [day.exDate, day.rows.length]));
+  /* Kulvarın ölçeği pencerenin en kalabalık günü. */
+  const maxCount = Math.max(1, ...days.map((day) => day.rows.length));
   /* HAFTA SONU ŞERİT GELECEK PAZARTESİDEN BAŞLIYOR. Pazar günü "bu
      haftanın pazartesisi" biten haftaydı ve şeridin ilk satırı baştan sona
      geçmiş, sönük beş hücreydi (27 Eylül pazar, ölçüldü). */
@@ -242,13 +238,18 @@ function DividendStrip({
                   {(parts.day === "1" || date === week[0]) && <span className={styles.cellMonth}>{parts.month}</span>}
                 </span>
                 {count > 0 && <span className={`figure ${styles.cellCount}`}>{count}</span>}
+                {count > 0 && (
+                  <span className={styles.cellLane}>
+                    <span className={`bar-fill ${styles.cellFill}`} style={{ "--ratio": Math.max(0.06, count / maxCount) } as CSSProperties} />
+                  </span>
+                )}
               </>
             );
             return (
               <li
                 key={date}
                 className={styles.cell}
-                data-heat={heatLevel(count)}
+                data-empty={count === 0 || undefined}
                 data-today={date === today || undefined}
                 data-outside={outside || undefined}
                 style={{ "--i": index } as CSSProperties}
@@ -273,6 +274,36 @@ function DividendStrip({
         </ol>
       ))}
     </nav>
+  );
+}
+
+/**
+ * DÖRT HAFTA KAPAKTA (10 Kasım 2026). Şerit panelin tepesinde tam genişlik
+ * duruyordu; kapağın solunda ise başlık ve iki satır açıklamanın altı boştu.
+ * Canlıda ölçüldü (1440): sol kolon 830 piksel geniş, içerik 121 pikselde
+ * bitiyor, kapak 314; altında ~150 piksel boş. Aynı anda paneldeki şerit
+ * 25 hücrenin çoğu DOLU MAVİ blok olarak 1278×250 piksel tutuyordu
+ * ("dolu ağır bloklar tablo programı gibi", `.claude/rules/arayuz.md` →
+ * grafik dili). Şimdi şerit kapağın SAĞ kolonunda (paylaşın altında) ve
+ * sıradaki hak kesim kartı sol kolonda başlığın altında, yatay: iki kolon
+ * da dolu. Hücre nötr, yoğunluğu 5 piksellik kulvar söylüyor (şerit uzunluğu =
+ * o günün ödemesi / pencerenin en kalabalık günü), sayı yanında yazılı.
+ * Ödemesiz gün kutusuz, yalnız soluk rakam. Panel doğrudan "En Yüksek
+ * Getiri" ile açılıyor. Veri aynı önbellekten (`loadCalendar`); okunamadı
+ * ya da boşsa hiç basılmaz (kapak yalnız başlığı taşır).
+ */
+export async function DividendWeeks({ locale, t }: { locale: Locale; t: Dictionary }) {
+  const result = await loadCalendar();
+  if (!result.ok || result.days.length === 0) return null;
+  return <DividendStrip days={result.days} locale={locale} t={t} />;
+}
+
+/** Şerit yedeği: başlık satırı + beş hafta, veri inince kayma yok. */
+export function DividendWeeksSkeleton() {
+  return (
+    <div className={styles.strip} aria-hidden>
+      <Skeleton className="h-[236px] w-full rounded-xl" />
+    </div>
   );
 }
 
@@ -329,7 +360,8 @@ export async function DividendCalendar({ locale, t }: { locale: Locale; t: Dicti
         <EmptyState compact title={x.dividendEmpty} hint={x.dividendEmptyHint} />
       ) : (
         <>
-          <DividendStrip days={result.days} locale={locale} t={t} />
+          {/* Dört haftalık şerit 10 Kasım 2026'da kapağa taşındı
+              (`DividendWeeks`, gerekçe orada). */}
           <DividendHighlights days={result.days} watched={watched} maxYield={maxYield} locale={locale} t={t} />
           {/* GÜNLER KATLANIR (25 Ekim). Seksen ödemenin hepsi açıkken liste
               1440'ta 9.242 piksel tutuyordu ve okuyucunun iki sorusu (benim

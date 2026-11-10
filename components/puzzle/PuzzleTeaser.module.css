@@ -57,16 +57,19 @@
 .area { fill:var(--primary-wash); }
 .path { fill:none; stroke:var(--text-strong); stroke-width:2; stroke-linejoin:round; stroke-linecap:round; }
 .end { stroke:var(--primary); stroke-width:7; stroke-linecap:round; }
-@media (prefers-reduced-motion: no-preference) {
-  .mini { animation:mini-wipe 900ms var(--ease-brand) 120ms both; }
-}
-@keyframes mini-wipe {
-  from { clip-path:inset(-20% 100% -20% 0); }
-  to { clip-path:inset(-20% -10% -20% 0); }
-}
+/* SİLUET GÖRÜNÜNCE ÇİZİLİR (10 Kasım 2026, tutarlılık denetiminde sahipsiz
+   kalan çizim). Kendi `mini-wipe` keyframes'i 900 ms + 120 ms gecikmeyle
+   YÜKLEMEDE oynuyordu; kart ana sayfada ekranın altında, kimse görmeden
+   bitiyordu. Şimdi globals'ın mini grafik çizimi (`.spark-line` SINIFI,
+   PuzzleTeaser.tsx; kırpmayla açılır), süresi merdivenden (`--draw`),
+   kapısı karodaki `data-draw` (kırpık SVG kesişmez, gözlemci karoyu
+   izler). Sınıf, ad değil: CSS modülü `animation` adını modül kapsamına
+   alıyor ve globals'taki keyframes'e ulaşamıyor. */
+.mini.mini { animation-duration:var(--draw); }
 
 /* ---- Metin ---- */
-.title { margin:0; font-size:var(--text-lead); font-weight:800; line-height:1.25; color:var(--text-strong); }
+/* Panel başlığı ölçüsü 16/700 (ortak ölçüler; 800 idi). */
+.title { margin:0; font-size:var(--text-lead); font-weight:700; line-height:1.25; color:var(--text-strong); }
 .headline { margin:.125rem 0 0; font-size:var(--text-read); font-weight:700; line-height:1.35; color:var(--primary-ink); }
 .line { margin:.125rem 0 0; font-size:var(--text-small); line-height:1.45; color:var(--text-body); }
 
@@ -104,7 +107,7 @@
 /* ---- Seri ve dağılım (≥ 1024) ---- */
 .record { align-items:center; gap:1rem; padding-left:1.5rem; border-left:1px solid var(--line-soft); }
 .streak { display:flex; flex-direction:column; align-items:center; }
-.streakValue { font-size:var(--text-heading); font-weight:800; line-height:1; color:var(--text-strong); }
+.streakValue { font-size:var(--text-heading); font-weight:700; line-height:1; color:var(--text-strong); }
 .streakLabel { margin-top:.25rem; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
 .dist { display:flex; align-items:flex-end; gap:4px; margin:0; padding:0; list-style:none; }
 .dist li { display:flex; flex-direction:column; align-items:center; gap:2px; }

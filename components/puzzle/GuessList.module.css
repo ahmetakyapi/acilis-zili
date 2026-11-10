@@ -33,7 +33,7 @@
 .tile[data-grade="near"] { background:var(--brass-wash); color:var(--brass-ink); }
 .tile[data-grade="none"] { background:transparent; outline:1px dashed var(--line); outline-offset:-1px; color:var(--text-muted); }
 .tileValue { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; min-width:0; font-size:var(--text-tiny); font-weight:700; line-height:1.15; overflow-wrap:break-word; }
-.tileEmpty { font-weight:500; }
+.tileEmpty { font-weight:400; }
 .arrow { flex:none; }
 
 /* Kalan hak: karoların hizasında dört soluk "?" kartı, 20 piksel. */

@@ -188,7 +188,7 @@
   padding: 6px 2px 4px;
   border-top: 1px solid var(--line-strong);
   text-align: center;
-  transition: opacity 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
+  transition: opacity 180ms var(--ease-brand), border-color 180ms var(--ease-brand);
 }
 .root[data-variant="strip"] .district { margin-top: 3px; }
 .district[data-on] { border-top-color: var(--text-strong); }
@@ -212,7 +212,7 @@
 }
 .districtValue {
   font-size: var(--text-nano);
-  font-weight: 750;
+  font-weight: 700;
   line-height: 1.3;
 }
 
@@ -248,7 +248,7 @@
   box-shadow: inset 0 0 0 1px var(--line);
 }
 .tipId { display: grid; min-width: 0; }
-.tipSymbol { color: var(--text-strong); font-size: var(--text-base); font-weight: 800; line-height: 1.2; }
+.tipSymbol { color: var(--text-strong); font-size: var(--text-base); font-weight: 700; line-height: 1.2; }
 .tipName {
   overflow: hidden;
   color: var(--text-body);
@@ -258,7 +258,7 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
-.tipValue { margin-left: auto; font-size: var(--text-title); font-weight: 800; letter-spacing: -0.03em; line-height: 1.1; white-space: nowrap; }
+.tipValue { margin-left: auto; font-size: var(--text-title); font-weight: 700; letter-spacing: -0.03em; line-height: 1.1; white-space: nowrap; }
 .tipMeta { color: var(--text-muted); font-size: var(--text-nano); line-height: 1.35; }
 .tipLink {
   display: inline-flex;
@@ -285,7 +285,7 @@
   stroke: var(--premium-surface);
   stroke-width: 3px;
   stroke-linejoin: round;
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 .tagSymbol { fill: var(--text-strong); }
@@ -353,13 +353,13 @@
   place-items: center;
   color: var(--text-muted);
   font-size: var(--text-nano);
-  font-weight: 750;
+  font-weight: 700;
 }
 .readoutId { grid-area: id; display: grid; min-width: 0; }
 .readoutValue {
   grid-area: value;
   font-size: var(--text-title);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
   white-space: nowrap;
@@ -372,7 +372,7 @@
   height: 44px;
   color: var(--text-muted);
   border-radius: var(--radius-md);
-  transition: color 0.2s var(--ease-brand);
+  transition: color 180ms var(--ease-brand);
 }
 .readoutClose:hover { color: var(--text-strong); }
 .readoutClose:focus-visible,
@@ -418,7 +418,7 @@
   left: calc(var(--line-l) * 100%);
   width: calc(var(--line-w) * 100%);
   border-top: 1px solid var(--line-strong);
-  transition: border-color 0.2s var(--ease-brand);
+  transition: border-color 180ms var(--ease-brand);
 }
 .district[data-sign][data-on]::before { border-top-color: var(--text-strong); }
 
@@ -431,7 +431,7 @@
 .highlightsTitle {
   color: var(--text-strong);
   font-size: var(--text-base);
-  font-weight: 750;
+  font-weight: 700;
   line-height: 1.3;
 }
 .chips {
@@ -457,7 +457,7 @@
   border-radius: var(--radius-md);
   background: var(--surface-sunken);
   text-align: left;
-  transition: box-shadow 0.2s var(--ease-brand), background-color 0.2s var(--ease-brand);
+  transition: box-shadow 180ms var(--ease-brand), background-color 180ms var(--ease-brand);
 }
 .chip[data-on] {
   background: var(--primary-wash);
@@ -489,7 +489,7 @@
   box-shadow: 0 0 0 1.5px var(--surface-sunken);
   color: var(--page-bg);
   font-size: var(--text-nano);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1;
   letter-spacing: -0.02em;
 }
@@ -500,7 +500,7 @@
   overflow: hidden;
   color: var(--text-strong);
   font-size: var(--text-base);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.2;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -523,7 +523,7 @@
 .chipValue {
   flex: none;
   font-size: var(--text-base);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1.2;
   white-space: nowrap;

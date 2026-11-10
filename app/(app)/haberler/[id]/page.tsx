@@ -166,7 +166,7 @@ export default async function NewsDetailPage(
             yeniden çizilmesine neden oluyordu (React #418). */}
         <div className={`${styles.detailMeta} flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-muted`}>
           {item.source && (
-            <span className="font-medium text-soft">{item.source}</span>
+            <span className="font-semibold text-soft">{item.source}</span>
           )}
           <span aria-hidden>·</span>
           <span>
@@ -455,7 +455,7 @@ async function RelatedNews({
                 </span>
               )}
               <span className="min-w-0 flex-1">
-              <p className="line-clamp-2 text-sm font-medium leading-snug text-strong">
+              <p className="line-clamp-2 text-sm font-semibold leading-snug text-strong">
                 <span lang={locale === "tr" && !n.headlineTr ? "en" : undefined}>
                   {locale === "tr" && n.headlineTr ? n.headlineTr : n.headline}
                 </span>

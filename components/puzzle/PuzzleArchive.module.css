@@ -2,21 +2,30 @@
    panel dili), renk anlamdan: bildin yeşil, bilemedin kırmızı ton, yarım
    pirinç, oynanmadı nötr. Gölge yok; derinlik ton ve üst kenar şeridi. */
 
-/* ---- Karne ---- */
-.scores { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); gap:.5rem; margin:0; }
-.score { display:flex; flex-direction:column; gap:.125rem; min-width:0; padding:.75rem .875rem; border-radius:var(--radius-lg); background:var(--surface-sunken); }
-.score dt { color:var(--text-muted); font-size:var(--text-tiny); font-weight:650; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.score dd { margin:0; color:var(--text-strong); font-size:1.75rem; font-weight:800; line-height:1.1; letter-spacing:-.03em; }
-.score[data-kind="won"] dd { color:var(--up); }
-.score[data-kind="lost"] dd { color:var(--down); }
-@media (max-width: 479.98px) {
-  .scores { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .score dd { font-size:1.5rem; }
+/* ---- Araç satırı: süzgeç + karne (gerekçe PuzzleArchive.tsx) ----
+   Karne süzgeçle aynı satırda, sağda: dağılım şeridi (ortak ölçü: 5 piksel,
+   uçlar 999, kulvar `--line-soft`, dolgu opak) ve seri. Telefonda satır
+   kırılır: çipler üstte, karne altında tam genişlik. */
+.toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.625rem 1.5rem; }
+.record { display:flex; align-items:center; gap:1rem; margin:0; min-width:0; }
+.recordMix dd { margin:0; }
+.mix { display:flex; gap:2px; width:11rem; height:5px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.mix > span { min-width:3px; border-radius:999px; background:transparent; transform-origin:left center; }
+.mix > span[data-kind="won"] { background:var(--up); }
+.mix > span[data-kind="lost"] { background:var(--down); }
+.recordStreak { display:flex; align-items:baseline; gap:.4375rem; }
+.recordStreak dt { color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; white-space:nowrap; }
+.recordStreak dd { margin:0; color:var(--text-strong); font-size:var(--text-lead); font-weight:700; letter-spacing:-.03em; }
+.recordStreak dd.recordEmpty { color:var(--text-muted); font-weight:400; }
+@media (max-width: 639.98px) {
+  .record { flex:1 1 100%; }
+  .recordMix { flex:1 1 auto; }
+  .mix { width:100%; }
 }
 
 /* ---- Süzgeç çipleri: ray + hap (`Segment` dili) ---- */
 .filters { display:flex; flex-wrap:wrap; gap:.375rem; }
-.filter { display:inline-flex; align-items:center; gap:.4375rem; min-height:40px; padding:0 .875rem; border-radius:999px; border:1px solid var(--line); background:var(--premium-surface); color:var(--text-body); font-size:var(--text-small); font-weight:600; cursor:pointer; transition:background-color 200ms var(--ease-brand), border-color 200ms var(--ease-brand), color 200ms var(--ease-brand); }
+.filter { display:inline-flex; align-items:center; gap:.4375rem; min-height:40px; padding:0 .875rem; border-radius:999px; border:1px solid var(--line); background:var(--premium-surface); color:var(--text-body); font-size:var(--text-small); font-weight:600; cursor:pointer; transition:background-color 180ms var(--ease-brand), border-color 180ms var(--ease-brand), color 180ms var(--ease-brand); }
 .filter:hover:not(:disabled) { border-color:var(--primary-faint); color:var(--text-strong); }
 .filter[aria-pressed="true"] { border-color:var(--primary); background:var(--primary); color:var(--on-primary); }
 .filter:disabled { opacity:.5; cursor:default; }
@@ -34,18 +43,21 @@
 /* Bugünün kartı iki sütun — telefonda da (iki sütunun tamamı). */
 .todayItem { grid-column:span 2; }
 
-.card { position:relative; display:flex; flex-direction:column; gap:.625rem; height:100%; min-height:12.5rem; padding:.875rem .875rem .75rem; overflow:hidden; border-radius:var(--radius-panel, var(--radius-xl)); border:1px solid var(--line); background:var(--premium-surface); color:inherit; transition:border-color 200ms var(--ease-brand), background-color 200ms var(--ease-brand), translate 200ms var(--ease-brand); }
+.card { position:relative; display:flex; flex-direction:column; gap:.625rem; height:100%; min-height:12.5rem; padding:.875rem .875rem .75rem; overflow:hidden; border-radius:var(--radius-panel, var(--radius-xl)); border:1px solid var(--line); background:var(--premium-surface); color:inherit; transition:border-color 180ms var(--ease-brand), background-color 180ms var(--ease-brand); }
 /* Üst kenar şeridi: durumun rengi (kutu değil, 3 piksel ton). */
 .card::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--line-soft); }
 .card[data-status="won"]::before { background:var(--up); }
 .card[data-status="lost"]::before { background:var(--down); }
 .card[data-status="playing"]::before { background:var(--brass); }
-.card:hover { border-color:var(--primary-faint); background:var(--primary-tint); translate:0 -2px; }
+/* Hover yalnız ton ve kenar (10 Kasım 2026: kart 2 piksel kalkıyordu);
+   hareket yalnız okta (iç bağlantı 3 piksel, 200 ms). Basış 0,992. */
+.card:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+.card:active { scale:.992; }
 .card:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .today { border-color:var(--primary-faint); }
 
 .head { display:flex; flex-wrap:wrap; align-items:center; gap:.375rem .5rem; }
-.number { margin-right:auto; font-size:var(--text-lead); font-weight:800; color:var(--text-strong); }
+.number { margin-right:auto; font-size:var(--text-lead); font-weight:700; color:var(--text-strong); }
 .today .number { font-size:1.5rem; }
 .todayTag { padding:.125rem .5rem; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:var(--text-tiny); font-weight:700; }
 .badge { min-height:1.375rem; padding:.125rem .5rem; border-radius:999px; font-size:var(--text-tiny); font-weight:700; white-space:nowrap; }
@@ -59,13 +71,15 @@
 .today .figure { height:6rem; }
 .mini { display:block; width:100%; height:100%; }
 .miniArea { fill:var(--primary-wash); }
-.miniLine { fill:none; stroke:var(--text-strong); stroke-width:1.5; stroke-linejoin:round; }
+/* Mini grafik çizgisi 2 piksel (ortak ölçü; 1,5 idi). */
+.miniLine { fill:none; stroke:var(--text-strong); stroke-width:2; stroke-linejoin:round; }
 .answer { display:flex; align-items:center; gap:.5rem; }
 .symbol { font-family:var(--font-mono); font-size:var(--text-small); font-weight:600; color:var(--text-strong); }
 
 /* Altı tahmin yuvası — paylaşım ızgarasının kart hâli. */
 .slots { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:3px; }
-.slot { height:6px; border-radius:2px; background:var(--line-soft); }
+/* Şerit ortak ölçüde: 5 piksel, uçlar 999 (6 piksel / 2 idi). */
+.slot { height:5px; border-radius:999px; background:var(--line-soft); }
 .slot[data-kind="miss"] { background:var(--line-strong); }
 .slot[data-kind="joker"] { background:var(--brass); }
 .slot[data-kind="hit"] { background:var(--up); }
@@ -74,10 +88,13 @@
 .foot { display:flex; align-items:center; justify-content:space-between; gap:.5rem; margin-top:auto; }
 .date { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-tiny); color:var(--text-muted); }
 .action { display:inline-flex; flex:none; align-items:center; gap:.25rem; color:var(--primary-ink); font-size:var(--text-tiny); font-weight:700; }
-.card:hover .action svg { translate:2px 0; }
+.card:hover .action svg { translate:3px 0; }
 .action svg { transition:translate 200ms var(--ease-brand); }
 
 @media (prefers-reduced-motion: reduce) {
   .card, .action svg { transition:none; }
-  .card:hover { translate:none; }
 }
+
+/* ÖLÇÜM (10 Kasım 2026, önce canlı → sonra yerel üretim derlemesi): ilk
+   kartın tepesi 1440'ta 506 → 337, 1024'te 489 → 320, 390'da 596 → 451.
+   Hangisi Büyük'te arena 1440'ta 455 → 385. Yatay taşma 0, iki tema. */

@@ -18,7 +18,6 @@ import {
   X,
 } from "@phosphor-icons/react/dist/ssr";
 import { UnseenPill } from "@/components/changelog/ChangelogBadge";
-import { SeenStage } from "@/components/changelog/SeenStage";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { FilterChip, Panel, PanelHeader } from "@/components/ui/primitives";
@@ -345,7 +344,7 @@ export function LatestDigest({
           </p>
           <p className={styles.digestSummary}>{entry.summary}</p>
         </div>
-        <SeenStage className={styles.ledeFigures}>
+        <div className={styles.ledeFigures} data-draw>
           <dl className={styles.kindStats}>
             {CHANGE_KINDS.map((kind) => {
               const KindIcon = KIND_ICON[kind];
@@ -385,9 +384,9 @@ export function LatestDigest({
               })}
             </ul>
           </div>
-        </SeenStage>
+        </div>
       </div>
-      <SeenStage className={styles.cardsStage}>
+      <div className={styles.cardsStage}>
         <ul className={styles.cards}>
           {items.map((item, index) => (
             <li key={item.title} style={{ "--n": index } as CSSProperties}>
@@ -395,7 +394,7 @@ export function LatestDigest({
             </li>
           ))}
         </ul>
-      </SeenStage>
+      </div>
       <p className={styles.note}>{L.footnote}</p>
     </Panel>
   );
@@ -438,7 +437,7 @@ export function WeeklyFlow({
     <Panel aria-label={L.flowTitle} className={styles.flow}>
       <PanelHeader title={L.flowTitle} />
       <p className={styles.panelHint}>{L.flowHint}</p>
-      <SeenStage className={styles.flowStage}>
+      <div className={styles.flowStage} data-draw>
       <div className={styles.flowPlot} style={{ "--n": weeks.length } as CSSProperties} data-filtered={filtered || undefined}>
         <ol className={styles.flowGrid} aria-hidden>
           {grid.map((value, i) => (
@@ -519,7 +518,7 @@ export function WeeklyFlow({
           })}
         </ol>
       </div>
-      </SeenStage>
+      </div>
       <p className={styles.flowLegend} aria-hidden>
         {CHANGE_KINDS.map((kind) => (
           <span key={kind} className={styles.k} data-kind={kind}>

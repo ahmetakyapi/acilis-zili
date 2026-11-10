@@ -23,7 +23,7 @@
   font-size: var(--text-base);
   font-weight: 700;
   cursor: pointer;
-  transition: border-color 0.2s var(--ease-brand), background-color 0.2s var(--ease-brand);
+  transition: border-color 180ms var(--ease-brand), background-color 180ms var(--ease-brand);
 }
 .listToggle:hover { border-color: var(--line-strong); background: var(--surface); }
 @media (min-width: 640px) {
@@ -38,18 +38,18 @@
 }
 .table th,
 .table td { padding: 6px 8px; text-align: left; }
-.table thead th { color: var(--text-muted); font-size: var(--text-nano); font-weight: 650; border-bottom: 1px solid var(--line); }
+.table thead th { color: var(--text-muted); font-size: var(--text-nano); font-weight: 600; border-bottom: 1px solid var(--line); }
 .groupRow th {
   padding-top: 14px;
   color: var(--text-strong);
-  font-weight: 750;
+  font-weight: 700;
   border-bottom: 1px solid var(--line-soft);
 }
 .num,
-.table .num { text-align: right; white-space: nowrap; font-weight: 650; }
+.table .num { text-align: right; white-space: nowrap; font-weight: 600; }
 .tableLink { display: inline-flex; gap: 8px; align-items: baseline; min-height: 28px; color: inherit; }
 .tableLink:hover .tableSymbol { color: var(--primary); }
-.tableSymbol { color: var(--text-strong); font-weight: 750; font-family: var(--font-mono); font-size: var(--text-nano); }
+.tableSymbol { color: var(--text-strong); font-weight: 700; font-family: var(--font-mono); font-size: var(--text-nano); }
 .tableName { color: var(--text-body); }
 
 @media (prefers-reduced-motion: reduce) {

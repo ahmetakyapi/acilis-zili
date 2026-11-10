@@ -136,7 +136,7 @@ export function PuzzleTeaser({ day, number, labels }: { day: string; number: num
   return (
     <Panel data-home-section="puzzle" data-durum={finished ? status : used > 0 ? "playing" : "idle"} className={styles.teaser}>
       <div className={styles.body}>
-        <span className={styles.thumb} aria-hidden>
+        <span className={styles.thumb} aria-hidden data-draw>
           {points ? <Mini points={points} /> : points === null ? <PuzzlePiece size={24} weight="duotone" className={styles.icon} /> : null}
         </span>
 
@@ -274,7 +274,7 @@ function Mini({ points }: { points: number[] }) {
   const area = `${path} L${width},${height} L0,${height} Z`;
   const [lastX, lastY] = coords[coords.length - 1] ?? [width, height / 2];
   return (
-    <svg className={styles.mini} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
+    <svg className={`spark-line ${styles.mini}`} viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="none">
       <line x1="0" x2={width} y1={height / 2} y2={height / 2} className={styles.lane} vectorEffect="non-scaling-stroke" />
       <path d={area} className={styles.area} />
       <path d={path} className={styles.path} vectorEffect="non-scaling-stroke" />

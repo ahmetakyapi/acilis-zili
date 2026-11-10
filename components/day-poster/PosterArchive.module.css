@@ -53,9 +53,11 @@
   border-radius: var(--radius-lg);
   background: var(--surface);
   color: var(--text-body);
-  transition: background-color 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand), border-color 180ms var(--ease-brand);
 }
 .card:hover { background: var(--primary-tint); border-color: var(--primary-faint); }
+/* Basış: kart 0,992 (`.claude/rules/hareket.md`). */
+.card:active { scale: 0.992; }
 .card:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
 
 .cardHead { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; }
@@ -79,7 +81,7 @@
 :global(:root[data-theme="dark"]) .cardScene .sceneLight { display: none; }
 /* Günün kısa başlığı ("Geniş Satış") — kartın ilk okunan sözü. Degrade
    yok: kart bir veri kartı, degrade yalnız posterin kendi başlığında. */
-.cardStory { color: var(--text-strong); font-size: var(--text-title); font-weight: 750; line-height: 1.2; letter-spacing: -0.02em; }
+.cardStory { color: var(--text-strong); font-size: var(--text-title); font-weight: 700; line-height: 1.2; letter-spacing: -0.02em; }
 
 .cardFoot { display: grid; gap: 3px; padding-top: 10px; border-top: 1px solid var(--line-soft); font-size: var(--text-tiny); line-height: 1.35; }
 .cardFoot > span { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--text-strong); font-weight: 600; }

@@ -12,7 +12,7 @@
 .card { display: flex; flex-direction: column; gap: 14px; min-width: 0; padding: 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
 .cardTitle { font-size: var(--text-base); font-weight: 700; line-height: 1.3; color: var(--text-strong); }
 
-.headLink { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: var(--text-small); font-weight: 600; color: var(--primary-ink); transition: color 200ms var(--ease-brand); }
+.headLink { display: inline-flex; align-items: center; gap: 6px; min-height: 44px; font-size: var(--text-small); font-weight: 600; color: var(--primary-ink); transition: color 180ms var(--ease-brand); }
 .headLink:hover { color: var(--primary); }
 
 /* Endeks kulvarları: posterin `PosterLanes`i; kart zemini koyu olduğu için
@@ -23,7 +23,7 @@
 .breadthFigures { display: flex; align-items: flex-end; justify-content: space-between; gap: 12px; }
 .breadthSide { display: flex; align-items: baseline; gap: 8px; }
 .breadthRight { justify-content: flex-end; }
-.breadthNumber { font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem); font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+.breadthNumber { font-size: clamp(2rem, 1.5rem + 2vw, 2.75rem); font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
 .breadthWord { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
 .strip { --line-soft: var(--line); }
 .flat { font-size: var(--text-tiny); color: var(--text-muted); }
@@ -38,7 +38,7 @@
 .moverCol { display: flex; flex-direction: column; gap: 6px; min-width: 0; }
 .moverTitle { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
 .moverList { display: grid; gap: 2px; margin: 0; padding: 0; list-style: none; }
-.mover { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 44px; padding: 4px 8px; margin-inline: -8px; border-radius: var(--radius-md); transition: background-color 200ms var(--ease-brand); }
+.mover { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; min-height: 44px; padding: 4px 8px; margin-inline: -8px; border-radius: var(--radius-md); transition: background-color 180ms var(--ease-brand); }
 .mover:hover { background: var(--primary-tint); }
 .mover:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 0; }
 .moverName { display: flex; flex-direction: column; min-width: 0; line-height: 1.2; }
@@ -55,7 +55,7 @@
 .earnings { display: flex; flex-direction: column; gap: 10px; padding-top: 12px; border-top: 1px solid var(--line); }
 .earningsTitle { font-size: var(--text-small); font-weight: 600; color: var(--text-strong); }
 .logos { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.logo { display: grid; place-items: center; min-width: 44px; min-height: 44px; border-radius: var(--radius-md); transition: background-color 200ms var(--ease-brand); }
+.logo { display: grid; place-items: center; min-width: 44px; min-height: 44px; border-radius: var(--radius-md); transition: background-color 180ms var(--ease-brand); }
 .logo:hover { background: var(--primary-tint); }
 .logo:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 0; }
 .empty { font-size: var(--text-small); color: var(--text-muted); line-height: 1.5; }

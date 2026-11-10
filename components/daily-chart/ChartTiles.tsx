@@ -165,7 +165,7 @@ function Tile({
         <span className={styles.lane} data-zero={signed ? "" : undefined} aria-hidden>
           {tile.bar.size > 0 && (
             <span
-              className={styles.bar}
+              className={`bar-fill ${styles.bar}`}
               data-dir={signed ? tile.dir : "neutral"}
               style={{ "--start": `${tile.bar.start}%`, "--size": `${tile.bar.size}%` } as CSSProperties}
             />
@@ -233,7 +233,7 @@ function ShiftTiles({
       {peak > 0 && (
         <span className={styles.lane} aria-hidden>
           <span
-            className={styles.bar}
+            className={`bar-fill ${styles.bar}`}
             data-dir="neutral"
             style={{ "--start": "0%", "--size": `${(Math.abs(value.value ?? 0) / peak) * 100}%` } as CSSProperties}
           />

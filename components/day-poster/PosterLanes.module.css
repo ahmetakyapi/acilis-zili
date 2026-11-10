@@ -58,7 +58,7 @@
   color: var(--text-muted);
   font-family: var(--font-mono);
   font-size: var(--text-nano);
-  font-weight: 500;
+  font-weight: 400;
 }
 .value {
   grid-area: value;
@@ -91,17 +91,22 @@
   inset-block: 0;
   width: max(1.5px, var(--len));
   border-radius: 999px;
-  animation: bar-grow 0.7s var(--ease-brand) both;
-  animation-delay: calc(0.15s + var(--i, 0) * 0.045s);
+}
+/* Çizim globals'ın `.bar-fill` sınıfı (PosterLanes.tsx; 700 ms = `--draw`).
+   Kopya `bar-grow` kalktı (10 Kasım 2026: 150 + 45 ms × sıra kademeyle on
+   bir kulvarda son çubuk 1,35 sn'de bitiyordu); burada yalnız kademe
+   (`--step` × sıra, tavan on kulvar = 400 ms) ve oynatma durumu.
+   CSS modülü `animation` adını modül kapsamına alıyor (derlemede `Modül__bar-fill` oldu, çizim HİÇ oynamadı: `getAnimations()` ile yakalandı).
+   Seçiciler çift sınıflı: `.bar-fill`in `animation` kısa yazımı ve
+   `transform-origin`i aynı özgüllükte, sıraya kalmasın. Kap `data-draw`
+   taşıyor: kulvarlar ekrana girince çiziliyor. */
+.bar.bar {
+  animation-delay: calc(min(var(--i, 0), 10) * var(--step));
   /* Çağıran kendi anında oynatabilir (`--lanes-play`); varsayılan: hemen. */
   animation-play-state: var(--lanes-play, running);
 }
-.barUp { left: 50%; background: var(--up); transform-origin: left center; }
-.barDown { right: 50%; background: var(--down); transform-origin: right center; }
-@keyframes bar-grow {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
+.bar.barUp { left: 50%; background: var(--up); transform-origin: left center; }
+.bar.barDown { right: 50%; background: var(--down); transform-origin: right center; }
 
 /* Ölçü ızgarasının tek şeridi (`MiniLane`). */
 .mini {
@@ -156,5 +161,5 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .bar { animation: none; }
+  .bar.bar { animation: none; }
 }

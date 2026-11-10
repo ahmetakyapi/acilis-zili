@@ -84,7 +84,7 @@ function AuthorLine({
           icon={post.author.avatar?.icon ?? null}
           color={post.author.avatar?.color}
           initials={initialsOf(post.author.username, locale)}
-          className={cn("rounded-full", large ? "size-8 text-[11px]" : "size-6 text-[10px]")}
+          className={cn("rounded-full", large ? "size-8 text-[12px]" : "size-6 text-[12px]")}
         />
         {post.author.username}
       </Link>
@@ -195,7 +195,7 @@ export function PostCard({
   return (
     <article
       className={cn(
-        "group relative grid h-full min-w-0 rounded-(--radius-md) border border-line-soft bg-surface-sunken transition-colors duration-300 ease-brand hover:border-primary-faint",
+        "group relative grid h-full min-w-0 rounded-(--radius-md) border border-line-soft bg-surface-sunken transition-colors duration-[180ms] ease-brand hover:border-primary-faint",
         lead ? "gap-5 p-5 sm:p-6" : "gap-3 p-4 sm:p-5",
         hasPreview && "lg:grid-cols-[minmax(0,1fr)_minmax(0,1.05fr)] lg:gap-7",
       )}
@@ -235,7 +235,7 @@ export function PostCard({
             <ArrowRight
               size={12}
               aria-hidden
-              className="transition-transform duration-300 ease-brand group-hover:translate-x-0.5"
+              className="transition-transform duration-200 ease-brand group-hover:translate-x-[3px]"
             />
           </span>
         </div>
@@ -310,7 +310,7 @@ export function TemplateTiles({ templates, size }: { templates: TemplateLabels; 
               href={`/yazilarim/yeni?sablon=${template.key}`}
               title={large ? undefined : copy.hint}
               className={cn(
-                "group flex h-full min-w-0 rounded-(--radius-md) border border-line-soft bg-surface-sunken transition-colors duration-300 ease-brand hover:border-primary-faint hover:bg-primary-tint",
+                "group flex h-full min-w-0 rounded-(--radius-md) border border-line-soft bg-surface-sunken transition-colors duration-[180ms] ease-brand hover:border-primary-faint hover:bg-primary-tint",
                 large ? "min-h-[88px] items-start gap-3 p-4" : "min-h-[76px] flex-col justify-between gap-2 p-3",
               )}
             >
@@ -329,7 +329,7 @@ export function TemplateTiles({ templates, size }: { templates: TemplateLabels; 
                     <ArrowRight
                       size={13}
                       aria-hidden
-                      className="shrink-0 text-muted transition-transform duration-300 ease-brand group-hover:translate-x-0.5 group-hover:text-primary"
+                      className="shrink-0 text-muted transition-transform duration-200 ease-brand group-hover:translate-x-[3px] group-hover:text-primary"
                     />
                   )}
                 </span>
@@ -421,7 +421,7 @@ export function FeedBand({
                     title={names?.[symbol]?.name ?? symbol}
                     aria-label={names?.[symbol]?.name ?? symbol}
                     className={cn(
-                      "tap-44 relative rounded-full ring-2 ring-(--premium-surface) transition-transform duration-300 ease-brand hover:-translate-y-0.5",
+                      "tap-44 relative rounded-full ring-2 ring-(--premium-surface)",
                       index > 0 && "-ml-1.5",
                     )}
                   >

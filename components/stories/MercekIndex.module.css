@@ -74,7 +74,7 @@
 .filtersLabel { flex-shrink:0; font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
 .chips { display:flex; min-width:0; flex-wrap:nowrap; align-items:center; gap:6px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:none; scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; padding-block:2px 6px; }
 .chips > * { flex-shrink:0; }
-.chips a { min-height:40px; font-size:12px; transition:color .2s var(--ease-brand),background-color .2s var(--ease-brand); }
+.chips a { min-height:40px; font-size:12px; transition:color 180ms var(--ease-brand),background-color 180ms var(--ease-brand); }
 .chips a:not([aria-current]):hover { background:var(--primary-tint); }
 @media(min-width:1024px) {
   .filters { flex-direction:row; align-items:center; justify-content:flex-end; gap:12px; }
@@ -91,7 +91,7 @@
   border:1px solid var(--primary-faint);
   border-radius:var(--radius-feature);
   background:var(--premium-surface);
-  transition:border-color .3s var(--ease-brand),background-color .3s var(--ease-brand);
+  transition:border-color 250ms var(--ease-brand),background-color 180ms var(--ease-brand);
 }
 /* Kadro sütunu 360 piksel tabanlı: üç satırlık tablo (44'lük logo, ad,
    21 puntoluk getiri + ölçek çizgisi) 320'nin altında adı kırpıyordu. */
@@ -118,9 +118,9 @@
   border-radius:999px;
   background:var(--primary); color:var(--on-primary);
   font-size:14px; font-weight:600;
-  transition:background-color .25s var(--ease-brand);
+  transition:background-color 180ms var(--ease-brand);
 }
-.leadCta svg { transition:transform .26s var(--ease-brand); }
+.leadCta svg { transition:transform 200ms var(--ease-brand); }
 .leadMeta { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:13px; color:var(--text-muted); }
 
 .leadAside {
@@ -145,16 +145,28 @@
 .archive { display:flex; flex-direction:column; gap:36px; }
 .month { display:flex; min-width:0; flex-direction:column; gap:16px; }
 .monthHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding-top:14px; border-top:1px solid var(--line); }
-.monthTitle { font-size:22px; line-height:1.2; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); }
+.monthTitle { font-size:22px; line-height:1.2; font-weight:600; letter-spacing:-.03em; color:var(--text-strong); }
 /* Başlık degrade için 0,12em yukarı açılıp geri kalkıyor; yanındaki sayı
    aynı payı kalkmazsa 2-3 piksel aşağıda durur (CLAUDE.md, görsel dil). */
-.monthCount { translate:0 calc(22px * -.12); font-size:13px; font-weight:500; color:var(--text-muted); white-space:nowrap; }
+.monthCount { translate:0 calc(22px * -.12); font-size:13px; font-weight:400; color:var(--text-muted); white-space:nowrap; }
 
 /* Izgara: 640'ta iki, 1180'de üç kolon. Üç kolon 1280 kapta 405 piksellik
    kart veriyor; dört logo yığını (112) + rakam (≈110) şeride rahat sığıyor. */
 .grid { display:grid; grid-template-columns:minmax(0,1fr); gap:18px; }
 @media(min-width:640px) { .grid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:20px; } }
-@media(min-width:1180px) { .grid { grid-template-columns:repeat(3,minmax(0,1fr)); } }
+/* 10 Kasım 2026: üç kolon ALTI iz üstünde kuruluyor (kart iki iz). Kolon
+   sayısı ve kart eni aynı (1440'ta 426); fark ayın son satırında: iki
+   kart kalınca üçer iz alıp satırı ikiye bölüyorlar. Canlıda ölçüldü:
+   Kasım 17 yazı, son satırda iki kart ve sağında 446 piksellik boş yuva
+   (1440). Tek kalan kart zaten satırı kaplıyordu (aşağıda, 5 Kasım). */
+@media(min-width:1180px) {
+  .grid { grid-template-columns:repeat(6,minmax(0,1fr)); }
+  .grid > .card { grid-column:span 2; }
+  .grid > .card:nth-child(3n+1):nth-last-child(2),
+  .grid > .card:nth-child(3n+2):last-child { grid-column:span 3; }
+  .grid > .card:nth-child(3n+1):nth-last-child(2) .cardDek,
+  .grid > .card:nth-child(3n+2):last-child .cardDek { -webkit-line-clamp:2; }
+}
 /* GENİŞ EKRAN (25 Ekim): çerçeve 1640'tan sonra büyüyor (`components/
    layout/frame.ts`); 1800'de içerik ~1480 piksel ve üç kolonlu kart
    480'e şişiyordu. Dört kolon kartı 1440'taki boyuna (~355–445) geri
@@ -174,9 +186,9 @@
   display:grid; grid-row:span 3; grid-template-rows:subgrid; row-gap:0; min-width:0;
   overflow:hidden;
   border:1px solid var(--line);
-  border-radius:var(--radius-xl);
+  border-radius:var(--radius-panel);
   background:var(--premium-surface);
-  transition:border-color .3s var(--ease-brand),background-color .3s var(--ease-brand);
+  transition:border-color 250ms var(--ease-brand),background-color 180ms var(--ease-brand);
 }
 .cardBand {
   display:flex; align-items:center; justify-content:space-between; gap:12px;
@@ -194,10 +206,10 @@
   display:flex; align-items:center; justify-content:center;
   width:32px; height:32px;
   background:var(--surface-elevated);
-  font-size:11px; font-weight:700; color:var(--text-muted);
+  font-size:12px; font-weight:700; color:var(--text-muted);
 }
 .reading { display:flex; min-width:0; flex-direction:column; align-items:flex-end; gap:3px; text-align:right; }
-.readingCaption { font-size:12px; line-height:1.35; font-weight:500; color:var(--text-muted); }
+.readingCaption { font-size:12px; line-height:1.35; font-weight:400; color:var(--text-muted); }
 .readingValue { font-size:19px; line-height:1.1; font-weight:700; letter-spacing:-.02em; }
 
 /* İMZA ŞERİDİ (24 Ekim). Şerit yazının imza bloğunu taşıyınca tek çocuk,
@@ -207,10 +219,10 @@
 .cardBand[data-signature] { display:block; padding:14px 16px; }
 .stack[data-size="xs"] { padding-left:6px; }
 .stack[data-size="xs"] .stackItem { margin-left:-6px; border-radius:var(--radius-sm); }
-.stack[data-size="xs"] .stackMore { width:22px; height:22px; font-size:10px; }
+.stack[data-size="xs"] .stackMore { width:22px; height:22px; font-size:12px; }
 .footCast { display:flex; min-width:0; align-items:center; gap:10px; }
 .footCast .reading { align-items:flex-start; gap:1px; text-align:left; }
-.footCast .readingCaption { overflow:hidden; max-width:100%; font-size:11px; text-overflow:ellipsis; white-space:nowrap; }
+.footCast .readingCaption { overflow:hidden; max-width:100%; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
 .footCast .readingValue { font-size:14px; }
 
 /* Şeridi olmayan kartta (şirketsiz yazı) eylem yine üçüncü izde. */
@@ -228,7 +240,7 @@
 }
 .cardSymbols { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
 .cardCta { display:inline-flex; flex-shrink:0; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--primary); }
-.cardCta svg { transition:transform .26s var(--ease-brand); }
+.cardCta svg { transition:transform 200ms var(--ease-brand); }
 
 .metaStrong { font-weight:600; color:var(--text-body); }
 .metaDot { color:var(--line-strong); }
@@ -258,8 +270,10 @@
 }
 
 /* Arşiv başlığı — sayfanın ikinci `h2`si; ay başlıklarından bir basamak büyük. */
-.archiveHeading { font-size:26px; line-height:1.2; font-weight:650; letter-spacing:-.035em; color:var(--text-strong); }
-@media(max-width:767px) { .archiveHeading { font-size:23px; } .archive { gap:28px; } .monthTitle { font-size:20px; } .monthCount { translate:0 calc(20px * -.12); } }
+/* 10 Kasım 2026: bölüm başlığı ortak basamakta (`.claude/rules/arayuz.md` →
+   Ortak ölçüler): 26/650 → clamp(25px,2.8vw,36px)/600; 1440'ta 36, 390'da 25. */
+.archiveHeading { font-size:clamp(25px,2.8vw,36px); line-height:1.15; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
+@media(max-width:767px) { .archive { gap:28px; } .monthTitle { font-size:20px; } .monthCount { translate:0 calc(20px * -.12); } }
 
 /* SATIRDA YALNIZ KALAN KART SATIRI KAPLAR (5 Kasım 2026). Ay grubu sütun
    sayısının katı değilse son kart tek başına kalıyor ve satırın üçte

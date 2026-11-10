@@ -15,7 +15,7 @@
   background:var(--surface);
   color:var(--primary-ink);
   font-size:12px; font-weight:700; line-height:1;
-  transition:background-color .2s var(--ease-brand), color .2s var(--ease-brand);
+  transition:background-color 180ms var(--ease-brand), color 180ms var(--ease-brand);
 }
 /* 25 Ekim: görünen 18 → 22 piksel (kart turu; asıl okuma kartlara geçti,
    matris kaynak katmanı). Dikey genişletme 13 → 11: toplam yine 44. */
@@ -47,7 +47,7 @@
   border-radius:6px;
   background:var(--surface);
   color:var(--text-muted);
-  font-size:11px; font-weight:700;
+  font-size:12px; font-weight:700;
 }
 
 .inlineLink {
@@ -55,7 +55,7 @@
   min-height:44px;
   font-size:13px; font-weight:600;
   color:var(--primary-ink);
-  transition:color .2s var(--ease-brand);
+  transition:color 180ms var(--ease-brand);
 }
 .inlineLink:hover { color:var(--primary-hover); }
 
@@ -77,14 +77,14 @@
   padding:12px 16px;
   cursor:pointer;
   border-radius:var(--radius-xl);
-  transition:background-color .2s var(--ease-brand);
+  transition:background-color 180ms var(--ease-brand);
 }
 @media (min-width:640px) { .foldLine { padding:12px 20px; } }
 @media (hover:hover) and (pointer:fine) { .foldLine:hover { background:var(--surface); } }
 .fold[data-level="3"] > .foldLine { min-height:44px; padding-block:8px; }
 .foldLine:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
 .foldTitle, .foldTitleSm { grid-area:title; margin:0; }
-.foldTitleSm { font-size:13.5px; font-weight:750; line-height:1.3; color:var(--text-strong); white-space:nowrap; }
+.foldTitleSm { font-size:14px; font-weight:700; line-height:1.3; color:var(--text-strong); white-space:nowrap; }
 .foldSummaryText {
   grid-area:summary;
   min-width:0;
@@ -96,7 +96,7 @@
   color:var(--text-muted);
 }
 .foldMeta { grid-area:meta; display:inline-flex; align-items:center; justify-content:flex-end; gap:8px; font-size:12px; color:var(--text-muted); white-space:nowrap; }
-.foldCaret { flex:none; transition:transform .28s var(--ease-brand); }
+.foldCaret { flex:none; transition:transform 200ms var(--ease-brand); }
 .fold[open] .foldCaret { transform:rotate(180deg); }
 .foldBody { padding:4px 16px 16px; }
 @media (min-width:640px) { .foldBody { padding:4px 20px 18px; } }

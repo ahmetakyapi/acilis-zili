@@ -32,7 +32,19 @@ type DayNav = {
   nextHref: string | null;
 };
 
-export function GameNav({ active, labels, day }: { active: GameKey; labels: StockPuzzleLabels; day?: DayNav }) {
+export function GameNav({
+  active,
+  labels,
+  day,
+  inHeader = false,
+}: {
+  active: GameKey;
+  labels: StockPuzzleLabels;
+  day?: DayNav;
+  /** Başlık kartının `action` yuvasında: kartın sağında dikeyde ortalı,
+      telefonda tam genişlik (arşiv ve Hangisi Büyük; 10 Kasım 2026). */
+  inHeader?: boolean;
+}) {
   const G = labels.games;
   const tabs = [
     { key: "stock", href: "/bulmaca", icon: PuzzlePiece, text: labels.title },
@@ -40,7 +52,7 @@ export function GameNav({ active, labels, day }: { active: GameKey; labels: Stoc
     { key: "archive", href: "/bulmaca/arsiv", icon: CalendarDots, text: labels.archiveLink },
   ] as const;
   return (
-    <div className={styles.strip}>
+    <div className={cn(styles.strip, inHeader && styles.inHeader)}>
       <nav aria-label={G.navLabel} className={styles.tabs}>
         {tabs.map(({ key, href, icon: Icon, text }) => (
           <Link

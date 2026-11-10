@@ -7,7 +7,7 @@
 
 .panel { border-radius:18px; background:var(--premium-surface); }
 
-.badge { padding:0 7px; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:var(--text-nano); font-weight:650; line-height:17px; }
+.badge { padding:0 7px; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:var(--text-nano); font-weight:600; line-height:17px; }
 
 /* ---- Künyeler ve damga ---- */
 .notes { display:flex; flex-direction:column; gap:6px; padding:12px 16px; border-top:1px solid var(--line-soft); font-size:var(--text-tiny); line-height:1.55; color:var(--text-muted); }
@@ -26,19 +26,19 @@
 .years { display:grid; grid-template-columns:repeat(auto-fit,minmax(120px,1fr)); border-top:1px solid var(--line-soft); }
 .years > div { display:flex; flex-direction:column; gap:3px; padding:12px 16px; min-width:0; }
 .years > div + div { border-left:1px solid var(--line-soft); }
-.years dt { display:flex; align-items:baseline; gap:6px; font-size:var(--text-tiny); font-weight:650; color:var(--text-muted); }
+.years dt { display:flex; align-items:baseline; gap:6px; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
 .years dd { display:flex; flex-direction:column; gap:2px; }
 .years dd > span:first-child { font-size:20px; font-weight:700; letter-spacing:-.03em; color:var(--text-strong); }
-.partial { font-weight:500; }
+.partial { font-weight:400; }
 .count { font-size:var(--text-nano); color:var(--text-muted); }
 .yearBar { margin-left:0; max-width:none; }
 .recent { padding:12px 16px; border-top:1px solid var(--line-soft); }
 @media(min-width:640px) { .years > div, .recent { padding-inline:20px; } }
-.recent h3 { font-size:var(--text-tiny); font-weight:650; color:var(--text-muted); }
+.recent h3 { font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
 .recent ul { margin-top:6px; }
 .recent li { display:flex; align-items:baseline; gap:10px; padding-block:5px; font-size:var(--text-small); color:var(--text-body); }
 .recent li + li { border-top:1px solid var(--line-soft); }
-.recent li > span:nth-child(2) { margin-left:auto; font-weight:650; color:var(--text-strong); }
+.recent li > span:nth-child(2) { margin-left:auto; font-weight:600; color:var(--text-strong); }
 .yieldLine { padding:0 16px 12px; font-size:var(--text-small); color:var(--text-body); }
 .yieldLine b { color:var(--text-strong); }
 @media(min-width:640px) { .yieldLine { padding-inline:20px; } }
@@ -72,7 +72,7 @@
 .recentHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
 .recentYield { font-size:var(--text-tiny); color:var(--text-muted); }
 .recentYield b { color:var(--text-strong); font-weight:700; }
-.how > summary { display:flex; min-height:32px; align-items:center; gap:6px; color:var(--primary-ink); font-size:var(--text-tiny); font-weight:650; list-style:none; cursor:pointer; }
+.how > summary { display:flex; min-height:32px; align-items:center; gap:6px; color:var(--primary-ink); font-size:var(--text-tiny); font-weight:600; list-style:none; cursor:pointer; }
 .how > summary::-webkit-details-marker { display:none; }
 .how > summary::after { width:6px; height:6px; margin-top:-3px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); transition:transform .2s var(--ease-brand); content:""; }
 .how[open] > summary::after { margin-top:3px; transform:rotate(-135deg); }

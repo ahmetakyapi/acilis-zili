@@ -82,7 +82,7 @@ export function NewsPulseStrip({
                   <DirectionFigure pct={dayChange[entry.symbol]} locale={locale} />
                 </span>
                 <span className={feed.countLane} aria-hidden>
-                  <span className={feed.countBar} style={{ "--share": entry.count / max } as CSSProperties} />
+                  <span className={`bar-fill ${feed.countBar}`} style={{ "--share": entry.count / max } as CSSProperties} />
                 </span>
               </Link>
             </li>

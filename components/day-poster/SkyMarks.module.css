@@ -39,7 +39,7 @@
 /* ETKİLEŞİM: bir bina etkinken şehir söner (etkin bina sahnede ayrıca,
    tam renkte çiziliyor); mahalle adına gelince öteki mahalleler söner. */
 .district,
-.label { transition: opacity 0.2s var(--ease-brand); }
+.label { transition: opacity 180ms var(--ease-brand); }
 .city[data-dimmed] .district { opacity: 0.5; }
 .city[data-dimmed] .reflection { opacity: 0.5; }
 .district[data-off] { opacity: 0.16; }
@@ -72,11 +72,11 @@
 .label[data-on] .leader { stroke: var(--text-strong); }
 .symbol {
   fill: var(--text-strong);
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.01em;
 }
 .value {
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 .value.up { fill: var(--up); }
@@ -84,7 +84,7 @@
 .value.flat { fill: var(--flat); }
 .initials {
   fill: var(--text-muted);
-  font-weight: 750;
+  font-weight: 700;
 }
 .label[data-off] { opacity: 0.2; }
 /* Telefonda değer etiketinin altında kalan çatı etiketi: sönük değil, yok
@@ -100,11 +100,11 @@
   fill: var(--text-strong);
   stroke: var(--page-bg);
   stroke-width: 1.5px;
-  transition: fill 0.2s var(--ease-brand);
+  transition: fill 180ms var(--ease-brand);
 }
 .pinNumber {
   fill: var(--page-bg);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 .label[data-on] .pinDisc { fill: var(--primary); }

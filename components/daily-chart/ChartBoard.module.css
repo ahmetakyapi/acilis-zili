@@ -76,12 +76,12 @@ a.key:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px;
   align-items: baseline;
   gap: 4px;
   font-size: clamp(1.375rem, 1.15rem + 0.6vw, 1.625rem);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.03em;
   white-space: nowrap;
 }
-.keySlash { color: var(--text-muted); font-weight: 500; }
+.keySlash { color: var(--text-muted); font-weight: 400; }
 .keyFoot { display: flex; flex-direction: column; gap: 6px; margin-top: auto; }
 .keyStrip { --line-soft: var(--line); }
 .keyNote {
@@ -106,7 +106,7 @@ a.key:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px;
 .keyBar[data-dir="up"] { background: var(--up); }
 .keyBar[data-dir="down"] { background: var(--down); }
 .keyName { display: -webkit-box; min-width: 0; overflow: hidden; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
-.keySymbol { flex: none; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-nano); font-weight: 500; }
+.keySymbol { flex: none; color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-nano); font-weight: 400; }
 .keyGo {
   position: absolute;
   top: 14px;
@@ -114,7 +114,8 @@ a.key:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px;
   color: var(--text-muted);
   transition: color 200ms var(--ease-brand), translate 200ms var(--ease-brand);
 }
-a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
+/* İç bağlantı oku 3 piksel, 200 ms (ortak ölçü; 2 pikseldi). */
+a.key:hover .keyGo { color: var(--primary); translate: 3px 0; }
 
 /* -------------------------------------------------------- ANA KART */
 /* Metin kolonu ana karttan uzunsa fark kartların İÇİNE dağılır (satırlar
@@ -208,7 +209,7 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
   background: var(--line-strong);
 }
 .scaleText { min-width: 0; }
-.scaleRowTitle { color: var(--text-body); font-weight: 650; }
+.scaleRowTitle { color: var(--text-body); font-weight: 600; }
 
 .tile {
   display: flex;
@@ -220,9 +221,7 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
   border: 1px solid transparent;
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
-  transition: background-color 200ms var(--ease-brand), border-color 200ms var(--ease-brand);
-  animation: tile-in 420ms var(--ease-brand) both;
-  animation-delay: calc(60ms + var(--i, 0) * 30ms);
+  transition: background-color 180ms var(--ease-brand), border-color 180ms var(--ease-brand);
 }
 /* Vurgu: yönün yıkama tonu ve ince yön çerçevesi. Karışık grafikte iki uç,
    tek yönlü grafikte yalnız hikâyenin ucu (`emphasis`, 31 Ekim); öteki uç
@@ -274,12 +273,12 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
 .tileFoot { display: flex; align-items: baseline; justify-content: space-between; gap: 6px; margin-top: auto; }
 .tileValue {
   font-size: clamp(1.125rem, 1rem + 0.5vw, 1.375rem);
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.05;
   letter-spacing: -0.03em;
   white-space: nowrap;
 }
-.tileSymbol { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-nano); font-weight: 500; }
+.tileSymbol { color: var(--text-muted); font-family: var(--font-mono); font-size: var(--text-nano); font-weight: 400; }
 
 /* Kulvar: 5 piksel (sitenin tek kulvar ölçüsü), sıfır çizgisi tüm
    kartlarda aynı yerde (`--zero`, ızgarada bir kez). */
@@ -305,9 +304,12 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
   left: var(--start);
   width: max(2px, var(--size));
   border-radius: 999px;
-  animation: bar-grow 0.8s var(--ease-brand) both;
-  animation-delay: calc(0.2s + var(--i, 0) * 0.04s);
 }
+/* Çizim globals'ın `.bar-fill` sınıfı (ChartTiles.tsx; 700 ms = `--draw`).
+   Kopya `bar-grow` kalktı (10 Kasım 2026: 800 ms, 200 + 40 ms × sıra; on
+   iki kartta son çubuk 1,5 sn'de bitiyordu); burada yalnız kademe, tavan
+   on kart = 400 ms. CSS modülü `animation` adını modül kapsamına alıyor (derlemede `Modül__bar-fill` oldu, çizim HİÇ oynamadı: `getAnimations()` ile yakalandı). */
+.lane > .bar { animation-delay: calc(min(var(--i, 0), 10) * var(--step)); }
 .bar[data-dir="up"] { background: var(--up); transform-origin: left center; }
 .bar[data-dir="down"] { background: var(--down); transform-origin: right center; }
 .bar[data-dir="neutral"], .bar[data-dir="flat"] { background: var(--primary-soft); transform-origin: left center; }
@@ -321,8 +323,6 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
   padding: 10px 12px 12px;
   border: 1px dashed var(--line-strong);
   border-radius: var(--radius-lg);
-  animation: tile-in 420ms var(--ease-brand) both;
-  animation-delay: calc(60ms + var(--i, 0) * 30ms);
 }
 .scaleTitle { color: var(--text-strong); font-size: var(--text-base); font-weight: 600; line-height: 1.3; }
 .scaleAxis { display: flex; flex-direction: column; gap: 5px; margin-top: auto; }
@@ -340,14 +340,10 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
   background: var(--line-strong);
 }
 
-@keyframes tile-in {
-  from { opacity: 0; transform: translateY(6px); }
-  to { opacity: 1; transform: none; }
-}
-@keyframes bar-grow {
-  from { transform: scaleX(0); }
-  to { transform: scaleX(1); }
-}
+/* 10 KASIM 2026'DA KALKTI: kartlar, halka ve değişim kutuları opaklık
+   0'dan 6 piksel kayarak, 30–60 ms kademeyle giriyordu (`tile-in`). Pano
+   ilk ekranda ve kartlar METİN kutusu: açılış opaklık 0'dan başlamaz,
+   kutu kaymaz (`.claude/rules/hareket.md`). Hareket veriyi çizen çubukta. */
 
 /* ------------------------------------------------------------- PAY */
 .share { display: grid; grid-template-columns: minmax(0, 1fr); gap: 16px; align-items: center; container-type: inline-size; }
@@ -360,7 +356,6 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
   aspect-ratio: 1;
   margin-inline: auto;
   border-radius: 50%;
-  animation: tile-in 420ms var(--ease-brand) both;
 }
 .ringHole {
   display: flex;
@@ -375,7 +370,7 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
   background: var(--premium-surface);
   text-align: center;
 }
-.ringValue { color: var(--text-strong); font-size: 1.5rem; font-weight: 800; line-height: 1; letter-spacing: -0.03em; }
+.ringValue { color: var(--text-strong); font-size: 1.5rem; font-weight: 700; line-height: 1; letter-spacing: -0.03em; }
 .ringName { color: var(--text-muted); font-size: var(--text-tiny); font-weight: 600; line-height: 1.2; }
 .shareTiles { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; margin: 0; padding: 0; list-style: none; }
 @container (min-width: 620px) { .shareTiles { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
@@ -389,8 +384,6 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
   padding: 10px 12px 12px;
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
-  animation: tile-in 420ms var(--ease-brand) both;
-  animation-delay: calc(60ms + var(--i, 0) * 30ms);
 }
 .shareTile > .tileName { grid-area: name; }
 .shareTile > .tileValue { grid-area: value; }
@@ -408,17 +401,15 @@ a.key:hover .keyGo { color: var(--primary); translate: 2px 0; }
   padding: 14px 16px 16px;
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
-  animation: tile-in 420ms var(--ease-brand) both;
-  animation-delay: calc(60ms + var(--i, 0) * 60ms);
 }
 .shiftDelta[data-dir="up"] { background: var(--up-wash); }
 .shiftDelta[data-dir="down"] { background: var(--down-wash); }
 .shiftLabel { color: var(--text-muted); font-size: var(--text-small); font-weight: 600; line-height: 1.3; }
-.shiftValue { margin-top: auto; color: var(--text-strong); font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem); font-weight: 800; line-height: 1; letter-spacing: -0.035em; }
+.shiftValue { margin-top: auto; color: var(--text-strong); font-size: clamp(1.75rem, 1.4rem + 1.4vw, 2.5rem); font-weight: 700; line-height: 1; letter-spacing: -0.035em; }
 .shiftArrow { display: none; align-self: center; color: var(--text-muted); }
 @media (min-width: 640px) { .shiftArrow { display: block; } }
 
 @media (prefers-reduced-motion: reduce) {
-  .tile, .scaleTile, .bar, .ring, .shareTile, .shiftCard, .shiftDelta { animation: none; }
+  .lane > .bar { animation: none; }
   .tile, .keyGo { transition: none; }
 }

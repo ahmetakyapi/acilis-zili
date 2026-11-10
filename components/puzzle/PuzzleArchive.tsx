@@ -18,7 +18,9 @@ import styles from "./PuzzleArchive.module.css";
  * OYUN ARŞİVİ GİBİ (29 Ekim, sahibinin isteği: "arşiv kısmı daha görsel
  * olsun, bunun bir oyun olduğu daha belirgin olsun"). Kartlar düz bir
  * liste gibi duruyordu: numara, logo ya da siluet, tarih, rozet. Şimdi:
- *   - üstte KARNE: çözülen, bilinemeyen, bekleyen gün ve seri — dört sayı;
+ *   - üstte KARNE: çözülen, bilinemeyen, bekleyen gün ve seri — dört sayı
+ *     (10 Kasım 2026'da süzgeç satırına indi: dağılım şeridi + seri;
+ *     gerekçe aşağıda, araç satırında);
  *   - SÜZGEÇ çipleri (Tümü · Oynanmadı · Çözüldü · Bilinemedi), sayılarıyla;
  *   - kartın üst kenarı durumun renginde (bildin yeşil, bilemedin kırmızı,
  *     yarım pirinç), altında altı TAHMİN YUVASI — o günün oyunu bir bakışta
@@ -75,36 +77,55 @@ export function PuzzleArchive({ items, labels }: { items: ArchiveItem[]; labels:
 
   return (
     <>
-      {/* ---- Karne: dört sayı ---- */}
-      <dl className={styles.scores}>
-        {[
-          { key: "won", label: A.solved, value: totals.won },
-          { key: "lost", label: A.missed, value: totals.lost },
-          { key: "none", label: A.waiting, value: totals.none },
-          { key: "streak", label: labels.streak, value: streak },
-        ].map(({ key, label, value }) => (
-          <div key={key} className={styles.score} data-kind={key}>
-            <dt>{label}</dt>
-            <dd className="numeral">{known ? value : "–"}</dd>
+      {/* ---- Araç satırı: süzgeç solda, karne sağda ----
+          10 KASIM 2026 (sahibinin sözü, Bilanço Analizleri için: "başlığın
+          altındaki boşluk göze çarpıyor… böyle başka ekran varsa onları da
+          düzeltelim"). Başlık kartı, oyun şeridi, dört karolu karne ve
+          süzgeç DÖRT ayrı satırdı; canlıda ölçüldü (1440): ilk kart y=507'de
+          başlıyor, karne karoları 1320×75 piksel ve üçü süzgeç çiplerinin
+          zaten yazdığı sayıyı tekrarlıyordu (Çözülen 0 = "Çözüldü 0").
+          Şimdi oyun şeridi başlık kartının sağında (sayfa), karne süzgeçle
+          AYNI satırda: tekrar eden üç sayı yerine dağılımı çizen tek şerit
+          (çözülen yeşil, bilinemeyen kırmızı, bekleyen kulvar) ve çiplerde
+          olmayan tek sayı, seri. 29 Ekim'in "karne" kararı duruyor, yalnız
+          biçimi değişti: sayı duvarı yerine çizim. */}
+      <div className={styles.toolbar}>
+        <div role="group" aria-label={A.filterLabel} className={styles.filters}>
+          {FILTERS.map((key) => (
+            <button
+              key={key}
+              type="button"
+              aria-pressed={filter === key}
+              className={styles.filter}
+              onClick={() => setFilter(key)}
+              disabled={!known && key !== "all"}
+            >
+              {A.filters[key]}
+              {known && <span className={cn(styles.filterCount, "numeral")}>{filterCount(key)}</span>}
+            </button>
+          ))}
+        </div>
+        <dl className={styles.record}>
+          <div className={styles.recordMix}>
+            <dt className="sr-only">
+              {A.solved} / {A.missed} / {A.waiting}
+            </dt>
+            <dd>
+              <span className="sr-only">
+                {known ? `${totals.won} / ${totals.lost} / ${totals.none}` : "–"}
+              </span>
+              <span className={styles.mix} aria-hidden data-draw>
+                {known && totals.won > 0 && <span className="bar-fill" data-kind="won" style={{ flexGrow: totals.won }} />}
+                {known && totals.lost > 0 && <span className="bar-fill" data-kind="lost" style={{ flexGrow: totals.lost }} />}
+                {(!known || totals.none > 0) && <span data-kind="none" style={{ flexGrow: known ? totals.none : 1 }} />}
+              </span>
+            </dd>
           </div>
-        ))}
-      </dl>
-
-      {/* ---- Süzgeç ---- */}
-      <div role="group" aria-label={A.filterLabel} className={styles.filters}>
-        {FILTERS.map((key) => (
-          <button
-            key={key}
-            type="button"
-            aria-pressed={filter === key}
-            className={styles.filter}
-            onClick={() => setFilter(key)}
-            disabled={!known && key !== "all"}
-          >
-            {A.filters[key]}
-            {known && <span className={cn(styles.filterCount, "numeral")}>{filterCount(key)}</span>}
-          </button>
-        ))}
+          <div className={styles.recordStreak}>
+            <dt>{labels.streak}</dt>
+            <dd className={cn("numeral", !known && styles.recordEmpty)}>{known ? streak : "–"}</dd>
+          </div>
+        </dl>
       </div>
 
       {shown.length === 0 ? (

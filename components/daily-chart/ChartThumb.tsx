@@ -209,7 +209,7 @@ export function ChartThumb({
           >
             {item.bar.size > 0 && (
               <span
-                className={styles.bar}
+                className={`bar-fill ${styles.bar}`}
                 data-tone={item.dir === "flat" ? "neutral" : item.dir}
                 data-from={zero !== null && item.dir === "down" ? "right" : undefined}
                 style={{ left: `${item.bar.start}%`, width: `${item.bar.size}%` }}
@@ -235,7 +235,7 @@ export function ChartThumb({
   };
 
   return (
-    <div className={styles.thumb}>
+    <div className={styles.thumb} data-draw>
       {strip}
       <ol className={styles.thumbList} aria-label={label}>
         {head.map(row)}

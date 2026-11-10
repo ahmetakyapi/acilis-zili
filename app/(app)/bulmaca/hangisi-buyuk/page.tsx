@@ -40,8 +40,9 @@ export default async function BiggerGamePage() {
   return (
     <MotionExperience className={polish.page}>
       <BreadcrumbJsonLd locale={locale} items={[{ name: L.title, path: "/bulmaca" }, { name: G.biggerTitle, path }]} />
-      <PageHeader title={G.biggerTitle} subtitle={G.biggerSubtitle} />
-      <GameNav active="bigger" labels={L} />
+      {/* Oyun şeridi başlık kartının sağında (10 Kasım 2026; gerekçe
+          arsiv/page.tsx). */}
+      <PageHeader title={G.biggerTitle} subtitle={G.biggerSubtitle} action={<GameNav active="bigger" labels={L} inHeader />} />
       {pool.length >= 2 ? (
         <>
           <BiggerGame pool={pool} labels={L} locale={locale} shareUrl={absoluteUrl(path, locale)} seed={puzzleDayKey()} />

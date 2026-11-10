@@ -8,6 +8,8 @@ import {
   DividendCalendarSkeleton,
   DividendHero,
   DividendHeroSkeleton,
+  DividendWeeks,
+  DividendWeeksSkeleton,
 } from "@/components/calendar/DividendCalendar";
 import { TabBar, TabItem } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
@@ -101,25 +103,37 @@ export default async function CalendarPage(
         {/* Köşe motifi yok: sağ sütun veri kartı taşıyor (gerekçe
             _view/EconomicCalendar.tsx, kapak notu). */}
         <header className={`${styles.hero} page-frame`}>
-          <div className="page-heading-copy">
-            <div className="page-title-row">
-              <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
-                {t.marketExtras.dividendTitle}
-              </h1>
-              <div className={cn("page-title-actions", styles.shareTitle)}>{share("/takvim?tur=temettu", t.marketExtras.dividendTitle)}</div>
+          {/* KAPAK İKİ KOLONU DA DOLDURUYOR (10 Kasım 2026). Solda başlık ve
+              altında sıradaki hak kesim (geniş kolonda yatay dizilir), sağda
+              paylaş ve dört haftalık şerit. Önceki hâl: solda yalnız başlık
+              (altı ~150 piksel boş), sağda kart, şerit panelde. Gerekçe ve
+              ölçüm DividendCalendar.tsx → `DividendWeeks`. Telefonda sıra:
+              başlık, sıradaki hak kesim, şerit. */}
+          <div className={styles.heroMain}>
+            <div className="page-heading-copy">
+              <div className="page-title-row">
+                <h1 className="display-ink w-fit text-heading font-bold tracking-[-0.03em] sm:text-display">
+                  {t.marketExtras.dividendTitle}
+                </h1>
+                <div className={cn("page-title-actions", styles.shareTitle)}>{share("/takvim?tur=temettu", t.marketExtras.dividendTitle)}</div>
+              </div>
+              <p>{t.marketExtras.dividendSubtitle}</p>
             </div>
-            <p>{t.marketExtras.dividendSubtitle}</p>
+            <div className={styles.heroLead}>
+              <Suspense fallback={<DividendHeroSkeleton t={t} />}>
+                <DividendHero locale={locale} t={t} />
+              </Suspense>
+            </div>
           </div>
-          {/* Sağ sütun ekonomik görünümdeki "sıradaki açıklama" kartının
-              yerinde: sıradaki hak kesim ve son alım günü. Veriye bağlı,
-              kendi Suspense sınırında; kapak ilk baytla geliyor. */}
-          <div className={styles.heroSide}>
+          <div className={cn(styles.heroSide, styles.heroSideFill)}>
             <div className={styles.heroControls}>
               <span className={styles.shareSide}>{share("/takvim?tur=temettu", t.marketExtras.dividendTitle)}</span>
             </div>
-            <Suspense fallback={<DividendHeroSkeleton t={t} />}>
-              <DividendHero locale={locale} t={t} />
-            </Suspense>
+            <div className={styles.heroWeeks}>
+              <Suspense fallback={<DividendWeeksSkeleton />}>
+                <DividendWeeks locale={locale} t={t} />
+              </Suspense>
+            </div>
           </div>
         </header>
         <KindTabs kind={kind} labels={kindLabels} />

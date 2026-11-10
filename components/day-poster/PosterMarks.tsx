@@ -32,7 +32,7 @@ export function BreadthStrip({
   const total = breadth.advancing + breadth.unchanged + breadth.declining;
   const part = (n: number) => ({ "--part": total > 0 ? n / total : 0 }) as CSSProperties;
   return (
-    <span className={cn(styles.strip, animate && styles.fill, className)} role="img" aria-label={label}>
+    <span className={cn(styles.strip, animate && styles.fill, className)} role="img" aria-label={label} data-draw={animate || undefined}>
       <span className={styles.ink}>
         <span className={styles.up} style={part(breadth.advancing)} />
         <span className={styles.flat} style={part(breadth.unchanged)} />

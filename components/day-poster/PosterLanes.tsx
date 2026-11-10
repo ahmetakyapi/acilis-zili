@@ -51,7 +51,7 @@ export function PosterLanes({
   className?: string;
 }) {
   return (
-    <div className={cn(styles.wrap, className)}>
+    <div className={cn(styles.wrap, className)} data-draw>
       <div className={styles.axis} aria-hidden>
         <span className={styles.axisTrack}>
           <span>{axis[0]}</span>
@@ -73,7 +73,7 @@ export function PosterLanes({
               <span className={styles.track} aria-hidden>
                 {dir !== "flat" && (
                   <span
-                    className={cn(styles.bar, dir === "up" ? styles.barUp : styles.barDown)}
+                    className={cn("bar-fill", styles.bar, dir === "up" ? styles.barUp : styles.barDown)}
                     style={{ "--len": `${length}%` } as CSSProperties}
                   />
                 )}
@@ -98,10 +98,10 @@ export function MiniLane({ change, scale, className }: { change: number; scale: 
   const length = (Math.min(Math.abs(change), scale) / scale) * 50;
   const dir = directionOf(change);
   return (
-    <span className={cn(styles.mini, className)} aria-hidden>
+    <span className={cn(styles.mini, className)} aria-hidden data-draw>
       {dir !== "flat" && (
         <span
-          className={cn(styles.bar, dir === "up" ? styles.barUp : styles.barDown)}
+          className={cn("bar-fill", styles.bar, dir === "up" ? styles.barUp : styles.barDown)}
           style={{ "--len": `${length}%` } as CSSProperties}
         />
       )}

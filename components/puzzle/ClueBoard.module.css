@@ -22,7 +22,7 @@
 .label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-tiny); font-weight:600; line-height:1.25; }
 .value { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:var(--text-read); font-weight:700; line-height:1.2; color:var(--text-strong); overflow-wrap:break-word; }
 /* Baş harf: klavye tuşu. Derinlik tonla: alt kenar bir ton koyu. */
-.keycap { display:inline-grid; place-items:center; align-self:flex-start; min-width:1.75rem; height:1.75rem; padding:0 .375rem; border-radius:var(--radius-sm); background:var(--premium-surface); border:1px solid var(--line); border-bottom-width:3px; border-bottom-color:var(--line-strong); font-size:var(--text-lead); font-weight:800; line-height:1; color:var(--text-strong); }
+.keycap { display:inline-grid; place-items:center; align-self:flex-start; min-width:1.75rem; height:1.75rem; padding:0 .375rem; border-radius:var(--radius-sm); background:var(--premium-surface); border:1px solid var(--line); border-bottom-width:3px; border-bottom-color:var(--line-strong); font-size:var(--text-lead); font-weight:700; line-height:1; color:var(--text-strong); }
 .up { color:var(--up); }
 .down { color:var(--down); }
 

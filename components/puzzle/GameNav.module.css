@@ -3,18 +3,22 @@
    Derinlik tonla; gölge yok. 44 px dokunma hedefi. */
 .strip { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.5rem .75rem; min-width:0; }
 
+/* Başlık kartının sağında (gerekçe GameNav.tsx → `inHeader`). */
+.inHeader { align-self:center; }
+@media (max-width: 639.98px) { .inHeader { flex:1 1 100%; } }
+
 .tabs { display:flex; gap:3px; min-width:0; padding:3px; border-radius:999px; background:var(--surface-elevated); overflow-x:auto; scrollbar-width:none; }
 .tabs::-webkit-scrollbar { display:none; }
-.tab { display:inline-flex; flex:none; align-items:center; gap:.4375rem; min-height:40px; padding:0 .9375rem; border-radius:999px; color:var(--text-body); font-size:var(--text-small); font-weight:650; white-space:nowrap; transition:background-color 200ms var(--ease-brand), color 200ms var(--ease-brand); }
+.tab { display:inline-flex; flex:none; align-items:center; gap:.4375rem; min-height:40px; padding:0 .9375rem; border-radius:999px; color:var(--text-body); font-size:var(--text-small); font-weight:600; white-space:nowrap; transition:background-color 180ms var(--ease-brand), color 180ms var(--ease-brand); }
 .tab:hover { color:var(--text-strong); background:var(--surface-sunken); }
 .tabActive, .tabActive:hover { background:var(--primary); color:var(--on-primary); }
 
 .days { display:flex; align-items:center; gap:2px; padding:3px; border-radius:999px; background:var(--surface-elevated); }
-.arrow { display:grid; place-items:center; width:40px; height:40px; border-radius:999px; color:var(--text-body); transition:background-color 200ms var(--ease-brand), color 200ms var(--ease-brand); }
+.arrow { display:grid; place-items:center; width:40px; height:40px; border-radius:999px; color:var(--text-body); transition:background-color 180ms var(--ease-brand), color 180ms var(--ease-brand); }
 .arrow:hover { background:var(--primary-tint); color:var(--primary-ink); }
 .arrowOff, .arrowOff:hover { background:transparent; color:var(--text-muted); opacity:.4; }
 .day { display:inline-flex; align-items:baseline; gap:.4375rem; padding:0 .375rem; font-size:var(--text-small); color:var(--text-muted); white-space:nowrap; }
-.day b { color:var(--text-strong); font-size:var(--text-read); font-weight:750; }
+.day b { color:var(--text-strong); font-size:var(--text-read); font-weight:700; }
 
 /* Telefonda iki şerit ayrı satır: sekmeler tam genişlikte, eşit; gün okları
    altında sağda. Dokunma hedefi 44. */

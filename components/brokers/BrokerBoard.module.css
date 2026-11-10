@@ -49,7 +49,7 @@
 .title {
   margin: 0;
   font-size: 16px;
-  font-weight: 800;
+  font-weight: 700;
   line-height: 1.25;
   letter-spacing: -0.01em;
   color: var(--text-strong);
@@ -62,7 +62,7 @@
   border-radius: 999px;
   background: var(--surface-elevated);
   color: var(--text-muted);
-  font-size: 11.5px;
+  font-size: 12px;
   font-weight: 600;
 }
 
@@ -78,7 +78,7 @@
 .amountValue {
   justify-self: end;
   font-size: 24px;
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.01em;
   color: var(--text-strong);
 }
@@ -102,7 +102,7 @@
   background: var(--primary);
   border: 3px solid var(--premium-surface);
   box-shadow: 0 0 0 1px var(--line-strong);
-  transition: transform 0.15s var(--ease-brand);
+  transition: transform 200ms var(--ease-brand);
 }
 .slider:active::-webkit-slider-thumb { transform: scale(1.12); }
 .slider::-moz-range-track { height: 4px; background: var(--line-strong); border-radius: 4px; }
@@ -119,7 +119,7 @@
   display: flex;
   justify-content: space-between;
   margin-top: -4px;
-  font-size: 11px;
+  font-size: 12px;
   color: var(--text-muted);
 }
 
@@ -174,8 +174,8 @@
   border-radius: 6px;
   background: var(--surface-elevated);
   color: var(--text-body);
-  font-size: 11px;
-  font-weight: 800;
+  font-size: 12px;
+  font-weight: 700;
   line-height: 1;
 }
 .step[data-first] .medal { background: var(--text-strong); color: var(--premium-surface); }
@@ -186,11 +186,11 @@
   overflow: hidden;
   min-height: 2.5em;
   font-size: 12.5px;
-  font-weight: 650;
+  font-weight: 600;
   line-height: 1.25;
   color: var(--text-strong);
 }
-.stepFee { margin-top: 4px; font-size: 16px; font-weight: 800; letter-spacing: -0.01em; color: var(--text-strong); }
+.stepFee { margin-top: 4px; font-size: 16px; font-weight: 700; letter-spacing: -0.01em; color: var(--text-strong); }
 .step[data-first] .stepFee { font-size: 20px; }
 /* Dar karoda (telefon, ~90 piksel) rozet logonun üstüne biniyordu: logo
    rozetin altına iner (390'da ölçüldü). */
@@ -198,7 +198,7 @@
   .step { padding-top: 32px; }
   .stepMark { margin-top: 0; }
 }
-.stepPct { font-size: 11px; color: var(--text-muted); }
+.stepPct { font-size: 12px; color: var(--text-muted); }
 
 .rest {
   display: flex;
@@ -216,10 +216,10 @@
   min-height: 32px;
   font-size: 13px;
 }
-.restRank { font-size: 11.5px; color: var(--text-muted); text-align: right; }
+.restRank { font-size: 12px; color: var(--text-muted); text-align: right; }
 .restName { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-weight: 600; color: var(--text-strong); }
 .restFee { display: inline-flex; align-items: baseline; gap: 6px; font-weight: 700; color: var(--text-strong); }
-.restFee small { font-size: 11px; font-weight: 500; color: var(--text-muted); }
+.restFee small { font-size: 12px; font-weight: 400; color: var(--text-muted); }
 
 /* ------------------------------------------------------------ b. eğriler */
 
@@ -233,7 +233,7 @@
 .chart { display: block; overflow: visible; }
 .gridLine { stroke: var(--line-soft); stroke-width: 1; }
 .axis { stroke: var(--line-strong); stroke-width: 1; }
-.tick { fill: var(--text-muted); font-size: 11px; }
+.tick { fill: var(--text-muted); font-size: 12px; }
 .curve {
   fill: none;
   stroke: var(--brand);
@@ -270,7 +270,7 @@
 .tip[data-side="left"] { transform: translateX(calc(-100% - 10px)); }
 .tip b { font-size: 12.5px; color: var(--text-strong); }
 .tipRow { display: grid; grid-template-columns: 8px minmax(0, 1fr) auto; align-items: center; gap: 6px; }
-.tipRow > span:last-child { color: var(--text-strong); font-weight: 650; }
+.tipRow > span:last-child { color: var(--text-strong); font-weight: 600; }
 .tipSwatch { width: 8px; height: 8px; border-radius: 2px; background: var(--brand); }
 
 /* En düşük komisyon şeridi (31 Ekim; gerekçe BrokerBoard.tsx "GÖRSEL
@@ -281,7 +281,7 @@
 .strip { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
 .stripHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 4px 12px; }
 .stripTitle { font-size: 12.5px; font-weight: 700; color: var(--text-strong); }
-.stripKey { display: inline-flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-muted); }
+.stripKey { display: inline-flex; align-items: center; gap: 6px; font-size: 12px; color: var(--text-muted); }
 .stripKeySwatch {
   width: 18px;
   height: 6px;
@@ -342,7 +342,7 @@
   background: var(--text-strong);
   transition: left 0.42s var(--ease-brand);
 }
-.stripTicks { position: relative; height: 16px; margin-top: 3px; font-size: 11px; color: var(--text-muted); }
+.stripTicks { position: relative; height: 16px; margin-top: 3px; font-size: 12px; color: var(--text-muted); }
 .stripTicks > span { position: absolute; top: 0; translate: -50% 0; white-space: nowrap; }
 .stripTicks > span::before {
   content: "";
@@ -355,7 +355,7 @@
 }
 
 .sentence { margin: 0; font-size: 13.5px; line-height: 1.5; color: var(--text-body); }
-.hint { margin: -4px 0 0; font-size: 11.5px; color: var(--text-muted); }
+.hint { margin: -4px 0 0; font-size: 12px; color: var(--text-muted); }
 
 /* ------------------------------------------------------------ c. yıllık */
 
@@ -375,10 +375,10 @@
   border-radius: 999px;
   color: var(--text-body);
   font-size: 12.5px;
-  font-weight: 650;
+  font-weight: 600;
   cursor: pointer;
   position: relative;
-  transition: background-color 0.2s var(--ease-brand), color 0.2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand), color 180ms var(--ease-brand);
 }
 /* Görünen 38, dokunma alanı 44 piksel. */
 .freqButton::after { content: ""; position: absolute; inset: -3px 0; }
@@ -400,8 +400,8 @@
   gap: 3px 8px;
 }
 .barRow > :nth-child(2) { grid-area: mark; }
-.barName { grid-area: name; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 650; color: var(--text-strong); }
-.barValue { grid-area: value; font-size: 13.5px; font-weight: 800; color: var(--text-strong); }
+.barName { grid-area: name; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 13px; font-weight: 600; color: var(--text-strong); }
+.barValue { grid-area: value; font-size: 13.5px; font-weight: 700; color: var(--text-strong); }
 .barTrack {
   grid-area: track;
   position: relative;
@@ -423,9 +423,9 @@
   background: color-mix(in srgb, var(--brand) 42%, transparent);
   transform: translateX(calc(var(--a) * 100%)) scaleX(var(--b));
 }
-.barNote { grid-area: note; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 11px; color: var(--text-muted); }
+.barNote { grid-area: note; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: 12px; color: var(--text-muted); }
 
-.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 11.5px; color: var(--text-muted); }
+.legend { display: flex; flex-wrap: wrap; gap: 4px 14px; font-size: 12px; color: var(--text-muted); }
 .legend span { display: inline-flex; align-items: center; gap: 6px; }
 .swatchA, .swatchB { width: 14px; height: var(--lane-h, 5px); border-radius: 999px; }
 .swatchA { background: var(--text-muted); }
@@ -434,7 +434,7 @@
   margin: auto 0 0;
   padding-top: 10px;
   border-top: 1px solid var(--line-soft);
-  font-size: 11.5px;
+  font-size: 12px;
   line-height: 1.45;
   color: var(--text-muted);
 }
@@ -448,12 +448,16 @@
   .curve {
     stroke-dasharray: 1;
     stroke-dashoffset: 1;
-    animation: draw 1.1s var(--ease-brand) 0.15s forwards;
+    animation: draw var(--draw) var(--ease-brand) forwards;
   }
-  .step::before { animation: grow 0.6s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 80ms + 200ms); }
-  .leader, .endDot { animation: fade 0.4s var(--ease-brand) 1.1s both; }
-  .barTrack { animation: grow 0.7s var(--ease-brand) both; transform-origin: 0 50%; }
-  .stripSeg::after { animation: grow 0.7s var(--ease-brand) 0.5s both; transform-origin: 0 50%; }
+  /* 10 Kasım 2026: süreler ortak merdivenden. Önce: eğri 1.100 ms + 150 ms
+     gecikme, uç imleri 1.100 ms'de başlayıp 1.500'de bitiyordu (açılış
+     tavanı ~900), kürsü kademesi 80 ms. Sonra: eğri `--draw` (700),
+     uç imleri eğrinin ardından `--mark` (900'de biter), kademe `--step`. */
+  .step::before { animation: grow var(--draw) var(--ease-brand) both; animation-delay: calc(var(--i, 0) * var(--step)); }
+  .leader, .endDot { animation: fade var(--mark) var(--ease-brand) var(--draw) both; }
+  .barTrack { animation: grow var(--draw) var(--ease-brand) both; transform-origin: 0 50%; }
+  .stripSeg::after { animation: grow var(--draw) var(--ease-brand) var(--mark) both; transform-origin: 0 50%; }
 }
 @keyframes draw { to { stroke-dashoffset: 0; } }
 @keyframes grow { from { transform: scaleX(0); } }

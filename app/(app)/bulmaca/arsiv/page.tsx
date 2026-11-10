@@ -53,8 +53,11 @@ export default async function PuzzleArchivePage() {
   return (
     <MotionExperience className={polish.page}>
       <BreadcrumbJsonLd locale={locale} items={[{ name: L.title, path: "/bulmaca" }, { name: L.archiveLink, path: "/bulmaca/arsiv" }]} />
-      <PageHeader title={L.archiveTitle} subtitle={L.archiveSubtitle} />
-      <GameNav active="archive" labels={L} />
+      {/* OYUN ŞERİDİ BAŞLIK KARTININ SAĞINDA (10 Kasım 2026). Kartın altında
+          kendi satırındaydı ve satırın sağ yarısı boştu (1440'ta şerit 345
+          piksel, satır 1320); kartın sağı da boştu. `PageHeader`ın tek
+          denetim yuvası (`action`); telefonda başlığın altına iner. */}
+      <PageHeader title={L.archiveTitle} subtitle={L.archiveSubtitle} action={<GameNav active="archive" labels={L} inHeader />} />
       <PuzzleArchive items={items} labels={L} />
       {items.length === 1 && (
         <EmptyState compact title={L.archiveLink} hint={L.archiveEmpty} action={<Link href="/bulmaca" className="font-semibold text-primary-ink">{L.backToToday}</Link>} />

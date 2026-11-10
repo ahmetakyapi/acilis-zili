@@ -854,7 +854,11 @@ export async function EconomicCalendar({
                     yedi boş karo (1440'ta ~170 piksel) cümlenin ve sıradaki
                     günün söylediğini tekrarlıyor, üstelik başka önemde
                     açıklaması olan günü boş gibi gösteriyordu. */}
-                {view !== "day" && !(impact !== null && listed.length === 0) && (
+                {/* 10 Kasım 2026: süzgeçsiz BOŞ aralıkta da çizilmiyor. Şerit
+                    artık verinin şeklinde (CalendarStrip, modül CSS'i):
+                    olaysız hafta yedi dar sırttan ibaret kalırdı; sessiz
+                    satır ve sıradaki gün aynı şeyi söylüyor. */}
+                {view !== "day" && listed.length > 0 && (
                   <CalendarStrip
                     view={view}
                     dates={dates}

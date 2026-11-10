@@ -51,11 +51,11 @@
 @media (max-width: 1023.98px) {
   .tabs { position:sticky; top:var(--app-bar-h); z-index:5; display:grid; grid-template-columns:1fr 1fr; gap:3px; margin:-.375rem -.25rem; padding:.375rem .25rem; background:var(--page-bg); }
   .tabs::before { content:""; position:absolute; inset:.375rem .25rem; z-index:-1; border-radius:999px; background:var(--surface-elevated); }
-  .tab { display:inline-flex; align-items:center; justify-content:center; gap:.4375rem; min-height:44px; margin:3px 0; border-radius:999px; font-size:var(--text-small); font-weight:600; color:var(--text-body); transition:background-color 200ms, color 200ms; }
+  .tab { display:inline-flex; align-items:center; justify-content:center; gap:.4375rem; min-height:44px; margin:3px 0; border-radius:999px; font-size:var(--text-small); font-weight:600; color:var(--text-body); transition:background-color 180ms, color 180ms; }
   .tab:first-child { margin-left:3px; }
   .tab:last-child { margin-right:3px; }
   .tab[aria-pressed="true"] { background:var(--primary); color:var(--on-primary); }
-  .tabMeta { font-weight:500; opacity:.8; }
+  .tabMeta { font-weight:400; opacity:.8; }
   .tabNew { padding:0 .375rem; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:var(--text-tiny); font-weight:700; line-height:1.5; }
   .guesses[data-gizli], .clues[data-gizli] { display:none; }
 }

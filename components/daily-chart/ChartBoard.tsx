@@ -83,7 +83,7 @@ export function ChartBoard({
   const keyCount = keys.length + (showMarket ? 1 : 0);
 
   return (
-    <div className={styles.board} data-keys={keyCount > 0 ? "" : undefined}>
+    <div className={styles.board} data-keys={keyCount > 0 ? "" : undefined} data-draw>
       {keyCount > 0 && (
         <ul className={styles.keys} aria-label={labels.board.keysLabel} data-m="keys" style={{ "--keys": keyCount } as CSSProperties}>
           {keys.map((key, index) => (

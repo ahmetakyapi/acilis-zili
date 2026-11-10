@@ -121,11 +121,11 @@ export function BrokerTable({
         >
           <thead>
             <tr className="border-y border-line-soft text-left text-nano text-muted">
-              <th scope="col" className={cn(sticky, "px-4 py-2.5 font-medium sm:px-5")} style={{ width: LABEL_COL_PX }}>
+              <th scope="col" className={cn(sticky, "px-4 py-2.5 font-semibold sm:px-5")} style={{ width: LABEL_COL_PX }}>
                 {L.columns.broker}
               </th>
               {BROKER_COLUMNS.map((column) => (
-                <th key={column} scope="col" className="px-3 py-2.5 align-bottom font-medium" style={{ width: VALUE_COL_PX }}>
+                <th key={column} scope="col" className="px-3 py-2.5 align-bottom font-semibold" style={{ width: VALUE_COL_PX }}>
                   {L.columns[column]}
                 </th>
               ))}

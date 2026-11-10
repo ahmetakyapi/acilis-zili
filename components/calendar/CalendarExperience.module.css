@@ -59,6 +59,17 @@
    kadar uzar, liste hiç kaybolmaz. */
 .heroMain { display:flex; min-width:0; flex-direction:column; align-self:stretch; gap:14px; }
 .heroMain.heroMain > :global(.page-heading-copy) { align-self:stretch; }
+/* Temettü kapağı (gerekçe app/(app)/takvim/page.tsx ve DividendCalendar.tsx
+   → `DividendWeeks`): solda başlığın altında sıradaki hak kesim, sağda
+   paylaşın altında dört haftalık şerit. */
+.heroLead { min-width:0; margin-top:auto; }
+/* Kolonlardan kısa kalan dibe yaslanır: iki kolon aynı hatta biter.
+   1024'te sol kolon 462 piksel (kart dikey, kapak 396), sağda şerit 286'da
+   bitiyordu; şerit dibe iniyor, paylaş tepede kalıyor. Yalnız çok sütunlu
+   yerleşimde. */
+@media (min-width:768px) { .heroSideFill { align-self:stretch; } .heroSideFill > .heroWeeks { margin-top:auto; } }
+.heroWeeks { align-self:stretch; min-width:0; }
+.heroLead:empty, .heroWeeks:empty { display:none; }
 .keyBox { display:flex; min-width:0; flex-direction:column; gap:4px; padding:10px 12px 6px; border:1px solid var(--line-soft); border-radius:var(--radius-xl); background:var(--surface); container-type:inline-size; }
 .keyBox[data-constrained] { flex:1 1 0; min-height:112px; contain:size; }
 /* Telefonda liste kapaktan takvim panelinin altına iniyor (25 Ekim;
@@ -81,13 +92,13 @@
    tek hat. */
 .keyLine { display:grid; grid-template-columns:36px minmax(0,1fr) auto; align-items:center; gap:12px; padding:5px 4px; border-radius:var(--radius-lg); color:inherit; text-decoration:none; transition-property:background-color; }
 .keyDate { display:flex; flex-direction:column; align-items:center; gap:2px; }
-.keyDate strong { font-size:17px; font-weight:650; line-height:18px; letter-spacing:-.03em; color:var(--text-strong); }
+.keyDate strong { font-size:17px; font-weight:700; line-height:18px; letter-spacing:-.03em; color:var(--text-strong); }
 .keyDate span { font-size:12px; font-weight:600; line-height:14px; color:var(--text-muted); }
 .keyBody { display:flex; min-width:0; flex-direction:column; gap:2px; }
 .keyTitle { min-width:0; overflow:hidden; font-size:14px; font-weight:600; line-height:19px; color:var(--text-strong); text-overflow:ellipsis; white-space:nowrap; }
 .keyMeta { display:flex; flex:none; align-items:center; gap:6px; font-size:12px; line-height:16px; color:var(--text-soft); white-space:nowrap; }
 .keyStatus { font-size:12px; font-weight:600; line-height:16px; color:var(--text-soft); text-align:right; white-space:nowrap; }
-.keyStatus strong { font-size:14px; font-weight:650; color:var(--text-strong); }
+.keyStatus strong { font-size:14px; font-weight:700; color:var(--text-strong); }
 /* GELECEK SATIRIN UZAKLIĞI BİR HAP (6 Kasım): "4 Gün Sonra" düz künyeydi
    ve geçmiş satırın "Geçti"siyle aynı tonda duruyordu; gündemin göreli gün
    rozetiyle (`.rel`) aynı malzeme, satırın "ne zaman" cevabı seçiliyor. */
@@ -116,7 +127,10 @@
 /* Giriş: satırlar sırayla, yalnız OPAKLIK (kartın `next-in` kararı:
    okunacak kutular kaymaz). Kart katları 120–330 ms'de; liste 160'tan
    45'er ms, sekizinci satırda tavan. */
-.keyRow { animation:next-in 420ms var(--ease-brand) backwards; animation-delay:calc(min(var(--i, 0), 8) * 45ms + 160ms); }
+/* 10 KASIM 2026'DA KALKTI: satırlar opaklık 0'dan, 160–520 ms kademeyle
+   giriyordu. Liste ilk ekranda ve METİN: "hiçbir açılış animasyonu opaklık
+   0'dan başlamaz, metin soluklaşarak girmez" (`.claude/rules/hareket.md`).
+   Sayfanın hareketi veriyi çizen kulvarlarda ve geri sayımda. */
 
 /* Sıradaki açıklama kartı. Derinlik TONLA: eski kartın radyal parıltısı,
    köşe halkası ve gölgesi kalktı (sayfa içi kartta gölge yok, yalnızca
@@ -127,15 +141,15 @@
    arası 12 piksel; künye ile ana satır arası aynı ritim. Sayı mavi DEĞİL
    (veri rengi kuralı): geri sayım ve değerler `--text-strong`, mavi
    yalnızca tarih karosunda — karo bir bağlantının parçası. */
-.next { display:flex; flex-direction:column; gap:12px; padding:16px 18px; border:1px solid var(--primary-faint); border-radius:var(--radius-xl); background:var(--primary-tint); color:inherit; text-decoration:none; transition-property:background-color,border-color; }
+.next { display:flex; flex-direction:column; gap:12px; padding:16px 18px; border:1px solid var(--primary-faint); border-radius:var(--radius-panel); background:var(--primary-tint); color:inherit; text-decoration:none; transition-property:background-color,border-color; }
 .nextTop { display:flex; align-items:center; justify-content:space-between; gap:8px; }
 .nextMain { display:grid; grid-template-columns:60px minmax(0,1fr); align-items:center; gap:16px; }
 .nextBadge { display:flex; flex-direction:column; align-items:center; gap:4px; padding-right:16px; border-right:1px solid var(--primary-faint); color:var(--primary-ink); }
-.nextBadge strong { font-size:36px; font-weight:500; letter-spacing:-.04em; line-height:1; }
+.nextBadge strong { font-size:36px; font-weight:600; letter-spacing:-.04em; line-height:1; }
 .nextBadge span { font-size:12px; font-weight:600; }
 .nextBody { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:4px; }
 .nextLabel { font-size:12px; font-weight:600; line-height:16px; color:var(--text-muted); }
-.nextTitle { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:17px; font-weight:650; line-height:1.3; letter-spacing:-.02em; color:var(--text-strong); }
+.nextTitle { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:17px; font-weight:700; line-height:1.3; letter-spacing:-.02em; color:var(--text-strong); }
 .nextMeta { font-size:12px; line-height:18px; color:var(--text-soft); }
 .nextPill { flex:none; padding:1px 8px; border-radius:999px; background:var(--surface-sunken); font-size:12px; font-weight:700; line-height:16px; color:var(--text-soft); white-space:nowrap; }
 /* Kartın zemini zaten `--primary-tint`; "Bugün" hapı aynı tonda kaybolurdu. */
@@ -144,12 +158,12 @@
 .nextFoot { display:flex; flex-wrap:wrap; align-items:flex-end; gap:10px 28px; padding-top:12px; border-top:1px solid var(--primary-faint); }
 .nextCount, .nextValue { display:flex; min-width:0; flex-direction:column; gap:5px; }
 .nextFootLabel { font-size:12px; font-weight:600; line-height:14px; color:var(--text-muted); white-space:nowrap; }
-.nextValue strong { font-size:16px; font-weight:650; line-height:22px; color:var(--text-strong); }
+.nextValue strong { font-size:16px; font-weight:700; line-height:22px; color:var(--text-strong); }
 /* Geri sayım: rakam iri, birim küçük ve soluk — ana sayfanın sayacıyla
    aynı tipografik karar ("17 sa 59 dk"), bir kademe küçük. */
 .count { display:inline-flex; flex-wrap:wrap; align-items:baseline; gap:2px 9px; }
 .countPart { display:inline-flex; align-items:baseline; gap:3px; }
-.countPart strong { font-size:22px; font-weight:650; line-height:22px; letter-spacing:-.03em; color:var(--text-strong); }
+.countPart strong { font-size:22px; font-weight:700; line-height:22px; letter-spacing:-.03em; color:var(--text-strong); }
 .countPart span { font-size:12px; font-weight:600; color:var(--text-muted); }
 .countDue { font-size:14px; font-weight:600; line-height:22px; color:var(--text-strong); }
 
@@ -159,12 +173,10 @@
    önce tam sonra sönük görünmüyor (MotionExperience'ın "ilk ekran
    kımıldamaz" gerekçesi hidratasyondaki ikinci boyamaydı). 70 ms kademe,
    dört kat 210 ms'de başlamış oluyor; başlığın `title-rise`ı 60 ms'de. */
-.next > * { animation:next-in 420ms var(--ease-brand) backwards; }
-.next > :nth-child(1) { animation-delay:120ms; }
-.next > :nth-child(2) { animation-delay:190ms; }
-.next > :nth-child(3) { animation-delay:260ms; }
-.next > :nth-child(4) { animation-delay:330ms; }
-@keyframes next-in { from { opacity:0; } }
+/* 10 KASIM 2026'DA KALKTI (yukarıdaki not kararın kaydı): dört kat opaklık
+   0'dan 120–330 ms gecikmeyle giriyordu; kart sayfanın LCP adayı ve ilk
+   ekrandaki asıl cevap. Açılış animasyonu opaklık 0'dan başlamaz
+   (`.claude/rules/hareket.md`); kartın canlılığı geri sayımın kendisi. */
 
 /* --- Pano ----------------------------------------------------------------- */
 /* Takvim tam genişlik (29 Eylül); halka arz artık panonun ALTINDA bir kart
@@ -226,6 +238,27 @@ a.cell { border-color:var(--line); background:var(--surface); }
 @media (min-width:768px) {
   .strip:not(.month) .cell[data-empty]:not([data-weekend],[data-holiday]) { border-style:dashed; border-color:var(--line); }
   .strip:not(.month) .cell[data-weekend] { background:var(--surface-sunken); }
+  /* IZGARA VERİNİN ŞEKLİNDE (10 Kasım 2026, sahibinin sözü: "boş günler
+     olunca kötü duruyor; her şekle uygun olmalı" — Bilanço Ufku'nda çözülen
+     sorunun aynısı, `components/earnings/horizon/HorizonGrid.tsx`). Yedi
+     hücre 2/1 birimle bölünüyordu: canlıda ölçüldü (1440, 10–16 Kasım,
+     iki olaylı gün) beş iş gününün üçü 206×108 piksellik kesik kenarlı BOŞ
+     kutu, şeridin 1278 pikselinin 618'i (%48). Şimdi olaysız gün 64
+     piksellik bir SIRT (gün adı + rakam; hafta yedi günüyle yerinde, yer
+     kaplamadan), hafta sonu 52; kalan genişliği olaylı günler olay
+     sayısıyla orantılı paylaşıyor (`--w`) ve o günün olaylarını saatiyle
+     yazıyor (CalendarStrip.tsx). 6 Kasım'ın "aynı hat" kararı yerinde:
+     yedi hücre aynı boyda, malzeme anlamı söylüyor. Hiç olay yoksa şerit
+     çizilmiyor (EconomicCalendar.tsx). Ölçüm dosyanın sonunda. */
+  .strip:not(.month) .cell[data-empty] { flex:0 0 64px; align-items:center; padding-inline:4px; text-align:center; }
+  .strip:not(.month) .cell[data-empty] .cellTop, .strip:not(.month) .cell[data-empty] .cellNum { justify-content:center; }
+  .strip:not(.month) .cell[data-empty][data-weekend] { flex-basis:52px; }
+  .strip:not(.month) .cell[data-empty] .cellNum strong { font-size:18px; }
+  .strip:not(.month) .cell[data-empty] .cellToday { display:none; }
+  .strip:not(.month) .cell[data-empty] .cellNote { display:none; }
+  .strip:not(.month) .cell:not([data-empty]) { flex:var(--w, 2) 1 0; }
+  /* Olay adları her satırda önem şeridini taşıyor; ayrı kulvar tekrar. */
+  .strip:not(.month) .cell:not([data-empty]) .lane { display:none; }
 }
 /* Seçili gün (DayPicker): kutu mavi çerçeve ve ton alıyor. */
 a.cell[aria-current="true"] { border-color:var(--primary); background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--primary); }
@@ -233,7 +266,7 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 .cellTop { display:flex; align-items:baseline; justify-content:space-between; gap:4px; font-size:12px; font-weight:600; line-height:14px; color:var(--text-muted); }
 .cellToday { font-size:12px; font-weight:700; color:var(--primary-ink); }
 .cellNum { display:flex; align-items:baseline; gap:4px; }
-.cellNum strong { font-size:24px; font-weight:500; letter-spacing:-.04em; line-height:1; color:var(--text-strong); }
+.cellNum strong { font-size:24px; font-weight:600; letter-spacing:-.04em; line-height:1; color:var(--text-strong); }
 .cellNum span { font-size:12px; font-weight:600; color:var(--text-muted); }
 .cell[data-empty] .cellNum strong { color:var(--text-muted); }
 .cell[data-weekend] .cellNum strong { font-size:16px; }
@@ -264,14 +297,40 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
    ızgarasında 22 iş günü 1 saniyeyi aşan bir dalga olurdu). Yalnız `.lane`
    altındaki dolu yuva — altı haftalık görünümün yuvalarını PremiumMotion
    çiziyor ve orada CSS animasyonu kapalı. */
-.lane .laneSlot[data-impact] { transform-origin:left center; animation:lane-draw 560ms var(--ease-brand) backwards; animation-delay:calc(min(var(--i, 0), 8) * 45ms + var(--s, 0) * 35ms + 140ms); }
+/* 10 Kasım 2026: süre ve kademe merdivenden (`--draw` = 700 ms, `--step`;
+   560 ms ve 45/35 ms idi), kopya `lane-draw` yerine globals'ın `.bar-fill`
+   SINIFI (CalendarStrip.tsx): CSS modülü `animation` adını modül kapsamına alıyor (derlemede `Modül__bar-fill` oldu, çizim HİÇ oynamadı: `getAnimations()` ile yakalandı); burada
+   yalnız kademe. Şerit `data-draw` taşıyor, ekranın altındaysa görününce
+   oynuyor. Kademe tavanı 7 gün + 3 yuva = 400 ms. */
+.lane .laneSlot[data-impact] { animation-delay:calc(min(var(--i, 0), 7) * var(--step) + var(--s, 0) * var(--step)); }
 .lane .laneSlot:nth-child(2) { --s:1; }
 .lane .laneSlot:nth-child(3) { --s:2; }
 .lane .laneSlot:nth-child(4) { --s:3; }
-@keyframes lane-draw { from { transform:scaleX(0); } }
-/* Günün öne çıkan olayı (yalnız hafta, ≥768): iki satırla kırpılmış ad. */
-.cellLead { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; font-size:12px; line-height:16px; color:var(--text-body); }
-.cellLead[data-high] { font-weight:600; color:var(--text-strong); }
+/* Günün olayları (yalnız hafta, ≥768): satır başına önem şeridi + saat +
+   tek satır ad; ad sığmazsa üç nokta (tam ad hemen alttaki gündemde). */
+.cellList { display:flex; min-width:0; flex-direction:column; gap:4px; }
+.cellItem { display:grid; grid-template-columns:14px auto minmax(0,1fr); align-items:center; gap:8px; font-size:13px; line-height:18px; color:var(--text-body); }
+.cellItem .laneSlot { width:14px; }
+/* Önem şeridi soldan çiziliyor: masaüstünde ayrı kulvar yok (yukarıda),
+   şeridin çizimi bu imlerde (globals `.bar-fill` sınıfı, 700 ms = `--draw`);
+   gün içi sıra `--step` (üç satır 80 ms). Şerit `data-draw` taşıyor. */
+.cellItem:nth-child(2) .laneSlot { animation-delay:var(--step); }
+.cellItem:nth-child(3) .laneSlot { animation-delay:calc(var(--step) * 2); }
+.cellTime { font-size:12px; font-weight:600; color:var(--text-soft); }
+.cellName { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.cellItem[data-high] .cellName { font-weight:600; color:var(--text-strong); }
+.cellMore { padding-left:22px; font-size:12px; font-weight:600; line-height:16px; color:var(--text-muted); }
+/* DAR HÜCRE (768'de beş olaylı günde hücre ~95 piksel, ölçüldü: ad
+   "Eki…", "S" diye kesiliyordu). Hücre kendi enini soruyor: 190 pikselin
+   altında saat düşer, ad iki satıra kırılır (eski "günün öne çıkanı"
+   ölçüsü). Saat hemen alttaki gündemde. */
+.strip:not(.month) .cell:not([data-empty]) { container-type:inline-size; }
+@container (max-width:190px) {
+  .cellItem { grid-template-columns:14px minmax(0,1fr); align-items:start; font-size:12px; line-height:16px; }
+  .cellItem .laneSlot { margin-top:6px; }
+  .cellTime { display:none; }
+  .cellName { display:-webkit-box; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; white-space:normal; }
+}
 
 /* --- Şerit (ay) ------------------------------------------------------------ */
 /* Pazartesi başlayan yedi sütun, hafta sonu dar. Başlık satırı ızgaranın
@@ -342,7 +401,7 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 /* Ad + önem hapı aynı akışta (gerekçe sayfada, "önem adın yanında"). */
 .titleRow { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
 .title { font-size:15px; line-height:21px; color:var(--text-body); }
-.title[data-high] { font-weight:650; letter-spacing:-.01em; color:var(--text-strong); }
+.title[data-high] { font-weight:600; letter-spacing:-.01em; color:var(--text-strong); }
 
 /* ÖNEM HAPI (gerekçe ImpactTag.tsx). 22 piksel, çubuklar adın x-yüksekliği
    değil taban çizgisine oturuyor; yüksek önem tonlu zemin + güçlü ad,
@@ -371,7 +430,7 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 .value { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:3px; }
 .valueLabel { display:flex; align-items:center; gap:6px; font-size:12px; font-weight:600; line-height:14px; color:var(--text-muted); white-space:nowrap; }
 .value > span:last-child { font-size:16px; line-height:20px; color:var(--text-soft); text-wrap:balance; }
-.value[data-kind="actual"] > span:last-child { font-size:17px; font-weight:750; letter-spacing:-.01em; color:var(--text-strong); }
+.value[data-kind="actual"] > span:last-child { font-size:17px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
 .value[data-kind="actual"] .valueLabel { color:var(--text-body); }
 /* Lejant işaretleri — çizgidekilerle aynı biçim ve ton (ReleasedData.module.css → `.key`). */
 .valueKey { display:inline-block; flex:none; }
@@ -422,7 +481,7 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 .aheadRows > * + * { border-top:1px solid var(--line-soft); }
 .aheadRow { min-height:60px; padding:12px 0; }
 .aheadWeek { display:flex; min-width:0; flex-direction:column; gap:2px; font-size:13px; font-weight:600; line-height:18px; color:var(--text-strong); }
-.aheadWeekNote { font-size:12px; font-weight:500; line-height:16px; color:var(--text-muted); }
+.aheadWeekNote { font-size:12px; font-weight:400; line-height:16px; color:var(--text-muted); }
 .aheadRow[data-current] .aheadWeekNote { font-weight:700; color:var(--primary-ink); }
 .aheadDay { display:flex; min-width:0; flex-direction:column; gap:6px; }
 .aheadNum { font-size:12px; font-weight:600; line-height:14px; color:var(--text-soft); }
@@ -440,6 +499,27 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 .aheadMore { font-size:12px; font-weight:600; color:var(--text-muted); }
 .aheadQuiet { font-size:12px; line-height:18px; color:var(--text-muted); }
 .valueBar { max-width:72px; }
+
+/* DEĞERSİZ GÜNDEMDE SATIR GENİŞLİĞİ KULLANIYOR (10 Kasım 2026). Değer sütunu
+   yalnız değer varsa açılıyor (yukarıda); tohumlanan haftada çoğu zaman yok
+   ve satırın metni 68ch'de bitiyordu. Canlıda ölçüldü (1440, 10–16 Kasım):
+   üç olay satırının her biri 1318 piksel geniş, içerik 172–660 arası,
+   sağdaki ~650 piksel (%49) boş. Şimdi (≥1024, yalnız değersiz gündemde):
+   aynı günün olayları yan yana iki sütun (aynı saatte açıklanan TÜFE ve
+   Çekirdek TÜFE zaten bir çift), tek sayıda kalan son olay tam genişlik;
+   günde tek olay varsa durum ve "Takvime Ekle" satırın sağ ucuna çıkıyor.
+   Çizgiler kutu gölgesiyle: ızgarada `li + li` üst çizgisi ikinci sütunun
+   ilk hücresine de düşerdi. Ölçüm dosyanın sonunda. */
+@media (min-width:1024px) {
+  .agenda:not([data-values]) .events { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); overflow:clip; }
+  .agenda:not([data-values]) .events > li { border-top:0; box-shadow:-1px 0 var(--line-soft), 0 -1px var(--line-soft); }
+  .agenda:not([data-values]) .events > li:last-child:nth-child(odd) { grid-column:1 / -1; }
+  /* Yalnız eylem taşıyan satırda (durum + "Takvime Ekle" ya da Fed
+     olasılığı): tek başına "Planlandı" sağ uçta asılı bir künye olurdu. */
+  .agenda:not([data-values]) .events > li:only-child .body:has(> .statusLine > :nth-child(2)) { display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:32px; align-items:start; }
+  .agenda:not([data-values]) .events > li:only-child .body:has(> .statusLine > :nth-child(2)) > :not(.statusLine) { grid-column:1; }
+  .agenda:not([data-values]) .events > li:only-child .body:has(> .statusLine > :nth-child(2)) > .statusLine { grid-column:2; grid-row:1 / span 2; justify-content:flex-end; margin-top:0; min-height:21px; }
+}
 
 .page :is(a,button):focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 
@@ -522,7 +602,7 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
   .cellNum strong { font-size:20px; }
   .cell[data-weekend] .cellNum strong { font-size:14px; }
   .cellFoot { justify-content:center; }
-  .cellCount, .cellNote, .cellLead { display:none; }
+  .cellCount, .cellNote, .cellList { display:none; }
   .lane { max-width:none; }
   /* 390'da iş günü hücresi ~42 piksel: dört parça 4×8 + 3×2 = 38. */
   .lane .laneSlot { width:8px; }
@@ -580,6 +660,9 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
   .aheadHeadHigh { display:none; }
   .aheadHead > span:not(:first-child) { text-align:left; }
   .aheadHigh { grid-column:1 / -1; padding:8px 0 0; }
+  /* Dokunma hedefi (10 Kasım 2026, 390'da ölçüldü): yüksek etkili adın
+     bağlantısı 19 piksel boyundaydı; telefonda 44. */
+  a.aheadHighItem { min-height:44px; align-items:center; }
   .aheadHigh:has(> .aheadQuiet) { display:none; }
   /* Tatil adı 34 piksellik sütuna sığmıyor ("Piyasa Kapalı" 390'da
      "Piyasa" diye kesiliyordu, ölçüldü). Telefonda yazı yerine kesik
@@ -635,24 +718,22 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 
 @media (prefers-reduced-motion:reduce) {
   .next, .cell, .chip { transition:none; }
-  .next > *, .lane .laneSlot[data-impact], .keyRow { animation:none; }
+  .lane .laneSlot[data-impact], .cellItem .laneSlot[data-impact] { animation:none; }
   .keyLine { transition:none; }
 }
 
 /* ---- Olay satırları, premium (26 Eylül) ----
    Yüksek etkili olayın solunda marka mavisinde bir hat (etki bir yön değil,
-   bir önem derecesi); saat karosu bir kademe iri. Satır üzerine gelince
-   tonlanıyor ve karo kalkıyor — göz hangi olayı okuduğunu buluyor. */
-.event { position:relative; transition:background-color .2s var(--ease-brand); }
+   bir önem derecesi); saat karosu bir kademe iri.
+   10 KASIM 2026: hover kalktı. Satır tonlanıyor ve karo 2 piksel
+   kalkıyordu; satır bir bağlantı DEĞİL (tıklanacak şey yok) ve hover'da
+   kaldırma yok (`.claude/rules/hareket.md`). Bağlantı olmayan satır hover
+   almaz (bu dosyanın kendi kuralı, "Hover yalnızca TON"). */
+.event { position:relative; }
 .event[data-impact="high"]::before { content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--primary); }
-.time { min-height:58px; transition:translate .25s var(--ease-brand); }
+.time { min-height:58px; }
 .time > span:first-child { font-size:20px; }
 .time > span:nth-child(2) { font-size:12px; }
-@media(hover:hover) and (pointer:fine) {
- .event:hover { background:var(--primary-tint); }
- .event:hover .time { translate:0 -2px; }
-}
-@media(prefers-reduced-motion:reduce) { .event, .time { transition:none; } .event:hover .time { translate:none; } }
 
 /* Telefonda saat zeminsiz ve bir kademe küçük (gerekçe yukarıda, "Olay
    satırı telefonda üç kutudan arınıyor"). Premium bloğundan SONRA: oradaki
@@ -662,3 +743,24 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
   .time > span:first-child { font-size:17px; }
   .time > span:nth-child(2) { font-size:12px; color:var(--text-muted); }
 }
+
+/* ÖLÇÜM (10 Kasım 2026, önce canlı → sonra yerel üretim derlemesi, canlıya
+   benzer sahte veri: 10–16 Kasım, iki olaylı salı + tek olaylı perşembe,
+   değersiz; `reducedMotion: "reduce"`, açık ve koyu tema).
+   - Hafta şeridi 1440: hücreler 205/205b/205/205b/108b/108b/205b × 108
+     (b = olaysız; 1318 pikselin 831'i boş kutu) → 562/64b/384/64b/52b/52b/
+     64b × 132 (boş 296). 1024: boş 602 → 296. 768: boş 431 → 296; beş
+     olaylı günde hücre ~95 piksel, ad iki satır (kap sorgusu). 390:
+     değişmedi (52×70; telefon şeridi 30 Eylül kararı).
+   - Değersiz gündem 1440: üç satır 1318 geniş, içerik 599/585/594 →
+     aynı günün iki olayı 659'ar piksel (içerik 599/585), tek olaylı gün
+     tam genişlik. 768 ve 390: tek sütun, değişmedi.
+   - Temettü kapağı 1440: boy 315 → 324; sol kolon içeriği 154 pikselde
+     bitiyordu (altı ~150 boş), şimdi iki kolon da dolu (solda başlık +
+     yatay kart, sağda 440×238 şerit). 390: sıra başlık → kart → şerit.
+   - Hareket (1440, yüklemede sayıldı): ekonomik görünümde `next-in` 9 +
+     `lane-draw` 3 (9'u opaklık 0'dan, son bitiş 790 ms) → `bar-fill` 3, opaklık 0'dan
+     0; temettüde `dividend-pop` 9 + `dividend-cell` 25 (34'ü opaklık
+     0'dan) → `bar-fill` 16, opaklık 0'dan 0.
+   - Yatay taşma her genişlik ve temada 0; 12 pikselin altında metin
+     yalnız yön glifi (▲▼, .78em) ve ortak rehber/logo karolarında. */

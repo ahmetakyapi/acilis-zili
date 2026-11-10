@@ -2,6 +2,7 @@ import styles from "@/components/calendar/CalendarExperience.module.css";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { MarketHoliday } from "@/lib/market-hours";
 import type { EconomicEventRow } from "@/lib/schema";
+import { timePair } from "@/lib/session-clock";
 import { cn, etDateParts } from "@/lib/utils";
 import { byImportance } from "@/components/calendar/lookahead";
 import type { CSSProperties } from "react";
@@ -36,6 +37,8 @@ import type { CSSProperties } from "react";
 
 /** Kulvarın yuva sayısı: en çok dört olay, fazlası "+N". */
 const LANE_SLOTS = 4;
+/** Hafta hücresinin yazdığı olay sayısı; fazlası "+N". */
+const LIST_ROWS = 3;
 /** Pazartesi başlayan hafta: 2024-01-01 bir Pazartesi. */
 const MONDAY_ANCHOR = "2024-01-01";
 
@@ -98,7 +101,7 @@ function Lane({ events, order }: { events: EconomicEventRow[]; order: number }) 
   return (
     <span className={styles.lane} aria-hidden style={{ "--i": order } as CSSProperties}>
       {sorted.slice(0, LANE_SLOTS).map((event, slot) => (
-        <span key={slot} className={styles.laneSlot} data-impact={event.importance} />
+        <span key={slot} className={`bar-fill ${styles.laneSlot}`} data-impact={event.importance} />
       ))}
       {extra > 0 && <span className={styles.laneMore}>+{extra}</span>}
     </span>
@@ -136,11 +139,14 @@ export function CalendarStrip({ view, dates, byDay, holidays, today, locale, t }
     ) : holidayLabel && !weekend ? (
       <span className={styles.cellNote}>{holidayLabel}</span>
     ) : null;
-    /* GÜNÜN ÖNE ÇIKANI (yalnız hafta, ≥768). Olaylı hücre "1 Olay"
-       diyordu; hangi olay olduğu ancak aşağıdaki listede okunuyordu. En
-       önemli olayın adı iki satırla kırpılmış olarak hücrede. Telefonda
-       hücre ~40 piksel, ad sığmıyor; orada gizli. */
-    const lead = view === "week" && count ? byImportance(events)[0] : null;
+    /* GÜNÜN OLAYLARI HÜCREDE (10 Kasım 2026; önceki: yalnız en önemli
+       olayın adı, iki satır kırpık — "GÜNÜN ÖNE ÇIKANI"). Şerit artık
+       verinin şeklinde (CSS `.strip`, "IZGARA VERİNİN ŞEKLİNDE"): olaysız
+       gün dar bir sırt, olaylı gün kalan genişliği alıyor; genişleyen
+       hücre o günün en çok üç olayını saatiyle ve önem şeridiyle yazıyor,
+       fazlası "+N". Telefonda hücre ~40 piksel: liste gizli, kulvar var. */
+    const listed = view === "week" ? byImportance(events).slice(0, LIST_ROWS) : [];
+    const listExtra = view === "week" ? count - listed.length : 0;
 
     const contents = (
       <>
@@ -155,9 +161,18 @@ export function CalendarStrip({ view, dates, byDay, holidays, today, locale, t }
           {showMonth ? <span>{month}</span> : <span className="sr-only">{month}</span>}
           {view === "month" && isToday && <span className="sr-only">{t.calendar.today}</span>}
         </span>
-        {lead && (
-          <span className={styles.cellLead} data-high={lead.importance === "high" || undefined}>
-            {locale === "tr" ? lead.titleTr : lead.titleEn}
+        {listed.length > 0 && (
+          <span className={styles.cellList}>
+            {listed.map((event) => (
+              <span key={event.id} className={styles.cellItem} data-high={event.importance === "high" || undefined}>
+                <i aria-hidden className={`bar-fill ${styles.laneSlot}`} data-impact={event.importance} />
+                {event.eventTimeEt && (
+                  <span className={cn(styles.cellTime, "numeral")}>{timePair(event.eventDate, event.eventTimeEt, locale).primary}</span>
+                )}
+                <span className={styles.cellName}>{locale === "tr" ? event.titleTr : event.titleEn}</span>
+              </span>
+            ))}
+            {listExtra > 0 && <span className={styles.cellMore}>+{listExtra}</span>}
           </span>
         )}
         {(lane || note) && (
@@ -177,6 +192,9 @@ export function CalendarStrip({ view, dates, byDay, holidays, today, locale, t }
       "data-holiday": holiday ? (holiday.earlyCloseEt ? "early" : "closed") : undefined,
       "data-empty": count === 0 || undefined,
       title: holidayName ?? undefined,
+      /* Olaylı günün payı: bir olay 2, iki olay 3, üç ve üstü 4 birim
+         (yalnız hafta, ≥768; CSS `.strip`). */
+      style: count ? ({ "--w": Math.min(count, LIST_ROWS) + 1 } as CSSProperties) : undefined,
     };
 
     return count ? (
@@ -197,7 +215,7 @@ export function CalendarStrip({ view, dates, byDay, holidays, today, locale, t }
 
   if (view === "week") {
     return (
-      <nav className={styles.strip} aria-label={t.calendar.datesNav}>
+      <nav className={styles.strip} aria-label={t.calendar.datesNav} data-draw>
         {dates.map(cell)}
       </nav>
     );
@@ -217,7 +235,7 @@ export function CalendarStrip({ view, dates, byDay, holidays, today, locale, t }
   });
 
   return (
-    <nav className={cn(styles.strip, styles.month)} aria-label={t.calendar.datesNav}>
+    <nav className={cn(styles.strip, styles.month)} aria-label={t.calendar.datesNav} data-draw>
       {headDays.map((date, index) => (
         <span key={`head-${index}`} className={styles.monthHead} aria-hidden data-weekend={index > 4 || undefined}>
           {weekdayShort.format(date)}
