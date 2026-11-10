@@ -105,7 +105,7 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
     );
   }
 
-  const rows = SECTOR_ETFS.map((entry) => {
+  const entries = SECTOR_ETFS.map((entry) => {
     const quote = quotes.data[entry.symbol];
     const change = quote?.changePct ?? null;
     return {
@@ -114,7 +114,17 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
       change,
       lastClose: quote ? quoteBasis(quote, status) === "lastClose" : false,
     };
-  }).sort((a, b) => {
+  });
+
+  return <SectorRibbonView entries={entries} locale={locale} t={t} />;
+}
+
+export type SectorEntry = { symbol: string; name: string; change: number | null; lastClose: boolean };
+
+/** Siluetin saf görünümü — veri `SectorRibbon`da (`olcum` skill'i: yükleyici ile çizim ayrı). */
+export function SectorRibbonView({ entries, locale, t }: { entries: readonly SectorEntry[]; locale: Locale; t: Dictionary }) {
+  const x = t.marketExtras;
+  const rows = [...entries].sort((a, b) => {
     if (a.change === null || b.change === null) return a.change === null ? 1 : -1;
     /* Son kapanıştaki fon sıralamanın DIŞINDA, sonda (28 Eylül denetimi).
        Siluet soldan sağa bu seansın en güçlüden en zayıfa dizilişi; dünün
@@ -128,21 +138,39 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
      fonları, hepsi son kapanıştaysa hepsi (künye o zaman bunu söylüyor). */
   const counted = rows.filter((row) => row.change !== null && (allLastClose || !row.lastClose));
   const changes = counted.map((row) => row.change!);
-  /* Ölçek SON KAPANIŞ grubunu da kapsıyor (31 Ekim): grup artık soluk
-     çubukla çiziliyor ve ölçek dışında kalınca XLK'nın +%2,63'ü sütunun
-     tepesini aşıp sayının üstüne biniyordu (ölçüldü, 1440). Sayım
-     (yükselen/düşen) yine yalnız bu seansın fonları. */
-  const drawn = rows.filter((row) => row.change !== null).map((row) => row.change!);
-  const up = Math.max(0, ...drawn);
-  const down = Math.max(0, ...drawn.map((change) => -change));
-  const span = Math.max(up + down, SECTOR_SCALE_FLOOR);
-  /* Sıfır çizgisi düşüşün payı kadar yukarıda: hepsi yükselen bir günde
-     sütunlar zeminden kalkıyor, alanın yarısı boş bir eksi bölgeye gitmiyor. */
-  const zero = (down / span) * 100;
+  /* İKİ GRUP, İKİ ÖLÇEK (10 Kasım, görsel tur). 31 Ekim'de ölçek SON
+     KAPANIŞ grubunu da kapsamıştı (grup ölçek dışında kalınca XLK'nın
+     +%2,63'ü sütunun tepesini aşıp sayının üstüne biniyordu, 1440). Bedeli
+     canlıda görüldü (10 Kasım, açılış öncesi): bu seansın dokuz fonu
+     ±%0,7 içinde, son kapanıştaki iki fon +%2,45 / +%1,45; ortak ölçekte
+     seansın en uzun sütunu 96 pikselin 9'uydu, dokuz sütun dokuz çizgi
+     gibi okunuyordu ("hepsi çizgi gibi"). İki grup zaten kesik çizgi ve
+     künyeyle ayrı ve iki AYRI günü anlatıyor; aynı cetvele koymak dünün
+     hareketini bugününkini ezmek için kullanmaktı. Artık her grup kendi
+     ölçeğinde (taban yine `SECTOR_SCALE_FLOOR`) ve kendi sıfır çizgisinde:
+     hiçbir sütun alanı aşamaz, seansın sütunları günün kendi aralığını
+     doldurur. Ölçüm (canlıdaki veriyle sahte önizleme, 1440, alan 96
+     piksel): −%0,68 sütunu 21 → 65, +%0,30 sütunu 9 → 29 piksel; son
+     kapanış grubu kendi ölçeğinde 96 ve 57 (alanı aşmıyor). */
+  const scaleOf = (values: number[]) => {
+    const up = Math.max(0, ...values);
+    const down = Math.max(0, ...values.map((change) => -change));
+    const span = Math.max(up + down, SECTOR_SCALE_FLOOR);
+    /* Sıfır çizgisi düşüşün payı kadar yukarıda: hepsi yükselen bir günde
+       sütunlar zeminden kalkıyor, alanın yarısı boş bir eksi bölgeye gitmiyor. */
+    return { up, down, span, zero: (down / span) * 100 };
+  };
+  const session = scaleOf(changes);
+  const stale = scaleOf(
+    rows.filter((row) => row.change !== null && row.lastClose && !allLastClose).map((row) => row.change!),
+  );
+  const { zero } = session;
   /* KARONUN ÇUBUĞU (12 Ekim, telefon ve tablet): sıfırdan iki yana değil,
      büyüklük olarak soldan; tek karoda eksen yok, yön rengin ve işaretin.
      Ölçek günün en büyük hareketi, tabanı yine `SECTOR_SCALE_FLOOR`. */
-  const peak = Math.max(up, down, SECTOR_SCALE_FLOOR);
+  /* Karo çubuğu da satırın kendi grubunun tepesine göre (10 Kasım): seansın
+     tepesiyle ölçülen son kapanış çubuğu kulvarı %245 aşıyordu (768, ölçüldü). */
+  const peakOf = (scale: { up: number; down: number }) => Math.max(scale.up, scale.down, SECTOR_SCALE_FLOOR);
   const risers = changes.filter((change) => change > 0).length;
   const fallers = changes.filter((change) => change < 0).length;
   const ranked = counted.length;
@@ -196,11 +224,13 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
              dönemi künye zaten söylüyor ("Son Kapanış" başlıkta ve karışık
              günde satırda), renk yalnız yönü taşıyor — tazelik iddiası yok. */
           const heat = row.change === null ? { tone: "flat", level: 0 } : heatOf(row.change);
-          const size = row.change === null ? 0 : (Math.abs(row.change) / span) * 100;
-          const start = row.change === null || row.change >= 0 ? zero : zero - size;
           /* Karışık günde son kapanıştaki fon künyesini kendi taşıyor: nötr
              sütun tek başına "hareket yok" gibi okunurdu. */
           const marked = row.lastClose && !allLastClose;
+          /* Ölçek satırın KENDİ grubundan (yukarıda "İKİ GRUP, İKİ ÖLÇEK"). */
+          const scale = marked ? stale : session;
+          const size = row.change === null ? 0 : (Math.abs(row.change) / scale.span) * 100;
+          const start = row.change === null || row.change >= 0 ? scale.zero : scale.zero - size;
           /* SON KAPANIŞ GRUBU (31 Ekim). Karışık günde bu fonlar çubuksuz,
              yalnız sayıydı ve her birinin altında mono "XLK · Son Kapanış"
              iki satıra kırılıyordu; sıra da "pozitifler, negatifler, yine
@@ -218,9 +248,10 @@ export async function SectorRibbon({ locale, t }: { locale: Locale; t: Dictionar
               className={styles.col}
               style={
                 {
+                  ...(marked ? { "--zero": `${scale.zero}%` } : null),
                   "--start": `${start}%`,
                   "--size": `${inScale || marked ? size : 0}%`,
-                  "--mag": `${(inScale || marked) && row.change !== null ? (Math.abs(row.change) / peak) * 100 : 0}%`,
+                  "--mag": `${(inScale || marked) && row.change !== null ? (Math.abs(row.change) / peakOf(scale)) * 100 : 0}%`,
                   "--i": i,
                 } as CSSProperties
               }

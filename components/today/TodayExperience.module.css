@@ -226,6 +226,24 @@
    alta alıyor. */
 .indexBasis { flex-basis:100%; color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; line-height:1.3; }
 .indexSpark { margin-top:10px; height:32px; width:100%; }
+/* KIVILCIM SAHNESİ (10 Kasım) — gerekçe IndexLive.tsx → SessionStage.
+   Kap `.indexSpark`in ölçüsünü taşıyor (boy kuralları aynen geçerli), SVG
+   onu dolduruyor. Bant çukur tonda, iki kenarı zil çentiği (1 piksel,
+   `--line`); gölge yok. Nokta 6 piksel, halkası kartın zemini.
+   Ölçüm (başsız Chrome, sahte veri, açılış öncesi 58. dakika, iki tema):
+   1440'ta sahne 213 piksel; çizgi 12 piksel (değişmedi, eksen aynı), bant
+   74–157 (alanın %39'u), nokta çizginin ucunda (16 = 16). 390'da sahne
+   131, bant 46–97, çizgi 8 piksel. Seans ortasında (18:10 UTC) çizgi
+   bandın içinde %57'de bitiyor. Dört kart eşit boyda (139 / 124). */
+.indexStage { position:relative; }
+.stageLine { position:absolute; inset:0; width:100%; height:100%; }
+.stageBand { position:absolute; inset-block:0; border-inline:1px solid var(--line-soft); background:color-mix(in srgb, var(--surface-sunken) 55%, transparent); animation:stage-band-in 520ms var(--ease-brand) 320ms backwards; }
+.stageBand[data-pre] { border-inline-start:0; border-radius:4px 0 0 4px; background:var(--surface-sunken); }
+.stageNow { position:absolute; width:6px; height:6px; margin:-3px 0 0 -3px; border-radius:50%; background:var(--flat); box-shadow:0 0 0 2px var(--premium-surface); animation:stage-now-in 300ms var(--ease-brand) 820ms backwards; }
+.stageNow[data-tone="up"] { background:var(--up); }
+.stageNow[data-tone="down"] { background:var(--down); }
+@keyframes stage-band-in { from { opacity:0; } }
+@keyframes stage-now-in { from { scale:0; } }
 /* YÖN ŞERİDİ (31 Ekim) — gerekçe IndexLive.tsx → "YÖN KARTIN TEPESİNDE".
    Bilanço/teknik kartlarının kalıbı: kenardan 14 piksel içeride, 3 piksel,
    alt köşeleri yuvarlak. Kart `overflow:hidden` taşıdığı için `top:0`
@@ -408,7 +426,14 @@
 /* ---- Haber bandı ---- */
 .texture { scroll-margin-top:150px; }
 .news { padding-top:18px; scroll-margin-top:150px; }
-.newsHeading { color:var(--text-strong); font-size:clamp(22px,2.2vw,28px); font-weight:650; letter-spacing:-.045em; line-height:1.1; }
+/* BÖLÜM BAŞLIKLARI TEK BASAMAKTA (10 Kasım, görsel tur). Sayfanın kutusuz
+   iki bölüm başlığı iki ayrı ölçekteydi: "Bugünün Akışı" 25 piksel / 600,
+   "Öne Çıkan Haberler" 1440'ta 28 piksel / 650 (clamp 22–28). Merdiven
+   artık üç basamak: bant başlığı (display, 26–40), bölüm başlığı (25;
+   telefonda 23), panel başlığı (`PanelHeader`, 19). Haber başlığı akışın
+   ölçüsüne indi; ağırlık ve harf aralığı da aynı. */
+.newsHeading { color:var(--text-strong); font-size:25px; font-weight:600; letter-spacing:-.035em; line-height:1.1; }
+@media (max-width:767px) { .newsHeading { font-size:23px; } }
 .news > div:first-child { padding-bottom:20px; }
 
 @media (hover:hover) and (pointer:fine) {
@@ -674,6 +699,7 @@
   .headline { animation:none; }
   .indexCard { transition:none; }
   .indexCard::before { animation:none; }
+  .stageBand, .stageNow { animation:none; }
   .indexValue[data-flash] { animation:none; }
   .storyRow,.storyRowMeta svg,.storyCastTile,.storyRowLogo,.storyLeadAction,.storyLeadAction svg { transition:none; }
   .storyLead:hover .storyLeadAction svg { translate:none; }

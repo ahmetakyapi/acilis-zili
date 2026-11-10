@@ -72,6 +72,29 @@
 .leadMark { order:-2; }
 @media (hover:hover) and (pointer:fine) { .leadText:hover { border-color:var(--primary-faint); } }
 @media (max-width:639px) { .leadText { padding:20px 20px 22px; } .leadText .leadHeadline { font-size:23px; } }
+/* GÖRSEL DÜŞERSE MANŞET METİN MANŞETİNE DÖNER (10 Kasım, görsel tur).
+   Sunucu görselin ADRESİNİ biliyor, yüklenip yüklenmeyeceğini bilemiyor:
+   CDN düşünce `NewsImage` sıradaki dala iniyor (şirket logosu, o da yoksa
+   nötr işaret) ama kutu 16:9 kalıyordu — 1440'ta 678 × 381 piksellik gri
+   bir dikdörtgenin ortasında küçük bir simge (canlıda görüldü, 10 Kasım).
+   Fotoğraf dalını `object-cover` taşıyan `<img>` ayırt ediyor; o yoksa
+   manşet `.leadText`in kurallarını alıyor: kıl kenarlı premium yüzey,
+   büyük başlık, dört satır özet. Logo dalında çerçeve 56'lık karoya iner
+   (haberin şirketi, `.leadMark` ile aynı ölçü), nötr işaret dalında hiç
+   basılmaz — yer tutucu kutu yok. `:has()` manşete kapsamlı, kökte değil.
+   Yüklenirken (img var, henüz inmedi) düzen fotoğraf düzeninde kalır.
+   Ölçüm (sahte veri, ölü görsel adresi, iki tema): görsel kutusu 1440'ta
+   381 → 0 piksel, manşet kartı 271 piksel; 390'da 272. Yatay taşma 0. */
+.lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) { gap:14px; padding:26px 28px 28px; border:1px solid var(--line); background:var(--premium-surface); transition:border-color .25s var(--ease-brand); }
+.lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadHeadline { -webkit-line-clamp:4; font-size:clamp(24px,2.4vw,34px); line-height:1.16; }
+.lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadSummary { -webkit-line-clamp:4; font-size:15.5px; line-height:1.65; }
+.lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadMeta { margin-top:0; }
+.leadImage:not(:has(:global(img))) { display:none; }
+.leadImage:has(:global(img.object-contain)) { width:56px; height:56px; aspect-ratio:auto; border-radius:var(--radius-md); }
+@media (max-width:639px) {
+  .lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) { padding:20px 20px 22px; }
+  .lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadHeadline { font-size:23px; }
+}
 .rowItem { min-width:0; }
 /* Manşetsiz günün tamamlama satırları yalnızca iki sütunlu düzende
    (gerekçe TopNews.tsx → `pairFill`). */

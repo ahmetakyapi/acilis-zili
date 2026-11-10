@@ -62,7 +62,7 @@ export async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary 
      eksenine, önceki kapanış kesik bir taban çizgisi olarak çiziliyor;
      gerekçe ve ölçüm `components/ui/Sparkline.tsx` başında. Yalnızca
      zaman ve kapanış istemciye iniyor, barın öteki dört alanı değil. */
-  const { domain, openAt } = sessionDomain(status);
+  const { domain, openAt, closeAt } = sessionDomain(status);
   const points: Record<string, { time: number; value: number }[]> = {};
   for (const symbol of INDEX_STRIP) {
     points[symbol] = (bars[symbol] ?? []).map((bar) => ({ time: bar.time, value: bar.close }));
@@ -96,6 +96,7 @@ export async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary 
       weeks={weeks}
       domain={domain}
       openAt={openAt}
+      closeAt={closeAt}
       session={status.session}
       locale={locale}
       labels={{

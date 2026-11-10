@@ -1,44 +1,41 @@
 import { PageShare } from "@/components/article/PageShare";
-import { SquaresFour, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
-import { Suspense, type ReactNode } from "react";
+import { Suspense } from "react";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/markets/MarketExperience.module.css";
 import { CommodityBoard, SectorPerformance, parseSectorSort } from "@/components/markets/EtfBoards";
 import { SentimentPulse } from "@/components/markets/SentimentPulse";
 import boardStyles from "@/components/markets/MarketBoards.module.css";
-import { ScaleBar } from "@/components/markets/CompareScale";
+import { IndexHeat } from "@/components/markets/IndexHeat";
+import { BreadthSummary, IndexIdentity, IndexTabs } from "@/components/markets/IndexSelection";
+import { MembersTable } from "@/components/markets/MembersTable";
+import { MoverPanel } from "@/components/markets/MoverPanel";
+import {
+  HEAT_MAX,
+  INDEX_TABS,
+  PAGE_STEP,
+  SORT_KEYS,
+  type Row,
+  type SortDir,
+  type SortKey,
+  type TabKey,
+} from "@/components/markets/index-shared";
 import { IndexCard } from "@/components/markets/IndexCard";
-import { HeatScale } from "@/components/markets/HeatScale";
-import { median, sameSessionMoves, themePhase, type MoveSet, type ThemePhase } from "@/lib/theme-stats";
-import { themeRow, type ThemeRow } from "@/lib/themes-data";
+import { median, sameSessionMoves, themePhase } from "@/lib/theme-stats";
+import { themeRow } from "@/lib/themes-data";
 import { GuideHint } from "@/components/article/GuideHint";
-import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import type { CompanyCardExtra } from "@/lib/company-card";
 import {
-  ChangePill,
   DataStamp,
   EmptyState,
   Panel,
-  PanelHeader,
-  PanelLink,
   Skeleton,
-  LogoTile,
-  SkeletonRow,
 } from "@/components/ui/primitives";
-import {
-  DOW_MEMBERS,
-  INDEX_COMPOSITION_DATE,
-  NDX_MEMBERS,
-  SPX_MEMBERS,
-  primaryOnly,
-  type IndexMember,
-} from "@/db/seed/indices";
-import { getStatus, getSymbolNames, liveMarketCap, type SymbolMeta } from "@/lib/data";
+import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getChartBarsMulti, getQuotes } from "@/lib/providers";
 import { quoteBasis, type MarketStatus } from "@/lib/market-hours";
@@ -46,22 +43,12 @@ import { sessionDomain } from "@/components/today/index-feed";
 import type { Quote } from "@/lib/providers/types";
 import {
   cn,
-  directionOf,
-  directionText,
-  SIGN_GAP,
   formatCompact,
-  formatEtDateMedium,
-  formatMoneyCompact,
-  formatPercent,
   formatPercentPlain,
-  formatPrice,
   staleMark,
-  NO_VALUE,
 } from "@/lib/utils";
 
 import { pageMetadata } from "@/lib/page-meta";
-import { FoldToggle } from "@/components/ui/FoldToggle";
-import { ScrollEdges } from "@/components/ui/ScrollEdges";
 
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
@@ -90,40 +77,6 @@ export const generateMetadata = pageMetadata({
  * elimizdeki fiyatlardan türer — tahmin yok.
  */
 
-/* Üyelik listeleri şirket başına tek satır gösterir: endekste iki sınıfı da
-   bulunan şirketler (GOOGL/GOOG, FOXA/FOX, NWSA/NWS) yaygın sınıfıyla yer
-   alır. Dow'da çok sınıflı üye yoktur, bölen hesabı bundan etkilenmez. */
-/* Sıra Nasdaq 100 ile başlıyor: okuyucunun bu siteye gelme sebebi ağırlıkla
-   teknoloji hissesi ve gün içi hareketin konuşulduğu endeks o. Dizi hem üstteki
-   endeks kartlarını hem seçici çiplerini besliyor, ikisi de aynı sırayı
-   izliyor — ve açılıştaki seçili sekme de baştaki endeks. Ardından S&P 500,
-   en sonda Dow Jones (17 Ekim, sahibinin isteği: piyasanın genelini anlatan
-   S&P 500 ikinci, 30 hisselik fiyat ağırlıklı Dow sonda). */
-const INDEX_TABS = [
-  { key: "nasdaq", label: "Nasdaq 100", proxy: "QQQ", members: primaryOnly(NDX_MEMBERS) },
-  { key: "sp500", label: "S&P 500", proxy: "SPY", members: primaryOnly(SPX_MEMBERS) },
-  { key: "dow", label: "Dow Jones", proxy: "DIA", members: primaryOnly(DOW_MEMBERS) },
-] as const;
-
-type TabKey = (typeof INDEX_TABS)[number]["key"];
-
-const SORT_KEYS = ["degisim", "fiyat", "ad", "katki", "cap"] as const;
-type SortKey = (typeof SORT_KEYS)[number];
-type SortDir = "asc" | "desc";
-
-/**
- * Bir seferde basılan bileşen satırı.
- *
- * S&P 500 sekmesi 499 satırın tamamını basıyordu: 2,3 MB HTML tek sayfada,
- * telefonda saniyelerce süren bir yerleşim. Endeks bileşenleri listesi
- * baştan sona okunan bir şey değil — okuyucu ilk sıralara, yani sıralamanın
- * tepesine bakıyor. Sıralama SATIRLARIN TAMAMI üzerinde yapılıp dilim sonra
- * alınıyor, yani "en çok düşen" ilk 60'ın değil 499'un en çok düşeni.
- * (Aynı ölçü ve aynı gerekçe /sirketler dizininde de var.)
- */
-const PAGE_STEP = 60;
-/** Telefonda bileşen tablosunun açık satırı; kalanı katlı (FoldToggle). */
-const PHONE_ROWS = 15;
 
 /** ABD Hazine tahvili serileri — FRED sabit vadeli getiriler. */
 /**
@@ -437,36 +390,6 @@ async function IndexCards({
    Seçili endeks — genişlik, hareket edenler, tam liste
    ========================================================================== */
 
-/**
- * Dow puan katkısı — YAKLAŞIK olduğu görünsün.
- *
- * Katkı, endeks böleninden hesaplanıyor ve bölen DIA fiyatı × 100
- * varsayımından türüyor. DIA gerçek Dow'un tam yüzde biri DEĞİL: temettü
- * dağıtımları ve NAV primi/iskontosu yüzünden bu yaklaşık bir oran. Sonuç iki ondalık haneyle
- * ("+38,42 puan") basılıyordu — yaklaşık bir bölenden çıkan sayıya iki
- * hanelik kesinlik giydirmek, projenin "uydurma kesinlik yok" kuralının
- * tam karşılığı. Tam sayıya yuvarlanıp başına `~` konuyor.
- */
-function approxPoints(value: number, locale: Locale): string {
-  const rounded = Math.round(value);
-  const sign = rounded > 0 ? "+" : rounded < 0 ? "−" : "";
-  const formatted = new Intl.NumberFormat(
-    locale === "tr" ? "tr-TR" : "en-US",
-    { maximumFractionDigits: 0 },
-  ).format(Math.abs(rounded));
-  return `~${sign}${SIGN_GAP}${formatted}`;
-}
-
-type Row = {
-  member: IndexMember;
-  quote: Quote | undefined;
-  /** Yalnızca Dow (fiyat ağırlıklı) için: endeks puanına katkı. */
-  contribution: number | null;
-  /** Finnhub logosu — tabloda satırı bir bakışta tanınır kılar. */
-  logoUrl: string | null;
-  /** Piyasa değeri — yalnızca USD cinsinden bilinenler. */
-  marketCap: number | null;
-};
 
 async function IndexDetail({
   tab,
@@ -479,7 +402,7 @@ async function IndexDetail({
   t,
 }: {
   tab: TabKey;
-  members: readonly IndexMember[];
+  members: readonly Row["member"][];
   proxy: string;
   sort: SortKey;
   dir: SortDir;
@@ -643,7 +566,7 @@ async function IndexDetail({
         tab={tab}
         locale={locale}
         t={t}
-        identity={<IndexIdentity tab={tab} proxy={proxy} median={medianMove} phase={medianPhase} locale={locale} t={t} />}
+        identity={<IndexIdentity tab={tab} proxy={proxy} median={medianMove} phase={medianPhase} moves={memberMoves?.values ?? null} locale={locale} t={t} />}
         aside={
           withChange.length > 0 ? (
             <BreadthSummary
@@ -657,7 +580,7 @@ async function IndexDetail({
           ) : undefined
         }
       />
-      <IndexToolbar
+      <IndexHeat
         total={withChange.length}
         memberCount={members.length}
         heat={heatRows}
@@ -667,7 +590,7 @@ async function IndexDetail({
       >
         {source && <DataStamp labels={t.data} source={source} at={stampAt} stale={stale} locale={locale}
           note={status.session === "pre-market" || status.session === "after-hours" ? t.data.extendedNote : undefined} />}
-      </IndexToolbar>
+      </IndexHeat>
 
       {withQuote.length > 0 && (
         <>
@@ -713,7 +636,15 @@ async function IndexDetail({
                 kopuk, haritayı anlatıyormuş gibi duruyordu. Not iki panelin
                 ORTAK ölçeğini söylüyor; yeri ikisinin altında, iki kolonu
                 kaplayan tek satır. */}
-            <p className={styles.movementScale}>{t.markets.movementScale}</p>
+            {/* 10 Kasım: not ölçeğin KENDİSİNİ de yazıyor ("Tam Şerit %6,93").
+                "Aynı ölçek" deniyordu ama ölçeğin ne olduğu yazmıyordu; tam
+                boydaki şeridin hangi yüzde olduğu artık notta, başında
+                şeridin küçük bir örneğiyle. */}
+            <p className={styles.movementScale}>
+              <i aria-hidden />
+              <span>{t.markets.movementScale}</span>
+              <span className="numeral">{t.markets.movementScaleFull.replace("{pct}", formatPercentPlain(movementScale, locale))}</span>
+            </p>
           </div>
         </>
       )}
@@ -749,766 +680,6 @@ async function IndexDetail({
         />
       )}
     </>
-  );
-}
-
-/* ---- Endeks seçici + piyasa genişliği ----
-
-   İkisi tek panelde: seçici başıboş bir düğme satırıydı, genişlik ise tek
-   bir çubuk için ayrı bir paneldi. Bilgi olarak da aynı şeye bakıyorlar —
-   "hangi endeks" ve "o endeksin bugünü". Ayrı dururken sayfada iki blok
-   yüksekliği harcıyor, birleşince seçimin karşılığı hemen altında okunuyor.
-   Sonraki yükleme düzeninde seçimler sonuç sınırının dışına çıktı: veri
-   beklenirken çipler kaybolmaz veya devre dışı kalmaz; genişlik yine altındadır. */
-
-function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Locale; t: Dictionary; aside?: ReactNode; identity?: ReactNode }) {
-  return <Panel className={styles.indexTabs}>
-      {/* TEK ŞERİT, ÜÇ BÖLME (6 Kasım). Çipler kutusuz, medyan çerçevesiz,
-          pay kendi kenarlıklı kutusunda duruyordu: üç ayrı yükseklik
-          (1440: çipler 38, medyan ~46, pay kutusu 90 piksel), üç ayrı dil
-          ve aralarında hizasız boşluklar. Şimdi tek panel; seçim, medyan ve
-          pay aynı yüzeyde üç bölme, aralarında saç çizgisi, üçü de dikeyde
-          ortalı. Pay kutusunun kenarlığı kalktı — panelin kendisi kutu. */}
-      {/* `data-aside`: pay basılmazsa ızgara iki kolona düşer (6 Kasım,
-          inceleme; MarketExperience.module.css → `.toolbarLayout`). */}
-      <div className={styles.toolbarLayout} data-aside={aside ? "" : undefined}>
-        <div className={styles.indexChoices}>
-        {/* "Piyasa Genişliği" künyesi çiplerin üstündeydi; 9 Ekim 2026'da
-            bütün bölüm künyeleriyle kalktı (`PageHeader` yorumu). Çiplerin
-            ne seçtiği adlarından, genişlik de "Yükselenlerin Payı"ndan okunuyor. */}
-        {/* ÜÇ ÇİP MOBİLDE TEK SATIRDA. `flex-wrap` ile diziliyorlardı ve
-            üçüncü çip (S&P 500) 390 pikselde alt satıra düşüyordu: üç eşit
-            seçenek iki-bir diye kırılınca denetim tek bir seçici olmaktan
-            çıkıp iki ayrı satır gibi okunuyordu. Dar ekranda üçlü ızgara,
-            geniş ekranda eskisi gibi doğal genişlikte akıyorlar.
-            Üye sayısı dar ekranda düşüyor: 106 piksellik hücreye sığmıyor ve
-            zaten bir alttaki "102 şirketin 5 tanesi" künyesinde yazılı. */}
-        <div className="grid w-full grid-cols-3 gap-1.5 sm:flex sm:w-auto sm:flex-wrap">
-          {INDEX_TABS.map((entry) => {
-            const activeTab = entry.key === tab;
-            return (
-              <Link
-                key={entry.key}
-                href={`/piyasalar?endeks=${entry.key}`}
-                aria-current={activeTab ? "page" : undefined}
-                scroll={false}
-                className={cn(
-                  /* Basış evin tek lehçesinde (BUTTON_BASE): ekranın ana
-                     seçicisi dokunuşa sessiz kalıyordu — sunucu gezinmesi
-                     dönene kadar hiçbir şey değişmiyordu (14 Ekim). */
-                  "flex min-h-11 items-center justify-center gap-2 rounded-full px-2.5 py-1.5 text-xs font-semibold transition-[color,background-color,border-color,scale] active:scale-[0.97] motion-reduce:active:scale-100 sm:min-h-[38px] sm:px-4 sm:text-sm",
-                  activeTab
-                    ? "bg-primary text-on-primary"
-                    : "border border-line bg-surface text-soft hover:border-line-strong hover:text-strong",
-                )}
-              >
-                {entry.label}
-                <span
-                  className={cn(
-                    "numeral hidden text-xs font-normal sm:inline",
-                    /* Saydamlık yerine punto — gerekçe şirketler dizininde. */
-                    activeTab ? "text-on-primary" : "text-muted",
-                  )}
-                >
-                  {entry.members.length}
-                </span>
-              </Link>
-            );
-          })}
-        </div>
-        </div>
-        {identity}
-        {/* SAĞDA YÜKSELENLERİN PAYI (26 Eylül). Pay genişlik kartının sağ
-            yarısını tutuyordu; satırın sağı ise yalnızca liste tarihini
-            taşıyordu. Pay buraya çıkınca kartın sağı ısı haritasına kaldı.
-            Liste tarihi kartın kimlik bloğuna indi. */}
-        {aside && <div className={styles.tabsAside}>{aside}</div>}
-      </div>
-
-  </Panel>;
-}
-
-/* Seçili endeksin kendi değişimi, yükselen şirketlerin payından farklıdır:
-   birkaç ağır şirket, üyelerin çoğu düşerken endeksi yukarı taşıyabilir.
-   Gösterilen fiyat endeks seviyesi değil onu izleyen fonun kotasyonudur;
-   fon sembolü bu yüzden fiyatın yanında kalır. Eksik değişimler sayaca
-   katılmaz; gerçek kapsam toplam üye sayısıyla ayrıca gösterilir.
-   18 Ekim: fonun fiyatı ve yüzdesi buradan kalktı (üstteki kartın tekrarı);
-   yerine üyelerin medyan değişimi — gerekçe IndexDetail → "MEDYAN HİSSE". */
-function IndexIdentity({ tab, proxy, median: medianMove, phase, locale, t, loading = false }: {
-  tab: TabKey; proxy: string; median: number | null; phase: ThemePhase | null;
-  locale: Locale; t: Dictionary; loading?: boolean;
-}) {
-  const label = INDEX_TABS.find((entry) => entry.key === tab)?.label;
-  /* Medyanın künyesi pencereye göre (tema ekranlarının kuralı, `themePhase`):
-     açılış öncesinde "Günün" değil, piyasa kapalıyken "Son Kapanış". */
-  const medianLabel =
-    phase === "pre-market" ? t.markets.medianPreMarket : phase === "lastClose" ? t.markets.medianLastClose : t.markets.medianStock;
-  /* FON SEMBOLÜ VE AD KALKTI (6 Kasım). "QQQ Nasdaq 100" satırı, fon
-     fiyatı burada dururken onun künyesiydi; fiyat 18 Ekim'de kalkınca
-     künye yalnız kaldı ve hemen solundaki seçili çipin ADINI tekrar
-     ediyordu (fon sembolü üstteki kartta zaten yazılı). Blok artık tek iş
-     yapıyor: medyan ve onun tek cümlelik açıklaması. Seçili endeksin adı
-     ekran okuyucuya `role="group"` + `aria-label` ile gidiyor (6 Kasım,
-     inceleme: rolsüz div'in `aria-label`ı ekran okuyucularca okunmuyordu;
-     grup rolüyle ad, içindeki medyana girerken duyuluyor). */
-  return <div role="group" className={styles.toolbarIdentity} aria-label={`${label} · ${proxy}`}>
-    {loading ? <Skeleton className="h-7 w-48 max-w-full" /> : medianMove !== null ? (
-      <div className={styles.selectedIndexReading}>
-        <span className={styles.medianLabel}>{medianLabel}</span>
-        <ChangePill changePct={medianMove} locale={locale} className={styles.medianPill} />
-        <p className={styles.medianHint}>{t.markets.medianHint}</p>
-      </div>
-    ) : <span className={styles.selectedIndexEmpty}>{t.markets.medianMissing}</span>}
-  </div>;
-}
-
-function IndexToolbar({ total, memberCount, heat, moves, locale, t, children }: {
-  total: number; memberCount: number; heat: ThemeRow[]; moves: MoveSet | null;
-  locale: Locale; t: Dictionary; children?: ReactNode;
-}) {
-  /* Künye haritanın hangi günü boyadığını söylüyor: renk yalnız bu
-     seansın kümesinde (gerekçe components/markets/HeatScale.tsx). */
-  const hint = moves === null ? t.markets.heatMixed : moves.basis === "lastClose" ? t.markets.heatLastClose : t.markets.heatmapHint;
-  return (
-    <Panel id="market-reading" className={styles.breadth}>
-      <div className={styles.breadthOverview}>
-        {/* ISI HARİTASI, LOGOLU VE 30 ŞİRKET (26 Eylül). Renkli kareler
-            "anlamsız" bulundu: hangi karenin hangi şirket olduğu okunmuyordu.
-            Artık piyasa değerine göre ilk 30 şirket (`HEAT_MAX`), her karede
-            logo ve günlük yüzde; renk karonun zemini, koyuluk hareketin
-            büyüklüğü. Üzerine gelince sitenin ortak şirket kartı açılıyor
-            (28 Eylül). Kareler klavyeyle de gezilebiliyor: 30 durak kabul
-            edilebilir.
-            18 Ekim: bir gün ağaç düzeninde kaldı, eşit karolara geri döndü
-            (sahibinin isteği; gerekçe aşağıdaki ızgarada). */}
-        {heat.length > 0 && (
-          <div className={styles.heat}>
-            <div className={styles.heatHead}>
-              <h2 data-ink="solid"><SquaresFour size={21} weight="duotone" aria-hidden />{t.markets.heatmap}</h2>
-              <p className={styles.heatHint}>{hint}</p>
-              <HeatScale locale={locale} label={t.markets.heatScaleHint} steps={t.markets.heatScaleSteps} />
-            </div>
-            {/* EŞİT KAROLAR, PİYASA DEĞERİ SIRASI (18 Ekim, sahibinin isteği:
-                "eski hâline dönsün; her şirketin logosu olsun, aynı boyutta
-                olsun, piyasa değerine göre sıralansın"). Ağaç düzeni bir gün
-                yayında kaldı. Ondan kalan tek kural: renk yalnız bu seansın
-                yüzdesine — öteki karolar nötr (`moves.included`). */}
-            <div className={styles.heatGrid} data-motion-stagger>
-              {heat.map((row, i) => {
-                const change = row.changePct;
-                const fresh = moves !== null && moves.included[i] && change !== null;
-                const magnitude = fresh ? Math.abs(change) : 0;
-                const level = magnitude === 0 ? 0 : magnitude < 0.5 ? 1 : magnitude < 1.5 ? 2 : magnitude < 3 ? 3 : 4;
-                const tone = !fresh ? "flat" : change > 0 ? "up" : change < 0 ? "down" : "flat";
-                return (
-                  <Link
-                    key={row.symbol}
-                    href={`/hisse/${row.symbol}`}
-                    prefetch={false}
-                    className={styles.heatCell}
-                    data-cc={row.symbol}
-                    aria-label={`${row.symbol}${row.name ? ` · ${row.name}` : ""}${change !== null ? ` · ${formatPercent(change, locale)}` : ""}`}
-                    data-heat-tone={tone}
-                    data-heat-level={level}
-                  >
-                    <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="md" className={styles.heatLogo} />
-                    <span className={styles.heatSymbol}>{row.symbol}</span>
-                    <span className={cn("numeral", styles.heatPct)}>{change !== null ? formatPercent(change, locale) : NO_VALUE}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
-      </div>
-      {total === 0 && <p className={styles.heatEmpty}>{t.common.noData}</p>}
-      <div className={styles.breadthStamp}>
-        {children}
-        <span className={styles.heatCoverage}>{t.markets.breadthCoverage.replace("{known}", String(total)).replace("{total}", String(memberCount))} · {t.markets.asOf}: {formatEtDateMedium(INDEX_COMPOSITION_DATE, locale)}</span>
-      </div>
-    </Panel>
-  );
-}
-
-/** Isı haritasında en çok kaç şirket — piyasa değerine göre ilk 30 (26 Eylül,
-    sahibinin isteği): Dow zaten 30 üye, böylece üç endekste de harita aynı
-    ızgarada ve her kare logosu, yüzdesi ve künye kartıyla okunacak kadar iri. */
-const HEAT_MAX = 30;
-
-/**
- * Yükselenlerin payı — sekme satırının sağında, sıkı hâliyle (26 Eylül).
- * Büyük yüzde, üç renkli ray ve artı/yatay/eksi sayıları tek blokta.
- */
-function BreadthSummary({
-  share, advancing, flat, declining, locale, t,
-}: {
-  share: number; advancing: number; flat: number; declining: number; locale: Locale; t: Dictionary;
-}) {
-  const parts = [
-    { key: "up", value: advancing, fill: "bg-up", tone: "text-up", label: t.markets.advancing },
-    { key: "flat", value: flat, fill: "bg-flat/50", tone: "text-muted", label: t.markets.unchanged },
-    { key: "down", value: declining, fill: "bg-down", tone: "text-down", label: t.markets.declining },
-  ];
-  return (
-    <div className={styles.shareBox}>
-      <div className={styles.shareHead}>
-        <span>{t.markets.advancingShare}</span>
-        <strong className="numeral">{formatPercentPlain(share, locale, 0)}</strong>
-      </div>
-      {/* Ray TEK süpürmeyle açılıyor (14 Ekim). Üç dilimin her biri ayrı
-          `bar-fill` + `data-motion-draw` taşıyordu ve her dilim KENDİ sol
-          kenarından scaleX ile büyüyordu: flex kutuları yerinde durduğu
-          için giriş "üç kopuk dilim" olarak okunuyordu. Süpürme rayın
-          kendisinde (`rail-sweep`, MarketExperience.module.css). */}
-      <div className={styles.breadthRail} aria-hidden>
-        {parts.map((part) => part.value > 0 && <span key={part.key} className={part.fill} style={{ flex: part.value }} />)}
-      </div>
-      <dl className={styles.shareCounts}>
-        {parts.map((part) => (
-          <div key={part.key}>
-            <dt>{part.label}</dt>
-            <dd className={cn("numeral", part.tone)}>{part.value}</dd>
-          </div>
-        ))}
-      </dl>
-    </div>
-  );
-}
-
-/* Haritanın renk eşikleri sabittir: %0,5 / %1,5 / %3. Endeks
-   değiştirmek aynı hareketi başka bir renge dönüştürmez. */
-
-/* ---- En çok artan / düşen kartları ---- */
-
-function MoverPanel({
-  title,
-  kind,
-  rows,
-  showContribution,
-  contributionLabel,
-  locale,
-  t,
-  meta,
-  scaleMax,
-}: {
-  title: string;
-  kind: "up" | "down";
-  rows: Row[];
-  showContribution: boolean;
-  contributionLabel: string;
-  locale: Locale;
-  t: Dictionary;
-  /** Başlığın yanındaki künye — kaç şirketten seçildiği. */
-  meta?: string;
-  scaleMax: number;
-}) {
-  if (rows.length === 0) return null;
-
-  return (
-    <Panel className={styles.mover}>
-      {/* KARŞILAŞTIRMAYA GİDEN YOL. Ekran gezinmede görünmüyor ve siteye
-          girenin çoğu varlığını bilmiyordu; oysa "günün en çok artan beşi"
-          listesi, karşılaştırmanın en doğal başlangıcı. Liste sabit değil,
-          o anki sıralamadan türüyor. */}
-      <div className={styles.moverHeading}>
-        <h2 data-ink="solid"><span className={styles.moverHeadingIcon} data-direction={kind}>
-          {kind === "up" ? <TrendUp size={18} weight="bold" aria-hidden /> : <TrendDown size={18} weight="bold" aria-hidden />}
-        </span>{title}</h2>
-        <div className={styles.moverHeadingMeta}>
-          {meta && <span>{meta}</span>}
-          {rows.length >= 2 && <PanelLink href={`/karsilastir?semboller=${rows.slice(0, 4).map((row) => row.member.symbol).join(",")}`}>
-            {t.compare.compareFirstFour}
-          </PanelLink>}
-        </div>
-      </div>
-      <ul className="divide-y divide-line-soft" data-motion-stagger>
-        {rows.map((row) => {
-          const changePct = row.quote?.changePct ?? 0;
-          const width = (Math.abs(changePct) / scaleMax) * 100;
-          /* RENK SATIRIN KENDİ DEĞERİNDEN, PANELİN ADINDAN DEĞİL.
-             `tone` propu panelin tamamını boyuyordu: düşüşle geçen bir günde
-             "Günün En Çok Artanları" listesindeki beş satırın hepsi eksi
-             olabiliyor ve eksi yüzdeler YEŞİL basılıyordu. Panelin adı bir
-             sıralama yönü, satırın rengi ise bir olgu. */
-          const satirTon = directionOf(row.quote?.changePct);
-          return (
-            <li key={row.member.symbol}>
-              {/* prefetch={false}: bu bağlantı bir LİSTE SATIRINDA ve satır
-                  sayısı altmışa çıkıyor. Next varsayılanı, görünür alana
-                  giren her bağlantıyı önden ısıtıyor — altmış satır altmış
-                  sunucu isteği demek. Sitedeki öteki liste satırları
-                  (şirketler, bilanço takvimi, analiz tablosu) bunu zaten
-                  yapıyordu; endeks bileşenleri gözden kaçmış. */}
-              <Link
-                href={`/hisse/${row.member.symbol}`}
-                prefetch={false}
-                className={styles.moverLink}
-                data-cc={row.member.symbol}
-              >
-                <div className={styles.moverIdentity}>
-                  {/* SIRA NUMARASI KALKTI (6 Kasım). Beşli kartın sağ üstünde
-                      12 piksellik "1…5" logodan kopuk duruyordu ve yeni bilgi
-                      taşımıyordu: sıra kartın yerinden (soldan sağa, telefonda
-                      yukarıdan aşağı) ve çubuğun boyundan zaten okunuyor. */}
-                  <LogoTile symbol={row.member.symbol} logoUrl={row.logoUrl} size="sm" className={styles.moverLogo} />
-                  <span className={styles.moverCompany}>
-                    <span className="shrink-0 text-base font-bold text-strong">
-                      {row.member.symbol}
-                    </span>
-                    {/* İKİ SATIR, KESİLMEZ (17 Ekim): beş sütunlu kartta ad tek
-                        satırda "Northrop Grumm…" diye kırpılıyordu. */}
-                    <span className="min-w-0 line-clamp-2 text-tiny leading-snug text-muted" title={row.member.name}>
-                      {row.member.name}
-                    </span>
-                  </span>
-                  <span
-                    className={cn(
-                      "numeral shrink-0 text-sm font-bold",
-                      directionText(satirTon),
-                    )}
-                  >
-                    {formatPercent(row.quote?.changePct, locale)}
-                  </span>
-                </div>
-
-                {/* Both panels use the same maximum absolute percentage. */}
-                <div className={styles.moverTrack}>
-                  <span
-                    aria-hidden
-                    data-motion-draw="line"
-                    className={cn(
-                      "bar-fill h-[5px] rounded-full",
-                      satirTon === "up"
-                        ? "bg-up/70"
-                        : satirTon === "down"
-                          ? "bg-down/70"
-                          : "bg-flat/50",
-                    )}
-                    style={{ width: `${width}%` }}
-                  />
-                  {showContribution && row.contribution !== null && (
-                    <span className="numeral shrink-0 text-nano text-muted">
-                      {contributionLabel} {approxPoints(row.contribution, locale)}
-                    </span>
-                  )}
-                </div>
-              </Link>
-            </li>
-          );
-        })}
-      </ul>
-    </Panel>
-  );
-}
-
-/* ---- Tam bileşen tablosu ---- */
-
-function sortHref(
-  tab: TabKey,
-  key: SortKey,
-  sort: SortKey,
-  dir: SortDir,
-  limit: number,
-) {
-  const nextDir: SortDir = sort === key && dir === "desc" ? "asc" : "desc";
-  // Derinlik korunur: 180 satıra inmiş biri sütun başlığına basınca ilk 60'a
-  // geri fırlatılmamalı.
-  const depth = limit > PAGE_STEP ? `&adet=${limit}` : "";
-  return `/piyasalar?endeks=${tab}&sirala=${key}&yon=${nextDir}${depth}`;
-}
-
-function SortHead({
-  label,
-  href,
-  active,
-  dir,
-  className,
-}: {
-  label: string;
-  href: string;
-  active: boolean;
-  dir: SortDir;
-  className?: string;
-}) {
-  return (
-    <th
-      scope="col"
-      /* Sıralı sütun rengi ve `aria-hidden` bir üçgenle anlatılıyordu; ikisi
-         de yardımcı teknolojiye ulaşmıyor. Gerekçe ikizinde yazılı:
-         app/(app)/sirketler/page.tsx */
-      aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : "none"}
-      className={cn("px-3 py-2.5 text-right font-semibold", className)}
-    >
-      {/* Dokunma alanı yazının kendisi kadardı (14px); negatif margin +
-          dikey dolgu tabloyu büyütmeden hedefi 32px'e çıkarır. */}
-      {/* scroll={false}: sıralama bir gezinme değil, aynı tablonun yeniden
-          dizilmesi. Varsayılan davranışta okuyucu tablonun ortasında bir
-          başlığa basınca sayfanın en üstüne fırlıyor ve aşağı geri kaydırmak
-          zorunda kalıyordu. */}
-      <Link
-        href={href}
-        scroll={false}
-        className={cn(
-          /* MOBİLDE 44px. Sıralama başlığı tablonun ANA denetimi ama dokunma
-             hedefi 32 pikseldi. Negatif margin dolguyu emiyor, yani hedef
-             büyürken satır yüksekliği değişmiyor; masaüstünde imleç hassas,
-             orada 32px yeterli. */
-          "-my-3.5 inline-flex min-h-11 items-center gap-1 py-3.5 transition-colors hover:text-primary sm:-my-2 sm:min-h-8 sm:py-2",
-          active && "text-primary",
-        )}
-      >
-        {label}
-        <span aria-hidden className="numeral text-micro">
-          {active ? (dir === "desc" ? "▼" : "▲") : "▽"}
-        </span>
-      </Link>
-    </th>
-  );
-}
-
-function MembersTable({
-  tab,
-  rows,
-  limit,
-  sort,
-  dir,
-  showContribution,
-  locale,
-  t,
-  cards,
-}: {
-  tab: TabKey;
-  rows: Row[];
-  /** Kaç satır basılacak — sıralama TAMAMI üzerinde, dilim sonra alınır. */
-  limit: number;
-  sort: SortKey;
-  dir: SortDir;
-  showContribution: boolean;
-  locale: Locale;
-  t: Dictionary;
-  /** Şirket kartı: sayfanın paketi ve üstte zaten kaydı basılmış semboller. */
-  cards: {
-    quotes: Record<string, Quote>;
-    stale: boolean;
-    names: Record<string, SymbolMeta>;
-    status: MarketStatus;
-    facts: (row: Row) => CompanyCardExtra;
-    skip: ReadonlySet<string>;
-  };
-}) {
-  if (rows.length === 0) {
-    return (
-      <Panel>
-        <EmptyState title={t.common.noData} />
-      </Panel>
-    );
-  }
-
-  /* Değeri olmayan satır `null` — eksik veri bir uç değer değil bilinmezlik.
-     `-Infinity` azalan sıralamada doğru çalışıp artanda bozuluyordu: artana
-     geçen okuyucu listenin başında en çok düşenleri değil kotasyonu hiç
-     gelmemiş şirketleri buluyordu (aynı düzeltme Şirketler tablosunda da). */
-  const valueOf = (row: Row): number | string | null => {
-    switch (sort) {
-      case "fiyat":
-        return row.quote?.price ?? null;
-      case "ad":
-        return row.member.name;
-      case "katki":
-        return row.contribution ?? null;
-      case "cap":
-        return row.marketCap ?? null;
-      default:
-        return row.quote?.changePct ?? null;
-    }
-  };
-
-  /* Cubuk olcegi: grubun EN BUYUK mutlak degisimi. Yuzde degerleri
-     kendi araliginda kucuk (±%3) oldugu icin sabit bir olcek cubuklari
-     gorunmez yapiyordu. */
-  const peakChange = Math.max(
-    ...rows.map((row) => Math.abs(row.quote?.changePct ?? 0)),
-    0.01,
-  );
-  /* Listede eksi bir değişim var mı — çubuğun sıfırı ortada mı (ScaleBar). */
-  const changeSigned = rows.some((row) => (row.quote?.changePct ?? 0) < 0);
-  /* PİYASA DEĞERİ BİR DE ÇİZGİ (26 Eylül). "Karşılaştırılan her büyüklük bir
-     de çizgi olarak okunur" (CLAUDE.md); sütun yalnızca sayıydı ve "hangisi
-     ne kadar büyük" basamak basamak okunuyordu. Ölçek DOĞRUSAL ve listenin
-     en büyüğüne göre: logaritmik ölçek sırayı korurdu ama büyüklüğü
-     çarpıtırdı, oysa sütunun asıl söylediği tam da o — birkaç dev şirketin
-     piyasanın ne kadarını tuttuğu. Çubuk bir yargı değil, nötr tonda. */
-  const peakCap = Math.max(...rows.map((row) => row.marketCap ?? 0), 1);
-
-  const ordered = [...rows].sort((a, b) => {
-    const va = valueOf(a);
-    const vb = valueOf(b);
-    // Boşlar her iki yönde de sonda; kendi aralarında tablo sırasını korur.
-    if (va === null) return vb === null ? 0 : 1;
-    if (vb === null) return -1;
-    if (typeof va === "string" || typeof vb === "string") {
-      const cmp = String(va).localeCompare(String(vb), "en");
-      return dir === "asc" ? cmp : -cmp;
-    }
-    return dir === "asc" ? va - vb : vb - va;
-  });
-
-  // Dilim SIRALAMADAN SONRA — bkz. PAGE_STEP.
-  const sorted = ordered.slice(0, limit);
-  const hasMore = ordered.length > sorted.length;
-  const moreHref = `/piyasalar?endeks=${tab}&sirala=${sort}&yon=${dir}&adet=${limit + PAGE_STEP}`;
-
-  const fresh = sorted.filter((row) => !cards.skip.has(row.member.symbol));
-
-  return (
-    <Panel id="market-members" className={styles.members} style={{ "--fold-inset": "16px" } as React.CSSProperties}>
-      <CompanyCards
-        symbols={fresh.map((row) => row.member.symbol)}
-        quotes={cards.quotes}
-        stale={cards.stale}
-        names={cards.names}
-        status={cards.status}
-        extras={Object.fromEntries(fresh.map((row) => [row.member.symbol, cards.facts(row)]))}
-      />
-      {/* Sayaç başlıkta: tablo kırpılıyor ve okuyucu tıklamadan önce
-          listenin ne kadarını gördüğünü bilmeli. Aynı kalıp ana sayfadaki
-          bilanço panelinde ve /mercek arşivinde de var. */}
-      <PanelHeader
-        title={t.markets.constituents}
-        meta={
-          hasMore
-            ? t.companies.showing
-                .replace("{n}", String(sorted.length))
-                .replace("{total}", String(ordered.length))
-            : undefined
-        }
-      />
-      {/* Tablo telefonda `min-w-[680px]` ile açılıyordu: ilk bakışta yalnızca
-          sıra, şirket ve değişimin bir kısmı görünüyor, FİYAT ekranın dışında
-          kalıyordu. Bir bileşen listesinde "ne kadar oynamış" ile "kaç dolar"
-          birlikte okunur — birini görmek için yana kaydırmak gerekmesi tabloyu
-          ilk açılışta kırık gösteriyordu.
-
-          Çözüm daraltmak değil, ELEMEK: sıra numarası, piyasa değeri ve Dow
-          katkısı telefonda gizleniyor (sm+ hepsi geri geliyor), kalan üç sütun
-          390px'e rahat sığıyor ve yatay kaydırma kalkıyor. Piyasa değeri
-          kaybolmuyor — fiyatın altına ikinci satır olarak iniyor. */}
-      {/* KAP KLAVYEYLE ODAKLANABİLİR — gerekçe ikizinde (sirketler). */}
-      {/* TELEFONDA İLK ON BEŞ (3 Ekim). Tablo 390 pikselde 60 satır,
-          ~4.600 piksel ölçüldü; altındaki bölümlere ulaşmak için yüz kez
-          kaydırmak gerekiyordu. Satırlar sunucuda yine çiziliyor, on beşin
-          ötesi katlı geliyor ve JS'siz anahtar açıyor (FoldToggle `phone`);
-          640'tan itibaren katlama yok. */}
-      <FoldToggle
-        id="members-fold"
-        phone
-        hiddenCount={Math.max(0, sorted.length - PHONE_ROWS)}
-        more={t.markets.constituentsMore.replace("{n}", String(Math.max(0, sorted.length - PHONE_ROWS)))}
-        less={t.markets.constituentsLess}
-      >
-      <ScrollEdges
-        className="scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
-        tabIndex={0}
-        role="region"
-        aria-label={t.markets.constituents}
-      >
-        <table className="w-full text-sm sm:min-w-[680px]">
-          <caption className="sr-only">{INDEX_TABS.find((entry) => entry.key === tab)?.label} · {t.markets.constituents}</caption>
-          <thead>
-            <tr className="border-b border-line text-left text-nano text-muted">
-              <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">
-                #
-              </th>
-              <SortHead
-                label={t.companies.company}
-                href={sortHref(tab, "ad", sort, dir, limit)}
-                active={sort === "ad"}
-                dir={dir}
-                className="text-left"
-              />
-              {/* Değişim fiyattan önce — bkz. /sirketler tablosu. */}
-              <SortHead
-                label={t.companies.change}
-                href={sortHref(tab, "degisim", sort, dir, limit)}
-                active={sort === "degisim"}
-                dir={dir}
-                className="px-1.5 sm:px-3"
-              />
-              <SortHead
-                label={`${t.companies.price} ($)`}
-                href={sortHref(tab, "fiyat", sort, dir, limit)}
-                active={sort === "fiyat"}
-                dir={dir}
-                className="pr-4 sm:pr-3"
-              />
-              <SortHead
-                label={t.market.marketCap}
-                href={sortHref(tab, "cap", sort, dir, limit)}
-                active={sort === "cap"}
-                dir={dir}
-                className={cn(
-                  "hidden sm:table-cell",
-                  !showContribution && "sm:pr-5",
-                )}
-              />
-              {showContribution && (
-                <SortHead
-                  label={t.markets.contribution}
-                  href={sortHref(tab, "katki", sort, dir, limit)}
-                  active={sort === "katki"}
-                  dir={dir}
-                  className="hidden sm:table-cell sm:pr-5"
-                />
-              )}
-            </tr>
-          </thead>
-          <tbody data-motion-stagger className="divide-y divide-line-soft">
-            {sorted.map((row, index) => {
-              const quote = row.quote;
-              const tone = directionOf(quote?.changePct);
-              return (
-                <tr
-                  key={row.member.symbol}
-                  className="transition-colors hover:bg-primary-tint"
-                  data-fold={index >= PHONE_ROWS || undefined}
-                >
-                  <td className="numeral hidden px-4 py-2.5 text-xs text-muted sm:table-cell sm:px-5">
-                    {index + 1}
-                  </td>
-                  <td className="px-3 py-2.5 pl-4 sm:pl-3">
-                    <Link
-                      href={`/hisse/${row.member.symbol}`}
-                      prefetch={false}
-                      /* -my-2 py-2: bağlantı hücreyi doldurmadığı için
-                         dokunma hedefi metnin kendi 20px'iyle sınırlıydı.
-                         Dolgu onu satır yüksekliğine yayar, negatif margin
-                         de tabloyu olduğu yerde tutar. */
-                      className="-my-2 flex min-w-0 items-center gap-2.5 py-2"
-                      data-cc={row.member.symbol}
-                    >
-                      <LogoTile
-                        symbol={row.member.symbol}
-                        logoUrl={row.logoUrl}
-                        size="sm"
-                      />
-                      <span className="min-w-0">
-                        <span className="block text-base font-bold leading-[17px] text-strong">
-                          {row.member.symbol}
-                        </span>
-                        <span title={row.member.name} className="block max-w-[104px] truncate text-tiny leading-[15px] text-muted sm:max-w-none">
-                          {row.member.name}
-                        </span>
-                      </span>
-                    </Link>
-                  </td>
-                  {/* Sayı + oran çubuğu birlikte: tablo yalnızca sayıdan
-                      ibaretken "kim ne kadar oynamış" sorusu ancak yüzdeler
-                      tek tek okunup kafada sıralanarak cevaplanıyordu.
-                      Çubuk sıralamayı göze taşıyor ve üstteki En Çok
-                      Artanlar kartıyla aynı ölçeği kullanıyor. */}
-                  {/* 6 Kasım: çubuk sitenin ölçek diline geçti (`ScaleBar`,
-                      CompareScale.tsx). Eskisi sağa yaslı, tek yönlü ve yön
-                      renginde 4 piksellik bir şeritti: artı ile eksi aynı
-                      yöne uzuyor, fark yalnız renkteydi. Şimdi listede eksi
-                      varsa SIFIR ORTADA — artı sağa, eksi sola açılıyor;
-                      renk yalnız işaretten (`signal`), kalınlık ve tavan
-                      piyasa değeri sütunuyla aynı (5 piksel, 96 piksel).
-                      Değişim bilinmiyorsa çubuk yine HİÇ çizilmiyor: sıfır
-                      genişlik "hareket yok" demek olurdu ve o da bir iddia. */}
-                  <td className="px-1.5 py-2.5 sm:px-3">
-                    <span
-                      className={cn(
-                        "numeral block text-right font-bold",
-                        tone === "up"
-                          ? "text-up"
-                          : tone === "down"
-                            ? "text-down"
-                            : "text-muted",
-                      )}
-                    >
-                      {quote ? formatPercent(quote.changePct, locale) : NO_VALUE}
-                    </span>
-                    {quote && quote.changePct !== null && quote.changePct !== undefined && (
-                      <ScaleBar
-                        ratio={quote.changePct / peakChange}
-                        signed={changeSigned}
-                        tone="signal"
-                        className="max-w-[64px] sm:max-w-[96px]"
-                      />
-                    )}
-                  </td>
-                  {/* Piyasa değeri telefonda kendi sütununu kaybediyor ama
-                      veriyi kaybetmiyor: fiyatın altına küçük punto ikinci
-                      satır olarak iniyor. Aynı şirketin iki ölçüsü zaten
-                      birlikte okunuyor ("kaç dolar / ne kadar büyük"), alt
-                      alta gelmeleri sütun olarak durmalarından daha sıkı.
-                      sm+ ekranda satır gizlenir, sütun geri gelir. */}
-                  <td className="px-3 py-2.5 pr-4 text-right sm:pr-3">
-                    <span className="numeral block font-bold text-strong">
-                      {quote ? formatPrice(quote.price, locale) : NO_VALUE}
-                    </span>
-                    {row.marketCap && (
-                      <span className="numeral mt-0.5 block text-tiny leading-[14px] text-muted sm:hidden">
-                        {formatMoneyCompact(row.marketCap, locale)}
-                      </span>
-                    )}
-                  </td>
-                  <td
-                    className={cn(
-                      "numeral hidden px-3 py-2.5 text-right text-body sm:table-cell",
-                      showContribution ? undefined : "sm:pr-5",
-                    )}
-                  >
-                    <span className="block">
-                      {row.marketCap
-                        ? formatMoneyCompact(row.marketCap, locale)
-                        : NO_VALUE}
-                    </span>
-                    {row.marketCap ? <ScaleBar ratio={row.marketCap / peakCap} signed={false} className="max-w-[96px]" /> : null}
-                  </td>
-                  {showContribution && (
-                    <td className="numeral hidden px-3 py-2 text-right text-soft sm:table-cell sm:pr-5">
-                      {row.contribution !== null
-                        ? approxPoints(row.contribution, locale)
-                        : NO_VALUE}
-                    </td>
-                  )}
-                </tr>
-              );
-            })}
-          </tbody>
-        </table>
-      </ScrollEdges>
-      </FoldToggle>
-      {/* Sayaç + devamı — /sirketler dizinindeki ölçünün aynısı.
-          scroll={false}: okuyucu tablonun dibinde, yeni satırlar geldiğinde
-          sayfanın başına fırlatılmamalı. */}
-      {hasMore && (
-        <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
-          <p className="numeral text-small text-muted">
-            {t.companies.showing
-              .replace("{n}", String(sorted.length))
-              .replace("{total}", String(ordered.length))}
-          </p>
-          <Link
-            href={moreHref}
-            scroll={false}
-            /* 44px: sayfanın en altındaki tek eylem ve mobilde dokunma
-               eşiğinin altındaydı (40px). */
-            className="inline-flex min-h-11 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-colors hover:border-line-strong hover:text-strong sm:min-h-10"
-          >
-            {t.companies.showMore}
-          </Link>
-        </div>
-      )}
-
-      {showContribution && (
-        <p className="border-t border-line-soft px-4 py-2.5 text-tiny leading-relaxed text-muted sm:px-5">
-          {t.markets.contributionHint}
-        </p>
-      )}
-    </Panel>
   );
 }
 
@@ -1580,8 +751,21 @@ function DetailSkeleton({ rows, contribution }: { rows: number; contribution: bo
 
       <Panel className={styles.members}>
         <div className="flex items-center justify-between gap-4 px-5 py-4"><Skeleton className="h-5 w-40" /><Skeleton className="h-3 w-20" /></div>
-        <div className="flex flex-col gap-px">
-          {Array.from({ length: rows }, (_, i) => <SkeletonRow key={i} />)}
+        {/* Satır boyu gerçek tabloyla aynı (10 Kasım: 46 piksel, telefonda
+            48 ve ilk on beş — MembersTable.module.css); eski yer tutucu 54
+            piksellik genel satırdı ve telefonda altmış satırın hepsini
+            basıyordu (gerçeği on beş). */}
+        <div className={styles.memberSkeleton}>
+          <div />
+          {Array.from({ length: rows }, (_, i) => (
+            <div key={i}>
+              <Skeleton className="size-7 shrink-0 rounded-md" />
+              <Skeleton className="h-3 w-24" />
+              <Skeleton className="ml-auto h-[5px] w-[30%] rounded-full" />
+              <Skeleton className="h-3 w-14 shrink-0" />
+              <Skeleton className="hidden h-3 w-14 shrink-0 sm:block" />
+            </div>
+          ))}
         </div>
       </Panel>
     </div>

@@ -5,6 +5,7 @@ import { Panel } from "@/components/ui/primitives";
 import { Sparkline, sparkFrame } from "@/components/ui/Sparkline";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { Quote } from "@/lib/providers/types";
+import { displayZone, formatInZone } from "@/lib/session-clock";
 import { cn, directionOf, formatChange, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./MarketExperience.module.css";
 
@@ -73,6 +74,29 @@ export function IndexCard({
   const below = quote !== null && quote.prevClose !== null && quote.price >= quote.prevClose;
   const baseSide = baseShare === null ? null : baseShare < 0.24 ? "below" : baseShare > 0.76 ? "above" : below ? "below" : "above";
   const ticks = frame ? [frame.xShare(rail.openAt), frame.xShare(rail.closeAt)].filter((x): x is number => x !== null) : [];
+  /* GÜN HENÜZ BİTMEDİYSE KART BOŞ DURMAZ (10 Kasım 2026). Eksen bütün
+     seans (04:00 → uzatılmış seansın sonu) ve açılış öncesinde eldeki veri
+     onun ilk %5–15'i: kartın solunda küçük bir kıpırtı, gerisi boş bir
+     kesik çizgi — "grafik yüklenmemiş" gibi okunuyordu (canlı, 12:43 TR).
+     Eksen DARALMIYOR (14 Ekim kararı: bar sırası günü yarım gösterir);
+     boş kalan kısım adlandırılıyor, hepsi eldeki veriden:
+     - SON FİYAT ÇİZGİSİ: eğrinin son noktasından sağ kenara noktalı ince
+       çizgi, yön tonunda. Fiyatın şu anki seviyesi; önceki kapanışın kesik
+       çizgisiyle arasındaki açıklık günün farkının kendisi. Tahmin değil:
+       yatay ve noktalı, veri çizgisinin (dolu) devamı gibi çizilmiyor.
+     - ÖN SEANS KUŞAĞI: açılış çizgisinin solu çukur tonda (`.preZone`);
+       eldeki verinin eksenin hangi diliminde durduğu bir bakışta okunuyor.
+     - AÇILIŞ İMİ ADIYLA: zilin dikey çizgisi "Açılış 17:30" künyesini
+       taşıyor (saat okurun diliminde, `lib/session-clock.ts`); çizgi
+       açılışın gerisindeyse boşluğun NEDEN boş olduğu yazıyor.
+     Eğri eksenin %88'ini geçtiyse (seansın sonu) çizgi basılmaz. */
+  const last = frame?.shown.at(-1);
+  const lastX = frame && last?.time !== undefined ? frame.xShare(last.time) : null;
+  const nowLine = frame && last && lastX !== null && lastX < 0.88 ? { x: lastX, y: frame.yShare(last.value) } : null;
+  const openX = frame ? frame.xShare(rail.openAt) : null;
+  const openLabel = openX !== null && lastX !== null && lastX < openX
+    ? `${t.markets.openTick} ${formatInZone(new Date(rail.openAt * 1000), displayZone(locale))}`
+    : null;
 
   const range =
     drawSpark && quote!.low !== null && quote!.high !== null && quote!.high > quote!.low
@@ -119,6 +143,17 @@ export function IndexCard({
                 {ticks.map((x) => (
                   <i key={x} className={styles.sessionTick} style={{ left: `${(x * 100).toFixed(2)}%` }} aria-hidden />
                 ))}
+                {openLabel && openX !== null && (
+                  <i className={styles.preZone} style={{ width: `${(openX * 100).toFixed(2)}%` }} aria-hidden />
+                )}
+                {nowLine && (
+                  <i
+                    className={styles.nowLine}
+                    data-tone={tone}
+                    style={{ left: `${(nowLine.x * 100).toFixed(2)}%`, top: `${(nowLine.y * 100).toFixed(2)}%` }}
+                    aria-hidden
+                  />
+                )}
                 <Sparkline
                   points={points}
                   title={`${label} · ${locale === "tr" ? "1G" : "1D"}`}
@@ -140,6 +175,11 @@ export function IndexCard({
                     {t.markets.prevClose} <b className="numeral">{formatPrice(quote.prevClose, locale)}</b>
                   </span>
                 )}
+              </div>
+            )}
+            {drawSpark && openLabel && openX !== null && (
+              <div className={styles.chartAxis}>
+                <span className="numeral" style={{ left: `${(openX * 100).toFixed(2)}%` }}>{openLabel}</span>
               </div>
             )}
             {/* GÜN ARALIĞI (17 Ekim): kıvılcım şekli söylüyor, aralık

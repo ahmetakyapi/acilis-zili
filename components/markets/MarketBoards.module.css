@@ -201,3 +201,80 @@
   .heat { min-height:38px; padding:0 5px; font-size:12px; letter-spacing:-.01em; }
 }
 @media(prefers-reduced-motion:reduce) { .heat { transition:none; } }
+
+/* ==========================================================================
+   10 Kasım 2026 — görsel tur. Karar kayıtları: EtfBoards.tsx ("SON KAPANIŞ
+   BİR İM", "YBB BİR DE ÇİZGİ", HeatCell), SentimentPulse.tsx ("KADRAN
+   İNCELDİ", "PUAN RAYI ORTADAN AÇILIR", "DURUM GÖRÜNÜR, YÖNTEM KATLI").
+   ========================================================================== */
+
+/* ---- Son kapanış imi ---- */
+.basisMark { display:inline-flex; margin-right:5px; color:var(--text-muted); vertical-align:-1.5px; }
+.basisKey { display:inline-flex; align-items:center; gap:5px; color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
+.sortIdle { opacity:.55; }
+
+/* ---- Sektör karosu: dolgu ayrı katman ----
+   Önce (1440, açılış öncesi): son kapanışlı iki satır 62, ötekiler 50
+   piksel; o iki satırın 1G karosu dolgusuz. Sonra: on bir satırın hepsi
+   aynı boyda, 1G sütununda her karo aynı kutu (son kapanışta nötr ton). */
+.heat { position:relative; gap:0; overflow:hidden; background:transparent; }
+.heat > :not(.heatFill) { position:relative; }
+.heatFill { position:absolute; inset:0; border-radius:inherit; background:color-mix(in oklab, var(--heat-color) calc(var(--heat, 0) * 38% + 4%), transparent); transform-origin:left center; }
+.heat[data-basis] > .heatFill { background:var(--surface-sunken); }
+.heatLegend .heat { background:color-mix(in oklab, var(--heat-color) calc(var(--heat, 0) * 38% + 4%), transparent); }
+
+/* ---- Emtia: iki katlı etiket, YBB çizgisi ----
+   Önce (1440, canlı): emtia tablosu sektör matrisinden ~200 piksel kısa,
+   fark tablonun altında boş. Sonra (önizleme, iki tema): satır doğal boyu
+   49 → 55 (çizgi 38 piksel); kalan fark satırlara dağılıyor (aşağıda
+   `.fill`: 1440'ta satır 65, grup başlığı 43) ve tablonun dibi ile künyenin
+   tepesi arasında boşluk 97 → 0 piksel. Sektör panosunda satırlar
+   62 / 50 → hepsi 48. */
+.tableCompact { min-width:548px; }
+.tableCompact th, .tableCompact td { padding-inline:9px; }
+.tableCompact tbody tr:not(.groupRow) > * { vertical-align:middle; }
+.tableCompact .valueCell { padding-block:12px; }
+.trendHead { text-align:right; font-weight:600; font-size:var(--text-nano); color:var(--text-muted); white-space:nowrap; }
+.table td.trendCell { width:1%; padding-block:6px; }
+.trend { display:block; width:100%; min-width:88px; height:38px; overflow:visible; }
+.tableCompact .trendCell, .tableCompact .trendHead { width:22%; }
+/* Kalan birkaç piksel satırlara dağılır: iki pano aynı hatta biterken
+   (30 Eylül kuralı) fark tablonun ALTINDA boşluk olarak değil satır
+   boyunda eriyor (1440: satır başına ≤ 10 piksel). Tablo kabı esner,
+   tablo onu doldurur; 1200'ün altında panolar alt alta, esneme yok. */
+@media(min-width:1200px) {
+  .boards > .board > .fill { display:flex; flex:1 1 auto; flex-direction:column; }
+  .boards > .board > .fill > table { flex:1 1 auto; }
+}
+
+/* ---- Nabız: kadran ---- */
+.gaugeMarker { fill:var(--text-strong); stroke:var(--premium-surface); stroke-width:3px; }
+.gaugeEnd { fill:var(--text-muted); font-size:8.5px; font-weight:600; }
+.gaugeReading { margin-top:-38px; }
+.gaugeCompact + .gaugeReading { margin-top:-28px; }
+
+/* ---- Nabız: puan rayı ortadan açılır ---- */
+.scoreTrack { height:var(--lane-h,5px); }
+.scoreTrack i { position:absolute; top:0; bottom:0; height:auto; border-radius:0 3px 3px 0; background:color-mix(in srgb, var(--up) 70%, transparent); }
+.scoreTrack i[data-side="down"] { border-radius:3px 0 0 3px; background:color-mix(in srgb, var(--down) 70%, transparent); }
+.scoreDot { position:absolute; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%; background:var(--down); box-shadow:0 0 0 2px var(--premium-surface); }
+.scoreDot[data-side="up"] { background:var(--up); }
+.chipTrack { height:var(--lane-h,5px); }
+.pulseRowHead b { color:var(--down); }
+.pulseRowHead b[data-side="up"] { color:var(--up); }
+.pulseList > li { gap:8px; padding-block:12px; }
+.pulseBody { padding-bottom:10px; }
+
+/* ---- Nabız: durum satırı ve "Nasıl Okunur" ---- */
+.pulseMissing { padding:0 16px 12px; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.5; }
+.howTo { border-top:1px solid var(--line-soft); }
+.howTo > summary { display:flex; align-items:center; gap:8px; min-height:44px; padding-inline:16px; color:var(--text-body); font-size:var(--text-base); font-weight:650; cursor:pointer; list-style:none; transition:color .18s var(--ease-brand); }
+.howTo > summary::-webkit-details-marker { display:none; }
+.howTo > summary > svg:first-child { color:var(--primary-ink); }
+.howToCaret { color:var(--text-muted); transition:transform .22s var(--ease-brand); }
+.howTo[open] .howToCaret { transform:rotate(180deg); }
+.howTo > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; border-radius:10px; }
+@media(hover:hover) and (pointer:fine) { .howTo > summary:hover { color:var(--text-strong); } }
+.howToBody { display:flex; flex-direction:column; gap:6px; max-width:104ch; padding:0 16px 16px; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.6; }
+@media(min-width:640px) { .pulseMissing, .howTo > summary, .howToBody { padding-inline:20px; } }
+@media(prefers-reduced-motion:reduce) { .howToCaret, .howTo > summary { transition:none; } }

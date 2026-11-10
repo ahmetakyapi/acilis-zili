@@ -1,3 +1,4 @@
+import { CaretDown, Info } from "@phosphor-icons/react/dist/ssr";
 import { EmptyState, Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import {
@@ -35,9 +36,17 @@ import styles from "./MarketBoards.module.css";
  * sözleşmeden (`VIX_SERIES`, lib/vix.ts) okunuyor.
  */
 
-const GAUGE = { cx: 100, cy: 100, r: 80, stroke: 14 } as const;
-/** Bant yayları arasındaki boşluk, puan cinsinden. */
-const GAUGE_GAP = 0.9;
+/* KADRAN İNCELDİ (10 Kasım 2026). Yay 14 birim kalınlığında dolu bir
+   banttı ve işaretçi onu saran 20 birimlik içi boş bir halkaydı: sitenin
+   "ince grafik" dilinde (kulvar üstünde 5 piksellik şerit) ekranın en ağır
+   çizimi buydu, halka da okumayı değil kendini gösteriyordu. Şimdi yay 6
+   birim (260 piksellik kadranda ~8 piksel), uçları yuvarlak; puanın
+   düştüğü bant tam tonda, ötekiler yarı tonda — "neredeyiz" yayın
+   kendisinden okunuyor. İşaretçi yayın üstünde dolu küçük bir nokta,
+   çevresinde yüzey renginde kesik (halka değil); iki uçta 0 ve 100. */
+const GAUGE = { cx: 100, cy: 100, r: 84, stroke: 6 } as const;
+/** Bant yayları arasındaki boşluk, puan cinsinden (yuvarlak uçlar dahil). */
+const GAUGE_GAP = 3.4;
 const SCORE_MAX = 100;
 
 function point(score: number, radius: number = GAUGE.r) {
@@ -76,6 +85,7 @@ const BAND_ARCS = SENTIMENT_BANDS.map((band, index) => {
 
 function Gauge({ score, label, size }: { score: number | null; label: string; size: "full" | "compact" }) {
   const marker = score !== null ? point(score) : null;
+  const active = score !== null ? sentimentBand(score).key : null;
   return (
     <svg
       viewBox="0 0 200 112"
@@ -89,7 +99,8 @@ function Gauge({ score, label, size }: { score: number | null; label: string; si
           d={band.path}
           fill="none"
           strokeWidth={GAUGE.stroke}
-          strokeLinecap="butt"
+          strokeLinecap="round"
+          opacity={active === null || active === band.key ? 1 : 0.42}
           /* Kadran görünüme girince bantlar uçtan uca çiziliyor
              (MotionExperience `arc`); JS yoksa tam çizili. */
           pathLength={1}
@@ -105,9 +116,15 @@ function Gauge({ score, label, size }: { score: number | null; label: string; si
         <circle
           cx={marker.x}
           cy={marker.y}
-          r={GAUGE.stroke / 2 + 3}
+          r={GAUGE.stroke / 2 + 2.5}
           className={cn("spark-dot", styles.gaugeMarker)}
         />
+      )}
+      {size === "full" && (
+        <>
+          <text x={GAUGE.cx - GAUGE.r} y={111} textAnchor="middle" className={styles.gaugeEnd}>0</text>
+          <text x={GAUGE.cx + GAUGE.r} y={111} textAnchor="middle" className={styles.gaugeEnd}>{SCORE_MAX}</text>
+        </>
       )}
     </svg>
   );
@@ -196,6 +213,35 @@ function rawReading(reading: SentimentReading, locale: Locale, t: Dictionary) {
   }
 }
 
+/**
+ * PUAN RAYI ORTADAN AÇILIR (10 Kasım 2026). Dolgu 0'dan puana uzanıyordu:
+ * 50 çizgisi çizili olduğu hâlde dolgu onu baştan sona kesip geçiyor, "9"
+ * ile "55" arasındaki fark yalnız uzunluk ve renk olarak okunuyordu —
+ * çizginin neye yaradığı anlaşılmıyordu. Ölçeğin anlamı iki yönlü (0 korku,
+ * 100 iştah, 50 nötr): dolgu artık 50'den puana doğru açılıyor, korku sola
+ * kırmızı, iştah sağa yeşil; ucunda puanın tam yerini gösteren nokta.
+ * Tam ve kompakt sürüm aynı bileşeni çiziyor (iki ekran, tek dil).
+ */
+function ScoreTrack({ score, className }: { score: number; className?: string }) {
+  const half = SCORE_MAX / 2;
+  const up = score >= half;
+  const clamped = Math.min(SCORE_MAX, Math.max(0, score));
+  return (
+    <span className={cn(styles.scoreTrack, className)} data-motion-track aria-hidden>
+      <i
+        data-motion-draw="line"
+        data-side={up ? "up" : "down"}
+        style={{
+          [up ? "left" : "right"]: "50%",
+          width: `${Math.abs(clamped - half)}%`,
+          transformOrigin: up ? "left center" : "right center",
+        }}
+      />
+      <span className={styles.scoreDot} data-side={up ? "up" : "down"} style={{ left: `${clamped}%` }} />
+    </span>
+  );
+}
+
 export async function SentimentPulse({
   locale,
   t,
@@ -205,8 +251,23 @@ export async function SentimentPulse({
   t: Dictionary;
   variant?: "full" | "compact";
 }) {
-  const x = t.marketExtras;
   const snapshot = await getSentiment();
+  return <SentimentPulseView locale={locale} t={t} variant={variant} snapshot={snapshot} />;
+}
+
+/** Saf görünüm — yükleyiciden ayrı, sahte veriyle ölçülebilsin (`olcum`). */
+export function SentimentPulseView({
+  locale,
+  t,
+  variant = "full",
+  snapshot,
+}: {
+  locale: Locale;
+  t: Dictionary;
+  variant?: "full" | "compact";
+  snapshot: Awaited<ReturnType<typeof getSentiment>>;
+}) {
+  const x = t.marketExtras;
   const overall = snapshot.overall;
   const rounded = overall !== null ? Math.round(overall) : null;
   const band = overall !== null ? bandLabel(overall, t) : null;
@@ -252,13 +313,7 @@ export async function SentimentPulse({
                     (iştah), orta çizgi 50. Renk yalnızca yarının hangi
                     tarafında olduğu — tam sürümdeki rayın aynısı. */}
                 <span className={styles.pulseChipScore}>
-                  <span className={cn(styles.scoreTrack, styles.chipTrack)} aria-hidden>
-                    <i
-                      data-motion-draw="line"
-                      style={{ width: `${reading.score}%` }}
-                      data-side={reading.score >= SCORE_MAX / 2 ? "up" : "down"}
-                    />
-                  </span>
+                  <ScoreTrack score={reading.score} className={styles.chipTrack} />
                   <b className="numeral" data-side={reading.score >= SCORE_MAX / 2 ? "up" : "down"}>
                     {Math.round(reading.score)}
                   </b>
@@ -297,17 +352,11 @@ export async function SentimentPulse({
                     {componentName(reading.key, t)}
                     <small>{componentHint(reading.key, t)}</small>
                   </span>
-                  <b className="numeral">{score}</b>
+                  <b className="numeral" data-side={reading.score >= SCORE_MAX / 2 ? "up" : "down"}>{score}</b>
                 </div>
                 {/* Puan rayı: 0 solda (korku), 100 sağda (iştah). Çubuk bir
                     büyüklük, renk yalnızca yarının hangi tarafında olduğu. */}
-                <span className={styles.scoreTrack} aria-hidden>
-                  <i
-                    data-motion-draw="line"
-                    style={{ width: `${reading.score}%` }}
-                    data-side={reading.score >= SCORE_MAX / 2 ? "up" : "down"}
-                  />
-                </span>
+                <ScoreTrack score={reading.score} />
                 <p className={styles.pulseRaw}>
                   <span className="numeral">{rawReading(reading, locale, t)}</span>
                   <span aria-hidden> · </span>
@@ -324,21 +373,36 @@ export async function SentimentPulse({
           })}
         </ul>
       </div>
-      <div className={styles.notes}>
-        <p>{x.pulseMethod}</p>
-        <p>{x.pulseRelative}</p>
-        {snapshot.missing.length > 0 && (
-          <p>
-            {x.pulseMissing.replace(
-              "{names}",
-              snapshot.missing.map((key) => componentName(key, t)).join(", "),
-            )}
-            {overall === null && ` ${x.pulseMinimum.replace("{n}", String(MIN_COMPONENTS))}`}
-          </p>
-        )}
-        <p>{x.pulseNoHighsLows}</p>
-      </div>
-      <p className={styles.sourceLine}>{x.pulseSources}</p>
+      {/* DURUM GÖRÜNÜR, YÖNTEM KATLI (10 Kasım). Dört açıklama paragrafı
+          ve kaynak satırı panelin dibinde açık duruyordu: 1440'ta panelin
+          520 pikselinin ~180'i (üçte biri) yöntem metniydi ve kadranla
+          bileşenleri bastırıyordu. Bugüne ait olan tek cümle — hangi
+          bileşenin hesaplanamadığı — görünür kalıyor; yöntem, görelilik
+          notu, kullanılmayan gösterge ve kaynaklar "Nasıl Okunur"
+          katlamasında (yerli `<details>`, JS'siz; yerinde açılır —
+          `ExpandInPlace` `summary`yi tanıyor). Metinlerin hiçbiri silinmedi. */}
+      {snapshot.missing.length > 0 && (
+        <p className={styles.pulseMissing}>
+          {x.pulseMissing.replace(
+            "{names}",
+            snapshot.missing.map((key) => componentName(key, t)).join(", "),
+          )}
+          {overall === null && ` ${x.pulseMinimum.replace("{n}", String(MIN_COMPONENTS))}`}
+        </p>
+      )}
+      <details className={styles.howTo}>
+        <summary>
+          <Info size={15} weight="bold" aria-hidden />
+          {x.pulseHowTo}
+          <CaretDown size={13} weight="bold" aria-hidden className={styles.howToCaret} />
+        </summary>
+        <div className={styles.howToBody}>
+          <p>{x.pulseMethod}</p>
+          <p>{x.pulseRelative}</p>
+          <p>{x.pulseNoHighsLows}</p>
+          <p>{x.pulseSources}</p>
+        </div>
+      </details>
     </Panel>
   );
 }

@@ -88,7 +88,7 @@
    dolgu sıfır ve künyenin son glifi ("2026"nın 6'sı) panelin kenarında
    kırpılıyordu (390, ölçüldü). */
 /* 6 Kasım: şerit yeniden gerçek bir panel (zemin ve üstten ışıklı kenar
-   `.panel`ten) — gerekçe page.tsx → IndexTabs, "TEK ŞERİT, ÜÇ BÖLME".
+   `.panel`ten) — gerekçe IndexSelection.tsx → IndexTabs, "TEK ŞERİT, ÜÇ BÖLME".
    `overflow` yine görünür; künye kırpılması bugün de geçerli. */
 .indexTabs { box-shadow:none; overflow:visible; }
 .indexTabs > div { padding:0; }
@@ -97,7 +97,7 @@
 /* Nasdaq before this pass: selected breadth began at y562 / y988
    (1440 / 390px). Selection and its reading now precede Treasury/VIX. */
 .breadthOverview { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr); align-items:center; gap:32px; padding:22px 24px; }
-/* Giriş: ray tek hamlede soldan süpürülerek açılır (gerekçe page.tsx →
+/* Giriş: ray tek hamlede soldan süpürülerek açılır (gerekçe IndexSelection.tsx →
    BreadthSummary). Kırpma yuvarlak köşeyi koruyor; JS yokken ve azaltılmış
    harekette son kare. */
 .breadthRail { display:flex; height:6px; overflow:hidden; margin:14px 0; border-radius:3px; background:var(--rail-track); animation:rail-sweep .7s var(--ease-brand) both; }
@@ -156,7 +156,7 @@
 }
 @media(prefers-reduced-motion:reduce) { .moverLink { transition:none; } }
 
-/* Isı haritası (26 Eylül) — gerekçe piyasalar/page.tsx → IndexToolbar.
+/* Isı haritası (26 Eylül) — gerekçe components/markets/IndexHeat.tsx.
    Kareler 18 pikselden başlayıp satırı dolduruyor; aralık 3 piksel.
    Üzerine gelince kare büyüyüp öne çıkıyor. */
 .heat { padding:18px 24px 20px; border-top:1px solid var(--line); }
@@ -565,7 +565,7 @@
 @media(prefers-reduced-motion:reduce) { .heatCell { transition:none; } .heatCell:is(:hover,:active) { scale:none; } }
 
 /* ==========================================================================
-   6 Kasım — seçim şeridi tek panel, üç bölme (gerekçe page.tsx → IndexTabs).
+   6 Kasım — seçim şeridi tek panel, üç bölme (gerekçe IndexSelection.tsx → IndexTabs).
    Önceki katmanların (`.toolbarLayout`, `.toolbarIdentity`, `.shareBox`)
    üstüne yazar; `.indexControls` sarmalı JSX'ten kalktı.
    Ölçü: çip 38, medyan iki satır, pay üç satır; bölmeler dikeyde ortalı,
@@ -575,7 +575,7 @@
 /* Pay (`aside`) basılmadığında (veri yok) üçüncü kolon boş kalıp medyanı
    ortaya sıkıştırıyordu; 1200+'da iki kolona düşer (altında ızgara zaten
    iki/tek kolon). Öznitelik JSX'ten
-   (`data-aside`, page.tsx → IndexTabs) — kökte `:has()` yok kuralı
+   (`data-aside`, IndexSelection.tsx → IndexTabs) — kökte `:has()` yok kuralı
    (6 Kasım, inceleme). */
 @media(min-width:1200px) { .indexTabs > .toolbarLayout:not([data-aside]) { grid-template-columns:auto minmax(0,1fr); } }
 .toolbarLayout > * { min-width:0; padding:4px 20px; }
@@ -617,3 +617,147 @@
    ölçüldü: aynı satırda üç sayının dibi 1112 / 1116 / 1110). Hücreler
    tepeye yaslı; sayılar ortak hatta, çubuklar onların altında. */
 .members tbody td { vertical-align:top; }
+
+/* ==========================================================================
+   10 Kasım 2026 — görsel tur (Piyasalar). Karar kayıtları ilgili TSX'lerde:
+   IndexCard.tsx ("GÜN HENÜZ BİTMEDİYSE"), IndexSelection.tsx ("MEDYAN BİR
+   DE ÇİZİM", "YARI ÇİZGİSİ"), IndexHeat.tsx ("KAROLAR KADEMELİ BELİRİR"),
+   MembersTable.module.css (tablo kendi modülünde). Önceki katmanların
+   üstüne yazar; ölçümler her bloğun başında.
+   ========================================================================== */
+
+/* ---- Endeks kartı: son fiyat çizgisi ve açılış künyesi ----
+   Önce (1440, açılış öncesi): 290 × 44 piksellik grafik kutusunun ~%8'i
+   çizili. Sonra: kutu aynı, sağ kenara dek son fiyat çizgisi + altında
+   14 piksellik eksen satırı ("Açılış 17:30"). Telefonda grafik 68 piksel;
+   eksen satırı orada yok. */
+.nowLine { position:absolute; right:0; height:0; margin-top:-.75px; border-top:1.5px dotted var(--text-muted); opacity:.75; pointer-events:none; }
+.nowLine[data-tone="up"] { border-top-color:var(--up); }
+.nowLine[data-tone="down"] { border-top-color:var(--down); }
+.chartAxis { position:relative; height:14px; margin-top:3px; color:var(--text-muted); font-size:11px; font-weight:550; line-height:14px; }
+.chartAxis > span { position:absolute; top:0; translate:-50% 0; white-space:nowrap; }
+.chartAxis > span::before { content:""; position:absolute; left:50%; top:-4px; width:1px; height:4px; background:var(--line-strong); }
+@media(prefers-reduced-motion:no-preference) {
+ .nowLine { animation:now-line .7s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 70ms + 900ms); transform-origin:left center; }
+}
+@keyframes now-line { from { clip-path:inset(-2px 100% -2px 0); } to { clip-path:inset(-2px 0 -2px 0); } }
+@media(max-width:767px) { .chartAxis { display:none; } }
+
+/* ---- Seçim şeridi: medyanın yanında dağılım ----
+   Önce (1440): orta bölme 449 piksel, içeriği 300 (hap + cümle); sağı boş.
+   Sonra: cümle solda, 14 kutuluk dağılım sağda (236 × 34), bölmeler aynı
+   hatta ortalı. 390: dağılım medyan satırının altında tam genişlik. */
+.toolbarIdentity[data-chart] { flex-direction:row; align-items:center; justify-content:flex-start; gap:12px 28px; }
+.toolbarIdentity[data-chart] .selectedIndexReading { flex:1 1 220px; min-width:0; }
+.dist { flex:0 1 236px; min-width:168px; margin:0; }
+.distPlot { position:relative; display:flex; align-items:flex-end; gap:2px; height:34px; border-bottom:1px solid var(--line-strong); }
+/* Sıfır: iki yarının arasındaki boşlukta, kulvar tonunda dikey çizgi. */
+.distPlot::before { content:""; position:absolute; left:50%; top:0; bottom:0; width:1px; margin-left:-.5px; background:var(--line-soft); }
+.distSlot { display:flex; flex:1 1 0; align-items:flex-end; height:100%; min-width:0; }
+.distSlot > i { display:block; width:100%; border-radius:2px 2px 0 0; background:color-mix(in srgb, var(--down) 78%, transparent); transform-origin:center bottom; }
+.distSlot > i[data-side="up"] { background:color-mix(in srgb, var(--up) 78%, transparent); }
+.distSlot > i[data-empty] { height:0; }
+.distMedian { position:absolute; top:-5px; bottom:-1px; width:0; margin-left:-.75px; border-left:1.5px solid var(--text-strong); }
+.distMedian::before { content:""; position:absolute; top:-3px; left:-3.75px; width:6px; height:6px; border-radius:50%; background:var(--text-strong); }
+.distAxis { display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin-top:4px; color:var(--text-muted); font-size:11px; font-weight:550; line-height:1.3; white-space:nowrap; }
+@media(min-width:768px) and (max-width:1199px) { .toolbarIdentity[data-chart] .medianHint { max-width:36ch; } }
+@media(max-width:767px) {
+ .toolbarIdentity[data-chart] { flex-wrap:wrap; gap:12px; }
+ .toolbarIdentity[data-chart] .selectedIndexReading { flex-basis:100%; }
+ .dist { flex:1 1 100%; }
+}
+
+/* ---- Yükselenlerin payı: yarı çentiği, sayı önde ----
+   Önce: üç sayaç `justify-between` ile rayın uçlarına gerili, ad önde.
+   Sonra: dilimler arası 2 piksel, ortada rayı 4'er piksel aşan çentik;
+   sayaçlar sayı + ad, uçlarda yön ikonu. */
+.breadthRailWrap { position:relative; }
+.breadthRailWrap::after { content:""; position:absolute; left:50%; top:-4px; bottom:-4px; width:1.5px; margin-left:-.75px; border-radius:1px; background:var(--text-strong); opacity:.55; }
+.toolbarLayout .shareBox .breadthRail { gap:2px; background:transparent; }
+.breadthRail > span { border-radius:3px; }
+.toolbarLayout .shareBox { gap:9px; }
+.shareCounts > div { gap:5px; }
+.shareCounts dd { display:inline-flex; align-items:center; gap:4px; font-size:17px; line-height:1.15; }
+.shareCounts dt { font-size:12px; color:var(--text-body); }
+.shareHead strong { min-width:2.4ch; text-align:right; }
+
+/* ---- Isı haritası: karo ----
+   Karo zemini yön tonu (sahibinin kararı, 26 Eylül) — duruyor. İncelen:
+   açık temada %14–30 karışım düz pastel bir kutu gibi duruyordu ("tablo
+   programı"); karoya kendi tonunda 1 piksellik iç kenar geldi (kutu değil
+   çini), yüzde kademe 1–3'te yön mürekkebine yaklaştı (renge ek ikinci
+   kodlama; en soluk karoda da yön okunuyor), sembol yüzdeden bir ağırlık
+   ağır. Üzerine gelince BÜYÜMÜYOR (hareket kuralı: hover'da kaldırma yok;
+   12 Ekim notu: "büyüme komşuları örtüyordu") — kimliği halka veriyor.
+   Ölçü: karo 68 → 72 piksel (logo 26 → 28), 15 × 2 düzen aynı. */
+.heatGrid { gap:6px; margin-top:14px; }
+.heatCell { gap:4px; min-height:72px; padding:8px 3px; border-radius:12px; box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--heat-tone) 22%, transparent); transition:box-shadow .18s var(--ease-brand), scale .12s var(--ease-brand); }
+.heatLogo { width:28px !important; height:28px !important; }
+.heatSymbol { font-size:12px; font-weight:750; letter-spacing:.015em; }
+.heatPct { font-weight:650; }
+.heatCell[data-heat-tone="up"]:not([data-heat-level="4"]) .heatPct { color:color-mix(in oklab, var(--up) 62%, var(--text-strong)); }
+.heatCell[data-heat-tone="down"]:not([data-heat-level="4"]) .heatPct { color:color-mix(in oklab, var(--down) 62%, var(--text-strong)); }
+.heatCell[data-heat-tone="flat"] .heatPct { color:var(--text-body); }
+@media(hover:hover) and (pointer:fine) { .heatCell:hover { scale:none; box-shadow:inset 0 0 0 1.5px var(--text-strong); } }
+.heatCell:focus-visible { box-shadow:inset 0 0 0 1.5px var(--text-strong); }
+/* Kademeli beliriş — gerekçe IndexHeat.tsx. 14 ms × 30 karo = 0,41 sn
+   kademe + 0,3 sn süre; yalnız opaklık ve ölçek. */
+@media(prefers-reduced-motion:no-preference) {
+ .heatGrid > .heatCell[style] { animation:heat-in .3s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 14ms); }
+}
+@keyframes heat-in { from { opacity:0; scale:.9; } }
+@media(max-width:639px) { .heatGrid { gap:4px; } .heatCell { min-height:68px; border-radius:10px; } }
+
+/* ---- Hareket panelleri ----
+   Ölçek notu: başında şeridin örneği, sonunda tam boyun yüzdesi. */
+.movers > .movementScale { display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; }
+.movementScale > i { flex:none; width:26px; height:var(--lane-h,5px); border-radius:3px; background:var(--line-strong); }
+.movementScale > span:last-child { color:var(--text-body); font-weight:600; }
+.moverLink .moverCompany > span:first-child { transition:color .18s var(--ease-brand); }
+@media(hover:hover) and (pointer:fine) { .moverLink:hover .moverCompany > span:first-child { color:var(--primary-ink); } }
+@media(min-width:1200px) {
+ /* Yüzde 21 → 19: beş sütunda sembolün (14) bir buçuk katı; ad, sembol ve
+    şerit arasında yüzde hâlâ en iri ama logoyu ezmiyor. Şeridin üstünde
+    6 piksel nefes. */
+ .mover li a > div:first-child > span:last-child, .moverIdentity > span:last-child { font-size:19px; }
+ .moverTrack { margin-top:6px; }
+}
+@media(prefers-reduced-motion:reduce) { .heatCell, .moverLink .moverCompany > span:first-child { transition:none; } }
+
+/* Ön seans kuşağı (IndexCard): açılış çizgisine kadar çukur ton. */
+.preZone { position:absolute; left:0; top:0; bottom:0; border-radius:4px 0 0 4px; background:var(--surface-sunken); }
+.indexLink[aria-current="true"] .preZone { background:color-mix(in srgb, var(--primary) 6%, transparent); }
+/* Şerit ızgarası: pay bölmesi 420 → 360 tavan; açılan yer medyan + dağılım
+   bölmesine (1440: 446 → 508 piksel; hap/cümle ile dağılım yan yana sığıyor). */
+.indexTabs > .toolbarLayout { grid-template-columns:auto minmax(0,1fr) minmax(280px,360px); }
+.toolbarIdentity[data-chart] .medianHint { max-width:30ch; }
+@media(min-width:768px) and (max-width:1199px) { .indexTabs > .toolbarLayout { grid-template-columns:auto minmax(0,1fr); } }
+@media(max-width:767px) { .indexTabs > .toolbarLayout { grid-template-columns:minmax(0,1fr); } }
+@media(max-width:767px) { .preZone { display:none; } }
+/* Medyan bölmesi: cümle hap satırının ALTINDA kalır (tavan genişliği esnek
+   tabanı da kısıp cümleyi hapın yanına alıyordu), dağılım sağda. */
+@media(min-width:1024px) {
+ .toolbarIdentity[data-chart] { flex-wrap:nowrap; }
+ .toolbarIdentity[data-chart] .selectedIndexReading { flex:1 1 0; }
+ .toolbarIdentity[data-chart] .medianHint { max-width:none; }
+}
+
+/* 1200–1399: orta bölme 386 piksel; hap + dağılım sığar, cümle sığmaz
+   (ilk ölçüm: cümle dört satıra sarıp bölmeyi 148 piksele uzattı). Cümle
+   telefonda olduğu gibi burada da düşer — söylediğini dağılım gösteriyor. */
+@media(min-width:1200px) and (max-width:1399px) { .toolbarIdentity[data-chart] .medianHint { display:none; } }
+@media(min-width:768px) and (max-width:1023px) { .toolbarIdentity[data-chart] .dist { flex:1 1 100%; } .toolbarIdentity[data-chart] .selectedIndexReading { flex-basis:100%; } }
+
+/* Bileşen tablosu yer tutucusu — gerçek satır boyları (page.tsx → DetailSkeleton). */
+.memberSkeleton > div { display:flex; align-items:center; gap:14px; height:48px; padding-inline:16px; border-top:1px solid var(--line-soft); }
+.memberSkeleton > div:first-child { height:40px; border-top:1px solid var(--line); background:var(--surface-sunken); }
+.memberSkeleton > div:nth-child(n+17) { display:none; }
+@media(min-width:640px) {
+ .memberSkeleton > div { height:46px; padding-inline:20px; }
+ .memberSkeleton > div:nth-child(n+17) { display:flex; }
+}
+
+/* NOT (10 Kasım 2026): yukarıdaki `.members …` kuralları artık yalnız
+   yükleme iskeletini (page.tsx → DetailSkeleton) biçimliyor; tablonun
+   kendisi components/markets/MembersTable.module.css'te. Karar kayıtları
+   yerinde bırakıldı. */

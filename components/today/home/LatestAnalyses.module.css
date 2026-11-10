@@ -1,0 +1,36 @@
+/* Son Bilanço Analizleri — satırın ölçü hücreleri.
+   Gerekçe LatestAnalyses.tsx → "ÜÇ ÖLÇÜ, KARTLA AYNI SIRA".
+
+   KAÇ ÖLÇÜ SIĞIYORSA O KADAR — PANELİN ENİNE GÖRE. Panel ana kolonda;
+   kolonun eni ekrana değil ızgaraya bağlı (1440'ta ~946, 1024'te ~560,
+   telefonda tam genişlik), o yüzden kırılım kap sorgusu. Hücre sabit 128
+   piksel: ilk denemede 104'tü ve "HBK Sürprizi ▲ %12,5" (116 piksel)
+   komşu hücrenin "İlk Tepki" künyesine biniyordu (1440, ölçüldü).
+   Ölçüm (sahte veri, eksik ölçülü satırlar dahil, iki tema): 1440'ta üç
+   hücrenin solu her satırda 443 / 595 / 747, hap 895–985, satır 63 piksel
+   (değişmedi); 390'da hücre yok, hap 265–355; yatay taşma 0. */
+.list { container-type: inline-size; }
+
+.metrics { display: none; flex: none; gap: 24px; }
+.metric { display: grid; align-content: center; gap: 5px; width: 128px; min-height: 26px; }
+.metricHead {
+  display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
+  color: var(--text-muted); font-size: var(--text-nano); font-weight: 600; white-space: nowrap;
+}
+.metricHead b { font-size: var(--text-tiny); font-weight: 800; }
+
+/* Tek ölçü (İlk Tepki): eski davranış, `sm` yerine panelin eni. */
+@container (min-width: 520px) {
+  .metrics { display: flex; }
+  .metric:not([data-key="reaction"]) { display: none; }
+}
+@container (min-width: 880px) {
+  .metric:not([data-key="reaction"]) { display: grid; }
+}
+
+/* Satırın oku: üzerine gelince hap yerinde kalır, ad mavileşir (sitenin
+   satır dili: ton, kaldırma yok). */
+.row :global(.text-strong) { transition: color 200ms var(--ease-brand); }
+@media (hover: hover) and (pointer: fine) {
+  .row:hover :global(.text-strong) { color: var(--primary-ink); }
+}

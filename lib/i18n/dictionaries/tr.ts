@@ -1767,8 +1767,11 @@ const tr = {
     breadthCoverage: "{total} şirketin {known} tanesinde değişim verisi mevcut.",
     heatmap: "Isı Haritası",
     /* 18 Ekim: harita ağaç düzeninde, karonun alanı piyasa değeri. Telefon
-       künyesi ("ilk 20") kalktı; otuzu da her genişlikte haritada. */
-    heatmapHint: "Piyasa değerine göre ilk 30 şirket; karonun alanı piyasa değerini, rengi günlük değişimi gösterir.",
+       künyesi ("ilk 20") kalktı; otuzu da her genişlikte haritada.
+       10 Kasım: metin görselle çelişiyordu — ağaç düzeni aynı gün eşit
+       karolara döndü (sahibinin isteği) ama cümle "karonun alanı piyasa
+       değerini gösterir" demeye devam etti. Büyüklüğü taşıyan şey SIRA. */
+    heatmapHint: "Piyasa değerine göre ilk 30 şirket, büyükten küçüğe; karonun rengi günlük değişimi gösterir.",
     heatLastClose: "Yüzdeler son kapanışa ait; yön rengi yalnızca bu seansın hareketinde kullanılır.",
     heatMixed: "Şirketlerin yüzdeleri henüz aynı seansı anlatmıyor; yön rengi seans oturunca gelir.",
     heatSmallTitle: "Haritada Küçük Kalanlar",
@@ -1797,6 +1800,11 @@ const tr = {
     constituentsMore: "{n} Şirket Daha",
     constituentsLess: "Daha Az Göster",
     asOf: "Liste Kompozisyonu",
+    /* 10 Kasım, görsel tur: dağılım çizimi, hareket ölçeği, açılış imi. */
+    distributionCaption: "Günlük Değişim Dağılımı",
+    distributionAria: "{n} şirketin günlük değişim dağılımı; medyan {median}.",
+    movementScaleFull: "Tam Şerit {pct}",
+    openTick: "Açılış",
   },
 
   news: {
@@ -2461,6 +2469,9 @@ const tr = {
       "52 haftalık zirve ve dip sayısı kullanılmıyor: her endeks üyesi için bir yıllık fiyat geçmişi gerekiyor ve bu ekranın verisinden türetilemiyor.",
     pulseSources:
       "Kaynaklar: VIX Cboe (yedek FRED), yüksek getirili tahvil farkı ICE BofA serisi FRED üzerinden, SPY ve TLT günlük kapanışları ile S&P 500 kotasyonları Alpaca.",
+    /* 10 Kasım: yöntem metinleri katlamada; emtia panosunda YBB çizgisi. */
+    pulseHowTo: "Nasıl Okunur",
+    trendColumn: "YBB Seyri",
 
     /* ---- Makro ikinci halka ---- */
     weekEnding: "{date} ile Biten Hafta",

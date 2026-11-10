@@ -1,8 +1,10 @@
+import { CaretDown, CaretUp, CaretUpDown, ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr";
 import { AnchorSettle } from "@/components/layout/AnchorSettle";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ScaleBar } from "@/components/markets/CompareScale";
 import { DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
+import { Sparkline } from "@/components/ui/Sparkline";
 import { getStatus } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { quoteBasis, type MarketStatus } from "@/lib/market-hours";
@@ -13,7 +15,7 @@ import {
   loadBoardBars,
   loadBoardQuotes,
 } from "@/lib/market-boards";
-import { periodReturns, type PeriodReturns } from "@/lib/period-returns";
+import { periodReturns, ytdSeries, type PeriodReturns } from "@/lib/period-returns";
 import type { Quote } from "@/lib/providers/types";
 import {
   cn,
@@ -41,8 +43,8 @@ import styles from "./MarketBoards.module.css";
  * 1G SEANSI KANITLAMALI (CLAUDE.md "Veri dürüstlüğü" 4). Yüzde kotasyondan
  * geliyor ve hangi günü anlattığına sağlayıcı karar veriyor; `quoteBasis`
  * bu seansa ait işlem görmeyen satırı `lastClose` diye ayırıyor. O satırda
- * yüzde yön rengini bırakıyor ve altında "Son Kapanış" yazıyor — ana
- * sayfanın dünya piyasaları satırlarıyla aynı kalıp.
+ * yüzde yön rengini bırakıyor ve "Son Kapanış" imini taşıyor (10 Kasım
+ * 2026'ya dek yüzdenin altında ayrı satırdı; gerekçe `BasisMark`).
  *
  * Dönem sütunları kotasyondan DEĞİL günlük barlardan (lib/period-returns.ts)
  * ve künye son barın gününü yazıyor: iki kaynak iki ayrı an anlatıyor ve
@@ -63,14 +65,18 @@ export function parseSectorSort(
   };
 }
 
-type BoardRow = {
+export type BoardRow = {
   symbol: string;
   name: string;
   quote: Quote | undefined;
   /** 1G bu seansa ait değilse true — yüzde son kapanışı anlatıyor. */
   lastClose: boolean;
   returns: PeriodReturns;
+  /** YBB çizgisi — aynı günlük barlardan, yüzdeyle aynı taban (`ytdSeries`). */
+  trend: ReturnType<typeof ytdSeries>;
 };
+
+export type BoardQuotes = Awaited<ReturnType<typeof loadBoardQuotes>>;
 
 type ColumnKey = "g1" | "h1" | "a1" | "a3" | "ybb";
 
@@ -103,6 +109,7 @@ async function loadRows(
       quote,
       lastClose: quote ? quoteBasis(quote, status) === "lastClose" : false,
       returns: periodReturns(bars[entry.symbol] ?? []),
+      trend: ytdSeries(bars[entry.symbol] ?? []),
     };
   });
   /* Künyedeki "{tarih} kapanışına kadar" — satırların EN YENİ son barı.
@@ -127,6 +134,25 @@ function peaks(rows: BoardRow[], keys: readonly ColumnKey[]) {
   ) as Record<ColumnKey, number>;
 }
 
+/**
+ * "SON KAPANIŞ" BİR İM, İKİNCİ SATIR DEĞİL (10 Kasım 2026). Künye yüzdenin
+ * altına ayrı satır olarak basılıyordu ve yalnız o seansta işlem görmemiş
+ * fonlarda çıkıyordu (açılış öncesinde ilk iki sektör): o iki satır
+ * ötekilerden 18 piksel uzundu (1440, canlı: 62 / 50 → şimdi hepsi 46) ve
+ * 1G karoları dolgusuz kalıp sütunu bozuyordu. Bilgi aynı, biçim değişti:
+ * yüzdenin solunda küçük bir saat imi (ekran okuyucuya ve `title`a tam
+ * adıyla), lejantta karşılığı. Karo ötekilerle aynı kutu, yalnız nötr tonda
+ * (yön rengi bugünün hareketi gibi okunurdu — veri dürüstlüğü 4).
+ */
+function BasisMark({ label }: { label: string }) {
+  return (
+    <span className={styles.basisMark} title={label}>
+      <ClockCounterClockwise size={12} weight="bold" aria-hidden />
+      <span className="sr-only">{label}</span>
+    </span>
+  );
+}
+
 function ReturnCell({
   value,
   peak,
@@ -144,11 +170,11 @@ function ReturnCell({
   return (
     <td className={styles.valueCell}>
       <span className={cn("numeral font-bold", lastClose ? "text-body" : directionText(tone))}>
+        {lastClose && lastCloseLabel && <BasisMark label={lastCloseLabel} />}
         {formatPercent(value, locale)}
       </span>
       {/* Değer yoksa çubuk yok: sıfır uzunluk "hareket yok" demek olurdu. */}
       {value !== null && <ScaleBar ratio={value / peak} signed tone="signal" className={styles.bar} />}
-      {lastClose && lastCloseLabel && <span className={styles.basis}>{lastCloseLabel}</span>}
     </td>
   );
 }
@@ -169,6 +195,10 @@ function ReturnCell({
  *
  * 1G bu seansa ait değilse (son kapanış) karo tonsuz: yön rengi bugünün
  * hareketi gibi okunurdu (veri dürüstlüğü 4).
+ *
+ * 10 Kasım: dolgu AYRI KATMAN (`.heatFill`). Karo görünüme girince dolgu
+ * soldan bir kez açılıyor (`data-motion-draw="line"`, MotionExperience);
+ * zemin karonun kendisindeyken ölçek sayıyı da ezerdi. Sayı yerinde durur.
  */
 function HeatCell({
   value,
@@ -186,10 +216,11 @@ function HeatCell({
   const tone = lastClose ? "flat" : directionOf(value);
   return (
     <td className={styles.heatCell}>
-      <span className={styles.heat} data-tone={value === null ? undefined : tone} style={{ "--heat": lastClose ? 0 : heatShare(value, peak) } as CSSProperties}>
+      <span className={styles.heat} data-tone={value === null ? undefined : tone} data-basis={lastClose ? "lastClose" : undefined} style={{ "--heat": lastClose ? 0 : heatShare(value, peak) } as CSSProperties}>
+        {value !== null && <i className={styles.heatFill} data-motion-draw="line" aria-hidden />}
+        {lastClose && lastCloseLabel && <BasisMark label={lastCloseLabel} />}
         <span className="numeral">{formatPercent(value, locale)}</span>
       </span>
-      {lastClose && lastCloseLabel && <span className={styles.basis}>{lastCloseLabel}</span>}
     </td>
   );
 }
@@ -209,7 +240,7 @@ function BoardStamp({
   locale,
   t,
 }: {
-  quotes: Awaited<ReturnType<typeof loadBoardQuotes>>;
+  quotes: BoardQuotes;
   lastDate: string | null;
   locale: Locale;
   t: Dictionary;
@@ -254,9 +285,32 @@ export async function SectorPerformance({
   /** Sayfanın öteki parametrelerini koruyan adres kurucu (endeks sekmesi, sıralama). */
   hrefFor: (params: { sektor: SectorSort; sektorYon: SortDir }) => string;
 }) {
-  const x = t.marketExtras;
   const status = await getStatus();
   const { rows, quotes, lastDate } = await loadRows(SECTOR_ETFS, locale, status);
+  return <SectorPerformanceView locale={locale} t={t} sort={sort} dir={dir} hrefFor={hrefFor} rows={rows} quotes={quotes} lastDate={lastDate} />;
+}
+
+/** Saf görünüm — yükleyiciden ayrı, sahte veriyle ölçülebilsin (`olcum`). */
+export function SectorPerformanceView({
+  locale,
+  t,
+  sort,
+  dir,
+  hrefFor,
+  rows,
+  quotes,
+  lastDate,
+}: {
+  locale: Locale;
+  t: Dictionary;
+  sort: SectorSort;
+  dir: SortDir;
+  hrefFor: (params: { sektor: SectorSort; sektorYon: SortDir }) => string;
+  rows: BoardRow[];
+  quotes: BoardQuotes;
+  lastDate: string | null;
+}) {
+  const x = t.marketExtras;
   const hasData = rows.some((row) => row.quote || row.returns.lastDate);
 
   const labels: Record<ColumnKey, { short: string; long: string }> = {
@@ -307,12 +361,15 @@ export async function SectorPerformance({
       >
         {label}
         {long && <span className="sr-only"> {long}</span>}
-        <span aria-hidden className="numeral text-micro">
-          {sort === key ? (dir === "desc" ? "▼" : "▲") : "▽"}
-        </span>
+        {/* Üçgen glifi yerine ikon — bileşen tablosuyla aynı üç hâl
+            (10 Kasım; gerekçe MembersTable.tsx → SortHead). */}
+        {sort === key
+          ? dir === "desc" ? <CaretDown aria-hidden size={11} weight="fill" /> : <CaretUp aria-hidden size={11} weight="fill" />
+          : <CaretUpDown aria-hidden size={11} weight="bold" className={styles.sortIdle} />}
       </Link>
     </th>
   );
+  const anyLastClose = rows.some((row) => row.lastClose);
 
   return (
     <Panel id="sektor-performansi" className={styles.board}>
@@ -349,6 +406,12 @@ export async function SectorPerformance({
                 <span>{v.heatScale}</span>{" "}
                 {SECTOR_COLUMNS.map((key) => `${labels[key].short} ±${formatPercentPlain(peak[key], locale, 0)}`).join(" · ")}
               </p>
+              {anyLastClose && (
+                <p className={styles.basisKey}>
+                  <ClockCounterClockwise size={12} weight="bold" aria-hidden />
+                  {t.market.lastClose}
+                </p>
+              )}
             </div>
           </div>
           {/* Sabit etiket sütunu + kaydırma (CLAUDE.md "Kaydırma saklanmaz"):
@@ -413,12 +476,29 @@ export async function SectorPerformance({
 const COMMODITY_COLUMNS: readonly ColumnKey[] = ["g1", "a1", "ybb"];
 
 export async function CommodityBoard({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const x = t.marketExtras;
   const status = await getStatus();
   const [commodities, crypto] = await Promise.all([
     loadRows(COMMODITY_ETFS, locale, status),
     loadRows(CRYPTO_ETFS, locale, status),
   ]);
+  return <CommodityBoardView locale={locale} t={t} commodities={commodities} crypto={crypto} />;
+}
+
+type BoardGroup = { rows: BoardRow[]; quotes: BoardQuotes; lastDate: string | null };
+
+/** Saf görünüm — yükleyiciden ayrı, sahte veriyle ölçülebilsin (`olcum`). */
+export function CommodityBoardView({
+  locale,
+  t,
+  commodities,
+  crypto,
+}: {
+  locale: Locale;
+  t: Dictionary;
+  commodities: BoardGroup;
+  crypto: BoardGroup;
+}) {
+  const x = t.marketExtras;
   const all = [...commodities.rows, ...crypto.rows];
   const hasData = all.some((row) => row.quote || row.returns.lastDate);
   /* Ölçek İKİ GRUBUN TOPLAMINDAN: kripto fonları emtianın birkaç katı
@@ -436,7 +516,7 @@ export async function CommodityBoard({ locale, t }: { locale: Locale; t: Diction
   const group = (title: string, rows: BoardRow[]) => (
     <tbody key={title}>
       <tr className={styles.groupRow}>
-        <th scope="colgroup" colSpan={2 + COMMODITY_COLUMNS.length}>
+        <th scope="colgroup" colSpan={3 + COMMODITY_COLUMNS.length}>
           <span className={styles.groupLabel}>{title}</span>
         </th>
       </tr>
@@ -447,11 +527,11 @@ export async function CommodityBoard({ locale, t }: { locale: Locale; t: Diction
               {/* Satırın adı FONUN adı: "GLD · Altın ETF". Emtianın adı
                   tek başına yazılsaydı yanındaki fiyat emtianın fiyatı
                   gibi okunurdu (gerekçe lib/market-boards.ts). */}
-              <span className={styles.labelName}>
-                <span className="numeral">{row.symbol}</span>
-                <span aria-hidden> · </span>
-                {x.etfLabel.replace("{name}", row.name)}
-              </span>
+              {/* 10 Kasım: ad üstte, sembol altta — sektör panosunun etiket
+                  kalıbı (iki pano yan yana, iki ayrı etiket dili vardı).
+                  Ad yine FONUN adı ("Altın ETF"); kural değişmedi. */}
+              <span className={styles.labelName}>{x.etfLabel.replace("{name}", row.name)}</span>
+              <span className={cn("numeral", styles.labelSymbol)}>{row.symbol}</span>
             </Link>
           </th>
           {/* Fiyat çubuksuz: farklı fonların fiyatları karşılaştırılabilir
@@ -471,6 +551,30 @@ export async function CommodityBoard({ locale, t }: { locale: Locale; t: Diction
               lastCloseLabel={t.market.lastClose}
             />
           ))}
+          {/* YBB BİR DE ÇİZGİ (10 Kasım). Emtia panosu sektörlerin yanında
+              ~200 piksel kısa kalıyor, fark tablonun altında boş duruyordu
+              (1440, koyu tema, canlı). "Boşluk esnetilmez, doldurulur":
+              satırlar zaten yüklenen günlük barlardan (`loadBoardBars`)
+              yılbaşından bugüne kapanış çizgisini taşıyor; taban önceki
+              yılın son kapanışı — YBB yüzdesiyle aynı iki uç (`ytdSeries`).
+              Satır bu çizgiyle 49 → 62 piksel; iki panonun boyu ölçümle
+              eşitlendi (MarketBoards.module.css → `.trendCell`). Ton YBB'nin
+              işaretinden; taban yoksa çizgi de yok. */}
+          <td className={styles.trendCell}>
+            {row.trend ? (
+              <Sparkline
+                points={row.trend.points}
+                title={`${row.symbol} · ${labels.ybb.long}`}
+                tone={directionOf(row.returns.ytd) === "up" ? "up" : directionOf(row.returns.ytd) === "down" ? "down" : "flat"}
+                width={120}
+                height={34}
+                strokeWidth={1.6}
+                baseline={row.trend.base}
+                showLastDot
+                className={styles.trend}
+              />
+            ) : null}
+          </td>
         </tr>
       ))}
     </tbody>
@@ -485,7 +589,7 @@ export async function CommodityBoard({ locale, t }: { locale: Locale; t: Diction
         <>
           <ScrollEdges
             fixedStart
-            className="scroll-x-hint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
+            className={cn("scroll-x-hint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)", styles.fill)}
             tabIndex={0}
             role="region"
             aria-label={x.commoditiesTitle}
@@ -502,6 +606,7 @@ export async function CommodityBoard({ locale, t }: { locale: Locale; t: Diction
                       <span className="sr-only"> {labels[key].long}</span>
                     </th>
                   ))}
+                  <th scope="col" className={styles.trendHead}>{x.trendColumn}</th>
                 </tr>
               </thead>
               {group(x.commodityGroup, commodities.rows)}
@@ -509,6 +614,12 @@ export async function CommodityBoard({ locale, t }: { locale: Locale; t: Diction
             </table>
           </ScrollEdges>
           <div className={styles.notes}>
+            {all.some((row) => row.lastClose) && (
+              <p className={styles.basisKey}>
+                <ClockCounterClockwise size={12} weight="bold" aria-hidden />
+                {t.market.lastClose}
+              </p>
+            )}
             <p>{x.commoditiesNote}</p>
             <p>{x.cryptoNote}</p>
             <p>{x.dayNote}</p>
