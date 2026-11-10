@@ -39,12 +39,16 @@ NODE_OPTIONS="--require $PWD/.claude/skills/olcum/sahte-saglayici.cjs" \
 npx next start -p 3110        # ya da: npx next dev -p 31xx
 ```
 
-Kapatırken `pkill -f next-server` (yalnız `next start` deseni asıl süreci
-öldürmez; 10 Kasım'da eski derlemenin sunucusu portta kaldı ve yeni ölçüm
-hata sayfasını çekti — `boy=900` görürsen şüphelen). Betik dış adresleri engeller (günlükte `[mock-fetch] engellendi`), canlı
-veritabanına ulaşılamaz. Sınırı: içerik tabloları (bülten, mercek, analiz,
-takvim) boş döner; o paneller için yine geçici rota. Eksik bir uç gerekirse
-betiğe ekle, uygulama koduna sahte dal koyma.
+Kapatırken yalnız KENDİ portunun süreç ağacını öldür
+(`pkill -f "next (dev|start) -p <port>"` ve onun `next-server` çocuğu);
+çıplak `pkill -f next-server` öteki ajanların sunucusunu da kapatır. Port
+doluysa eski derlemenin sunucusu kalmıştır ve ölçüm hata sayfasını çeker
+(`boy=900` görürsen şüphelen; 10 Kasım). Betik dış adresleri engeller
+(günlükte `[mock-fetch] engellendi`), canlı veritabanına ulaşılamaz. İçerik
+tabloları (bülten, mercek, analiz, takvim, haber, makro) ve Hazine/Cboe/FRED
+10 Kasım canlısına benzer satırlarla dolu; eksik sorguyu
+`MOCK_SQL_LOG=<dosya>` ile bul ve betiğe ekle, uygulama koduna sahte dal
+koyma.
 
 Paralel ajanlar aynı dizinde `next dev` koşturamaz (`.next/dev` kilidi):
 her ajan kendi worktree'sinde ve kendi portunda (`npx next dev -p 31xx`).

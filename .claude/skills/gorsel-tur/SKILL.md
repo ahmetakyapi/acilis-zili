@@ -69,8 +69,13 @@ gelirse ortak bileşene sen terfi ettirirsin (birleştirmeden sonra).
 2. Ajanların bıraktığı tutarsızlığı ara: aynı işi gören iki yeni bileşen
    ya da iki `@keyframes`, farklı süre/gecikme, farklı boş durum dili.
    Tekilleştir (`.claude/rules/hareket.md` kataloğuna işle).
-3. `gorsel-denetci` ajanı birleşik hâli ölçer (kod değiştirmez); kırmızı
-   bulgu kalmayana dek düzelt.
+3. `gorsel-denetci` ajanı EKRANLAR ARASI farkı ölçer (kod değiştirmez):
+   aynı role farklı ölçü (başlık, yarıçap, hap, şerit), hover dili,
+   hareket envanteri (kopya keyframes, süre dağılımı, ekran dışında
+   oynayıp biten çizim). Bulguları ekran ekran sahibine dağıt, ortak
+   dosyadakini kendin düzelt; kırmızı bulgu kalmayana dek sürdür. Bu
+   denetimi ekran ajanları ÇALIŞIRKEN başlat (canlıya bakar, çakışmaz);
+   ilk turda sona bırakıldı ve ikinci bir tur gerekti.
 4. `rm -rf .next && npm run build && npm run check`, sonra `yayin`.
 5. Yayından sonra canlıyı § 1 ile YENİDEN çek, "önce" ile karşılaştır;
    kullanıcıya ekran başına ne değiştiğini ve neye dokunulmadığını yaz.
@@ -87,3 +92,11 @@ gelirse ortak bileşene sen terfi ettirirsin (birleştirmeden sonra).
 - 10 Kasım: önizleme rotası yalnız değişen paneli gösterir; ana sayfanın
   bütünü (kolon dipleri, 390 kahraman) ölçülemeden döndü. Bütün sayfa
   `olcum` → "Gerçek Sayfa, Sahte Sağlayıcı" ile açılır; brife yaz.
+- 10 Kasım: worktree ajanı HEAD'den değil `origin/main`den açıldı; brifteki
+  "şu SHA değilse dur" üç ajanı da tereddüde düşürdü. Brifte SHA yerine
+  "ağacı `origin/main` ile aynı olmalı (`git diff --quiet origin/main`)"
+  yaz; ana oturumda yayınlanmamış commit varsa önce onu `main`e al.
+- 10 Kasım: sahibinin iki itirazı aynı kökten geldi ("slop gibi durmasın",
+  "boş günler kötü duruyor"): sabit ızgara veriye uymuyordu. Tekrarlı yapı
+  (gün × pencere, kart ızgarası) tasarlarken brife UÇ DAĞILIMLARI yaz (boş,
+  tek hücreye yığılmış, zirve) ve hepsinin önizlenmesini iste.

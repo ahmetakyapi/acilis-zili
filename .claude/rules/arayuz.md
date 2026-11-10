@@ -116,6 +116,17 @@ kontrastlar sahibinin makinesindeki `~/dev-starter/knowledge/themes/acilis-zili.
   analize giden hap `AnalysisBadge`. Elle `verdictPillClass` hapı yazma.
   Hap/çip SABİT genişlikli sütuna konmaz: sütun `max-content` (gerekçe
   `EarningsToday` → subgrid); sıkışan hap duman testinde düşer.
+- **Ortak ölçüler** (10 Kasım tutarlılık denetimi: dört ekranda aynı role
+  dört ayrı ölçü vardı). Modülde yenisini uydurma, bunları kullan:
+  panel yarıçapı `--radius-panel` (öne çıkan tek yüzey `--radius-feature`);
+  paneller arası `--page-section-gap`; panel `h2` `PanelHeader` ölçüsü
+  (16/700), küçük kart başlığı 14/700, bölüm başlığı
+  `clamp(25px,2.8vw,36px)`/600; display sayı 700, harf aralığı −0,03em;
+  ağırlıklar 400/600/700 (550/650/750/850 ara basamak yok); metin tabanı 12
+  piksel; şerit 5 piksel, uçlar 999, kulvar `--line-soft`, dolgu opak; mini
+  grafik çizgisi 2 piksel; halka 6 piksel; etiket çipi 22/12/600 dolgu 8;
+  zaman çipi `TimingChip`, değişim hapı `ChangePill`, karne
+  `components/earnings/KarneStrip.tsx`; boş değer "–" + `text-muted`.
 - **Görselin etrafında çerçeve yok** — görsel kutunun kendisi
   (`overflow-hidden` + yarıçap). Kenarlık yalnız yer tutucularda.
 - **Tema** next-themes değil: `data-theme` + `az-theme` çerezi.

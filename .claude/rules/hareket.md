@@ -26,14 +26,21 @@ paths:
 - **Yalnız kompozitör:** `transform`, `opacity`, çizim için `clip-path`,
   `stroke-dashoffset`, `scale`. Genişlik/yükseklik/konum canlandırılmaz
   (şerit `scaleX` ile dolar, `width` ile değil).
-- **Süre kısa, çıkış girişten kısa:** mikro geri bildirim 120–200 ms,
-  veri çizimi 450–900 ms, kademe (stagger) adımı 30–60 ms ve toplamı
-  ~400 ms'yi aşmaz; çıkış `exitOf()` (`lib/motion.ts`).
+- **Süre TEK merdivenden:** veri çizimi `--draw` (700 ms), küçük im
+  `--mark` (200 ms), kademe adımı `--step` (40 ms; toplamı ~400 ms'yi
+  aşmaz), ton/renk geçişi 180 ms, panel kenarı 250 ms; çıkış `exitOf()`
+  (`lib/motion.ts`). 10 Kasım denetiminde çizim süresi sekiz ayrı değerdi.
+- **Açılış bir koreografidir, ≤ ~900 ms:** başlık → sayı → şerit/im →
+  kartlar; hiçbir açılış animasyonu opaklık 0'dan başlamaz (LCP).
 - **Hareketi azaltan** son kareyi görür: genel blok süreyi sıfırlar ama
   KAYDIRMA güdümlü animasyon süreyi umursamaz, ayrıca kapatılır
   (`@media (prefers-reduced-motion: no-preference)` kapısı).
-- **Hover'da kaldırma yok** (`.panel-hover` "zıplamaz"); geri bildirim ton
-  ve kenarla, basışta hafif çökme. Derinlik gölgeyle kurulmaz.
+- **Hover'da kaldırma, kayma, büyüme yok** (`.panel-hover` "zıplamaz"):
+  geri bildirim ton ve kenarla; hareket yalnız bağlantı okunda (dış
+  bağlantı (2,−2), iç 3 piksel, 200 ms). Basışta çökme: kart 0,992, buton
+  0,97. Derinlik gölgeyle kurulmaz.
+- **Metin kaymaz.** Yüzde hapı, künye, paragraf, liste satırı çizim
+  değildir; "soluklaş-ve-kay" ile girmez.
 
 ## Katalog: Önce Bunlara Bak
 
@@ -51,6 +58,8 @@ paths:
 | Bölüm gezgini, okuma ilerlemesi | `SectionNav`, `ScrollProgress` (`PremiumMotion.tsx`) | Çapa kimliği dönüşümlü kutunun DIŞINA |
 | Sıralama değişince tablo satırları kaysın | `components/markets/RowFlip.tsx` | `data-row` anahtarı, yalnız `translate` |
 | Uzayan panelde çizimler görünce oynasın | `components/today/home/DrawOnView.tsx` | `PlayOnView`ın %40 eşiği doldurucuyla uzayan panelde sağlanmayabiliyor |
+| Çizim ekrana girince oynasın (her yerde) | `data-draw` özniteliği + `components/motion/DrawGate.tsx` (kabukta bir kez) | Sarmalayıcı gerekmez; ekranın altındaki öğe son karede bekler, girince baştan oynar. Yeni çizimde İLK tercih |
+| Süre ve kademe | `--draw` (700 ms), `--mark` (200 ms), `--step` (40 ms) — globals.css "HAREKET MERDİVENİ" | Modülde elle süre yazma; kademe toplamı ~400 ms'yi aşmaz |
 | Sayfa geçişi | `app/(app)/template.tsx` → `.page-enter` | Kabuk yerinde kalır |
 | Seçim imi (sekme, segment) | `SELECTION_TRANSITION` (`lib/motion.ts`) | Hedefinde durur, yaylanmaz |
 | JS'te eğri | `EASE_BRAND`, `EASE_BRAND_POINTS` (`lib/motion.ts`) | `element.animate` CSS değişkeni çözmez |
