@@ -50,10 +50,10 @@ for (const [width, height] of SIZES) {
         // Tembel görseller: sayfayı bir kez baştan sona gez, başa dön.
         await page.evaluate(async () => {
           for (let y = 0; y < document.documentElement.scrollHeight; y += innerHeight) {
-            scrollTo(0, y);
+            scrollTo({ top: y, behavior: "instant" });
             await new Promise((r) => setTimeout(r, 120));
           }
-          scrollTo(0, 0);
+          scrollTo({ top: 0, behavior: "instant" });
         });
         await page.waitForLoadState("networkidle").catch(() => {});
         const { total, overflow } = await page.evaluate(() => ({

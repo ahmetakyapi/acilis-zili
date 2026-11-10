@@ -100,3 +100,15 @@ gelirse ortak bileşene sen terfi ettirirsin (birleştirmeden sonra).
   "boş günler kötü duruyor"): sabit ızgara veriye uymuyordu. Tekrarlı yapı
   (gün × pencere, kart ızgarası) tasarlarken brife UÇ DAĞILIMLARI yaz (boş,
   tek hücreye yığılmış, zirve) ve hepsinin önizlenmesini iste.
+- 10 Kasım: kök `scroll-behavior: smooth` taşıyor; hızlı `scrollTo` döngüsü
+  yarıda kesilir ve sayfanın altı hiç ekrana girmez (tembel logolar boş,
+  `data-armed` çizimler "bekliyor" görünür; ikisi de kusur sanıldı). Ölçüm
+  kaydırması `behavior: "instant"` ile (`cek.mjs` öyle yapar).
+- 10 Kasım: altı tur masaüstünde eleştirildi, telefon en sona kaldı ve 28
+  rotada 116 küçük metin + 404 küçük dokunma hedefi birikti. Her ekran
+  turunun brifine 390 ve 360'ı SAYIMLA yaz (<12 px metin, <44 hedef;
+  hedef `elementFromPoint` ile yoklanır, kutu ölçüsü sözde öğeyi görmez).
+- 10 Kasım: sahibinin çizim tercihleri kuralda (`arayuz.md` → "Büyüklük
+  kalın yatay şeritle", ortak tablo `BoardTable`, ortak çubuk `.value-bar`).
+  Yeni ekranda önce onlara bak; nokta/çentik/eksen çözdüren çizim önerme.
+
