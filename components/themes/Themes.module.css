@@ -1,6 +1,19 @@
 /* ==========================================================================
    Tematik listeler — `/tema` ve `/tema/[slug]` (28 Eylül)
 
+   10 Kasım 2026 (yeniden tasarım): bu dosyada artık yalnız PAYLAŞILAN ve
+   detayın harita/diğer temalar kuralları duruyor. Dizinin galeri kartı,
+   logo mozaiği/yığını/kümesi, kapak özeti, ölçüt sütunu, ölçü ızgarası ve
+   eski tablo başlıkları KALKTI; yerlerine gelenler kendi modülünde:
+   ThemeBoard.module.css (dizin panosu + kapak özeti), ThemeStrip.module.css
+   (dağılım şeridi), ThemeDetail.module.css (kapak okuması + ölçü ızgarası),
+   ThemeTable.module.css (üyeler tablosu). Kalkan kuralların karar notları
+   (dar kartta ızgara, dengeli küme satırları, telefonda tek satır uç tema)
+   o bileşenlerle birlikte geçersiz; gerekçeleri yeni bileşenlerin başında.
+   ANA SAYFA BANDI buradan şunları okuyor, sözleşmeleri değişmedi:
+   `.roll*` (RollingFigure), `.rank*` (ThemeRanking), `.spread*` / `.tick*`
+   (SpreadStrip), `.heat` (HeatScale, piyasalar).
+
    Derinlik TONLA: kartlar düz panel yüzeyinde, hover `.panel-hover` ile
    aynı dil (kenar `--primary-faint`, zemin `--primary-tint`). Gölge, ışıma,
    cam yok. Renkli olan yalnızca veri: yön renkleri işaretten, ısı tonları
@@ -95,73 +108,6 @@
   .rankTrack { grid-area:track; }
 }
 
-/* --------------------------------------------------------------------------
-   Galeri
-   -------------------------------------------------------------------------- */
-.gallery { display:grid; gap:16px; }
-.galleryItem { min-width:0; }
-@media(min-width:768px) { .gallery { grid-template-columns:repeat(2,minmax(0,1fr)); } }
-@media(min-width:1024px) {
-  .gallery { grid-template-columns:repeat(12,minmax(0,1fr)); gap:18px; }
-  .galleryItem[data-span="4"] { grid-column:span 4; }
-  .galleryItem[data-span="5"] { grid-column:span 5; }
-  .galleryItem[data-span="6"] { grid-column:span 6; }
-  .galleryItem[data-span="7"] { grid-column:span 7; }
-  .galleryItem[data-span="8"] { grid-column:span 8; }
-}
-
-.card {
-  display:flex; flex-direction:column; gap:12px; height:100%; min-width:0;
-  padding:18px 22px 14px; border:1px solid var(--line); border-radius:var(--radius-panel);
-  background:var(--premium-surface); color:inherit;
-  transition:background-color .18s var(--ease-brand), border-color .25s var(--ease-brand), transform .2s var(--ease-brand);
-}
-/* 10 Kasım (ortak ölçüler, B grubu): on kartın onu da `--radius-feature`
-   taşıyordu; o yarıçap "öne çıkan TEK yüzey" için, galeri kartı panel
-   yarıçapında. Geçiş 300 → 180 (ton) / 250 (kenar). Hover'da logoların
-   kalkması, yığının yelpaze açması ve çentiklerin 1,5 kat uzaması KALKTI
-   ("hover'da kaldırma, kayma, büyüme yok" — hareket.md); cevap ton + kenar,
-   hareket yalnız okta (2,−2), 200 ms. */
-.card:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
-.card:active { transform:scale(.992); }
-@media(hover:hover) { .card:hover { border-color:var(--primary-faint); background:var(--primary-tint); } }
-
-.cardHead { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; }
-.cardTitle { font-size:var(--text-title); line-height:1.25; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); text-wrap:balance; }
-.card[data-wide] .cardTitle { font-size:22px; letter-spacing:-.035em; }
-.cardArrow { flex-shrink:0; margin-top:3px; color:var(--primary); transition:transform .2s var(--ease-brand); }
-@media(hover:hover) { .card:hover .cardArrow { transform:translate(2px,-2px); } }
-/* İki satırda kesilir: kartların boyu dek uzunluğuna göre oynamasın. */
-.cardDek {
-  display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden;
-  max-width:56ch; min-height:3.1em; font-size:14px; line-height:1.5; color:var(--text-body);
-}
-
-.cardBody { display:flex; flex-wrap:wrap; align-items:flex-end; justify-content:space-between; gap:14px 20px; margin-top:auto; }
-.cardFigure { display:flex; flex-direction:column; gap:4px; min-width:0; }
-.figureLabel { display:flex; align-items:center; gap:8px; min-height:20px; font-size:12px; font-weight:600; color:var(--text-muted); }
-/* Etiket çipi 22/12/600, dolgu 8 (ortak ölçü). */
-.flag {
-  display:inline-flex; align-items:center; min-height:22px; padding:0 8px; border-radius:999px;
-  background:var(--surface-sunken); color:var(--text-strong); font-size:12px; font-weight:600;
-}
-/* Display sayı 700, harf aralığı −0,03em (ortak ölçü; önce 600 / −0,05em). */
-.figure { display:block; font-size:clamp(34px,3.1vw,44px); line-height:1.1; font-weight:700; letter-spacing:-.03em; }
-.card[data-wide] .figure { font-size:clamp(38px,3.8vw,54px); }
-
-/* Logo yığını: karolar üst üste biner; hover'da yelpaze gibi açılır. */
-.stack { display:flex; align-items:center; padding-left:8px; }
-.stack .logoSlot { margin-left:-8px; border-radius:9px; box-shadow:0 0 0 2px var(--premium-surface); }
-/* Mozaik: iki sıra düzgün ızgara. */
-.mosaic { display:grid; grid-template-columns:repeat(5,32px); gap:6px; }
-.logoSlot { display:inline-flex; flex-shrink:0; border-radius:9px; }
-.logoSkeleton { width:32px; height:32px; border-radius:8px; }
-.logoRest {
-  align-items:center; justify-content:center; width:32px; height:32px; border-radius:8px;
-  background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:700;
-}
-.stack .logoRest { width:auto; min-width:32px; padding:0 6px; }
-
 /* Dağılım şeridi */
 .spreadWrap { min-width:0; }
 .spread { position:relative; height:28px; container-type:inline-size; }
@@ -175,109 +121,10 @@
 .tick[data-tone="down"] { background:var(--down); }
 .tickMedian { position:absolute; top:0; bottom:0; width:3px; margin-left:-1.5px; border-radius:2px; background:var(--text-strong); }
 .spreadScale { display:flex; justify-content:space-between; margin-top:3px; font-size:12px; line-height:1.3; color:var(--text-muted); }
-/* KARTTA ŞERİT DAHA OKUNUR (29 Eylül). Ana sayfa bandının şeridi
-   (MarketTexture) değişmesin diye `.card` altında: ray kalın bir iz,
-   çentikler tam opak, sıfır çizgisi şeridin tam boyu, medyan tepesinde
-   bir düğmeyle çentik kalabalığından ayrılıyor (on yedi çentik arasında
-   3 piksellik çizgi seçilmiyordu). */
-.card .spread { height:30px; }
-.card .spread::before { top:calc(50% - 2.5px); height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
-.card .spreadZero { top:0; bottom:0; width:1px; background:var(--text-muted); opacity:.55; }
-.card .tick { top:6px; bottom:6px; opacity:1; }
-.card .tickMedian { top:2px; bottom:0; }
-.card .tickMedian::before {
-  content:""; position:absolute; left:50%; top:-2px; width:9px; height:9px; margin-left:-4.5px;
-  border-radius:50%; background:var(--text-strong);
-}
-
-.cardFoot {
-  display:flex; align-items:center; justify-content:space-between; gap:12px;
-  padding-top:10px; border-top:1px solid var(--line-soft);
-  font-size:12px; color:var(--text-muted); white-space:nowrap;
-}
-.breadth { display:inline-flex; align-items:baseline; gap:4px; }
-.breadth b { font-size:13px; font-weight:700; }
-.breadthSep { display:inline-block; width:1px; height:10px; margin:0 6px; background:var(--line-strong); }
-
-@media(max-width:767px) {
-  .card { padding:16px 16px 12px; gap:12px; }
-  .card[data-wide] .cardTitle { font-size:var(--text-title); }
-  .card[data-wide] .figure, .figure { font-size:36px; }
-  /* Telefonda rakam ve logolar alt alta: yan yana 306 piksele sığmıyor,
-     yığın rakamın üstüne biniyordu (390'da ölçüldü). Mozaik tek sıraya
-     iner ve yedinci logodan sonrası "+N"de kalır. */
-  .cardBody { flex-direction:column; align-items:flex-start; }
-  .mosaic { display:flex; gap:6px; }
-  .mosaic > :nth-child(n+8):not(.logoRest) { display:none; }
-  .logoRest > [data-at="wide"] { display:none; }
-}
-/* "+N" çipinin iki sayısı (ThemeVisuals → `narrowRest`): genişte görünmeyen
-   üyeler, telefonda yedinci logodan sonrakiler. Yalnızca telefonda gereken
-   çip genişte hiç yer kaplamıyor. */
-@media(min-width:768px) {
-  .logoRest > [data-at="narrow"], .logoRest[data-only="narrow"] { display:none; }
-}
 
 /* --------------------------------------------------------------------------
-   Detay: kapaktaki logo kümesi
-
-   Kutu SABİT YÜKSEKLİKTE, üye sayısından bağımsız: Katılım listesinin üye
-   sayısı akışla geliyor ve yirmi yer tutucunun yerine on dört logo inse
-   kapak kısalıp altındaki her şeyi yukarı çekerdi.
+   Detay: kapak künyesi
    -------------------------------------------------------------------------- */
-.cluster {
-  display:flex; flex-wrap:wrap; align-content:center; justify-content:center; gap:10px;
-  height:184px; overflow:hidden;
-}
-.cluster .logoSlot { border-radius:12px; }
-/* DENGELİ SATIRLAR (28 Eylül). Kümenin sarmalı bir kapsayıcı; genişliğine
-   göre bir satıra sığan karo sayısı m seçiliyor ve küme m için hesaplanmış
-   dengeli sütun sayısına (`--cm`, ThemeVisuals) daraltılıyor. Eşik: m karo
-   + (m − 1) aralık = 54m − 10 (44'lük karo, 10'luk aralık), telefonda
-   44m − 8 (36 + 8).
-
-   ÖLÇÜLDÜ (/tema/yari-iletkenler, 21 karo = 20 logo + "+1" ya da 21 logo;
-   ikisi de 44×44, aynı yer): 1440'ta kap 547 piksel, m = 10 → eski dizilim
-   10 + 10 + 1, yeni 7 + 7 + 7; 1024'te kap 387, m = 7 → iki hâlde de
-   7 + 7 + 7; 390'da kap 316, m = 7 → 7 + 7 + 7. Satır sayısı üçte kalıyor
-   ve küme sabit 184 (telefonda 172) piksel: kapak 1440'ta 244, 1024'te 234
-   piksel, değişmedi. 11 + 10 sığmıyor: 11 karo 584 piksel, kap 547. */
-.clusterBox { display:block; container-type:inline-size; }
-.cluster { --tile:44px; --gap:10px; max-width:calc(var(--cols, 99) * (var(--tile) + var(--gap)) - var(--gap)); margin-inline:auto; }
-@media(min-width:768px) {
-  @container (min-width:260px) { .cluster { --cols:var(--c5); } }
-  @container (min-width:314px) { .cluster { --cols:var(--c6); } }
-  @container (min-width:368px) { .cluster { --cols:var(--c7); } }
-  @container (min-width:422px) { .cluster { --cols:var(--c8); } }
-  @container (min-width:476px) { .cluster { --cols:var(--c9); } }
-  @container (min-width:530px) { .cluster { --cols:var(--c10); } }
-  @container (min-width:584px) { .cluster { --cols:var(--c11); } }
-  @container (min-width:638px) { .cluster { --cols:var(--c12); } }
-}
-@media(max-width:767px) {
-  .cluster { --tile:36px; --gap:8px; margin-inline:0; }
-  @container (min-width:212px) { .cluster { --cols:var(--c5); } }
-  @container (min-width:256px) { .cluster { --cols:var(--c6); } }
-  @container (min-width:300px) { .cluster { --cols:var(--c7); } }
-  @container (min-width:344px) { .cluster { --cols:var(--c8); } }
-  @container (min-width:388px) { .cluster { --cols:var(--c9); } }
-  @container (min-width:432px) { .cluster { --cols:var(--c10); } }
-  @container (min-width:476px) { .cluster { --cols:var(--c11); } }
-  @container (min-width:520px) { .cluster { --cols:var(--c12); } }
-  @container (min-width:564px) { .cluster { --cols:var(--c13); } }
-  @container (min-width:608px) { .cluster { --cols:var(--c14); } }
-}
-.cluster .logoSkeleton, .cluster .logoRest { width:44px; height:44px; border-radius:11px; }
-/* 10 Kasım (hareket merdiveni): logoların "soluklaş-kay-büyü" girişi
-   (`cluster-in`, opaklık 0'dan, son logo 1.112 ms'de bitiyordu — ölçüldü)
-   ve hover'da 3 piksel kalkması KALKTI. Logo veri çizimi değil; ilk ekrandaki
-   kapak opaklık 0'dan başlamaz (hareket.md → Açılış). Sayfanın çizimi
-   haritada: karolar alan sırasıyla oturuyor. */
-@media(max-width:767px) {
-  .cluster { height:172px; gap:8px; justify-content:flex-start; }
-  .cluster .logoSlot > * { width:36px; height:36px; }
-  .cluster .logoSkeleton, .cluster .logoRest { width:36px; height:36px; }
-}
 .heroMeta { display:flex; flex-wrap:wrap; gap:6px 18px; margin-top:18px; font-size:13px; color:var(--text-muted); }
 .heroMeta b { font-weight:600; color:var(--text-strong); }
 
@@ -288,14 +135,9 @@
    sütununun çukur zemini kırpılmadığı için köşesini kendisi yuvarlıyor. */
 .mapPanel { overflow:visible; }
 .mapBody { display:grid; gap:0; border-top:1px solid var(--line); }
-.mapBody[data-bench] { grid-template-columns:minmax(0,1fr); }
-/* Ölçüt sütunu 1200'den itibaren yanda (önce 1024). 1024'te haritaya 662
-   × 315 piksel kalıyordu ve karoların yarısında yalnızca sembol vardı
-   (ölçüldü, 28 Eylül); 1024-1199 arasında sütun haritanın altına iniyor. */
-@media(min-width:1200px) {
-  .mapBody[data-bench] { grid-template-columns:minmax(0,1fr) 272px; }
-  .mapBody[data-bench] .bench { border-radius:0 0 var(--radius-panel, var(--radius-xl)) 0; }
-}
+/* Ölçüt sütunu (1200+ yanda, 272 piksel; 28 Eylül) 10 Kasım'da KAPAĞA
+   taşındı (ThemeReading.tsx): harita panelin tam genişliğinde. 1440'ta
+   harita 1.006 × 479 → 1.278 × 492 piksel (ölçüldü). */
 .mapMain { min-width:0; padding:16px 20px 18px; }
 .mapHint { margin-bottom:12px; font-size:13px; line-height:1.6; color:var(--text-body); }
 .stage { position:relative; }
@@ -306,8 +148,7 @@
    birbirine oranı değişmiyor (yerleşim yüzde). */
 .map, .mapSkeleton { position:relative; width:100%; aspect-ratio:1.9 / 1; }
 @media(min-width:1200px) {
-  .map, .mapSkeleton { aspect-ratio:2.1 / 1; }
-  .mapBody:not([data-bench]) :is(.map, .mapSkeleton) { aspect-ratio:2.6 / 1; }
+  .map, .mapSkeleton { aspect-ratio:2.6 / 1; }
 }
 @media(max-width:639px) {
   .mapLayout[data-layout="wide"] { display:none; }
@@ -320,6 +161,13 @@
    yalnızca sembol, ortalı. Eşikler metnin kendisinden: dört harfli sembol
    11,5 puntoda ≈ 34 piksel, "−%2,40" ≈ 42; logo ve ad ancak sol hizalı
    düzene geçince giriyor. */
+/* YAZI 12 PİKSELİN ALTINA İNMEZ (10 Kasım, ortak ölçü: metin tabanı 12).
+   Sembol ve yüzde dar karoda `clamp(8.5px, 26cqi, …)` ile karonun
+   genişliğine göre küçülüyordu; 1440'ta MPWR/SNDK karolarında 8,5–9,5
+   piksel ölçüldü. Şimdi iki yazı da SABİT 12: sığmayan karo yazıyı
+   küçültmez, bırakır — yalnız ısı rengi kalır, kimliği ipucu (`title`),
+   şirket kartı ve hemen alttaki tablo söyler. Eşikler: beş harfli sembol
+   12 puntoda ≈ 42 piksel + dolgu 10 = 52; "−%2,53" ≈ 46 + 10 = 56. */
 .tile { position:absolute; padding:2px; container:tile / size; color:var(--text-strong); }
 .tile:focus-visible { outline:none; }
 .tile:focus-visible .tileFace { box-shadow:0 0 0 2px var(--premium-surface), 0 0 0 4px var(--line-focus); }
@@ -331,19 +179,18 @@
 .tileHead { display:flex; align-items:center; justify-content:center; gap:8px; min-width:0; max-width:100%; }
 .tileLogo { display:none; }
 .tileId { display:flex; flex-direction:column; min-width:0; }
-.tileSymbol { font-size:clamp(8.5px, 26cqi, 10.5px); font-weight:700; letter-spacing:.01em; line-height:1.15; white-space:nowrap; }
+.tileSymbol { display:none; font-size:12px; font-weight:700; letter-spacing:.01em; line-height:1.15; white-space:nowrap; }
 .tileName { display:none; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; line-height:1.3; opacity:.78; }
 .tilePct { display:none; font-size:12px; font-weight:700; line-height:1.15; letter-spacing:-.01em; white-space:nowrap; }
 .tileMuted { color:var(--text-muted); }
 .tileFoot { display:none; }
-@container tile (max-width:27px) or (max-height:17px) { .tileSymbol { display:none; } }
-/* Sembol ve yüzde dar karoda karonun genişliğiyle küçülüyor (en az 8,5
-   punto): 768'de 42 piksellik LHX karosunda yüzde yoktu, 390'da 44
-   piksellik MRVL karosunda sembolün son harfi kesiliyordu. */
-@container tile (min-width:36px) and (min-height:32px) {
+@container tile (min-width:52px) and (min-height:22px) { .tileSymbol { display:block; } }
+/* 28 Eylül notu (geçersiz, 10 Kasım): sembol ve yüzde dar karoda karonun
+   genişliğiyle en az 8,5 puntoya küçülüyordu (768'de 42 piksellik LHX,
+   390'da 44 piksellik MRVL için). O karolar artık yalnız renk. */
+@container tile (min-width:56px) and (min-height:40px) {
   .tileFace { gap:3px; padding:3px 2px; border-radius:8px; }
-  .tileSymbol { font-size:clamp(8.5px, 26cqi, 12px); }
-  .tilePct { display:block; font-size:clamp(8.5px, 24cqi, 12px); }
+  .tilePct { display:block; }
 }
 @container tile (min-width:84px) and (min-height:62px) {
   .tileFace { align-items:stretch; justify-content:space-between; padding:9px 10px; border-radius:10px; text-align:left; }
@@ -410,27 +257,23 @@
    Hangi karonun okunduğunu karonun kendi hover/odak halkası söylüyor. */
 
 /* Giriş koreografisi — büyükten küçüğe (`--i` alan sırası). Karo önce
-   yerine oturuyor, yazısı bir nefes sonra geliyor. Harita ilk ekranın
-   altındaysa `TreemapStage` onu görünmezken gizleyip görüş alanında
-   yeniden oynatıyor (`data-armed` → `data-play`); ikinci ad, animasyonun
-   yeniden başlaması için. */
+   yerine oturuyor, yazısı bir nefes sonra geliyor.
+   10 Kasım: harita ilk ekranın altındaysa onu gizleyip görününce yeniden
+   oynatan `TreemapStage` (istemci yaprağı, `data-armed` → `data-play`)
+   KALKTI; yerine sitenin ortak çizim kapısı geldi (`data-draw`,
+   components/motion/DrawGate.tsx): ekranın altındaki harita SON KAREDE
+   bekler, ekrana değince baştan oynar. Eski yaprak karoları opaklık 0'da
+   bekletiyordu (JS gecikirse boş harita) ve ikinci bir keyframes çifti
+   (`-again`) gerektiriyordu. Karo artık opaklık 0'dan değil 0,3'ten
+   başlıyor (hareket.md → "hiçbir açılış animasyonu opaklık 0'dan başlamaz").
+   Önceki ölçüm (hareket merdiveni): karo 500 ms, kademe 10 × `--step` =
+   400 ms tavan; yazı kaymaz, `--mark` süresinde belirir; son karo 900 ms. */
 @media(prefers-reduced-motion:no-preference) {
-  /* 10 Kasım (hareket merdiveni): karo 620 → 500 ms, kademe 16 × 34 = 544
-     → 10 × `--step` = 400 ms (kademe tavanı); yazı 4 piksel KAYMIYOR ("metin
-     kaymaz"), yalnız `--mark` süresinde beliriyor. Son karenin bitişi
-     1.164 → 900 ms; yazınınki 1.194 → 800 ms. */
   .tile { animation:tile-in .5s var(--ease-brand) both; animation-delay:calc(min(var(--i), 10) * var(--step)); }
   .tileId, .tilePct { animation:tile-ink var(--mark) var(--ease-brand) both; animation-delay:calc(min(var(--i), 10) * var(--step) + 200ms); }
-  .stage[data-armed]:not([data-play]) .tile { animation:none; opacity:0; }
-  .stage[data-armed]:not([data-play]) :is(.tileId, .tilePct) { animation:none; }
-  .stage[data-play] .tile { animation-name:tile-in-again; }
-  .stage[data-play] :is(.tileId, .tilePct) { animation-name:tile-ink-again; }
-  .stage[data-settled] :is(.tile, .tileId, .tilePct) { animation:none; opacity:1; transform:none; }
 }
-@keyframes tile-in { from { opacity:0; transform:scale(.9); } }
-@keyframes tile-in-again { from { opacity:0; transform:scale(.9); } }
-@keyframes tile-ink { from { opacity:0; } }
-@keyframes tile-ink-again { from { opacity:0; } }
+@keyframes tile-in { from { opacity:.3; transform:scale(.92); } }
+@keyframes tile-ink { from { opacity:.2; } }
 
 /* Isı tonu — `/piyasalar` ile aynı kademe ve aynı tokenlar (globals.css →
    `--heat-*`). */
@@ -453,6 +296,13 @@
    karşılaştırılamayanlar. İlk hâlde karşılaştırılamayanlar tek satırda,
    künyenin yanına sıkışmış hap düğmelerdi ve adları yoktu. */
 .roster { margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft); }
+/* TELEFONDA AD LİSTESİ YOK (10 Kasım). Tablo artık haritanın HEMEN altında
+   (önce araya ölçü ızgarası ve zaman çizgisi giriyordu); 390'da Yarı
+   İletkenler'in iki listesi on bir satır, 598 piksel tutuyor ve aynı on bir
+   şirket 20 piksel aşağıda tabloda yeniden başlıyordu (ölçüldü). Geniş
+   ekranda liste tek-iki satırlık bir şerit, haritanın künyesi olarak
+   kalıyor. "Diğer N" karosu telefonda tabloya götürür (ThemeTreemap). */
+@media(max-width:639px) { .roster { display:none; } }
 .rosterTitle { display:flex; align-items:baseline; gap:6px; margin-bottom:8px; font-size:14px; font-weight:700; color:var(--text-strong); }
 .rosterTitle span { font-weight:600; color:var(--text-muted); }
 .rosterList { display:grid; grid-template-columns:repeat(auto-fill, minmax(220px, 1fr)); gap:6px 10px; }
@@ -463,63 +313,12 @@
 .rosterText small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
 .rosterPct { flex-shrink:0; padding:3px 7px; border-radius:7px; font-size:12px; font-weight:600; }
 
-/* Ölçüt kıyası — haritanın yanında, telefonda altında. */
-.bench { display:flex; flex-direction:column; gap:16px; min-width:0; padding:18px 20px; border-top:1px solid var(--line); background:var(--surface-sunken); }
-@media(min-width:1024px) { .bench { border-top:0; border-left:1px solid var(--line); } }
-.benchTitle { font-size:14px; font-weight:700; color:var(--text-strong); }
-.benchRow { display:flex; flex-direction:column; gap:6px; }
-.benchLabel { display:flex; flex-direction:column; font-size:12px; line-height:1.4; color:var(--text-muted); }
-.benchLabel b { font-size:13px; font-weight:700; color:var(--text-strong); }
-.benchValue { font-size:30px; line-height:1.1; font-weight:700; letter-spacing:-.03em; }
-/* Kulvar 8/3 → 5/999 + `--line-soft` zemini: iz yokken çubuk havada asılıydı. */
-.benchTrack { position:relative; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
-.benchTrack::before { content:""; position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:var(--line-strong); }
-.benchNote { margin-top:auto; padding-top:12px; border-top:1px solid var(--line); font-size:13px; line-height:1.6; color:var(--text-body); }
-
 /* --------------------------------------------------------------------------
-   Detay: ölçü ızgarası
+   Detay: tablo paneli ve dip satırı
    -------------------------------------------------------------------------- */
-.metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-top:1px solid var(--line); }
-@media(min-width:1024px) { .metrics { grid-template-columns:repeat(4,minmax(0,1fr)); } }
-.metric { display:flex; flex-direction:column; gap:8px; min-width:0; padding:18px 20px 20px; }
-.metric + .metric { border-left:1px solid var(--line-soft); }
-@media(max-width:1023px) {
-  .metric:nth-child(3) { border-left:0; }
-  .metric:nth-child(n+3) { border-top:1px solid var(--line-soft); }
-}
-.metricLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
-/* Renk yok: yön rengi çağıranın yardımcı sınıfından geliyor (modül kuralı
-   katmansız olduğu için Tailwind'in `text-up`ını ezerdi). */
-.metricValue { font-size:clamp(30px,3vw,40px); line-height:1.1; font-weight:700; letter-spacing:-.03em; }
-.metricNote { font-size:12px; color:var(--text-muted); }
-.split { display:flex; height:var(--lane-h,5px); gap:2px; overflow:hidden; border-radius:999px; }
-.split > i { display:block; height:100%; }
-.split > i[data-tone="up"] { background:var(--up); }
-.split > i[data-tone="down"] { background:var(--down); }
-.split > i[data-tone="flat"] { background:var(--rail-track); }
-.member { display:flex; align-items:center; gap:10px; min-width:0; color:inherit; }
-.member:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:8px; }
-.memberText { display:flex; flex-direction:column; min-width:0; }
-.memberText b { font-size:14px; font-weight:700; color:var(--text-strong); }
-.memberText small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
-@media(hover:hover) { .member:hover b { color:var(--primary-ink); } }
-@media(max-width:767px) { .metric { padding:14px 16px 16px; } .metricValue { font-size:30px; } }
-
-/* --------------------------------------------------------------------------
-   Detay: tablo sıralama başlıkları ve dip satırı
-   -------------------------------------------------------------------------- */
-.sortButton {
-  display:inline-flex; align-items:center; gap:4px; min-height:28px; margin:-4px -6px; padding:4px 6px;
-  border-radius:6px; font:inherit; color:inherit; cursor:pointer; transition:color .2s var(--ease-brand), background-color .2s var(--ease-brand);
-}
-/* Telefonda 44 piksel hedef; eksi dış boşluk satır yüksekliğini korur
-   (önce 28-42 piksel, 390'da ölçüldü). */
-@media(max-width:639px) { .sortButton { min-height:44px; margin-block:-10px; } }
-.sortButton[data-active] { color:var(--text-strong); }
-.sortButton:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
-@media(hover:hover) { .sortButton:hover { color:var(--primary-ink); background:var(--primary-tint); } }
-.sortIcon { transition:transform .3s var(--ease-brand); }
-.sortButton[data-dir="asc"] .sortIcon { transform:rotate(180deg); }
+/* Tablo paneli kırpar ama kaydırma kabı kurmaz (`clip`): yapışkan başlık
+   belgeye tutunabilsin (aile kuralı, MembersTable.module.css). */
+.tablePanel.tablePanel { overflow:clip; }
 .tableFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 16px; padding:14px 20px; border-top:1px solid var(--line); }
 @media(max-width:639px) { .tableFoot { padding:12px 16px; } }
 
@@ -528,98 +327,39 @@
    -------------------------------------------------------------------------- */
 .others { display:grid; border-top:1px solid var(--line); }
 @media(min-width:768px) { .others { grid-template-columns:repeat(2,minmax(0,1fr)); } }
+/* IZGARA DOLU BİTER (10 Kasım). Dokuz tema iki sütunda son satırı yarım
+   bırakıyordu (sağ hücre boş, 660 × 64 piksel). 1024+ üç sütun (9 = 3 × 3);
+   arada kalan genişlikte ve tema sayısı değişirse tek kalan son satır
+   bütün sütunlara yayılır. */
+@media(min-width:1024px) {
+  .others { grid-template-columns:repeat(3,minmax(0,1fr)); }
+  .others > :last-child:nth-child(3n+1) { grid-column:1 / -1; }
+  .others > :nth-last-child(2):nth-child(3n+1) { grid-column:span 2; }
+}
+@media(min-width:768px) and (max-width:1023px) { .others > :last-child:nth-child(odd) { grid-column:1 / -1; } }
 .otherLink {
   display:flex; align-items:center; gap:14px; min-width:0; min-height:64px; padding:12px 20px;
   border-bottom:1px solid var(--line-soft); color:inherit; transition:background-color .2s var(--ease-brand);
 }
-@media(min-width:768px) { .others > :nth-child(odd) .otherLink { border-right:1px solid var(--line-soft); } }
+@media(min-width:768px) and (max-width:1023px) { .others > :nth-child(odd):not(:last-child) .otherLink { border-right:1px solid var(--line-soft); } }
+@media(min-width:1024px) { .others > :not(:nth-child(3n)):not(:last-child) .otherLink { border-right:1px solid var(--line-soft); } }
 .otherLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
 @media(hover:hover) { .otherLink:hover { background:var(--primary-tint); } }
 .otherText { display:flex; flex-direction:column; flex:1; min-width:0; }
 .otherText b { font-size:14px; font-weight:700; color:var(--text-strong); }
 .otherText small { font-size:12px; color:var(--text-muted); }
-.otherStack { width:112px; flex-shrink:0; }
-.stack[data-size="sm"] .logoRest { height:26px; min-width:26px; font-size:12px; }
+/* Logolar üst üste binen yığın değil, aralıklı sıra (10 Kasım): 26'lık
+   dört logo −8 bindirmeyle birbirine karışıyor, "+13" çipi son logonun
+   üstüne oturuyordu (1440 ve 768, canlı). Dizin panosuyla aynı dil: dört
+   22'lik logo, 3 piksel ara, "+N" çipi. Sütun sabit genişlikte: adlar aynı
+   hatta başlar (Katılım'ın logosu yok, yeri duruyor). */
+.otherLogos { display:flex; align-items:center; gap:3px; width:132px; flex-shrink:0; }
+.otherMore { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; margin-left:3px; padding:0 5px; border-radius:6px; background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; }
 .otherArrow { flex-shrink:0; color:var(--primary); transition:transform .2s var(--ease-brand); }
 @media(hover:hover) {
   .otherLink:hover .otherArrow { transform:translateX(3px); }
 }
 
 @media(prefers-reduced-motion:reduce) {
-  .card, .cardArrow, .tileFace, .otherArrow, .sortIcon, .rosterItem { transition:none; }
-  .card:hover .cardArrow { transform:none; }
+  .tileFace, .otherArrow, .rosterItem { transition:none; }
 }
-
-/* --------------------------------------------------------------------------
-   Kapağın günün özeti — gerekçe page.tsx → HeroSummary. Tek çukur yüzey,
-   üstte yön oranı, altta iki uç tema yan yana (telefonda alt alta);
-   bölümler hairline ile ayrılıyor. Kutu değil ton, gölge yok.
-   -------------------------------------------------------------------------- */
-/* 34rem tavanı kalktı (10 Kasım): 1440'ta sol sütun 666 piksel, özet 544'te
-   bitiyor ve sağında 122 piksellik boş bir şerit kalıyordu (ölçüldü). */
-.heroSummary { display:flex; flex-direction:column; margin-top:22px; border-radius:14px; background:var(--surface-sunken); }
-.heroLabel { color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.3; }
-.heroBreadth { display:flex; flex-direction:column; gap:9px; padding:12px 14px 13px; }
-.heroBreadthHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
-.heroCounts { display:inline-flex; align-items:baseline; gap:5px; font-size:12px; color:var(--text-muted); }
-.heroCounts b { font-size:20px; font-weight:700; line-height:1; letter-spacing:-.03em; }
-.heroExtremes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-top:1px solid var(--line-soft); }
-.heroExtreme {
-  display:flex; min-width:0; flex-direction:column; gap:8px; padding:11px 14px 12px; color:inherit;
-  transition:background-color .2s var(--ease-brand);
-}
-.heroExtreme + .heroExtreme { border-left:1px solid var(--line-soft); }
-.heroExtremes > :first-child { border-bottom-left-radius:14px; }
-.heroExtremes > :last-child { border-bottom-right-radius:14px; }
-a.heroExtreme:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
-@media(hover:hover) { a.heroExtreme:hover { background:var(--primary-tint); } a.heroExtreme:hover .heroExtremeName { color:var(--primary-ink); } }
-.heroExtremeHead { display:flex; min-width:0; align-items:baseline; justify-content:space-between; gap:10px; }
-.heroExtremeHead .heroLabel { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.heroExtremePct { flex-shrink:0; font-size:15px; font-weight:700; }
-.heroExtremeBody { display:flex; min-width:0; align-items:center; gap:10px; min-height:22px; }
-.heroLogos { display:flex; flex-shrink:0; gap:3px; }
-.heroExtremeName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:14px; font-weight:700; transition:color .18s var(--ease-brand); }
-@media(max-width:639px) {
-  .heroSummary { margin-top:16px; }
-  .heroExtremes { grid-template-columns:minmax(0,1fr); }
-  .heroExtreme + .heroExtreme { border-left:0; border-top:1px solid var(--line-soft); }
-  .heroExtremes > :first-child { border-bottom-left-radius:0; }
-  .heroExtremes > :last-child { border-bottom-left-radius:14px; }
-  /* Telefonda uç tema TEK SATIR: logolar solda, künye ile ad üst üste,
-     yüzde sağda. İki satırlık masaüstü düzeni alt alta inince kapağı 68
-     piksel uzatıyordu (dört kutuyla 696, iki satırla 764, tek satırla 732;
-     390'da ölçüldü — sayfa bütünü yine 6141 → 6004). */
-  .heroExtreme {
-    display:grid; grid-template-columns:auto minmax(0,1fr) auto; grid-template-areas:"logos label pct" "logos name pct";
-    align-items:center; gap:2px 10px; padding:10px 14px;
-  }
-  .heroExtremeHead, .heroExtremeBody { display:contents; }
-  .heroExtremeHead .heroLabel { grid-area:label; }
-  .heroExtremePct { grid-area:pct; }
-  .heroLogos { grid-area:logos; }
-  .heroExtremeName { grid-area:name; white-space:normal; line-height:1.25; }
-  /* 390'da künye ve ad kesiliyordu ("Açılış Öncesi En G…", "Kilo İlaçları
-     (G…" — hangisinin güçlü, hangisinin zayıf olduğu okunmuyordu; ölçüldü).
-     Dört logodan ikisi kalır (50 piksel açılır), ad iki satıra kadar sarar. */
-  .heroLogos > :nth-child(n+3) { display:none; }
-}
-
-/* Yön oranı — kapakta ve kart dibinde aynı çubuk. Parçalar `flex-grow`
-   ile sayılarla orantılı. Nötr kümede (son kapanış) yön rengi yok ama
-   yükselen ve düşen iki ayrı tonda: oran yine okunuyor. */
-/* 8/4 → 5/999, kulvar `--line-soft` (ortak şerit ölçüsü, 10 Kasım). */
-.ratio { display:flex; gap:2px; height:var(--lane-h,5px); overflow:hidden; border-radius:999px; background:var(--line-soft); }
-.ratio > i { display:block; flex-basis:0; min-width:3px; height:100%; }
-.ratio > i[data-tone="up"] { background:var(--up); }
-.ratio > i[data-tone="down"] { background:var(--down); }
-.ratio > i[data-tone="neutral-up"] { background:var(--flat); }
-.ratio > i[data-tone="neutral-down"] { background:var(--line-strong); }
-.ratio > i[data-tone="flat"] { background:transparent; }
-.cardRatio { flex:1; min-width:40px; }
-
-/* Dar kart: dört sütunlu, iki satırlık logo ızgarası (gerekçe page.tsx →
-   NARROW_MOSAIC_MAX). Geniş kartın beş sütunu korunuyor. */
-.card:not([data-wide]) .mosaic { grid-template-columns:repeat(4,32px); }
-
-/* Telefonda üye bağlantısı 44 piksel (önce 39; 390'da ölçüldü). */
-@media(max-width:767px) { .member { min-height:44px; } }

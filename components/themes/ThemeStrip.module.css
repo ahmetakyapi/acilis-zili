@@ -1,0 +1,19 @@
+/* ==========================================================================
+   Dağılım şeridi — gerekçe ThemeStrip.tsx (10 Kasım 2026).
+
+   Ortak ölçüler: kulvar 5 piksel / 999 / `--line-soft`, sıfır çizgisi
+   `--line-strong`. Çağıran üç değişkenle ayarlar: `--strip-h` (boy),
+   `--axis-over` (sıfır çizgisinin şeridi iki yana aştığı pay; panoda satır
+   boyunca kesintisiz eksen), `--strip-surface` (düğme halkasının zemini).
+   `--i` kademe sırası (çağıran satırdan miras bırakır).
+   ========================================================================== */
+.strip { position:relative; display:block; height:var(--strip-h,32px); container-type:inline-size; }
+.strip::before { content:""; position:absolute; left:50%; top:calc(var(--axis-over,0px) * -1); bottom:calc(var(--axis-over,0px) * -1); width:1px; margin-left:-.5px; background:var(--line-strong); }
+.lane { position:absolute; left:0; right:0; top:calc(50% - 2.5px); height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
+/* Dolu çubuk: kulvardan KALIN (8 piksel; kulvar 5). Sahibinin tercihi
+   kalın yatay şerit (10 Kasım); dış ucu yuvarlak, sıfıra dayanan ucu düz. */
+.fill { position:absolute; top:calc(50% - var(--bar-h,8px) / 2); height:var(--bar-h,8px); border-radius:0 999px 999px 0; background:var(--flat); transform-origin:left center; animation-delay:calc(min(var(--i, 0), 5) * var(--step)); }
+.fill[data-tone="up"] { background:var(--up); }
+.fill[data-tone="down"] { background:var(--down); border-radius:999px 0 0 999px; transform-origin:right center; }
+/* Ölçüt fonu: ince koyu çentik. */
+.bench { position:absolute; top:calc(50% - 9px); width:2px; height:18px; margin-left:-1px; border-radius:1px; background:var(--text-strong); box-shadow:0 0 0 2px var(--strip-surface, var(--premium-surface)); }

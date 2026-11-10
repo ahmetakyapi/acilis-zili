@@ -1805,6 +1805,12 @@ const tr = {
     distributionAria: "{n} şirketin günlük değişim dağılımı; medyan {median}.",
     movementScaleFull: "Tam Şerit {pct}",
     openTick: "Açılış",
+    /* 10 Kasım, bileşen tablosu: haftalık sütun, piyasa değeri payı, künye. */
+    capShare: "Pay",
+    capShareNote:
+      "Pay, şirketin piyasa değerinin bu endeksteki şirketlerin toplam piyasa değerine oranıdır; resmî endeks ağırlığı değildir.",
+    laneScaleNote: "Şeritlerin tam boyu: Değişim {day}, Haftalık {week}.",
+    weekNote: "Haftalık, son 5 işlem gününe göre değişimdir; takvim haftası değil, seans sayısı.",
   },
 
   news: {
@@ -1973,6 +1979,15 @@ const tr = {
     readStory: "Yazıyı Oku",
     companyCountOne: "{count} Şirket",
     companyCountMany: "{count} Şirket",
+    /* Mercek yeniden tasarımı (10 Kasım 2026). Ay başlığındaki gün şeridinin
+       ekran okuyucu adı (cümle; `aria-label`), okuma rayının kalan süresi ve
+       yazı sonu şeridi. */
+    monthStripLabel: "{month} günlerine göre yazı dağılımı",
+    railRemaining: "~{count} Dk Kaldı",
+    railDone: "Okundu",
+    endGlossary: "Sözlük",
+    endGuide: "Rehber",
+    endTerms: "Kavramlar İçin",
   },
 
   macro: {
@@ -2673,6 +2688,18 @@ const tr = {
     best: "En Güçlü Üye",
     worst: "En Zayıf Üye",
     otherThemes: "Diğer Temalar",
+    /* YENİDEN TASARIM (10 Kasım): dizin panosu, kapaktaki fark çizgisi,
+       detayın kapak okuması ve tek katlı tablo. */
+    boardTheme: "Tema",
+    boardMedian: "Medyan",
+    boardKeyMember: "Üye",
+    boardKeyBench: "Ölçüt Fonu",
+    boardNote: "Şerit sıfırdan temanın medyanına uzanır; bütün şeritler aynı ölçekte.",
+    gapLabel: "Aradaki Fark",
+    gapPoints: "{points} Puan",
+    largest: "En Büyük Üye",
+    tableAll: "Tümünü Göster · {count}",
+    tableLastCloseNote: "Kesikli kulvar: yüzde son kapanışa ait, günün ölçeğine girmiyor.",
     sortBy: "{column} sütununa göre sırala",
   },
   pairs: {

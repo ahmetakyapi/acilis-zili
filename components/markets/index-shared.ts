@@ -31,7 +31,8 @@ export const INDEX_TABS = [
 
 export type TabKey = (typeof INDEX_TABS)[number]["key"];
 
-export const SORT_KEYS = ["degisim", "fiyat", "ad", "katki", "cap"] as const;
+/* "hafta": Şirketler dizinindeki anahtarın aynısı (app/(app)/sirketler). */
+export const SORT_KEYS = ["degisim", "fiyat", "ad", "katki", "cap", "hafta"] as const;
 export type SortKey = (typeof SORT_KEYS)[number];
 export type SortDir = "asc" | "desc";
 
@@ -78,6 +79,9 @@ export type Row = {
   logoUrl: string | null;
   /** Piyasa değeri — yalnızca USD cinsinden bilinenler. */
   marketCap: number | null;
+  /** Son 5 işlem günündeki değişim, yüzde (`getWeeklyChanges` — Şirketler
+      tablosuyla aynı kaynak); bar gelmediyse null ve hücre boş kalır. */
+  week: number | null;
 };
 
 /** Isı haritasında en çok kaç şirket — piyasa değerine göre ilk 30 (26 Eylül,

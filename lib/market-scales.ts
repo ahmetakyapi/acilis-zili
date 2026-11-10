@@ -1,5 +1,5 @@
 /**
- * Piyasalar ekranının iki çizim ölçeği (10 Kasım 2026).
+ * Piyasalar ekranının çizim ölçekleri (10 Kasım 2026).
  *
  * İkisi de ekrana ZATEN gelen sayılardan türer (üyelerin günlük yüzdesi,
  * canlı piyasa değeri); yeni veri yok, yalnız okuma biçimi.
@@ -76,41 +76,59 @@ export function histogramShare(value: number): number {
   return (clamped + edge) / (edge * 2);
 }
 
-/* ---- Piyasa değeri ekseni (bileşen tablosundaki nokta) ---- */
-
-export type CapAxis = {
-  /** Eksenin iki ucu — onluk basamaklar (10 Mr, 100 Mr, 1 T…). */
-  min: number;
-  max: number;
-  /** Uçlar dahil her onluk basamak. */
-  ticks: number[];
-  /** Değerin eksendeki payı, 0–1 (logaritmik). */
-  at: (value: number) => number;
-};
+/* ---- Bileşen tablosunun satır içi ölçekleri ---- */
 
 /**
- * Piyasa değerleri için LOGARİTMİK KONUM ekseni.
+ * Yön kulvarlarının SABİT ölçeği (10 Kasım 2026): tam kol kaç yüzde.
  *
- * Doğrusal çubukta listenin devi (4 T $) rayı dolduruyor, kalan doksan
- * şirketin çubuğu bir pikselin altında kalıyordu: sütun "boş" okunuyordu
- * (1440, ölçüldü: 60 satırın 52'sinde dolgu < 3 piksel). Logaritmik ÇUBUK
- * ise yalan söyler — uzunluğun sıfırı yoktur. Çözüm çubuk değil NOKTA:
- * konum, onluk basamakları çizili bir eksende (her çentik on kat). Okur
- * uzunluk değil yer okur, çentikler ölçeğin doğrusal olmadığını söyler.
- * Uçlar veriyi saran en yakın onluklar; pozitif sonlu değer yoksa `null`.
+ * Tablo şeridi listenin en büyük hareketine göre ölçekliyordu; "Daha Fazla
+ * Göster"e ya da başka sekmeye basınca aynı %1 başka uzunlukta çiziliyordu
+ * ve 56 piksellik dar kulvarda tek bir %20'lik satır ötekileri 1 piksele
+ * indirirdi. Sabit ölçekte aynı uzunluk her yerde aynı hareket. Günlük kol
+ * ısı haritasının ve histogramın doyduğu eşikte (`HISTOGRAM_LIMIT`) dolar;
+ * haftalık kol sektör tablosunun 1H tam tonunda (±%8).
  */
-export function capAxis(values: readonly (number | null | undefined)[]): CapAxis | null {
+export const DAY_LANE_SPAN = HISTOGRAM_LIMIT;
+export const WEEK_LANE_SPAN = 8;
+/** "Büyük hareket" eşiği — günlük kulvarın dolduğu yer; satırda yüzde hap zemini alır. */
+export const BIG_MOVE = HISTOGRAM_LIMIT;
+
+/** Sıfır ortalı kulvarda kolun payı, 0–50 (kulvar genişliğinin yüzdesi). */
+export function laneArm(value: number, span: number): number {
+  if (!Number.isFinite(value) || !(span > 0)) return 0;
+  return Math.min(1, Math.abs(value) / span) * 50;
+}
+
+/* ---- Piyasa değeri payı (bileşen tablosunda sayının yanındaki yüzde) ---- */
+
+/** Değeri bilinen üyelerin oranı bunun altındaysa pay HİÇ basılmaz. */
+export const CAP_SHARE_MIN_COVERAGE = 0.9;
+
+/**
+ * Bir şirketin piyasa değerinin, listedeki şirketlerin TOPLAM piyasa
+ * değerine oranı (yüzde).
+ *
+ * KARAR GEÇMİŞİ. 26 Eylül: doğrusal çubuk (en büyüğe göre) — Nasdaq 100'de
+ * 60 satırın 52'sinde dolgu 3 pikselin altındaydı. 10 Kasım sabah: onluk
+ * eksende nokta (`capAxis`) — logaritmik ÇUBUK yasak (uzunluğun sıfırı yok),
+ * konum olur. 10 Kasım, sahibinin itirazı ("piyasa değerini de direkt yazsak
+ * daha doğru olacak"): nokta ekseni sayıyı dolaylı okutuyordu ve 132
+ * piksellik sütun asıl sayıyı soluk bırakıyordu. Eksen KALKTI (`capAxis`
+ * silindi); sayı güçlü mürekkeple yazılıyor, yanında yalnız bu pay duruyor.
+ * Pay bir çizim değil SAYI: doğrusal çubuğun okunmayan küçük uçlarını
+ * ("%0,07") yazıyla söyler, ölçek çarpıtması yok. Logaritmik çubuk yasağı
+ * yerinde duruyor.
+ *
+ * DÜRÜSTLÜK: bu resmî endeks ağırlığı DEĞİL (Nasdaq 100 tavanlı, S&P 500
+ * halka açıklık düzeltmeli); tablo künyesi bunu yazar. Fiyat ağırlıklı
+ * endekste (Dow) çağıran hiç basmaz. Toplam yalnız değeri bilinenlerden
+ * kurulduğu için eksik çoksa pay şişer: bilinenlerin oranı
+ * `CAP_SHARE_MIN_COVERAGE` altındaysa `null` (pay basılmaz).
+ */
+export function capShares(values: readonly (number | null | undefined)[]): ((value: number | null | undefined) => number | null) | null {
   const known = values.filter((value): value is number => typeof value === "number" && Number.isFinite(value) && value > 0);
-  if (known.length === 0) return null;
-  const lo = Math.floor(Math.log10(Math.min(...known)) + 1e-9);
-  let hi = Math.ceil(Math.log10(Math.max(...known)) - 1e-9);
-  if (hi <= lo) hi = lo + 1;
-  const ticks: number[] = [];
-  for (let power = lo; power <= hi; power += 1) ticks.push(10 ** power);
-  return {
-    min: 10 ** lo,
-    max: 10 ** hi,
-    ticks,
-    at: (value) => (value > 0 ? Math.min(1, Math.max(0, (Math.log10(value) - lo) / (hi - lo))) : 0),
-  };
+  if (values.length === 0 || known.length / values.length < CAP_SHARE_MIN_COVERAGE) return null;
+  const total = known.reduce((sum, value) => sum + value, 0);
+  if (!(total > 0)) return null;
+  return (value) => (typeof value === "number" && Number.isFinite(value) && value > 0 ? (value / total) * 100 : null);
 }

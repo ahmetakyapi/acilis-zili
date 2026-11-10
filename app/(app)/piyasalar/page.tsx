@@ -37,7 +37,7 @@ import {
 } from "@/components/ui/primitives";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
-import { getChartBarsMulti, getQuotes } from "@/lib/providers";
+import { getChartBarsMulti, getQuotes, getWeeklyChanges } from "@/lib/providers";
 import { quoteBasis, type MarketStatus } from "@/lib/market-hours";
 import { sessionDomain } from "@/components/today/index-feed";
 import type { Quote } from "@/lib/providers/types";
@@ -411,7 +411,7 @@ async function IndexDetail({
   t: Dictionary;
 }) {
   const status = await getStatus();
-  const [{ quotes, stampAt, source, stale }, proxyResult, meta] = await Promise.all([
+  const [{ quotes, stampAt, source, stale }, proxyResult, meta, weekly] = await Promise.all([
     quotesFor(
       members.map((m) => m.symbol),
       status,
@@ -424,6 +424,18 @@ async function IndexDetail({
        yazması çıkıyordu. */
     getQuotes([...INDEX_TABS.map((entry) => entry.proxy)], status),
     getSymbolNames(members.map((m) => m.symbol)),
+    /* HAFTALIK DEĞİŞİM (10 Kasım, sahibinin isteği: "haftalık değişim de
+       koyabiliriz buraya"). Kaynak Şirketler tablosununkiyle AYNI
+       (`getWeeklyChanges`: toplu günlük bar isteği, son 5 işlem günü) —
+       aynı hissenin haftalığı iki ekranda iki ayrı sayı olmasın (Veri
+       dürüstlüğü 3). Yeni uç ya da şema yok. MALİYET: 200 sembollük paket
+       başına bir Alpaca isteği (Nasdaq 100 ve Dow 1, S&P 500 3), kotasyonla
+       PARALEL; yanıt Next veri önbelleğinde en az 15 dakika (seans sınırını
+       aşmadan, `boundedTtl`). Liste üyelik sırasıyla soruluyor: sıralama ya
+       da derinlik değişince adres, dolayısıyla önbellek kaydı değişmez.
+       Sağlayıcı düşerse boş sözlük döner; sütun HİÇ basılmaz
+       (`MembersTable` → `showWeek`). */
+    getWeeklyChanges(members.map((m) => m.symbol), status),
   ]);
 
   /* Dow fiyat ağırlıklıdır: Endeks = Σfiyat / bölen. Bölen, elimizdeki
@@ -464,6 +476,7 @@ async function IndexDetail({
       // Canlı fiyat × hisse sayısı — gün içinde güncel kalır.
       logoUrl: meta[member.symbol]?.logoUrl ?? null,
       marketCap: liveMarketCap(meta[member.symbol], quote?.price),
+      week: weekly[member.symbol] ?? null,
     };
   });
 

@@ -209,6 +209,22 @@ const TILE_TIERS = [2, 3, 4, 6] as const;
 type TileTier = { cols: number; /** Ölçek künyesi ızgaranın boş hücresinde mi. */ legendInGrid: boolean };
 
 /**
+ * Ana sayfa panelinin (`ChartThumb`) karışık grafikteki taban satırları.
+ * Taban satırların iki yöne paylaşımı: azınlık yan en az bir satır alır ve
+ * hiç düşmez (tek düşen grafiğin öznesidir), kalan öteki yana; bir yan
+ * payını dolduramıyorsa artanı öteki kullanır. 5 satır: 5↑1↓ → 4+1,
+ * 3↑2↓ → 3+2, 9↑3↓ → 3+2, 1↑7↓ → 1+4.
+ */
+export function splitRows(up: number, down: number, rows: number): [number, number] {
+  const half = Math.max(1, Math.floor(rows / 2));
+  const minorIsDown = down <= up;
+  const minor = Math.min(minorIsDown ? down : up, half);
+  const major = Math.min(minorIsDown ? up : down, Math.max(1, rows - minor));
+  const minorFinal = Math.min(minorIsDown ? down : up, Math.max(minor, rows - major));
+  return minorIsDown ? [major, minorFinal] : [minorFinal, major];
+}
+
+/**
  * Her genişlik basamağında kaç sütun (31 Ekim). Eskiden sütun sayısı
  * kalem sayısından bağımsızdı ve ölçek kartı hep ızgaranın SON hücresiydi:
  * 11 sektörde 6×2'yi tamamlıyordu ama 8 hissede (6 sütun) ikinci satırda

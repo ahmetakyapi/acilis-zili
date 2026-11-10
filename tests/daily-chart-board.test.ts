@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { checkChartBlock } from "../lib/daily-chart";
-import { boardKeys, boardTiles, mosaicCells, percentDisplay, ringGradient, ringSlices, tileTiers } from "../lib/daily-chart-board";
+import { boardKeys, boardTiles, mosaicCells, percentDisplay, ringGradient, ringSlices, splitRows, tileTiers } from "../lib/daily-chart-board";
 import { divergingScale, memberSymbolOf } from "../lib/daily-chart-figure";
 import { SIGN_GAP as GAP } from "../lib/utils";
 
@@ -265,4 +265,19 @@ test("mosaicCells: sıralı, ton yön, en büyük tam koyuluk", () => {
   assert.equal(cells[0].weight, 1);
   assert.equal(cells.at(-1)?.dir, "down");
   assert.ok(cells.every((cell) => cell.weight > 0 && cell.weight <= 1));
+});
+
+test("ana sayfa paneli: taban satırlar iki yöne paylaşılır, azınlık yan düşmez", () => {
+  // 10 Kasım: altı kalemin tek düşeni (Nvidia) kesimde kaybolmamalı.
+  assert.deepEqual(splitRows(5, 1, 5), [4, 1]);
+  assert.deepEqual(splitRows(3, 2, 5), [3, 2]);
+  assert.deepEqual(splitRows(9, 3, 5), [3, 2]);
+  assert.deepEqual(splitRows(1, 7, 5), [1, 4]);
+  // Bir yan payını dolduramıyorsa artanı öteki kullanır; toplam tabanı aşmaz.
+  assert.deepEqual(splitRows(2, 2, 5), [2, 2]);
+  assert.deepEqual(splitRows(1, 1, 5), [1, 1]);
+  for (const [up, down] of [[5, 1], [9, 3], [1, 7], [6, 6], [2, 9]]) {
+    const [a, b] = splitRows(up, down, 5);
+    assert.ok(a >= 1 && b >= 1 && a + b <= 5, `${up}/${down} → ${a}+${b}`);
+  }
 });

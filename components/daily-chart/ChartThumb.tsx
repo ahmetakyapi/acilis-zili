@@ -1,9 +1,9 @@
 import type { CSSProperties, ReactNode } from "react";
-import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { LogoTile } from "@/components/ui/primitives";
+import { ButtonLink, LogoTile } from "@/components/ui/primitives";
 import { checkChartBlock } from "@/lib/daily-chart";
-import { boardTiles, ringSlices, type TileDir } from "@/lib/daily-chart-board";
+import { boardTiles, ringSlices, splitRows, type TileDir } from "@/lib/daily-chart-board";
 import type { DailyChartLabels } from "@/lib/i18n/dictionaries/daily-chart";
 import { formatPercent } from "@/lib/utils";
 import { SECTOR_ICONS } from "./sector-icons";
@@ -25,14 +25,30 @@ type ThumbRow = {
   /** Karo sütunu yok: `oncesi`nin iki hâli ("22 Eylül", "23 Ekim") bir
       kimlik taşımıyor; baş harf karosu orada "2" gibi anlamsız bir sayıydı. */
   bare?: boolean;
+  /** Grafiğin öznesi: karışık grafikte bir yanda TEK kalan kalem. */
+  subject?: "up" | "down";
+};
+
+/** Sunucunun bastığı en çok satır; tabanın üstü `hidden` + `data-fill`. */
+const ROW_CAP = 12;
+
+type ThumbGroup = {
+  /** Karışık grafikte yönün başlığı; tek listede yok. */
+  dir: "up" | "down" | null;
+  /** Grubun TAMAMI (basılmayanlar dahil) — başlıktaki sayaç. */
+  total: number;
+  rows: ThumbRow[];
+  /** Her zaman açık satır sayısı; kalanı doldurucuya. */
+  base: number;
 };
 
 /**
  * Grafiğin küçük hâli — ana sayfa paneli (24 Ekim; 31 Ekim'de yeniden;
  * 6 Kasım'da sıralı liste olarak yeniden).
  *
- * TAM GRAFİK DEĞİL, ŞEKLİ: `rows` satır, geri kalanı "N Kalem Daha"
- * bağlantısıyla. 31 Ekim'de sahibinin itirazı: "bu böyle kabul edilemez,
+ * TAM GRAFİK DEĞİL, ŞEKLİ: `rows` satır taban; geri kalanı kolonda yer
+ * varsa açılır, yoksa dipteki sayaç ve "Grafiği İncele" butonu söyler
+ * (10 Kasım, aşağıda). 31 Ekim'de sahibinin itirazı: "bu böyle kabul edilemez,
  * logolar olsun, daha görsel ve anlaşılır." Eskiden satır düz metin addı
  * ("Advanced Micro De…" kesik), sayı birimsizdi ("-28,58"), katlanan
  * satırlar ortada çıplak bir "+3"tü. Bunlar korunuyor:
@@ -65,9 +81,33 @@ type ThumbRow = {
  * sembol uydurulmuyor, sütun boş delik de kalmıyor).
  *
  * Sıra sayfanın kartlarıyla aynı hesap (`boardTiles`): düşüş listesinde en
- * sert düşüş başta. Kesim: tek yönlü grafikte hikâye baştadır, ilk `rows`
- * satır kalır ve bağlantı sonda; karışık grafikte iki uç da hikâyedir,
- * kesim ORTADAN (paylaşım görseli aynı kuralla, `lib/daily-chart-og.tsx`).
+ * sert düşüş başta.
+ *
+ * 10 KASIM 2026, SAHİBİNİN İTİRAZI: "'1 Kalem Daha' ne, gereksiz, onu
+ * gösterme; sadece 1 tane düşen göstermeyi de bilemedim, daha mantıklı ele
+ * al." Karışık grafik ORTADAN kesiliyordu (6 Kasım: "iki uç da hikâyedir"):
+ * altı kalemde üç yükselen, ortada "1 Kalem Daha →" bağlantısı, altında bir
+ * yükselen ve bağlamsız tek düşen. Sıralı listenin ortasındaki bağlantı
+ * hem atlanan satırla aynı yeri kaplıyordu (40 piksel; satır 42) hem de
+ * kesimin kuralını gizliyordu. Şimdi:
+ *   · KARIŞIK grafik iki GRUP: "Yükselenler" ve "Düşenler", yan koldaki
+ *     Günün Hareketleri'nin başlığıyla (yön ikonu, ad, sayaç) ve TEK
+ *     ölçekte; sıfır çizgisi bütün satırlarda aynı x'te, düşen sola
+ *     yükselen sağa. Grup içinde sıra büyüklükten: en sert düşüş başta.
+ *     Kesim her grubun SONUNDAN (en ılımlı kalem), ortadan değil; taban
+ *     satırlar iki yana paylaştırılır (`splitRows`), azınlık yan hiç
+ *     düşmez.
+ *   · Bir yanda TEK kalem, ötekinde en az iki kalem varsa o kalem grafiğin
+ *     ÖZNESİ ("Nvidia Ters Yönde Geriledi"): satır yön yıkamasıyla vurgulu,
+ *     adının üstünde "Tek Düşen" / "Tek Yükselen".
+ *   · Ortadaki bağlantı YOK. Sığmayan satır varsa dipte sakin bir sayaç
+ *     ("5 / 6 Kalem") ve her zaman grafiğin sayfasına giden tek buton.
+ *     Sayaç CSS sayacı: `FillColumn` kolonda yer bulup satır açtığında
+ *     (`hidden` + `data-fill`, sunucu `ROW_CAP` kadar basar) sayı kendisi
+ *     artar, hepsi açılınca sayaç kalkar; JS kapalıyken taban doğru sayılır.
+ *   · Satırlar opaklık 0'dan gelmiyor (`thumb-in` kalktı; metin kaymaz ve
+ *     soluklaşarak girmez, `.claude/rules/hareket.md`): hareket çubukta.
+ * Paylaşım görseli (`lib/daily-chart-og.tsx`) kendi kesimini korur.
  *
  * Bozuk blok hiçbir şey çizmez: yazma yolu bozuk bloğu zaten kabul etmiyor,
  * ama elle düzeltilmiş eski bir kayıt kartı kırmasın.
@@ -87,9 +127,9 @@ export function ChartThumb({
   rows?: number;
   /** Sembol → logo adresi (`getChartLogos`); yoksa depodaki logo. */
   logos?: Record<string, string | null>;
-  /** Arayüz dilindeki etiketler ("{n} Kalem Daha", "Değişim"). */
+  /** Arayüz dilindeki etiketler ("Grafiği İncele", "Değişim"). */
   labels: DailyChartLabels;
-  /** Grafiğin sayfası — katlanan satırların bağlantısı. */
+  /** Grafiğin sayfası — dipteki butonun hedefi. */
   href: string;
   /** Listenin ekran okuyucu adı (bloğun etiketi). */
   label: string;
@@ -165,26 +205,47 @@ export function ChartThumb({
     }
   }
 
-  const cut = items.length > rows;
-  const headCount = !cut ? items.length : oneSided ? rows : Math.ceil(rows / 2);
-  const head = items.slice(0, headCount);
-  const tail = cut && !oneSided ? items.slice(items.length - (rows - headCount)) : [];
-  const rest = items.length - head.length - tail.length;
-  /* Katlanan satırlar (31 Ekim → 6 Kasım): önce satır başında yalnız "+6",
-     sonra kesik çizginin ortasında "+3", sonra kesik çizgili "3 Kalem
-     Daha" künyesi. Künye tıklanmıyordu ve kesik çizgi sitenin başka hiçbir
-     listesinde yok. Artık grafiğin sayfasına giden bir BAĞLANTI, adın
-     hizasında: karışık grafikte iki ucun arasında, tek yönlüde sonda. */
-  const more = rest > 0 && (
-    <li key="rest" className={styles.moreRow}>
-      <Link href={href} prefetch={false} className={styles.more}>
-        {labels.board.moreRows.replace("{n}", String(rest))}
-        <ArrowRight size={12} weight="bold" aria-hidden />
-      </Link>
-    </li>
-  );
+  /* GRUPLAR (10 Kasım, gerekçe yukarıda). Karışık işaretli çubuk grafik
+     iki yöne ayrılır; öteki her şey (tek yönlü liste, pay, öncesi) tek
+     liste. `mixed` yalnız iki yanda da kalem varken: hepsi artı + bir sıfır
+     "Yükselenler" başlığı açmaz, sıfır kalem listenin sonunda durur. */
+  const ups = items.filter((item) => item.dir === "up");
+  const downs = items.filter((item) => item.dir === "down").reverse();
+  const flats = items.filter((item) => item.dir === "flat");
+  /* Üç kalemlik grafikte (1↑ 1↓ + sıfır) başlık kalemden çok yer tutardı:
+     grup ancak bir yanda en az iki kalem ve toplam dört kalem varken. */
+  const mixed = !oneSided && ups.length > 0 && downs.length > 0 && Math.max(ups.length, downs.length) >= 2 && items.length >= 4;
+  let groups: ThumbGroup[];
+  if (mixed) {
+    if (downs.length === 1 && ups.length >= 2) downs[0] = { ...downs[0], subject: "down" };
+    if (ups.length === 1 && downs.length >= 2) ups[0] = { ...ups[0], subject: "up" };
+    const [upBase, downBase] = splitRows(ups.length, downs.length, rows);
+    const spare = Math.max(0, rows - upBase - downBase);
+    groups = [
+      { dir: "up", total: ups.length, rows: ups, base: upBase },
+      /* Sıfırda kalan kalem iki grubun arasında, başlıksız: ekseninin
+         üstünde duruyor, yönü yok. Tabanda yalnız yer kalırsa. */
+      { dir: null, total: flats.length, rows: flats, base: Math.min(flats.length, spare) },
+      { dir: "down", total: downs.length, rows: downs, base: downBase },
+    ].filter((group) => group.rows.length > 0) as ThumbGroup[];
+  } else {
+    groups = [{ dir: null, total: items.length, rows: items, base: Math.min(items.length, rows) }];
+  }
+  /* Tavan: tabanın üstündeki yedek satırlar sırayla dağıtılır (önce
+     yükselenler), toplam `ROW_CAP`i geçmez. */
+  let budget = ROW_CAP - groups.reduce((sum, group) => sum + group.base, 0);
+  const printed = groups.map((group) => {
+    const extra = Math.max(0, Math.min(group.rows.length - group.base, budget));
+    budget -= extra;
+    return { ...group, rows: group.rows.slice(0, group.base + extra) };
+  });
+  const total = items.length;
+  const printedCount = printed.reduce((sum, group) => sum + group.rows.length, 0);
+  const baseCount = printed.reduce((sum, group) => sum + group.base, 0);
 
-  const row = (item: ThumbRow, index: number) => {
+  let order = 0;
+  const row = (item: ThumbRow, hidden: boolean) => {
+    const index = order++;
     const code = item.symbol ?? item.fund;
     const body = (
       <>
@@ -194,6 +255,11 @@ export function ChartThumb({
           </span>
         )}
         <span className={styles.thumbName}>
+          {item.subject && (
+            <span className={styles.thumbRole} data-tone={item.subject}>
+              {item.subject === "down" ? labels.home.onlyDown : labels.home.onlyUp}
+            </span>
+          )}
           {item.name}
           {code && <span className={styles.thumbCode}>{code}</span>}
         </span>
@@ -219,31 +285,77 @@ export function ChartThumb({
         )}
       </>
     );
+    const rowProps = {
+      className: styles.thumbRow,
+      "data-row": "",
+      "data-bar": item.bar ? "" : undefined,
+      "data-bare": item.bare ? "" : undefined,
+      "data-subject": item.subject,
+    };
     return (
-      <li key={`${index}-${item.name}`} style={{ "--i": index } as CSSProperties}>
+      /* Yedek satır `hidden` + `data-fill`: `FillColumn` kolonda yer varsa
+         açar (hidrasyondan önce de dokunabilir; uyarı bilerek susturuldu,
+         `DayMovers` ile aynı kalıp). */
+      <li
+        key={`${index}-${item.name}`}
+        style={{ "--i": index } as CSSProperties}
+        data-fill={hidden ? "" : undefined}
+        hidden={hidden}
+        suppressHydrationWarning
+      >
         {code ? (
-          <Link href={`/hisse/${code}`} prefetch={false} className={styles.thumbRow} data-row="" data-bar={item.bar ? "" : undefined} data-bare={item.bare ? "" : undefined}>
+          <Link href={`/hisse/${code}`} prefetch={false} {...rowProps}>
             {body}
           </Link>
         ) : (
-          <div className={styles.thumbRow} data-row="" data-bar={item.bar ? "" : undefined} data-bare={item.bare ? "" : undefined}>
-            {body}
-          </div>
+          <div {...rowProps}>{body}</div>
         )}
       </li>
     );
   };
 
+  const [countLead, countTail] = labels.home.count.replace("{total}", String(total)).split("{shown}");
   return (
-    <div className={styles.thumb} data-draw>
+    <div className={styles.thumb} data-draw data-cut={printedCount < total ? "" : undefined}>
       {strip}
-      <ol className={styles.thumbList} aria-label={label}>
-        {head.map(row)}
-        {!oneSided && more}
-        {tail.map((item, index) => row(item, head.length + index))}
-        {oneSided && more}
-      </ol>
+      {printed.map((group, at) => {
+        const list = (
+          <ol className={styles.thumbList} aria-label={group.dir ? undefined : label}>
+            {group.rows.map((item, index) => row(item, index >= group.base))}
+          </ol>
+        );
+        if (!group.dir) return <div key={at}>{list}</div>;
+        const heading = group.dir === "up" ? labels.home.up : labels.home.down;
+        return (
+          <div key={at} role="group" aria-label={heading} className={styles.thumbGroup}>
+            {/* Başlık satırla aynı ızgarada: ikon işaret sütununda, ad
+                adların, sayaç değerlerin hattında (`DayMovers` kalıbı). */}
+            <p className={styles.groupHead}>
+              <span className={styles.groupIcon} data-tone={group.dir} aria-hidden>
+                {group.dir === "up" ? <TrendUp size={16} weight="bold" /> : <TrendDown size={16} weight="bold" />}
+              </span>
+              <span className={styles.groupLabel}>{heading}</span>
+              <span className={`numeral ${styles.groupCount}`}>{labels.home.groupCount.replace("{n}", String(group.total))}</span>
+            </p>
+            {list}
+          </div>
+        );
+      })}
       {foot}
+      {/* DİP: sayaç yalnız gizli satır varken (CSS, DailyChart.module.css →
+          "DİP"), buton her zaman. `data-base`: JS'siz sayfada sayacın
+          göstereceği sayı CSS sayacından; öznitelik ölçüm ve test için. */}
+      <div className={styles.thumbEnd} data-base={baseCount}>
+        <span className={`numeral ${styles.thumbCount}`}>
+          {countLead}
+          <i aria-hidden />
+          {countTail}
+        </span>
+        <ButtonLink href={href} prefetch={false} variant="ghost" size="sm" className={styles.thumbOpen}>
+          {labels.home.open}
+          <ArrowRight size={12} weight="bold" aria-hidden />
+        </ButtonLink>
+      </div>
     </div>
   );
 }

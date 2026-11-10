@@ -18,6 +18,13 @@ import "./bell.css";
  * saat ve geri sayım; kadranda renkli seans dilimleri (asıl seans mavi:
  * sitenin seans şeridiyle aynı, uzatılmış seanslar pirinç); altta TR saatiyle
  * üç seans düğmesi ve "Zili Çal". Metin tek satır.
+ *
+ * 10 KASIM 2026 (sahibinin isteği: "Seans Zili'ni de bugünkü çıtaya
+ * getir"): çizimin kendisi (art.tsx, geometry.ts, view.ts, model.ts) aynı;
+ * değişen ÇEVRESİ — sağ kolonun düzeni (durum satırı, display saat ve
+ * yanında oynatma denetimleri, kart + günün rayı, dipte not), sahnenin
+ * kolon boyuna gerilen kutusu. Gerekçe ve ölçüm bell.css → "SAĞ KOLON TEK
+ * IZGARA", "KART + RAY", "ÖLÇÜM 10 KASIM"; markup live.tsx.
  */
 export function SessionBellFigure({ status, nowMs, locale, t }: { status: MarketStatus; nowMs: number; locale: Locale; t: Dictionary }) {
   const B = t.sessionBell;

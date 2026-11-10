@@ -1,11 +1,12 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { capAxis, changeHistogram, histogramShare, HISTOGRAM_LIMIT, HISTOGRAM_STEP } from "../lib/market-scales";
+import { BIG_MOVE, CAP_SHARE_MIN_COVERAGE, DAY_LANE_SPAN, WEEK_LANE_SPAN, capShares, changeHistogram, laneArm, histogramShare, HISTOGRAM_LIMIT, HISTOGRAM_STEP } from "../lib/market-scales";
 
 /**
  * Piyasalar ekranının iki çizim ölçeği (gerekçe `lib/market-scales.ts`):
- * dağılım kutuları sıfırı sınır sayar, piyasa değeri ekseni onluk basamak.
+ * dağılım kutuları sıfırı sınır sayar; tablo kulvarları sabit ölçekli,
+ * piyasa değeri payı bilinenlerin toplamına oran.
  */
 
 test("histogram sıfırın iki yanında eşit sayıda kutu kurar, uçlar açık", () => {
@@ -43,20 +44,30 @@ test("histogram payı: sıfır ortada, eşik ötesi uç kutunun ortasında", () 
 });
 const h14 = () => changeHistogram([]).bins.length;
 
-test("piyasa değeri ekseni veriyi saran onluklara oturur", () => {
-  const axis = capAxis([27.6e9, 4.38e12, null, undefined, 0])!;
-  assert.equal(axis.min, 1e10);
-  assert.equal(axis.max, 1e13);
-  assert.deepEqual(axis.ticks, [1e10, 1e11, 1e12, 1e13]);
-  assert.equal(axis.at(1e10), 0);
-  assert.equal(axis.at(1e13), 1);
-  assert.ok(Math.abs(axis.at(1e11) - 1 / 3) < 1e-9, "her onluk eşit adım");
-  assert.equal(axis.at(5), 0, "eksenin altı sol uca sabitlenir");
+test("yön kulvarı: sabit ölçek, kol yarım kulvarda doyar", () => {
+  assert.equal(laneArm(0, DAY_LANE_SPAN), 0);
+  assert.equal(laneArm(DAY_LANE_SPAN / 2, DAY_LANE_SPAN), 25);
+  assert.equal(laneArm(-DAY_LANE_SPAN / 2, DAY_LANE_SPAN), 25, "işaret uzunluğu değiştirmez");
+  assert.equal(laneArm(40, DAY_LANE_SPAN), 50, "eşiğin ötesi tam kol");
+  assert.equal(laneArm(Number.NaN, WEEK_LANE_SPAN), 0);
+  assert.equal(laneArm(1, 0), 0);
+  assert.equal(BIG_MOVE, DAY_LANE_SPAN, "hap eşiği kulvarın dolduğu yer");
 });
 
-test("piyasa değeri ekseni: tam onluk ve tek değer bir basamaklık eksen verir, veri yoksa null", () => {
-  const axis = capAxis([1e11])!;
-  assert.equal(axis.min, 1e11);
-  assert.equal(axis.max, 1e12);
-  assert.equal(capAxis([null, 0, -4]), null);
+test("piyasa değeri payı: bilinenlerin toplamına oran, toplamı 100", () => {
+  const share = capShares([4e12, 1e12, 5e11, 5e11])!;
+  assert.equal(share(4e12), (4 / 6) * 100);
+  assert.equal(share(null), null);
+  assert.equal(share(0), null);
+  const sum = [4e12, 1e12, 5e11, 5e11].reduce((total, value) => total + share(value)!, 0);
+  assert.ok(Math.abs(sum - 100) < 1e-9);
+});
+
+test("piyasa değeri payı: eksik çoksa ya da veri yoksa hiç basılmaz", () => {
+  const nine = Array.from({ length: 9 }, () => 1e10);
+  assert.ok(capShares([...nine, null]), "onda dokuz bilinen yeter");
+  assert.equal(capShares([...nine.slice(0, 8), null, undefined]), null, "onda sekiz yetmez: pay şişerdi");
+  assert.ok(CAP_SHARE_MIN_COVERAGE >= 0.9);
+  assert.equal(capShares([]), null);
+  assert.equal(capShares([null, 0, -4]), null);
 });

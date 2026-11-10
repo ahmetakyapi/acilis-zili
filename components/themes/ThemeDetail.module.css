@@ -1,0 +1,92 @@
+/* ==========================================================================
+   Tema detayı: kapağın okuması ve ölçü ızgarası — `/tema/[slug]`
+   (10 Kasım 2026, yeniden tasarım). Karar kayıtları ThemeReading.tsx ve
+   ThemeStats.tsx başında; harita ve "diğer temalar" Themes.module.css'te,
+   tablo ThemeTable.module.css'te.
+
+   ÖLÇÜM (gerçek sayfa + sahte sağlayıcı, iki tema; önce = canlı 78ad602):
+   - Yarı İletkenler 1440: sayfa 4.643 → 3.906; kapak 244 → 289 (logo kümesi
+     yerine medyan 68 punto + şerit + ölçüt); dört ölçü rakamı tek hatta
+     (dip y=595); harita 1.006 × 479 → 1.278 × 492; karo yazısı en az 12
+     (önce 8,5), yalnız renk kalan karo 1/16.
+   - 1024: sayfa 5.019 → 3.985. 390: 6.951 → 5.355; medyan 44 punto; ölçü
+     ızgarası 2 × 2; harita 324 × 405, yalnız renk 2/11.
+   - Kilo İlaçları (5 üye) 1440: 4.212 → 3.418. Katılım (20) 1440: 4.411 →
+     3.756, 390: 6.462 → 5.355.
+   - Açılış: son animasyon 970 ms'de bitiyor, opaklık 0'dan başlayan 0;
+     hareketi azaltanda çalışan animasyon 0.
+   ========================================================================== */
+
+/* ---- Kapağın okuması ---- */
+.reading { display:flex; flex-direction:column; min-width:0; }
+.readHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
+.readLabel { color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.3; }
+.readMeta { color:var(--text-muted); font-size:12px; }
+/* Display sayı 700 / −0,03em (ortak ölçü). Sayfanın en büyük puntosu:
+   1440'ta 68, 390'da 44 piksel. */
+.readFig { margin:6px 0 12px; font-size:clamp(44px,5.4vw,68px); line-height:1.05; font-weight:700; letter-spacing:-.03em; white-space:nowrap; }
+.readStrip { --strip-h:36px; --tick-h:18px; }
+.readAxis { display:flex; justify-content:space-between; margin-top:2px; color:var(--text-muted); font-size:12px; line-height:1.3; }
+.readAxis > span { flex:1; white-space:nowrap; }
+.readAxis > span:nth-child(2) { text-align:center; }
+.readAxis > span:last-child { text-align:right; }
+.readBench { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px 14px; margin-top:14px; padding-top:13px; border-top:1px solid var(--line-soft); }
+.readBenchId { display:flex; align-items:center; gap:9px; min-width:0; color:var(--text-body); font-size:13px; }
+.readBenchLink { display:flex; align-items:baseline; gap:8px; min-width:0; min-height:24px; color:inherit; }
+.readBenchLink b { flex:none; color:var(--text-strong); font-weight:700; transition:color .18s var(--ease-brand); }
+.readBenchLink > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.readBenchLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
+@media(hover:hover) { .readBenchLink:hover b { color:var(--primary-ink); } }
+.readBenchKey { flex:none; display:block; width:8px; height:8px; margin-inline:2px; border:1.5px solid var(--text-strong); border-radius:2px; rotate:45deg; }
+.readBenchPct { font-size:16px; font-weight:700; letter-spacing:-.01em; }
+.readNote { grid-column:1 / -1; margin:0; color:var(--text-body); font-size:13px; line-height:1.5; }
+.reading > .readNote { margin-top:12px; }
+
+/* ---- Ölçü ızgarası ---- */
+.metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-top:1px solid var(--line); }
+.metric { display:flex; flex-direction:column; gap:8px; min-width:0; padding:18px 20px 20px; }
+.metric + .metric { border-left:1px solid var(--line-soft); }
+.metricLabel { color:var(--text-muted); font-size:12px; font-weight:600; }
+/* Renk yok: yön rengi çağıranın yardımcı sınıfından geliyor (modül kuralı
+   katmansız olduğu için Tailwind'in `text-up`ını ezerdi). */
+.metricValue { font-size:clamp(30px,3vw,40px); line-height:1.1; font-weight:700; letter-spacing:-.03em; white-space:nowrap; }
+.metricSlash { padding-inline:.16em; color:var(--text-muted); font-weight:400; }
+/* Oran kulvarı 5/999, `--line-soft` (ortak şerit ölçüsü). Üye satırıyla
+   aynı kutu boyunda (26) ortalı: dört hücrenin dibi aynı hatta. */
+.split { display:flex; gap:2px; height:var(--lane-h,5px); margin-block:10.5px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.split > i { display:block; flex-basis:0; min-width:3px; height:100%; }
+.split > i[data-tone="up"] { background:var(--up); }
+.split > i[data-tone="down"] { background:var(--down); }
+.split > i[data-tone="neutral-up"] { background:var(--flat); }
+.split > i[data-tone="neutral-down"] { background:var(--line-strong); }
+.split > i[data-tone="flat"] { background:transparent; }
+.member { display:flex; align-items:center; gap:10px; min-width:0; color:inherit; }
+.member:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:8px; }
+.memberText { display:flex; align-items:baseline; gap:8px; min-width:0; }
+.memberText b { flex:none; color:var(--text-strong); font-size:14px; font-weight:700; transition:color .18s var(--ease-brand); }
+.memberText small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted); font-size:12px; }
+@media(hover:hover) { .member:hover b { color:var(--primary-ink); } }
+
+@media(min-width:768px) {
+  .metrics[data-cells="3"] { grid-template-columns:repeat(3,minmax(0,1fr)); }
+}
+@media(min-width:1024px) {
+  .metrics[data-cells="4"] { grid-template-columns:repeat(4,minmax(0,1fr)); }
+}
+/* Dar ekranda dört hücre 2 × 2; üç hücrede oran tam satır, iki üye altında. */
+@media(max-width:1023px) {
+  .metrics[data-cells="4"] .metric:nth-child(3) { border-left:0; }
+  .metrics[data-cells="4"] .metric:nth-child(n+3) { border-top:1px solid var(--line-soft); }
+}
+@media(max-width:767px) {
+  .metric { padding:14px 16px 16px; }
+  .metricValue { font-size:30px; }
+  /* Telefonda üye bağlantısı 44 piksel (önce 39; 390'da ölçüldü). */
+  .member { min-height:44px; margin-block:-9px; }
+  .memberText { flex-direction:column; align-items:flex-start; gap:0; }
+  .metrics[data-cells="3"] .metric:first-child { grid-column:1 / -1; }
+  .metrics[data-cells="3"] .metric:nth-child(2) { border-left:0; }
+  .metrics[data-cells="3"] .metric:nth-child(n+2) { border-top:1px solid var(--line-soft); }
+}
+@media(max-width:639px) { .readBenchLink { min-height:44px; } }
+@media(prefers-reduced-motion:reduce) { .memberText b, .readBenchLink b { transition:none; } }

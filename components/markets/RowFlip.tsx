@@ -100,3 +100,46 @@ export function RowFlip({ scope, token, order }: {
 
   return null;
 }
+
+/**
+ * Satırın tamamı, içindeki bağlantıya götürür (10 Kasım 2026).
+ *
+ * NEDEN: bileşen tablosunda bağlantı yalnız Şirket hücresindeydi; okur
+ * yüzdeye ya da fiyata bastığında hiçbir şey olmuyordu. CSS ile germe
+ * (`a::after { inset:0 }`) burada çalışmıyor: Şirket hücresi 1280'in
+ * altında yapışkan (`position:sticky`), yani sözde öğenin kapsayıcısı satır
+ * değil o hücre; taşırmak da kabın kaydırma genişliğini büyütürdü.
+ *
+ * NASIL: gerçek bağlantı yerinde kalır (klavye, orta tık, ekran okuyucu,
+ * şirket kartı ona bağlı). Bu yaprak satırın GERİ KALANINA yapılan birincil
+ * tıklamayı o bağlantıya aynı değiştirici tuşlarla iletir; yönlendirmeyi
+ * yine `Link` yapar (dil öneki, istemci gezinmesi). Metin seçilirken ve
+ * satırdaki başka bir etkileşimli öğede hiçbir şey yapmaz. JS yoksa Şirket
+ * hücresi eskisi gibi bağlantıdır.
+ */
+export function RowTap({ scope }: { scope: string }) {
+  useEffect(() => {
+    const root = document.getElementById(scope);
+    if (!root) return;
+    const open = (event: MouseEvent) => {
+      if (event.defaultPrevented || event.button !== 0 || !(event.target instanceof Element)) return;
+      const row = event.target.closest("tbody tr[data-row]");
+      if (!row || event.target.closest("a, button, input, label")) return;
+      if (window.getSelection()?.toString()) return;
+      row.querySelector<HTMLAnchorElement>("a[href]")?.dispatchEvent(
+        new MouseEvent("click", {
+          bubbles: true,
+          cancelable: true,
+          view: window,
+          ctrlKey: event.ctrlKey,
+          metaKey: event.metaKey,
+          shiftKey: event.shiftKey,
+          altKey: event.altKey,
+        }),
+      );
+    };
+    root.addEventListener("click", open);
+    return () => root.removeEventListener("click", open);
+  }, [scope]);
+  return null;
+}
