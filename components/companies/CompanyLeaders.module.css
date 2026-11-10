@@ -27,21 +27,25 @@
 /* ---- Premium raf (26 Eylül) ----
    Sembol ve değer okunur puntoya çıktı (10 → 12 / 11), birinci şirket
    hafif bir marka yıkamasıyla öne çıkıyor ve her karonun dibinde birinciye
-   oranla bir pay çubuğu var. Üzerine gelince logo hafifçe kalkıyor. */
-.company { gap:7px; padding-bottom:14px; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), translate .22s var(--ease-brand); }
+   oranla bir pay çubuğu var.
+   10 Kasım (ortak ölçüler): hover'da karo ve logo 2 piksel KALKMIYOR
+   ("hover'da kaldırma yok" — hareket.md; 24 Eylül'ün düz yüzey kararının
+   kaçağıydı), cevap ton + kenar. Pay çubuğu 3 → 5 piksel, dolgu sitenin
+   büyüklük tonu `--bar-soft`. */
+.company { gap:7px; padding-bottom:16px; transition:border-color .25s var(--ease-brand), background-color .18s var(--ease-brand); }
 .company[data-first] { border-color:var(--primary-faint); background:var(--primary-tint); }
 .symbol { font-size:12px; font-weight:700; color:var(--text-strong); }
 .cap { font-size:12px; font-weight:600; color:var(--text-body); margin-top:-3px; }
-.logo { transition:translate .25s var(--ease-brand); }
-.share { position:absolute; left:10px; right:10px; bottom:7px; height:3px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
-.share > i { display:block; height:100%; border-radius:999px; background:color-mix(in srgb, var(--primary) 70%, transparent); transform-origin:left center; }
+.share { position:absolute; left:10px; right:10px; bottom:7px; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); overflow:hidden; }
+.share > i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); transform-origin:left center; }
 .company[data-first] .share > i { background:var(--primary); }
 @media(hover:hover) and (pointer:fine) {
- .company:hover { translate:0 -2px; background:var(--primary-tint); }
- .company:hover .logo { translate:0 -2px; }
+ .company:hover { background:var(--primary-tint); }
 }
 @media(max-width:767px) { .symbol { font-size:12px; } .cap { font-size:12px; } .share { left:7px; right:7px; bottom:5px; } }
-@media(prefers-reduced-motion:reduce) { .company, .logo { transition:none; } .company:hover, .company:hover .logo { translate:none; } }
+@media(prefers-reduced-motion:reduce) { .company { transition:none; } }
+.company:active { scale:.992; }
+@media(prefers-reduced-motion:reduce) { .company:active { scale:none; } }
 
 /* Klavye odağı da fareyle aynı kart tonunu ve sembol vurgusunu alır.
    Basılı durum yalnız tonla verilir; logo uçuşunun geometrisi değişmez. */
@@ -55,15 +59,18 @@
    CSS'te ve yüklemede bir kez. Karolar sıraya göre (`--i`) aşağıdan bir
    dalga hâlinde, pay çubuğu karo oturduktan sonra soldan açılıyor — çubuk
    kendisi `data-motion-draw` taşıdığı için kırpma kabında (`.share`).
-   Hepsi `backwards`: bitince geride dönüşüm kalmıyor. */
-.choices > li { animation:leader-in 640ms var(--ease-brand) backwards; animation-delay:calc(160ms + var(--i, 0) * 45ms); }
-.share { animation:leader-share 900ms var(--ease-brand) backwards; animation-delay:calc(420ms + var(--i, 0) * 45ms); }
-@keyframes leader-in { from { opacity:0; transform:translate3d(0,16px,0) scale(.97); } }
+   Hepsi `backwards`: bitince geride dönüşüm kalmıyor.
+   10 Kasım (hareket merdiveni): karoların "soluklaş-kay-büyü" dalgası
+   KALKTI — opaklık 0'dan başlayan açılış ve kart girişi kural dışı
+   (hareket.md: hareket veriyi çizen öğede). Çizen öğe pay çubuğu: o kalıyor,
+   süre `--draw`, kademe `--step`in yarısı (10 karo, toplam 180 ms). Önce:
+   son çubuk 1.455 ms'de bitiyordu (ölçüldü); şimdi 880. */
+.share { animation:leader-share var(--draw) var(--ease-brand) backwards; animation-delay:calc(var(--i, 0) * var(--step) / 2); }
 @keyframes leader-share { from { clip-path:inset(0 100% 0 0); } to { clip-path:inset(0); } }
-@media(prefers-reduced-motion:reduce) { .choices > li, .share { animation:none; } }
+@media(prefers-reduced-motion:reduce) { .share { animation:none; } }
 /* Kapak sekmesi değişince (`CoverTabs`) telefonda panel `display:none`dan
    dönüyor ve CSS girişi baştan oynardı; giriş yalnız yüklemede. */
-:global([data-cover-switched]) .choices > li, :global([data-cover-switched]) .share { animation:none; }
+:global([data-cover-switched]) .share { animation:none; }
 
 /* ---- Telefonda tek satır şerit (25 Ekim) ----
    Gerekçe CompanyLeaders.tsx. Kap yana kayıyor, dikeyde kırpıyor: giriş

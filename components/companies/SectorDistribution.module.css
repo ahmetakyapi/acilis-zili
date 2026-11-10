@@ -3,7 +3,8 @@
    şerit 84 + ızgara 3×32 + künye. */
 .body { display: grid; gap: 12px; margin-top: 16px; }
 @media (max-width: 767px) { .body { margin-top: 12px; gap: 10px; } }
-@container cover (max-width: 459.98px) { .axis { font-size: 11px; } }
+/* 10 Kasım: 11 → 12, metin tabanı (ortak ölçüler). */
+@container cover (max-width: 459.98px) { .axis { font-size: 12px; } }
 
 .figure { display: grid; grid-template-columns: auto minmax(0, 1fr); gap: 10px; align-items: stretch; }
 .axis { display: flex; flex-direction: column; justify-content: space-between; color: var(--text-muted); font-size: 12px; font-weight: 600; white-space: nowrap; }
@@ -26,7 +27,7 @@
 .rest .count, .rest .value { fill: var(--line); }
 .rest .ribbon { fill: var(--line-soft); }
 
-.pct { position: absolute; display: flex; align-items: center; height: 24px; color: var(--text-strong); font-size: 12px; font-weight: 650; white-space: nowrap; pointer-events: none; }
+.pct { position: absolute; display: flex; align-items: center; height: 24px; color: var(--text-strong); font-size: 12px; font-weight: 600; white-space: nowrap; pointer-events: none; }
 .pctValue[data-active] { color: var(--on-primary); }
 /* Dar panelde (telefon, 768–1099 arası) bu payın altındaki yüzde yazısı
    komşu parçaya taşar; `@container cover` CoverTabs.module.css'te. */
@@ -59,14 +60,14 @@
 .legendName { overflow: hidden; color: var(--text-strong); font-size: 13px; font-weight: 600; white-space: nowrap; text-overflow: ellipsis; }
 .legendRest .legendName { color: var(--text-muted); }
 .legendShares { color: var(--text-muted); font-size: 12px; white-space: nowrap; }
-.legendShares b { color: var(--text-strong); font-weight: 650; }
+.legendShares b { color: var(--text-strong); font-weight: 600; }
 .note { overflow: hidden; color: var(--text-muted); font-size: 12px; line-height: 1.4; white-space: nowrap; text-overflow: ellipsis; }
 @container cover (max-width: 459.98px) { .note { white-space: normal; } }
 
 /* Sahneli giriş: sekme AÇILDIĞINDA şerit bir kez soldan açılır
    (`data-enter`, CoverTabs). Yüklemede sekme gizli, giriş oynamaz. */
 @media (prefers-reduced-motion: no-preference) {
-  :global([data-enter]) .svg { animation: dist-in 520ms var(--ease-brand) 60ms backwards; }
+  :global([data-enter]) .svg { animation: dist-in var(--draw) var(--ease-brand) backwards; }
 }
 @keyframes dist-in { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0); } }
 @media (prefers-reduced-motion: reduce) { .group :is(.count, .ribbon, .value), .legendLink { transition: none; } }

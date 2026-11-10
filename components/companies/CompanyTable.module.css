@@ -1,0 +1,186 @@
+/* --------------------------------------------------------------------------
+   Şirket dizini tablosu (10 Kasım 2026, görsel tur — B grubu)
+
+   Piyasalar'daki Endeks Bileşenleri tablosuyla (components/markets/
+   MembersTable.module.css) AYNI AİLE: tek katlı satır, 40 piksellik batık
+   başlık, sayının YANINDA 5 piksellik kulvar, satır cevabı ton + sol kenarda
+   3 piksel mavi. Karar kaydı app/(app)/sirketler/page.tsx → "YOĞUNLUK".
+
+   Eski kurallar components/motion/DirectoryExperience.module.css →
+   `.tablePanel`de duruyor (ortak dosya, başka dizinler okuyor); bu tablo artık
+   o sınıfı taşımıyor, belgelenmiş davranışları (kırpma `clip`, yapışkan
+   başlık, 640–1023'te yapışkan kimlik sütunu, opak başlık zemini) burada
+   yeniden kuruyor.
+
+   ÖLÇÜM (gerçek sayfa + sahte sağlayıcı, 60 satır, iki tema; önce = canlı
+   9685ac9, aynı sahte veriyle):
+   - 1440: satır 67 → 46 piksel; sayfa boyu 5.277 → 4.024. Kap 1318 = içerik
+     1318. Sütunlar: sıra 36 · Şirket 310 · Sektör 210 · Değişim 208 (kulvar
+     esnek) · Haftalık 185 · Fiyat 78 · Piyasa Değeri 204 · Hacim 86.
+   - 1280: kap 1198 = içerik 1198. 1024: kap 974 = içerik 974 (haftalık
+     kulvar burada gizli; kulvarla 1.053'e çıkıp taşıyordu). Yapışkan başlık
+     1024+ (eski karar korunuyor).
+   - 640 / 768: içerik 880 / 972, kap 590 / 718 → kap kayar, Şirket sabit.
+   - 390: satır 69 → 52; sayfa 6.288 → 5.337; Şirket 122 + Değişim 78 +
+     Fiyat 66 + Piyasa Değeri 86 = 352 = kap; yatay taşma 0.
+   - Hacim sütunu: kotasyon hacim taşımadığında (canlıda 60 satırın 60'ı
+     "–") sütun HİÇ basılmıyor (page.tsx → `showVolume`).
+   -------------------------------------------------------------------------- */
+
+.panel.panel { overflow:clip; border-radius:var(--radius-panel); }
+
+.table { width:100%; border-collapse:separate; border-spacing:0; font-size:var(--text-base); }
+.table :is(th, td) { padding:0 12px; vertical-align:middle; white-space:nowrap; }
+/* Opak taban + batık ton: yapışkan başlığın altından kayan satırlar içinden
+   okunmasın (22 Eylül ölçümü, DirectoryExperience). Çizgi iç gölgeden:
+   yapışkan satırda kenarlık boyanmıyor. */
+.table thead th { height:40px; background:linear-gradient(var(--surface-sunken),var(--surface-sunken)),var(--panel-fixed); box-shadow:inset 0 -1px var(--line), inset 0 1px var(--line); color:var(--text-body); font-size:12px; font-weight:600; text-align:right; }
+.table tbody td { height:52px; border-top:1px solid var(--line-soft); font-weight:400; }
+.table tbody tr:first-child td { border-top:0; }
+
+/* ---- Başlık ---- */
+.table thead th.startHead { text-align:left; }
+.sortLink { position:relative; display:inline-flex; align-items:center; gap:5px; min-height:44px; margin-block:-4px; color:var(--text-body); transition:color .18s var(--ease-brand); }
+.sortIcon { flex:none; color:var(--text-muted); opacity:.7; transition:opacity .18s var(--ease-brand), color .18s var(--ease-brand); }
+.sortCell[data-active] .sortLink { color:var(--primary-ink); }
+.sortCell[data-active] .sortIcon { color:var(--primary-ink); opacity:1; }
+/* Sıralı sütunun imi: başlığın dibinde 2 piksellik mavi çizgi (seçim bir
+   etkileşim durumu; mavi burada anlam taşıyor). */
+.sortCell[data-active] .sortLink::after { content:""; position:absolute; left:0; right:0; bottom:1px; height:2px; border-radius:1px; background:var(--primary); }
+@media(hover:hover) and (pointer:fine) {
+  .sortLink:hover { color:var(--text-strong); }
+  .sortLink:hover .sortIcon { opacity:1; color:var(--text-strong); }
+  .sortCell[data-active] .sortLink:hover, .sortCell[data-active] .sortLink:hover .sortIcon { color:var(--primary-ink); }
+}
+.sortLink:active { scale:.97; }
+
+/* ---- Kimlik ---- */
+.rankHead, .rank, .sectorHead, .sector, .weekHead, .weekCell, .volumeHead, .volume { display:none; }
+.company { padding:0 !important; }
+.companyLink { display:flex; align-items:center; gap:8px; min-width:0; height:51px; padding:0 6px 0 14px; }
+.logo { flex:none; width:28px !important; height:28px !important; }
+.companyText { display:flex; flex-direction:column; min-width:0; }
+.symbol { color:var(--text-strong); font-size:14px; font-weight:700; line-height:17px; letter-spacing:-.01em; transition:color .18s var(--ease-brand); }
+.name { overflow:hidden; color:var(--text-muted); font-size:12px; line-height:15px; text-overflow:ellipsis; }
+.sector { overflow:hidden; max-width:180px; color:var(--text-body); text-overflow:ellipsis; }
+
+/* ---- Yön: sayı + kulvar ----
+   Telefonda kulvar sayının ALTINDA (dört sütun 352 piksele ancak böyle
+   sığıyor); 640'tan itibaren YANINDA, satır tek kat. */
+.pair { display:grid; justify-items:end; gap:5px; }
+.num { font-size:13px; font-weight:700; letter-spacing:-.01em; text-align:right; }
+.weekCell .num { font-weight:600; }
+/* Çift sınıf: `Lanes.module.css` → `.lane` üst boşluğu ve 96 piksel tavanı
+   taşıyor; modül sırası garanti değil. */
+.inlineLane.inlineLane { order:2; width:100%; max-width:56px; margin:0; }
+.none { color:var(--text-muted); }
+
+.price { color:var(--text-strong); font-size:13px; font-weight:700; text-align:right; }
+.cap { display:grid; justify-items:end; gap:5px; color:var(--text-body); font-size:12px; text-align:right; }
+.capBar.capBar { width:100%; max-width:56px; margin:0; }
+.volume { color:var(--text-muted); text-align:right; }
+
+/* ---- Satır cevabı: ton + sol kenarda 3 piksel mavi ---- */
+.table tbody tr { cursor:pointer; transition:background-color .18s var(--ease-brand), box-shadow .18s var(--ease-brand); }
+.table tbody tr:focus-within { background:var(--primary-tint); box-shadow:inset 3px 0 var(--primary); }
+@media(hover:hover) {
+  .table tbody tr:hover { background:var(--primary-tint); box-shadow:inset 3px 0 var(--primary); }
+  .table tbody tr:hover .symbol { color:var(--primary-ink); }
+}
+.companyLink:focus-visible { outline-offset:-3px; }
+
+/* ---- Devamı: sayaç + şerit + buton tek grupta, solda (iki uca gerilmiş
+   bant `justify-between` yasağına takılıyordu; ikizi MembersTable `.more`) */
+.more { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; padding:12px 16px; border-top:1px solid var(--line); }
+.moreCount { color:var(--text-body); font-size:12px; }
+.moreLane { flex:0 1 160px; min-width:72px; height:var(--lane-h,5px); overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.moreLane > i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); transform-origin:left center; }
+.moreButton { display:inline-flex; align-items:center; gap:7px; min-height:44px; padding-inline:16px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text-strong); font-size:var(--text-base); font-weight:600; transition:border-color .18s var(--ease-brand), background-color .18s var(--ease-brand), scale .12s var(--ease-brand); }
+.moreButton:active { scale:.97; }
+@media(hover:hover) and (pointer:fine) { .moreButton:hover { border-color:var(--primary-faint); background:var(--primary-tint); } }
+/* Telefonda karşılaştırma bağlantısı burada: panel başlığında 32 piksellik
+   hedefti ve 390'da "İlk Dördünü Karşıla…" diye kırpılıyordu (ölçüldü). */
+.compare { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin-left:auto; color:var(--primary-ink); font-size:var(--text-base); font-weight:600; }
+.compareBar { display:flex; padding:4px 16px; border-top:1px solid var(--line); }
+.note { padding:10px 16px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; line-height:1.6; }
+
+/* ---- Telefon (<640): dört sütun, sabit düzen. Otomatik düzende Şirket
+   sütunu en uzun adın doğal genişliğini alıp tabloyu 101 piksel taşırıyordu
+   (ölçüm page.tsx → "MOBİLDE SABİT DÜZEN"). ---- */
+@media(max-width:639px) {
+  .table { table-layout:fixed; }
+  .table :is(th, td) { padding-inline:6px; }
+  .table thead th.startHead { padding-left:14px; }
+  .changeHead { width:78px; }
+  .priceHead { width:66px; }
+  .capHead { width:86px; }
+  .table tr > :is(.capHead, .capCell) { padding-right:14px; }
+  .sortLink { white-space:normal; text-align:right; line-height:1.2; }
+}
+
+/* ---- 640+: sıra numarası, haftalık ve hacim gelir; kulvar sayının yanında ---- */
+@media(min-width:640px) {
+  .table { min-width:880px; }
+  .table :is(th, td) { padding-inline:14px; }
+  .table tbody td { height:46px; }
+  .rankHead, .rank { display:table-cell; width:1%; padding:0 2px 0 20px !important; color:var(--text-muted); font-size:12px; text-align:right !important; }
+  .weekHead, .weekCell, .volumeHead, .volume { display:table-cell; }
+  .company, .startHead { width:1%; }
+  .companyLink { gap:10px; height:45px; max-width:190px; padding:0 14px; }
+  .priceHead, .price, .capHead, .capCell, .weekHead, .weekCell, .volumeHead, .volume { width:1%; }
+  .num, .price { font-size:14px; }
+  .cap { font-size:13px; }
+  .pair { grid-template-columns:minmax(56px,1fr) 7.2ch; align-items:center; justify-items:stretch; gap:12px; }
+  /* Haftalık kulvar 1280'den itibaren: 1024'te kap 974 piksel ve kulvarla
+     içerik 1.053'e çıkıp son sütunu panelin dışında kırpıyordu (ölçüldü). */
+  .weekCell .pair { grid-template-columns:7.2ch; }
+  .weekCell .inlineLane { display:none; }
+  .inlineLane.inlineLane { order:0; max-width:none; }
+  .cap { grid-template-columns:minmax(8ch,auto) 56px; align-items:center; justify-content:end; gap:12px; }
+  .capBar.capBar { max-width:none; }
+  .table tr > :last-child { padding-right:20px; }
+  .more, .note { padding-inline:20px; }
+  .moreButton { min-height:40px; }
+  .sortLink { min-height:32px; }
+  .compareBar { display:none; }
+}
+/* 640–1023: tablo kabından taşar, kap kayar; KİMLİK SÜTUNU YAPIŞIR (14 Ekim
+   kararı, DirectoryExperience): sağa kaydıran okur sembolü kaybetmesin.
+   Zemin opak; hover'ın saydam tonu yapışkan hücrede opak eşdeğeriyle. */
+@media(min-width:640px) and (max-width:1023px) {
+  .company, .table thead th.startHead { position:sticky; left:0; z-index:1; }
+  .table thead th.startHead { z-index:3; }
+  .company { background:var(--premium-surface); }
+  .table tbody tr:is(:hover, :focus-within) .company { background:color-mix(in srgb, var(--primary) 5%, var(--premium-surface)); }
+}
+@media(min-width:768px) {
+  .sectorHead, .sector { display:table-cell; width:1%; }
+}
+/* ---- 1024+: tablo kaba sığar (ölçüm aşağıda), kap kaymaz, başlık belgeye
+   yapışır (`--app-bar-h`). `overflow` görünür olmadan `sticky` kaba
+   yapışırdı. ---- */
+@media(min-width:1024px) {
+  .table { min-width:0; }
+  .panel .scroller { overflow:visible; }
+  .table thead th { position:sticky; top:var(--app-bar-h, 0px); z-index:2; }
+  .sector { max-width:130px; }
+}
+/* ---- 1280+: tek katlı kimlik, geniş şeritler ---- */
+@media(min-width:1280px) {
+  .companyText { flex-direction:row; align-items:baseline; gap:9px; }
+  .name { font-size:13px; line-height:17px; }
+  .companyLink { max-width:270px; }
+  .sector { max-width:170px; }
+  .weekCell .pair { grid-template-columns:64px 7.2ch; }
+  .weekCell .inlineLane { display:block; }
+  .cap { grid-template-columns:minmax(8ch,auto) 72px; }
+}
+@media(min-width:1440px) { .companyLink { max-width:310px; } .weekCell .pair { grid-template-columns:84px 7.2ch; } .cap { grid-template-columns:minmax(8ch,auto) 96px; gap:16px; } .pair { gap:16px; } }
+
+@media(prefers-reduced-motion:reduce) {
+  .table tbody tr, .symbol, .sortLink, .sortIcon, .moreButton { transition:none; }
+  .sortLink:active, .moreButton:active { scale:none; }
+}
+@media(max-width:639px) { .pair > span:empty { display:none; } }
+@media(min-width:1440px) { .sector { max-width:210px; } }
+@media(min-width:640px) { .table tr > :is(.priceHead, .price) { padding-left:20px; } }

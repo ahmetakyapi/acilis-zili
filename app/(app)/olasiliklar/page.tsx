@@ -2,7 +2,8 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import polish from "@/components/motion/UtilityExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { PageShare } from "@/components/article/PageShare";
-import { DataStamp, EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
+import { DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
+import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import styles from "@/components/probabilities/Probabilities.module.css";
 import { OddsStrip, type StripTile } from "@/components/probabilities/OddsStrip";
 import {
@@ -79,10 +80,22 @@ export default async function ProbabilitiesPage() {
   return (
     <MotionExperience className={`${polish.page} ${styles.scope}`}>
       <ScrollProgress />
-      <PageHeader
+      {/* KADRANLAR KAPAĞIN İÇİNDE (10 Kasım, görsel tur — B grubu; sahibinin
+          sözü: "başlığın altındaki boşluk göze çarpıyor … böyle başka ekran
+          varsa onları da düzeltelim"). Kapak yalnız başlık ve tek cümle
+          taşıyordu: 1440'ta 1320×155 piksellik kartın sağ üçte ikisi boştu,
+          dört kadran altında ayrı bir sıradaydı. Şimdi kompakt bant
+          (`DirectoryHeader compact`, Bilançolar'la aynı kalıp): başlık,
+          cümle ve Paylaş tek satırda, kadranlar kapağın alt satırı. Önce →
+          sonra (ölçüldü; önce = canlı): 1440'ta kapak 156 (yalnız başlık) →
+          199 (kadranlarla), kadranların dibi 379 → 275, üç kartın tepesi
+          429 → 358; 390'da kartların tepesi 681 → 662. Yatay taşma 0. */}
+      <DirectoryHeader
+        compact
         title={p.title}
-        subtitle={p.subtitle}
+        description={p.subtitle}
         share={snapshot ? <PageShare path="/olasiliklar" title={p.title} locale={locale} t={t} compactOnMobile align="right" /> : undefined}
+        footer={snapshot ? <div className={styles.coverStrip}><OddsStrip tiles={tiles} summary={lead} locale={locale} t={t} /></div> : undefined}
       />
 
       {!snapshot ? (
@@ -91,12 +104,9 @@ export default async function ProbabilitiesPage() {
         </Panel>
       ) : (
         <>
-          <div className={styles.top}>
-            <OddsStrip tiles={tiles} summary={lead} locale={locale} t={t} />
-            <div className={styles.topNote}>
-              <p>{p.certainty}</p>
-              {stamp}
-            </div>
+          <div className={styles.topNote}>
+            <p>{p.certainty}</p>
+            {stamp}
           </div>
 
           <div className={styles.cards} data-probe="cards">

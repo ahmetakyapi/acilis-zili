@@ -5,9 +5,13 @@ import { useMotionPreference } from "@/components/motion/useMotionPreference";
 import styles from "./Themes.module.css";
 import { EASE_BRAND } from "@/lib/motion";
 
-/** Basamak başına yuvarlanma süresi ve basamaklar arası gecikme, ms. */
-const ROLL_MS = 900;
-const ROLL_STAGGER_MS = 70;
+/** Basamak başına yuvarlanma süresi ve basamaklar arası gecikme, ms.
+ *  10 Kasım (hareket merdiveni): 900 + 70'er → 700 (`--draw`) + 40'ar
+ *  (`--step`). Üç basamaklı "+%0,34"te son rakam 1.040 ms'de bitiyordu
+ *  (ölçüldü, 1 saniye tavanının üstü); şimdi 780. `element.animate` CSS
+ *  değişkenini çözmediği için sayılar burada. */
+const ROLL_MS = 700;
+const ROLL_STAGGER_MS = 40;
 const DIGITS = ["0", "1", "2", "3", "4", "5", "6", "7", "8", "9"] as const;
 
 /**

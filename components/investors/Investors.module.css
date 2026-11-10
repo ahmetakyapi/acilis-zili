@@ -56,7 +56,7 @@
 .portrait[data-size="chip"] .emblemIcon, .portrait[data-size="sm"] .emblemIcon { width:62%; height:62%; }
 .emblemInitials {
   position:absolute; top:9%; left:10%;
-  font-size:clamp(9px, 11cqi, 18px); font-weight:750; letter-spacing:-.02em; line-height:1; color:var(--primary);
+  font-size:clamp(9px, 11cqi, 18px); font-weight:700; letter-spacing:-.02em; line-height:1; color:var(--primary);
 }
 
 /* Dizinin kapağı, kart ızgarası ve hisse kartları `InvestorsIndex.module.css`te. */
@@ -69,7 +69,7 @@
 
 .badge {
   display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:999px;
-  font-size:12px; font-weight:650; letter-spacing:.01em; white-space:nowrap;
+  font-size:12px; font-weight:600; letter-spacing:.01em; white-space:nowrap;
   background:var(--brass-wash); color:var(--brass-ink);
 }
 .badge[data-tone="congress"] { background:var(--primary-wash); color:var(--primary-ink); }
@@ -80,7 +80,7 @@
 
 .txChip, .moveChip {
   display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border-radius:999px;
-  font-size:12px; font-weight:650; white-space:nowrap; background:var(--surface-sunken); color:var(--text-body);
+  font-size:12px; font-weight:600; white-space:nowrap; background:var(--surface-sunken); color:var(--text-body);
 }
 .txChip[data-tone="up"], .moveChip[data-tone="up"] { background:var(--up-wash); color:var(--up); }
 .txChip[data-tone="down"], .moveChip[data-tone="down"] { background:var(--down-wash); color:var(--down); }
@@ -98,18 +98,18 @@
 .detailCopy { min-width:0; }
 .detailNameRow { display:flex; flex-wrap:wrap; align-items:center; gap:2px 10px; }
 /* Global `.page-heading-copy h1` (sayfa başlığı ölçüsü) ezilmesin diye çift sınıf. */
-.detailCopy .detailName.detailName { margin:0; font-size:clamp(26px, 3vw, 34px); line-height:1.1; letter-spacing:-.04em; font-weight:650; color:var(--text-strong); }
+.detailCopy .detailName.detailName { margin:0; font-size:clamp(26px, 3vw, 34px); line-height:1.1; letter-spacing:-.03em; font-weight:700; color:var(--text-strong); }
 .detailShare { width:fit-content; margin-left:-4px; }
 /* Global `.page-heading-copy > p` (10 piksel pay, 14 punto) yerine kartın ritmi. */
 .detailCopy.detailCopy > .detailFirm.detailFirm { margin:2px 0 0; font-size:14px; font-weight:600; color:var(--text-body); }
-.detailCopy.detailCopy > .detailDek.detailDek { margin:4px 0 0; max-width:72ch; font-size:13.5px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
+.detailCopy.detailCopy > .detailDek.detailDek { margin:4px 0 0; max-width:72ch; font-size:14px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
 .detailFigure { display:flex; flex-direction:column; align-items:flex-end; gap:4px; text-align:right; }
 .detailFigureLabel { font-size:12px; color:var(--text-muted); }
-.detailFigure strong { font-size:clamp(30px, 3.4vw, 40px); line-height:1; letter-spacing:-.05em; font-weight:650; color:var(--text-strong); }
+.detailFigure strong { font-size:clamp(30px, 3.4vw, 40px); line-height:1; letter-spacing:-.03em; font-weight:700; color:var(--text-strong); }
 .detailFigureMeta { display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:4px 10px; font-size:13px; color:var(--text-body); }
 .detailNote {
   padding-top:12px; border-top:1px solid var(--line);
-  font-size:13.5px; line-height:1.6; color:var(--brass-ink);
+  font-size:14px; line-height:1.6; color:var(--brass-ink);
 }
 @media(max-width:767px) {
   .detailHero { padding:16px 16px 14px; border-radius:20px; }
@@ -124,7 +124,7 @@
 .strip > div { display:flex; flex:1 1 140px; flex-direction:column; gap:2px; min-width:0; padding:0 16px; box-shadow:-1px 0 0 var(--line-soft); }
 .strip > div:first-child { padding-left:0; box-shadow:none; }
 .strip dt { font-size:12px; color:var(--text-muted); }
-.strip dd { font-size:15px; font-weight:650; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
+.strip dd { font-size:15px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
 .strip small { font-size:12px; color:var(--text-muted); }
 @media(max-width:639px) {
   .strip { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:10px 14px; }
@@ -145,47 +145,61 @@
 .topCard {
   display:flex; flex:1; flex-direction:column; gap:10px; min-width:0; padding:12px;
   border-radius:16px; background:var(--surface-sunken);
-  transition:background-color .25s var(--ease-brand), transform .3s var(--ease-brand);
+  transition:background-color .18s var(--ease-brand), transform .2s var(--ease-brand);
 }
 @media(hover:hover) and (pointer:fine) {
   a.topCard:hover { background:var(--primary-tint); }
   a.topCard:hover .topId > b { color:var(--primary-ink); }
 }
-a.topCard:active { transform:scale(.99); }
+a.topCard:active { transform:scale(.992); }
 a.topCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .topHead { display:grid; grid-template-columns:auto minmax(0,1fr); align-items:center; gap:9px; }
 .topId { display:flex; min-width:0; flex-direction:column; line-height:1.2; }
 .topId > b { font-size:14px; font-weight:700; color:var(--text-strong); transition:color .2s var(--ease-brand); }
 .topId > small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
 .topFigure { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 8px; }
-.topFigure > strong { font-size:24px; font-weight:650; line-height:1; letter-spacing:-.04em; color:var(--text-strong); }
-.topFigure > small { font-size:12.5px; color:var(--text-body); }
+.topFigure > strong { font-size:24px; font-weight:700; line-height:1; letter-spacing:-.03em; color:var(--text-strong); }
+.topFigure > small { font-size:13px; color:var(--text-body); }
 .lane { display:block; height:var(--lane-h, 5px); overflow:hidden; border-radius:999px; background:var(--line-soft); }
 .lane > i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); transform-origin:left center; }
 .topMove { display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; }
-.topRest { padding:0 20px 14px; font-size:12.5px; color:var(--text-muted); }
+.topRest { padding:0 20px 14px; font-size:13px; color:var(--text-muted); }
 @media(max-width:639px) { .topRest { padding:0 16px 12px; } }
 
 /* ---- Bu çeyrek ne yaptı ------------------------------------------------- */
 
 /* Dört grup dört kart (25 Ekim): ton farkıyla ayrılıyor, hairline ızgara
    değil. Başlıktaki sayı yön renginde, grubun adı yanında. */
+/* İKİ TARAF, DÖRT KART (10 Kasım). Dört grup dört eşit sütundu ve en uzun
+   grup hepsini geriyordu: Buffett'ta "Yeni" ve "Tamamen Sattı" birer satır
+   taşırken 366 piksellik batık kutuların ~255'i boştu (1440, canlı). Şimdi
+   sütun TARAF: solda alış (Yeni, Artırdı), sağda satış (Azalttı, Tamamen
+   Sattı), gruplar üst üste; geniş ekranda satırlar grup içinde iki sütun.
+   Kısa grup kendi boyunda kalır, tarafın son kartı dibe uzar: iki sütun aynı
+   hatta biter. Ölçüm FundDetail.tsx → MovesPanel. */
 .moves { display:grid; grid-template-columns:minmax(0,1fr); gap:10px; padding:14px 16px 16px; border-top:1px solid var(--line); }
 @media(min-width:640px) { .moves { grid-template-columns:repeat(2, minmax(0,1fr)); } }
-@media(min-width:1100px) { .moves { grid-template-columns:repeat(4, minmax(0,1fr)); gap:12px; padding:16px 20px 18px; } }
+@media(min-width:1100px) { .moves { gap:12px; padding:16px 20px 18px; } }
 @media(max-width:639px) { .moves { padding:12px; } }
+.moveSide { display:flex; flex-direction:column; gap:10px; min-width:0; }
+@media(min-width:1100px) { .moveSide { gap:12px; } }
+.moveSide > :last-child { flex:1; }
 .moveGroup { min-width:0; padding:12px 6px 8px; border-radius:16px; background:var(--surface-sunken); }
+@media(min-width:1100px) { .moveList.moveList { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:2px 8px; } .moveMore { grid-column:1 / -1; } }
 .moveGroupTitle {
   display:flex; align-items:baseline; justify-content:space-between; gap:8px; margin:0 8px 6px;
-  font-size:13px; font-weight:650; color:var(--text-strong);
+  font-size:13px; font-weight:700; color:var(--text-strong);
 }
-.moveGroupTitle b { font-size:22px; font-weight:700; letter-spacing:-.03em; color:var(--up); }
+/* Sayı YÖN renginde: başlık (h3) degrade maskeli olduğu için sayı mavi
+   basılıyordu (veri panelinde mavi sayı; canlıda ölçüldü). Dolgu rengi
+   maskeden çıkarılıyor. */
+.moveGroupTitle b { font-size:22px; font-weight:700; letter-spacing:-.03em; color:var(--up); -webkit-text-fill-color:currentColor; }
 .moveGroup[data-tone="down"] .moveGroupTitle b { color:var(--down); }
-.moveEmpty { margin:0 8px; font-size:12.5px; color:var(--text-muted); }
+.moveEmpty { margin:0 8px; font-size:13px; color:var(--text-muted); }
 .moveList { display:flex; flex-direction:column; gap:2px; }
 .moveRow {
   display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:10px;
-  padding:8px; border-radius:12px; transition:background .2s var(--ease-brand), transform .25s var(--ease-brand);
+  padding:8px; border-radius:12px; transition:background .18s var(--ease-brand);
 }
 .moveId { display:flex; min-width:0; flex-direction:column; }
 .moveFigures { display:flex; flex-direction:column; align-items:flex-end; gap:1px; }
@@ -220,7 +234,7 @@ a.topCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:2p
    piksel solardı. Çizgi bir üst kutuda, maske yalnızca kayan kapta. */
 .tableRule { border-top:1px solid var(--line); }
 .tableRule > .tableScroll { border-top:0; }
-.table { width:100%; min-width:640px; border-collapse:collapse; font-size:13.5px; }
+.table { width:100%; min-width:640px; border-collapse:collapse; font-size:14px; }
 .table th, .table td { padding:11px 12px; border-top:1px solid var(--line-soft); text-align:left; vertical-align:middle; }
 .table thead th { border-top:0; background:var(--surface-sunken); font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
 .table tbody tr { transition:background .2s var(--ease-brand); }
@@ -232,25 +246,27 @@ a.topCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:2p
 .table tbody tr:hover .companyCell { background:color-mix(in oklab, var(--primary-tint) 100%, var(--premium-surface)); }
 .company { display:flex; align-items:center; gap:10px; min-width:0; max-width:320px; }
 .companyText { display:flex; min-width:0; flex-direction:column; }
-.companyText b { font-size:13.5px; font-weight:700; color:var(--text-strong); }
+.companyText b { font-size:14px; font-weight:700; color:var(--text-strong); }
 .companyText small { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
 a.company:hover b { color:var(--primary-ink); }
 .cellNote { display:block; margin-top:2px; font-size:12px; color:var(--text-muted); white-space:nowrap; }
 .weightCell { display:flex; flex-direction:column; gap:5px; }
-.weightTrack { display:block; height:4px; }
-.weightTrack i { display:block; height:100%; border-radius:2px; background:var(--primary); }
+/* 4/2 doygun mavi → 5/999 `--bar-soft` (10 Kasım): büyüklük dolgusu sitenin
+   tek büyüklük tonu; doygun etkileşim mavisi veri çiziminde yok (25 Ekim). */
+.weightTrack { display:block; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
+.weightTrack i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); }
 /* Açılır kalan bir `<details>` idi, artık düğme (gerekçe `PositionsMore`);
    görünüşü aynı. Kalanın tablosu başlık satırı taşımıyor — sütunlar hemen
    üstteki tablonunkiyle aynı. */
 .tableMore { border-top:1px solid var(--line); }
 .tableMoreToggle {
   display:flex; align-items:center; width:100%; min-height:48px; padding:0 20px; cursor:pointer; text-align:left;
-  font-size:13px; font-weight:650; color:var(--primary-ink);
+  font-size:13px; font-weight:600; color:var(--primary-ink);
 }
 .tableMoreToggle::after { content:"+"; margin-left:8px; font-weight:700; }
 .tableMoreToggle[aria-expanded="true"]::after { content:"\2212"; }
 .tradeTable { min-width:900px; }
-.detailCell { min-width:240px; max-width:360px; font-size:12.5px; line-height:1.5; color:var(--text-body); }
+.detailCell { min-width:240px; max-width:360px; font-size:13px; line-height:1.5; color:var(--text-body); }
 @media(max-width:767px) { .company { max-width:200px; } }
 
 /* TELEFONDA POZİSYON TABLOSU KAYMIYOR, KATLANIYOR (29 Eylül, sahibinin
@@ -277,7 +293,7 @@ a.company:hover b { color:var(--primary-ink); }
   .positions .colRank { grid-area:rank; width:auto; }
   .positions .companyCell { grid-area:company; position:static; min-width:0; background:none; }
   .positions .company { max-width:none; }
-  .positions .colValue { grid-area:value; font-weight:650; color:var(--text-strong); }
+  .positions .colValue { grid-area:value; font-weight:600; color:var(--text-strong); }
   .positions .colShares { display:none; }
   .positions .colWeight { grid-area:weight; width:auto; min-width:0; }
   .positions .colChange { grid-area:change; }
@@ -291,7 +307,7 @@ a.company:hover b { color:var(--primary-ink); }
      adın uzantısı gibi okunuyor. */
   .positions .weightCell { flex-direction:row-reverse; align-items:center; gap:10px; }
   .positions .weightCell > :global(.numeral) { min-width:44px; font-size:12px; font-weight:600; color:var(--text-body); text-align:right; }
-  .positions .weightTrack { flex:1; border-radius:2px; background:var(--surface-sunken); }
+  .positions .weightTrack { flex:1; }
   /* Başlık satırı yalnızca iki ad taşıyor: şirket ve değer. Ağırlık ve
      değişimin başlığı yok, çünkü çubuk ve çip kendini söylüyor. */
   .positions thead tr { grid-template-areas:"rank company value"; padding-block:9px; background:var(--surface-sunken); border-top:0; }
@@ -305,10 +321,12 @@ a.company:hover b { color:var(--primary-ink); }
 .history { padding:18px 20px 16px; border-top:1px solid var(--line); }
 .historyBars { display:grid; grid-template-columns:repeat(var(--count, 8), minmax(0,1fr)); gap:10px; align-items:end; }
 .historyBars li { display:flex; flex-direction:column; align-items:center; gap:6px; min-width:0; text-align:center; }
-.historyValue { font-size:12px; font-weight:650; color:var(--text-body); white-space:nowrap; }
+.historyValue { font-size:12px; font-weight:600; color:var(--text-body); white-space:nowrap; }
 .historyTrack { display:flex; align-items:flex-end; justify-content:center; width:100%; height:140px; border-bottom:1px solid var(--line); }
 .historyTrack i {
-  display:block; width:min(44px, 72%); height:var(--share); border-radius:6px 6px 0 0; transform-origin:center bottom;
+  /* 44 → 20 piksel (10 Kasım): sekiz dolu blok "tablo programı" gibi
+     duruyordu (arayuz.md → grafik dili ince); sütun ince, değer üstünde. */
+  display:block; width:min(20px, 40%); height:var(--share); border-radius:5px 5px 0 0; transform-origin:center bottom;
   background:color-mix(in oklab, var(--bar-soft) 50%, transparent);
 }
 /* Güncel çeyrek koyu ama yine büyüklük tonu (doygun etkileşim mavisi veri
@@ -340,9 +358,9 @@ a.company:hover b { color:var(--primary-ink); }
   .historyLabel { grid-area:label; }
   .historyBars small { grid-area:small; }
   .historyValue { grid-area:value; min-width:4.5rem; text-align:right; }
-  .historyTrack { grid-area:track; height:10px; justify-content:flex-start; align-items:center; border-bottom:0; border-radius:5px; background:var(--surface-sunken); }
+  .historyTrack { grid-area:track; height:var(--lane-h,5px); justify-content:flex-start; align-items:center; border-bottom:0; border-radius:999px; background:var(--line-soft); }
   .historyTrack i[data-axis="y"] { display:none; }
-  .historyTrack i[data-axis="x"] { display:block; width:var(--share); height:100%; border-radius:5px; transform-origin:left center; }
+  .historyTrack i[data-axis="x"] { display:block; width:var(--share); height:100%; border-radius:999px; transform-origin:left center; }
 }
 
 /* ---- Kongre: hisse bazında ---------------------------------------------- */
@@ -351,11 +369,11 @@ a.company:hover b { color:var(--primary-ink); }
 @media(min-width:900px) { .tickerRows { grid-template-columns:repeat(2, minmax(0,1fr)); gap:2px 20px; } }
 .tickerRow {
   display:grid; grid-template-columns:auto minmax(0,1fr) minmax(110px, 38%) auto; align-items:center; gap:12px;
-  padding:9px 8px; border-radius:12px; transition:background .2s var(--ease-brand), transform .25s var(--ease-brand);
+  padding:9px 8px; border-radius:12px; transition:background .18s var(--ease-brand);
 }
 .tickerBars { display:flex; flex-direction:column; gap:4px; min-width:0; }
 .tickerBars > span { position:relative; display:flex; align-items:center; gap:8px; height:16px; }
-.tickerBars i { display:block; height:6px; min-width:0; border-radius:3px; background:var(--up); transform-origin:left center; }
+.tickerBars i { display:block; height:var(--lane-h,5px); min-width:0; border-radius:999px; background:var(--up); transform-origin:left center; }
 .tickerBars [data-tone="down"] i { background:var(--down); }
 .tickerBars b { flex-shrink:0; font-size:12px; font-weight:600; color:var(--text-body); white-space:nowrap; }
 .tickerLast { font-size:12px; color:var(--text-muted); white-space:nowrap; }
@@ -397,10 +415,10 @@ a.company:hover b { color:var(--primary-ink); }
   .holderValue { display:none; }
 }
 .holderTrades { padding:12px 18px 12px; border-top:1px solid var(--line); }
-.holderTradesTitle { margin-bottom:6px; font-size:12.5px; font-weight:650; color:var(--text-strong); }
+.holderTradesTitle { margin-bottom:6px; font-size:13px; font-weight:700; color:var(--text-strong); }
 .holderTrade {
   display:grid; grid-template-columns:auto auto auto minmax(0,1fr); align-items:center; gap:10px;
-  padding:6px 0; font-size:12.5px; color:var(--text-body);
+  padding:6px 0; font-size:13px; color:var(--text-body);
 }
 .holderTrade > :last-child { text-align:right; font-weight:600; white-space:nowrap; }
 .holderTradeWho { display:flex; min-width:0; flex-direction:column; gap:1px; line-height:1.25; }
@@ -426,20 +444,27 @@ a.company:hover b { color:var(--primary-ink); }
 .arkFunds { display:flex; flex-wrap:wrap; gap:4px; margin-top:4px; }
 .arkFunds i {
   padding:1px 6px; border-radius:999px; background:var(--surface-sunken);
-  font-size:12px; font-style:normal; font-weight:650; letter-spacing:.02em; color:var(--text-muted);
+  font-size:12px; font-style:normal; font-weight:600; letter-spacing:.02em; color:var(--text-muted);
 }
 .arkFunds i[data-tone="up"] { background:var(--up-wash); color:var(--up); }
 .arkFunds i[data-tone="down"] { background:var(--down-wash); color:var(--down); }
 .arkSides .moveFigures b { color:var(--text-strong); }
 .arkEarlier { padding:14px 18px 6px; border-top:1px solid var(--line); }
-.arkEarlierTitle { margin-bottom:6px; font-size:13px; font-weight:650; color:var(--text-strong); }
+.arkEarlierTitle { margin-bottom:6px; font-size:13px; font-weight:700; color:var(--text-strong); }
 .arkEarlierRow {
   display:grid; grid-template-columns:minmax(88px,auto) minmax(110px,auto) minmax(0,1fr); align-items:baseline; gap:4px 16px;
   padding:8px 0; border-top:1px solid var(--line-soft); font-size:13px; color:var(--text-body);
 }
 .arkEarlierRow:first-child { border-top:0; }
 .arkEarlierTickers { display:flex; flex-wrap:wrap; gap:4px 12px; min-width:0; }
-.arkEarlierTickers b { font-weight:650; }
+.arkEarlierTickers b { font-weight:600; }
 .arkEarlierTickers b[data-tone="up"] { color:var(--up); }
 .arkEarlierTickers b[data-tone="down"] { color:var(--down); }
 @media(max-width:639px) { .arkEarlierRow { grid-template-columns:minmax(0,1fr) auto; } .arkEarlierTickers { grid-column:1 / -1; } }
+
+/* Telefonda dokunma hedefleri 44 (10 Kasım; önce pozisyon satırı 39, SEC
+   bağlantısı 23 piksel — 390'da ölçüldü). Eksi dış boşluk satırı uzatmaz. */
+@media(max-width:767px) {
+  a.company { min-height:44px; }
+  .stripLink { min-height:44px; margin-block:-11px; }
+}

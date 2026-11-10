@@ -361,15 +361,34 @@ function ThemeGallery({ board, locale, t }: { board: ThemeBoard; locale: Locale;
 
               <div className={styles.cardBody}>
                 <div className={styles.cardFigure}>
+                  {/* UÇ TEMADA ETİKETİN YERİNE ÇİP (10 Kasım). "Açılış Öncesi
+                      Medyanı" + "Açılış Öncesi En Zayıf" yan yana 270 piksel
+                      tutuyordu: dar kartta (4/12, içerik 380) rakam bloğu
+                      logo ızgarasını alt satıra itiyor, kart 60 piksel
+                      uzuyor ve aynı satırdaki geniş komşunun (canlıda Kilo
+                      İlaçları) açıklamasıyla rakamı arasında ölü boşluk
+                      açılıyordu (1440: 81 piksel; öteki kartlarda 12–27.
+                      Sonra en çok 29). Çip dönemi zaten
+                      söylüyor ("Açılış Öncesi En Zayıf"); rakamın medyan
+                      olduğu öteki kartlardan ve erişilebilir addan
+                      okunuyor. */}
                   <span className={styles.figureLabel}>
-                    <span>
-                      {card.basis === "lastClose"
-                        ? t.themes.medianClose
-                        : pre
-                          ? t.themes.medianPre
-                          : t.themes.median}
-                    </span>
-                    {flag && <span className={styles.flag}>{flag}</span>}
+                    {flag ? (
+                      <>
+                        <span className="sr-only">
+                          {card.basis === "lastClose" ? t.themes.medianClose : pre ? t.themes.medianPre : t.themes.median}
+                        </span>
+                        <span className={styles.flag}>{flag}</span>
+                      </>
+                    ) : (
+                      <span>
+                        {card.basis === "lastClose"
+                          ? t.themes.medianClose
+                          : pre
+                            ? t.themes.medianPre
+                            : t.themes.median}
+                      </span>
+                    )}
                   </span>
                   <span
                     className={cn(

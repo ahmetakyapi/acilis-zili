@@ -34,7 +34,6 @@
 
 /* ---------------------------------------------------------------- TEPE
    Şerit + altında tek satırlık künye (olasılık ≠ kesinlik, damga). */
-.top { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
 .topNote { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 16px; font-size: var(--text-tiny); line-height: 1.5; color: var(--text-muted); }
 .topNote > p { margin: 0; }
 
@@ -55,16 +54,16 @@
   justify-items: center; align-content: start; gap: 4px; padding: 12px 10px 12px;
   border: 1px solid var(--line-soft); border-radius: var(--radius-panel, 18px);
   background: var(--premium-surface); color: inherit; text-decoration: none; text-align: center;
-  transition: border-color 200ms var(--ease-brand), background-color 200ms var(--ease-brand);
+  transition: border-color 250ms var(--ease-brand), background-color 180ms var(--ease-brand);
 }
 .tile:hover { border-color: var(--primary-faint); background: color-mix(in srgb, var(--premium-surface) 94%, var(--primary)); }
 .tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
-.tileLabel { grid-area: label; min-width: 0; font-size: var(--text-small); font-weight: 650; line-height: 1.35; color: var(--text-body); }
-.tileWord { grid-area: word; display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: var(--text-read); font-weight: 750; line-height: 1.25; color: var(--text-strong); }
+.tileLabel { grid-area: label; min-width: 0; font-size: var(--text-small); font-weight: 600; line-height: 1.35; color: var(--text-body); }
+.tileWord { grid-area: word; display: inline-flex; align-items: center; gap: 6px; min-width: 0; font-size: var(--text-read); font-weight: 700; line-height: 1.25; color: var(--text-strong); }
 .tileWord > i { display: inline-block; width: 9px; height: 9px; border-radius: 2px; background: var(--tone); flex: none; }
 .tileMeta { grid-area: meta; display: flex; flex-wrap: wrap; justify-content: center; align-items: center; gap: 4px 6px; min-height: 22px; }
 /* 24 saat rozeti: ton farkı (çökük zemin), metin mürekkepte; ok işareti söyler. */
-.tileDelta { display: inline-flex; align-items: center; gap: 4px; min-height: 22px; padding: 2px 8px; border-radius: 999px; background: var(--surface-sunken); font-size: var(--text-tiny); font-weight: 650; line-height: 1.3; color: var(--text-strong); }
+.tileDelta { display: inline-flex; align-items: center; gap: 4px; min-height: 22px; padding: 2px 8px; border-radius: 999px; background: var(--surface-sunken); font-size: var(--text-tiny); font-weight: 600; line-height: 1.3; color: var(--text-strong); }
 .tileDelta[data-flat] { font-weight: 600; color: var(--text-body); }
 .tileThin { padding: 2px 8px; border-radius: 999px; background: var(--brass-wash); font-size: var(--text-tiny); font-weight: 600; color: var(--brass-ink); }
 @media (min-width: 900px) {
@@ -83,7 +82,7 @@
 .gaugeSvg { display: block; width: 100%; height: auto; aspect-ratio: 100 / 59; overflow: visible; }
 .gaugeFigure {
   position: absolute; left: 50%; bottom: -2px; transform: translateX(-50%);
-  font-size: 28px; line-height: 1; font-weight: 800; letter-spacing: -.035em; color: var(--text-strong); white-space: nowrap;
+  font-size: 28px; line-height: 1; font-weight: 700; letter-spacing: -.03em; color: var(--text-strong); white-space: nowrap;
 }
 .gaugeFigure[data-resolved] { bottom: 4px; font-size: var(--text-small); letter-spacing: 0; }
 @media (min-width: 900px) { .gauge { width: 136px; } .gaugeFigure { font-size: 30px; } }
@@ -100,8 +99,11 @@
 @keyframes odds-sweep { from { stroke-dashoffset: 100; } }
 @keyframes odds-fill { from { transform: scaleX(0); } }
 @media (prefers-reduced-motion: no-preference) {
-  .gaugeSweep { animation: odds-sweep 1000ms var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 90ms + 120ms); }
-  .stackTrack { transform-origin: left center; animation: odds-fill 900ms var(--ease-brand) both; animation-delay: 200ms; }
+  /* 10 Kasım (hareket merdiveni): yay 1.000 ms + 90'ar ms kademe (son kadran
+     1.390 ms'de bitiyordu) → `--draw` + `--step` (820 ms); çubuk 900 + 200
+     → `--draw` + `--mark` (900 ms). */
+  .gaugeSweep { animation: odds-sweep var(--draw) var(--ease-brand) both; animation-delay: calc(var(--i, 0) * var(--step)); }
+  .stackTrack { transform-origin: left center; animation: odds-fill var(--draw) var(--ease-brand) both; animation-delay: var(--mark); }
 }
 .strip li { min-width: 0; }
 
@@ -122,7 +124,7 @@
 .facts { display: flex; flex-wrap: wrap; gap: 4px 20px; margin: 0; }
 .facts > div { display: flex; align-items: baseline; gap: 6px; }
 .facts dt { font-size: var(--text-tiny); color: var(--text-muted); }
-.facts dd { margin: 0; font-size: var(--text-small); font-weight: 650; color: var(--text-strong); }
+.facts dd { margin: 0; font-size: var(--text-small); font-weight: 600; color: var(--text-strong); }
 div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; }
 
 /* ---------------------------------------------------------- YIĞIN ÇUBUK
@@ -135,22 +137,22 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 .stackMidLabel { position: absolute; bottom: calc(100% + 4px); left: 50%; transform: translateX(-50%); font-size: var(--text-nano); line-height: 1.2; color: var(--text-muted); white-space: nowrap; }
 .legend { display: flex; flex-wrap: wrap; gap: 4px 16px; margin: 0; padding: 0; list-style: none; font-size: var(--text-tiny); color: var(--text-body); }
 .legend li { display: inline-flex; align-items: center; gap: 6px; }
-.legend li[data-lead] { color: var(--text-strong); font-weight: 650; }
+.legend li[data-lead] { color: var(--text-strong); font-weight: 600; }
 /* Çoğunluk çentiğinin künyesi: çubuktaki dikey çizginin küçük kopyası. */
 .legend li.legendMajority i { width: 2px; height: 12px; border-radius: 1px; background: var(--text-strong); opacity: .6; }
 .legend i,
 .lineEnds i,
 .lineRead i,
 .chamberShares i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--tone); flex: none; }
-.legend b { font-weight: 650; color: var(--text-strong); }
+.legend b { font-weight: 600; color: var(--text-strong); }
 
 /* Fed çipleri: tek satır, çubuğun sırasıyla. Taşarsa satır atlar (kesmez);
    1440'ta beş çip 390 piksellik gövdeye tek satır sığıyor (ölçüldü). */
 .chips { display: flex; flex-wrap: wrap; gap: 3px; margin: 0; padding: 0; list-style: none; }
 .chips li { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; padding: 2px 7px 2px 6px; border-radius: 999px; background: var(--surface-sunken); font-size: var(--text-tiny); line-height: 1.2; color: var(--text-muted); white-space: nowrap; }
-.chips li > b { font-weight: 650; color: var(--text-body); }
-.chips li[data-lead] { background: color-mix(in srgb, var(--tone) 16%, transparent); color: var(--text-strong); font-weight: 650; }
-.chips li[data-lead] > b { font-weight: 800; color: var(--text-strong); }
+.chips li > b { font-weight: 600; color: var(--text-body); }
+.chips li[data-lead] { background: color-mix(in srgb, var(--tone) 16%, transparent); color: var(--text-strong); font-weight: 600; }
+.chips li[data-lead] > b { font-weight: 700; color: var(--text-strong); }
 .chips i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--tone); flex: none; }
 
 /* Meclis satırı: ad ve iki pay aynı hatta, altında çubuk ve küçük çizgi. */
@@ -160,10 +162,10 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 .chamberHead h3 { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-strong); }
 .chamberShares { display: inline-flex; align-items: baseline; gap: 14px; }
 .chamberShares > span { display: inline-flex; align-items: center; gap: 5px; }
-.chamberShares b { font-size: var(--text-lead); line-height: 1; font-weight: 800; letter-spacing: -.02em; color: var(--text-strong); }
+.chamberShares b { font-size: var(--text-lead); line-height: 1; font-weight: 700; letter-spacing: -.02em; color: var(--text-strong); }
 .chamberShares [data-trail] b { font-weight: 600; color: var(--text-body); }
 .result { display: flex; flex-direction: column; gap: 4px; padding: 12px 14px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
-.result b { font-size: var(--text-lead); font-weight: 800; color: var(--text-strong); }
+.result b { font-size: var(--text-lead); font-weight: 700; color: var(--text-strong); }
 .result span { font-size: var(--text-tiny); color: var(--text-muted); }
 
 /* ------------------------------------------------------------ ÇİZGİ
@@ -183,7 +185,7 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 .lineEnds { position: relative; height: var(--plot-h); font-size: var(--text-tiny); }
 .lineEnds span { position: absolute; left: 0; display: inline-flex; align-items: center; gap: 5px; transform: translateY(-50%); font-size: var(--text-tiny); color: var(--text-body); white-space: nowrap; }
 .lineEnds b,
-.lineRead b { font-weight: 650; color: var(--text-strong); }
+.lineRead b { font-weight: 600; color: var(--text-strong); }
 .lineRead { display: flex; flex-wrap: nowrap; align-items: center; gap: 4px 12px; height: 18px; overflow: hidden; font-size: var(--text-tiny); line-height: 18px; color: var(--text-muted); white-space: nowrap; }
 .lineRead > span { display: inline-flex; align-items: center; gap: 5px; }
 .lineAxis { display: flex; flex: 1; justify-content: space-between; font-size: var(--text-nano); color: var(--text-muted); }
@@ -207,7 +209,7 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 .historyNow { position: absolute; top: -4px; bottom: -4px; width: 2px; margin-left: -1px; border-radius: 1px; background: var(--text-strong); opacity: .55; }
 .historyNext { position: absolute; top: 0; bottom: 0; border: 1.5px dashed var(--tone); border-radius: 4px; background: color-mix(in srgb, var(--tone) 22%, transparent); }
 .historyNextLabel { position: absolute; right: 0; bottom: calc(100% + 3px); font-size: var(--text-tiny); line-height: 1.2; color: var(--text-muted); white-space: nowrap; }
-.historyNextLabel b { font-weight: 750; color: var(--text-strong); }
+.historyNextLabel b { font-weight: 700; color: var(--text-strong); }
 .historyAxis { position: relative; height: 16px; font-size: var(--text-nano); color: var(--text-muted); }
 .historyAxis > span { position: absolute; top: 0; transform: translateX(-50%); }
 .historyAxis > span:first-child { transform: none; }
@@ -224,7 +226,7 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 .pathBand { fill: color-mix(in srgb, var(--fed-hold) 16%, transparent); }
 .pathKey { display: inline-flex; align-items: center; gap: 6px; }
 .pathKey > i { display: inline-block; width: 14px; height: 8px; border-radius: 2px; background: color-mix(in srgb, var(--fed-hold) 30%, transparent); }
-.pathKey > b { font-weight: 650; color: var(--text-strong); }
+.pathKey > b { font-weight: 600; color: var(--text-strong); }
 .pathGrid { position: relative; display: grid; grid-template-columns: repeat(var(--cols), minmax(0, 1fr)); margin: 0; padding: 0; list-style: none; }
 .pathCol { position: relative; display: flex; flex-direction: column; align-items: center; gap: 6px; min-width: 0; padding: 0 2px; border-radius: var(--radius-sm); outline: none; }
 .pathCol:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
@@ -240,7 +242,7 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 .pathUnit { color: var(--text-muted); }
 .pathStep[data-empty] { visibility: hidden; }
 .pathDate { font-size: var(--text-tiny); color: var(--text-body); white-space: nowrap; }
-.pathCol[data-today] .pathDate { font-weight: 650; color: var(--text-strong); }
+.pathCol[data-today] .pathDate { font-weight: 600; color: var(--text-strong); }
 .pathTip { position: absolute; bottom: calc(100% - var(--plot-h) + 8px); z-index: 2; display: none; min-width: 168px; padding: 10px 12px; border-radius: var(--radius-md); background: var(--overlay-surface); box-shadow: var(--shadow-floating); font-size: var(--text-tiny); color: var(--text-body); }
 .pathCol:nth-child(-n + 4) .pathTip { left: 0; }
 .pathCol:nth-child(n + 5) .pathTip { right: 0; }
@@ -248,8 +250,8 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 .pathCol:focus-visible .pathTip { display: block; }
 .pathTip dl { display: grid; grid-template-columns: auto auto; gap: 3px 12px; margin: 0; }
 .pathTip dt { color: var(--text-muted); }
-.pathTip dd { margin: 0; text-align: right; font-weight: 650; color: var(--text-strong); }
-.pathTip p { margin: 0 0 6px; font-weight: 650; color: var(--text-strong); }
+.pathTip dd { margin: 0; text-align: right; font-weight: 600; color: var(--text-strong); }
+.pathTip p { margin: 0 0 6px; font-weight: 600; color: var(--text-strong); }
 @media (max-width: 479px) {
   .pathUnit { display: none; }
   .pathStep { padding: 2px 5px; }
@@ -263,7 +265,7 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 /* Eşik etiketinde tablo rakamı YOK: dar virgül/nokta tablo genişliğine
    açılıp "%0 , 1" gibi okunuyordu (ölçüldü). */
 .ladder li > span:first-child { color: var(--text-body); white-space: nowrap; }
-.ladder li > b { text-align: right; font-weight: 650; color: var(--text-strong); }
+.ladder li > b { text-align: right; font-weight: 600; color: var(--text-strong); }
 .lane { position: relative; height: 6px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
 .lane > span { position: absolute; inset-block: 0; left: 0; border-radius: 999px; background: var(--odds-yes); }
 .ladderMid { position: absolute; top: -3px; bottom: -3px; left: 50%; width: 1px; background: var(--line-strong); }
@@ -280,7 +282,7 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 /* Renk kartı biraz geniş: beş çip 1440'ta tek satıra sığsın (kart 224 → ölçüm commit'te). */
 @media (min-width: 1024px) { .explain { grid-template-columns: repeat(3, minmax(0, 1fr)) minmax(0, 1.3fr); } }
 .explain > li { display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 4px; padding: 12px 14px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
-.explain h3 { margin: 4px 0 0; font-size: var(--text-read); font-weight: 750; line-height: 1.3; color: var(--text-strong); }
+.explain h3 { margin: 4px 0 0; font-size: var(--text-read); font-weight: 700; line-height: 1.3; color: var(--text-strong); }
 .explain p { margin: 0; font-size: var(--text-tiny); line-height: 1.5; color: var(--text-body); }
 .explainIcon { display: inline-grid; place-items: center; width: 24px; height: 24px; border-radius: 8px; background: var(--primary-wash); color: var(--primary-ink); }
 /* Telefonda (640 altı) kartlar alt alta: ikon başlığın yanına çıkar, her
@@ -293,14 +295,14 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 }
 /* Fiyat → olasılık: kontrat fiyatı, ok, kulvarda %63 dolu şerit, yüzde. */
 .priceViz { display: flex; align-items: center; gap: 6px; min-height: 26px; font-size: var(--text-small); color: var(--text-muted); }
-.priceViz > b { font-weight: 750; color: var(--text-strong); white-space: nowrap; }
+.priceViz > b { font-weight: 700; color: var(--text-strong); white-space: nowrap; }
 .priceLane { position: relative; flex: 1; min-width: 40px; height: var(--lane-h, 5px); border-radius: 999px; background: var(--line-soft); overflow: hidden; }
 .priceLane > span { position: absolute; inset-block: 0; left: 0; width: 63%; border-radius: 999px; background: var(--odds-yes); }
 .colorChips { display: flex; flex-wrap: wrap; gap: 3px; margin: 2px 0 0; padding: 0; list-style: none; }
 .colorChips li { display: inline-flex; align-items: center; gap: 4px; padding: 1px 5px 1px 4px; border-radius: 999px; background: var(--premium-surface); font-size: var(--text-nano); line-height: 1.5; color: var(--text-body); }
 .colorChips i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--tone); flex: none; }
 /* Katlama: kutu panelin başında, düğme başlıkta, içerik kartların altında. */
-.foldToggle { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: var(--text-tiny); font-weight: 650; color: var(--primary-ink); cursor: pointer; }
+.foldToggle { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; font-size: var(--text-tiny); font-weight: 600; color: var(--primary-ink); cursor: pointer; }
 .foldToggle > svg { transition: transform 220ms var(--ease-brand); }
 .foldInput:checked ~ * .foldToggle > svg { transform: rotate(-180deg); }
 .foldInput:checked ~ * .foldMore,
@@ -312,14 +314,14 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 @media (min-width: 640px) { .foldBody { margin: 0 20px 16px; } }
 .body .foldBody { margin: 0; padding-top: 10px; }
 .foldBody p { margin: 0; max-width: 78ch; font-size: var(--text-small); line-height: 1.6; color: var(--text-body); }
-.disclaimer { font-weight: 650; color: var(--text-strong); }
+.disclaimer { font-weight: 600; color: var(--text-strong); }
 .headActions { display: inline-flex; flex-wrap: wrap; align-items: center; justify-content: flex-end; gap: 0 14px; }
 @media (prefers-reduced-motion: reduce) { .foldToggle > svg { transition: none; } }
 .calLink { display: inline-flex; align-items: center; gap: 4px; min-height: 32px; font-size: var(--text-tiny); font-weight: 600; color: var(--primary-ink); }
 
 /* Makro'nun FOMC kartı ve takvimin FOMC satırı için küçük künye. */
 .tag { display: inline-flex; flex-wrap: wrap; align-items: center; gap: 4px 6px; font-size: var(--text-tiny); line-height: 1.4; color: var(--text-muted); }
-.tag b { font-weight: 650; color: var(--text-strong); }
+.tag b { font-weight: 600; color: var(--text-strong); }
 .tag a { font-weight: 600; color: var(--primary-ink); }
 
 /* ---------------------------------------------- 1200–1439: İLK EKRAN PAYI
@@ -342,3 +344,25 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
   .chamber { gap: 4px; }
   .chamber + .chamber { padding-top: 8px; }
 }
+
+/* ---- Kadranlar kapağın içinde (10 Kasım; gerekçe page.tsx) ----
+   Kapak zaten bir yüzey: kadran kutuları kenarlığını ve zeminini bırakır
+   (kutu içinde kutu olmasın), aralarında saç teli. Cevap ton. */
+.coverStrip .stripList { gap: 0; }
+.coverStrip .tile { border: 0; border-radius: 12px; background: transparent; }
+.coverStrip .tile:hover { background: var(--primary-tint); }
+@media (min-width: 720px) {
+  .coverStrip li + li { border-left: 1px solid var(--line-soft); }
+  .coverStrip .tile { padding-block: 6px; }
+}
+@media (max-width: 719px) {
+  .coverStrip li:nth-child(n + 3) { border-top: 1px solid var(--line-soft); }
+  .coverStrip li:nth-child(2n) { border-left: 1px solid var(--line-soft); }
+}
+/* Rozet tek satır: 1440da "24 Saatte / Değişmedi" diye ikiye bölünüyordu (kolon 140, rozet 150 piksel). */
+.coverStrip .tileDelta { white-space: nowrap; }
+@media (min-width: 900px) { .coverStrip .tile { padding-inline: 8px; column-gap: 12px; } .coverStrip .gauge { width: 124px; } }
+
+/* Katlama anahtarı telefonda 44 piksel hedef (önce 18; 390'da ölçüldü).
+   Eksi dış boşluk başlık satırını uzatmaz. */
+@media (max-width: 767px) { .foldToggle { min-height: 44px; margin-block: -13px; } }
