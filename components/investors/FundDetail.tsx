@@ -334,11 +334,21 @@ function MovesPanel({
 }) {
   const pick = (move: Move) => moveItems(positions, move);
   const soldItems = soldItemsOf(detail, known);
-  const groups = [
-    { key: "new", title: t.moveNew, tone: "up", items: pick("new") },
-    { key: "increased", title: t.moveIncreased, tone: "up", items: pick("increased") },
-    { key: "decreased", title: t.moveDecreased, tone: "down", items: pick("decreased") },
-    { key: "soldOut", title: t.moveSoldOut, tone: "down", items: soldItems },
+  /* İKİ TARAF (10 Kasım, gerekçe Investors.module.css → `.moves`): alış
+     tarafı ve satış tarafı. ÖNCE (1440, canlı, Buffett; gruplar 1/5/5/1
+     satır): dört kutunun dördü de 366 piksel, tek satırlı iki kutunun
+     ~255'er pikseli boş; gövde 401. SONRA (1440, sahte veri, 3/5/5/0 satır):
+     kutular 166 / 253 / 253 / 166, taraflar aynı hatta bitiyor, gövde 466;
+     boy kısalmıyor, boş kutu kalmıyor. 390'da tek sütun (değişmedi). */
+  const sides = [
+    [
+      { key: "new", title: t.moveNew, tone: "up", items: pick("new") },
+      { key: "increased", title: t.moveIncreased, tone: "up", items: pick("increased") },
+    ],
+    [
+      { key: "decreased", title: t.moveDecreased, tone: "down", items: pick("decreased") },
+      { key: "soldOut", title: t.moveSoldOut, tone: "down", items: soldItems },
+    ],
   ] as const;
 
   return (
@@ -355,6 +365,8 @@ function MovesPanel({
       />
       {detail.diff.compared ? (
         <div className={styles.moves}>
+          {sides.map((groups) => (
+          <div key={groups[0].key} className={styles.moveSide}>
           {groups.map((group) => (
             <section key={group.key} className={styles.moveGroup} data-tone={group.tone}>
               <h3 className={styles.moveGroupTitle}>
@@ -403,6 +415,8 @@ function MovesPanel({
                 </ol>
               )}
             </section>
+          ))}
+          </div>
           ))}
         </div>
       ) : (

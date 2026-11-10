@@ -120,7 +120,7 @@ export async function FomcCard({ locale, t }: { locale: Locale; t: Dictionary })
       </div>
 
       {strip.length > 1 && (
-        <div className={styles.fomcStrip} role="img" aria-label={`${x.fomcCalendar}: ${strip.length - 1}`}>
+        <div className={styles.fomcStrip} data-draw role="img" aria-label={`${x.fomcCalendar}: ${strip.length - 1}`}>
           {strip.map((day, i) => (
             <span key={day.date} data-kind={day.kind} style={{ "--i": i } as CSSProperties} />
           ))}

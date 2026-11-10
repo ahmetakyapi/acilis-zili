@@ -2,6 +2,7 @@ import { FoldToggle } from "@/components/ui/FoldToggle";
 import type { Dictionary } from "@/lib/i18n";
 import type { Band, CheckId, ScreenResult } from "@/lib/screening";
 import { dialSlices, type DialSlice } from "@/lib/screening-gauge";
+import { NO_VALUE } from "@/lib/utils";
 import styles from "./Screening.module.css";
 
 type T = Dictionary["screening"];
@@ -216,7 +217,7 @@ export function MiniDial({
           />
         )}
       </svg>
-      <b>{score ?? "—"}</b>
+      <b>{score ?? NO_VALUE}</b>
     </span>
   );
 }

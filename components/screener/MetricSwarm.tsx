@@ -186,6 +186,7 @@ export function MetricSwarm({
       <div
         ref={plotRef}
         className={styles.plot}
+        data-draw
         tabIndex={0}
         role="group"
         aria-label={labels.aria}

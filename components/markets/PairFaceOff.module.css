@@ -58,42 +58,11 @@
   }
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  @keyframes face-in-left {
-    from {
-      opacity: 0;
-      transform: translateX(-18px);
-    }
-  }
-
-  @keyframes face-in-right {
-    from {
-      opacity: 0;
-      transform: translateX(18px);
-    }
-  }
-
-  @keyframes seal-in {
-    from {
-      opacity: 0;
-      transform: translate(-50%, -50%) scale(0.6);
-    }
-  }
-
-  @media (min-width: 768px) {
-    .side[data-side="left"] {
-      animation: face-in-left 0.7s var(--ease-brand) both;
-    }
-
-    .side[data-side="right"] {
-      animation: face-in-right 0.7s var(--ease-brand) both;
-    }
-
-    .versus {
-      animation: seal-in 0.55s var(--ease-brand) 0.35s both;
-    }
-  }
-}
+/* 10 Kasım (hareket kuralı): iki kart 18 piksel yandan, opaklık 0'dan
+   700 ms kayarak giriyordu. Panel ve metin kayarak girmez, ilk ekrandaki
+   açılış opaklık 0'dan başlamaz (LCP: kartlar sayfanın en büyük ilk
+   boyaması). Kartlar artık yerinde; hareket veriyi çizen tek öğede:
+   piyasa değeri şeridi iki uçtan dolar (`.bar-fill`, aşağıda). */
 
 .identity {
   display: flex;
@@ -103,14 +72,11 @@
 }
 
 .logo {
-  transition: transform 0.35s var(--ease-brand);
 }
 
+/* 10 Kasım: logo hover'da 1,06 büyüyüp 2 derece dönüyordu (hover'da
+   büyüme yok); geri bildirim yalnız sembolün tonu. */
 @media (hover: hover) {
-  .identity:hover .logo {
-    transform: scale(1.06) rotate(-2deg);
-  }
-
   .identity:hover .symbol {
     color: var(--primary);
   }
@@ -125,7 +91,7 @@
 .symbol {
   color: var(--text-strong);
   font-size: clamp(1.5rem, 2.8vw, 2rem);
-  font-weight: 650;
+  font-weight: 700;
   letter-spacing: -0.04em;
   line-height: 1.1;
   transition: color 0.25s var(--ease-brand);
@@ -164,7 +130,7 @@
   overflow-wrap: anywhere;
   color: var(--text-strong);
   font-size: var(--text-small);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 /* Aradaki mühür: iki kartın ortasında, telefonda gizli (kartlar alt alta
@@ -214,41 +180,24 @@
   text-align: center;
 }
 
+/* 10 Kasım (ortak ölçüler): şerit 11 piksel (0,7rem) kalınlığındaydı ve
+   kaydırmaya bağlı doğrusal bir animasyonla doluyordu; site genelinde
+   şerit 5 piksel, uçlar 999 ve dolgu `.bar-fill` (globals.css, `--draw`
+   ailesi). İkinci parça sağdan dolar: kaynağı sağ kenar. */
 .balanceBar {
   display: flex;
   gap: 3px;
-  height: 0.7rem;
-  overflow: hidden;
-  border-radius: 999px;
+  height: 5px;
 }
 
 .balanceBar > span {
   flex-basis: 0;
   min-width: 4px;
+  border-radius: 999px;
 }
 
-@supports (animation-timeline: view()) {
-  @media (prefers-reduced-motion: no-preference) {
-    @keyframes balance-grow {
-      from {
-        transform: scaleX(0);
-      }
-    }
-
-    .balanceBar > span:first-child {
-      transform-origin: left center;
-      animation: balance-grow linear both;
-      animation-timeline: view();
-      animation-range: entry 10% cover 30%;
-    }
-
-    .balanceBar > span:last-child {
-      transform-origin: right center;
-      animation: balance-grow linear both;
-      animation-timeline: view();
-      animation-range: entry 10% cover 30%;
-    }
-  }
+.balanceBar > span:last-child {
+  transform-origin: right center;
 }
 
 .balanceLegend {
@@ -303,8 +252,8 @@
   border-radius: 0.9rem;
   background: var(--surface-sunken);
   transition:
-    background-color 0.25s var(--ease-brand),
-    transform 0.25s var(--ease-brand);
+    background-color 180ms var(--ease-brand),
+    scale 180ms var(--ease-brand);
 }
 
 .otherLogos {
@@ -315,7 +264,6 @@
    sayfa yüzeyinin tonunda, gölge değil. */
 .otherLogo {
   box-shadow: 0 0 0 2px var(--surface-sunken);
-  transition: transform 0.35s var(--ease-brand);
 }
 
 .otherLogo + .otherLogo {
@@ -328,24 +276,21 @@
   white-space: nowrap;
   color: var(--text-strong);
   font-size: var(--text-small);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .otherArrow {
   color: var(--text-muted);
   transition:
-    transform 0.3s var(--ease-brand),
-    color 0.2s var(--ease-brand);
+    transform 200ms var(--ease-brand),
+    color 180ms var(--ease-brand);
 }
 
 @media (hover: hover) {
+  /* 10 Kasım: kart 1 piksel kalkıyor, ikinci logo yana kayıyordu;
+     hover yalnız ton, hareket yalnız okta (3 piksel, 200 ms). */
   .other:hover {
     background: var(--primary-tint);
-    transform: translateY(-1px);
-  }
-
-  .other:hover .otherLogo + .otherLogo {
-    transform: translateX(0.35rem);
   }
 
   .other:hover .otherArrow {
@@ -355,5 +300,5 @@
 }
 
 .other:active {
-  transform: scale(0.985);
+  scale: 0.992;
 }

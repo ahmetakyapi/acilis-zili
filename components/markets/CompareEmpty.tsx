@@ -122,7 +122,10 @@ export async function CompareEmpty({
                   değil, gösterim biçimiydi. Etiket o durumda tekrar
                   edilmiyor; künye rayla birlikte alt hizada kalsın diye
                   yükseklik sabit. */}
-              <ul className="grid grid-cols-4 gap-2 border-t border-line-soft pt-3.5">
+              {/* 10 Kasım: `mt-auto` — kartlar eş boy, künyesi iki satır olan kartta
+                  logo sırası üç satırlıdan 19 piksel yukarıda bitiyor ve altında
+                  boş bant kalıyordu; sıra artık dört kartta aynı hatta. */}
+              <ul className="mt-auto grid grid-cols-4 gap-2 border-t border-line-soft pt-3.5">
                 {preset.symbols.map((symbol) => {
                   const logoUrl = names[symbol]?.logoUrl;
                   return (
@@ -142,7 +145,7 @@ export async function CompareEmpty({
                           </span>
                         </>
                       ) : (
-                        <span className="numeral flex h-8 w-full items-center justify-center rounded-(--radius-sm) bg-primary-wash px-1 text-tiny font-bold tracking-[-0.02em] text-primary-ink">
+                        <span className="numeral flex min-h-8 w-full flex-1 items-center justify-center rounded-(--radius-sm) bg-primary-wash px-1 text-tiny font-bold tracking-[-0.02em] text-primary-ink">
                           {symbol}
                         </span>
                       )}

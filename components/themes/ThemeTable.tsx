@@ -179,7 +179,8 @@ export function ThemeTable({
     <Link
       href={`/hisse/${row.symbol}`}
       prefetch={false}
-      className="flex min-w-0 items-center gap-2.5 py-0.5 transition-colors hover:text-primary"
+      /* Telefonda 44 piksel: satırın tek bağlantısı 38-41 pikseldi (390, ölçüldü). */
+      className="flex min-h-11 min-w-0 items-center gap-2.5 py-0.5 transition-colors hover:text-primary sm:min-h-0"
       /* Şirket kartı (components/ui/CompanyCard.tsx); ölçüt ETF'inin kaydı
          yok, onda kart açılmıyor. */
       data-cc={row.symbol}
@@ -211,10 +212,10 @@ export function ThemeTable({
       >
         <thead>
           <tr className="border-y border-line-soft text-left text-nano text-muted">
-            {header("company", labels.company, cn(sticky, "px-4 py-2.5 font-medium sm:px-5"))}
-            {header("price", labels.price, "px-2 py-2.5 text-right font-medium sm:px-4")}
-            {header("day", labels.day, "px-2 py-2.5 text-right font-medium sm:px-4")}
-            {header("cap", labels.cap, "py-2.5 pl-2 pr-4 text-right font-medium sm:pl-4 sm:pr-5")}
+            {header("company", labels.company, cn(sticky, "px-4 py-2.5 font-semibold sm:px-5"))}
+            {header("price", labels.price, "px-2 py-2.5 text-right font-semibold sm:px-4")}
+            {header("day", labels.day, "px-2 py-2.5 text-right font-semibold sm:px-4")}
+            {header("cap", labels.cap, "py-2.5 pl-2 pr-4 text-right font-semibold sm:pl-4 sm:pr-5")}
           </tr>
         </thead>
         <tbody className="divide-y divide-line-soft">

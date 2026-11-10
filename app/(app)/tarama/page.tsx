@@ -279,14 +279,31 @@ export default async function ScreenerPage(props: PageProps<"/tarama">) {
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
-      <PageHeader title={L.title} subtitle={L.subtitle} />
-      <div className="flex flex-col gap-4">
-        <ScreenQueryBox
-          labels={t.screenQuery}
-          sentence={sentence}
-          fieldLabels={t.screenQuery.fields}
-          scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }}
-        />
+      {/* CÜMLE KUTUSU BAŞLIĞIN SAĞINDA (10 Kasım, sahibinin itirazı:
+          "başlığın altındaki boşluk göze çarpıyor… böyle başka ekran varsa
+          onları da düzeltelim"). Ölçüldü, 1440: başlık kartının sağ yarısı
+          (~650 piksel) boştu; altında cümle kutusu 680 piksellik ayrı bir
+          satırda (sağı 640 piksel boş), sonra örnek cümleler, sonra hazır
+          süzgeçler: tablonun başlığına kadar dört yarım satır, 300 piksel.
+          Kutu başlığın `action` yuvasında ("sağda tek denetim",
+          `.claude/rules/arayuz.md` → Ekran Düzeni 1); örnek cümleler kutunun
+          altında, aynı sütunda. Başlığın altından tablo paneline 208 → 76
+          piksel. Telefonda kutu başlığın altına tam genişlikte iner. */}
+      <PageHeader
+        title={L.title}
+        subtitle={L.subtitle}
+        action={
+          <div className={visual.headQuery}>
+            <ScreenQueryBox
+              labels={t.screenQuery}
+              sentence={sentence}
+              fieldLabels={t.screenQuery.fields}
+              scrollLabels={{ prev: t.common.scrollPrev, next: t.common.scrollNext }}
+            />
+          </div>
+        }
+      />
+      <div className="flex flex-col gap-4 empty:hidden">
         <ActiveFilters filters={filters} paramsFor={paramsFor} locale={locale} t={t} />
         {/* Hazır süzgeç şeridi — ölçütü çip değil künye söyler. */}
         <ChipStrip
@@ -851,10 +868,21 @@ async function ScreenerTable({
                     );
                   })}
                 </div>
-                <ul className={visual.legend}>
-                  {sectorMix.slice(0, LEGEND_LIMIT).map(({ sector, count, label }) => (
-                    <li key={sector}>
+                {/* KÜNYE GENİŞTE SIRALI LİSTE (10 Kasım). Şeridin altında ilk beş
+                    sektör tek satırda diziliydi ve sütunun kalanı boştu (ölçüldü,
+                    1440: sektör bloğu 128, yanındaki küme 300 piksel; altında
+                    172 piksellik boşluk) — öteki altı sektör "Diğer 6 Sektör"
+                    diye saklanıyordu. Genişte (≥1024) bütün sektörler birer satır:
+                    ad, 5 piksellik pay şeridi (en kalabalık sektöre göre), sayı,
+                    yüzde. Aynı `sectorMix`, yeni veri yok. Dar ekranda eski
+                    künye (ilk beş + "Diğer") kalır: orada sütun zaten dolu. */}
+                <ul className={visual.legend} data-draw>
+                  {sectorMix.map(({ sector, count, label }, index) => (
+                    <li key={sector} data-rest={index >= LEGEND_LIMIT || undefined}>
                       <span className={visual.legendName}>{label}</span>
+                      <span aria-hidden className={visual.legendLane}>
+                        <i className="bar-fill" style={{ width: `${(count / (sectorMix[0]?.count || count)) * 100}%` }} />
+                      </span>
                       <span className="numeral">{count}</span>
                       <span className="numeral text-muted">{t.toolVisuals.companies.sharePct.replace("{p}", String(sharePercent(count / filtered.length)))}</span>
                     </li>

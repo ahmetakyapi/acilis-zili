@@ -118,8 +118,8 @@ export async function PairFaceOff({
         <div className={styles.balance}>
           <p className={styles.balanceTitle}>{t.pairs.capShare}</p>
           <span className={styles.balanceBar} aria-hidden>
-            <span style={{ flexGrow: left.cap, background: left.color } as CSSProperties} />
-            <span style={{ flexGrow: right.cap, background: right.color } as CSSProperties} />
+            <span className="bar-fill" style={{ flexGrow: left.cap, background: left.color } as CSSProperties} />
+            <span className="bar-fill" style={{ flexGrow: right.cap, background: right.color } as CSSProperties} />
           </span>
           <p className={styles.balanceLegend}>
             <span className="figure">

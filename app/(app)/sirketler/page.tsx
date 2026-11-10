@@ -1,3 +1,4 @@
+import { ArrowRight, CaretDown, CaretUp, CaretUpDown } from "@phosphor-icons/react/dist/ssr";
 import { PageShare } from "@/components/article/PageShare";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
@@ -7,18 +8,17 @@ import { CompanyCards } from "@/components/ui/CompanyCards";
 import { CompanySearch } from "@/components/companies/CompanySearch";
 import { LinkedRows } from "@/components/companies/LinkedRows";
 import companyStyles from "@/components/companies/CompanyDirectory.module.css";
+import table from "@/components/companies/CompanyTable.module.css";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { DirectionLane, SizeBar } from "@/components/screener/Lanes";
 import { SectorDistribution } from "@/components/companies/SectorDistribution";
 import { CoverTabs } from "@/components/companies/CoverTabs";
-import visual from "@/components/screener/ScreenerVisuals.module.css";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import {
-  ChangePill,
   DataStamp,
   EmptyState,
   Panel,
@@ -192,6 +192,13 @@ function SortHead({
   /** Başlığın neyi ölçtüğü — kısaltılmış etiketlerde tanım. */
   hint?: string;
 }) {
+  /* SIRALAMA DURUMU ÜÇ HÂL (10 Kasım, ikizi MembersTable). Üçgen glifleri
+     (▼ ▲ ▽) 8 piksellik `text-micro` ile basılıyordu: sıralı sütun
+     ötekilerden yalnız renkle ayrışıyor, sırasız sütunların içi boş üçgeni
+     "açılır menü" gibi okunuyordu. Şimdi ikon: sıralı sütunda yönü gösteren
+     ok ve başlığın altında 2 piksellik mavi çizgi (`data-active`), sırasızda
+     soluk çift ok. */
+  const Icon = active ? (dir === "desc" ? CaretDown : CaretUp) : CaretUpDown;
   return (
     <th
       key={col}
@@ -201,11 +208,12 @@ function SortHead({
          teknolojiye ulaşmıyor — ekran okuyucu kullanıcısı tablonun neye göre
          dizildiğini hiç öğrenemiyordu. `aria-sort` bunu doğrudan söylüyor. */
       aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : "none"}
-      className={cn("px-1.5 py-2.5 text-right font-semibold sm:px-3", className)}
+      data-active={active || undefined}
+      className={cn(table.sortCell, className)}
     >
       {/* Dokunma alanı yazının kendisi kadardı (14px yüksekliğinde) ve
           telefonda sıralama değiştirmek nişancılık istiyordu. Negatif
-          margin + dikey dolgu, tabloyu büyütmeden hedefi 32px'e çıkarıyor. */}
+          margin + dikey dolgu, tabloyu büyütmeden hedefi büyütüyor. */}
       {/* scroll={false}: sıralama bir gezinme değil, aynı tablonun yeniden
           dizilmesi. Varsayılan davranışta okuyucu tablonun ortasında bir
           başlığa basınca sayfanın en üstüne fırlıyor ve aşağı geri kaydırmak
@@ -226,21 +234,14 @@ function SortHead({
            ipucunda; bilmesi ölçüyü değiştirmeyen bir ayrıntı olduğu için
            balonda kalması yeterli. */
         title={hint}
-        className={cn(
-          /* MOBİLDE 44px. Sıralama başlığı tablonun ANA denetimi ama dokunma
-             hedefi 32 pikseldi. Negatif margin dolguyu emiyor, yani hedef
-             büyürken satır yüksekliği değişmiyor; masaüstünde imleç hassas,
-             orada 32px yeterli. */
-          "-my-3.5 inline-flex min-h-11 items-center gap-1 py-3.5 transition-colors hover:text-primary sm:-my-2 sm:min-h-8 sm:py-2",
-          active && "text-primary",
-        )}
+        /* MOBİLDE 44px. Sıralama başlığı tablonun ANA denetimi ama dokunma
+           hedefi 32 pikseldi. Negatif margin dolguyu emiyor, yani hedef
+           büyürken satır yüksekliği değişmiyor; masaüstünde imleç hassas,
+           orada 32px yeterli (`.sortLink`, CompanyTable.module.css). */
+        className={table.sortLink}
       >
         {label}
-        {/* 8 piksellik ok `--primary` ile 4,48'de kalıyordu (gereken 4,5);
-            mürekkep tonu aynı aileden ama eşiğin üstünde. */}
-        <span aria-hidden className="numeral text-micro text-primary-ink">
-          {active ? (dir === "desc" ? "▼" : "▲") : "▽"}
-        </span>
+        <Icon aria-hidden size={11} weight="bold" className={table.sortIcon} />
       </Link>
     </th>
   );
@@ -677,10 +678,19 @@ async function CompaniesTable({
   const total = unsorted.length;
   const hasMore = total > rows.length;
   const kotasyonsuz = rows.filter((r) => !quotes[r.symbol]).length;
+  /* HACİM SÜTUNU VERİ VARSA (10 Kasım). Açılış öncesinde ve sağlayıcının
+     hacim döndürmediği pakette sütun 60 satırın 60'ında "–" basıyordu
+     (canlıda ölçüldü): eksik veri yer tutmaz. Okur sütuna göre sıralamışsa
+     (`?sirala=hacim`) sütun yine görünür — neye göre dizildiğini saklamaz. */
+  const showVolume = sort === "hacim" || rows.some((r) => quotes[r.symbol]?.volume != null);
+  const compareHref =
+    rows.length >= 2
+      ? `/karsilastir?semboller=${rows.slice(0, 4).map((row) => row.symbol).join(",")}`
+      : null;
 
   return (
     <>
-      <Panel className={styles.tablePanel}>
+      <Panel className={table.panel}>
         {/* Şirket kartı — görünen satırlar, sayfanın paketiyle. */}
         <CompanyCards
           symbols={rows.map((row) => row.symbol)}
@@ -710,14 +720,13 @@ async function CompaniesTable({
                sabit değil, o anki sıralamadan ve sektör süzgecinden
                türüyor. Karşılaştırma ekranı gezinmede görünmüyor ve
                siteye girenin çoğu varlığını bilmiyordu. */
+            /* TELEFONDA BAŞLIKTA DEĞİL, TABLONUN DİBİNDE (10 Kasım): 390'da
+               künye ("1625 şirketin 60 tanesi · Piyasa Değeri ▼") ile aynı
+               satıra sığmıyor, "İlk Dördünü Karşıla" diye panelin kenarında
+               kırpılıyordu (canlıda ölçüldü). */
             action={
-              rows.length >= 2 ? (
-                <PanelLink
-                  href={`/karsilastir?semboller=${rows
-                    .slice(0, 4)
-                    .map((row) => row.symbol)
-                    .join(",")}`}
-                >
+              compareHref ? (
+                <PanelLink href={compareHref} className="max-sm:hidden">
                   {t.compare.compareFirstFour}
                 </PanelLink>
               ) : undefined
@@ -774,11 +783,11 @@ async function CompaniesTable({
             hint={query ? t.companies.searchEmptyHint : t.companies.emptyHint} />
         ) : (
           <ScrollEdges
-            className={cn(styles.tableScroll, "scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)")}
+            className={cn(table.scroller, "scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)")}
             tabIndex={0}
             role="region"
             aria-label={t.companies.title}
-            /* Kimlik sütunu 640-1023'te yapışkan (DirectoryExperience):
+            /* Kimlik sütunu 640-1023'te yapışkan (CompanyTable.module.css):
                sol kenar solmasın, yalnız sağ uç "devamı var" desin. */
             fixedStart
           >
@@ -789,19 +798,33 @@ async function CompaniesTable({
                 piyasa değeri sütununu ancak yana kaydırarak görebiliyordu.
                 Ölçüldü: 101 piksel taşma.
                 Sabit düzende sayı sütunları kendi genişliğini alıyor, şirket
-                sütunu artan yeri; ad zaten `truncate` taşıyor. Geniş ekranda
+                sütunu artan yeri; ad zaten kısalıyor. Geniş ekranda
                 otomatik düzen geri geliyor — orada yer bol ve sütunlar
-                içeriğe göre nefes almalı. */}
-            <table className="w-full table-fixed text-sm sm:table-auto sm:min-w-[700px]">
+                içeriğe göre nefes almalı. (Kural artık modülde:
+                CompanyTable.module.css → "Telefon".) */}
+            {/* YOĞUNLUK (10 Kasım, görsel tur — B grubu). Önce: 60 satır × 67
+                piksel = 4.020 piksellik seyrek bir duvar (1440, canlı).
+                Satır iki katlıydı (sembol üstte, ad altta; hapın ve sayının
+                ALTINDA 84 piksellik kulvar), Hacim sütunu açılış öncesinde
+                60 satırın 60'ında "–" basıyordu ve tablo, aynı gün yenilenen
+                Piyasalar'daki Endeks Bileşenleri tablosundan (46 piksel, tek
+                kat, şerit sayının yanında) başka bir aileden görünüyordu.
+                Şimdi aynı dil: 1280+ sembol ve ad aynı hatta, satır 46
+                piksel; günlük değişimin kulvarı sütunun esnek genişliğini
+                alıyor (ölçek yine SABİT ±%5 — gerekçe `DirectionLane`),
+                haftalık kulvar ve piyasa değeri çubuğu sayının yanında.
+                Değişim HAP DEĞİL yön renginde sayı: 60 dolgulu hap alt alta
+                bir "rozet duvarı" kuruyordu ve yönü zaten yanındaki ayrışan
+                kulvar söylüyor (Endeks Bileşenleri'yle aynı karar).
+                Ölçüm: CompanyTable.module.css başında. */}
+            <table className={table.table}>
               <thead>
-                <tr className="border-b border-line text-left text-nano text-muted">
-                  <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">
-                    #
-                  </th>
-                  <th className="px-3 py-2.5 font-semibold sm:px-3">
+                <tr>
+                  <th scope="col" className={table.rankHead}>#</th>
+                  <th scope="col" className={table.startHead}>
                     {t.companies.company}
                   </th>
-                  <th className="hidden px-3 py-2.5 font-semibold md:table-cell">
+                  <th scope="col" className={cn(table.startHead, table.sectorHead)}>
                     {t.companies.sector}
                   </th>
                   {/* Değişim fiyattan önce: listeye bakan önce "bugün ne
@@ -812,7 +835,7 @@ async function CompaniesTable({
                     href={sortHref("degisim")}
                     active={sort === "degisim"}
                     dir={dir}
-                    className="w-[76px] sm:w-auto"
+                    className={table.changeHead}
                   />
                   <SortHead
                     col="hafta"
@@ -821,7 +844,7 @@ async function CompaniesTable({
                     active={sort === "hafta"}
                     dir={dir}
                     hint={t.companies.weekChangeHint}
-                    className="hidden sm:table-cell"
+                    className={table.weekHead}
                   />
                   <SortHead
                     col="fiyat"
@@ -829,7 +852,7 @@ async function CompaniesTable({
                     href={sortHref("fiyat")}
                     active={sort === "fiyat"}
                     dir={dir}
-                    className="w-[62px] px-1.5 sm:w-auto sm:px-3"
+                    className={table.priceHead}
                   />
                   <SortHead
                     col="cap"
@@ -837,120 +860,98 @@ async function CompaniesTable({
                     href={sortHref("cap")}
                     active={sort === "cap"}
                     dir={dir}
-                    className="w-[74px] pr-4 sm:w-auto sm:pr-3"
+                    className={table.capHead}
                   />
-                  <SortHead
-                    col="hacim"
-                    label={t.market.volume}
-                    href={sortHref("hacim")}
-                    active={sort === "hacim"}
-                    dir={dir}
-                    className="hidden sm:table-cell sm:px-5"
-                  />
+                  {showVolume && (
+                    <SortHead
+                      col="hacim"
+                      label={t.market.volume}
+                      href={sortHref("hacim")}
+                      active={sort === "hacim"}
+                      dir={dir}
+                      className={table.volumeHead}
+                    />
+                  )}
                 </tr>
               </thead>
               {/* Satırın tamamı gezinir — gerekçe LinkedRows. */}
-              <LinkedRows data-motion-stagger className="divide-y divide-line-soft">
+              <LinkedRows data-motion-stagger>
                 {rows.map((company, index) => {
                   const quote = quotes[company.symbol];
+                  const week = weekly[company.symbol];
+                  const cap = capOf(company);
                   return (
-                    <tr
-                      key={company.symbol}
-                      className="cursor-pointer transition-colors hover:bg-primary-tint"
-                    >
-                      <td className="numeral hidden px-4 py-3 text-xs text-muted sm:table-cell sm:px-5">
-                        {index + 1}
-                      </td>
-                      <td className="py-3 pl-3 pr-1.5 sm:px-3">
+                    <tr key={company.symbol}>
+                      {/* Sıra numarası logoyla aynı hatta, sağa yaslı ve
+                          tabular: "9" ile "10" aynı sağ kenarda. */}
+                      <td className={cn("numeral", table.rank)}>{index + 1}</td>
+                      <td className={table.company}>
                         <Link
                           href={`/hisse/${company.symbol}`} prefetch={false}
-                          /* Telefonda 44px: satıra dokunmak bu sayfanın ana
-                             eylemi ama bağlantı yalnızca logo yüksekliği
-                             kadardı (34px) ve hücre dolgusunun bir kısmı
-                             tıklanabilir değildi. */
-                          className="flex min-h-11 items-center gap-2 sm:min-h-0 sm:gap-2.5"
+                          /* Bağlantı hücreyi dolduruyor: satıra dokunmak bu
+                             sayfanın ana eylemi ama bağlantı yalnızca logo
+                             yüksekliği kadardı (34px) ve hücre dolgusunun
+                             bir kısmı tıklanabilir değildi. Telefonda 51px. */
+                          className={table.companyLink}
                           data-cc={company.symbol}
                         >
                           <LogoTile
                             symbol={company.symbol}
                             logoUrl={company.logoUrl}
-                            /* Telefonda 30px: dördüncü sütun (piyasa değeri)
-                               eklenince satır 372px'e çıkıp 352'lik kanalı
-                               20 piksel aşıyordu. */
-                            className="size-[30px] sm:size-[34px]"
+                            size="sm"
+                            className={table.logo}
                           />
-                          <span className="min-w-0">
-                            <span className="block text-base font-bold leading-[18px] text-strong">
-                              {company.symbol}
-                            </span>
-                            {/* SABİT SINIR YOK, HÜCRE NE VERİRSE.
-                                Ad kutusu `sm` altında 66 piksele
-                                çakılıydı; hücre ise 500–639 piksel arasında
-                                183–196 piksele kadar genişliyor ve sağında
-                                55–68 piksel boş duruyordu — ekran
-                                büyüdükçe ad daha az okunur hâle geliyordu.
-                                `min-w-0` + `truncate` ikilisi zaten
-                                gerekeni yapıyor: kutu hücreyi aşmıyor,
-                                sığmayan ad üç noktayla kesiliyor. Sabit
-                                sınır yalnızca büyümeyi engelliyordu. */}
-                            <span className="block truncate text-tiny leading-[15px] text-muted">
-                              {company.name}
-                            </span>
+                          <span className={table.companyText}>
+                            <span className={table.symbol}>{company.symbol}</span>
+                            {/* SABİT SINIR YOK, HÜCRE NE VERİRSE. Ad kutusu
+                                `sm` altında 66 piksele çakılıydı; hücre ise
+                                500–639 piksel arasında 183–196 piksele kadar
+                                genişliyor ve sağında 55–68 piksel boş
+                                duruyordu. `min-width:0` + üç nokta gerekeni
+                                yapıyor: kutu hücreyi aşmıyor, sığmayan ad
+                                kesiliyor; tam ad `title`da. */}
+                            <span title={company.name} className={table.name}>{company.name}</span>
                           </span>
                         </Link>
                       </td>
-                      <td className="hidden max-w-40 truncate px-3 py-3 text-small text-soft md:table-cell">
-                        {industryLabel(company.industry, locale) ?? NO_VALUE}
+                      <td className={table.sector}>
+                        {industryLabel(company.industry, locale) ?? <span className={table.none}>{NO_VALUE}</span>}
                       </td>
-                      <td className="px-1 py-3 text-right sm:px-3">
-                        {quote ? (
-                          <>
-                          <ChangePill
-                            changePct={quote.changePct}
-                            locale={locale}
-                            size="sm"
-                            /* sm:text-…: dar ekranda pilin 11px'i kalıyor
-                               (390px'te dört sütun zor sığıyor), geniş
-                               ekranda sayı bir bakışta okunacak boya çıkıyor. */
-                            className="px-1 sm:px-2 sm:text-small"
-                          />
-                          {/* Yön bir de çizgi: sıfır ortada, ölçek sabit
-                              ±%5 (gerekçe DirectionLane). */}
-                          {quote.changePct !== null && (
-                            <DirectionLane value={quote.changePct} span={CHANGE_LANE_SPAN} className="[--lane-max:64px] sm:[--lane-max:84px]" />
-                          )}
-                          </>
+                      <td className={table.changeCell}>
+                        {quote && quote.changePct !== null ? (
+                          <span className={table.pair}>
+                            {/* Yön bir de çizgi: sıfır ortada, ölçek sabit
+                                ±%5 (gerekçe DirectionLane). */}
+                            <DirectionLane value={quote.changePct} span={CHANGE_LANE_SPAN} className={table.inlineLane} />
+                            <span className={cn("numeral", table.num, directionText(directionOf(quote.changePct)))}>
+                              {formatPercent(quote.changePct, locale)}
+                            </span>
+                          </span>
                         ) : (
-                          <span className="text-xs text-muted">{NO_VALUE}</span>
+                          <span className={cn(table.pair, table.none)}><span /><span className={table.num}>{NO_VALUE}</span></span>
                         )}
                       </td>
-                      <td className="numeral hidden px-3 py-3 text-right text-read sm:table-cell">
-                        {weekly[company.symbol] !== undefined ? (
-                          <>
-                          <span
-                            className={cn(
-                              "font-semibold",
-                              directionText(directionOf(weekly[company.symbol])),
-                            )}
-                          >
-                            {formatPercent(weekly[company.symbol], locale)}
+                      <td className={table.weekCell}>
+                        {week !== undefined ? (
+                          <span className={table.pair}>
+                            {/* Hafta da bir çizgi (31 Ekim): günlük sütun şeritli,
+                                haftalık birimsiz sayıydı; iki yön yan yana aynı
+                                dilde okunsun. Ölçek ayrı (±%12), hafta geniş oynar. */}
+                            <DirectionLane value={week} span={WEEK_LANE_SPAN} className={table.inlineLane} />
+                            <span className={cn("numeral", table.num, directionText(directionOf(week)))}>
+                              {formatPercent(week, locale)}
+                            </span>
                           </span>
-                          {/* Hafta da bir çizgi (31 Ekim): günlük sütun şeritli,
-                              haftalık çıplak sayıydı; iki yön yan yana aynı
-                              dilde okunsun. Ölçek ayrı (±%12), hafta geniş oynar. */}
-                          <DirectionLane value={weekly[company.symbol]!} span={WEEK_LANE_SPAN} className="[--lane-max:84px]" />
-                          </>
                         ) : (
-                          <span className="text-xs text-muted">{NO_VALUE}</span>
+                          <span className={cn(table.pair, table.none)}><span /><span className={table.num}>{NO_VALUE}</span></span>
                         )}
                       </td>
                       {/* Fiyat satırın ÇAPASI: değişim, hafta, piyasa değeri
                           ve hacim hep ona göre okunuyor. Diğerleriyle aynı
-                          ağırlıkta yazılınca sayı dizisinin içinde kayboluyordu.
-                          Boylar bir kademe büyütüldü: 13/13.5 punto sayılar
-                          "bir bakışta" okunmuyordu, tablo sayı tablosu. */}
-                      <td className="numeral px-1 py-3 text-right text-base font-bold text-strong sm:px-3 sm:text-read">
-                        {quote ? formatPrice(quote.price, locale) : NO_VALUE}
+                          ağırlıkta yazılınca sayı dizisinin içinde kayboluyordu;
+                          kalın ve en koyu mürekkepte. */}
+                      <td className={cn("numeral", table.price)}>
+                        {quote ? formatPrice(quote.price, locale) : <span className={table.none}>{NO_VALUE}</span>}
                       </td>
                       {/* Piyasa değeri telefonda da FİYATIN SAĞINDA, kendi
                           sütununda. Bir süre fiyatın altına ikinci satır
@@ -960,31 +961,30 @@ async function CompaniesTable({
                           okunuyordu. Ayrı sütunda ikisi de kendi başlığının
                           altında duruyor; 390px'e dört sütun, kalan yerler
                           daraltılarak sığdı. */}
-                      <td className="numeral py-3 pl-1 pr-3 text-right text-small font-semibold text-body sm:px-3 sm:text-base">
-                        {(() => {
-                          const cap = capOf(company);
-                          return cap ? (
-                            <>
-                              {formatMoneyCompact(cap, locale)}
-                              <SizeBar ratio={cap / peakCap} />
-                            </>
-                          ) : NO_VALUE;
-                        })()}
+                      <td className={table.capCell}>
+                        {cap ? (
+                          <span className={table.cap}>
+                            <span className="numeral">{formatMoneyCompact(cap, locale)}</span>
+                            <SizeBar ratio={cap / peakCap} className={table.capBar} />
+                          </span>
+                        ) : <span className={cn(table.cap, table.none)}>{NO_VALUE}</span>}
                       </td>
-                      <td className="numeral hidden px-4 py-3 text-right text-read text-soft sm:table-cell sm:px-5">
-                        {/* HACİM YALNIZCA CANLI KOTASYONDAN. Buraya bir
-                            önbellek yedeği (`?? company.volume`) konmuştu ve
-                            o değer `quotes_cache`ten geliyor: kotasyonu
-                            gelmeyen bir sembolde başka bir GÜNÜN hacmi,
-                            komşularının bugünkü hacmiyle aynı başlığın
-                            altında duruyordu. Aynı sütunda iki farklı günün
-                            sayısı — projenin "aynı sayı aynı kaynaktan"
-                            kuralının ihlali. Satırın fiyat ve değişim
-                            hücreleri zaten "—" gösteriyor; hacim de öyle. */}
-                        {/* KISALTILMIŞ (31 Ekim): "169.643.020" sekiz basamaklık bir
-                            dizi olarak okunuyordu; "169,6 Mn" bir bakışta. */}
-                        {quote?.volume != null ? formatCompact(quote.volume, locale) : NO_VALUE}
-                      </td>
+                      {showVolume && (
+                        <td className={cn("numeral", table.volume)}>
+                          {/* HACİM YALNIZCA CANLI KOTASYONDAN. Buraya bir
+                              önbellek yedeği (`?? company.volume`) konmuştu ve
+                              o değer `quotes_cache`ten geliyor: kotasyonu
+                              gelmeyen bir sembolde başka bir GÜNÜN hacmi,
+                              komşularının bugünkü hacmiyle aynı başlığın
+                              altında duruyordu. Aynı sütunda iki farklı günün
+                              sayısı — projenin "aynı sayı aynı kaynaktan"
+                              kuralının ihlali. Satırın fiyat ve değişim
+                              hücreleri zaten "–" gösteriyor; hacim de öyle. */}
+                          {/* KISALTILMIŞ (31 Ekim): "169.643.020" sekiz basamaklık bir
+                              dizi olarak okunuyordu; "169,6 Mn" bir bakışta. */}
+                          {quote?.volume != null ? formatCompact(quote.volume, locale) : NO_VALUE}
+                        </td>
+                      )}
                     </tr>
                   );
                 })}
@@ -994,44 +994,56 @@ async function CompaniesTable({
         )}
 
         {/* Sayaç + devamı. Sayaç düğmeden ÖNCE geliyor çünkü asıl soru
-            "listenin neresindeyim": çıplak bir "Daha Fazla Göster" düğmesi
+            "listenin neresindeyim": yalnız bir "Daha Fazla Göster" düğmesi
             kaç satır daha olduğunu söylemiyor ve tıklamanın karşılığını
             tahmin ettiriyordu.
             scroll={false}: okuyucu listenin dibinde, sayfanın başına
             fırlatılmamalı — geldiği yerin altına yeni satırlar eklenmeli. */}
         {kotasyonsuz >= KOTASYONSUZ_ACIKLAMA_ESIGI && (
-          <p className="border-t border-line px-4 py-3 text-small text-muted sm:px-5">
+          <p className={table.note}>
             {t.companies.noQuoteNote.replace("{n}", String(kotasyonsuz))}
           </p>
         )}
         {hasMore && (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
+          <div className={table.more}>
             {/* Sayacın ÇİZGİSİ var (14 Ekim): "60 / 670" bir büyüklük
                 karşılaştırması ve kural "karşılaştırılan büyüklük bir de
-                çizgi olarak okunur" (CLAUDE.md). 3 piksellik nötr ray,
-                listenin neresinde olduğunu sayıdan önce söylüyor. */}
-            <div className="min-w-0">
-              <p className="numeral text-small text-muted">
-                {t.companies.showing
-                  .replace("{n}", String(rows.length))
-                  .replace("{total}", String(total))}
-              </p>
-              <span aria-hidden className="mt-1.5 block h-[var(--lane-h,5px)] w-28 overflow-hidden rounded-full bg-(--line-soft)">
-                <span
-                  data-motion-draw="line"
-                  className={cn("block h-full rounded-full", visual.progressFill)}
-                  style={{ width: `${Math.min(100, (rows.length / Math.max(1, total)) * 100)}%` }}
-                />
-              </span>
-            </div>
+                çizgi olarak okunur" (CLAUDE.md). 5 piksellik nötr ray,
+                listenin neresinde olduğunu sayıdan önce söylüyor.
+                10 Kasım: sayaç, şerit ve buton tek grupta, SOLDA. Bandın
+                iki ucuna gerilmişlerdi (`justify-between` yasağı): 1320
+                piksellik bantta sayaç ile buton arasında ~1.000 piksel boş
+                duruyordu. İkizi MembersTable. */}
+            <p className={cn("numeral", table.moreCount)}>
+              {t.companies.showing
+                .replace("{n}", String(rows.length))
+                .replace("{total}", String(total))}
+            </p>
+            <span aria-hidden className={table.moreLane}>
+              <i
+                data-motion-draw="line"
+                style={{ width: `${Math.min(100, (rows.length / Math.max(1, total)) * 100)}%` }}
+              />
+            </span>
             <Link
               href={moreHref}
               scroll={false}
               /* 44px: sayfanın en altındaki tek eylem ve mobilde dokunma
                  eşiğinin altındaydı (40px). Basılı durum evin lehçesinde. */
-              className="inline-flex min-h-11 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-[color,background-color,border-color,scale] hover:border-line-strong hover:text-strong active:scale-[0.97] motion-reduce:active:scale-100 sm:min-h-10"
+              className={table.moreButton}
             >
               {t.companies.showMore}
+              <CaretDown aria-hidden size={13} weight="bold" />
+            </Link>
+          </div>
+        )}
+        {/* Telefonda karşılaştırma bağlantısı tablonun dibinde — gerekçe
+            panel başlığındaki `action` yorumunda. */}
+        {compareHref && (
+          <div className={table.compareBar}>
+            <Link href={compareHref} className={table.compare}>
+              {t.compare.compareFirstFour}
+              <ArrowRight aria-hidden size={13} weight="bold" />
             </Link>
           </div>
         )}
@@ -1072,7 +1084,7 @@ function TableSkeleton({ rows }: { rows: number }) {
         <Skeleton className="h-3 w-36" />
         <Skeleton className="h-2.5 w-16" />
       </div>
-      <div className="flex h-9 items-center gap-6 border-b border-line bg-surface-sunken px-4 sm:px-5">
+      <div className="flex h-10 items-center gap-6 border-b border-line bg-surface-sunken px-4 sm:px-5">
         <Skeleton className="h-2 w-20" />
         <Skeleton className="h-2 w-12" />
         <Skeleton className="ml-auto h-2 w-14" />

@@ -64,17 +64,23 @@ export function ThemeStats({
     row === null ? (
       <p className={cn("numeral", styles.metricValue, "text-muted")}>{NO_VALUE}</p>
     ) : (
+      /* SAYI ÖNCE, KİMLİK ALTINDA (10 Kasım). Üye satırı sayının ÜSTÜNDEYDİ:
+         dört hücrenin büyük rakamları iki ayrı hatta duruyordu (medyan ve
+         yükselen/düşen y=1353, en güçlü/en zayıf y=1402 — 1440, canlı)
+         ve ilk iki hücrenin altı boş kalıyordu. Ekran düzeni kuralı 4: yan
+         yana ölçüler aynı hatta. Şimdi dört rakam tek hatta, ayrıntı (oran
+         şeridi, üye) altında. */
       <>
+        <p className={cn("numeral", styles.metricValue, tone(row.changePct))}>
+          <RollingFigure value={formatPercent(row.changePct, locale)} />
+        </p>
         <Link href={`/hisse/${row.symbol}`} prefetch={false} className={styles.member} data-cc={row.symbol}>
-          <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="md" />
+          <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
           <span className={styles.memberText}>
             <b className="numeral">{row.symbol}</b>
             <small>{row.name ?? NO_VALUE}</small>
           </span>
         </Link>
-        <p className={cn("numeral", styles.metricValue, tone(row.changePct))}>
-          <RollingFigure value={formatPercent(row.changePct, locale)} />
-        </p>
       </>
     );
 

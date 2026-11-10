@@ -101,6 +101,20 @@ export function PlanHistory({
                     <VerdictPill verdict={stance} label={verdictLabel(stance, t)} size="xs" />
                     {turned && <span className={cn("ml-2 text-tiny font-bold", changeToneClass(stance))}>{turned}</span>}
                   </td>
+                  {/* PLANSIZ YAYIN TEK CÜMLE (10 Kasım). SAT görüşünde bölge de
+                      stop da yok; satır "–", "–" ve boş bir kulvar basıyordu.
+                      Canlıda NVDA'nın beş satırının üçü böyleydi: altı çizgi
+                      ve üç boş ray, yani tablonun yarısı "veri yok" diyordu
+                      ("–" duvarı). Üç hücre tek hücrede birleşir ve nedenini
+                      söyler (Tek Harita'nın cümlesi, `technicalVisuals.noPlan`);
+                      boş kulvar basılmaz. Yalnız biri eksikse eski düzen ve
+                      tek "–" kalır. */}
+                  {!zone && entry.stop === null ? (
+                    <td data-cell="planless" colSpan={scale ? 3 : 2} className={styles.historyPlanless}>
+                      {t.technicalVisuals.noPlan}
+                    </td>
+                  ) : (
+                  <>
                   <td className="numeral" data-cell="entry" data-label={t.technical.entryZone}>
                     {zone
                       ? formatRange(zone.low, zone.high, locale)
@@ -109,7 +123,9 @@ export function PlanHistory({
                   <td className="numeral" data-cell="stop" data-label={t.technical.stop}>
                     {formatPrice(entry.stop, locale, { currency: true })}
                   </td>
-                  {scale && (
+                  </>
+                  )}
+                  {scale && (zone || entry.stop !== null) && (
                     <td data-cell="track" aria-hidden>
                       {/* Bölge kapsülü soldan çizilir, stop çentiği yerine
                           oturur (14 Ekim) — sayfadaki öteki karşılaştırma

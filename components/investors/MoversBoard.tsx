@@ -92,7 +92,14 @@ export function MoversBoard({
         <p className="border-t border-line px-4 py-4 text-small text-muted sm:px-5">{t.moversEmpty}</p>
       ) : (
         <div className={styles.stocks} style={{ "--peak": peak } as CSSProperties}>
-          <ol className={styles.stockGrid} data-motion-stagger>
+          {/* Sütun sayısı kart sayısını bölüyorsa son satır dolu biter
+              (gerekçe InvestorsIndex.module.css → `.stockGrid`). */}
+          <ol
+            className={styles.stockGrid}
+            data-cols-wide={[4, 5, 3].find((n) => rows.length % n === 0) ?? 4}
+            data-cols-mid={[3, 2].find((n) => rows.length % n === 0) ?? 3}
+            data-motion-stagger
+          >
             {rows.map(({ entry, buyers, sellers }) => {
               const meta = entry.ticker ? known[entry.ticker] : undefined;
               const net = buyers.length - sellers.length;

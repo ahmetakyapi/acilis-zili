@@ -131,7 +131,7 @@ function MovingAveragesPanel({
                     )}
                   </>
                 ) : (
-                  <span className="text-tiny font-medium text-muted">{t.technical.notEnoughHistory}</span>
+                  <span className="text-tiny font-normal text-muted">{t.technical.notEnoughHistory}</span>
                 )}
               </dd>
               {distance !== null && (
@@ -271,6 +271,16 @@ function MacdPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; local
   );
 }
 
+/** Hacim satırının büyüklük şeridi; değer ya da ölçek yoksa hiç basılmaz. */
+function VolumeBar({ value, peak, heavy }: { value: number | null; peak: number; heavy?: boolean }) {
+  if (value === null || peak <= 0) return null;
+  return (
+    <div className={styles.volumeBar} data-heavy={heavy || undefined} aria-hidden>
+      <span data-motion-draw="bar" style={{ width: `${Math.min(100, (value / peak) * 100)}%` }} />
+    </div>
+  );
+}
+
 function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; locale: Locale; t: Dictionary }) {
   const ratio =
     snapshot.lastVolume !== null && snapshot.avgVolume20 ? snapshot.lastVolume / snapshot.avgVolume20 : null;
@@ -282,6 +292,7 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
   /* Ölçek üç kat: ortalamanın üç katı hacim zaten olağanüstü, fazlası
      çubuğu doldurur. Ortalama çizgisi ölçeğin üçte birinde. */
   const scale = 3;
+  const volumePeak = Math.max(snapshot.lastVolume ?? 0, snapshot.avgVolume20 ?? 0, snapshot.todayVolume ?? 0);
   return (
     <section className={styles.indicator}>
       <Head
@@ -292,14 +303,24 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
       />
       <Lead>{t.technical.volumeLead}</Lead>
       <div className={styles.indicatorBody}>
+        {/* HACİMLER BİR DE ÇİZGİ OLARAK (10 Kasım). Kart ızgaranın en kısa
+            kartıydı: iki sayı satırı, bir oran rayı ve dibe itilmiş tek
+            başına bir künye ("Ortalamaya Oran"); komşusu pivot kartının
+            boyuna gerildiğinde ray ile künye arasında 60 piksellik boş bant
+            kalıyordu (ölçüldü, 1440). Karşılaştırılan büyüklük çizgi olarak
+            okunur (`.claude/rules/arayuz.md` → Ekran Düzeni): her satırın
+            altında aynı ölçekte (üçünün en büyüğü) 5 piksellik şerit. Oran
+            künyesi rayının ÜSTÜNE taşındı, ray grubu kartın dibine yaslı. */}
         <dl className={styles.rows}>
           <div className={styles.row}>
             <dt>{t.technical.volumeLast}</dt>
             <dd>{formatCompact(snapshot.lastVolume, locale)}</dd>
+            <VolumeBar value={snapshot.lastVolume} peak={volumePeak} heavy={heavy} />
           </div>
           <div className={styles.row}>
             <dt>{t.technical.volumeAverage}</dt>
             <dd>{formatCompact(snapshot.avgVolume20, locale)}</dd>
+            <VolumeBar value={snapshot.avgVolume20} peak={volumePeak} />
           </div>
           {/* DONMUŞ SAYI, KENDİ SAATİYLE. Değer yazma anındaki kotasyonun hacmi
               ve fotoğrafta sabit; "Bugün (Şu Ana Kadar)" diye basılınca Cuma
@@ -314,18 +335,19 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
                 )}
               </dt>
               <dd>{formatCompact(snapshot.todayVolume, locale)}</dd>
+              <VolumeBar value={snapshot.todayVolume} peak={volumePeak} />
             </div>
           )}
         </dl>
         {ratio !== null && (
-          <>
+          <div className={styles.volumeRatio}>
+            <p className={styles.indicatorNote}>{t.technical.volumeRatio}</p>
             <div className={styles.ratioTrack} data-heavy={heavy || undefined} aria-hidden>
               <span data-motion-draw="bar" style={{ width: `${Math.min(100, (ratio / scale) * 100)}%` }} />
               <i style={{ left: `${100 / scale}%` }} />
             </div>
             <div className={styles.volumeScale} aria-hidden="true"><span>0</span><span>1×</span><span>3×+</span></div>
-            <p className={styles.indicatorNote}>{t.technical.volumeRatio}</p>
-          </>
+          </div>
         )}
       </div>
     </section>
