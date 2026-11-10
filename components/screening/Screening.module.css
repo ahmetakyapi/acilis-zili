@@ -127,12 +127,11 @@
 .lane { grid-column:1 / -1; position:relative; display:block; min-width:0; padding:4px 6px 16px; }
 .laneRail { position:relative; display:block; height:15px; container-type:inline-size; }
 .laneRail::before { content:""; position:absolute; inset-inline:-6px; top:50%; height:5px; margin-top:-2.5px; border-radius:999px; background:var(--rail-track,var(--line-soft)); }
-.laneZone { position:absolute; top:50%; height:5px; margin-top:-2.5px; background:color-mix(in srgb, var(--up) 16%, transparent); }
-.laneGap { position:absolute; top:50%; height:5px; margin-top:-2.5px; background:var(--st); }
+/* 10 Kasım: zemin, dikkat çentiği ve nokta kalktı; fark çubuğu 5 → 8 piksel
+   (gerekçe ScreenReport.tsx → ThresholdLane). */
+.laneGap { position:absolute; top:calc(50% - 4px); height:8px; border-radius:0 999px 999px 0; background:var(--st); }
+.laneGap[data-side="below"] { border-radius:999px 0 0 999px; }
 .lanePass { position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-strong); }
-.laneWarn { position:absolute; top:3px; bottom:3px; width:1.5px; margin-left:-.75px; border-radius:1px; background:var(--text-muted); }
-.laneDot { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border:2px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--text-strong); box-sizing:border-box; }
-.laneDot[data-clipped] { background:var(--premium-surface,var(--surface-solid)); box-shadow:inset 0 0 0 2px var(--text-strong); }
 .laneLabel { position:absolute; bottom:0; color:var(--text-muted); font-size:12px; line-height:1.2; white-space:nowrap; translate:-50% 0; }
 .laneLabel[data-align="start"] { translate:-6px 0; }
 .laneLabel[data-align="end"] { translate:calc(-100% + 6px) 0; }

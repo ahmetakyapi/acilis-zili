@@ -170,19 +170,26 @@ export async function ScorecardPanel({ symbol, locale, t }: { symbol: string; lo
  * etmiyor"). Her şirket için bir çentik vardı; 70 şirketlik sektörde şerit
  * bir barkoda dönüyordu ve okuyucu ne gösterdiğini çözemiyordu. Kalan: 5
  * piksellik dolu şerit (konunun yüzdeliği), konunun noktası ve medyan
- * çizgisi; ölçeğin uçları ve ortası listenin üstünde yazılı. Sektördeki
+ * çizgisi (nokta 10 Kasım'da kalktı, aşağıda); ölçeğin uçları ve ortası listenin üstünde yazılı. Sektördeki
  * şirket sayısı başlığın künyesinde ve ekran okuyucu etiketinde duruyor.
  *
  * Eski çubuk yalnızca yüzdeyi uzunluk olarak tekrar ediyordu; yanında
  * yazan sayıdan başka bir şey söylemiyordu. Şerit o sayıya sektörün
  * ortasının nerede olduğunu ekliyor (uzun çizgi, medyan; `axisDistribution`
- * — aynı yöntem, kendisi hariç herkese karşı). Dolu ray konunun yüzdeliği,
- * yuvarlak işaret konunun kendisi.
+ * — aynı yöntem, kendisi hariç herkese karşı). Dolu ray konunun yüzdeliği.
  *
  * TEK TON, YARGI YOK. Yüksek yüzdelik "iyi" demek değil (lib/scorecard.ts
- * başlığı), o yüzden yön rengi yok: ray ve işaret marka tonunda, medyan
- * nötr. İşaret medyandan kalkıp kendi yerine kayıyor (`travel`): hareketin
- * kendisi "sektörün ortasına göre nerede" sorusunun cevabı.
+ * başlığı), o yüzden yön rengi yok: şerit sitenin büyüklük tonunda, medyan
+ * koyu ince çentik.
+ *
+ * NOKTA KALKTI, ŞERİT KALINLAŞTI (10 Kasım 2026, sahibinin sözü: "böyle
+ * nokta nokta ne anlatıyor anlamıyorum; yatayda uzun kalın çizgi
+ * seviyorum"). Şeridin ucunda 13 piksellik yuvarlak bir işaret vardı ve
+ * medyandan kendi yerine kayıyordu: dolu şeridin ucu zaten aynı yeri
+ * söylüyor, nokta ikinci bir im olarak okurun "hangisine bakacağım"
+ * sorusunu açıyordu. Şimdi tek şey: sıfırdan yüzdeliğe uzanan 8 piksellik
+ * dolu şerit (kulvar 5); medyan onun üstünde tek kıyas imi. Sayı satırın
+ * sağında güçlü puntoyla yazılı.
  */
 function ScoreStrip({
   percentile,
@@ -199,13 +206,6 @@ function ScoreStrip({
         <i data-motion-draw="line" style={{ width: `${percentile}%` }} />
       </span>
       {median !== null && <i aria-hidden className={styles.stripMedian} style={{ left: `${median}%` }} />}
-      <i
-        aria-hidden
-        className={styles.stripDot}
-        data-motion-draw="travel"
-        data-delta={((median ?? percentile) - percentile).toFixed(2)}
-        style={{ left: `${percentile}%` }}
-      />
     </span>
   );
 }

@@ -173,15 +173,18 @@
    `container-type` işaretin `travel` kaymasını şeridin eniyle ölçüyor. */
 /* 11 Ekim: çentikler kalktı (gerekçe ScoreStrip'te). Grafik dili CLAUDE.md
    "ince": kulvar üstünde 5 piksellik şerit. Dolu kısım yüzdelik; medyan
-   kulvarı aşan tek ince çizgi; işaret konunun kendisi. */
+   kulvarı aşan tek ince çizgi; işaret konunun kendisi.
+   10 Kasım: yuvarlak işaret kalktı, dolu kısım 8 piksel (aşağıda). Şeridin
+   `margin-inline`i duruyor: ölçek başlığı (`.axisScale`) ona hizalı. */
 .strip { grid-area:strip; position:relative; display:block; height:18px; margin-inline:6px; container-type:inline-size; }
 .stripRail { position:absolute; inset-inline:0; top:50%; height:var(--lane-h,5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
 /* Renk kararı (25 Ekim son düzeltme): yüzdelik bir büyüklük, etkileşim
    değil; şerit sitenin tek büyüklük tonu `--bar-soft` (önce doygun
    `--primary` %55, sonra `--primary-soft` %60 idi), nokta en koyu mürekkep. */
-.stripRail > i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); }
-.stripMedian { position:absolute; top:1px; bottom:1px; width:2px; margin-left:-1px; border-radius:1px; background:var(--line-strong); }
-.stripDot { position:absolute; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border:2.5px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--text-strong); box-sizing:border-box; }
+.stripRail > i { position:absolute; left:0; top:calc(50% - 4px); display:block; height:8px; border-radius:999px; background:var(--bar-soft); }
+/* 10 Kasım: 13 piksellik nokta kalktı, dolu şerit 5 → 8 piksel (kulvar 5);
+   medyan şeridin ÜSTÜNDE koyu ince çentik (gerekçe ScoreStrip). */
+.stripMedian { position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-strong); }
 /* Ölçek başlığı: satırla aynı üç sütun; yazılar şerit sütununun solunda,
    ortasında ve sağında (şeridin `margin-inline`i kadar içeride). */
 /* 12 PİKSEL (14 Ekim): 11,5 sitenin metin tabanının altındaydı (globals.css
@@ -577,41 +580,9 @@
   ul.tradeGrid > li > a > :nth-child(3) { justify-self:start; }
 }
 
-/* BANT VE GEÇMİŞ RAPORLAR (12 Ekim) — `ExpectedMoveFigure`. İnce grafik
-   dili: kulvar `--line-soft`, sıfır `--line-strong`, bant nötr ton, renk
-   yalnız işaretten. Sunucu son kareyi basar; hareket yalnız `data-armed`
-   altında tanımlı ve `data-play` gelene dek ilk karede duraklatılmış
-   (`PlayOnView`). Sayılar bileşenin başlığındaki sekiz satırda. */
-.emFig { display:flex; flex-direction:column; gap:12px; margin:0 0 16px; }
-.emFigHead h3 { font-size:var(--text-small); font-weight:600; color:var(--text-strong); }
-.emFigHead p { margin-top:2px; font-size:12px; line-height:1.55; color:var(--text-muted); }
-/* Nokta 9 → 11 piksel, satır 14 → 16 (10 Kasım 2026): 1320 piksellik panelde 9
-   piksellik nokta kayboluyordu; değer etiketi çizimin üstünde (`.emFigLabels`). */
-.emFigPlot { --dot:11px; --row-h:16px; position:relative; height:calc(var(--rows,1) * var(--row-h) + 20px); }
-.emFigPlot::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line-soft); }
-.emFigBand { position:absolute; inset-block:0; border-radius:6px; background:color-mix(in srgb, var(--text-strong) 7%, transparent); box-shadow:inset 1px 0 var(--line-strong), inset -1px 0 var(--line-strong); }
-.emFigZero { position:absolute; inset-block:4px; left:50%; width:1px; background:var(--line-strong); }
-.emFigDot { position:absolute; width:var(--dot); height:var(--dot); margin-left:calc(var(--dot) / -2); border-radius:50%; top:calc(50% - var(--rows,1) * var(--row-h) / 2 + var(--row,0) * var(--row-h) + (var(--row-h) - var(--dot)) / 2); background:var(--up); box-shadow:0 0 0 2px var(--premium-surface); }
-.emFigDot[data-dir="down"] { background:var(--down); }
-/* Bandın içinde kalan nokta kısık: göz önce dışarı çıkanları sayar. */
-.emFigDot:not([data-out]) { opacity:.55; }
-.emFigLabels { position:relative; height:16px; margin-bottom:-6px; font-size:12px; font-weight:600; line-height:16px; }
-.emFigLabels > span { position:absolute; top:0; translate:-50% 0; white-space:nowrap; color:var(--up); }
-.emFigLabels > span[data-dir="down"] { color:var(--down); }
-.emFigScale { text-align:center; font-size:12px; font-weight:600; color:var(--text-strong); }
-.emFigReadout { padding-top:10px; border-top:1px solid var(--line-soft); font-size:13px; line-height:1.5; color:var(--text-body); }
-
-.emFigStage[data-armed] .emFigBand { animation:em-band 600ms var(--ease-brand) both; }
-/* 10 Kasım, tek merdiven: toplam 1,5 sn → ≤ 0,9 (bant 600; ölçek 200 @300;
-   noktalar 300 @400 + 45i; etiket 200 @500; okuma 200 @600). */
-.emFigStage[data-armed] .emFigScale { animation:em-fade 200ms var(--ease-brand) 300ms both; }
-.emFigStage[data-armed] .emFigDot { animation:em-drop 300ms var(--ease-brand) calc(400ms + var(--i,0) * 45ms) both; }
-.emFigStage[data-armed] .emFigReadout { animation:em-fade 200ms var(--ease-brand) calc(600ms + var(--n,0) * 45ms) both; }
-.emFigStage[data-armed] .emFigLabels { animation:em-fade 200ms var(--ease-brand) calc(500ms + var(--n,0) * 45ms) both; }
-.emFigStage[data-armed]:not([data-play]) :is(.emFigBand,.emFigScale,.emFigDot,.emFigReadout,.emFigLabels) { animation-play-state:paused; }
-@keyframes em-band { from { scale:0 1; } }
-@keyframes em-drop { from { opacity:0; translate:0 -10px; } }
-@keyframes em-fade { from { opacity:0; } }
-@media (prefers-reduced-motion:reduce) {
-  .emFigStage[data-armed] :is(.emFigBand,.emFigScale,.emFigDot,.emFigReadout,.emFigLabels) { animation:none; }
-}
+/* BANT VE GEÇMİŞ RAPORLAR figürü (12 Ekim, `ExpectedMoveFigure`) 10 Kasım
+   2026'da kalktı: bandın üstünde rapor başına bir nokta çiziyordu ve aynı
+   bilgi hemen altındaki satırlarda kalın çubukla zaten duruyor (gerekçe
+   ExpectedMovePanel.tsx). Kalan: satırların üstündeki okuma cümlesi. */
+.emReadout { margin-top:4px; color:var(--text-muted); font-size:12.5px; line-height:1.55; }
+.emReadout > b { color:var(--text-strong); font-weight:600; }

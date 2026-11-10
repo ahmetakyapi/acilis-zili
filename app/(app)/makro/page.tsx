@@ -246,7 +246,7 @@ function gaugesOf(series: BoardSeries[], locale: Locale, t: Dictionary): GaugeVi
       value: signed,
       text: fillTemplate({ normal: v.gaugeCurveNormal, flat: v.gaugeCurveFlat, inverted: v.gaugeCurveInverted }[shape], { spread: points(Math.abs(spread)) }),
       alert: shape === "inverted",
-      visual: { kind: "slope", rise: spread / span, short: v.gaugeShort, long: v.gaugeLong },
+      visual: { kind: "spread", rise: spread / span, zeroLabel: points(0), lo: v.gaugeInverted, hi: v.gaugeNormal },
     });
   }
 

@@ -1,7 +1,7 @@
 /* ---- Plan atlası: "16 Hisse, Tek Harita" (25 Ekim) ----
    Gerekçe `PlanAtlas.tsx` ve `lib/technical-visuals.ts`. Grafik dili sitenin
    kulvarı: `--line-soft` üstünde 5 piksellik şerit, ince çentikler; renk
-   yalnız yön (hedef `--up`, stop ve satış `--down`), nokta mürekkep.
+   yalnız yön (hedef `--up`, stop ve satış `--down`), fiyat çubuğu nötr.
    ALIM BÖLGESİ TEK SINIF (25 Ekim): `.zoneBand` — alım planının yumuşak
    yeşili. `/teknik/[symbol]` Görüş Geçmişi'nin "Planın Seyri" şeridi aynı
    sınıfı kullanıyor; orada bölge görüşe göre maviydi, aynı bölge iki
@@ -31,12 +31,13 @@
    aynı reçete. */
 .legendZone, .zoneBand { border-radius:5px; background:linear-gradient(var(--primary-wash), var(--primary-wash)), var(--premium-surface); box-shadow:inset 0 0 0 1px var(--primary-faint); }
 .legendZone { width:18px; height:10px; border-radius:4px; }
-.legendDot { width:10px; height:10px; border-radius:50%; background:var(--text-strong); }
-.legendDot[data-snapshot] { background:transparent; box-shadow:inset 0 0 0 2px var(--text-strong); }
+/* 10 Kasım: fiyat noktası → kalın çubuk (gerekçe PlanAtlasView). Lejant imi
+   satırdaki çubuğun kendisi. */
+.legendBar { width:18px; height:8px; border-radius:999px; background:var(--flat); }
+.legendBar[data-snapshot] { background:transparent; box-shadow:inset 0 0 0 2px var(--flat); }
 .legendTick { width:2px; height:14px; border-radius:1px; background:var(--text-muted); }
 .legendTick[data-kind="stop"] { background:var(--down); }
 .legendTick[data-kind="target"] { background:var(--up); }
-.legendTick[data-kind="level"] { height:10px; background:var(--line-strong); }
 
 .body { display:grid; gap:20px; align-items:start; }
 
@@ -76,16 +77,15 @@
 .tick { position:absolute; top:50%; left:calc(var(--at) * 100%); width:2px; height:14px; margin:-7px 0 0 -1px; border-radius:1px; background:var(--text-muted); }
 .tick[data-kind="stop"], .tick[data-kind="sell"] { background:var(--down); }
 .tick[data-kind="target"] { background:var(--up); }
-.tick[data-kind="target2"] { height:10px; margin-top:-5px; background:var(--up); opacity:.55; }
-.tick[data-kind="sell2"] { height:10px; margin-top:-5px; background:var(--down); opacity:.55; }
-.tick[data-kind="level"] { width:2px; height:10px; margin:-5px 0 0 -1px; background:var(--line-strong); }
-/* Taşıyıcı izin tam genişliği; `translateX(%)` kendi genişliğine göre,
-   yani izin genişliğine göre — nokta `left` değil `transform` ile yürüyor. */
-.carrier { position:absolute; inset:0; pointer-events:none; transform:translateX(calc(var(--at) * 100%)); }
-.dot { position:absolute; top:50%; left:0; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--text-strong); box-shadow:0 0 0 2px var(--premium-surface); }
-.dot[data-tone="up"] { background:var(--up); }
-.dot[data-tone="down"] { background:var(--down); }
-.dot[data-snapshot] { background:var(--premium-surface); box-shadow:inset 0 0 0 2px var(--text-strong), 0 0 0 2px var(--premium-surface); }
+.tick[data-kind="support"], .tick[data-kind="resistance"] { background:var(--text-muted); }
+/* FİYAT ÇUBUĞU: stoptan (0) fiyata, 8 piksel (kulvar 5); dış ucu yuvarlak,
+   sıfıra dayanan ucu düz. Ton yön taşıyorsa ondan (bölgede `--up`, stop
+   altında `--down`), yoksa nötr `--flat`. Analiz anındaki fiyat içi boş. */
+.fill { position:absolute; top:calc(50% - 4px); height:8px; border-radius:0 999px 999px 0; background:var(--flat); transform-origin:left center; animation-delay:calc(min(var(--i, 0), 10) * var(--step)); }
+.fill[data-side="below"] { border-radius:999px 0 0 999px; transform-origin:right center; }
+.fill[data-tone="up"] { background:var(--up); }
+.fill[data-tone="down"] { background:var(--down); }
+.fill[data-snapshot] { background:var(--premium-surface); box-shadow:inset 0 0 0 2px var(--flat); }
 .noLevels { position:absolute; inset:0; display:flex; align-items:center; font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 .distance { text-align:right; font-size:12.5px; font-weight:600; color:var(--text-body); white-space:nowrap; }
@@ -148,7 +148,7 @@
   .legend { gap:4px 12px; font-size:12px; }
 }
 
-/* ---- Giriş: bir kez; nokta stoptan (0) bugünkü yerine yürür ----
+/* ---- Giriş: bir kez; çubuk stoptan (0) fiyata dolar (`bar-fill`, TSX'te) ----
    10 Kasım (hareket merdiveni): süreler 480/360/760 ms ve satır başına
    28 ms idi (16 satırda 448 ms + 180 ms taban = son nokta 628 ms'de
    kalkıyordu). Artık çizim `--draw`, çentik `--mark`, kademe `--step` ve
@@ -159,11 +159,9 @@
   .lane, .zone { animation:atlas-in var(--draw) var(--ease-brand) calc(min(var(--i, 0), 10) * var(--step)) backwards; }
   .zone { transform-origin:center; }
   .tick { animation:atlas-fade var(--mark) var(--ease-brand) calc(min(var(--i, 0), 10) * var(--step)) backwards; }
-  .carrier { animation:atlas-travel var(--draw) var(--ease-brand) calc(min(var(--i, 0), 10) * var(--step)) backwards; }
 }
 @keyframes atlas-in { from { opacity:0; transform:scaleX(.2); } }
 @keyframes atlas-fade { from { opacity:0; } }
-@keyframes atlas-travel { from { opacity:0; transform:translateX(calc(var(--from) * 100%)); } 25% { opacity:1; } }
 @media (prefers-reduced-motion: reduce) {
   .inline { animation:none; }
 }

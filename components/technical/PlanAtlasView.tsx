@@ -16,7 +16,7 @@ export type AtlasRowView = {
   stance: string;
   href: string;
   geometry: AtlasGeometry | null;
-  /** Kotasyon yok, fiyat analiz anından: nokta içi boş halka. */
+  /** Kotasyon yok, fiyat analiz anından: çubuk içi boş (yalnız kenar). */
   fromSnapshot: boolean;
   priceText: string;
   priceLabel: string;
@@ -48,7 +48,6 @@ type Copy = {
   legendSnapshot: string;
   legendStop: string;
   legendTarget: string;
-  legendLevel: string;
   noLevels: string;
   noPlan: string;
   details: string;
@@ -58,6 +57,9 @@ type Copy = {
 };
 
 type Vars = React.CSSProperties & Record<`--${string}`, string | number>;
+
+/** Satırda çizilen çentikler: eksenin iki ucu. Gerisi ayrıntıda (gerekçe çubuğun yorumunda). */
+const MAIN_TICKS: ReadonlySet<string> = new Set(["stop", "target", "support", "resistance", "sell"]);
 
 /**
  * Atlasın istemci adası — yalnız SEÇİM tutuyor; sayılar sunucuda biçimlendi
@@ -104,15 +106,14 @@ export function PlanAtlasView({
           <span className={styles.basis}>{basis}</span>
           <span>{copy.scaleNote}</span>
         </p>
-        {/* Lejant işaretlerin kendisiyle çiziliyor: satırdaki bant, nokta,
+        {/* Lejant işaretlerin kendisiyle çiziliyor: satırdaki bant, çubuk,
             çentik ne ise burada da o. */}
         <ul className={styles.legend} aria-hidden>
           <li><i className={styles.legendZone} />{copy.legendZone}</li>
-          <li><i className={styles.legendDot} />{copy.legendPrice}</li>
-          {anySnapshot && <li><i className={styles.legendDot} data-snapshot />{copy.legendSnapshot}</li>}
+          <li><i className={styles.legendBar} />{copy.legendPrice}</li>
+          {anySnapshot && <li><i className={styles.legendBar} data-snapshot />{copy.legendSnapshot}</li>}
           <li><i className={styles.legendTick} data-kind="stop" />{copy.legendStop}</li>
           <li><i className={styles.legendTick} data-kind="target" />{copy.legendTarget}</li>
-          <li><i className={styles.legendTick} data-kind="level" />{copy.legendLevel}</li>
         </ul>
       </header>
 
@@ -166,23 +167,37 @@ export function PlanAtlasView({
                                   style={{ "--from": g.zone.from, "--to": g.zone.to } as Vars}
                                 />
                               )}
-                              {g.ticks.map((tick, k) => (
-                                <i key={`${tick.kind}-${k}`} className={styles.tick} data-kind={tick.kind} style={{ "--at": tick.at } as Vars} />
-                              ))}
-                              {/* Taşıyıcı izin tam genişliği: `translate`in yüzdesi
-                                  kendi genişliği, yani izin genişliği. Nokta stoptan
-                                  (0) bugünkü yerine kayarak giriyor. */}
-                              <span
-                                className={styles.carrier}
-                                style={{ "--at": g.at, "--from": axis.zero } as Vars}
-                              >
-                                <i
-                                  className={styles.dot}
-                                  data-snapshot={row.fromSnapshot || undefined}
-                                  data-tone={row.distanceTone}
-                                  data-clamped={g.clamped || undefined}
-                                />
-                              </span>
+                              {/* KALIN ÇUBUK, NOKTA DEĞİL (10 Kasım 2026, sahibinin
+                                  sözü: "böyle nokta nokta ne anlatıyor anlamıyorum;
+                                  yatayda uzun kalın çizgi seviyorum"). Satırda beş
+                                  ayrı im vardı: alım bölgesi, fiyatın 11 piksellik
+                                  noktası, stop ve hedef çentikleri, ikinci hedefin
+                                  soluk çentiği ve her destek/direnç için gri bir
+                                  çentik (16 satırda ~40 gri çizgi). Şimdi satır TEK
+                                  şey söylüyor: stoptan (0) fiyatın bugünkü yerine
+                                  uzanan 8 piksellik dolu çubuk. Çubuğun ucu fiyat;
+                                  stop ve ilk hedef eksenin iki ucu olarak kaldı
+                                  (kıyas), alım bölgesi bir aralık olduğu için bant.
+                                  Destek/dirençler ve ikinci hedef satırın
+                                  ayrıntısında (sayıyla) ve planın kendi sayfasında.
+                                  Fiyat stopun altındaysa çubuk sıfırdan SOLA uzar. */}
+                              <i
+                                className={cn("bar-fill", styles.fill)}
+                                data-snapshot={row.fromSnapshot || undefined}
+                                data-tone={row.distanceTone}
+                                data-side={g.at < axis.zero ? "below" : "above"}
+                                style={{
+                                  ...(g.at < axis.zero
+                                    ? { right: `${((1 - axis.zero) * 100).toFixed(2)}%` }
+                                    : { left: `${(axis.zero * 100).toFixed(2)}%` }),
+                                  width: `${Math.max(Math.abs(g.at - axis.zero) * 100, 1).toFixed(2)}%`,
+                                }}
+                              />
+                              {g.ticks
+                                .filter((tick) => MAIN_TICKS.has(tick.kind))
+                                .map((tick, k) => (
+                                  <i key={`${tick.kind}-${k}`} className={styles.tick} data-kind={tick.kind} style={{ "--at": tick.at } as Vars} />
+                                ))}
                             </>
                           ) : (
                             <span className={styles.noLevels}>{row.verdict === "sell" ? copy.noLevels : copy.noPlan}</span>

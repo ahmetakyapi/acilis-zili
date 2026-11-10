@@ -43,50 +43,40 @@
    türünden değil çizgideki ROLÜNDEN (`data-mark` ← `legendMark`, 6 Kasım,
    inceleme): taban önceki olunca dik çizgi öncekinin, çentik hiç yok. */
 .key { display: inline-block; flex: none; }
-.key[data-mark="dot"] { width: 8px; height: 8px; border-radius: 50%; background: var(--flat); }
+/* 10 Kasım: gerçekleşenin imi nokta değil kalın çubuk (çizgideki gibi). */
+.key[data-mark="dot"] { width: 14px; height: 8px; border-radius: 999px; background: var(--flat); }
 .figure[data-dir="above"] .key[data-mark="dot"] { background: var(--up); }
 .figure[data-dir="below"] .key[data-mark="dot"] { background: var(--down); }
 .key[data-mark="zero"] { width: 2px; height: 12px; border-radius: 1px; background: var(--text-strong); }
 .key[data-mark="notch"] { width: 3px; height: 9px; border-radius: 2px; background: var(--text-muted); opacity: .7; }
 
 /* ---- Sapma çizgisi ----
-   Ray 24 piksel: ortada 2 piksellik eksen (`--line-soft` kulvarı),
-   beklenti 18 piksellik dik çizgi (`--text-strong`, sıfır), önceki 10
-   piksellik gri çentik, gerçekleşen 12 piksellik nokta. Nokta zemin
-   tonunda bir halka taşıyor ki çentik ya da sıfırla çakıştığında ayrı
-   okunsun (gölge değil, zemin rengi). */
+   Ray 24 piksel: ortada 5 piksellik kulvar (`--line-soft`), beklenti 18
+   piksellik dik çizgi (`--text-strong`, sıfır), önceki 10 piksellik gri
+   çentik, gerçekleşen beklentiden uzanan 8 piksellik dolu çubuk (dış ucu
+   yuvarlak, sıfıra dayanan ucu düz). 10 Kasım: 2 piksellik eksen, 4
+   piksellik yarı saydam bacak ve 12 piksellik nokta kalktı (gerekçe
+   DeviationLine.tsx). */
 .line { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; }
 .rail { position: relative; height: 24px; container-type: inline-size; }
-.axis { position: absolute; inset: 11px 0 auto; height: 2px; border-radius: 1px; background: var(--line-soft); }
-.leg { position: absolute; top: 10px; height: 4px; border-radius: 2px; background: var(--flat); opacity: .55; }
+.axis { position: absolute; inset: 9.5px 0 auto; height: 5px; border-radius: 999px; background: var(--line-soft); }
+.leg { position: absolute; top: 8px; height: 8px; border-radius: 0 999px 999px 0; background: var(--flat); }
+.leg[data-side="below"] { border-radius: 999px 0 0 999px; }
 .line[data-dir="above"] .leg { background: var(--up); }
 .line[data-dir="below"] .leg { background: var(--down); }
 .zero { position: absolute; top: 3px; left: 50%; width: 2px; height: 18px; margin-left: -1px; border-radius: 1px; background: var(--text-strong); }
 .previous { position: absolute; top: 7px; width: 3px; height: 10px; margin-left: -1.5px; border-radius: 2px; background: var(--text-muted); opacity: .7; }
-.dot {
-  position: absolute; top: 6px; width: 12px; height: 12px; margin-left: -6px; border-radius: 50%;
-  background: var(--flat);
-  /* Zemin halkası: kartın tonu (`--surface-sunken` sayfa zemininin üstünde). */
-  /* `--dev-ring`: çizgiyi başka zeminde basan yüzey kendi tonunu verir;
-     yoksa sayfa zemini. Zemin yarı saydam bir tonun bileşimiyse (Bugünün
-     Akışı'nın açık satırı, bülten kartının kuyusu) tek renk yetmiyor:
-     `--dev-ring-shadow` katlı halkayı verir (6 Kasım, inceleme). */
-  box-shadow: var(--dev-ring-shadow, 0 0 0 2px var(--dev-ring, var(--page-bg)));
-}
-.line[data-dir="above"] .dot { background: var(--up); }
-.line[data-dir="below"] .dot { background: var(--down); }
 
 /* KÜÇÜK HÂL (6 Kasım, inceleme; `DeviationLine compact`): bülten kartının
    "Günün Verileri" karosu. Ray 24 → 14 piksel, işaretler orantılı ve hepsi
-   7. pikselde ortalı: eksen 2, bacak 4, sıfır 12, çentik 8, nokta 10.
+   7. pikselde ortalı: kulvar 5, çubuk 8, sıfır 12, çentik 8.
    Uç adları yok (karoda taban künyesi ve yön yazılı). */
 .line[data-size="compact"] { gap: 0; margin-top: 0; }
 .line[data-size="compact"] .rail { height: 14px; }
-.line[data-size="compact"] .axis { top: 6px; }
-.line[data-size="compact"] .leg { top: 5px; }
+.line[data-size="compact"] .axis { top: 4.5px; }
+.line[data-size="compact"] .leg { top: 3px; }
 .line[data-size="compact"] .zero { top: 1px; height: 12px; }
 .line[data-size="compact"] .previous { top: 3px; height: 8px; }
-.line[data-size="compact"] .dot { top: 2px; width: 10px; height: 10px; margin-left: -5px; }
 
 /* Uç adları: yön sözle de yazılı. Orta künye sıfırın adı (Beklenti ya da,
    beklenti yoksa, Önceki). */

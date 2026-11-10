@@ -165,7 +165,8 @@
 .progressFill { background: var(--bar-soft); }
 
 /* Özet iskeleti — gerçek panelin yüksekliğine yakın (telefonda şerit + küme alt alta). */
-/* Ölçüldü (25 Ekim, süzgeçsiz): panel 634 / 568 / 397 piksel, başlık 48. */
-.summarySkeleton { display: grid; align-content: start; gap: 10px; height: 586px; padding: 4px 16px 20px; }
-@media (min-width: 640px) { .summarySkeleton { height: 520px; padding: 4px 20px 22px; } }
-@media (min-width: 1024px) { .summarySkeleton { height: 349px; padding: 6px 24px 24px; } }
+/* Ölçüldü (25 Ekim, süzgeçsiz): panel 634 / 568 / 397 piksel, başlık 48.
+   10 Kasım (küme → ölçü basamakları, MetricBands): 669 / 586 / 446. */
+.summarySkeleton { display: grid; align-content: start; gap: 10px; height: 621px; padding: 4px 16px 20px; }
+@media (min-width: 640px) { .summarySkeleton { height: 538px; padding: 4px 20px 22px; } }
+@media (min-width: 1024px) { .summarySkeleton { height: 398px; padding: 6px 24px 24px; } }

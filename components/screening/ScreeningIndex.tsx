@@ -19,7 +19,7 @@ import type { Dictionary } from "@/lib/i18n";
 import { CATEGORY_WEIGHTS, ELIMINATED_CAP, type Band, type CheckId, type ScreenCategory } from "@/lib/screening";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
-import { laneLabelLayout, SCORE_BAND_FLOORS } from "@/lib/tool-visuals";
+import { SCORE_BAND_FLOORS } from "@/lib/tool-visuals";
 import { MiniDial } from "./ScreenVisuals";
 import styles from "./ScreeningIndex.module.css";
 
@@ -183,61 +183,46 @@ export function WeightShare({
    Hızlı bakış: puan kulvarı
    ------------------------------------------------------------------------- */
 
-/** Kulvarın alt ucu en az bu; daha düşük puan varsa onlu yuvarlanarak iner. */
-const LANE_FLOOR = 40;
-
-/**
- * Etiket yerleşiminin kırılımları. `track`: o kırılımdaki EN DAR kulvar
- * (piksel) — çakışmasızlık oradan büyüğe taşınıyor (gerekçe
- * `laneLabelLayout`). Ölçüldü (6 Kasım, gerçek sayfa, .tmp ölçüm betiği):
- * kulvar 320'de 250, 360'ta 290, 640'ta 558, 1100'de 1002 piksel; payla
- * aşağı yuvarlandı. Telefonda iki satır 70+ piksel kaydırıyordu (etiket
- * noktasından kopuk), üç satırda en büyük kayma 15–25 piksel: uzak satırın
- * çizgisi yakın etiketin arkasından geçiyor (CSS `.laneTag` zemini).
- */
-const LANE_FITS = [
-  { key: "p", track: 248, gap: 4, maxRows: 3, maxShift: 34 },
-  { key: "m", track: 540, gap: 4, maxRows: 2, maxShift: 30 },
-  { key: "w", track: 960, gap: 4, maxRows: 2, maxShift: 26 },
-] as const;
-
-/** Etiket mono puntoda (11 px): genişlik harf sayısından kesin çıkıyor —
-    sunucu ölçemiyor, çakışma çözücü tahminle değil hesapla çalışsın.
-    Mono ~0,6 em; 6,7 px pay bırakıyor, +4 px iki yan nefes. */
-const LABEL_CHAR = 6.7;
-const LABEL_PAD = 4;
-/** Dikey ölçüler (piksel) — CSS'teki `.laneTag` / `.leader` hesaplarıyla aynı:
-    satır aralığı, raydan yakın etiketin kenarına uzaklık, etiket boyu, kenar payı. */
-const ROW_PITCH = 18;
-const LEAD = 22;
-const TAG_H = 14;
-const EDGE = 10;
-
-/** Bant → kulvar bölgesi (en düşükten). Eleme/veri yetersiz bölge açmaz:
-    elenen hisse 45'le sınırlanıp zayıf bölgeye düşüyor. */
+/** Bant → puan aralığı (en yüksekten). Eleme/veri yetersiz ayrı aralık açmaz:
+    elenen hisse 45'le sınırlanıp zayıf aralığa düşüyor. */
 const ZONES = [
-  { band: "weak", to: SCORE_BAND_FLOORS.mixed },
-  { band: "mixed", to: SCORE_BAND_FLOORS.worth },
-  { band: "worth", to: SCORE_BAND_FLOORS.strong },
-  { band: "strong", to: 100 },
+  { band: "strong", from: SCORE_BAND_FLOORS.strong, to: 100 },
+  { band: "worth", from: SCORE_BAND_FLOORS.worth, to: SCORE_BAND_FLOORS.strong },
+  { band: "mixed", from: SCORE_BAND_FLOORS.mixed, to: SCORE_BAND_FLOORS.worth },
+  { band: "weak", from: 0, to: SCORE_BAND_FLOORS.mixed },
 ] as const;
 
 /**
- * PUANLAR TEK KULVARDA. Kartlar puanı tek tek halkayla veriyordu; on altı
- * hissenin birbirine göre nerede durduğu (kaçı aynı bantta, en yüksekle en
- * düşük arası ne kadar) ancak hepsini okuyarak çıkıyordu. Kulvarda her hisse
- * bir nokta, rengi bandından (görüş paleti: güçlü yeşil, karışık pirinç,
- * zayıf kırmızı — kartlardaki halkayla aynı).
- * Kulvarın alt ucu 40 ya da en düşük puanın altındaki onluk: 0'dan başlasa
- * on altı nokta sağ çeyreğe yığılırdı; uçlar yazılı.
+ * PUAN SIRASI — her hisse bir satır, satırın KALIN çubuğu puanı.
  *
- * 6 Kasım turu: BANTLAR ZEMİNDE. Eşikler kulvarın altında kesik çentikti ve
- * bant adları çentiğin altına yazılıyordu — hangi aralığın hangi bant olduğu
- * çıkarım istiyordu. Şimdi her bant kulvarın arkasında kendi tonunda bir
- * bölge (yüzde 6–9'luk yıkama, kart halkasının rengi), adı bölgenin altında
- * aynı mürekkeple; eşik sayıları eksende sınırın tam altında. Etiketler
- * çakışma çözücüyle (`laneLabelLayout`) üstte ve altta tek sıra; nokta ile
- * etiket arasındaki çizgi kesişmiyor.
+ * Kartlar puanı tek tek halkayla veriyor; on altı hissenin birbirine göre
+ * nerede durduğu (kaçı aynı bantta, en yüksekle en düşük arası ne kadar)
+ * ancak hepsini okuyarak çıkıyordu. Bu blok o soruyu tek bakışta veriyor.
+ *
+ * 10 Kasım 2026: NOKTALI KULVAR KALKTI. Önceki hâl ("Puanlar Tek Kulvarda",
+ * 25 Ekim; 6 Kasım'da bant zeminleri eklendi) tek bir rayın üstünde her
+ * hisse için 12 piksellik bir nokta, noktadan çizgiyle bağlanan sembol
+ * etiketi (üstte ve altta ikişer satır, çakışma çözücüyle) ve arkada dört
+ * bant yıkamasıydı; ray 40'tan başlıyordu. Sahibinin itirazı (Temalar
+ * panosundaki çentikler için; "başka buna uyarlanacak ekran varsa onları da
+ * yapalım"): "böyle nokta nokta ne anlatıyor anlamıyorum; çizgi grafiği
+ * yerine yatayda uzun KALIN çizgi seviyorum." Okurun çözmesi gerekenler:
+ * hangi etiket hangi noktanın (79 ile 80 arasındaki üç nokta dört etikete
+ * çizgiyle bağlıydı), rayın sıfırdan değil 40'tan başladığı, zeminin bant
+ * olduğu.
+ *
+ * Şimdi: sembol, SIFIRDAN puana uzanan 8 piksellik dolu çubuk (kulvar 5),
+ * puan. Çubuğun rengi bandından (görüş paleti: güçlü yeşil, karışık
+ * pirinç, zayıf kırmızı; kartlardaki halkayla aynı). Bantların aralığı
+ * çizimde değil lejantta yazılı. Satırlar puana göre sıralı; her genişlikte
+ * iki sütun (sol sütun üst yarı). Ölçek 0–100: çubuğun boyu puanın kendisi,
+ * yakınlaştırma yok. Satır bağlantı DEĞİL: hemen altındaki kartlar aynı
+ * on altı hissenin bağlantısı; ikinci bir bağlantı listesi telefonda 44
+ * piksellik satır isterdi (ölçüldü, 390: tek sütun bağlantılı liste 662
+ * piksel; iki sütun düz satır 318).
+ *
+ * Çakışma çözücü (`laneLabelLayout`, lib/tool-visuals.ts) artık ekranda
+ * kullanılmıyor; testi duruyor.
  */
 export function ScoreLane({
   rows,
@@ -249,103 +234,41 @@ export function ScoreLane({
   V: Dictionary["toolVisuals"]["screening"];
 }) {
   if (rows.length < 2) return null;
-  const min = Math.min(...rows.map((row) => row.score));
-  const lo = Math.min(LANE_FLOOR, Math.floor((min - 5) / 10) * 10);
-  const pos = (score: number) => ((Math.min(100, Math.max(lo, score)) - lo) / (100 - lo)) * 100;
-  const positions = rows.map((row) => pos(row.score));
-  const items = rows.map((row, i) => ({ at: positions[i], width: row.symbol.length * LABEL_CHAR + LABEL_PAD }));
-
-  const plot: Record<string, string> = {};
-  const tagVars: Record<string, string | number>[] = rows.map(() => ({}));
-  for (const fit of LANE_FITS) {
-    const places = laneLabelLayout(items, fit);
-    const used = Math.max(...places.map((place) => place.row)) + 1;
-    const above = Math.ceil(used / 2);
-    const below = Math.floor(used / 2);
-    const railY = EDGE + LEAD + TAG_H + (above - 1) * ROW_PITCH;
-    plot[`--rail-y-${fit.key}`] = `${railY}px`;
-    plot[`--plot-h-${fit.key}`] = `${railY + (below ? LEAD + TAG_H + (below - 1) * ROW_PITCH : 12) + EDGE}px`;
-    places.forEach((place, i) => {
-      const vars = tagVars[i];
-      vars[`--x-${fit.key}`] = place.shift;
-      vars[`--xa-${fit.key}`] = Math.max(1, Math.abs(place.shift));
-      vars[`--fx-${fit.key}`] = place.shift < 0 ? -1 : 1;
-      vars[`--s-${fit.key}`] = place.row % 2 === 0 ? -1 : 1;
-      vars[`--lv-${fit.key}`] = Math.floor(place.row / 2);
-    });
-  }
-
-  const zones = ZONES.map((zone, i) => {
-    const start = i === 0 ? lo : ZONES[i - 1].to;
-    return { band: zone.band, start, end: zone.to, left: pos(start), width: pos(zone.to) - pos(start) };
-  }).filter((zone) => zone.width > 0);
-  const ticks = [lo, ...zones.slice(0, -1).map((zone) => zone.end), 100];
-
+  const sorted = [...rows].sort((a, b) => b.score - a.score || a.symbol.localeCompare(b.symbol));
   return (
-    <figure className={styles.lane} data-draw>
+    <figure className={styles.lane}>
       <figcaption className={styles.laneHead}>
         <span>{V.laneTitle}</span>
         <span className={styles.laneHint}>{V.laneHint}</span>
       </figcaption>
-      <div className={styles.lanePlot} style={plot as CSSProperties} aria-hidden>
-        {zones.map((zone) => (
-          <span key={zone.band} className={styles.zone} data-band={zone.band} style={{ left: `${zone.left}%`, width: `${zone.width}%` }} />
+      <ol className={styles.laneRows} style={{ "--half": Math.ceil(sorted.length / 2) } as CSSProperties} data-draw>
+        {sorted.map((row, i) => (
+          <li key={row.symbol} className={styles.laneRow} style={{ "--i": i } as CSSProperties}>
+            <span className={styles.laneSymbol}>{row.symbol}</span>
+            <span className={styles.laneTrack} aria-hidden>
+              <i
+                className="bar-fill"
+                data-band={row.band ?? "limited"}
+                style={{ width: `${Math.max(Math.min(100, row.score), 1.5)}%` }}
+              />
+            </span>
+            <b className="numeral">{row.score}</b>
+          </li>
         ))}
-        <span className={styles.rail} />
-        {rows.map((row, i) => (
-          <span key={row.symbol} className={styles.leader} style={{ "--at": positions[i], ...tagVars[i] } as CSSProperties}>
-            <svg viewBox="0 0 1 1" preserveAspectRatio="none">
-              <line x1="0" y1="1" x2="1" y2="0" vectorEffect="non-scaling-stroke" />
-            </svg>
-          </span>
-        ))}
-        {rows.map((row, i) => (
-          <span
-            key={row.symbol}
-            className={styles.dot}
-            data-band={row.band ?? "limited"}
-            style={{ left: `${positions[i]}%`, "--i": i } as CSSProperties}
-          />
-        ))}
-        {rows.map((row, i) => (
-          <span key={row.symbol} className={styles.laneTag} data-band={row.band ?? "limited"} style={{ "--at": positions[i], ...tagVars[i] } as CSSProperties}>
-            {row.symbol}
-          </span>
-        ))}
-      </div>
-      <div className={styles.laneAxis} aria-hidden>
-        {ticks.map((tick, i) => (
-          <span
-            key={tick}
-            className={`numeral ${styles.tick}`}
-            data-edge={i === 0 ? "start" : i === ticks.length - 1 ? "end" : undefined}
-            style={{ left: `${pos(tick)}%` }}
-          >
-            {tick}
-          </span>
-        ))}
-        {zones.map((zone) => (
-          <span key={zone.band} className={styles.zoneName} data-band={zone.band} style={{ left: `${zone.left}%`, width: `${zone.width}%` }}>
-            {bands[zone.band]}
-          </span>
-        ))}
-      </div>
-      {/* Telefonda bölge adları sığmıyor (15 puanlık bölge ~60 piksel):
-          aynı bilgi aralığıyla bir lejant olarak. Zayıf bant 0'dan başlar;
-          kulvar yakınlaştırıldığı için ilk bölgenin `start`ı eksenin alt ucu
-          (ör. 40) ve lejant "Zayıf 40–49" diyordu. Bant tanımı gereği alt
-          sınırsız: "<50" (6 Kasım, inceleme). */}
+      </ol>
+      {/* Bantların aralığı lejantta (çizimde bölge zemini yok). Zayıf bant
+          alt sınırsız: "<50" (6 Kasım, inceleme). */}
       <ul className={styles.zoneLegend}>
-        {[...zones].reverse().map((zone) => (
+        {ZONES.map((zone) => (
           <li key={zone.band} data-band={zone.band}>
             <span className={styles.zoneSwatch} aria-hidden />
             {bands[zone.band]}
             <span className="numeral">
               {zone.band === "strong"
-                ? V.zoneFrom.replace("{n}", String(zone.start))
+                ? V.zoneFrom.replace("{n}", String(zone.from))
                 : zone.band === "weak"
-                  ? `<${zone.end}`
-                  : `${zone.start}–${zone.end - 1}`}
+                  ? `<${zone.to}`
+                  : `${zone.from}–${zone.to - 1}`}
             </span>
           </li>
         ))}

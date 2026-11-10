@@ -15,7 +15,7 @@ export const stockVisualsTr = {
   /** Ekran okuyucu: kulvarın tamamı tek cümlede. */
   peerAria: "{metric} {v}; sektör medyanı {m}, {n} şirketle karşılaştırıldı, {pos}.",
   peerNote:
-    "Kulvar aynı GICS sektöründeki {n} şirketin %5 ile %95 dilimi arası: çizgi sektör medyanı, nokta şirket. Hisse Skor Kartı'yla aynı kaynak; sektör verisi olmayan ölçüde kulvar yok. Konum not değildir: yüksek ya da düşük olmak tek başına iyi ya da kötü demek değil.",
+    "Kulvar aynı GICS sektöründeki {n} şirketin %5 ile %95 dilimi arası: koyu çentik sektör medyanı, çubuk medyandan şirketin değerine uzanır. Hisse Skor Kartı'yla aynı kaynak; sektör verisi olmayan ölçüde kulvar yok. Konum not değildir: yüksek ya da düşük olmak tek başına iyi ya da kötü demek değil.",
 
   /* ---- Analist Görüşleri Nasıl Değişti ---- */
   shiftDown: "Al tarafının payı {m} ayda {d} puan azaldı: %{a}\u00a0→\u00a0%{b}.",
@@ -51,7 +51,7 @@ export const stockVisualsTr = {
   colGauge: "Eşik ve Değer",
   gaugeAria: "Eşik {t}, değer {v}",
   gaugeNote:
-    "Kulvarda çizgi kuralın eşiği, nokta hissenin değeri, aradaki çubuk farkı. Piyasa değeri, fiyat ve hacimde ölçek logaritmik: bir aralık on kat. Ucu aşan değer uçta açık nokta olarak durur.",
+    "Kulvarda koyu çentik kuralın eşiği; çubuk eşikten hissenin değerine uzanır, boyu aradaki fark, rengi kuralın durumu. Piyasa değeri, fiyat ve hacimde ölçek logaritmik: bir aralık on kat. Ucu aşan değerde çubuk kulvarın sonuna kadar gider; sayı yanında yazılı.",
   /** Halkanın dilim ayrıntısı (dokunuşta, `title`). */
   sliceTitle: "{name}: {score} Puan, Ağırlık %{w}",
   dialCaption: "Halkanın dilimleri kategoriler: boyu ağırlık, dolu kısmı puan.",
@@ -62,7 +62,7 @@ export const stockVisualsEn: typeof stockVisualsTr = {
   peerBelow: "Below {p}% of Sector",
   peerAria: "{metric} {v}; sector median {m}, compared with {n} companies, {pos}.",
   peerNote:
-    "The lane spans the 5th to 95th percentile of {n} companies in the same GICS sector: the line is the sector median, the dot is the company. Same source as the Stock Scorecard; measures without sector data get no lane. Position is not a grade: being high or low is not good or bad on its own.",
+    "The lane spans the 5th to 95th percentile of {n} companies in the same GICS sector: the dark notch is the sector median and the bar runs from it to the company's value. Same source as the Stock Scorecard; measures without sector data get no lane. Position is not a grade: being high or low is not good or bad on its own.",
 
   shiftDown: "The buy-side share fell {d} points in {m} months: {a}%\u00a0→\u00a0{b}%.",
   shiftUp: "The buy-side share rose {d} points in {m} months: {a}%\u00a0→\u00a0{b}%.",
@@ -90,7 +90,7 @@ export const stockVisualsEn: typeof stockVisualsTr = {
   colGauge: "Threshold and Value",
   gaugeAria: "Threshold {t}, value {v}",
   gaugeNote:
-    "In each lane the line is the rule's threshold, the dot is the stock's value and the bar between them is the gap. Market cap, price and volume use a log scale: one step is ten times. A value beyond the end sits at the edge as an open dot.",
+    "In each lane the dark notch is the rule's threshold; the bar runs from it to the stock's value, its length the gap and its colour the rule's status. Market cap, price and volume use a log scale: one step is ten times. A value beyond the end fills the lane to its edge; the number is written beside it.",
   sliceTitle: "{name}: {score} Points, Weight {w}%",
   dialCaption: "The ring's slices are the categories: length is weight, fill is score.",
 };

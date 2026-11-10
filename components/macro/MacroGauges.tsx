@@ -11,10 +11,22 @@ import styles from "./MacroGauges.module.css";
 
    - Enflasyon: sıfırdan yuvarlak tavana kulvar, %2 hedefi işaretli; hedefin
      üstünde kalan parça pirinç (uyarı tonu, yön değil konum).
-   - İşsizlik: son 12 ayın aralığında önceki ay (içi boş halka) ve bu ay
-     (dolu nokta); aradaki parça YÖN rengi (sitenin her okundaki kural).
-   - Getiri eğrisi: 3 aydan 10 yıla eğim; ters eğride pirinç.
+   - İşsizlik: son 12 ayın aralığında önceki aydan bu aya uzanan çubuk;
+     rengi YÖN (sitenin her okundaki kural), önceki ay ince çentik.
+   - Getiri eğrisi: sıfır ortada, 10 yıl ile 3 ay arasındaki fark kadar
+     sağa (normal) ya da sola (ters, pirinç) uzanan çubuk.
    - Sahm kuralı: sıfırdan eşiğin iki katına kulvar, 0,50 eşiği işaretli.
+
+   KALIN ÇUBUK, NOKTA YOK (10 Kasım 2026, sahibinin sözü: "böyle nokta nokta
+   ne anlatıyor anlamıyorum; çizgi grafiği yerine yatayda uzun KALIN çizgi
+   seviyorum"; "başka buna uyarlanacak ekran varsa onları da yapalım").
+   Dört çizimin dördünde de değerin yeri 13 piksellik bir noktaydı: 5
+   piksellik ince dolgunun ucunda (enflasyon, Sahm), içi boş halkadan dolu
+   noktaya (işsizlik), iki uçlu eğim çizgisinin ucunda (getiri eğrisi; iki
+   noktalı bir çizgi grafiği). Sahm 0,00 iken kulvarın başında tek başına
+   bir nokta duruyordu. Şimdi dördü de aynı dil: 5 piksellik kulvar, 8
+   piksellik dolu çubuk (dış ucu yuvarlak), tek kıyas imi koyu ince çentik
+   (hedef, eşik, önceki ay, sıfır). Değerin kendisi üstte 32 punto.
 
    Her ölçünün altında tek kısa cümle (şablon + veri, `lib/macro-visual.ts`)
    ve ölçünün kendi dönemi başlığın yanında: dört seri aynı günün verisi
@@ -52,11 +64,13 @@ export type GaugeVisual =
       range: string;
     }
   | {
-      kind: "slope";
-      /** Uzun ucun yüksekliği, −1 – 1 (fark / ölçeğin yarısı). */
+      kind: "spread";
+      /** Farkın ölçeğin yarısına oranı, −1 – 1 (eksi: ters eğri). */
       rise: number;
-      short: string;
-      long: string;
+      /** Sıfırın etiketi ve iki ucun adı ("Ters", "Normal"). */
+      zeroLabel: string;
+      lo: string;
+      hi: string;
     };
 
 export type GaugeView = {
@@ -104,16 +118,18 @@ function edge(ratio: number): "start" | "end" | undefined {
 function Visual({ visual, alert }: { visual: GaugeVisual; alert: boolean }) {
   if (visual.kind === "scale") {
     const below = Math.min(visual.at, visual.ref);
+    const over = visual.at > visual.ref;
     return (
       <div className={styles.scale}>
         <span className={`${styles.mark} numeral`} data-edge={edge(visual.ref)} style={{ left: pct(visual.ref) }}>{visual.refLabel}</span>
-        <div className={styles.track}>
-          <span className={styles.fill} style={{ left: 0, width: pct(below) }} />
-          {visual.at > visual.ref && (
-            <span className={styles.fill} data-tone={alert ? "alert" : undefined} style={{ left: pct(visual.ref), width: pct(visual.at - visual.ref) }} />
+        <div className={styles.track} data-draw>
+          {/* Sıfırdan değere tek çubuk; hedefi/eşiği aşan parça uyarı tonunda.
+              En az %1,5: sıfırdaki değerde (Sahm 0,00) çubuğun başı görünsün. */}
+          <span className={`bar-fill ${styles.fill}`} data-end={over ? "start" : undefined} style={{ left: 0, width: pct(Math.max(below, 0.015)) }} />
+          {over && (
+            <span className={`bar-fill ${styles.fill}`} data-end="end" data-tone={alert ? "alert" : undefined} style={{ left: pct(visual.ref), width: pct(visual.at - visual.ref) }} />
           )}
           <span className={styles.tick} style={{ left: pct(visual.ref) }} />
-          <span className={styles.dot} data-tone={alert ? "alert" : undefined} style={{ left: pct(visual.at) }} />
         </div>
         <div className={`${styles.ends} numeral`}><span>{visual.lo}</span><span>{visual.hi}</span></div>
       </div>
@@ -121,37 +137,52 @@ function Visual({ visual, alert }: { visual: GaugeVisual; alert: boolean }) {
   }
   if (visual.kind === "move") {
     const { from, to } = visual;
+    const left = from !== null && to < from;
     return (
       <div className={styles.scale}>
         {from !== null && visual.fromLabel && (
           <span className={`${styles.mark} numeral`} data-muted="" data-edge={edge(from)} style={{ left: pct(from) }}>{visual.fromLabel}</span>
         )}
-        <div className={styles.track}>
-          {from !== null && (
-            <span className={styles.fill} data-tone={visual.tone} style={{ left: pct(Math.min(from, to)), width: pct(Math.abs(to - from)) }} />
+        <div className={styles.track} data-draw>
+          {from !== null ? (
+            <>
+              {/* Önceki aydan bu aya: çubuğun yuvarlak ucu bu ay. */}
+              <span
+                className={`bar-fill ${styles.fill}`}
+                data-end={left ? "start" : "end"}
+                data-grow={left ? "left" : undefined}
+                data-tone={visual.tone}
+                style={{ left: pct(Math.min(from, to)), width: pct(Math.max(Math.abs(to - from), 0.015)) }}
+              />
+              <span className={styles.tick} style={{ left: pct(from) }} />
+            </>
+          ) : (
+            /* Değişmedi: aralığın başından bu aya nötr çubuk (yön yok). */
+            <span className={`bar-fill ${styles.fill}`} style={{ left: 0, width: pct(Math.max(to, 0.015)) }} />
           )}
-          {from !== null && <span className={styles.ring} style={{ left: pct(from) }} />}
-          <span className={styles.dot} style={{ left: pct(to) }} />
         </div>
         <div className={`${styles.ends} numeral`}><span>{visual.lo}</span><span className={styles.range}>{visual.range}</span><span>{visual.hi}</span></div>
       </div>
     );
   }
-  /* Eğim: sol uç 3 ay (sıfır çizgisi), sağ uç 10 yıl; yükseklik farkın
-     ölçeğin yarısına oranı. SVG oranı serbest, noktalar HTML (daire
-     elipse dönmesin). */
-  const top = 0.5 - visual.rise / 2;
+  /* Fark: sıfır ortada; artı (normal eğri) sağa, eksi (ters eğri) sola.
+     Önceki hâl 3 aydan 10 yıla çizilen iki noktalı bir eğim çizgisiydi. */
+  const half = Math.min(1, Math.abs(visual.rise)) * 50;
+  const negative = visual.rise < 0;
   return (
-    <div className={styles.slope}>
-      <div className={styles.slopePlot}>
-        <svg viewBox="0 0 100 100" preserveAspectRatio="none">
-          <line x1="0" x2="100" y1="50" y2="50" className={styles.zero} vectorEffect="non-scaling-stroke" />
-          <line x1="0" x2="100" y1="50" y2={top * 100} className={styles.slopeLine} data-tone={alert ? "alert" : undefined} vectorEffect="non-scaling-stroke" />
-        </svg>
-        <span className={styles.ring} style={{ left: 0, top: "50%" }} />
-        <span className={styles.dot} data-tone={alert ? "alert" : undefined} style={{ left: "100%", top: pct(top) }} />
+    <div className={styles.scale}>
+      <span className={`${styles.mark} numeral`} data-muted="" style={{ left: "50%" }}>{visual.zeroLabel}</span>
+      <div className={styles.track} data-draw>
+        <span
+          className={`bar-fill ${styles.fill}`}
+          data-end={negative ? "start" : "end"}
+          data-grow={negative ? "left" : undefined}
+          data-tone={alert ? "alert" : undefined}
+          style={negative ? { right: "50%", width: pct(Math.max(half, 1.5) / 100) } : { left: "50%", width: pct(Math.max(half, 1.5) / 100) }}
+        />
+        <span className={styles.tick} style={{ left: "50%" }} />
       </div>
-      <div className={styles.ends}><span>{visual.short}</span><span>{visual.long}</span></div>
+      <div className={styles.ends}><span>{visual.lo}</span><span>{visual.hi}</span></div>
     </div>
   );
 }

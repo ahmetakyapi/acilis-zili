@@ -1,0 +1,35 @@
+/* Ölçü basamakları — gerekçe MetricBands.tsx başında (10 Kasım 2026).
+   Ortak ölçüler: kulvar 5 piksel / 999 / `--line-soft`, dolu çubuk 8 piksel
+   (sahibinin tercihi: kalın yatay şerit), dolgu `--bar-soft` (sayım). */
+.wrap { display: grid; gap: 12px; min-width: 0; }
+
+/* En büyük punto en anlamlı değere: bloğun tek sayısı ortanca. */
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 4px 12px; }
+.headLabel { color: var(--text-muted); font-size: 12px; font-weight: 600; }
+.headValue { color: var(--text-strong); font-size: 28px; line-height: 1.1; font-weight: 700; letter-spacing: -0.03em; }
+.headAside { color: var(--text-body); font-size: 12.5px; font-weight: 600; }
+
+/* Satırlar ortak sütunları paylaşır: aralık | çubuk | sayı | pay | adlar. */
+.rows { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content max-content; gap: 0 12px; }
+.row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; min-height: 30px; padding-block: 3px; }
+.range { color: var(--text-strong); font-size: 13px; font-weight: 600; white-space: nowrap; }
+.lane { position: relative; display: block; height: 5px; border-radius: 999px; background: var(--line-soft); }
+.lane > i { position: absolute; left: 0; top: calc(50% - 4px); height: 8px; border-radius: 999px; background: var(--bar-soft); animation-delay: calc(min(var(--i, 0), 8) * var(--step)); }
+.count { color: var(--text-strong); font-size: 13px; text-align: right; }
+.count b { font-weight: 700; }
+.share { min-width: 3ch; color: var(--text-muted); font-size: 12px; text-align: right; }
+/* Adlar genişte beşinci sütun; telefonda YOK. Çubuğun altında ikinci satır
+   olarak denendi: yedi basamakta blok 669 → 834 piksel uzuyordu (390,
+   ölçüldü) ve aynı hisseler hemen üstteki kartlarda zaten adıyla duruyor. */
+.names { display: none; align-items: center; gap: 2px 10px; color: var(--text-muted); font-size: 12px; white-space: nowrap; }
+.names a { display: inline-flex; align-items: center; min-height: 24px; color: var(--text-body); font-family: var(--font-mono); font-weight: 600; transition: color 180ms var(--ease-brand); }
+.names a:hover { color: var(--primary-ink); }
+.names a:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 4px; }
+@media (min-width: 640px) {
+  .rows { grid-template-columns: max-content minmax(0, 1fr) max-content max-content minmax(0, max-content); }
+  .names { display: flex; }
+}
+.namesHint { display: none; }
+@media (min-width: 640px) { .namesHint { display: inline; } }
+
+.note { color: var(--text-muted); font-size: 12.5px; line-height: 1.55; }
