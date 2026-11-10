@@ -1122,7 +1122,11 @@ export function FilterChip({
            dizilen çiplerde yanlış çipe basmak kolaydı. İmleç hassas olduğu
            için geniş ekranda ölçü değişmiyor, çip şeridi orada aynı
            sıkılıkta kalıyor. */
-        "inline-flex min-h-11 min-w-11 items-center justify-center whitespace-nowrap sm:min-w-0 rounded-full px-[11px] py-[5px] text-tiny transition-colors sm:min-h-8",
+        /* `shrink-0` (10 Kasım): `min-w-11` esnek kabın otomatik taban genişliğini
+           (içerik) 44 ile değiştirdi; çipler kaydırma şeridinde 44 piksele
+           büzülüp metni kenarından taşırıyordu (duman testi: "İyileştirme 79"
+           +23 piksel). Çip içeriği kadar kalır, şerit kayar. */
+        "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center whitespace-nowrap sm:min-w-0 rounded-full px-[11px] py-[5px] text-tiny transition-colors sm:min-h-8",
         active
           ? "bg-primary font-semibold text-on-primary"
           : "bg-surface-elevated text-body hover:text-strong",
@@ -1247,7 +1251,7 @@ export function SegmentItem({
            bu `min-h-10`. Karşılaştırma ekranının birincil denetimi artık bu
            segment ve dar ekranda altı düğme yan yana duruyor. */
         /* `min-w-11` (10 Kasım, telefon turu): iki harfli etiket ("Ay", "1Y") 38×44 kalıyordu. */
-        "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-4 py-[7px] transition-colors sm:min-h-8 sm:min-w-0",
+        "inline-flex min-h-11 min-w-11 shrink-0 items-center justify-center rounded-full px-4 py-[7px] transition-colors sm:min-h-8 sm:min-w-0",
         active
           ? "bg-primary font-semibold text-on-primary shadow-(--shadow-raised)"
           : "text-body hover:text-strong",

@@ -868,13 +868,13 @@ a.dayCount:focus-visible { outline: 2px solid var(--primary); outline-offset: 2p
 @container (max-width: 149px) {
   .dayWeekday { display: none; }
   .todayTag,
-  .peakTag { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .peakTag { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); background: none; white-space: nowrap; }
   .dayShort { display: inline; }
   .dayHeadIn { gap: 4px 7px; padding-right: 6px; }
 }
 @container (min-width: 150px) and (max-width: 189px) {
   .todayTag,
-  .peakTag { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+  .peakTag { position: absolute; width: 1px; height: 1px; padding: 0; overflow: hidden; clip-path: inset(50%); background: none; white-space: nowrap; }
 }
 
 .laneNote { display: none; }
