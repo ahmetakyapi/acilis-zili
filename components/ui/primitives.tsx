@@ -367,7 +367,7 @@ export function TimingChip({
     <span
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface-sunken font-semibold text-body ring-1 ring-line ring-inset",
-        size === "sm" ? "px-2 py-[3px] text-nano" : "px-2.5 py-[3px] text-tiny",
+        size === "sm" ? "px-2.5 py-[3px] text-nano" : "px-2.5 py-[3px] text-tiny",
         wide && "min-w-[7rem] justify-center",
         className,
       )}

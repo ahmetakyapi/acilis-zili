@@ -22,7 +22,7 @@
    altında iki sütun; düğme kimlik satırının sağında kalır. */
 .identityFacts { display:flex; flex-wrap:wrap; align-items:stretch; gap:10px 0; margin:0; min-width:0; }
 .identityFacts > div { display:flex; flex-direction:column; justify-content:center; gap:3px; min-width:0; padding-inline:24px; border-left:1px solid var(--line-soft); }
-.identityFacts dt { font-size:11.5px; font-weight:500; line-height:1.2; color:var(--text-muted); white-space:nowrap; }
+.identityFacts dt { font-size:12px; font-weight:500; line-height:1.2; color:var(--text-muted); white-space:nowrap; }
 .identityFacts dd { display:flex; align-items:center; gap:8px; margin:0; font-size:13.5px; font-weight:700; line-height:1.25; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
 .identityRead { display:inline-flex; align-items:center; gap:8px; border-radius:6px; transition:color .2s var(--ease-brand); }
 .identityRead:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
@@ -81,14 +81,15 @@
    tarihler ilk karede yazılı, bilgi gecikmiyor. Yalnız `transform` /
    `opacity`; hareketi azaltana son kare. */
 @media(prefers-reduced-motion:no-preference) {
-  .cycleFill { animation:ce-draw .8s var(--ease-brand) both; }
+  /* Dolgu ortak `.bar-fill` (10 Kasım tutarlılık denetimi: `ce-draw` onun
+     kopyasıydı). Burada yalnız sıra: beklenti şeridi çizginin ardından, son
+     çeyrek onun ardından. Nokta modülde: ortak `.spark-dot`, `.experience`
+     içinde kapalı (PremiumMotion.module.css), bu sayfa o kabın içinde. */
   .cycleNow { animation:ce-dot .3s var(--ease-brand) .62s both; }
-  .expectFill { animation:ce-draw .7s var(--ease-brand) .15s both; }
-  .expectRow:not([data-strong]) .expectFill { animation-name:ce-draw-soft; animation-delay:.27s; }
+  .expectFill { animation-delay:.15s; }
+  .expectRow:not([data-strong]) .expectFill { animation-delay:.27s; }
   .dayTicks > i { animation:ce-tick .36s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 28ms); }
 }
-@keyframes ce-draw { from { transform:scaleX(0); } }
-@keyframes ce-draw-soft { from { transform:scaleX(0); opacity:.5; } }
 @keyframes ce-dot { from { opacity:0; scale:.4; } }
 @keyframes ce-tick { from { opacity:0; transform:scaleY(.3); } }
 /* Gün şeridi (son rapor bilinmediğinde): bir çentik bir gün; bugün dolu,
@@ -101,7 +102,7 @@
 .cycleEnds { display:flex; justify-content:space-between; gap:12px; font-size:12.5px; font-weight:600; color:var(--text-strong); }
 .cycleEnds > span { display:flex; flex-direction:column; gap:2px; }
 .cycleEnds > span:last-child { text-align:right; }
-.cycleEndLabel { font-size:11.5px; font-weight:500; color:var(--text-muted); }
+.cycleEndLabel { font-size:12px; font-weight:500; color:var(--text-muted); }
 
 /* BEKLENTİ IZGARASI — iki ölçü aynı hatta biter (CLAUDE.md "Ölçü
    ızgarası"); ton farkıyla ayrılmış hücre, kenarlık yok. Altında
@@ -124,7 +125,10 @@
 .expectFill[data-tone="down"] { background:var(--down); }
 .expectRow:not([data-strong]) .expectFill { opacity:.5; }
 .expectLane[data-signed]::after { content:""; position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:var(--line-strong); }
-.expectValue { font-size:26px; font-weight:800; letter-spacing:-.03em; line-height:1.1; color:var(--text-strong); }
+/* Display sayı tek ağırlık 700 (10 Kasım tutarlılık denetimi; 800'dü).
+   Geri sayım (`.countValue`) ve yaprağın günü 800'de kalır: onlar ölçü
+   değil panelin display başlığı, sitenin display başlık ağırlığında. */
+.expectValue { font-size:26px; font-weight:700; letter-spacing:-.03em; line-height:1.1; color:var(--text-strong); }
 .expectBars { display:flex; flex-direction:column; gap:6px; padding-top:6px; }
 .expectRow { display:grid; grid-template-columns:6.5rem minmax(0,1fr) max-content; align-items:center; gap:10px; font-size:12px; color:var(--text-muted); }
 .expectRow[data-strong] { color:var(--text-body); }
@@ -162,8 +166,9 @@
    kaçırdı `--down`, denk `--line-strong` (yön yok). Gerekçe BeatRecordCard. */
 .karne { display:flex; flex-direction:column; gap:12px; padding:14px 16px 16px; border-radius:var(--radius-md); background:var(--surface-sunken); }
 .karneHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.karneSum { display:inline-flex; align-items:center; gap:12px; }
 .karneLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
-.karneValue { font-size:26px; font-weight:800; letter-spacing:-.03em; line-height:1; color:var(--text-strong); }
+.karneValue { font-size:26px; font-weight:700; letter-spacing:-.03em; line-height:1; color:var(--text-strong); }
 .karneValue > span { font-size:16px; font-weight:700; color:var(--text-muted); }
 .karneQuarters { display:grid; grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr)); gap:6px; }
 .karneQuarter { position:relative; display:flex; flex-direction:column; gap:3px; min-width:0; padding:12px 10px 10px; overflow:hidden; border-radius:var(--radius-sm); background:var(--surface-solid); }
@@ -176,13 +181,28 @@
 }
 .karneQuarter[data-mark="beat"]::before { background:var(--up); }
 .karneQuarter[data-mark="miss"]::before { background:var(--down); }
-.qPeriod { font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
+.qPeriod { font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
 .qOutcome { display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:700; color:var(--text-body); }
 .karneQuarter[data-mark="beat"] .qOutcome { color:var(--up); }
 .karneQuarter[data-mark="miss"] .qOutcome { color:var(--down); }
 .qActual { margin-top:2px; font-size:15px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
-.qEstimate { font-size:11.5px; color:var(--text-muted); white-space:nowrap; }
+.qEstimate { font-size:12px; color:var(--text-muted); white-space:nowrap; }
 .karneNote { font-size:12px; line-height:1.5; color:var(--text-muted); }
+/* EŞİK HÜCRESİ (10 Kasım, ikinci tur; gerekçe `VoteThreshold.tsx`). Tek
+   ray, ortasında eşik çentiği (`--line-strong`, sitenin sıfır çizgisi):
+   solu kaçırır (`--down`), sağı geçer (`--up`); renk yalnız yönden. Ray
+   bir büyüklük DEĞİL, iki yanı adlandıran bir ölçek: dolgu yarı saydam,
+   uzunluk iddia etmiyor. ÖNCE (1440, karnesiz): oy kartları x=81–661, sağda
+   698 piksel boş. SONRA: sol sütun 81–605, hücre 625–1359. */
+.threshold { display:grid; grid-template-columns:max-content minmax(0,1fr) max-content; align-items:center; gap:12px; padding:14px 12px; border-radius:var(--radius-sm); background:var(--surface-solid); }
+.thresholdSide { display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:700; white-space:nowrap; }
+.thresholdSide[data-side="miss"] { color:var(--down); }
+.thresholdSide[data-side="beat"] { color:var(--up); }
+.thresholdLane { position:relative; display:grid; grid-template-columns:1fr 1fr; height:var(--lane-h,5px); }
+.thresholdLane > span { opacity:.45; }
+.thresholdLane > span[data-side="miss"] { border-radius:999px 0 0 999px; background:var(--down); }
+.thresholdLane > span[data-side="beat"] { border-radius:0 999px 999px 0; background:var(--up); }
+.thresholdLane > i { position:absolute; left:50%; top:-5px; bottom:-5px; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-strong); }
 
 /* Hikâye girişi — Bilanço Analizleri panelinin son satırı, listenin
    satırlarıyla aynı iç boşluk ve aynı üzerine gelme tonu. Solda destenin
@@ -224,7 +244,7 @@
   .leaf { width:92px; }
   .leafBand { font-size:11px; padding:5px 4px; }
   .leafDay { font-size:40px; padding:8px 0 3px; }
-  .leafWeekday { font-size:11.5px; padding-bottom:9px; }
+  .leafWeekday { font-size:12px; padding-bottom:9px; }
   .countValue { font-size:40px; }
   .expectRow { grid-template-columns:5.5rem minmax(0,1fr) max-content; }
   .karneQuarters { grid-template-columns:repeat(2,minmax(0,1fr)); }
@@ -237,10 +257,27 @@
    bitiyor, panel 1280); beklentiler o boşluğa üst üste girdi. */
 /* 10 Kasım: iki sütun (ne zaman · ne bekleniyor); hücreler sağ sütunu
    doldurur, kıyas çubukları hücrenin dibinde. Ölçüm NextReport.tsx'te. */
+/* HÜCRE İÇERİĞİ KADAR (10 Kasım, ikinci tur). Yukarıdaki düzende hücreler
+   sol sütunun boyuna geriliyor (`grid-auto-rows:1fr`) ve kıyas çubukları
+   `margin-top:auto` ile dibe itiliyordu: sayı ile çubuklar arasında EPS
+   hücresinde 42, gelir hücresinde 42 piksel boş bant (ölçüldü, 1440; hücre
+   167 piksel, içerik 125). "Boşluk esnetilmez" kuralının ihlali: fark panel
+   içine dağıtılmıştı. Şimdi hücre içeriği kadar; sayı, başlığıyla aynı
+   blokta ve çubuklar hemen altında. Sütun dipleri esnetmeyle değil ÖLÇÜYLE
+   yaklaştırıldı: beklenti sayısı 26 → 32 piksel (hücrenin tek büyük
+   değeri), kıyas satırları arası 6 → 10, hücre dolgusu 16 → 18. Sağ sütun
+   üstten hizalı; sol sütunun son öğesi (takvim düğmesi) kendi satırında.
+   KIYASSIZ DURUM DA İKİ SÜTUN (`data-plain`, son çeyrek bilinmiyor): eski
+   düzende hücreler gerildiği için bu durumda çizimin altına yan yana
+   iniyor, üst satırın sağı ~760 piksel boş kalıyor ve altında 634
+   piksellik iki kutuda tek sayı duruyordu (ölçüldü, 1440, yeni halka arz
+   örneği). Hücre içeriği kadar olunca sağ sütuna sığıyor.
+   Ölçüm (SONRA) NextReport.tsx başındaki notun devamında. */
 @media(min-width:1100px) {
-  .next:not([data-plain]) { grid-template-columns:minmax(0,1fr) minmax(0,30rem); gap:20px 40px; }
-  .next:not([data-plain]) .expect { grid-template-columns:minmax(0,1fr); grid-auto-rows:1fr; }
-  .next:not([data-plain]) .expectCell { display:flex; flex-direction:column; grid-row:auto; }
-  .expectBars { margin-top:auto; padding-top:12px; }
+  .next { grid-template-columns:minmax(0,1fr) minmax(0,30rem); gap:20px 40px; align-items:start; }
+  .next .expect { grid-template-columns:minmax(0,1fr); grid-auto-rows:auto; gap:12px; }
+  .next .expectCell { display:flex; flex-direction:column; grid-row:auto; row-gap:8px; padding:18px 18px 20px; }
+  .next .expectValue { font-size:32px; }
+  .next .expectBars { gap:10px; padding-top:14px; }
 }
 @media(prefers-reduced-motion:reduce) { .storyEntry { transition:none; } }

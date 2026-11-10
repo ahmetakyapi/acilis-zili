@@ -1,10 +1,11 @@
 import { Panel, PanelHeader } from "@/components/ui/primitives";
+import { KarneStrip } from "@/components/earnings/KarneStrip";
 import { HorizonWeekNav } from "./HorizonWeekNav";
 import { analysisHref } from "@/lib/analysis";
 import type { AnalysisBadge } from "@/lib/data";
 import { earningsHref } from "@/lib/earnings-company";
 import type { KarneMark } from "@/lib/earnings-horizon";
-import { capCell, horizonLead, horizonWhen, laneSlots, peakCell, peakDay, tileScale, tileTierOf } from "@/lib/earnings-horizon";
+import { capCell, horizonLead, horizonShape, horizonWhen, peakCell, peakDay, shapeSlots, tileScale, tileTierOf } from "@/lib/earnings-horizon";
 import { loadHorizonKarne } from "@/lib/earnings-horizon-data";
 import { currentWeekStart, dayLabel, epsSurprise, laneOf, WEEK_MAX_NAMES, weekRangeLabel, type ScheduleRow, type WeekLane } from "@/lib/earnings-week";
 import type { EarningsWeek } from "@/lib/earnings-week-data";
@@ -95,8 +96,16 @@ export function EarningsHorizon({
       labels={{ prev: w.prevWeek, next: w.nextWeek, thisWeek: w.thisWeek, nav: h.weekNav }}
     />
   );
-  if (week.failed || week.picked === 0) {
-    /* Varsayılan haftada boşsa eski davranış: panel hiç basılmaz. */
+  /* SESSİZ HAFTA (10 Kasım, veriye göre ızgara turu). Kayda değer şirketi
+     olmayan haftada panel ya hiç basılmıyordu (varsayılan hafta) ya da 240
+     piksellik çukur bir kutunun ortasında tek gri cümle duruyordu: "kart +
+     ortalanmış veri yok yazısı" kalıbı. Şimdi hafta yine ÇİZİLİYOR: beş
+     günün başlığı (yoğunluk ölçeri ve günün sayısı; sayı o günün tam
+     listesine bağlantı) tek sıra, karo yok, boş hücre de yok. Takvim
+     OKUNAMADIYSA boşluk iddiası basılmaz: eski davranış (varsayılan haftada
+     panel yok, gezilen haftada tek satır). Varsayılan haftada takvim de
+     boşsa (hiç açıklayan yok) panel yine basılmaz. */
+  if (week.failed || (week.picked === 0 && week.total === 0 && week.monday === thisMonday)) {
     if (week.monday === thisMonday) return null;
     return (
       <Panel className={styles.panel}>
@@ -144,12 +153,24 @@ export function EarningsHorizon({
     };
   };
 
-  /* Hücre en çok sekiz yuva, saati belirsiz satırı dört (`laneSlots`):
-     sığmayan küçükler "+N" çipinde. */
-  const cut = (rows: ScheduleRow[], lane: WeekLane) => capCell(rows, laneSlots(lane));
-  const cap = (rows: ScheduleRow[], lane: WeekLane) => cut(rows, lane).shown.map(tile);
+  /* IZGARA VERİNİN ŞEKLİNDE (10 Kasım — kural `horizonShape`). Gün, en
+     kalabalık penceresi kadar karo sütunu alır; karosuz gün sütun almaz.
+     Hücrenin yuva tavanı o günün sütunu × sıra (`shapeSlots`): sığmayan
+     küçükler "+N" çipinde. Kapalı gün (tam tatil) karo taşımaz. */
+  const shape = horizonShape(
+    week.days.map((day) => (day.closed ? { bmo: 0, amc: 0, other: 0 } : { bmo: day.bmo.length, amc: day.amc.length, other: day.other.length })),
+  );
   const peakDate = peakDay(week.schedule);
-  const days: HorizonDay[] = week.days.map((day) => {
+  /* Şerit adları ve saatleri ilk açık günden: ABD saat değişimi pazar günü,
+     bir iş haftasının saatleri beş günde aynı (WeekBoard'un kuralı). Tek
+     istisna YARIM GÜN: kapanış erkene kayar, o günün kapanış sonrası
+     hücresi kendi saatini yazar (`amcNote`) — eksendeki saat o gün iki
+     saat yanlış olurdu (veri dürüstlüğü 1). */
+  const open = week.days.find((day) => !day.closed) ?? week.days[0];
+  const days: HorizonDay[] = week.days.map((day, dayIndex) => {
+    const columns = shape.columns[dayIndex];
+    const cut = (rows: ScheduleRow[], lane: WeekLane) => capCell(rows, shapeSlots(columns, shape.rows, lane));
+    const cap = (rows: ScheduleRow[], lane: WeekLane) => cut(rows, lane).shown.map(tile);
     const label = dayLabel(day.date, locale);
     const parts = etDateParts(day.date, locale);
     const total = totals.get(day.date) ?? 0;
@@ -165,6 +186,8 @@ export function EarningsHorizon({
       countText: h.countCompanies.replace("{count}", String(total)),
       density: total / peakTotal,
       peak: day.date === peakDate && day.closed === null,
+      columns,
+      amcNote: !day.closed && day.amcClock.primary !== open.amcClock.primary ? `~${day.amcClock.primary}` : null,
       lanes: { bmo: cap(day.bmo, "bmo"), amc: cap(day.amc, "amc"), other: cap(day.other, "other") },
       more: { bmo: cut(day.bmo, "bmo").more, amc: cut(day.amc, "amc").more, other: cut(day.other, "other").more },
       /* Liste yalnız bugünden ileriyi kapsıyor; gezilen başka haftanın
@@ -177,12 +200,12 @@ export function EarningsHorizon({
     };
   });
 
-  /* Şerit adları ve saatleri ilk açık günden: ABD saat değişimi pazar günü,
-     bir iş haftasının saatleri beş günde aynı (WeekBoard'un kuralı). */
-  const open = week.days.find((day) => !day.closed) ?? week.days[0];
   const tags = zoneTag(locale);
   const lanes: HorizonLane[] = (["bmo", "amc", "other"] as const)
-    .filter((key) => key !== "other" || week.days.some((day) => day.other.length > 0))
+    /* Haftada hiç dolmayan pencerenin SATIRI basılmaz (eskiden yalnız
+       "saati belirsiz" düşüyordu): yalnız kapanış sonrası açıklanan haftada
+       boş bir "Açılış Öncesi" satırı beş hücrelik gri alandı. */
+    .filter((key) => week.days.some((day) => !day.closed && day[key].length > 0))
     .map((key) => {
       const clock = key === "bmo" ? open.bmoClock : key === "amc" ? open.amcClock : null;
       return {
@@ -231,15 +254,17 @@ export function EarningsHorizon({
      gelemiyor ve sağlayıcı kotası (Finnhub) boşa harcanmasın. */
   const karne = karneOverride ?? loadHorizonKarne(days.flatMap((day) => [...day.lanes.bmo, ...day.lanes.amc, ...day.lanes.other].map((tile) => tile.symbol)));
 
+  const quiet = week.picked === 0;
   return (
     <Panel className={styles.panel} data-motion-reveal>
       <PanelHeader title={h.title} action={nav} />
-      <p className={styles.lead}>{lead}</p>
+      <p className={styles.lead}>{week.total === 0 ? h.emptyWeek : quiet ? `${lead} ${h.quietWeek}` : lead}</p>
       {/* `key` hafta: gezinmede seçim durumu (karo, telefonun açık günü)
           önceki haftadan taşınmasın; yeni hafta kısa bir girişle oturur. */}
       <HorizonGrid
         key={week.monday}
         monday={week.monday}
+        rows={shape.rows}
         days={days}
         lanes={lanes}
         karne={karne}
@@ -268,6 +293,7 @@ export function EarningsHorizon({
           hint: h.readoutHint,
           pickDay: h.pickDay,
           more: h.more,
+          dayList: h.dayList,
         }}
       />
       {/* KÜNYE TEK SATIR + KATLI AYRINTI (25 Ekim, kart turu). Burada iki
@@ -276,18 +302,19 @@ export function EarningsHorizon({
           ortasında kalıyordu. Şimdi kare lejantı görsel olarak tek satırda;
           iki paragraf "Nasıl Okunur" katlamasında (`<details>`, JS'siz;
           açılınca `ExpandInPlace` bastığın yerde uzatıyor). */}
+      {!quiet && (
       <div className={styles.foot}>
         <p className={styles.legend}>
           <span className={styles.legendItem}>
-            <i aria-hidden className={styles.square} data-mark="beat" />
+            <KarneStrip marks={["beat"]} size="key" />
             {h.legendBeat}
           </span>
           <span className={styles.legendItem}>
-            <i aria-hidden className={styles.square} data-mark="miss" />
+            <KarneStrip marks={["miss"]} size="key" />
             {h.legendMiss}
           </span>
           <span className={styles.legendItem}>
-            <i aria-hidden className={styles.square} data-mark="none" />
+            <KarneStrip marks={["none"]} size="key" />
             {h.legendNone}
           </span>
           <span className={styles.legendNote}>{h.legendNote}</span>
@@ -298,6 +325,7 @@ export function EarningsHorizon({
           <p>{w.noteSelection.replace("{max}", String(WEEK_MAX_NAMES))}</p>
         </details>
       </div>
+      )}
     </Panel>
   );
 }

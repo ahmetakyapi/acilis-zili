@@ -45,6 +45,14 @@ import css from "./CompanyEarnings.module.css";
  * 1280'de 441–789 / 441–785. 1100'ün altında ve 390'da alt alta (390: sol
  * 634–1041, hücreler 1057–1340). Yatay taşma ve kutudan taşan 0.
  *
+ * HÜCRE İÇERİĞİ KADAR (10 Kasım, ikinci tur). Sağ sütunun hücreleri sol
+ * sütunun boyuna geriliyor, kıyas çubukları dibe itiliyordu: sayı ile
+ * çubuklar arasında 42 piksel boş bant (1440; EPS hücresinde sayının dibi
+ * 519, çubukların tepesi 561). Şimdi hücre içeriği kadar, sayı 26 → 32
+ * piksel. SONRA (gerçek sayfa, sahte sağlayıcı, TR, açık): 1440'ta sol
+ * sütun 444–788, sağ sütun 444–790 (dip farkı 2), sayı ile çubuklar arası
+ * 8 piksel; 1280'de 441–785 / 441–787.
+ *
  * Beklenti çubukları artık hücrenin kendi kulvarında, SOLDAN (ScaleBar sağa
  * yaslı ve 128 piksel tavanlıydı: tablo sütunu için doğru, burada sayıyla
  * etiket arasında kısa bir çizgi kalıyordu). İki çubuk aynı ölçekte
@@ -127,8 +135,10 @@ export function NextReport({
 
   /* Kıyas çubuğu yoksa (son çeyrek bilinmiyor) hücreler iki satırlık kısa
      kutular: sağ sütuna gerilince içleri boş kalıyordu (ölçüldü: 175
-     piksellik hücrede tek sayı). O durumda iki sütun kurulmaz, hücreler
-     çizimin altında yan yana durur (`data-plain`). */
+     piksellik hücrede tek sayı). O durumda iki sütun kurulmuyordu.
+     10 Kasım (ikinci tur): hücreler artık içeriği kadar, bu durumda da sağ
+     sütunda durur; öznitelik kıyassız hâli adlandırmak için kalıyor
+     (`CompanyEarnings.module.css` → "HÜCRE İÇERİĞİ KADAR"). */
   const plain = !(eps?.last || revenue?.last);
 
   return (
@@ -201,10 +211,19 @@ export function NextReport({
               .replace("{elapsed}", String(Math.max(0, elapsed)))
               .replace("{left}", String(Math.max(0, daysLeft)))}
           >
-            <span className={css.cycleLane} data-motion-track>
+            {/* ÇİZİM YÜKLEMEDE OYNAR (10 Kasım, tutarlılık denetimi). Bu öğeler
+                `data-motion-draw` taşıyordu; `PremiumMotion.module.css`in
+                `.experience [data-motion-draw] { animation:none }` kuralı
+                modülün çizimini eziyor, panel ilk ekranda olduğu için JS de
+                oynatmıyordu: canlıda çeyrek çizgisi ve beklenti şeritleri
+                HİÇ çizilmiyordu (`getAnimations()` 0). Öznitelik kalktı;
+                dolgu ortak `.bar-fill` (globals.css, hareket kataloğu),
+                kopya `ce-draw` silindi. Nokta modülde kaldı: ortak
+                `.spark-dot` `.experience` içinde koşulsuz kapalı
+                (PremiumMotion.module.css; ölçüldü, `animation-name: none`). */}
+            <span className={css.cycleLane}>
               <span
-                className={css.cycleFill}
-                data-motion-draw="line"
+                className={cn(css.cycleFill, "bar-fill")}
                 style={{ width: `${cycle * 100}%`, transformOrigin: "left center" }}
               />
               <span className={css.cycleStart} />
@@ -264,10 +283,9 @@ function ExpectCell({
     return (
       <span className={css.expectRow} data-strong={strong || undefined}>
         <span className={css.expectRowLabel}>{label}</span>
-        <span aria-hidden className={css.expectLane} data-motion-track data-signed={signed || undefined}>
+        <span aria-hidden className={css.expectLane} data-signed={signed || undefined}>
           <span
-            className={css.expectFill}
-            data-motion-draw="line"
+            className={cn(css.expectFill, "bar-fill")}
             data-tone={tone === "signal" ? (negative ? "down" : "up") : "neutral"}
             style={
               signed

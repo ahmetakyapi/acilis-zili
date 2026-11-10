@@ -48,10 +48,13 @@ export function CompanyIdentity({
     <div className={css.identity}>
       <div className={css.identityWho}>
         <LogoTile symbol={symbol} logoUrl={logoUrl} size="lg" />
-        <div className="min-w-0">
-          <p className={css.identitySymbol}>{symbol}</p>
-          <p className="truncate text-small text-muted">{name}</p>
-        </div>
+        {/* AD YİNELENMEZ (10 Kasım, tutarlılık denetimi): şirket adı iki
+            satır yukarıda sayfanın h1'inde yazılı; şeritte logo + sembol
+            kalır. Ad logonun erişilebilir adı olarak duruyor. */}
+        <p className={css.identitySymbol}>
+          {symbol}
+          <span className="sr-only"> · {name}</span>
+        </p>
       </div>
       {(facts.length > 0 || latest) && (
         <dl className={css.identityFacts}>
@@ -65,7 +68,7 @@ export function CompanyIdentity({
             <div>
               <dt>{latest.label}</dt>
               <dd>
-                <Link href={latest.href} prefetch={false} className={css.identityRead}>
+                <Link href={latest.href} prefetch={false} className={`tap-44 ${css.identityRead}`}>
                   <span className="figure">{latest.period}</span>
                   <VerdictPill verdict={latest.verdict} label={latest.verdictLabel} score={latest.score} size="xs" />
                 </Link>

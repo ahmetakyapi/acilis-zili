@@ -4,6 +4,8 @@ import {
   BIG_TILE_SCALE,
   capCell,
   CELL_MAX_SLOTS,
+  horizonShape,
+  shapeSlots,
   karneSlots,
   laneSlots,
   OTHER_MAX_SLOTS,
@@ -67,4 +69,29 @@ test("haftanın zirvesi: en kalabalık gün, eşitlikte önce gelen, boşta yok"
   assert.equal(peakDay([{ date: "2026-10-27", total: 5 }, { date: "2026-10-26", total: 5 }]), "2026-10-26");
   assert.equal(peakDay([{ date: "2026-10-26", total: 0 }]), null);
   assert.equal(peakDay([]), null);
+});
+
+test("haftanın şekli: sütunlar günün ihtiyacı kadar, karosuz gün sütun almaz", () => {
+  const need = (bmo: number, amc: number, other = 0) => ({ bmo, amc, other });
+  /* Dengeli hafta tek sıraya sığar. */
+  assert.deepEqual(horizonShape([need(4, 3), need(3, 4), need(4, 4), need(2, 4), need(3, 3)]), { columns: [4, 4, 4, 4, 3], rows: 1 });
+  /* Tek güne yığılma: kalabalık gün genişler, boş günler 0, tek karolu gün
+     dar birimde iki sütun. */
+  assert.deepEqual(horizonShape([need(14, 3), need(1, 0), need(0, 0), need(0, 1), need(0, 0)]), { columns: [14, 2, 0, 2, 0], rows: 1 });
+  /* Seyrek hafta: birim geniş, tek sütun yeter. */
+  assert.deepEqual(horizonShape([need(1, 0), need(0, 0), need(0, 2), need(0, 0), need(0, 0)]), { columns: [1, 0, 2, 0, 0], rows: 1 });
+  /* Sezon zirvesi: tek sıra sığmaz, iki sıra. */
+  assert.deepEqual(horizonShape([need(6, 6), need(5, 6), need(6, 4), need(6, 6), need(4, 5)]), { columns: [3, 3, 3, 3, 3], rows: 2 });
+  /* İki sıra da sığmazsa bütçe orantılı bölünür, toplam bütçeyi aşmaz. */
+  const crowded = horizonShape([need(12, 12), need(12, 10), need(12, 12), need(10, 12), need(12, 12)]);
+  assert.equal(crowded.rows, 2);
+  assert.equal(crowded.columns.reduce((a, b) => a + b, 0), 20);
+  assert.ok(crowded.columns.every((value) => value >= 2));
+  /* Yalnız saati belirsiz: satır tek sıra, sütun o kadar. */
+  assert.deepEqual(horizonShape([need(0, 0, 3), need(0, 0), need(0, 0, 1), need(0, 0), need(0, 0)]), { columns: [3, 0, 1, 0, 0], rows: 1 });
+  /* Tamamen boş hafta. */
+  assert.deepEqual(horizonShape([need(0, 0), need(0, 0)]), { columns: [0, 0], rows: 1 });
+  assert.equal(shapeSlots(4, 2, "amc"), 8);
+  assert.equal(shapeSlots(4, 2, "other"), 4);
+  assert.equal(shapeSlots(0, 1, "bmo"), 1);
 });

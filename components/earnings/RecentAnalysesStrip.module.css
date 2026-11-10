@@ -29,7 +29,8 @@
   flex-direction: column;
   gap: 10px;
   padding: 14px 16px 16px;
-  border-radius: var(--radius-xl, 1rem);
+  /* Panel yarıçapı ortak token (10 Kasım tutarlılık denetimi; 16 pikseldi). */
+  border-radius: var(--radius-panel, var(--radius-xl, 1rem));
   /* KENAR NÖTR (10 Kasım, görsel kalite turu). Şerit `--primary-soft`
      karışımı mavi bir kenarla çevriliydi ("belirginlik kenarlıktan",
      `RecentAnalysesStrip.tsx`). İki şey değişti: içindeki çipler 31 Ekim'de
@@ -44,7 +45,9 @@
 @media (min-width: 640px) { .strip { padding: 14px 24px 16px; } }
 
 .head { display: flex; align-items: center; justify-content: space-between; gap: 12px; min-width: 0; }
-.title { margin: 0; font-size: var(--text-read); font-weight: 700; white-space: nowrap; }
+/* PanelHeader ölçüsü (10 Kasım tutarlılık denetimi): 14/700 idi, sayfanın
+   öteki panel başlıkları 16/700/-0,24 piksel. */
+.title { margin: 0; font-size: var(--text-lead); font-weight: 700; letter-spacing: -0.015em; white-space: nowrap; }
 .all {
   display: inline-flex;
   min-height: 40px;
