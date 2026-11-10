@@ -103,8 +103,11 @@
   .window,
   .strip,
   .sizer {
-    animation-duration: var(--figure-roll, 1.15s);
-    animation-delay: calc(var(--delay, 0ms) + var(--order, 0) * 55ms);
+    /* 1,15 s + 55 ms → 0,85 s + 40 ms (10 Kasım, tutarlılık denetimi): sayı
+       kapağın geri kalanı 900 ms'de oturduktan sonra da dönüyordu (altı
+       basamakta 1.425 ms; dört ekranda ölçüldü). */
+    animation-duration: var(--figure-roll, .85s);
+    animation-delay: calc(var(--delay, 0ms) + var(--order, 0) * 40ms);
     animation-fill-mode: backwards;
   }
   .window {
