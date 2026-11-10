@@ -9,6 +9,7 @@ import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { timingOf } from "@/components/earnings/EarningsCalendar";
 import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
 import { BeatRecordCard } from "@/components/earnings/company/BeatRecordCard";
+import { CompanyIdentity } from "@/components/earnings/company/CompanyIdentity";
 import { NextReport } from "@/components/earnings/company/NextReport";
 import css from "@/components/earnings/company/CompanyEarnings.module.css";
 import { EarningsVote } from "@/components/earnings/vote/EarningsVote";
@@ -16,14 +17,12 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import {
-  ButtonLink,
   DataStamp,
-  LogoTile,
   PageHeader,
   Panel,
   PanelHeader,
 } from "@/components/ui/primitives";
-import { analysisHref } from "@/lib/analysis";
+import { analysisHref, verdictLabel, verdictOf } from "@/lib/analysis";
 import {
   getAnalyses,
   getEarningsForSymbol,
@@ -270,17 +269,33 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
            sayfa zemininde ayrı bir satırdı; kartlarla hizasız duruyor ve
            "logo dışta kalmış" diye okunuyordu (sahibinin itirazı). */
         strip={
-          <div className={css.identity}>
-            <LogoTile symbol={symbol} logoUrl={data.meta?.logoUrl} size="lg" />
-            <div className="min-w-0">
-              <p className={css.identitySymbol}>{symbol}</p>
-              <p className="truncate text-small text-muted">{data.name}</p>
-            </div>
-            <ButtonLink href={`/hisse/${symbol}`} size="sm" className={css.stockLink}>
-              {c.stockPage}
-              <ArrowUpRight size={14} weight="bold" aria-hidden />
-            </ButtonLink>
-          </div>
+          /* Künyeler (10 Kasım): gerekçe `CompanyIdentity.tsx`. */
+          <CompanyIdentity
+            symbol={symbol}
+            name={data.name}
+            logoUrl={data.meta?.logoUrl}
+            facts={[
+              data.meta?.marketCap
+                ? { label: t.calendarVisuals.companyPage.marketCap, value: formatMoneyCompact(data.meta.marketCap, locale) }
+                : null,
+              data.meta?.sector || data.meta?.industry
+                ? { label: t.calendarVisuals.companyPage.sector, value: (data.meta.sector || data.meta.industry)! }
+                : null,
+            ].filter((fact): fact is { label: string; value: string } => fact !== null)}
+            latest={
+              latest
+                ? {
+                    label: t.calendarVisuals.companyPage.latestRead,
+                    period: latest.periodLabel,
+                    href: analysisHref(latest.symbol, latest.period),
+                    verdict: verdictOf(latest.verdict),
+                    verdictLabel: verdictLabel(verdictOf(latest.verdict), t),
+                    score: latest.score,
+                  }
+                : null
+            }
+            stock={{ href: `/hisse/${symbol}`, label: c.stockPage }}
+          />
         }
       />
 
@@ -332,20 +347,23 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
                   : null
               }
               locale={locale}
-              labels={c}
-            />
+              labels={{ ...c, vsLastQuarter: t.calendarVisuals.companyPage.vsLastQuarter }}
+            >
+              {/* Açıklama ve takvim düğmesi çizimin SOL SÜTUNUNDA (10 Kasım):
+                  ızgaranın altında ayrı bir sol hattan başlıyorlardı; gerekçe
+                  ve ölçüm `NextReport.tsx` → "TEK KOMPOZİSYON". */}
+              <p className={css.lead}>{copy.lead}</p>
+              <AddToCalendar
+                symbol={symbol}
+                date={data.next.reportDate}
+                label={t.earnings.addToCalendar}
+                className="mb-0 w-fit"
+              />
+            </NextReport>
           )}
 
-          <p className={css.lead}>{copy.lead}</p>
-
-          {data.next && (
-            <AddToCalendar
-              symbol={symbol}
-              date={data.next.reportDate}
-              label={t.earnings.addToCalendar}
-              className="mb-0 w-fit"
-            />
-          )}
+          {/* Takvimde tarih yokken çizim de yok; açıklama tek başına. */}
+          {!(data.next && daysLeft !== null) && <p className={css.lead}>{copy.lead}</p>}
 
           {data.next && (
             <div className={css.notes}>

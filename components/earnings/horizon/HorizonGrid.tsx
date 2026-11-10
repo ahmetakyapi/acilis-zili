@@ -1,6 +1,6 @@
 "use client";
 
-import { Suspense, use, useState, type CSSProperties } from "react";
+import { Suspense, use, useLayoutEffect, useRef, useState, type CSSProperties } from "react";
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { buttonClass, LogoTile, TimingChip, type TimingTone } from "@/components/ui/primitives";
@@ -133,6 +133,7 @@ type Labels = {
   analysis: string;
   marketClosed: string;
   emptyLane: string;
+  emptyDay: string;
   today: string;
   hint: string;
   pickDay: string;
@@ -142,6 +143,17 @@ type Labels = {
 type Karne = Promise<Record<string, KarneMark[]>>;
 
 const READOUT_ID = "bilanco-ufku-ayrinti";
+
+/* HAFTA DEĞİŞİMİNİN YÖNÜ (10 Kasım, görsel kalite turu). Izgara hafta
+   değişince `key` ile yeniden kuruluyor ve 4 piksel aşağıdan beliriyordu:
+   ileri de geri de aynı hareket, okur hangi yöne gittiğini hareketten
+   okuyamıyordu. Şimdi yeni hafta GELDİĞİ yönden kayıyor (sonraki hafta
+   sağdan, önceki soldan; 14 piksel + saydamlık, CSS `weekIn`).
+   Önceki hafta modül değişkeninde: bileşen yeniden kurulduğu için durumda
+   tutulamaz. Yalnız İSTEMCİDE ve yerleşim efektinde yazılıyor — sunucuda
+   modül değişkeni istekler arası ortak olurdu ve işaretleme sunucu
+   çıktısına sızıp hidrasyonu bozardı. */
+let lastMonday: string | null = null;
 const LANE_TONE: Record<WeekLane, TimingTone> = { bmo: "pre", amc: "post", other: "neutral" };
 
 export function HorizonGrid({
@@ -151,7 +163,10 @@ export function HorizonGrid({
   initial,
   initialDay,
   labels,
+  monday,
 }: {
+  /** Ufkun haftası — geçişin yönü bundan (bkz. `lastMonday`). */
+  monday?: string;
   days: HorizonDay[];
   lanes: HorizonLane[];
   karne: Karne;
@@ -162,6 +177,13 @@ export function HorizonGrid({
 }) {
   const [selected, setSelected] = useState<string | null>(initial);
   const [activeDay, setActiveDay] = useState<string | null>(initialDay ?? days[0]?.date ?? null);
+  const gridRef = useRef<HTMLDivElement>(null);
+  useLayoutEffect(() => {
+    if (!monday) return;
+    const previous = lastMonday;
+    lastMonday = monday;
+    if (previous && previous !== monday && gridRef.current) gridRef.current.dataset.from = monday > previous ? "next" : "prev";
+  }, [monday]);
   const all = days.flatMap((day) => [...day.lanes.bmo, ...day.lanes.amc, ...day.lanes.other]);
   const current = all.find((tile) => tile.symbol === selected) ?? all[0] ?? null;
   /* Giriş kademesi haftanın okuma sırasıyla: gün gün, şerit şerit. */
@@ -202,7 +224,7 @@ export function HorizonGrid({
           </button>
         ))}
       </div>
-      <div className={styles.grid} style={{ "--lanes": lanes.length } as CSSProperties}>
+      <div ref={gridRef} className={styles.grid} style={{ "--lanes": lanes.length } as CSSProperties}>
         {/* Sol eksen yalnız geniş ekranda; her hücrede aynı ad dar ekranda
             görünür, geniş ekranda ekran okuyucuya kalır. */}
         <div className={styles.axis} aria-hidden>
@@ -254,10 +276,46 @@ export function HorizonGrid({
               <span className={styles.density} aria-hidden>
                 <span style={{ "--ratio": day.density } as CSSProperties} />
               </span>
-              <p className={`figure ${styles.dayCount}`}>{day.closed ? NO_VALUE : day.countText}</p>
+              {/* SAYI KOYU, BİRİM SOLUK (10 Kasım): "307 Şirket" tek
+                  ağırlıkta 12 pikseldi; beş sütunda sayılar birimleriyle
+                  aynı gürültüde okunuyordu. Sayı `day.count`, metnin kalanı
+                  sözlükteki kalıptan (sıra dile göre değişebilir). */}
+              <p className={`figure ${styles.dayCount}`}>
+                {day.closed
+                  ? NO_VALUE
+                  : day.countText.split(String(day.count)).map((part, index) => (
+                      <span key={index}>
+                        {index > 0 && <b>{day.count}</b>}
+                        {part}
+                      </span>
+                    ))}
+              </p>
             </header>
             {day.closed ? (
               <p className={styles.closed}>{labels.marketClosed}</p>
+            ) : lanes.every((lane) => day.lanes[lane.key].length === 0) ? (
+              /* TAMAMEN BOŞ GÜN TEK BOŞ DURUM (10 Kasım, görsel kalite turu).
+                 Kayda değer şirketi olmayan günde (cuma: 45 küçük şirket)
+                 sütun üç boş gri hücreydi, 1440'ta 229×395 piksel düz ton
+                 — kırık bir yükleme gibi okunuyordu. Şimdi sütunun
+                 ortasında tek sakin satır ve o günün tam listesine bağlantı
+                 (`moreHref`; sayı gün başlığındakiyle aynı `countText`).
+                 Sahne yok: panel içi boş durum kuralı. */
+              <p className={styles.voidDay}>
+                <span>{labels.emptyDay}</span>
+                {day.count > 0 &&
+                  (day.moreHref.startsWith("#") ? (
+                    <a href={day.moreHref} className={`tap-44 ${styles.voidLink}`}>
+                      {day.countText}
+                      <ArrowUpRight size={12} weight="bold" aria-hidden />
+                    </a>
+                  ) : (
+                    <Link href={day.moreHref} prefetch={false} className={`tap-44 ${styles.voidLink}`}>
+                      {day.countText}
+                      <ArrowUpRight size={12} weight="bold" aria-hidden />
+                    </Link>
+                  ))}
+              </p>
             ) : (
               lanes.map((lane) => {
                 const tiles = day.lanes[lane.key];

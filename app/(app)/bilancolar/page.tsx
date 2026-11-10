@@ -130,7 +130,10 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
     getAnalysisBadges(null, locale, { from: today, to: rangeEnd }),
     getAnalyses(locale, { limit: RECENT_ANALYSES }),
     userId ? getVoteBoard(userId, today, rangeEnd) : Promise.resolve(null),
-    userId ? getHolidays() : Promise.resolve([]),
+    /* TATİLLER HERKESE (10 Kasım): baş kartın seans şeridi kapanış zilini o
+       günün kapanışından yazıyor (yarım gün). Yeni tur değil: `getHolidays`
+       `cache()` sarılı ve aşağıdaki `getEarningsWeek` zaten çağırıyor. */
+    getHolidays(),
     getEarningsWeek(horizonMonday, locale),
   ]);
 
@@ -286,6 +289,7 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
           locale={locale}
           t={t}
           vote={voteBoard?.available ? { board: voteBoard, holidays, now: new Date() } : undefined}
+          holidays={holidays}
         />
       )}
 

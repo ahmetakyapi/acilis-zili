@@ -750,3 +750,109 @@ a.weekStep:focus-visible { outline: 2px solid var(--primary); outline-offset: 2p
   text-align: center;
 }
 @media (max-width: 639px) { .emptyWeek { min-height: 180px; margin-inline: 16px; } }
+
+/* ==========================================================================
+   GÖRSEL KALİTE TURU (10 Kasım 2026). Canlı ekranın (9–13 Kasım haftası,
+   1440, açık) okunmasından çıkanlar; işaretleme gerekçeleri
+   `HorizonGrid.tsx`te.
+   Ölçüm (önizleme, 9–13 Kasım örnek haftası, TR, açık/koyu): kart 1440'ta
+   49×88, 1280'de 43×77 (boy değişmedi), karne parçası 38,5×6 / 32,5×6
+   (dört parça toplamı); okuma şeridi 1440'ta x=61–1379 (panelin tam eni,
+   önce 81–1359), 59 piksel; sembol kırpılması 0, yatay taşma 0, kutudan
+   taşan 0 (390 / 768 / 1024 / 1280 / 1440). Hafta değişiminde ızgara
+   `weekFromNext` / `weekFromPrev` ile oynuyor (`getAnimations()`),
+   hareketi azaltanda animasyon 0.
+   ========================================================================== */
+
+/* GÜN SAYACI: sayı koyu ve bir basamak büyük, birim soluk. */
+.dayCount { font-weight: 500; color: var(--text-muted); }
+.dayCount b { font-size: 13px; font-weight: 750; letter-spacing: -0.02em; color: var(--text-strong); }
+.day[data-state="past"] .dayCount b { color: var(--text-muted); }
+
+/* YOĞUNLUK ŞERİDİ ÇİZİLİR: beş günün şeridi soldan dolar (veri çizimi, bir
+   kez; sayı yanında yazılı olduğu için ilk ekranda bilgi gecikmiyor).
+   Telefonun gün seçicisindeki şerit aynı sınıf, aynı çizim. */
+@media (prefers-reduced-motion: no-preference) {
+  .density > span { animation: hz-density 700ms var(--ease-brand) both; }
+}
+@keyframes hz-density { from { transform: scaleX(0); } }
+
+/* TAMAMEN BOŞ GÜN — tek sakin satır + günün listesine bağlantı. Geniş
+   ekranda pencere satırlarının tamamını kaplar ve ortalanır (kapalı günün
+   `.closed`ı ile aynı yerleşim). */
+.voidDay {
+  grid-column: 1 / -1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  margin: 0;
+  padding: 18px 10px 20px;
+  border-top: 1px solid var(--line-soft);
+  font-size: var(--text-small);
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: center;
+}
+.voidLink {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  font-weight: 650;
+  color: var(--primary-ink);
+  transition: color .2s var(--ease-brand);
+}
+@media (hover: hover) { .voidLink:hover { color: var(--primary-hover); } }
+.voidLink:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; border-radius: 6px; }
+@media (max-width: 1179px) { .voidDay { border-top: 0; padding-block: 22px; } }
+
+@media (min-width: 1180px) {
+  .voidDay { grid-row: 2 / -1; }
+  /* BOŞ PENCERE DE SÖYLER. Geniş ekranda boş hücre hiçbir şey basmıyordu
+     ("satır hizası 'yok'u zaten söylüyor"); canlı haftada çarşamba açılış
+     öncesi 229×100 piksellik düz gri bir kutuydu ve yüklenmemiş gibi
+     duruyordu. Hücrenin ortasında soluk tek sözcük: boşluk bir cevap. */
+  .lane[data-empty] { justify-content: center; }
+  .laneEmpty { display: block; font-size: 11.5px; font-weight: 500; opacity: .85; }
+
+  /* KARNE PARÇASI 5 → 6 PİKSEL, kartın iç aralığı 5 → 4: parça 1440'ta
+     ~10×5 pikseldi ve içi boş "aşılmadı" halkası (1,5 piksel kenar) 2
+     piksellik bir boşluğa kalıyordu. Kart boyu değişmedi (iki aralık −2,
+     parça +1): ufkun ilk ekran bütçesi (page.tsx ölçümleri) korunur. */
+  .tile { gap: 4px; }
+  .squares:not([data-large]) > .square { height: 6px; }
+
+  /* OKUMA ŞERİDİ PANELİN BANDI. Şerit panelin içinde 20 piksel içeriden
+     başlayan yuvarlak köşeli ayrı bir kutuydu: ızgaranın altında "eklenmiş"
+     duruyor, seçili karoyla bağı kurulmuyordu. Şimdi panelin tam
+     genişliğinde, saç teliyle ayrılmış çukur bir bant — ızgaranın altyazısı.
+     İçerik ızgarayla aynı 20 piksellik hatta başlar. */
+  .readout { margin: 8px 0 0; padding: 6px 20px; border-radius: 0; border-block: 1px solid var(--line-soft); }
+  /* Panel boyu büyümesin (ilk ekran bütçesi): şerit +4 (üst pay 6 → 8,
+     iki saç teli), künye payı 8 → 2; net −2 piksel. */
+  .foot { margin-top: 2px; }
+}
+@media (min-width: 768px) and (max-width: 1179px) {
+  .readout { margin: 10px 0 0; padding: 12px 20px; border-radius: 0; border-block: 1px solid var(--line-soft); }
+}
+
+/* LOGOSUZ KARO DA KARE (≥1400). Harf karosu (`LogoTile` yedeği) yüzde
+   genişliği çözemiyordu: `.karo` içeriği kadar daralıyor, `width: min(100%,
+   52px)` ona göre 20 piksele düşüyor ve "CB" kartı komşularından 28 piksel
+   kısa kalıyordu (ölçüldü: 49×56, komşu 49×84). Karonun tabanı görselli
+   logonun öz boyu (`lg`, 44 piksel); görselli karolar değişmez. */
+@media (min-width: 1400px) {
+  .tiles .karo { min-width: 44px; }
+}
+
+/* HAFTA GELDİĞİ YÖNDEN KAYAR (gerekçe `HorizonGrid.tsx` → `lastMonday`).
+   Yalnız saydamlık + 14 piksel yatay kayma; panel `overflow: clip`, yatay
+   kaydırma doğmaz. İlk yüklemede `data-from` yok, eski `weekIn` oynar. */
+@media (prefers-reduced-motion: no-preference) {
+  .grid[data-from="next"] { animation-name: weekFromNext; }
+  .grid[data-from="prev"] { animation-name: weekFromPrev; }
+}
+@keyframes weekFromNext { from { opacity: 0; translate: 14px 0; } }
+@keyframes weekFromPrev { from { opacity: 0; translate: -14px 0; } }

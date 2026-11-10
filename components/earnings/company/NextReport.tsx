@@ -1,9 +1,9 @@
-import type { CSSProperties } from "react";
-import { ScaleBar } from "@/components/markets/CompareScale";
+import type { CSSProperties, ReactNode } from "react";
+import { RollingFigure } from "@/components/ui/RollingFigure";
 import { TimingChip } from "@/components/ui/primitives";
 import type { TimingTone } from "@/components/ui/primitives";
 import { daysBetweenEt } from "@/lib/market-hours";
-import { cn, etDateParts, formatEtDateCompact } from "@/lib/utils";
+import { cn, etDateParts, formatEtDateCompact, formatPercentPlain } from "@/lib/utils";
 import css from "./CompanyEarnings.module.css";
 
 /**
@@ -27,6 +27,31 @@ import css from "./CompanyEarnings.module.css";
  *     gerçekleşeniyle yan yana iki çubuk (CompareScale dili: EPS işaretten
  *     renk alır, gelir büyüklüktür, yumuşak mavi). Son çeyrek yoksa çubuk
  *     yok, yalnız sayı.
+ *
+ * TEK KOMPOZİSYON (10 Kasım, görsel kalite turu). Üç okuma doğruydu ama
+ * panelde dağınıktı. Canlı ekrandan (1440): ızgara `align-items: center` ve
+ * sağdaki iki beklenti hücresi ~283 piksel olduğu için 127 piksellik yaprak
+ * panelin ortasında yüzüyor, üstünde ~78 piksel boşluk kalıyordu; çeyrek
+ * çizgisi yaprağın sağından başlıyor (x≈245), paragraf ve "Takvime Ekle" ise
+ * ızgaranın ALTINDA sol kenardan (x≈81) — ayrı sol hatlar. Şimdi iki
+ * sütun: solda "ne zaman" (yaprak + geri sayım, altında yaprağın sol
+ * kenarından panelin sütun sonuna tek çeyrek çizgisi, altında açıklama ve
+ * takvim düğmesi), sağda "ne bekleniyor" (iki hücre sütunu doldurur). İki
+ * sütun aynı üst ve alt hatta; sol sütunun her öğesi aynı sol kenarda.
+ * Kalan gün kahraman: 44 → 64 piksel, ilk ekranda bir kez yuvarlanır
+ * (`RollingFigure`, CSS; sunucu son kareyi basar).
+ * SONRA (önizleme, TR, açık/koyu): 1440'ta sol sütun 444–792, sağ sütun
+ * 444–788 (üst hat aynı, dip farkı 4); sol sütunun bütün öğeleri x=81;
+ * 1280'de 441–789 / 441–785. 1100'ün altında ve 390'da alt alta (390: sol
+ * 634–1041, hücreler 1057–1340). Yatay taşma ve kutudan taşan 0.
+ *
+ * Beklenti çubukları artık hücrenin kendi kulvarında, SOLDAN (ScaleBar sağa
+ * yaslı ve 128 piksel tavanlıydı: tablo sütunu için doğru, burada sayıyla
+ * etiket arasında kısa bir çizgi kalıyordu). İki çubuk aynı ölçekte
+ * (ikisinin büyüğü tam kulvar); başlığın yanında beklentinin son çeyreğe
+ * göre farkı yazılı — çubukların söylediği şeyin sayısı. Fark yalnız iki
+ * değer aynı işaretteyken ve son çeyrek sıfır değilken basılır (zarardan
+ * kâra geçişte yüzde anlamsız).
  */
 
 /** Gün şeridinin üst sınırı — üç hafta (gerekçe `ticks`). */
@@ -44,6 +69,8 @@ type NextReportLabels = {
   revenueEstimate: string;
   lastQuarter: string;
   estimateLabel: string;
+  /** "Son Çeyreğe Göre" — beklentinin son çeyreğe göre farkının künyesi. */
+  vsLastQuarter: string;
 };
 
 type Figure = {
@@ -65,7 +92,10 @@ export function NextReport({
   revenue,
   locale,
   labels,
+  children,
 }: {
+  /** Sol sütunun dibi: açıklama paragrafı ve takvim düğmesi (sayfa verir). */
+  children?: ReactNode;
   date: string;
   previousDate: string | null;
   today: string;
@@ -93,31 +123,41 @@ export function NextReport({
      çentikler okunmayacak kadar sıklaşıyor; o zaman şerit yok. */
   const ticks = daysLeft >= 1 && daysLeft <= MAX_TICK_DAYS ? daysLeft + 1 : 0;
 
-  return (
-    <div className={css.next}>
-      <div className={css.leafCol}>
-        <div className={css.leaf} data-estimated={estimated || undefined} data-today={daysLeft <= 0 || undefined}>
-          <span className={css.leafBand}>
-            {parts.month} {year}
-          </span>
-          <b className={cn("numeral", css.leafDay)}>{parts.day}</b>
-          <span className={css.leafWeekday}>{weekday}</span>
-        </div>
-        {estimated && <span className={css.leafNote}>{labels.estimatedDate}</span>}
-      </div>
+  const countText = daysLeft <= 0 ? labels.today : labels.daysValue.replace("{n}", String(daysLeft));
 
-      <div className={css.countdown}>
-        <div className={css.countHead}>
-          <p className={css.countLabel}>{labels.daysLeft}</p>
-          <p className={cn("figure", css.countValue)}>
-            {daysLeft <= 0 ? labels.today : labels.daysValue.replace("{n}", String(daysLeft))}
-          </p>
-          {(timing || clockLine) && (
-            <div className={css.windowRow}>
-              {timing && <TimingChip tone={timing.tone}>{timing.label}</TimingChip>}
-              {clockLine && <span className="figure text-small text-body">{clockLine}</span>}
+  /* Kıyas çubuğu yoksa (son çeyrek bilinmiyor) hücreler iki satırlık kısa
+     kutular: sağ sütuna gerilince içleri boş kalıyordu (ölçüldü: 175
+     piksellik hücrede tek sayı). O durumda iki sütun kurulmaz, hücreler
+     çizimin altında yan yana durur (`data-plain`). */
+  const plain = !(eps?.last || revenue?.last);
+
+  return (
+    <div className={css.next} data-plain={plain || undefined}>
+      <div className={css.when}>
+        <div className={css.whenTop}>
+          <div className={css.leafCol}>
+            <div className={css.leaf} data-estimated={estimated || undefined} data-today={daysLeft <= 0 || undefined}>
+              <span className={css.leafBand}>
+                {parts.month} {year}
+              </span>
+              <b className={cn("numeral", css.leafDay)}>{parts.day}</b>
+              <span className={css.leafWeekday}>{weekday}</span>
             </div>
-          )}
+            {estimated && <span className={css.leafNote}>{labels.estimatedDate}</span>}
+          </div>
+
+          <div className={css.countHead}>
+            <p className={css.countLabel}>{labels.daysLeft}</p>
+            <p className={cn("figure", css.countValue)}>
+              {daysLeft > 0 ? <RollingFigure value={countText} /> : countText}
+            </p>
+            {(timing || clockLine) && (
+              <div className={css.windowRow}>
+                {timing && <TimingChip tone={timing.tone}>{timing.label}</TimingChip>}
+                {clockLine && <span className="figure text-small text-body">{clockLine}</span>}
+              </div>
+            )}
+          </div>
         </div>
 
         {/* GÜN ŞERİDİ — son rapor bilinmiyorsa (takvimde geçmiş satır yok,
@@ -136,6 +176,7 @@ export function NextReport({
                   key={index}
                   data-at={index === 0 ? "today" : index === ticks - 1 ? "end" : undefined}
                   data-estimated={(index === ticks - 1 && estimated) || undefined}
+                  style={{ "--i": index } as CSSProperties}
                 />
               ))}
             </span>
@@ -182,12 +223,14 @@ export function NextReport({
             </span>
           </div>
         )}
+
+        {children}
       </div>
 
       {(eps || revenue) && (
         <dl className={css.expect}>
-          {eps && <ExpectCell title={labels.epsEstimate} figure={eps} tone="signal" labels={labels} />}
-          {revenue && <ExpectCell title={labels.revenueEstimate} figure={revenue} tone="neutral" labels={labels} />}
+          {eps && <ExpectCell title={labels.epsEstimate} figure={eps} tone="signal" labels={labels} locale={locale} />}
+          {revenue && <ExpectCell title={labels.revenueEstimate} figure={revenue} tone="neutral" labels={labels} locale={locale} />}
         </dl>
       )}
     </div>
@@ -199,32 +242,61 @@ function ExpectCell({
   figure,
   tone,
   labels,
+  locale,
 }: {
   title: string;
   figure: Figure;
   tone: "signal" | "neutral";
   labels: NextReportLabels;
+  locale: string;
 }) {
   const { estimate, last } = figure;
   const scale = last ? Math.max(Math.abs(estimate.value), Math.abs(last.value)) || 1 : 1;
   /* İşaretli ray yalnız iki değer sıfırın iki yanındaysa (zarardan kâra);
-     ikisi de eksideyse uzunluk büyüklük, renk işaretten (ScaleBar `signal`). */
+     ikisi de eksideyse uzunluk büyüklük, renk işaretten. */
   const signed = last !== null && Math.sign(estimate.value) * Math.sign(last.value) < 0;
-  const row = (label: string, item: { text: string; value: number }, strong: boolean) => (
-    <span className={css.expectRow} data-strong={strong || undefined}>
-      <span className={css.expectRowLabel}>{label}</span>
-      <ScaleBar
-        ratio={item.value / scale}
-        signed={signed}
-        tone={tone}
-        className={cn("mt-0 max-w-none", !strong && "opacity-55")}
-      />
-      <span className={cn("figure", css.expectRowValue)}>{item.text}</span>
-    </span>
-  );
+  /* Beklentinin son çeyreğe göre farkı — gerekçe dosya başında. */
+  const change =
+    last !== null && !signed && last.value !== 0 ? ((estimate.value - last.value) / Math.abs(last.value)) * 100 : null;
+  const row = (label: string, item: { text: string; value: number }, strong: boolean) => {
+    const ratio = Math.min(1, Math.abs(item.value) / scale);
+    const negative = item.value < 0;
+    return (
+      <span className={css.expectRow} data-strong={strong || undefined}>
+        <span className={css.expectRowLabel}>{label}</span>
+        <span aria-hidden className={css.expectLane} data-motion-track data-signed={signed || undefined}>
+          <span
+            className={css.expectFill}
+            data-motion-draw="line"
+            data-tone={tone === "signal" ? (negative ? "down" : "up") : "neutral"}
+            style={
+              signed
+                ? {
+                    left: negative ? `${50 - ratio * 50}%` : "50%",
+                    width: `${ratio * 50}%`,
+                    transformOrigin: negative ? "right center" : "left center",
+                  }
+                : { width: `${ratio * 100}%`, transformOrigin: "left center" }
+            }
+          />
+        </span>
+        <span className={cn("figure", css.expectRowValue)}>{item.text}</span>
+      </span>
+    );
+  };
   return (
     <div className={css.expectCell}>
-      <dt>{title}</dt>
+      <dt>
+        <span>{title}</span>
+        {change !== null && Math.abs(change) >= 0.05 && (
+          <span className={css.expectChange} data-dir={change > 0 ? "up" : "down"}>
+            <span className={css.expectChangeLabel}>{labels.vsLastQuarter}</span>
+            <b className="figure">
+              {change > 0 ? "▲" : "▼"} {formatPercentPlain(Math.abs(change), locale as "tr" | "en", 1)}
+            </b>
+          </span>
+        )}
+      </dt>
       <dd className={cn("figure", css.expectValue)}>{estimate.text}</dd>
       {last && (
         <dd className={css.expectBars}>

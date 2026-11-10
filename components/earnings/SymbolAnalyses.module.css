@@ -1,0 +1,63 @@
+/* Bilanço Analizleri listesi (SymbolAnalyses.tsx) — satır düzeni (10 Kasım,
+   görsel kalite turu; gerekçe bileşende "SATIR DÖRT BÖLGE").
+   Önce (canlı ekran, 1440, /bilancolar/NVDA): manşet satırı ~1218 piksel
+   genişti (~205 karakter); tarih satırın sağ ucunda, dönem adından ~1050
+   piksel uzaktaydı. Sonra (önizleme, açık/koyu): 1440'ta manşet 666 piksel
+   (84ch tavanın altında), yanında üç ölçü sütunu; 1280'de 546; 1024'te
+   668 ve tek ölçü; 390'da 262, şerit yok, tepkinin yüzdesi başlık
+   satırının sağında. Satır 99 piksel (değişmedi). Kutudan taşan 0. */
+.row {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 14px;
+  padding: 16px;
+  border-top: 1px solid var(--line);
+  transition: background-color .2s var(--ease-brand);
+}
+.row:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; }
+.score { display: flex; flex-shrink: 0; flex-direction: column; align-items: center; gap: 4px; }
+.main { display: flex; min-width: 0; flex-direction: column; gap: 4px; }
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; min-width: 0; }
+.period { font-size: var(--text-read); font-weight: 700; letter-spacing: -0.01em; color: var(--text-strong); white-space: nowrap; }
+.date { font-size: var(--text-tiny); color: var(--text-muted); white-space: nowrap; }
+.headline {
+  display: -webkit-box;
+  max-width: 84ch;
+  overflow: hidden;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  font-size: var(--text-base);
+  line-height: 1.5;
+  color: var(--text-body);
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+/* İlk tepki: etiket + yüzde, altında sıfır merkezli şerit (`MetricStrip`,
+   analiz listelerinin dili; ölçek panelin ortak ölçeği). */
+.reaction { display: none; }
+.reactionHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: var(--text-nano); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+.reactionHead b, .reactionInline { font-size: var(--text-tiny); font-weight: 800; }
+.reactionInline { margin-left: auto; white-space: nowrap; }
+.arrow { display: none; }
+
+/* Sütunlar KABIN genişliğinden (panel hisse sayfasında da duruyor, orada
+   kolonu dar olabilir): ≥560 tepki + ok, ≥1100 üç ölçü (940 denendi:
+   1024'lük ekranda manşete 322 piksel kalıyordu). */
+.list { container: analyses / inline-size; margin: 0; padding: 0; list-style: none; }
+@container analyses (min-width: 560px) {
+  .row { grid-template-columns: auto minmax(0, 1fr) 9rem auto; gap: 20px; padding: 16px 20px; }
+  .reaction:not([data-extra]) { display: grid; gap: 6px; min-width: 0; }
+  .reactionInline { display: none; }
+  .arrow { display: block; color: var(--text-muted); transition: translate .2s var(--ease-brand), color .2s var(--ease-brand); }
+}
+@container analyses (min-width: 1100px) {
+  .row { grid-template-columns: auto minmax(0, 1fr) 9rem 9rem 9rem auto; gap: 24px; }
+  .reaction[data-extra] { display: grid; gap: 6px; min-width: 0; }
+}
+@media (hover: hover) and (pointer: fine) {
+  .row:hover { background: var(--primary-tint); }
+  .row:hover .arrow { translate: 3px 0; color: var(--primary-ink); }
+}
+@media (prefers-reduced-motion: reduce) { .row, .arrow { transition: none; } }

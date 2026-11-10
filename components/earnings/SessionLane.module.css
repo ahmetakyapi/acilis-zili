@@ -1,0 +1,51 @@
+/* Seans şeridi (SessionLane.tsx; gerekçe orada). Grafik dili ince: kulvar
+   `--line-soft` üstünde 5 piksellik şerit, ziller `--line-strong` çentik.
+   Üç pencere süreleriyle orantılı (`--pre` / `--regular` / `--after`,
+   dakika); aralarında 3 piksellik boşluk çentiğin yeri. */
+.lane { display: flex; min-width: 0; flex-direction: column; gap: 7px; }
+
+.head { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 8px; margin: 0; min-width: 0; }
+.headName { font-size: var(--text-small); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
+.headClock { font-size: var(--text-small); font-weight: 600; color: var(--text-body); white-space: nowrap; }
+.lane[data-window="unknown"] .headName { font-weight: 600; color: var(--text-muted); }
+/* Etiket penceresinin HİZASINDA: kapanış sonrası sağa, seans içi ortaya. */
+.lane[data-window="amc"] .head { justify-content: flex-end; }
+.lane[data-window="dmh"] .head { justify-content: center; }
+
+.track { display: flex; gap: 3px; height: var(--lane-h, 5px); }
+.segment[data-key="bmo"] { flex: var(--pre) 1 0; }
+.segment[data-key="dmh"] { flex: var(--regular) 1 0; }
+.segment[data-key="amc"] { flex: var(--after) 1 0; }
+.segment { position: relative; display: block; min-width: 0; height: 100%; border-radius: 999px; background: var(--line-soft); }
+.fill { position: absolute; inset: 0; border-radius: inherit; background: var(--bar-soft); }
+/* Saati belirsiz: kulvar kesik — "bu günün içinde, ama nerede bilinmiyor". */
+.lane[data-window="unknown"] .segment {
+  background: repeating-linear-gradient(90deg, var(--line-strong) 0 5px, transparent 5px 9px);
+  opacity: .7;
+}
+
+/* Ziller: çentik pencere sınırında, saat ve ad altında. Izgara şeritle
+   AYNI sütunlar; çentik sütun çizgisine oturur (kendi genişliği kadar
+   ortalanır), yani şerit daralınca saat de birlikte kayar. Oran dakikadan
+   (`calc()` içinde `fr` çarpılamıyor; şerit bu yüzden esnek kutu). */
+.ticks { position: relative; height: 34px; }
+.tick {
+  position: absolute;
+  top: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 1px;
+  translate: -50% 0;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.tick::before { content: ""; width: 1px; height: 5px; margin-bottom: 2px; background: var(--line-strong); }
+.tick[data-at="open"] { left: calc(var(--pre) / (var(--pre) + var(--regular) + var(--after)) * 100%); }
+.tick[data-at="close"] { left: calc((var(--pre) + var(--regular)) / (var(--pre) + var(--regular) + var(--after)) * 100%); }
+.tickClock { font-size: var(--text-tiny); font-weight: 700; color: var(--text-strong); }
+.tickName { font-size: 11px; font-weight: 500; color: var(--text-muted); }
+/* Bilançonun dayandığı zil koyu, öteki soluk: açılış öncesi açılışa,
+   kapanış sonrası kapanışa bakar. */
+.lane[data-window="amc"] .tick[data-at="open"] .tickClock,
+.lane[data-window="bmo"] .tick[data-at="close"] .tickClock { font-weight: 600; color: var(--text-muted); }
