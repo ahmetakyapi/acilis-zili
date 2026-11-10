@@ -27,6 +27,17 @@ Alt ajan bağlamı görmez; brif tek kaynağıdır. Her brifte:
    skill'i. Commit ATMA, push ETME.
 5. Teslim: değişen dosyalar, gerekçe, ölçüm/test, check özeti.
 
+Dört ajana aynı on paragrafı yazma: ortak kısım ajan tanımındadır
+(`.claude/agents/` — görsel işte `ekran-tasarimcisi`, denetimde
+`gorsel-denetci`); tanımı olmayan işte ortak brifi scratchpad'e TEK dosya
+yaz, her ajana yolunu ver. Brif yalnız o ajana özgü olanı taşır: kapsam,
+port, bulgular.
+
+Herkesin dokunmak isteyeceği dosyalar (`app/globals.css`,
+`components/ui/primitives.tsx`, `components/motion/`, sözlükler) tur
+boyunca ana oturumundur: ajan yamayı raporunda önerir. Sözlükte her ajan
+yalnız kendi ad alanına ekler, var olanı yeniden sıralamaz.
+
 Ürün kararı gerekiyorsa brifte ver (ör. "panelden düzeltilen yedek yedek
 kalır"); ajan karar vermek zorunda kalırsa raporuna yazar.
 

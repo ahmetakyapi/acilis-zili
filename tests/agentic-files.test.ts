@@ -16,7 +16,10 @@ const ruleFiles = readdirSync(path.join(ROOT, ".claude/rules")).filter((f) => f.
 const skillFiles = readdirSync(path.join(ROOT, ".claude/skills"))
   .map((d) => `.claude/skills/${d}/SKILL.md`)
   .filter((f) => existsSync(path.join(ROOT, f)));
-const docs = ["CLAUDE.md", ...ruleFiles, ...skillFiles];
+const agentFiles = existsSync(path.join(ROOT, ".claude/agents"))
+  ? readdirSync(path.join(ROOT, ".claude/agents")).filter((f) => f.endsWith(".md")).map((f) => `.claude/agents/${f}`)
+  : [];
+const docs = ["CLAUDE.md", ...ruleFiles, ...skillFiles, ...agentFiles];
 
 /** Ters tırnak içindeki depo yolları: bilinen kök dizinle başlayan, joker ve yer tutucu içermeyenler. */
 function referencedPaths(text: string): string[] {
@@ -89,4 +92,23 @@ test("her skill'in name ve description frontmatter'ı var, name dizin adıyla ay
     assert.equal(name, skill.split("/")[2], `${skill}: name dizin adıyla aynı olmalı`);
     assert.match(front[1], /^description:\s*\S/m, `${skill}: description yok (otomatik çağrı onunla seçiliyor)`);
   }
+});
+
+test("her proje ajanının name ve description frontmatter'ı var, name dosya adıyla aynı", () => {
+  for (const agent of agentFiles) {
+    const front = read(agent).match(/^---\n([\s\S]*?)\n---/);
+    assert.ok(front, `${agent}: frontmatter yok`);
+    const name = front[1].match(/^name:\s*(.+)$/m)?.[1].trim();
+    assert.equal(name, path.basename(agent, ".md"), `${agent}: name dosya adıyla aynı olmalı`);
+    assert.match(front[1], /^description:\s*\S/m, `${agent}: description yok (ana oturum ajanı onunla seçiyor)`);
+  }
+});
+
+test("CLAUDE.md her skill'i ve her proje ajanını adıyla anıyor", () => {
+  // Skill ya da ajan eklenip haritaya yazılmazsa AGENTS.md okuyan araçlar
+  // (Codex, Cursor, Gemini) varlığını hiç öğrenmez (10 Kasım).
+  const map = read("CLAUDE.md");
+  const names = [...skillFiles.map((f) => f.split("/")[2]), ...agentFiles.map((f) => path.basename(f, ".md"))];
+  const missing = names.filter((name) => !map.includes(`\`${name}\``));
+  assert.deepEqual(missing, [], `CLAUDE.md'de anılmayan skill/ajan: ${missing.join(", ")}`);
 });

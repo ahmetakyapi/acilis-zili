@@ -103,6 +103,7 @@ kontrastlar sahibinin makinesindeki `~/dev-starter/knowledge/themes/acilis-zili.
   `--ease-spring` / `--ease-spring-soft` YALNIZ tek küçük öğenin geri
   bildiriminde (sayaç rakamı, saat kolu, onay işareti); panel, sayfa ve metin
   girişinde asla. Elle `cubic-bezier(...)` yazılmaz.
+  Hangi yardımcıyla, ne zaman: `.claude/rules/hareket.md` (katalog).
 - **Display başlığın yanındaki metin 0,12em kalkar.** Degrade başlıklar Ü/İ/Ö
   imleri kesilmesin diye 0,12em yukarı açılıp `translate` ile geri kalkıyor
   (globals.css, "ÜSTTEKİ İMLER"); yanındaki künye 2–5 piksel aşağıda görünür.

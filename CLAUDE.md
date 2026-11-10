@@ -24,7 +24,8 @@ yazılır. Bir kural değişince satırı güncelle, yanına yenisini ekleme.
 | Sunucu, deploy, geri dönüş | `docs/deploy-vps.md`, `deploy/update.sh` |
 | Video/kısa film (MP4: tanıtım, reklam, sosyal medya) — `cinecode` skill'i | `docs/film-kimligi.md` |
 | Alan kuralları (dosyaya dokununca yüklenir) | `.claude/rules/*.md` (aşağıda özet) |
-| Prosedürler: ön kontrol, ölçüm, ajan dağıtımı, yayın | `.claude/skills/*/SKILL.md` |
+| Prosedürler: ön kontrol, ölçüm, görsel tur, ajan dağıtımı, yayın | `.claude/skills/*/SKILL.md` |
+| Proje ajanları (ortak brif tanımında) | `.claude/agents/*.md` |
 | Eski tasarım devri ve denetim kayıtları (kural DEĞİL) | `docs/arsiv/` |
 
 ## Oturum Başı
@@ -138,8 +139,9 @@ kuralı buraya yaz, aracın adına değil.
   bitince. Paralel ajanlar aynı dosyayı düzenleyecekse ya sıraya koy ya da
   `isolation: worktree`.
 - **Alt ajan brifi bu dosyayı okutur** ve ilgili §'i adıyla verir; ajan
-  kuralı bilmeden "düzeltip" kod içi karar yorumunu silebilir. Karar
-  yorumları silinmez (bu dosyanın sözleşmesi).
+  kuralı bilmeden "düzeltip" kod içi karar yorumunu silebilir. Ortak
+  dosyalar (`app/globals.css`, `components/ui/primitives.tsx`, sözlükler)
+  paralel turda ana oturumundur (`ajan-dagitimi`).
 - **Bitti demeden önce kanıt:** değişen davranışın testi ya da ölçümü
   (`npm run check`, `npm run smoke`, `.tmp-*.mjs` ölçüm betiği). Görsel iş
   ekran görüntüsüyle değil sayıyla doğrulanır (`.claude/rules/arayuz.md` → Düzen; yöntem `olcum` skill'i).
@@ -160,15 +162,19 @@ dosyayı işe başlamadan OKUR. Kural değişince orada güncellenir.
 | Site içi Claude | `.claude/rules/site-ici-claude.md` | Tek kapı `callClaude` + ortak bütçe; çıktıdaki sayı girdide geçmeli; tavsiye denetimi; dördüncü SDK yolu açma |
 | Altyapı | `.claude/rules/altyapi-ve-guvenlik.md` | Depo herkese açık, sır commit'lenmez; migration deploy'da uygulanmaz ("Migrate DB"), veri değiştiren migration sorulur; çerçeveleme, cron, push, e-posta tek kapı |
 | Diller | `.claude/rules/diller.md` | Metin `lib/i18n/dictionaries/{tr,en}.ts`, ikisi birlikte, özellik başına ad alanı; çevirisi eksik içerikte dil listesi |
+| Hareket | `.claude/rules/hareket.md` | Hareket veriyi çizen öğede, bir kez, sunucu son kareyi basar; yalnız kompozitör; yardımcı KATALOĞU (yenisini yazmadan önce bak) |
 | Küçük ama kritik | `.claude/rules/kucuk-ama-kritik.md` | `scroll={false}`, katlama yerinde açılır, otomatik bağlantı, W-8BEN %20, iCloud kopyaları |
 
 **Prosedürler skill'lerde** (`.claude/skills/`, çağrılınca yüklenir):
 `on-kontrol` (kırmızı koşu, migration, rutin, dal artığı — işe ve yayına
 başlamadan), `olcum` (geçici önizleme rotasıyla görsel ölçüm),
-`ajan-dagitimi` (paralel worktree ajanları ve birleştirme), `yayin` (toplu
-commit, `main`, Deploy izleme). Bir tuzak yaşanınca ilgili skill'e tek
-satır ders yazılır; atıfların tazeliğini `tests/agentic-files.test.ts`
-denetler.
+`gorsel-tur` (canlıyı dilimli oku → bulgu listesi → ekran başına ajan →
+yeniden ölç), `ajan-dagitimi` (paralel worktree ajanları ve birleştirme),
+`yayin` (toplu commit, `main`, Deploy izleme). **Proje ajanları**
+(`.claude/agents/`): `ekran-tasarimcisi` (tek ekranın görsel sahibi,
+ölçerek teslim eder), `gorsel-denetci` (salt okunur ölçüm). Bir tuzak
+yaşanınca ilgili skill'e tek satır ders yazılır; atıfların tazeliğini ve
+bu haritanın eksiksizliğini `tests/agentic-files.test.ts` denetler.
 
 ## Yerelde
 

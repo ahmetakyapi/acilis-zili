@@ -20,6 +20,12 @@ bileşeni sahte veriyle ölçülebilir.
 app/(app)/tmp-onizleme-<konu>/page.tsx   # İŞ BİTİNCE SİL
 ```
 
+"Önce" hâli için canlı siteye bak: bulut oturumu https://aciliszili.com'a
+erişir; `.claude/skills/gorsel-tur/cek.mjs` rota × genişlik × temayı
+dilimli çeker (yalnız okur). Sahte veriyi oradaki gerçek değerlere benzet:
+uzun ad, eksik alan, negatif, sıfır (10 Kasım: yalnız "güzel" veriyle
+ölçülen kart canlıda "0,00 $" dev başlığı bastı).
+
 Paralel ajanlar aynı dizinde `next dev` koşturamaz (`.next/dev` kilidi):
 her ajan kendi worktree'sinde ve kendi portunda (`npx next dev -p 31xx`).
 
@@ -54,7 +60,15 @@ tema için:
    aynı tuzağa düştü).
 3. `npm run build && npm run check`.
 
-## 4. Kayıt
+## 4. Kendi Görüntüne Bak
+
+Sayılar temizken ekran yine kötü durabilir (ölü boşluk, zayıf hiyerarşi
+taşma değildir). Son hâli dilimli çek, Read ile oku ve bir tasarımcı gibi
+eleştir (`gorsel-tur` § 2 sınıfları); beğenmediğini düzeltip yeniden ölç.
+Tam sayfa görüntüde boş logo karosu tembel yüklemedir: önce sayfayı
+kaydır (`cek.mjs` yapar).
+
+## 5. Kayıt
 
 Ölçülen sayıları (önce → sonra) değişen kuralın kod içi karar yorumuna yaz:
 genişlik, tema, piksel. "Sığıyor gibi duruyor" doğrulama değildir.
