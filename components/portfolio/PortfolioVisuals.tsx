@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import { LogoTile, Skeleton } from "@/components/ui/primitives";
+import { Money } from "@/components/portfolio/Money";
 import { formatLira } from "@/lib/fx";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { PortfolioTotals } from "@/lib/portfolio";
@@ -312,8 +313,11 @@ export function TotalsBand({
     <div className={styles.totals}>
       <div className={styles.totalLead}>
         <p className={styles.totalLabel}>{labels.totalValue}</p>
-        <RollingFigure value={usd(totals.valueUsd)} className={styles.totalValue} />
-        <p className={`figure ${styles.totalTl}`}>{tl(totals.valueTl)}</p>
+        {/* Tutarlar `Money` ile gizlenebilir (10 Kasım; lib/privacy.ts). */}
+        <Money className={styles.totalValue}>
+          <RollingFigure value={usd(totals.valueUsd)} />
+        </Money>
+        <p className={`figure ${styles.totalTl}`}><Money>{tl(totals.valueTl)}</Money></p>
       </div>
 
       <dl className={styles.basisGrid}>
@@ -327,7 +331,9 @@ export function TotalsBand({
             </dt>
             <dd className={styles.basisBody}>
               <span className={cn(styles.basisValue, directionText(directionOf(card.tone)))}>
-                <RollingFigure value={card.value} delayMs={(index + 1) * 120} />
+                <Money>
+                  <RollingFigure value={card.value} delayMs={(index + 1) * 120} />
+                </Money>
               </span>
               {card.pct !== null && (
                 <span className={cn("figure", styles.basisPct)} data-tone={directionOf(card.tone)}>
@@ -337,10 +343,10 @@ export function TotalsBand({
               {card.cost && card.worth && (
                 <span className={styles.basisLine}>
                   <span>
-                    {labels.costShort} <b className="figure">{card.cost}</b>
+                    {labels.costShort} <b className="figure"><Money>{card.cost}</Money></b>
                   </span>
                   <span>
-                    {labels.value} <b className="figure">{card.worth}</b>
+                    {labels.value} <b className="figure"><Money>{card.worth}</Money></b>
                   </span>
                 </span>
               )}
@@ -378,7 +384,7 @@ export function TotalsBand({
                   </span>
                   <span className={styles.receiptHint}>{labels.fromStockHint}</span>
                 </dt>
-                <dd className="figure" data-tone={directionOf(stockPart)}>{tl(stockPart, true)}</dd>
+                <dd className="figure" data-tone={directionOf(stockPart)}><Money>{tl(stockPart, true)}</Money></dd>
               </div>
               <div>
                 <dt>
@@ -388,13 +394,13 @@ export function TotalsBand({
                   </span>
                   <span className={styles.receiptHint}>{labels.fromFxHint}</span>
                 </dt>
-                <dd className="figure" data-tone={directionOf(fxPart)}>{tl(fxPart, true)}</dd>
+                <dd className="figure" data-tone={directionOf(fxPart)}><Money>{tl(fxPart, true)}</Money></dd>
               </div>
               <div className={styles.receiptTotal}>
                 <dt>
                   <span className={styles.receiptLabel}>{labels.tlTotal}</span>
                 </dt>
-                <dd className="figure" data-tone={directionOf(totals.pnlTl)}>{tl(totals.pnlTl, true)}</dd>
+                <dd className="figure" data-tone={directionOf(totals.pnlTl)}><Money>{tl(totals.pnlTl, true)}</Money></dd>
               </div>
             </dl>
           </div>

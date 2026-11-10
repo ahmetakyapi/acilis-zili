@@ -131,10 +131,14 @@ export function PortfolioWorkbench({
   maxPositions,
   sales,
   preset = null,
+  openAdd = false,
   children,
 }: {
   /** `?ekle=` ile gelen sembol — ekleme penceresi onunla açık başlıyor. */
   preset?: { symbol: string; name: string | null; logo: string | null } | null;
+  /** Sembolsüz `?ekle=` (10 Kasım, ana sayfa panelinin davet kartı): pencere
+   *  boş açılır, okuyucu sembolü pencerede arar. */
+  openAdd?: boolean;
   labels: PortfolioLabels;
   /** Satış etiketleri; `null` ise satış kaydı kapalı (migration 0027 yok). */
   sales: Dictionary["portfolioSales"] | null;
@@ -145,15 +149,15 @@ export function PortfolioWorkbench({
   maxPositions: number;
   children: React.ReactNode;
 }) {
-  const [sheet, setSheet] = useState<Sheet | null>(preset ? { kind: "add", preset } : null);
-  const [open, setOpen] = useState(Boolean(preset));
+  const [sheet, setSheet] = useState<Sheet | null>(preset ? { kind: "add", preset } : openAdd ? { kind: "add" } : null);
+  const [open, setOpen] = useState(Boolean(preset) || openAdd);
   /* Adres temizleniyor ki yenileme pencereyi yeniden açmasın. Sığ değil,
      gerçek bir gezinme (`router.replace`): sığ güncelleme uçuştaki
      gezinmeyi öldürüyor (CLAUDE.md). */
   const router = useRouter();
   useEffect(() => {
-    if (preset) router.replace(window.location.pathname, { scroll: false });
-  }, [preset, router]);
+    if (preset || openAdd) router.replace(window.location.pathname, { scroll: false });
+  }, [preset, openAdd, router]);
   const [toast, setToast] = useState<Toast | null>(null);
   const [hidden, setHidden] = useState<ReadonlySet<string>>(new Set());
   const [fresh, setFresh] = useState<ReadonlySet<string>>(new Set());

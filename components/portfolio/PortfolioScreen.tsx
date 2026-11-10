@@ -14,6 +14,9 @@ import {
   PortfolioWorkbench,
 } from "@/components/portfolio/PortfolioWorkbench";
 import { PortfolioNote } from "@/components/portfolio/PortfolioNote";
+import { Money } from "@/components/portfolio/Money";
+import { PrivacyToggle } from "@/components/portfolio/PrivacyToggle";
+import { getPrivacy } from "@/lib/privacy-server";
 import { PortfolioTechnical, type TechnicalHolding } from "@/components/portfolio/PortfolioTechnical";
 import { PositionsTable, type PositionRow } from "@/components/portfolio/PositionsTable";
 import { RealizedPanel } from "@/components/portfolio/RealizedPanel";
@@ -65,14 +68,15 @@ import { getTechnicalBoard } from "@/lib/technical-data";
  * migration'lar deploy'da uygulanmıyor; okuma düşerse sayfa "şu an
  * açılamıyor" der (`lib/portfolio-data.ts`).
  */
-export async function PortfolioScreen({ userId, preset = null }: { userId: string; preset?: string | null }) {
+export async function PortfolioScreen({ userId, preset = null, openAdd = false }: { userId: string; preset?: string | null; openAdd?: boolean }) {
   /* Satış tablosu var mı — Sat düğmeleri ve pencere ona bağlı. Tek küçük
      sorgu; kotasyon ve kur okumalarını (ilk baytı geciktiren asıl iş)
      beklemiyor. Aynı okuma `cache()`li, gövde onu yeniden kullanıyor. */
-  const [{ locale, t }, sales, presetNames] = await Promise.all([
+  const [{ locale, t }, sales, presetNames, privacy] = await Promise.all([
     getI18n(),
     getPortfolioSales(userId),
     preset ? getSymbolNames([preset]) : Promise.resolve(null),
+    getPrivacy(),
   ]);
   const presetPick = preset
     ? { symbol: preset, name: presetNames?.[preset]?.name ?? null, logo: presetNames?.[preset]?.logoUrl ?? null }
@@ -86,7 +90,7 @@ export async function PortfolioScreen({ userId, preset = null }: { userId: strin
   return (
     <MotionExperience className={directory.page}>
       <ScrollProgress />
-      <PortfolioWorkbench labels={L} locale={locale} today={today} minDate={TCMB_MIN_DATE} maxPositions={MAX_POSITIONS} sales={sales.available ? t.portfolioSales : null} preset={presetPick}>
+      <PortfolioWorkbench labels={L} locale={locale} today={today} minDate={TCMB_MIN_DATE} maxPositions={MAX_POSITIONS} sales={sales.available ? t.portfolioSales : null} preset={presetPick} openAdd={openAdd}>
         <DirectoryHeader
           title={L.title}
           description={L.subtitle}
@@ -102,6 +106,11 @@ export async function PortfolioScreen({ userId, preset = null }: { userId: strin
               bağlantının iki kopyası, ekranda hep yalnız biri görünür. */}
           <div className={styles.heroActions}>
             <AddPositionButton />
+            {/* TUTARLARI GİZLE (10 Kasım, sahibinin isteği: "tutarlar
+                gizlensin, yüzdelikler gözüksün"). Başlıkta, birincil
+                eylemin yanında: ekran paylaşılmadan, ekran görüntüsü
+                alınmadan önce tek dokunuş. Sözleşme lib/privacy.ts. */}
+            <PrivacyToggle initial={privacy} labels={{ hide: L.hideAmounts, show: L.showAmounts }} />
             {/* Portföy analizi (24 Ekim) — ayrı rota, gerekçe
                 components/portfolio/analysis/AnalysisScreen.tsx. */}
             <ButtonLink href="/portfoy/analiz" variant="ghost" className={styles.inlineOnlyWide}>
@@ -371,7 +380,7 @@ async function PortfolioBody({
                 <span className="numeral inline-flex flex-wrap items-baseline gap-x-2 text-small">
                   <span className="text-muted">{t.portfolioDay.title} · {basisLabel}</span>
                   <span className={cn("font-bold", directionText(directionOf(day.changeUsd)))}>
-                    {`${day.changeUsd > 0 ? "+" : ""}${formatPrice(day.changeUsd, locale, { currency: true })}`}
+                    <Money>{`${day.changeUsd > 0 ? "+" : ""}${formatPrice(day.changeUsd, locale, { currency: true })}`}</Money>
                   </span>
                   <span className={cn("font-semibold", directionText(directionOf(day.changeUsd)))}>{formatPercent(day.changePct, locale)}</span>
                 </span>

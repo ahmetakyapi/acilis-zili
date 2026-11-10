@@ -1,3 +1,4 @@
+import { Money } from "@/components/portfolio/Money";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { VerdictPill } from "@/components/ui/VerdictPill";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -144,7 +145,8 @@ export async function PortfolioTechnical({
                 </div>
                 <div>
                   <dt>{P.avgCost}</dt>
-                  <dd className="numeral">{money(holding.avgCost)}</dd>
+                  {/* Ortalama maliyet okurun parası: tutar gizlemesine girer. */}
+                  <dd className="numeral"><Money>{money(holding.avgCost)}</Money></dd>
                 </div>
                 <div>
                   <dt>{verdict === "sell" ? P.toSellLevel : P.toTarget}</dt>

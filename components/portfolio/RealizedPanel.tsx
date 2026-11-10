@@ -1,3 +1,4 @@
+import { Money } from "@/components/portfolio/Money";
 import { Panel, PanelHeader, LogoTile } from "@/components/ui/primitives";
 import { formatIsoDate, formatLira } from "@/lib/fx";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -50,9 +51,9 @@ export function RealizedPanel({
                   <span className="numeral text-tiny text-muted">{S.yearCount.replace("{n}", String(year.count))}</span>
                 </p>
                 <p className="flex flex-wrap items-baseline gap-x-3 gap-y-0.5">
-                  <span className={cn("numeral text-lead font-bold", directionText(directionOf(year.pnlUsd)))}>{usd(year.pnlUsd, true)}</span>
+                  <span className={cn("numeral text-lead font-bold", directionText(directionOf(year.pnlUsd)))}><Money>{usd(year.pnlUsd, true)}</Money></span>
                   <span className={cn("numeral text-read font-semibold", year.pnlTl === null ? "text-muted" : directionText(directionOf(year.pnlTl)))}>
-                    {year.pnlTl === null ? S.rateMissing : formatLira(year.pnlTl, locale, 2, true)}
+                    {year.pnlTl === null ? S.rateMissing : <Money>{formatLira(year.pnlTl, locale, 2, true)}</Money>}
                   </span>
                 </p>
               </div>
@@ -69,7 +70,7 @@ export function RealizedPanel({
                     <span className="numeral text-tiny text-muted">{formatIsoDate(view.soldAt, locale)}</span>
                   </p>
                   <p className="numeral text-tiny text-body">
-                    {qtyFormat.format(view.quantity)} × {formatPrice(view.priceUsd, locale, { currency: true })}
+                    <Money>{qtyFormat.format(view.quantity)}</Money> × {formatPrice(view.priceUsd, locale, { currency: true })}
                     {view.lots > 1 && <span className="text-muted"> · {S.lotsNote.replace("{n}", String(view.lots))}</span>}
                   </p>
                 </div>
@@ -79,6 +80,7 @@ export function RealizedPanel({
                   <Result
                     label={S.tl}
                     value={view.pnlTl === null ? S.rateMissing : formatLira(view.pnlTl, locale, 2, true)}
+                    money={view.pnlTl !== null}
                     pct={view.pnlTlPct}
                     tone={view.pnlTl}
                     locale={locale}
@@ -103,9 +105,12 @@ function Result({
   pct,
   tone,
   locale,
+  money = true,
 }: {
   label: string;
   value: string;
+  /** Tutar gizlemesine girer mi — "kur alınamadı" gibi metin girmez. */
+  money?: boolean;
   pct: number | null;
   tone: number | null;
   locale: Locale;
@@ -113,7 +118,7 @@ function Result({
   return (
     <div className="min-w-0">
       <p className="text-nano text-muted">{label}</p>
-      <p className={cn("numeral text-read font-bold", tone === null ? "text-muted" : directionText(directionOf(tone)))}>{value}</p>
+      <p className={cn("numeral text-read font-bold", tone === null ? "text-muted" : directionText(directionOf(tone)))}>{money ? <Money>{value}</Money> : value}</p>
       <p className="numeral text-tiny text-muted">{pct === null ? NO_VALUE : formatPercent(pct, locale)}</p>
     </div>
   );

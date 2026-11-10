@@ -1,0 +1,10 @@
+/* Gizleme anahtarının dokunma hedefi HER genişlikte en az 44 piksel (10
+   Kasım brifi). `.tap-44` 640'tan itibaren kapanıyor (globals.css; masaüstü
+   işaretçisi için bilinçli); bu anahtar ise masaüstünde de ekran paylaşımı
+   öncesi tek tık — görünür ölçü değişmeden hedef açılır. `.tap-44`ün
+   `::after`ı telefonda aynı işi görüyor; bu kural ondan sonra gelir ve
+   aynı ölçüyü verir.
+   Ölçüm: ana sayfa paneli görünür 36 → hedef 44 × 44, /portfoy başlığı
+   görünür 144 × 40 → hedef 44 yükseklik (390 ve 1440). */
+.hit { position:relative; }
+.hit::after { content:""; position:absolute; inset:min(0px, calc((100% - 44px) / 2)); translate:none; height:auto; top:min(0px, calc((100% - 44px) / 2)); }
