@@ -728,12 +728,13 @@ export default async function AnalysesPage(
                         <span
                           data-today={away <= 0 || undefined}
                           data-optional={optional || undefined}
+                          data-paired={session !== null || undefined}
                         >
                           {relativeDayLabel(away, t.calendar)}
                         </span>
                         {session && (
                           <>
-                            <span aria-hidden data-optional={optional || undefined}>
+                            <span aria-hidden data-optional={optional || undefined} data-paired>
                               {" · "}
                             </span>
                             <span className="inline-flex items-center gap-1 whitespace-nowrap">

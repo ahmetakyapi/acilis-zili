@@ -271,6 +271,11 @@
    kolonda o gidiyor. 1024'te panel 342: sığıyor, kalıyor. */
 @container upcoming (max-width: 339.98px) {
   .upcomingWhen [data-optional] { display: none; }
+  /* Beklenti zaman satırına inince (10 Kasım) 306 piksellik panelde "2 Gün
+     Sonra · Kap. Sonrası" + "HBK 1,35 $" sığmadı ve zaman iki satıra kırıldı
+     (canlıda görüldü). Dar panelde seansı bilinen satırda göreli gün düşer:
+     gün zaten takvim yaprağında yazılı, seans satırın asıl bilgisi. */
+  .upcomingWhen [data-paired] { display: none; }
 }
 /* 320'de (panel 288) metne logoyla 128 piksel kalıyordu ve "2 Gün Sonra ·
    Kap. Sonrası" (~150) noktadan kırılıyordu. Logo süs: sembol zaten yazılı.

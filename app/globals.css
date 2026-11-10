@@ -1941,7 +1941,11 @@ html.theme-switching::view-transition-new(root) {
    Gerekçe ve ölçüm DrawGate.tsx başında. `!important`: modül CSS'inin
    `animation` kısa yazımı özgüllükte bu kuralı geçebiliyor. */
 [data-draw][data-armed],
-[data-draw][data-armed] * {
+[data-draw][data-armed] *,
+[data-draw][data-armed]::before,
+[data-draw][data-armed]::after,
+[data-draw][data-armed] *::before,
+[data-draw][data-armed] *::after {
   animation-name: none !important;
 }
 

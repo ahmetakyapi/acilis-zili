@@ -79,5 +79,12 @@ globals.css'e (ana oturum) terfi eder ve bu tabloya satır olarak girer.
   ancak binlerce piksel sonra tamamlanırdı.
 - Başsız Chrome çalışan animasyonu başa sarılmış karede çeker; yerleşimi
   `reducedMotion: "reduce"` ile çek, animasyonu `getAnimations()` ile say.
+- Modül CSS'inde `animation: bar-fill …` YAZILMAZ: derleyici animasyon
+  adını modül kapsamına alır, globals'taki keyframes'e ulaşmaz ve çizim HİÇ
+  oynamaz; görüntüde fark edilmez, `getAnimations()` sayımı yakalar (10
+  Kasım). Globals'ın SINIFINI TSX'te ver (`bar-fill`, `spark-line`,
+  `ring-fill`); modülde yalnız `animation-delay` / `transform-origin`.
+- `[data-draw]` kapısı `::before`/`::after` çizimlerini de durdurur
+  (globals.css); modülde ayrıca yazma.
 - Kökte `:has()` yok; saniyede bir değişen DOM'da tüm belge yeniden
   hesaplanır.

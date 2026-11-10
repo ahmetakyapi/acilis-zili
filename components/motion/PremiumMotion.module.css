@@ -185,7 +185,7 @@
   border-radius: 0.65rem;
   color: var(--text-body);
   font-size: 0.75rem;
-  font-weight: 550;
+  font-weight:600;
   white-space: nowrap;
   scale: 1;
   transition: color 180ms var(--ease-brand), background-color 180ms var(--ease-brand), scale 120ms var(--ease-brand);
@@ -303,7 +303,7 @@
 /* KAPAĞIN İMZASI ÇİZİLİYOR (9 Ekim). Yaylar yüklemede bir kez, içteki
    önce, köşeden uçtan uca çiziliyor; sayfa başlığının maskeden yükselişiyle
    aynı anda. `backwards`: bitince kesik değeri kalmıyor. */
-.accentContours > * { stroke-dasharray:1; animation:contour-draw 1.5s var(--ease-brand) 120ms backwards; }
+.accentContours > * { stroke-dasharray:1; animation:contour-draw .9s var(--ease-brand) 120ms backwards; }
 .accentContours > :nth-child(2) { animation-delay:300ms; }
 @keyframes contour-draw { from { stroke-dashoffset:1; } to { stroke-dashoffset:0; } }
 @supports (animation-timeline:view()) {
