@@ -826,7 +826,7 @@
 .star {
   margin-right: 3px;
   color: var(--primary);
-  font-size: 0.8em;
+  font-size: max(0.8em, 12px);
 }
 
 /* ---- Öne çıkanlar ----

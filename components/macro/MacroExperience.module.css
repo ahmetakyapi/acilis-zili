@@ -108,7 +108,7 @@
 .chips button:active { scale:.97; }
 /* Telefonda dokunma hedefi 44: görünür çip 36'da kalır, görünmez alan 4'er
    piksel taşar (çipler tek satırda, dikeyde komşu yok; önce 36, ölçüldü). */
-@media(max-width:767px) { .chips { padding-block:4px; margin-block:-4px; } .chips button::after { content:""; position:absolute; inset:-4px 0; } }
+@media(max-width:767px) { .chips { padding-block:6px; margin-block:-6px; } .chips button::after { content:""; position:absolute; inset:-5px 0; } }
 .chips button[aria-pressed="true"] { border-color:var(--primary); background:var(--primary-tint); color:var(--primary-ink); }
 @media(hover:hover) { .chips button[aria-pressed="false"]:hover { border-color:var(--line-strong); color:var(--text-strong); } }
 
@@ -135,7 +135,7 @@
 .readingSide dd[data-muted] { font-weight:400; color:var(--text-muted); }
 
 .delta { display:inline-flex; align-items:center; gap:4px; padding:2px 9px; border-radius:999px; background:var(--surface-sunken); font-size:12px; font-weight:600; color:var(--text-body); white-space:nowrap; }
-.delta > span { font-size:.8em; }
+.delta > span { font-size:max(.8em, 12px); }
 /* Ok YÖNÜN rengi, sayfanın her yerinde aynı kural (25 Ekim son düzeltme):
    yükseliş `--up`, düşüş `--down`. Önce kartta yükseliş maviydi, eğri
    sütununda yeşil, VIX'te kırmızı: aynı ▲ üç renkti. "İyi mi kötü mü"

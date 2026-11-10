@@ -1995,10 +1995,23 @@
    logoları aynı sütunlarda alt alta duruyor. Sekizden fazlası bir alt
    satıra aynı sütunlarla iniyor. Karo hücrenin genişliğinde: 390'da ~31,
    430'da ~35 piksel (taban 36'ydı); dokunma hedefi hücrenin tamamı. */
+/* 10 Kasım (telefon turu) — SEKİZ SÜTUN → ALTI. Sekiz sütunda karo 28
+   piksel, adım 33 pikseldi: on altı logonun on altısı da 44'ün altında bir
+   hedefti (ölçüldü 390, `elementFromPoint`: alan 34×34) ve logolar bu
+   ekranın en küçük şirket işaretiydi. Altı sütunda karo ~40, adım ~44
+   (360'ta 36 / 40): ortak ızgara, kenardan kenara dolgu ve alt alta hiza
+   aynı; SAT 10 yine iki satır, TUT 6 tam bir satır. Görünmez taşma 4 → 3
+   piksel (adım artık kendisi 44; komşular üst üste binmesin). */
 @media (max-width:767px) {
-  .pulse[data-variant="panel"] .pulseLogos { display:grid; grid-template-columns:repeat(8,minmax(0,1fr)); gap:5px; }
+  .pulse[data-variant="panel"] .pulseLogos { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:4px; }
   .pulse[data-variant="panel"] .pulseLogo { width:100%; aspect-ratio:1; padding:3px; }
+  .pulse[data-variant="panel"] .pulseLogo::after { inset:-3px; }
   .pulse[data-variant="panel"] .pulseLogo > :first-child { width:100%; height:100%; }
+}
+/* 380'in altında beş sütun: altı sütunda karo 34, adım 38 pikseldi (ölçüldü
+   360); beşte karo ~40, adım ~44. */
+@media (max-width:379px) {
+  .pulse[data-variant="panel"] .pulseLogos { grid-template-columns:repeat(5,minmax(0,1fr)); }
 }
 /* 360'ın altında etiket ("AL 7") logoların ÜSTÜNDE: yan yana dururken
    sekiz sütuna 193 piksel kalıyor ve karo 20 piksele iniyordu (320,

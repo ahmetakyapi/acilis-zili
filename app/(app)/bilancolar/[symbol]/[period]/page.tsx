@@ -443,25 +443,17 @@ export default async function AnalysisDetailPage(
           })();
 
   /* Fiyat merdiveninin işaretleri — gerekçe kapaktaki `reportClose`
-     notunda. Bugün ile hedef arası yön renginde bir bant: fiyat hedefin
-     altındaysa yukarı (yeşil), üstündeyse aşağı (kırmızı) — potansiyel
-     rozetinin rengiyle aynı hesap. Bugün yoksa bant kapanıştan. */
-  const ladderBase =
-    upside?.basis === "today" && live ? live.quote.price : row.price;
+     notunda. (10 Kasım'a dek bugün ile hedef arası yön renginde bir bant
+     da vardı: fiyat hedefin altındaysa yeşil, üstündeyse kırmızı.)
+     10 Kasım (telefon turu): merdiven `PriceRail`in `bar` kipinde; yön
+     yıkamalı bant KALKTI. Kalın çubuk bilanço gününden bugüne alınan yol;
+     hedefe kalan mesafe çubuğun ucuyla "Hedef" çentiği arasındaki boş
+     kulvardan okunuyor, yüzdesi görüş şeridinde yazılı. İki renkli yüzey
+     (yön çubuğu + yön bandı) üst üste aynı rayda iki ayrı şeyi söylüyordu. */
   const ladderMarks: RailMark[] =
     row.price === null
       ? []
       : [
-          ...(row.targetPrice !== null && ladderBase !== null
-            ? [
-                {
-                  kind: "band",
-                  from: Math.min(ladderBase, row.targetPrice),
-                  to: Math.max(ladderBase, row.targetPrice),
-                  tone: row.targetPrice >= ladderBase ? "up" : "down",
-                } as const,
-              ]
-            : []),
           ...(live && live.quote.price > 0
             ? [{ kind: "travel", from: row.price, to: live.quote.price } as const]
             : []),

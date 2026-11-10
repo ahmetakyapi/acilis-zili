@@ -284,7 +284,7 @@
 
 .tileStar {
   color: var(--primary);
-  font-size: 0.85em;
+  font-size: max(0.85em, 12px);
 }
 
 .tileName {

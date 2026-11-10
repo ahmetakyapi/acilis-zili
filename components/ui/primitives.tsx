@@ -317,7 +317,10 @@ export function ChangePill({
       )}
     >
       {direction !== "flat" && (
-        <span aria-hidden className="text-[0.85em] leading-none">
+        /* OK GLİFİ 12'NİN ALTINA İNMEZ (10 Kasım, telefon turu): 0,85em
+           12 piksellik hapta 10,2 pikseldi (ölçüldü 390; /makro 9,6,
+           haberler 9,36 aynı gün aynı tabana çekildi). */
+        <span aria-hidden className="text-[max(0.85em,12px)] leading-none">
           {direction === "up" ? "▲" : "▼"}
         </span>
       )}
@@ -559,7 +562,13 @@ export function LogoTile({
       className={cn(
         "numeral flex shrink-0 items-center justify-center bg-primary-wash font-bold tracking-[-0.02em] text-primary-ink",
         step.box,
-        size === "xs" || size === "sm" ? "text-micro" : "text-tiny",
+        /* HARF 12 PİKSEL (10 Kasım, telefon turu). Küçük karolarda
+           `text-micro` (8) idi: globals.css bunu "metin olmayan işaret"
+           sayıyordu ama logosu olmayan şirketi satırda TANITAN tek şey bu
+           iki harf (ölçüldü 390: yatırımcı kartlarında "SP", "IE" 8
+           piksel). İki kalın harf 12 pikselde ≈ 16 piksel, 22'lik karoya
+           sığıyor; sıkı harf aralığı geniş çiftler ("WM") için. */
+        size === "xs" || size === "sm" ? "text-tiny tracking-[-0.05em]" : "text-tiny",
         className,
       )}
     >
@@ -1113,7 +1122,7 @@ export function FilterChip({
            dizilen çiplerde yanlış çipe basmak kolaydı. İmleç hassas olduğu
            için geniş ekranda ölçü değişmiyor, çip şeridi orada aynı
            sıkılıkta kalıyor. */
-        "inline-flex min-h-11 items-center whitespace-nowrap rounded-full px-[11px] py-[5px] text-tiny transition-colors sm:min-h-8",
+        "inline-flex min-h-11 min-w-11 items-center justify-center whitespace-nowrap sm:min-w-0 rounded-full px-[11px] py-[5px] text-tiny transition-colors sm:min-h-8",
         active
           ? "bg-primary font-semibold text-on-primary"
           : "bg-surface-elevated text-body hover:text-strong",
@@ -1237,7 +1246,8 @@ export function SegmentItem({
            O düzeltme 40 pikselde YARIM kalmıştı: `FilterChip` `min-h-11`,
            bu `min-h-10`. Karşılaştırma ekranının birincil denetimi artık bu
            segment ve dar ekranda altı düğme yan yana duruyor. */
-        "inline-flex min-h-11 items-center justify-center rounded-full px-4 py-[7px] transition-colors sm:min-h-8",
+        /* `min-w-11` (10 Kasım, telefon turu): iki harfli etiket ("Ay", "1Y") 38×44 kalıyordu. */
+        "inline-flex min-h-11 min-w-11 items-center justify-center rounded-full px-4 py-[7px] transition-colors sm:min-h-8 sm:min-w-0",
         active
           ? "bg-primary font-semibold text-on-primary shadow-(--shadow-raised)"
           : "text-body hover:text-strong",

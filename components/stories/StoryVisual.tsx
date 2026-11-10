@@ -57,6 +57,12 @@ function LogoTile({
   size: number;
   radius: number;
 }) {
+  /* HARF 12'NİN ALTINA İNMEZ (10 Kasım, telefon turu). Punto karoya
+     orantılıydı (34 piksellik karoda 8,84: şirket sayfasındaki "SPY",
+     "QQQ" karoları, ölçüldü 390). Şimdi taban 12; sembol karoya sığmıyorsa
+     (kalın 12 piksel ≈ 7,6 piksel/harf, 6 piksel pay) punto değil HARF
+     azalır: sitenin ortak karosu gibi ilk iki harf. */
+  const fits = Math.floor((size - 6) / 7.6);
   const letters = (
     <span
       aria-hidden
@@ -66,10 +72,10 @@ function LogoTile({
         width: size,
         height: size,
         borderRadius: radius,
-        fontSize: size * (symbol.length > 4 ? 0.2 : 0.26),
+        fontSize: Math.max(12, size * (symbol.length > 4 ? 0.2 : 0.26)),
       }}
     >
-      {symbol}
+      {symbol.length > fits ? symbol.slice(0, 2) : symbol}
     </span>
   );
   if (!logoUrl) return letters;

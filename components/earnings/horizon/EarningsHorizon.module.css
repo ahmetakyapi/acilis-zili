@@ -208,7 +208,7 @@
 .tile:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
 
 .karo { position: relative; display: grid; place-items: center; }
-.star { position: absolute; top: -5px; left: -5px; font-size: 11px; line-height: 1; color: var(--primary); }
+.star { position: absolute; top: -5px; left: -5px; font-size: 12px; line-height: 1; color: var(--primary); }
 /* SONUÇ ROZETİ (6 Kasım). Logonun köşesinde 9 piksellik çıplak üçgen
    vardı; logonun kendi renkleriyle karışıp (McDonald's kırmızısı, Uber
    siyahı) kayboluyordu. Şimdi kart zemini halkalı yuvarlak rozet: yön

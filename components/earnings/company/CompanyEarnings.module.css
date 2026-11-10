@@ -242,7 +242,7 @@
   .identityFacts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px; }
   .identityFacts > div { padding-inline:0; border-left:0; }
   .leaf { width:92px; }
-  .leafBand { font-size:11px; padding:5px 4px; }
+  .leafBand { font-size:12px; padding:5px 4px; }
   .leafDay { font-size:40px; padding:8px 0 3px; }
   .leafWeekday { font-size:12px; padding-bottom:9px; }
   .countValue { font-size:40px; }

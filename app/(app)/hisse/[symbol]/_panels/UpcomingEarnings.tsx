@@ -99,12 +99,15 @@ export async function UpcomingEarnings({
         label={t.earnings.addToCalendar}
         className="mt-3 mb-0 w-fit self-start sm:mt-3 sm:mb-0"
       />
-      {/* ŞİRKETİN BİLANÇO SAYFASI (24 Ekim) — tarihin TR saatiyle
+      {/* `flex`, `inline-flex` değil (10 Kasım, telefon turu): telefonda
+          panel blok akışında ve iki satır içi kutu ("Takvime Ekle" ile bu
+          bağlantı) aralıksız YAN YANA diziliyordu (ölçüldü 390).
+          ŞİRKETİN BİLANÇO SAYFASI (24 Ekim) — tarihin TR saatiyle
           cevabı, okur oylaması ve okunan çeyrekler orada
           (`/bilancolar/[symbol]`); takvim kartları da oraya gidiyor. */}
       <Link
         href={earningsHref(symbol)}
-        className="tap-44 mt-2 inline-flex min-h-8 w-fit items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
+        className="tap-44 mt-2 flex min-h-8 w-fit items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
       >
         {t.earningsSeason.company.pageLink}
         <ArrowUpRight size={12} weight="bold" aria-hidden />

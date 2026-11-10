@@ -37,6 +37,6 @@ export function InboxNewBadge({ isNew, label }: { isNew: boolean; label: string 
   const [fresh] = useState(isNew);
   if (!fresh) return null;
   return (
-    <span className="rounded-full bg-primary px-1.5 text-[11px] font-bold leading-[18px] text-on-primary">{label}</span>
+    <span className="rounded-full bg-primary px-1.5 text-[12px] font-bold leading-[18px] text-on-primary">{label}</span>
   );
 }

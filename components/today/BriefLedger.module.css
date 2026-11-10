@@ -333,7 +333,7 @@
 .cellHoliday::after { content: none; }
 .cellHolidayText {
   color: var(--text-muted);
-  font-size: var(--text-micro);
+  font-size: var(--text-tiny);
   font-weight: 700;
 }
 
@@ -809,7 +809,7 @@
 }
 .figGlyph {
   margin-right: 4px;
-  font-size: 0.78em;
+  font-size: max(0.78em, 12px);
 }
 
 /* Dipnot — kuyunun içinde, hairline ile ayrılmış düz paragraf. */

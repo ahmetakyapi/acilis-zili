@@ -164,7 +164,7 @@
 .star {
   margin-right: 3px;
   color: var(--primary);
-  font-size: 0.85em;
+  font-size: max(0.85em, 12px);
 }
 
 .name {

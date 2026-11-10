@@ -757,7 +757,10 @@
      Mobilde ölçek masaüstündekiyle aynı; dar ekranda ayarlanacak şey punto
      değil, boşluk ve sütun sayısı.
      `--text-micro` yalnızca METİN OLMAYAN yerde kalır: logo künyesindeki
-     iki harf gibi, 26 piksellik bir kutunun içinde. */
+     iki harf gibi, 26 piksellik bir kutunun içinde.
+     10 Kasım (telefon turu): logo karosunun yedek harfleri de 12'ye çıktı
+     (`LogoTile`, components/ui/primitives.tsx); `micro`yu kullanan görünür
+     metin kalmadı sayılır, yeni kullanım açma. */
   --text-micro: 0.5rem;        /* 8px   — en küçük künye, plaka */
   /* METİN TABANI 12 PİKSEL (9 Ekim, sahibinin isteği: "bu tür başlıklar
      hiç okunmuyor … her şey net okunabilir olmalı"). `nano` (10) ve `tiny`
@@ -1807,7 +1810,21 @@ html.theme-switching::view-transition-new(root) {
       gider — düzeltmeye çalıştığımız kusurun aynısı.
 
    İkisinde de doğru araç gerçek yükseklik: `min-h-11 sm:min-h-8` ve dikey
-   aralığın ona göre ayarlanması. */
+   aralığın ona göre ayarlanması.
+
+   10 KASIM (telefon turu) — DAR HEDEF YATAYDA DA 44. "Yalnızca dikey"
+   kuralı 44 pikselden DAR hedefleri yarım bırakıyordu (ölçüldü 390,
+   `elementFromPoint`: "Arşiv" 28×32 → alan 28×44, bilanço haftası oku
+   30×30 → 30×44, şirket sayfasındaki benzer logoları 26×26 → 26×44).
+   Yatay kenar artık `min(0px, (100% − 44px) / 2)`: 44'ten geniş hedefte
+   0 (hiçbir şey değişmez; yatayda taşma yok, yan yana çiplerin alanı
+   yenmez), dar hedefte eksi, yani merkezden iki yana eşit açılır. Yan
+   yana DAR hedeflerde (logo dizisi) alanlar birbirine biner; orada doğru
+   araç yine gerçek ölçü ve aralık. Özellik kümesi eskisiyle AYNI
+   (`inset-inline`, `top`, `height`, `translate`): ilk denemede `left:50%`
+   + `width` + iki eksenli `translate` yazıldı ve `::after`ın kenarını
+   kendi modülünde ezen çağıranlarda (ör. ana sayfa `.partLink`) alan
+   yarım genişlik kaydı (ölçüldü). */
 .tap-44 {
   position: relative;
 }
@@ -1815,7 +1832,7 @@ html.theme-switching::view-transition-new(root) {
 .tap-44::after {
   content: "";
   position: absolute;
-  inset-inline: 0;
+  inset-inline: min(0px, calc((100% - 44px) / 2));
   top: 50%;
   height: 44px;
   translate: 0 -50%;
@@ -2921,6 +2938,16 @@ html.ink-splash-out .ink-splash-layer {
 /* Görünen düğme 32, dokunulan alan 44 (10 Ekim denetimi). */
 .chip-strip-arrow::after { content:""; position:absolute; inset:-6px; }
 @keyframes chip-arrow-in { from { opacity:0; scale:.8; } }
+/* ŞERİTTEKİ ÇİPİN DOKUNMA ALANI KIRPILMASIN (10 Kasım, telefon turu).
+   Şeridin kaydırma kabı dikeyde kırpıyor (`.scroll-x`: dikey taşma kesik);
+   28–36 piksellik çipin `.tap-44` genişletmesi kabın boyunda kesiliyordu
+   (ölçüldü 390, /hisse "Claude ile Analiz": 55×28, alan 54×40; bkz.
+   `.tap-44` → "iki yerde işe yaramaz" 1. madde). Kap telefonda 8 piksel
+   dikey dolgu alıyor ve aynı kadar eksi kenar boşluğuyla geri çekiliyor:
+   düzen kımıldamıyor, kırpma hattı 8 piksel dışarı çıkıyor. */
+@media (max-width: 639px) {
+  .chip-strip > :is(.scroll-x, .scroll-x-hint) { padding-block: 8px; margin-block: -8px; }
+}
 @media(prefers-reduced-motion:reduce) { .chip-strip-arrow { animation:none; } }
 
 /* YÖNETİMDE SIKI BAŞLIK (26 Eylül, sahibinin isteği: "başlığı küçültüp

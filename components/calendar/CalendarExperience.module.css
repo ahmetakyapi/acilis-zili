@@ -446,7 +446,7 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 .verdict { display:inline-flex; align-self:flex-start; align-items:baseline; gap:5px; font-size:13px; font-weight:700; line-height:18px; color:var(--text-body); }
 .verdict[data-dir="above"] { color:var(--up); }
 .verdict[data-dir="below"] { color:var(--down); }
-.verdictGlyph { font-size:.78em; }
+.verdictGlyph { font-size:max(.78em, 12px); }
 
 /* Sessiz satır: ardışık boş iş günleri tek satır, 44 piksel. */
 .quiet { display:flex; min-height:44px; flex-wrap:wrap; align-items:center; gap:4px 6px; margin:0; padding:12px 20px; font-size:12px; line-height:1.5; color:var(--text-muted); }

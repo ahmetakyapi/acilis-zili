@@ -321,7 +321,7 @@ function SurprisePill({
       )}
     >
       {surprise.direction !== "flat" && (
-        <span aria-hidden className="text-[0.85em] leading-none">
+        <span aria-hidden className="text-[max(0.85em,12px)] leading-none">
           {surprise.direction === "up" ? "▲" : "▼"}
         </span>
       )}

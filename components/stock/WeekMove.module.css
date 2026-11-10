@@ -58,7 +58,18 @@
 
 /* Gün gün: her seans çizgideki noktasının altında, aynı x. */
 .days { position: relative; height: 34px; margin: 4px 0 0; padding: 0; list-style: none; }
-.days > li { position: absolute; top: 0; display: grid; justify-items: center; width: 56px; margin-left: -28px; }
+.days > li { position: absolute; top: 0; display: grid; justify-items: center; width: 56px; margin-left: -28px; line-height: 15px; }
+/* SON GÜN KUTUNUN İÇİNDE, SATIRLAR AYRILAN YERDE (10 Kasım, telefon turu;
+   ölçüldü 390, /hisse/NVDA). Son seans çizginin sağ ucunda (%100): 56
+   piksellik etiket ortalanınca yarısı kutunun dışına taşıyor ve panel onu
+   kırpıyordu ("−%0," ve "2,2" yarım basılıyordu). Çizim ve gün satırı
+   telefonda sağdan 14 piksel içeri alınır: son etiketin taşan yarısı
+   (28) bu pay + kutunun 14 piksellik dolgusuna sığar; etiketler aynı
+   adımla dizilmeye devam eder (son etiketi sola yaslamak komşusuyla
+   çakıştırıyordu, denendi). Üç katlı etiket (gün, yüzde, hacim) satır
+   yüksekliği verilmediği için 54 piksel tutuyor, ayrılan 46 pikseli aşıp
+   lejantın üstüne biniyordu; satır 15 piksel (3 × 15 = 45). */
+@media (max-width: 639px) { .spark { padding-right: 14px; } }
 .dayName { font-size: 12px; font-weight: 600; color: var(--text-body); }
 .dayValue { font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--text-muted); }
 .dayValue[data-tone="up"] { color: var(--up); }

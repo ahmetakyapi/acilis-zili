@@ -327,8 +327,11 @@
 /* Dar düzende (tek kolon) buton üst satırda, rozetin karşısında: 44
    piksel (dokunma hedefi), içeriği kadar. Önce şeridin altında tam
    genişlik 48 piksellik dolu şeritti (panelin en ağır öğesi). */
+/* 10 Kasım (telefon turu): sözde öğeyle genişletme İŞE YARAMIYORDU; buton
+   ilerleme dolgusunu kırpmak için `overflow:hidden` ve genişletmeyi de
+   kırpıyordu (ölçüldü 390, `elementFromPoint`: alan 131×40). Gerçek boy 44. */
 @media (max-width: 1023px) {
-  .sb-play::after { content: ""; position: absolute; inset: 50% 0 auto; height: 44px; translate: 0 -50%; }
+  .sb-play { min-height: 44px; }
 }
 /* 320–379: rozet ve geri sayım yan yana sığmıyor (320'de üst üste
    biniyordu), kart saatleri komşu karta taşıyordu — ölçüldü. */

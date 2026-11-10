@@ -400,7 +400,7 @@
    ortalı. Numara aşağıdaki satırla eşleşiyor; olayın türü satırda yazılı,
    noktada ikinci bir renk kodu yok. */
 .rulerDot { position:absolute; top:11px; display:grid; place-items:center; width:20px; height:20px; border:1px solid var(--primary); border-radius:50%; background:var(--premium-surface); color:var(--primary-ink); transform:translateX(-50%); animation:preview-dot var(--mark,200ms) var(--ease-brand) calc(420ms + var(--i, 0) * var(--step,40ms)) backwards; }
-.rulerDot b { font-size:10px; font-weight:700; line-height:1; }
+.rulerDot b { font-size:12px; font-weight:700; line-height:1; }
 .rulerEnd { position:absolute; bottom:0; color:var(--text-muted); font-size:var(--text-tiny); font-weight:500; line-height:1.2; white-space:nowrap; }
 .rulerEnd[data-at="start"] { left:0; }
 .rulerEnd[data-at="open"], .rulerEnd[data-at="close"] { transform:translateX(-50%); color:var(--text-body); font-weight:600; }
@@ -408,7 +408,7 @@
 .previewList { display:grid; gap:6px; margin-top:12px; }
 .previewRow { display:grid; grid-template-columns:38px 74px minmax(0,1fr) auto; align-items:center; gap:0 14px; min-height:52px; padding:7px 14px 7px 0; border-radius:12px; background:var(--surface-sunken); }
 .previewNode { display:grid; place-items:center; justify-self:center; width:26px; height:26px; border:1px solid var(--line-strong); border-radius:50%; background:var(--surface-solid); color:var(--text-body); }
-.previewNode b { font-size:11px; font-weight:700; line-height:1; }
+.previewNode b { font-size:12px; font-weight:700; line-height:1; }
 .previewTime { display:flex; flex-direction:column; gap:1px; }
 .previewTime b { color:var(--text-strong); font-size:16px; font-weight:600; line-height:1.15; }
 .previewTime small { color:var(--text-muted); font-size:12px; font-weight:500; }
@@ -454,6 +454,19 @@
   /* DOKUNMA HEDEFLERİ MOBİLDE 44 (WCAG 2.5.8); masaüstünde ölçü değişmiyor,
      fare için 32-36 yeterli. */
   .toolbar { gap:12px; padding-bottom:12px; }
+  /* TELEFONDA BAŞLIK İKİ KAT (10 Kasım, telefon turu). Dört kattı: başlık,
+     açıklama cümlesi, karne hapı, gün seçici (ölçüldü 390: ilk olaya kadar
+     ~150 piksel). Açıklama ("Veriler, bilançolar ve seansın dönüm
+     noktaları.") telefonda basılmaz: başlığın altındaki ilk satır zaten
+     bunu gösteriyor. Hap başlığın SATIRINA çıkar, sağa yaslı; "5 Olay"
+     parçası düşer ("1/5 Açıklandı" toplamı zaten söylüyor, tam metin ekran
+     okuyucuda). Sığmazsa (360, uzun başlık) hap alt satıra iner. Sonra:
+     ilk olaya kadar ~100 piksel. */
+  .headingRow { flex:1 1 100%; justify-content:space-between; gap:6px 12px; }
+  .headingRow p:not(.summary) { display:none; }
+  .headingRow > .summary > span:first-child { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  /* Saat tek satır: 360'ta "20:18 TR" iki satıra kırılıyordu (ölçüldü). */
+  .connection { flex:none; white-space:nowrap; }
   .toolbarMeta { flex:1 1 100%; flex-wrap:nowrap; justify-content:space-between; gap:8px; }
   /* Telefonda oklar 44'lük dokunma hedefi; tarih kısalırsa kırpılmaz, gün adı
      ile ay tek satırda kalır (390'da ölçüldü). */
@@ -561,3 +574,15 @@
 .filingLink { display:inline-flex; align-items:center; gap:4px; width:fit-content; min-height:32px; margin:-6px 0 -6px; padding:0; color:var(--primary-ink); font-size:12px; font-weight:600; text-decoration:none; }
 .filingLink:hover { color:var(--primary-hover); }
 .memberIdentity .filingLink { margin-top:0; }
+
+/* 360 (10 Kasım, telefon turu): başlık + karne hapı tek satıra sığmıyordu
+   (ölçüldü: kap 294, başlık 160 + hap 143 + aralık). 380'in altında hapın
+   kareleri düşer, "0/4 Açıklandı" yazısı kalır (~95 piksel): başlık yine
+   iki kat. Dosyanın sonunda: 767 bloğundaki kuralları geçsin. */
+@media (max-width:379px) {
+  .headingRow { gap:6px 8px; }
+  .headingRow > .summary > .summaryBar { display:none; }
+  /* Saat tek satırda kalınca (yukarıda) tarihe 83 piksel kalıyor ve "NY"
+     ileri okuna değiyordu; saatin önündeki saat simgesi düşer (20 piksel). */
+  .connection button > svg { display:none; }
+}

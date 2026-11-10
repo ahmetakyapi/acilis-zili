@@ -55,9 +55,21 @@ import styles from "./PriceRail.module.css";
  *     çentiğin renginde değil: fiyatın ortalamanın üstünde mi altında mı
  *     olduğu çubuğun ucunun çentiği geçip geçmediğinden ve yanındaki
  *     tablodaki yüzdeden okunuyor.
- * Varsayılan (kip kapalı) çizim piksel piksel aynı: bilanço kapağındaki
- * fiyat merdiveni (`ReportCover`) hâlâ noktalı dilde — o ekran bu turun
- * kapsamı dışında, geçiş kararı ana oturumun.
+ * Varsayılan (kip kapalı) çizim piksel piksel aynı.
+ *
+ * 10 Kasım (telefon turu) — BİLANÇO KAPAĞI DA `bar` KİPİNDE (`ReportCover`;
+ * ana oturumun kararı). Kapaktaki merdiven noktalı dilin son kullanıcısıydı:
+ * yön yıkamalı bant + hayalet nokta + noktalı yolculuk çizgisi + mavi nokta.
+ * Kip iki küçük ekle genişledi:
+ *   · `barFrom` / `barTone`: çubuğun tabanı çağırandan gelebilir. Kapakta
+ *     taban BİLANÇO GÜNÜ KAPANIŞI: çubuk "o günden bugüne alınan yol"dur,
+ *     yön renginde (yükseldiyse sağa yeşil, düştüyse sola kırmızı) —
+ *     noktalı `travel` çizgisinin söylediğini kalın çubuk söyler; `travel`
+ *     işareti bu kipte çizilmez.
+ *   · `ghost` ve `target` noktaları bu kipte ADLI ÇENTİK (`value-notch`;
+ *     hedef birincil tonda): "Bilanço Günü", "Hedef". Bugün yine koyu dik
+ *     "şimdi" imi.
+ * Kotasyon yoksa çubuk çizilmez: kulvarın üstünde iki adlı çentik kalır.
  */
 
 export type RailBandTone = "entry" | "range" | "up" | "down";
@@ -170,6 +182,8 @@ export function PriceRail({
   size = "sm",
   pad = 0.06,
   bar = false,
+  barFrom,
+  barTone,
   className,
 }: {
   marks: readonly RailMark[];
@@ -178,6 +192,10 @@ export function PriceRail({
   pad?: number;
   /** Atlas dili: tabandan fiyata kalın çubuk, koyu adlı çentikler (gerekçe üstte). */
   bar?: boolean;
+  /** `bar` kipinde çubuğun tabanı (ör. bilanço günü kapanışı); yoksa 52 hafta dibi / ölçeğin solu. */
+  barFrom?: number;
+  /** `bar` kipinde çubuğun tonu; yoksa büyüklük tonu (`--bar-soft`). */
+  barTone?: "up" | "down" | "flat";
   className?: string;
 }) {
   const values = marks
@@ -255,13 +273,22 @@ export function PriceRail({
                   fiyata dolu çubuk. En az 4 piksel. */}
               {bar && live && (() => {
                 const range = bands.find((mark) => (mark.tone ?? "range") === "range");
-                const base = range ? Math.min(range.from, range.to) : lo;
+                const base =
+                  barFrom !== undefined && Number.isFinite(barFrom)
+                    ? barFrom
+                    : range
+                      ? Math.min(range.from, range.to)
+                      : lo;
+                /* Fiyat tabanın solundaysa (bilançodan bu yana düşüş) çubuk
+                   sola büyür: yuvarlak uç ve kaynak fiyatın tarafında. */
+                const leftward = live.at < base;
                 return (
                   <span
                     className="value-bar"
-                    data-end="end"
+                    data-end={leftward ? "start" : "end"}
+                    data-tone={barTone}
                     data-motion-draw="line"
-                    style={{ ...span(base, live.at, 4), transformOrigin: "left center" }}
+                    style={{ ...span(base, live.at, 4), transformOrigin: leftward ? "right center" : "left center" }}
                   />
                 );
               })()}
@@ -279,7 +306,7 @@ export function PriceRail({
               ))}
             </span>
           )}
-          {travel && <span className={styles.travel} style={span(travel.from, travel.to, 0)} />}
+          {travel && !bar && <span className={styles.travel} style={span(travel.from, travel.to, 0)} />}
           {marks.map((mark, index) => {
             if (mark.kind === "tick") {
               if (bar) {
@@ -296,6 +323,19 @@ export function PriceRail({
               );
             }
             if (mark.kind !== "point") return null;
+            if (bar && mark.variant !== "live") {
+              /* Atlas dili: geçmiş an ve hedef adlı çentik; hedef birincil tonda. */
+              return (
+                <span
+                  key={`pt-${index}`}
+                  className="value-notch"
+                  style={{
+                    left: pct(mark.at),
+                    ...(mark.variant === "target" ? ({ "--notch-tone": "var(--primary)" } as React.CSSProperties) : null),
+                  }}
+                />
+              );
+            }
             if (mark.variant === "target") {
               return <span key={`pt-${index}`} className={styles.tick} data-tone="primary" data-target style={{ left: pct(mark.at) }} />;
             }

@@ -244,9 +244,12 @@
     width: 100%;
   }
 
-  .navLink {
+  /* 42 → 44 (10 Kasım, telefon turu): sitenin dokunma standardı; ölçüldü
+     390, /hisse ve /teknik/[symbol] sekmeleri 42, yüzen çeşit 36 pikseldi. */
+  .navLink,
+  .sectionNav[data-variant="floating"] .navLink {
     flex: 0 0 auto;
-    min-height: 42px;
+    min-height: 44px;
     gap: 0.4rem;
     padding-inline: 0.8rem;
     font-size: 0.75rem;

@@ -44,7 +44,7 @@
 .tick[data-at="open"] { left: calc(var(--pre) / (var(--pre) + var(--regular) + var(--after)) * 100%); }
 .tick[data-at="close"] { left: calc((var(--pre) + var(--regular)) / (var(--pre) + var(--regular) + var(--after)) * 100%); }
 .tickClock { font-size: var(--text-tiny); font-weight: 700; color: var(--text-strong); }
-.tickName { font-size: 11px; font-weight: 500; color: var(--text-muted); }
+.tickName { font-size: 12px; font-weight: 500; color: var(--text-muted); }
 /* Bilançonun dayandığı zil koyu, öteki soluk: açılış öncesi açılışa,
    kapanış sonrası kapanışa bakar. */
 .lane[data-window="amc"] .tick[data-at="open"] .tickClock,

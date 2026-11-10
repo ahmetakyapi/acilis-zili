@@ -20,8 +20,16 @@ export function GlyphTile({
   className?: string;
 }) {
   // Uzun işaretler (ETF, EPS, Fed) küçülür ki karo taşmasın.
-  const fontSize =
-    glyph.length >= 3 ? size * 0.28 : glyph.length === 2 ? size * 0.36 : size * 0.46;
+  /* METİN TABANI 12 (10 Kasım, telefon turu). 36 piksellik karoda üç
+     harfli işaret 10,08 pikseldi ("F/K", "Mr$", "ETF", "TÜFE": 19 ekranın
+     dibindeki rehber kartlarında, ölçüldü 390). Punto 12'nin altına inmez;
+     sığmayan uzun işarette (beş harf: "IE↔US", "Beyan") KARO genişler
+     (`minWidth` + yatay dolgu), harf küçülmez. Çağıranlar da büyüdü
+     (GuideHint 36 → 44). */
+  const fontSize = Math.max(
+    12,
+    glyph.length >= 3 ? size * 0.28 : glyph.length === 2 ? size * 0.36 : size * 0.46,
+  );
 
   return (
     <span
@@ -31,8 +39,10 @@ export function GlyphTile({
         className,
       )}
       style={{
-        width: size,
+        minWidth: size,
         height: size,
+        paddingInline: glyph.length >= 3 ? 4 : 0,
+        whiteSpace: "nowrap",
         borderRadius: size / 3,
         background: "var(--mark-gradient)",
         boxShadow: "var(--mark-shadow), inset 0 0 0 1px var(--mark-edge)",

@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { briefReleases, sharedLaneScale, MOVERS_LANE_FLOOR, WORLD_LANE_FLOOR } from "../lib/home-figures";
+import { briefReleases, laneOverflows, sharedLaneScale, MOVERS_LANE_FLOOR, WORLD_LANE_FLOOR } from "../lib/home-figures";
 import type { EconomicEventRow } from "../lib/schema";
 
 /**
@@ -35,6 +35,26 @@ test("ortak ölçek: en büyük mutlak değer, tabanın altına inmez", () => {
   assert.equal(sharedLaneScale([0.2, -0.3], WORLD_LANE_FLOOR), 1);
   assert.equal(sharedLaneScale([2.4, -1.1], MOVERS_LANE_FLOOR), 3);
   assert.equal(sharedLaneScale([12.5, -20.66], MOVERS_LANE_FLOOR), 20.66);
+});
+
+test("ortak ölçek: tek uç değer ölçeği belirlemez, ikinci değer belirler", () => {
+  /* 10 Kasım canlısı: tek sert satır öteki beşi çizgiye indiriyordu. */
+  const day = [-6.93, -1.54, -1.2, 0.9, -0.42, 0.31];
+  const scale = sharedLaneScale(day, WORLD_LANE_FLOOR);
+  assert.equal(scale, 1.54);
+  assert.equal(laneOverflows(-6.93, scale), true);
+  assert.equal(laneOverflows(-1.54, scale), false);
+  /* En büyük ikinciye yakınsa (1,5 katın altında) kimse taşmaz. */
+  assert.equal(sharedLaneScale([-6.49, -4.41, -3.53], WORLD_LANE_FLOOR), 6.49);
+  assert.equal(sharedLaneScale([16.79, 16.6, 13.26, -6.93, -6.4], MOVERS_LANE_FLOOR), 16.79);
+  /* Uç değerin ardındaki ikinci değer tabanın altındaysa ölçek taban. */
+  const calm = sharedLaneScale([4.2, 0.3, -0.2, 0.1], WORLD_LANE_FLOOR);
+  assert.equal(calm, 1);
+  assert.equal(laneOverflows(4.2, calm), true);
+  /* İki değerde "uç" tanımsız. */
+  assert.equal(sharedLaneScale([12.5, -2], MOVERS_LANE_FLOOR), 12.5);
+  assert.equal(laneOverflows(null, 3), false);
+  assert.equal(laneOverflows(3, 3), false);
 });
 
 test("ortak ölçek: bilinmeyen değer hesaba girmez", () => {

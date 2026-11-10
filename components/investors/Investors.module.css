@@ -39,7 +39,7 @@
   font-size:clamp(11px, 34cqi, 64px);
 }
 .portrait { container-type:inline-size; }
-.portrait[data-size="chip"] .initialsText { font-size:9px; letter-spacing:-.02em; }
+.portrait[data-size="chip"] .initialsText { font-size:12px; letter-spacing:-.05em; }
 .portrait[data-size="sm"] .initialsText { font-size:13px; }
 
 /* Amblem karosu: aynı kutu, iki tonlu zemin (üst köşe biraz daha mavi),
