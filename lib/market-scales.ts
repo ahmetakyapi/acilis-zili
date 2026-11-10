@@ -87,6 +87,13 @@ export function histogramShare(value: number): number {
  * indirirdi. Sabit ölçekte aynı uzunluk her yerde aynı hareket. Günlük kol
  * ısı haritasının ve histogramın doyduğu eşikte (`HISTOGRAM_LIMIT`) dolar;
  * haftalık kol sektör tablosunun 1H tam tonunda (±%8).
+ *
+ * 10 Kasım (gece): İKİ TABLO, TEK SABİT. Şirketler dizini kendi sayfasında
+ * ayrı sabit tutuyordu (günlük ±%5, haftalık ±%12): aynı %4'lük hafta
+ * Endeks Bileşenleri'nde kolun yarısı, Şirketler'de üçte biriydi. İki tablo
+ * da artık bu sabitleri okur (`components/markets/BoardTable.tsx` →
+ * `ZeroBar`); dizinin küçük şirketlerinde eşiği aşan hareket kolu doldurur,
+ * büyüklüğünü yanındaki sayı söyler.
  */
 export const DAY_LANE_SPAN = HISTOGRAM_LIMIT;
 export const WEEK_LANE_SPAN = 8;
@@ -97,6 +104,32 @@ export const BIG_MOVE = HISTOGRAM_LIMIT;
 export function laneArm(value: number, span: number): number {
   if (!Number.isFinite(value) || !(span > 0)) return 0;
   return Math.min(1, Math.abs(value) / span) * 50;
+}
+
+/**
+ * Bir fiyatın gün aralığındaki yeri, 0–100 (dip 0, tepe 100).
+ *
+ * Tablo satırındaki gün aralığı şeridinin dolgusu: dipten fiyata. Aralık
+ * yoksa (dip = tepe, eksik ya da sonlu olmayan değer) `null` — şerit HİÇ
+ * çizilmez; sıfır genişlik "dipte" demek olurdu ve o da bir iddia. Aralığın
+ * dışındaki fiyat (seans dışı işlem) uca sabitlenir.
+ */
+export function rangeShare(low: number | null | undefined, high: number | null | undefined, value: number | null | undefined): number | null {
+  if (typeof low !== "number" || typeof high !== "number" || typeof value !== "number") return null;
+  if (!Number.isFinite(low) || !Number.isFinite(high) || !Number.isFinite(value) || !(high > low)) return null;
+  return Math.min(100, Math.max(0, ((value - low) / (high - low)) * 100));
+}
+
+/** Kademeli çizimde gecikme alan satır sayısı: 10 × `--step` (40 ms) = 400 ms tavan. */
+export const DRAW_STAGGER_ROWS = 10;
+
+/**
+ * Satırın çizim kademesi (`--i`): ilk on satır sırayla, gerisi gecikmesiz.
+ * Ekranın altındaki satır kendi görünüşünde oynar (`data-draw`); ona kademe
+ * vermek kaydıran okuru bekletirdi.
+ */
+export function drawStep(index: number): number {
+  return index >= 0 && index < DRAW_STAGGER_ROWS ? index : 0;
 }
 
 /* ---- Piyasa değeri payı (bileşen tablosunda sayının yanındaki yüzde) ---- */

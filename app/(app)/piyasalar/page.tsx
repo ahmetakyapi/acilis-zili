@@ -11,12 +11,14 @@ import { SentimentPulse } from "@/components/markets/SentimentPulse";
 import boardStyles from "@/components/markets/MarketBoards.module.css";
 import { IndexHeat } from "@/components/markets/IndexHeat";
 import { BreadthSummary, IndexIdentity, IndexTabs } from "@/components/markets/IndexSelection";
+import { BoardTableSkeleton } from "@/components/markets/BoardTable";
 import { MembersTable } from "@/components/markets/MembersTable";
 import { MoverPanel } from "@/components/markets/MoverPanel";
 import {
   HEAT_MAX,
   INDEX_TABS,
   PAGE_STEP,
+  PHONE_ROWS,
   SORT_KEYS,
   type Row,
   type SortDir,
@@ -762,25 +764,15 @@ function DetailSkeleton({ rows, contribution }: { rows: number; contribution: bo
         ))}
       </div>
 
-      <Panel className={styles.members}>
-        <div className="flex items-center justify-between gap-4 px-5 py-4"><Skeleton className="h-5 w-40" /><Skeleton className="h-3 w-20" /></div>
-        {/* Satır boyu gerçek tabloyla aynı (10 Kasım: 46 piksel, telefonda
-            48 ve ilk on beş — MembersTable.module.css); eski yer tutucu 54
-            piksellik genel satırdı ve telefonda altmış satırın hepsini
-            basıyordu (gerçeği on beş). */}
-        <div className={styles.memberSkeleton}>
-          <div />
-          {Array.from({ length: rows }, (_, i) => (
-            <div key={i}>
-              <Skeleton className="size-7 shrink-0 rounded-md" />
-              <Skeleton className="h-3 w-24" />
-              <Skeleton className="ml-auto h-[5px] w-[30%] rounded-full" />
-              <Skeleton className="h-3 w-14 shrink-0" />
-              <Skeleton className="hidden h-3 w-14 shrink-0 sm:block" />
-            </div>
-          ))}
-        </div>
-      </Panel>
+      {/* Satır boyu gerçek tabloyla aynı (10 Kasım: 46 piksel, telefonda
+          48 ve ilk on beş — MembersTable.module.css); eski yer tutucu 54
+          piksellik genel satırdı ve telefonda altmış satırın hepsini
+          basıyordu (gerçeği on beş).
+          10 Kasım (gece): tablo pano satırına geçti (62 piksel, telefonda
+          56, logo 40 / 32); iskelet ortak parçadan (`BoardTableSkeleton`,
+          components/markets/BoardTable.tsx) — Şirketler dizini de aynısını
+          basıyor. Telefonda yine ilk on beş. */}
+      <BoardTableSkeleton rows={rows} phoneRows={PHONE_ROWS} />
     </div>
   );
 }

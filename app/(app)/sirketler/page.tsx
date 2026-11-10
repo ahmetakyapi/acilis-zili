@@ -1,4 +1,4 @@
-import { ArrowRight, CaretDown, CaretUp, CaretUpDown } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { PageShare } from "@/components/article/PageShare";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
@@ -6,12 +6,12 @@ import { Suspense } from "react";
 import { CompanyLeaders } from "@/components/companies/CompanyLeaders";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { CompanySearch } from "@/components/companies/CompanySearch";
-import { LinkedRows } from "@/components/companies/LinkedRows";
 import companyStyles from "@/components/companies/CompanyDirectory.module.css";
 import table from "@/components/companies/CompanyTable.module.css";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
-import { DirectionLane, SizeBar } from "@/components/screener/Lanes";
+import { BoardSortHead, BoardTableSkeleton, CompanyCell, MoreBand, MoveFigure, board, rowStep } from "@/components/markets/BoardTable";
+import { RowFlip, RowTap } from "@/components/markets/RowFlip";
 import { SectorDistribution } from "@/components/companies/SectorDistribution";
 import { CoverTabs } from "@/components/companies/CoverTabs";
 import { RollingFigure } from "@/components/ui/RollingFigure";
@@ -24,9 +24,6 @@ import {
   Panel,
   PanelHeader,
   PanelLink,
-  LogoTile,
-  Skeleton,
-  SkeletonRow,
 } from "@/components/ui/primitives";
 import { primaryOnly } from "@/db/seed/indices";
 import {
@@ -37,6 +34,7 @@ import {
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
+import { DAY_LANE_SPAN, WEEK_LANE_SPAN } from "@/lib/market-scales";
 import { getQuotesWithin, getWeeklyChanges } from "@/lib/providers";
 import {
   SECTOR_GROUPS,
@@ -47,10 +45,8 @@ import {
 } from "@/lib/sectors";
 import {
   cn,
-  directionOf,
-  directionText,
   formatMoneyCompact,
-  formatPercent,
+  formatPercentPlain,
   formatPrice,
   formatCompact,
   staleMark,
@@ -127,10 +123,13 @@ const CAP_CANDIDATE_MARGIN = 40;
 /** Canlı kotasyona tanınan süre; dolarsa son bilinen değer künyesiyle (getQuotesWithin). */
 const QUOTE_BUDGET_MS = 2500;
 
-/** Günlük değişim kulvarının tam kolu (yüzde) — bütün sayfalarda aynı ölçek. */
-const CHANGE_LANE_SPAN = 5;
-/** Haftalık değişimin şerit ölçeği: hafta günden geniş oynar, ±%12. */
-const WEEK_LANE_SPAN = 12;
+/* KULVAR ÖLÇEĞİ TEK KAYNAKTAN (10 Kasım, gece). Burada iki yerel sabit
+   vardı: günlük ±%5 ("bütün sayfalarda aynı ölçek") ve haftalık ±%12
+   ("hafta günden geniş oynar"). Aynı gün kurulan Endeks Bileşenleri tablosu
+   ±%3 / ±%8 kullanıyordu: aynı hareket iki tabloda iki ayrı uzunluktu.
+   İkisi de artık `DAY_LANE_SPAN` / `WEEK_LANE_SPAN` okur
+   (lib/market-scales.ts; ısı haritası ve sektör tablosuyla aynı eşikler).
+   Eşiği aşan hareket kolu doldurur; büyüklüğünü yanındaki sayı söyler. */
 
 /** Kategori çipi — etiket + o gruptaki şirket sayısı. */
 function SectorChip({
@@ -174,78 +173,10 @@ function SectorChip({
   );
 }
 
-function SortHead({
-  col,
-  label,
-  href,
-  active,
-  dir,
-  className,
-  hint,
-}: {
-  col: SortKey;
-  label: string;
-  href: string;
-  active: boolean;
-  dir: SortDir;
-  className?: string;
-  /** Başlığın neyi ölçtüğü — kısaltılmış etiketlerde tanım. */
-  hint?: string;
-}) {
-  /* SIRALAMA DURUMU ÜÇ HÂL (10 Kasım, ikizi MembersTable). Üçgen glifleri
-     (▼ ▲ ▽) 8 piksellik `text-micro` ile basılıyordu: sıralı sütun
-     ötekilerden yalnız renkle ayrışıyor, sırasız sütunların içi boş üçgeni
-     "açılır menü" gibi okunuyordu. Şimdi ikon: sıralı sütunda yönü gösteren
-     ok ve başlığın altında 2 piksellik mavi çizgi (`data-active`), sırasızda
-     soluk çift ok. */
-  const Icon = active ? (dir === "desc" ? CaretDown : CaretUp) : CaretUpDown;
-  return (
-    <th
-      key={col}
-      scope="col"
-      /* Hangi sütuna göre sıralı olduğu iki şeyle anlatılıyordu: `text-primary`
-         rengi ve `aria-hidden` işaretli bir üçgen. İkisi de yardımcı
-         teknolojiye ulaşmıyor — ekran okuyucu kullanıcısı tablonun neye göre
-         dizildiğini hiç öğrenemiyordu. `aria-sort` bunu doğrudan söylüyor. */
-      aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : "none"}
-      data-active={active || undefined}
-      className={cn(table.sortCell, className)}
-    >
-      {/* Dokunma alanı yazının kendisi kadardı (14px yüksekliğinde) ve
-          telefonda sıralama değiştirmek nişancılık istiyordu. Negatif
-          margin + dikey dolgu, tabloyu büyütmeden hedefi büyütüyor. */}
-      {/* scroll={false}: sıralama bir gezinme değil, aynı tablonun yeniden
-          dizilmesi. Varsayılan davranışta okuyucu tablonun ortasında bir
-          başlığa basınca sayfanın en üstüne fırlıyor ve aşağı geri kaydırmak
-          zorunda kalıyordu. */}
-      <Link
-        href={href}
-        scroll={false}
-        /* Sütun adı iki kez değişti, ikisinin de gerekçesi duruyor.
-           Önce "Hafta" idi: bir ad, bir ölçü değil — takvim haftası mı,
-           7 gün mü, 5 seans mı söylemiyordu ve tanım yalnızca bu balonda
-           duruyordu. Balon dokunmatik tablette hiç açılmıyor (`hover: none`)
-           ve sütun `hidden sm:table-cell` ile orada görünüyor, yani tanımı
-           göremeyen bir okuyucu kitlesi vardı. Sonra "5 Seans" oldu: kesindi
-           ama okuyucunun dili değildi, bir sütun başlığından çok bir
-           tanımdı. Şimdi "Haftalık" — sıfat olduğu için "haftalık değişim"
-           diye okunuyor, "Hafta"nın belirsizliği yok ve 5 seans zaten bir
-           haftanın kendisi. Kalan tek nüans (seans mı takvim günü mü) bu
-           ipucunda; bilmesi ölçüyü değiştirmeyen bir ayrıntı olduğu için
-           balonda kalması yeterli. */
-        title={hint}
-        /* MOBİLDE 44px. Sıralama başlığı tablonun ANA denetimi ama dokunma
-           hedefi 32 pikseldi. Negatif margin dolguyu emiyor, yani hedef
-           büyürken satır yüksekliği değişmiyor; masaüstünde imleç hassas,
-           orada 32px yeterli (`.sortLink`, CompanyTable.module.css). */
-        className={table.sortLink}
-      >
-        {label}
-        <Icon aria-hidden size={11} weight="bold" className={table.sortIcon} />
-      </Link>
-    </th>
-  );
-}
+/* SIRALAMA BAŞLIĞI ortak parçada (10 Kasım, gece): `BoardSortHead`,
+   components/markets/BoardTable.tsx — Endeks Bileşenleri'yle aynı bileşen.
+   Buradaki `SortHead`in karar yorumları (üç hâlli sıralama imi, `aria-sort`,
+   `scroll={false}`, telefonda 44 piksellik hedef) onunla birlikte taşındı. */
 
 /** Boşluk ve noktalamasız eşleşmenin en kısa sorgusu. */
 const COMPACT_MIN = 3;
@@ -632,7 +563,15 @@ async function CompaniesTable({
      en büyüğüne göre: logaritmik ölçek sırayı korurdu ama büyüklüğü
      çarpıtırdı, oysa sütunun asıl söylediği tam da o — birkaç dev şirketin
      piyasanın ne kadarını tuttuğu. Çubuk bir yargı değil, nötr tonda. */
-  const peakCap = Math.max(...unsorted.map((row) => capOf(row) ?? 0), 1);
+  /* 10 Kasım (gece), sahibinin sözü — "piyasa değerini direkt yazsak daha
+     doğru": ÇUBUK KALKTI. Doğrusal çubuk doğruydu ama okunmuyordu: dizinin
+     devi 4,4 T $, altmışıncı sıradaki ~200 Mr $; 56–96 piksellik rayda ilk
+     on satırın ötesinde dolgu birkaç pikseldi (canlıda ölçüldü, sütun
+     "veri gelmemiş" gibi duruyordu) ve yanındaki sayı soluk 12–13
+     pikseldi. Logaritmik çubuk yasak (uzunluğun sıfırı yok). Şimdi sayının
+     KENDİSİ güçlü mürekkeple (15/600) — Endeks Bileşenleri'yle aynı karar
+     (`arayuz.md` → Görsel Dil: "piyasa değeri gibi büyüklükler doğrudan
+     yazılır"). Dev şirketlerin payı üstteki sektör dağılımında çiziliyor. */
 
   /* Değeri OLMAYAN satır `null` döner, sayı değil.
      Eskiden eksik değerler `-Infinity` ile temsil ediliyordu ve bu, azalan
@@ -683,6 +622,8 @@ async function CompaniesTable({
      (canlıda ölçüldü): eksik veri yer tutmaz. Okur sütuna göre sıralamışsa
      (`?sirala=hacim`) sütun yine görünür — neye göre dizildiğini saklamaz. */
   const showVolume = sort === "hacim" || rows.some((r) => quotes[r.symbol]?.volume != null);
+  /** "İlk üç" vurgusu yalnız hareket sıralamalarında (gerekçe MembersTable.tsx). */
+  const leadSort = sort === "degisim" || sort === "hafta";
   const compareHref =
     rows.length >= 2
       ? `/karsilastir?semboller=${rows.slice(0, 4).map((row) => row.symbol).join(",")}`
@@ -690,7 +631,20 @@ async function CompaniesTable({
 
   return (
     <>
-      <Panel className={table.panel}>
+      {/* `data-fit="lg"`: bu tablo 1024'ten itibaren kaba sığıyor (ölçüm
+          CompanyTable.module.css); ortak parça başlığı oradan itibaren
+          belgeye yapıştırır. */}
+      <Panel id="company-table" className={cn(board.panel, table.panel)} data-fit="lg" data-volume={showVolume || undefined}>
+        {/* SIRALAMA DEĞİŞİNCE SATIRLAR YERİNE KAYAR (10 Kasım, gece; gerekçe
+            components/markets/RowFlip.tsx). Sektör süzgeci ya da arama
+            değişince (`token`) kayıt geçersiz: o bir sıralama değil. */}
+        <RowFlip scope="company-table" token={`${groupLabel}:${query}`} order={`${sort}:${dir}:${limit}`} />
+        {/* SATIRIN TAMAMI GEZİNİR — 14 Ekim kararı (`LinkedRows`), 10 Kasım
+            gecesinden beri Endeks Bileşenleri'yle aynı yaprakla (`RowTap`):
+            düz sol tık satırdaki GERÇEK bağlantıya aynı değiştirici tuşlarla
+            iletilir; metin seçimi ve iç içe etkileşimli öğe hariç.
+            `LinkedRows` /tarama'da yaşamaya devam ediyor. */}
+        <RowTap scope="company-table" />
         {/* Şirket kartı — görünen satırlar, sayfanın paketiyle. */}
         <CompanyCards
           symbols={rows.map((row) => row.symbol)}
@@ -783,12 +737,13 @@ async function CompaniesTable({
             hint={query ? t.companies.searchEmptyHint : t.companies.emptyHint} />
         ) : (
           <ScrollEdges
-            className={cn(table.scroller, "scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)")}
+            className={cn(board.scroller, "scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)")}
             tabIndex={0}
             role="region"
             aria-label={t.companies.title}
-            /* Kimlik sütunu 640-1023'te yapışkan (CompanyTable.module.css):
-               sol kenar solmasın, yalnız sağ uç "devamı var" desin. */
+            /* Kimlik sütunu yapışkan (ortak parça; tablo kaba sığmadığı
+               her genişlikte): sol kenar solmasın, yalnız sağ uç "devamı
+               var" desin. */
             fixedStart
           >
             {/* MOBİLDE SABİT DÜZEN. Otomatik düzende şirket sütunu
@@ -816,29 +771,68 @@ async function CompaniesTable({
                 Değişim HAP DEĞİL yön renginde sayı: 60 dolgulu hap alt alta
                 bir "rozet duvarı" kuruyordu ve yönü zaten yanındaki ayrışan
                 kulvar söylüyor (Endeks Bileşenleri'yle aynı karar).
-                Ölçüm: CompanyTable.module.css başında. */}
-            <table className={table.table}>
+                Ölçüm: CompanyTable.module.css başında.
+
+                10 Kasım (gece), sahibinin sözü — "çok daha görsel, çok
+                daha okunabilir; şirketlerin adı ve logolar az daha
+                büyüyebilir": PANO SATIRI, Endeks Bileşenleri'yle ORTAK
+                parçalardan (components/markets/BoardTable.tsx; gerekçe
+                MembersTable.tsx → "PANO SATIRI"). Satır 46 → 62 (telefonda
+                52 → 56), logo 28 → 40, sembol 14 → 16/700, ad gövde
+                mürekkebinde 14; günlük yüzde 13/700 → 19/700, fiyat 14/400
+                (700 yazılmıştı, özgüllükten 400 basılıyordu) → 16/700,
+                piyasa değeri soluk 13 + ince çubuk → güçlü 15/600. Kulvarlar
+                5 piksellik ince şeritten 8 / 6 piksellik dolu çubuğa, ölçek
+                iki tabloda aynı sabit. Sütun sırası da aynı aileye geçti:
+                Değişim · Fiyat · Haftalık · Piyasa Değeri · Hacim (Fiyat,
+                Haftalık'ın önüne). TELEFON: dört sütunluk sabit düzen
+                (aşağıdaki "MOBİLDE SABİT DÜZEN") yerine Endeks'in düzeni —
+                Şirket sabit, ilk ekranda Değişim + Fiyat, Haftalık / Piyasa
+                Değeri / Hacim kaydırınca; sağ kenar "devamı var" diye
+                soluyor (`arayuz.md` → "Kaydırma saklanmaz"). Piyasa değeri
+                artık ilk ekranda değil: dört sütun 352 piksele ancak 13
+                piksellik sayılar ve 122 piksellik kimlikle sığıyordu; iri
+                kimlik ve iri yüzde ile aynı ekrana sığmıyor (ölçüm modülde,
+                "ÖLÇÜM 2"). */}
+            <table className={cn(board.table, table.table)}>
               <thead>
                 <tr>
-                  <th scope="col" className={table.rankHead}>#</th>
-                  <th scope="col" className={table.startHead}>
+                  <th scope="col" className={board.rankHead}>#</th>
+                  <th scope="col" className={board.companyHead}>
                     {t.companies.company}
                   </th>
-                  <th scope="col" className={cn(table.startHead, table.sectorHead)}>
+                  <th scope="col" className={cn(board.tagHead, table.sectorHead)}>
                     {t.companies.sector}
                   </th>
                   {/* Değişim fiyattan önce: listeye bakan önce "bugün ne
                       olmuş" diye bakıyor, seviyeye sonra. */}
-                  <SortHead
-                    col="degisim"
+                  <BoardSortHead
                     label={t.companies.change}
                     href={sortHref("degisim")}
                     active={sort === "degisim"}
                     dir={dir}
                     className={table.changeHead}
                   />
-                  <SortHead
-                    col="hafta"
+                  <BoardSortHead
+                    label={t.companies.price}
+                    href={sortHref("fiyat")}
+                    active={sort === "fiyat"}
+                    dir={dir}
+                    className={table.priceHead}
+                  />
+                  {/* Sütun adı iki kez değişti, ikisinin de gerekçesi duruyor.
+                      Önce "Hafta" idi: bir ad, bir ölçü değil — takvim haftası
+                      mı, 7 gün mü, 5 seans mı söylemiyordu ve tanım yalnızca
+                      balonda duruyordu. Balon dokunmatik tablette hiç
+                      açılmıyor (`hover: none`), yani tanımı göremeyen bir
+                      okuyucu kitlesi vardı. Sonra "5 Seans" oldu: kesindi ama
+                      okuyucunun dili değildi, bir sütun başlığından çok bir
+                      tanımdı. Şimdi "Haftalık" — sıfat olduğu için "haftalık
+                      değişim" diye okunuyor, "Hafta"nın belirsizliği yok ve
+                      5 seans zaten bir haftanın kendisi. Kalan tek nüans
+                      (seans mı takvim günü mü) ipucunda (`hint`) ve 10 Kasım
+                      gecesinden beri tablonun dibindeki künyede de yazılı. */}
+                  <BoardSortHead
                     label={t.companies.weekChange}
                     href={sortHref("hafta")}
                     active={sort === "hafta"}
@@ -846,16 +840,7 @@ async function CompaniesTable({
                     hint={t.companies.weekChangeHint}
                     className={table.weekHead}
                   />
-                  <SortHead
-                    col="fiyat"
-                    label={t.companies.price}
-                    href={sortHref("fiyat")}
-                    active={sort === "fiyat"}
-                    dir={dir}
-                    className={table.priceHead}
-                  />
-                  <SortHead
-                    col="cap"
+                  <BoardSortHead
                     label={t.market.marketCap}
                     href={sortHref("cap")}
                     active={sort === "cap"}
@@ -863,8 +848,7 @@ async function CompaniesTable({
                     className={table.capHead}
                   />
                   {showVolume && (
-                    <SortHead
-                      col="hacim"
+                    <BoardSortHead
                       label={t.market.volume}
                       href={sortHref("hacim")}
                       active={sort === "hacim"}
@@ -874,103 +858,70 @@ async function CompaniesTable({
                   )}
                 </tr>
               </thead>
-              {/* Satırın tamamı gezinir — gerekçe LinkedRows. */}
-              <LinkedRows data-motion-stagger>
+              {/* Satırın tamamı gezinir — `RowTap`, panelin başında. */}
+              <tbody data-motion-stagger>
                 {rows.map((company, index) => {
                   const quote = quotes[company.symbol];
                   const week = weekly[company.symbol];
                   const cap = capOf(company);
                   return (
-                    <tr key={company.symbol}>
-                      {/* Sıra numarası logoyla aynı hatta, sağa yaslı ve
-                          tabular: "9" ile "10" aynı sağ kenarda. */}
-                      <td className={cn("numeral", table.rank)}>{index + 1}</td>
-                      <td className={table.company}>
-                        <Link
-                          href={`/hisse/${company.symbol}`} prefetch={false}
-                          /* Bağlantı hücreyi dolduruyor: satıra dokunmak bu
-                             sayfanın ana eylemi ama bağlantı yalnızca logo
-                             yüksekliği kadardı (34px) ve hücre dolgusunun
-                             bir kısmı tıklanabilir değildi. Telefonda 51px. */
-                          className={table.companyLink}
-                          data-cc={company.symbol}
-                        >
-                          <LogoTile
-                            symbol={company.symbol}
-                            logoUrl={company.logoUrl}
-                            size="sm"
-                            className={table.logo}
-                          />
-                          <span className={table.companyText}>
-                            <span className={table.symbol}>{company.symbol}</span>
-                            {/* SABİT SINIR YOK, HÜCRE NE VERİRSE. Ad kutusu
-                                `sm` altında 66 piksele çakılıydı; hücre ise
-                                500–639 piksel arasında 183–196 piksele kadar
-                                genişliyor ve sağında 55–68 piksel boş
-                                duruyordu. `min-width:0` + üç nokta gerekeni
-                                yapıyor: kutu hücreyi aşmıyor, sığmayan ad
-                                kesiliyor; tam ad `title`da. */}
-                            <span title={company.name} className={table.name}>{company.name}</span>
-                          </span>
-                        </Link>
+                    <tr
+                      key={company.symbol}
+                      data-row={company.symbol}
+                      /* İlk üç yalnız hareket sıralamasında; çizim kapısı ve
+                         kademe satırda — gerekçeleri MembersTable.tsx'te. */
+                      data-lead={leadSort && index < 3 ? "" : undefined}
+                      data-draw
+                      style={rowStep(index)}
+                    >
+                      {/* Sıra numarası logoyla aynı hatta, sağa yaslı:
+                          "9" ile "10" aynı sağ kenarda. */}
+                      <td className={cn("numeral", board.rank)}>{index + 1}</td>
+                      {/* Bağlantı hücreyi dolduruyor: satıra dokunmak bu
+                          sayfanın ana eylemi ama bağlantı yalnızca logo
+                          yüksekliği kadardı (34px) ve hücre dolgusunun
+                          bir kısmı tıklanabilir değildi. Şimdi satır boyu
+                          (telefonda 55px). SABİT SINIR YOK DEĞİL: ad kutusu
+                          `--name-max` ile tavanlı, sığmayan ad üç noktayla
+                          kesiliyor; tam ad `title`da (`CompanyCell`). */}
+                      <CompanyCell symbol={company.symbol} name={company.name} logoUrl={company.logoUrl} />
+                      <td className={cn(board.tag, table.sector)}>
+                        {industryLabel(company.industry, locale) ?? <span className={board.none}>{NO_VALUE}</span>}
                       </td>
-                      <td className={table.sector}>
-                        {industryLabel(company.industry, locale) ?? <span className={table.none}>{NO_VALUE}</span>}
-                      </td>
-                      <td className={table.changeCell}>
-                        {quote && quote.changePct !== null ? (
-                          <span className={table.pair}>
-                            {/* Yön bir de çizgi: sıfır ortada, ölçek sabit
-                                ±%5 (gerekçe DirectionLane). */}
-                            <DirectionLane value={quote.changePct} span={CHANGE_LANE_SPAN} className={table.inlineLane} />
-                            <span className={cn("numeral", table.num, directionText(directionOf(quote.changePct)))}>
-                              {formatPercent(quote.changePct, locale)}
-                            </span>
-                          </span>
-                        ) : (
-                          <span className={cn(table.pair, table.none)}><span /><span className={table.num}>{NO_VALUE}</span></span>
-                        )}
-                      </td>
-                      <td className={table.weekCell}>
-                        {week !== undefined ? (
-                          <span className={table.pair}>
-                            {/* Hafta da bir çizgi (31 Ekim): günlük sütun şeritli,
-                                haftalık birimsiz sayıydı; iki yön yan yana aynı
-                                dilde okunsun. Ölçek ayrı (±%12), hafta geniş oynar. */}
-                            <DirectionLane value={week} span={WEEK_LANE_SPAN} className={table.inlineLane} />
-                            <span className={cn("numeral", table.num, directionText(directionOf(week)))}>
-                              {formatPercent(week, locale)}
-                            </span>
-                          </span>
-                        ) : (
-                          <span className={cn(table.pair, table.none)}><span /><span className={table.num}>{NO_VALUE}</span></span>
-                        )}
+                      {/* Yön bir de çizgi: sıfır ortada, ölçek sabit
+                          (`ZeroBar`; gerekçe lib/market-scales.ts). */}
+                      <td className={table.changeCell} data-sorted={sort === "degisim" || undefined}>
+                        <MoveFigure value={quote ? quote.changePct : null} locale={locale} />
                       </td>
                       {/* Fiyat satırın ÇAPASI: değişim, hafta, piyasa değeri
                           ve hacim hep ona göre okunuyor. Diğerleriyle aynı
                           ağırlıkta yazılınca sayı dizisinin içinde kayboluyordu;
-                          kalın ve en koyu mürekkepte. */}
-                      <td className={cn("numeral", table.price)}>
-                        {quote ? formatPrice(quote.price, locale) : <span className={table.none}>{NO_VALUE}</span>}
+                          kalın ve en koyu mürekkepte. (10 Kasım gecesi
+                          ölçüldü: `.price` 700 yazıyordu, `.table tbody td`
+                          özgüllükle 400 basıyordu; ortak parçada genel hücre
+                          kuralı `:where()` içinde, tuzak kapandı.) */}
+                      <td className={cn("numeral", board.price, table.priceCell, !quote && board.none)} data-sorted={sort === "fiyat" || undefined}>
+                        {quote ? formatPrice(quote.price, locale) : NO_VALUE}
                       </td>
-                      {/* Piyasa değeri telefonda da FİYATIN SAĞINDA, kendi
-                          sütununda. Bir süre fiyatın altına ikinci satır
-                          olarak konmuştu: yer kazandırıyordu ama iki ayrı
-                          ölçüyü tek hücrede üst üste bindirdiği için satır
-                          "fiyat 178,19 / 105 milyar" diye tek bir bilgi gibi
-                          okunuyordu. Ayrı sütunda ikisi de kendi başlığının
-                          altında duruyor; 390px'e dört sütun, kalan yerler
-                          daraltılarak sığdı. */}
-                      <td className={table.capCell}>
-                        {cap ? (
-                          <span className={table.cap}>
-                            <span className="numeral">{formatMoneyCompact(cap, locale)}</span>
-                            <SizeBar ratio={cap / peakCap} className={table.capBar} />
-                          </span>
-                        ) : <span className={cn(table.cap, table.none)}>{NO_VALUE}</span>}
+                      {/* Hafta da bir çizgi (31 Ekim): günlük sütun şeritli,
+                          haftalık birimsiz sayıydı; iki yön yan yana aynı
+                          dilde okunsun. Ölçek ayrı (hafta geniş oynar),
+                          sabiti lib/market-scales.ts'te. */}
+                      <td className={table.weekCell} data-sorted={sort === "hafta" || undefined}>
+                        <MoveFigure value={week ?? null} weight="week" locale={locale} />
+                      </td>
+                      {/* Piyasa değeri telefonda da kendi sütununda. Bir
+                          süre fiyatın altına ikinci satır olarak konmuştu:
+                          yer kazandırıyordu ama iki ayrı ölçüyü tek hücrede
+                          üst üste bindirdiği için satır "fiyat 178,19 / 105
+                          milyar" diye tek bir bilgi gibi okunuyordu. Ayrı
+                          sütunda ikisi de kendi başlığının altında duruyor
+                          (10 Kasım gecesinden beri telefonda kaydırınca). */}
+                      <td className={cn("numeral", board.strong, table.capCell, !cap && board.none)} data-sorted={sort === "cap" || undefined}>
+                        {cap ? formatMoneyCompact(cap, locale) : NO_VALUE}
                       </td>
                       {showVolume && (
-                        <td className={cn("numeral", table.volume)}>
+                        <td className={cn("numeral", table.volume)} data-sorted={sort === "hacim" || undefined}>
                           {/* HACİM YALNIZCA CANLI KOTASYONDAN. Buraya bir
                               önbellek yedeği (`?? company.volume`) konmuştu ve
                               o değer `quotes_cache`ten geliyor: kotasyonu
@@ -988,7 +939,7 @@ async function CompaniesTable({
                     </tr>
                   );
                 })}
-              </LinkedRows>
+              </tbody>
             </table>
           </ScrollEdges>
         )}
@@ -1000,42 +951,38 @@ async function CompaniesTable({
             scroll={false}: okuyucu listenin dibinde, sayfanın başına
             fırlatılmamalı — geldiği yerin altına yeni satırlar eklenmeli. */}
         {kotasyonsuz >= KOTASYONSUZ_ACIKLAMA_ESIGI && (
-          <p className={table.note}>
+          <p className={board.note}>
             {t.companies.noQuoteNote.replace("{n}", String(kotasyonsuz))}
           </p>
         )}
+        {/* Sayacın ÇİZGİSİ var (14 Ekim): "60 / 670" bir büyüklük
+            karşılaştırması ve kural "karşılaştırılan büyüklük bir de
+            çizgi olarak okunur" (CLAUDE.md). Listenin neresinde olduğunu
+            sayıdan önce söylüyor.
+            10 Kasım: sayaç, şerit ve buton tek grupta, SOLDA. Bandın
+            iki ucuna gerilmişlerdi (`justify-between` yasağı): 1320
+            piksellik bantta sayaç ile buton arasında ~1.000 piksel boş
+            duruyordu. Gece: bant ortak parça (`MoreBand`), şerit kalın ve
+            `data-draw` + `bar-fill` ile doluyor (eskisi `data-motion-draw`). */}
         {hasMore && (
-          <div className={table.more}>
-            {/* Sayacın ÇİZGİSİ var (14 Ekim): "60 / 670" bir büyüklük
-                karşılaştırması ve kural "karşılaştırılan büyüklük bir de
-                çizgi olarak okunur" (CLAUDE.md). 5 piksellik nötr ray,
-                listenin neresinde olduğunu sayıdan önce söylüyor.
-                10 Kasım: sayaç, şerit ve buton tek grupta, SOLDA. Bandın
-                iki ucuna gerilmişlerdi (`justify-between` yasağı): 1320
-                piksellik bantta sayaç ile buton arasında ~1.000 piksel boş
-                duruyordu. İkizi MembersTable. */}
-            <p className={cn("numeral", table.moreCount)}>
-              {t.companies.showing
-                .replace("{n}", String(rows.length))
-                .replace("{total}", String(total))}
-            </p>
-            <span aria-hidden className={table.moreLane}>
-              <i
-                data-motion-draw="line"
-                style={{ width: `${Math.min(100, (rows.length / Math.max(1, total)) * 100)}%` }}
-              />
-            </span>
-            <Link
-              href={moreHref}
-              scroll={false}
-              /* 44px: sayfanın en altındaki tek eylem ve mobilde dokunma
-                 eşiğinin altındaydı (40px). Basılı durum evin lehçesinde. */
-              className={table.moreButton}
-            >
-              {t.companies.showMore}
-              <CaretDown aria-hidden size={13} weight="bold" />
-            </Link>
-          </div>
+          <MoreBand
+            count={t.companies.showing
+              .replace("{n}", String(rows.length))
+              .replace("{total}", String(total))}
+            share={(rows.length / Math.max(1, total)) * 100}
+            href={moreHref}
+            label={t.companies.showMore}
+          />
+        )}
+        {/* KÜNYE: şeritlerin sabit ölçeği ve haftalığın tanımı — Endeks
+            Bileşenleri'ndeki cümlelerin aynısı (aynı ölçek, aynı söz). */}
+        {rows.length > 0 && (
+          <p className={board.note}>
+            {t.markets.laneScaleNote
+              .replace("{day}", `±${formatPercentPlain(DAY_LANE_SPAN, locale, 0)}`)
+              .replace("{week}", `±${formatPercentPlain(WEEK_LANE_SPAN, locale, 0)}`)}
+            {` ${t.markets.weekNote}`}
+          </p>
         )}
         {/* Telefonda karşılaştırma bağlantısı tablonun dibinde — gerekçe
             panel başlığındaki `action` yorumunda. */}
@@ -1074,30 +1021,13 @@ async function CompaniesTable({
 
 /** Filtre değişiminde anında görünen iskelet — boş ekran yerine yapı. */
 function TableSkeleton({ rows }: { rows: number }) {
-  return (
-    <Panel>
-      {/* İskelet GERÇEK tablonun açılışını da taşıyor (14 Ekim): yalnız
-          satır listesi basılıyordu ve içerik gelince başlık (~48px) +
-          sütun satırı (~36px) satırları aşağı itiyordu — iskeletin bütün
-          amacı olan "takas yerinde oturur" bozuluyordu. */}
-      <div className="flex min-h-12 items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
-        <Skeleton className="h-3 w-36" />
-        <Skeleton className="h-2.5 w-16" />
-      </div>
-      <div className="flex h-10 items-center gap-6 border-b border-line bg-surface-sunken px-4 sm:px-5">
-        <Skeleton className="h-2 w-20" />
-        <Skeleton className="h-2 w-12" />
-        <Skeleton className="ml-auto h-2 w-14" />
-        <Skeleton className="h-2 w-14" />
-      </div>
-      <div className="flex flex-col gap-px">
-        {/* Satır düzeni artık paylaşılan `SkeletonRow`da: aynı iskelet
-            /piyasalar'ın bileşen tablosunda da kullanılıyor ve ikisinin
-            birbirinden ayrı düşmesinin bir gerekçesi yok. */}
-        {Array.from({ length: rows }).map((_, i) => (
-          <SkeletonRow key={i} />
-        ))}
-      </div>
-    </Panel>
-  );
+  /* İskelet GERÇEK tablonun açılışını da taşıyor (14 Ekim): yalnız satır
+     listesi basılıyordu ve içerik gelince başlık (~48px) + sütun satırı
+     (~36px) satırları aşağı itiyordu — iskeletin bütün amacı olan "takas
+     yerinde oturur" bozuluyordu.
+     10 Kasım (gece): satır düzeni paylaşılan `SkeletonRow`daydı (54
+     piksel, 34 piksellik logo); tablo pano satırına geçince (62 / 56) ortak
+     parçanın iskeleti (`BoardTableSkeleton`) — /piyasalar'ın bileşen
+     tablosu da aynısını basıyor. */
+  return <BoardTableSkeleton rows={rows} />;
 }

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { BIG_MOVE, CAP_SHARE_MIN_COVERAGE, DAY_LANE_SPAN, WEEK_LANE_SPAN, capShares, changeHistogram, laneArm, histogramShare, HISTOGRAM_LIMIT, HISTOGRAM_STEP } from "../lib/market-scales";
+import { BIG_MOVE, CAP_SHARE_MIN_COVERAGE, DAY_LANE_SPAN, DRAW_STAGGER_ROWS, WEEK_LANE_SPAN, capShares, drawStep, rangeShare, changeHistogram, laneArm, histogramShare, HISTOGRAM_LIMIT, HISTOGRAM_STEP } from "../lib/market-scales";
 
 /**
  * Piyasalar ekranının iki çizim ölçeği (gerekçe `lib/market-scales.ts`):
@@ -70,4 +70,24 @@ test("piyasa değeri payı: eksik çoksa ya da veri yoksa hiç basılmaz", () =>
   assert.ok(CAP_SHARE_MIN_COVERAGE >= 0.9);
   assert.equal(capShares([]), null);
   assert.equal(capShares([null, 0, -4]), null);
+});
+
+test("gün aralığındaki yer: dip 0, tepe 100, aralık yoksa çizim yok", () => {
+  assert.equal(rangeShare(10, 20, 10), 0);
+  assert.equal(rangeShare(10, 20, 20), 100);
+  assert.equal(rangeShare(10, 20, 12.5), 25);
+  assert.equal(rangeShare(10, 20, 25), 100, "aralığın dışı uca sabitlenir");
+  assert.equal(rangeShare(10, 20, 4), 0);
+  assert.equal(rangeShare(10, 10, 10), null, "dip = tepe: aralık yok");
+  assert.equal(rangeShare(null, 20, 15), null);
+  assert.equal(rangeShare(10, undefined, 15), null);
+  assert.equal(rangeShare(10, 20, Number.NaN), null);
+});
+
+test("çizim kademesi ilk on satırda, toplamı 400 ms'yi aşmaz", () => {
+  assert.equal(drawStep(0), 0);
+  assert.equal(drawStep(DRAW_STAGGER_ROWS - 1), DRAW_STAGGER_ROWS - 1);
+  assert.equal(drawStep(DRAW_STAGGER_ROWS), 0, "ekranın altındaki satır beklemez");
+  assert.equal(drawStep(-1), 0);
+  assert.ok(DRAW_STAGGER_ROWS * 40 <= 400, "kademe toplamı (--step 40 ms)");
 });
