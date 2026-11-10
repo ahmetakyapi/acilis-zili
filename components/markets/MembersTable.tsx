@@ -17,7 +17,7 @@ import {
   formatPrice,
   NO_VALUE,
 } from "@/lib/utils";
-import { BoardSortHead, CompanyCell, MoreBand, MoveFigure, RangeFigure, board, rowStep } from "./BoardTable";
+import { BoardSortHead, BoardSortMenu, CompanyCell, MoreBand, MoveFigure, RangeFigure, board, phoneSlots, rowStep } from "./BoardTable";
 import {
   INDEX_TABS,
   PAGE_STEP,
@@ -210,6 +210,31 @@ export function MembersTable({
   );
 
   const fresh = sorted.filter((row) => !cards.skip.has(row.member.symbol));
+
+  /* TELEFONDA KOMPAKT LİSTE (10 Kasım gece, son tur; sahibinin sözü: "öyle
+     listeleri KAYDIRMADAN kullanalım, KOMPAKT olsun, YETERLİ bilgi
+     gözüksün"). Satırın sağında iki sayı: üstte okurun SIRALADIĞI ölçü,
+     altında ikincisi (`phoneSlots`, BoardTable.tsx). Ada ya da değişime
+     göre dizili listede günlük yüzde + fiyat; fiyat, piyasa değeri,
+     haftalık ya da katkıya göre diziliyse o ölçü üstte, günlük yüzde
+     altında — neye göre sıraladıysa onu görür. */
+  const lead: SortKey = sort === "ad" ? "degisim" : sort === "hafta" && !showWeek ? "degisim" : sort === "katki" && !showContribution ? "degisim" : sort;
+  const second: SortKey = lead === "degisim" ? "fiyat" : "degisim";
+  const slot = phoneSlots(lead, second);
+  const slotLabel: Record<SortKey, string> = {
+    degisim: t.companies.change,
+    fiyat: `${t.companies.price} ($)`,
+    hafta: t.companies.weekChange,
+    cap: t.market.marketCap,
+    katki: t.markets.contribution,
+    ad: t.companies.company,
+  };
+  const sortItems = (["degisim", "fiyat", ...(showWeek ? ["hafta"] : []), "cap", ...(showContribution ? ["katki"] : []), "ad"] as SortKey[]).map((key) => ({
+    key,
+    label: slotLabel[key].replace(" ($)", ""),
+    href: sortHref(tab, key, sort, dir, limit, basePath),
+    active: sort === key,
+  }));
   const shownShare = (sorted.length / ordered.length) * 100;
 
   return (
@@ -269,13 +294,33 @@ export function MembersTable({
           Şirket sütunu yerinde kalıyor, ötekiler altından kayıyor, sağ kenar
           "devamı var" diye soluyor (`ScrollEdges fixedStart`). Piyasa
           değerinin fiyatın altına inen ikinci satırı bu yüzden kalktı
-          (sütunun kendisi geldi; satır 53'ten 48 piksele indi). */}
+          (sütunun kendisi geldi; satır 53'ten 48 piksele indi).
+
+          10 Kasım (gece, son tur): KAYDIRMA → KOMPAKT LİSTE. Sahibi canlı
+          telefon görüntüsüne bakıp "mobilde çok kötü duruyor… tablolar sağa
+          sola kaymasın" dedi; yukarıdaki "Kaydırma saklanmaz" kararı bu
+          tarihte kalktı (390'da içerik 772 > kap 352 idi). Telefonda satır
+          bir liste satırı (kimlik + iki sayı + kalın çubuk; düzen
+          BoardTable.module.css → "TELEFON: KOMPAKT LİSTE"), 640–1023'te
+          yalnız sığan sütunlar, 1024+ tam tablo — hiçbir genişlikte kap
+          kaymıyor (ölçüm MembersTable.module.css → "ÖLÇÜM 5"). Kap yine
+          `ScrollEdges`: kaymadığı sürece kenar solması basılmıyor; ileride
+          bir sütun taşarsa okur veriyi kaybetmesin diye güvenlik ağı. */}
       {/* KAP KLAVYEYLE ODAKLANABİLİR — gerekçe ikizinde (sirketler). */}
       {/* TELEFONDA İLK ON BEŞ (3 Ekim). Tablo 390 pikselde 60 satır,
           ~4.600 piksel ölçüldü; altındaki bölümlere ulaşmak için yüz kez
           kaydırmak gerekiyordu. Satırlar sunucuda yine çiziliyor, on beşin
           ötesi katlı geliyor ve JS'siz anahtar açıyor (FoldToggle `phone`);
           640'tan itibaren katlama yok. */}
+      {/* Telefonda başlık satırının yerinde sıralama şeridi (640+ yok). */}
+      <BoardSortMenu
+        items={sortItems}
+        dir={dir}
+        label={t.markets.phoneSort}
+        caption={`${slotLabel[lead]} · ${slotLabel[second]}`}
+        ascLabel={t.markets.phoneSortAsc}
+        descLabel={t.markets.phoneSortDesc}
+      />
       <FoldToggle
         id="members-fold"
         phone
@@ -463,14 +508,14 @@ export function MembersTable({
                       üstünde 8 piksellik dolu çubuk (`ZeroBar`); gerekçe
                       yukarıda, "PANO SATIRI". */}
                   {showSector && <td className={cn(board.tag, styles.sector)}>{sectorLabel(row.member.sector, locale) ?? ""}</td>}
-                  <td className={styles.changeCell} data-sorted={sort === "degisim" || undefined}>
+                  <td className={styles.changeCell} data-sorted={sort === "degisim" || undefined} data-slot={slot("degisim")}>
                     <MoveFigure value={quote ? change : null} span={daySpan} locale={locale} />
                   </td>
-                  <td className={cn("numeral", board.price, styles.priceCell, !quote && board.none)} data-sorted={sort === "fiyat" || undefined}>
+                  <td className={cn("numeral", board.price, styles.priceCell, !quote && board.none)} data-sorted={sort === "fiyat" || undefined} data-slot={slot("fiyat")}>
                     {quote ? formatPrice(quote.price, locale) : NO_VALUE}
                   </td>
                   {showWeek && (
-                    <td className={styles.weekCell} data-sorted={sort === "hafta" || undefined}>
+                    <td className={styles.weekCell} data-sorted={sort === "hafta" || undefined} data-slot={slot("hafta")}>
                       <MoveFigure value={row.week} weight="week" span={weekSpan} locale={locale} />
                     </td>
                   )}
@@ -483,7 +528,7 @@ export function MembersTable({
                       )}
                     </td>
                   )}
-                  <td className={styles.capCell} data-sorted={sort === "cap" || undefined}>
+                  <td className={styles.capCell} data-sorted={sort === "cap" || undefined} data-slot={slot("cap")}>
                     <span className={styles.cap} data-share={shareOf ? "" : undefined}>
                       <span className={cn("numeral", board.strong, !row.marketCap && board.none)}>
                         {row.marketCap ? formatMoneyCompact(row.marketCap, locale) : NO_VALUE}
@@ -498,7 +543,7 @@ export function MembersTable({
                     </span>
                   </td>
                   {showContribution && (
-                    <td className={cn("numeral", styles.contribution)} data-sorted={sort === "katki" || undefined}>
+                    <td className={cn("numeral", styles.contribution)} data-sorted={sort === "katki" || undefined} data-slot={slot("katki")}>
                       {row.contribution !== null
                         ? approxPoints(row.contribution, locale)
                         : NO_VALUE}

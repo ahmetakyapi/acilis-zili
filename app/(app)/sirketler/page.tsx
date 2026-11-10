@@ -10,7 +10,7 @@ import companyStyles from "@/components/companies/CompanyDirectory.module.css";
 import table from "@/components/companies/CompanyTable.module.css";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
-import { BoardSortHead, BoardTableSkeleton, CompanyCell, MoreBand, MoveFigure, board, rowStep } from "@/components/markets/BoardTable";
+import { BoardSortHead, BoardSortMenu, BoardTableSkeleton, CompanyCell, MoreBand, MoveFigure, board, phoneSlots, rowStep } from "@/components/markets/BoardTable";
 import { RowFlip, RowTap } from "@/components/markets/RowFlip";
 import { SectorDistribution } from "@/components/companies/SectorDistribution";
 import { CoverTabs } from "@/components/companies/CoverTabs";
@@ -644,6 +644,29 @@ async function CompaniesTable({
     const week = weekly[row.symbol];
     return (change != null && laneOver(change, daySpan)) || (week != null && laneOver(week, weekSpan));
   });
+  /* TELEFONDA KOMPAKT LİSTE (10 Kasım gece, son tur; sahibinin sözü:
+     "listeleri KAYDIRMADAN kullanalım, KOMPAKT olsun"). Satırın sağında iki
+     sayı: üstte okurun sıraladığı ölçü (varsayılan piyasa değeri), altında
+     günlük yüzde; değişime göre diziliyse yüzde + fiyat (`phoneSlots`,
+     components/markets/BoardTable.tsx). Aynı gece öğlen kurulan "piyasa
+     değeri telefonda fiyatın ÖNÜNDE, sütun iki kez basılır" çözümü
+     (`capPhone`) bu yüzden kalktı: listede hücrenin yeri ızgaradan. */
+  const lead: SortKey = sort === "hacim" && !showVolume ? "degisim" : sort;
+  const second: SortKey = lead === "degisim" ? "fiyat" : "degisim";
+  const slot = phoneSlots(lead, second);
+  const slotLabel: Record<SortKey, string> = {
+    degisim: t.companies.change,
+    fiyat: t.companies.price,
+    hafta: t.companies.weekChange,
+    cap: t.market.marketCap,
+    hacim: t.market.volume,
+  };
+  const sortItems = (["cap", "degisim", "fiyat", "hafta", ...(showVolume ? ["hacim"] : [])] as SortKey[]).map((key) => ({
+    key,
+    label: slotLabel[key],
+    href: sortHref(key),
+    active: sort === key,
+  }));
   const compareHref =
     rows.length >= 2
       ? `/karsilastir?semboller=${rows.slice(0, 4).map((row) => row.symbol).join(",")}`
@@ -729,21 +752,12 @@ async function CompaniesTable({
                  `?sirala=hacim` adresi telefonda açıldığında tablo
                  GÖRÜNMEYEN bir ölçüye göre diziliydi ve ekranda bunu
                  söyleyen hiçbir şey yoktu. Künye yalnız dar ekranda,
-                 sütun başlığı zaten görünürken ikinci kez söylemiyor. */
-              const sortLabels: Record<string, string> = {
-                degisim: t.companies.change,
-                hafta: t.companies.weekChange,
-                fiyat: t.companies.price,
-                cap: t.market.marketCap,
-                hacim: t.market.volume,
-              };
-              const sortNote = `${sortLabels[sort] ?? sort} ${dir === "asc" ? "▲" : "▼"}`;
-              return (
-                <>
-                  {parts || null}
-                  <span className="sm:hidden">{parts ? " · " : ""}{sortNote}</span>
-                </>
-              );
+                 sütun başlığı zaten görünürken ikinci kez söylemiyor.
+                 TARİHÇE (10 Kasım gece, son tur): künyedeki "Piyasa
+                 Değeri ▼" kalktı — telefonda sıralama şeridi
+                 (`BoardSortMenu`) aynı şeyi butonun üstünde söylüyor ve
+                 sıralanan ölçü satırın sağ üstünde; iki kez yazılmıyor. */
+              return parts || null;
             })()}
           />
         )}
@@ -756,6 +770,17 @@ async function CompaniesTable({
           <EmptyState scene="searching" title={query ? t.companies.searchEmpty : t.companies.empty}
             hint={query ? t.companies.searchEmptyHint : t.companies.emptyHint} />
         ) : (
+          <>
+          {/* Telefonda başlık satırının yerinde sıralama şeridi (640+ yok);
+              kabın DIŞINDA — açılır menü kabın taşma kırpmasına girmesin. */}
+          <BoardSortMenu
+            items={sortItems}
+            dir={dir}
+            label={t.markets.phoneSort}
+            caption={`${slotLabel[lead]} · ${slotLabel[second]}`}
+            ascLabel={t.markets.phoneSortAsc}
+            descLabel={t.markets.phoneSortDesc}
+          />
           <ScrollEdges
             className={cn(board.scroller, "scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)")}
             tabIndex={0}
@@ -813,7 +838,15 @@ async function CompaniesTable({
                 artık ilk ekranda değil: dört sütun 352 piksele ancak 13
                 piksellik sayılar ve 122 piksellik kimlikle sığıyordu; iri
                 kimlik ve iri yüzde ile aynı ekrana sığmıyor (ölçüm modülde,
-                "ÖLÇÜM 2"). */}
+                "ÖLÇÜM 2").
+
+                10 Kasım (gece, son tur), sahibinin sözü — "tablolar sağa
+                sola kaymasın, kompakt olsun": KAYDIRMA KALKTI. Telefonda
+                satır kompakt liste satırı (kimlik + sıralanan ölçü + günlük
+                yüzde; BoardTable.module.css → "TELEFON: KOMPAKT LİSTE"),
+                640–1023'te yalnız sığan sütunlar, 1024+ tam tablo; kap hiçbir
+                genişlikte kaymıyor (ölçüm CompanyTable.module.css → "ÖLÇÜM
+                4"). */}
             <table className={cn(board.table, table.table)}>
               <thead>
                 <tr>
@@ -844,14 +877,11 @@ async function CompaniesTable({
                       Yalnız Şirketler'de; Endeks Bileşenleri'nde sıra aynı.
                       Başlık telefonda iki satır ("Piyasa / Değeri"): tek
                       satırda sütun 111 piksel tutuyor, Fiyat solma kuşağına
-                      giriyordu (ölçüm CompanyTable.module.css → "ÖLÇÜM 3"). */}
-                  <BoardSortHead
-                    label={t.market.marketCap}
-                    href={sortHref("cap")}
-                    active={sort === "cap"}
-                    dir={dir}
-                    className={cn(table.capHead, table.capPhone)}
-                  />
+                      giriyordu (ölçüm CompanyTable.module.css → "ÖLÇÜM 3").
+                      TARİHÇE (10 Kasım gece, son tur): ikinci kopya KALKTI.
+                      Telefonda tablo artık kompakt liste; piyasa değeri
+                      sıralanan ölçüyse satırın sağ üstünde, ızgarayla
+                      (`phoneSlots`) — sütunu iki kez basmaya gerek yok. */}
                   <BoardSortHead
                     label={t.companies.price}
                     href={sortHref("fiyat")}
@@ -884,7 +914,7 @@ async function CompaniesTable({
                     href={sortHref("cap")}
                     active={sort === "cap"}
                     dir={dir}
-                    className={cn(table.capHead, table.capWide)}
+                    className={table.capHead}
                   />
                   {showVolume && (
                     <BoardSortHead
@@ -929,7 +959,7 @@ async function CompaniesTable({
                       </td>
                       {/* Yön bir de çizgi: sıfır ortada, ölçek sabit
                           (`ZeroBar`; gerekçe lib/market-scales.ts). */}
-                      <td className={table.changeCell} data-sorted={sort === "degisim" || undefined}>
+                      <td className={table.changeCell} data-sorted={sort === "degisim" || undefined} data-slot={slot("degisim")}>
                         <MoveFigure value={quote ? quote.changePct : null} span={daySpan} locale={locale} />
                       </td>
                       {/* Fiyat satırın ÇAPASI: değişim, hafta, piyasa değeri
@@ -939,18 +969,14 @@ async function CompaniesTable({
                           ölçüldü: `.price` 700 yazıyordu, `.table tbody td`
                           özgüllükle 400 basıyordu; ortak parçada genel hücre
                           kuralı `:where()` içinde, tuzak kapandı.) */}
-                      {/* Telefon kopyası — gerekçe başlıkta. */}
-                      <td className={cn("numeral", board.strong, table.capCell, table.capPhone, !cap && board.none)} data-sorted={sort === "cap" || undefined}>
-                        {cap ? formatMoneyCompact(cap, locale) : NO_VALUE}
-                      </td>
-                      <td className={cn("numeral", board.price, table.priceCell, !quote && board.none)} data-sorted={sort === "fiyat" || undefined}>
+                      <td className={cn("numeral", board.price, table.priceCell, !quote && board.none)} data-sorted={sort === "fiyat" || undefined} data-slot={slot("fiyat")}>
                         {quote ? formatPrice(quote.price, locale) : NO_VALUE}
                       </td>
                       {/* Hafta da bir çizgi (31 Ekim): günlük sütun şeritli,
                           haftalık birimsiz sayıydı; iki yön yan yana aynı
                           dilde okunsun. Ölçek ayrı (hafta geniş oynar),
                           sabiti lib/market-scales.ts'te. */}
-                      <td className={table.weekCell} data-sorted={sort === "hafta" || undefined}>
+                      <td className={table.weekCell} data-sorted={sort === "hafta" || undefined} data-slot={slot("hafta")}>
                         <MoveFigure value={week ?? null} weight="week" span={weekSpan} locale={locale} />
                       </td>
                       {/* Piyasa değeri telefonda da kendi sütununda. Bir
@@ -961,11 +987,11 @@ async function CompaniesTable({
                           sütunda ikisi de kendi başlığının altında duruyor
                           (10 Kasım gecesi telefonda kaydırmanın arkasına
                           düştü; aynı gece Fiyat'ın ÖNÜNE alındı — başlıkta). */}
-                      <td className={cn("numeral", board.strong, table.capCell, table.capWide, !cap && board.none)} data-sorted={sort === "cap" || undefined}>
+                      <td className={cn("numeral", board.strong, table.capCell, !cap && board.none)} data-sorted={sort === "cap" || undefined} data-slot={slot("cap")}>
                         {cap ? formatMoneyCompact(cap, locale) : NO_VALUE}
                       </td>
                       {showVolume && (
-                        <td className={cn("numeral", table.volume)} data-sorted={sort === "hacim" || undefined}>
+                        <td className={cn("numeral", table.volume)} data-sorted={sort === "hacim" || undefined} data-slot={slot("hacim")}>
                           {/* HACİM YALNIZCA CANLI KOTASYONDAN. Buraya bir
                               önbellek yedeği (`?? company.volume`) konmuştu ve
                               o değer `quotes_cache`ten geliyor: kotasyonu
@@ -986,6 +1012,7 @@ async function CompaniesTable({
               </tbody>
             </table>
           </ScrollEdges>
+          </>
         )}
 
         {/* Sayaç + devamı. Sayaç düğmeden ÖNCE geliyor çünkü asıl soru

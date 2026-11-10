@@ -22,8 +22,25 @@ import styles from "./BoardTable.module.css";
  * sütun genişliği ve değişken taşır.
  */
 export { styles as board };
+export { BoardSortMenu, type BoardSortItem } from "./BoardSortMenu";
 
 export type SortDirection = "asc" | "desc";
+
+/**
+ * Telefonda satırın sağ sütunu (10 Kasım 2026, gece; sahibinin sözü:
+ * "listeleri kaydırmadan kullanalım, kompakt olsun, yeterli bilgi
+ * gözüksün"). <640'ta tablo kompakt LİSTE: solda kimlik, sağda iki sayı
+ * üst üste (BoardTable.module.css → "TELEFON: KOMPAKT LİSTE"). Hangi iki
+ * hücrenin görüneceğini çağıran söyler: `a` üstte, iri (okurun SIRALADIĞI
+ * ölçü — piyasa değerine göre dizdiyse piyasa değeri), `b` altında (çoğu
+ * zaman günlük değişim ya da fiyat). Öteki hücreler telefonda basılı ama
+ * `display:none`; 640+ hepsi tabloda yerinde.
+ *
+ *   <td data-slot={slot("cap")}>  →  "a" | "b" | undefined
+ */
+export function phoneSlots(lead: string, second: string) {
+  return (key: string): "a" | "b" | undefined => (key === lead ? "a" : key === second ? "b" : undefined);
+}
 
 /**
  * Sıralama başlığı.
@@ -265,6 +282,10 @@ export function MoreBand({ count, share, href, label }: { count: string; share: 
  * altındaki her şey aşağı sıçrıyordu. `phoneRows`: gerçek tablo telefonda
  * katlıysa (Endeks Bileşenleri ilk on beş) iskelet de o kadar basar.
  */
+/* 10 Kasım (gece, kompakt liste): telefonda iskelet de listenin ölçüsünde —
+   başlık satırının yerinde 44 piksellik sıralama şeridi, satır 60, sağda
+   İKİ sayı üst üste (yüzde + fiyat) ve yüzdenin solunda kısa çubuk; 640+
+   eskisi gibi yan yana. */
 export function BoardTableSkeleton({ rows, phoneRows, className }: { rows: number; phoneRows?: number; className?: string }) {
   return (
     <Panel className={cn(styles.panel, styles.skeleton, className)} data-phone={phoneRows ? "" : undefined} aria-hidden>
@@ -280,9 +301,11 @@ export function BoardTableSkeleton({ rows, phoneRows, className }: { rows: numbe
             <Skeleton className="h-3.5 w-12" />
             <Skeleton className="h-3 w-24" />
           </div>
-          <Skeleton className={cn(styles.skeletonWide, "h-2 w-20 rounded-full")} />
-          <Skeleton className="h-4 w-14 shrink-0" />
-          <Skeleton className="h-3.5 w-12 shrink-0" />
+          <Skeleton className={cn(styles.skeletonLane, "h-2 rounded-full")} />
+          <div className={styles.skeletonEnd}>
+            <Skeleton className="h-4 w-14 shrink-0" />
+            <Skeleton className="h-3.5 w-12 shrink-0" />
+          </div>
           <Skeleton className={cn(styles.skeletonWide, "h-2 w-14 rounded-full")} />
           <Skeleton className={cn(styles.skeletonWide, "h-3 w-12 shrink-0")} />
           <Skeleton className={cn(styles.skeletonWide, "h-3.5 w-16 shrink-0")} />

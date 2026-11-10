@@ -56,9 +56,11 @@
 /* Son kapanış cümlesi yalnız telefonda: 640+ satırın kendi yazısı var. */
 .staleNote { display:inline; }
 
-/* ---- Telefon (<640): ilk ekranda Şirket (sabit 136, ortak parça) +
-   Değişim + Fiyat; Piyasa Değeri solma kuşağında başlar. Sayı sütunları
-   içeriği kadar. ---- */
+/* ---- Telefon (<640): TARİHÇE — ilk ekranda Şirket (sabit 136, ortak
+   parça) + Değişim + Fiyat; Piyasa Değeri solma kuşağında başlar. Sayı
+   sütunları içeriği kadar. 10 Kasım gece, son tur: telefonda tablo kompakt
+   liste (BoardTable.module.css → "TELEFON: KOMPAKT LİSTE"), başlık satırı
+   gizli; aşağıdaki başlık kuralları yalnız güvenlik ağı. ---- */
 @media(max-width:639px) {
   .changeCell, .changeHead, .priceCell, .priceHead { width:1%; }
   /* Başlıklar iki satır ("Günlük / Değişim", "Son Fiyat / ($)"): tek satırda
@@ -80,6 +82,11 @@
   .table :is(.priceCell, .priceHead, .capCell, .capHead) { width:1%; }
   .table :global(th[scope="row"]) { width:1%; }
   .staleNote { display:none; }
+}
+/* 640–767 (10 Kasım gece, son tur): önce kap kayıyordu (640'ta içerik 689
+   > kap 590). Sıra numarası düşer, ad ve kulvarın tabanı daralır. */
+@media(min-width:640px) and (max-width:767px) {
+  .wrap .table { --cell-pad:10px; --name-max:92px; --day-lane:minmax(40px,1fr); --rank-display:none; --company-start:20px; }
 }
 @media(min-width:1024px) {
   .wrap .table { --cell-pad:16px; --name-max:240px; --day-lane:minmax(96px,1fr); }
@@ -106,4 +113,19 @@
      fark 0), 17 satır `translate` ile kayıyor, kaydırma konumu farkı 0;
      fiyat hücresine basış hisse sayfasına gidiyor.
    - Yatay taşma 0, hücresinden taşan öğe 0, kırpılan başlık 0.
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM 4 — KOMPAKT LİSTE (10 Kasım 2026 gece, son tur; sahibinin sözü:
+   "tablolar sağa sola kaymasın")
+   Yöntem: gerçek sayfa + sahte sağlayıcı (`olcum` skill'i), seans içi ve
+   kapalı piyasa, barsız mod, TR ve EN, iki tema; 360 / 390 / 640 / 768 /
+   844 (yatay telefon) / 1024 / 1280 / 1440. "Kap" = tablonun her atası için
+   `scrollWidth − clientWidth`; önce = aynı gün c548782, aynı sahte veri.
+   Yarı İletkenler, 21 üye (12 açık).
+   - Kap: 360 81 → 0 · 390 51 → 0 · 640 99 → 0 (768+ zaten 0).
+   - Telefon: satır 56 → 60; sağ üstte piyasa değeri, altında günlük yüzde
+     + çubuk. Sıralama şeritteki menüden (istemcide): "Günlük Değişim"
+     seçimi 5 satırı kaydırdı, menü kapandı, künye "Değişim · Son Fiyat".
+   - 640–767: sıra numarası düşer; Şirket 200 → kap 590 = içerik.
    -------------------------------------------------------------------------- */

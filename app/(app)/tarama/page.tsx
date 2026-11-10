@@ -5,7 +5,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
-import { BoardSortHead, BoardTableSkeleton, CompanyCell, MoreBand, board, rowStep } from "@/components/markets/BoardTable";
+import { BoardSortHead, BoardSortMenu, BoardTableSkeleton, CompanyCell, MoreBand, board, phoneSlots, rowStep } from "@/components/markets/BoardTable";
 import { RowTap } from "@/components/markets/RowFlip";
 import { SizeBar, UniverseLane } from "@/components/screener/Lanes";
 import tbl from "@/components/screener/ScreenerTable.module.css";
@@ -539,7 +539,12 @@ async function ScreenerTable({
           bağlantı (`RowTap`; eski `LinkedRows` yerine). TELEFON: `table-fixed`
           kalktı ("Kaydırma saklanmaz", arayuz.md): Şirket sütunu sabit,
           altı ölçünün HEPSİ tabloda ve kap yana kayar (önce üçü gizliydi).
-          Ölçüm ScreenerTable.module.css sonunda. */}
+          Ölçüm ScreenerTable.module.css sonunda.
+          10 Kasım (gece, son tur), sahibinin sözü — "tablolar sağa sola
+          kaymasın, kompakt olsun": KAYDIRMA KALKTI. Telefonda (`?gorunum=
+          tablo`) kompakt liste: kimlik + sıralanan ölçü (çubuklu) + piyasa
+          değeri; 640–1023'te sığan ölçüler, 1024+ tam tablo. Ölçüm
+          ScreenerTable.module.css → "ÖLÇÜM — KOMPAKT LİSTE". */}
       <Panel id="screener-table" className={cn(board.panel, tbl.panel)} data-fit="lg">
         <RowTap scope="screener-table" />
         <PanelHeader
@@ -564,17 +569,10 @@ async function ScreenerTable({
               .filter(Boolean)
               .join(" · ");
             /* Telefonda gizli sütuna göre sıralanmış olabilir — künye söyler
-               (/sirketler kalıbı). */
-            const sortNote = `${sortLabels[sort]} ${dir === "asc" ? "▲" : "▼"}`;
-            return (
-              <>
-                {parts || null}
-                <span className="sm:hidden">
-                  {parts ? " · " : ""}
-                  {sortNote}
-                </span>
-              </>
-            );
+               (/sirketler kalıbı). TARİHÇE (10 Kasım gece, son tur): künyedeki
+               "F/K ▼" kalktı; telefonda sıralama şeridi (`BoardSortMenu`)
+               ölçüyü butonun üstünde söylüyor, kartlarda da tabloda da. */
+            return parts || null;
           })()}
         />
 
@@ -616,6 +614,19 @@ async function ScreenerTable({
           <EmptyState title={L.empty} hint={L.emptyHint} compact />
         ) : (
           <>
+          {/* TELEFONDA SIRALAMA ŞERİDİ (10 Kasım gece, son tur). Telefonda
+              tablo kompakt liste (başlık satırı yok) ve kart görünümünün hiç
+              sıralama denetimi yoktu; ikisinin de üstünde aynı şerit, aynı
+              `?sirala=` adresleri. Sağdaki künye yalnız tabloda: listede
+              satırın iki sayısının adı. 640+ basılmaz. */}
+          <BoardSortMenu
+            items={(["fk", "buyume", "marj", "roe", "borc", "cap"] as SortKey[]).map((key) => ({ key, label: sortLabels[key], href: sortHref(key), active: sort === key }))}
+            dir={dir}
+            label={t.markets.phoneSort}
+            caption={view === "tablo" ? `${sortLabels[sort]} · ${sortLabels[sort === "cap" ? "fk" : "cap"]}` : undefined}
+            ascLabel={t.markets.phoneSortAsc}
+            descLabel={t.markets.phoneSortDesc}
+          />
           {view !== "tablo" && (
             <ScreenerCards
               rows={shown}
@@ -674,6 +685,10 @@ async function ScreenerTable({
                           : null
                         : lane && <UniverseLane position={lane.p} title={lane.title} className={tbl.figLane} />;
                   const cell = (key: SortKey) => cn("numeral", tbl.num, key === sort ? tbl.lead : board.strong);
+                  /* Telefonda liste satırının sağı: üstte sıralanan ölçü
+                     (çubuğuyla), altında piyasa değeri — piyasa değerine
+                     göre diziliyse F/K (`phoneSlots`, BoardTable.tsx). */
+                  const slot = phoneSlots(sort, sort === "cap" ? "fk" : "cap");
                   const debt = m.debtToEquity !== null && m.debtToEquity >= 0 ? m.debtToEquity : null;
                   const none = <span className={board.none}>{NO_VALUE}</span>;
                   return (
@@ -681,12 +696,12 @@ async function ScreenerTable({
                       <td className={cn("numeral", board.rank)}>{index + 1}</td>
                       <CompanyCell symbol={row.symbol} name={row.company.name} logoUrl={row.company.logoUrl} />
                       <td className={cn(board.tag, tbl.sector)}>{sectorLabel(row.sector, locale) ?? row.sector}</td>
-                      <td className={cell("fk")} data-sorted={sort === "fk" || undefined}>
+                      <td className={cell("fk")} data-sorted={sort === "fk" || undefined} data-slot={slot("fk")}>
                         <Figure lane={laneFor("fk")}>{row.fk !== null ? formatRatio(row.fk, locale) : none}</Figure>
                       </td>
                       {/* Büyüme bir DEĞİŞİM — yön rengi meşru. Marj, ROE ve
                           borç seviye ölçüleri: renk yok, işaret sayının içinde. */}
-                      <td className={cell("buyume")} data-sorted={sort === "buyume" || undefined}>
+                      <td className={cell("buyume")} data-sorted={sort === "buyume" || undefined} data-slot={slot("buyume")}>
                         <Figure lane={laneFor("buyume")}>
                           {m.revenueGrowthTTMYoy !== null ? (
                             <span className={directionText(directionOf(m.revenueGrowthTTMYoy))}>
@@ -695,16 +710,16 @@ async function ScreenerTable({
                           ) : none}
                         </Figure>
                       </td>
-                      <td className={cell("marj")} data-sorted={sort === "marj" || undefined}>
+                      <td className={cell("marj")} data-sorted={sort === "marj" || undefined} data-slot={slot("marj")}>
                         <Figure lane={laneFor("marj")}>{m.netProfitMarginTTM !== null ? formatPercent(m.netProfitMarginTTM, locale, 1) : none}</Figure>
                       </td>
-                      <td className={cell("roe")} data-sorted={sort === "roe" || undefined}>
+                      <td className={cell("roe")} data-sorted={sort === "roe" || undefined} data-slot={slot("roe")}>
                         <Figure lane={laneFor("roe")}>{m.roeTTM !== null ? formatPercent(m.roeTTM, locale, 1) : none}</Figure>
                       </td>
-                      <td className={cell("borc")} data-sorted={sort === "borc" || undefined}>
+                      <td className={cell("borc")} data-sorted={sort === "borc" || undefined} data-slot={slot("borc")}>
                         <Figure lane={laneFor("borc")}>{debt !== null ? formatRatio(debt, locale) : none}</Figure>
                       </td>
-                      <td className={cell("cap")} data-sorted={sort === "cap" || undefined}>
+                      <td className={cell("cap")} data-sorted={sort === "cap" || undefined} data-slot={slot("cap")}>
                         <Figure lane={laneFor("cap")}>{row.cap ? formatMoneyCompact(row.cap, locale) : none}</Figure>
                       </td>
                     </tr>

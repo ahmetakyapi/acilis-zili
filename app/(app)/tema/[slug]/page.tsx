@@ -448,6 +448,10 @@ async function LiveTheme({ slug, locale, t }: { slug: string; locale: Locale; t:
               scaleNote: t.themes.tableScaleNote,
               overNote: t.markets.laneOverNote,
               sortBy: t.themes.sortBy,
+              phoneSort: t.markets.phoneSort,
+              dayShort: t.companies.change,
+              sortAsc: t.markets.phoneSortAsc,
+              sortDesc: t.markets.phoneSortDesc,
               showAll: t.themes.tableAll,
               showLess: t.compact.showLess,
             }}

@@ -60,7 +60,9 @@ export function RowFlip({ scope, token, order }: {
     const root = document.getElementById(scope);
     if (!root || reduced) return;
     const record = (event: Event) => {
-      if (!(event.target instanceof Element) || !event.target.closest("thead a")) return;
+      /* `[data-sort-link]`: telefonda başlık satırı yok, sıralama şeridin
+         menüsünden (BoardSortMenu.tsx, 10 Kasım gece). */
+      if (!(event.target instanceof Element) || !event.target.closest("thead a, [data-sort-link]")) return;
       const found = rowsOf(scope);
       if (!found) return;
       const tops = new Map<string, number>();

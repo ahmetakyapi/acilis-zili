@@ -26,9 +26,34 @@
 .figure > .figLane { order:2; width:var(--fig-lane,64px); max-width:none; margin:0; }
 .figure > span { min-width:5.4ch; text-align:right; }
 
+/* Telefon (<640). TARİHÇE: Şirket sabit (ortak parça, 136); ilk ekranda
+   iki ölçü, kalanı kaydırınca. 10 Kasım gece, son tur: kompakt liste
+   (BoardTable.module.css → "TELEFON: KOMPAKT LİSTE"): üstte sıralanan ölçü
+   ve çubuğu (çubuk sayının solunda), altında piyasa değeri. */
 @media(max-width:639px) {
-  /* Şirket sabit (ortak parça, 136); ilk ekranda iki ölçü, kalanı kaydırınca. */
-  .panel .table { --cell-pad:9px; }
+  .table [data-slot] .figure { grid-template-columns:var(--phone-lane,48px) auto; gap:12px; }
+  .table [data-slot] .figure > .figLane { order:0; width:var(--phone-lane,48px); }
+  .table [data-slot="a"].lead { font-size:17px; line-height:22px; }
+  .table [data-slot="b"].lead { color:var(--text-body); font-size:14px; font-weight:600; line-height:18px; }
+}
+/* 640–1023: KAYMAYAN ORTA TABLO (10 Kasım gece, son tur). Önce kap
+   kayıyordu (640/768'de içerik 839 > kap 590 / 718). Öncelik sırasıyla en
+   alttaki ölçüler düşer — sıralanan ölçü HİÇ düşmez (`data-sorted`,
+   başlıkta `data-active`): 640–767 Marj, ROE ve Borç; 768–1023 Borç. Sütun
+   sırası: # · Şirket · Sektör · F/K · Büyüme · Marj · ROE · Borç · Piyasa
+   Değeri. */
+@media(min-width:640px) and (max-width:767px) {
+  .table :is(th, td):is(:nth-child(6), :nth-child(7), :nth-child(8)):not([data-sorted], [data-active]) { display:none; }
+  .panel .table { --name-max:130px; }
+}
+@media(min-width:768px) and (max-width:1023px) {
+  .table :is(th, td):nth-child(8):not([data-sorted], [data-active]) { display:none; }
+  /* 120 → 110: EN başlıkları ("Net Margin", "Market Cap") 768'de 5 piksel
+     taşırıyordu (ölçüldü). */
+  .panel .table { --name-max:110px; }
+}
+@media(min-width:820px) and (max-width:1023px) {
+  .panel .table { --name-max:150px; }
 }
 @media(min-width:640px) {
   .lead { font-size:16px; }
@@ -65,4 +90,20 @@
      Sayfada yatay taşma 0 (390–1440, altı genişlik).
    - Çizim: `bar-fill` 1440'ta yüklemede 6 çubuk oynuyor, 57'si kapıda
      (`data-armed`) bekliyor; hareketi azaltana son kare.
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM — KOMPAKT LİSTE (10 Kasım 2026 gece, son tur; sahibinin sözü:
+   "tablolar sağa sola kaymasın, kompakt olsun")
+   Yöntem: gerçek sayfa + sahte sağlayıcı (`olcum` skill'i), seans içi ve
+   kapalı piyasa, barsız mod, TR ve EN, iki tema; 360 / 390 / 640 / 768 /
+   844 (yatay telefon) / 1024 / 1280 / 1440. "Kap" = tablonun her atası için
+   `scrollWidth − clientWidth`; önce = aynı gün c548782, aynı sahte veri.
+   - Kap (`?gorunum=tablo`): 360 315 → 0 · 390 285 → 0 · 640 249 → 0 · 768
+     121 → 0 · 844 45 → 0 (1024+ zaten 0).
+   - Telefon: satır 56 → 60; sağ üstte sıralanan ölçü 17/700 ve çubuğu,
+     altında piyasa değeri (piyasa değeri sırasında F/K) 14/600. Dokunma
+     12/18 → 18/18. Sıralama şeridi kart görünümünün de üstünde.
+   - 640: F/K · Büyüme · Piyasa Değeri (+ sıralanan ölçü); 768: + Marj ·
+     ROE. Borç 1024+.
    -------------------------------------------------------------------------- */

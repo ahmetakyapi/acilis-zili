@@ -60,8 +60,46 @@
    soldururdu). Kuşakta Haftalık sütununun kulvarı görünür — "devamı var".
    Sayı sütunları içeriği kadar: otomatik yerleşim fazlayı Şirket'e verip
    Fiyat'ı ekran dışına itiyordu (ilk ölçüm: Şirket 210, Fiyat x=413). */
+/* 10 Kasım (gece, son tur): yukarıdaki "ilk ekran kuralı" TARİHÇE —
+   telefonda tablo artık kompakt liste (BoardTable.module.css → "TELEFON:
+   KOMPAKT LİSTE"); burada yalnız bu tablonun hücrelerinin listedeki hâli:
+   piyasa değeri üstteyse pay yazısı düşer, katkı üstteyse iri. */
 @media(max-width:639px) {
-  .changeCell, .changeHead, .priceCell, .priceHead { width:1%; }
+  .cap, .cap[data-share] { display:block; }
+  .cap > :nth-child(2) { display:none; }
+  .table [data-slot="a"] .cap > :first-child { font-size:16px; font-weight:700; line-height:21px; }
+  .table [data-slot="b"] .cap > :first-child { color:var(--text-body); font-size:14px; line-height:18px; }
+  .table [data-slot="a"].contribution { color:var(--text-strong); font-size:16px; font-weight:700; }
+}
+
+/* ---- 640–1023: KAYMAYAN ORTA TABLO (10 Kasım gece, son tur). Önce kap
+   kayıyordu (768'de içerik 1044 > kap 718). Sığmayan ikincil sütunlar
+   düşer: gün aralığı, pay; Şirket adı ve kulvarlar daralır. Kalan: sıra ·
+   Şirket · Değişim (çubuklu) · Fiyat · Haftalık · Piyasa Değeri (+ Dow'da
+   Katkı). ---- */
+@media(min-width:640px) and (max-width:1023px) {
+  .rangeHead, .rangeCell, .shareHead, .cap > :nth-child(2) { display:none; }
+  .cap[data-share], .capShared > span { grid-template-columns:auto; }
+  .panel .table { --cell-pad:8px; --name-max:116px; --day-lane:48px; --week-lane:32px; }
+  .table :is(.changeCell, .changeHead, .priceCell, .priceHead, .weekCell, .weekHead, .capCell, .capHead, .contribution, .contributionHead) { width:1%; }
+}
+/* 640–767: Haftalık da düşer (yatay telefonun dar ucu, küçük tablet). */
+@media(min-width:640px) and (max-width:767px) {
+  .weekHead, .weekCell { display:none; }
+}
+/* 768–1023: Haftalık geri gelir; sıra numarası düşer (yer Şirket'e). */
+@media(min-width:768px) and (max-width:1023px) {
+  .panel .table { --cell-pad:10px; --name-max:108px; --day-lane:56px; --week-lane:32px; --rank-display:none; --company-start:20px; }
+}
+/* 820–1023 (yatay telefon, küçük tablet): ad tavanı açılır — 844'te
+   Şirket sütunu 266 piksel tutarken ad 108'de kesiliyordu. */
+@media(min-width:820px) and (max-width:1023px) {
+  .panel .table { --name-max:150px; }
+}
+/* 1024–1279: gün aralığı düşer — en düşük öncelikli sütun (önce seans
+   içinde içerik 1092 > kap 974, kap kayıyordu). */
+@media(min-width:1024px) and (max-width:1279px) {
+  .rangeHead, .rangeCell { display:none; }
 }
 
 /* ---- 1024+: ad genişler ---- */
@@ -187,4 +225,34 @@
      ölçeği yazıyor ("Değişim ±%5, Haftalık ±%8"); taşan varsa kesik cümlesi.
    - Kesik uç: 2 piksel, uçtan 4 piksel içeride; koyu ve açık temada panel
      zemininde. Hücresinden taşan öğe 0, yatay taşma 0.
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM 5 — KOMPAKT LİSTE (10 Kasım 2026 gece, son tur; sahibinin sözü:
+   "listeleri KAYDIRMADAN kullanalım… tablolar sağa sola kaymasın")
+   Yöntem: gerçek sayfa + sahte sağlayıcı (`olcum` skill'i), seans içi ve
+   kapalı piyasa, barsız mod, TR ve EN, iki tema; 360 / 390 / 640 / 768 /
+   844 (yatay telefon) / 1024 / 1280 / 1440. "Kap" = tablonun her atası için
+   `scrollWidth − clientWidth`; önce = aynı gün c548782, aynı sahte veri.
+   - Kap: 360 450 → 0 · 390 420 → 0 · 640 454 → 0 · 768 326 → 0 · 844 250
+     → 0 · 1024 118 → 0 (1280 / 1440 zaten 0). Sayfada yatay taşma 0.
+   - Telefon: satır 56 → 60 (+1 çizgi); kimlik 32 + sembol 16/700 + ad 13;
+     sağda yüzde 17/700 + fiyat 14/600, yüzdenin solunda 48 piksellik çubuk.
+     İlk ekranda 12 → 11 satır (390×844), ama satırın BÜTÜN bilgisi ekranda
+     (önce Haftalık, Piyasa Değeri, Katkı kaydırmanın arkasındaydı; şimdi
+     sıralanan ölçü sağ üstte). Dokunma: ilk altı satırda 18 noktanın 18'i
+     satırın kendisinde ve bağlantıda (önce 6/18; sağ kenardaki solma
+     kuşağı basışı yutuyordu). Kesilen ad 7 → 2 (390).
+   - 640: # 36 · Şirket 198 · Değişim 155 · Fiyat 78 · Piyasa Değeri 123
+     (Haftalık, gün aralığı, pay düşer). 768: Şirket 220 · Değişim 167 ·
+     Fiyat 82 · Haftalık 118 · Piyasa Değeri 125 (sıra numarası düşer).
+     1024: gün aralığı düşer, içerik 1092 → 974 = kap.
+   - Sıralama şeridi: menü 5 seçenek × 44 piksel, açıkken yatay taşma 0;
+     seçim `RowFlip` ile satırları kaydırdı (63 animasyon), kaydırma konumu
+     farkı 0, menü kapandı; dışarı basınca kapanıyor. Hareketi azaltanda
+     animasyon 0. Katlama 15 → 60, devamı bandı butonu 44 piksel.
+   - Çizim: 177 `bar-fill` (önceki gibi), tablo görününce ~65 çizim
+     oynuyor; `reducedMotion: "reduce"` altında 0.
+   - JS'siz (sunucunun bastığı tablo): thead gizli, kap 0, satır 60,
+     menüde 5 gerçek bağlantı.
    -------------------------------------------------------------------------- */
