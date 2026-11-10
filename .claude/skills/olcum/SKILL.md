@@ -20,6 +20,32 @@ bileşeni sahte veriyle ölçülebilir.
 app/(app)/tmp-onizleme-<konu>/page.tsx   # İŞ BİTİNCE SİL
 ```
 
+"Önce" hâli için canlı siteye bak: bulut oturumu https://aciliszili.com'a
+erişir; `.claude/skills/gorsel-tur/cek.mjs` rota × genişlik × temayı
+dilimli çeker (yalnız okur). Sahte veriyi oradaki gerçek değerlere benzet:
+uzun ad, eksik alan, negatif, sıfır (10 Kasım: yalnız "güzel" veriyle
+ölçülen kart canlıda "0,00 $" dev başlığı bastı).
+
+### Gerçek Sayfa, Sahte Sağlayıcı
+
+Bileşen değil SAYFANIN bütünü ölçülecekse (kolon dipleri, paneller arası
+ritim, akışla gelen paneller) geçici rota yetmez. Sağlayıcıları sahteleyen
+betikle gerçek rotayı gerçek yükleyicileriyle aç:
+
+```bash
+ANTHROPIC_API_KEY=mock DATABASE_URL="postgres://u:p@ep-x.mockdb.test/db" \
+FINNHUB_API_KEY=mock ALPACA_API_KEY_ID=mock ALPACA_API_SECRET_KEY=mock \
+NODE_OPTIONS="--require $PWD/.claude/skills/olcum/sahte-saglayici.cjs" \
+npx next start -p 3110        # ya da: npx next dev -p 31xx
+```
+
+Kapatırken `pkill -f next-server` (yalnız `next start` deseni asıl süreci
+öldürmez; 10 Kasım'da eski derlemenin sunucusu portta kaldı ve yeni ölçüm
+hata sayfasını çekti — `boy=900` görürsen şüphelen). Betik dış adresleri engeller (günlükte `[mock-fetch] engellendi`), canlı
+veritabanına ulaşılamaz. Sınırı: içerik tabloları (bülten, mercek, analiz,
+takvim) boş döner; o paneller için yine geçici rota. Eksik bir uç gerekirse
+betiğe ekle, uygulama koduna sahte dal koyma.
+
 Paralel ajanlar aynı dizinde `next dev` koşturamaz (`.next/dev` kilidi):
 her ajan kendi worktree'sinde ve kendi portunda (`npx next dev -p 31xx`).
 
@@ -54,7 +80,15 @@ tema için:
    aynı tuzağa düştü).
 3. `npm run build && npm run check`.
 
-## 4. Kayıt
+## 4. Kendi Görüntüne Bak
+
+Sayılar temizken ekran yine kötü durabilir (ölü boşluk, zayıf hiyerarşi
+taşma değildir). Son hâli dilimli çek, Read ile oku ve bir tasarımcı gibi
+eleştir (`gorsel-tur` § 2 sınıfları); beğenmediğini düzeltip yeniden ölç.
+Tam sayfa görüntüde boş logo karosu tembel yüklemedir: önce sayfayı
+kaydır (`cek.mjs` yapar).
+
+## 5. Kayıt
 
 Ölçülen sayıları (önce → sonra) değişen kuralın kod içi karar yorumuna yaz:
 genişlik, tema, piksel. "Sığıyor gibi duruyor" doğrulama değildir.
