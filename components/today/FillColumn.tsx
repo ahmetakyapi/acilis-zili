@@ -101,15 +101,43 @@ export function FillColumn() {
          bir satır boyundan yarım satır boyuna iner; 1440'ta 57 → 6,
          1024'te 31 → 19, 1600'de 10, 1280'de 17 → 17 (satır 62, taşma 45 > 17:
          kapalı). */
-      if (bosluk > 0) {
-        const siradaki = yedek.find(
-          (satir) => satir.hidden && satir.closest("[data-col]")?.getAttribute("data-col") === kisa,
-        );
-        if (siradaki) {
-          siradaki.hidden = false;
-          const boy = siradaki.getBoundingClientRect().height;
-          if (boy <= 0 || boy - bosluk >= bosluk) siradaki.hidden = true;
+      /* İKİ YÖNE YAKINSAMA (10 Kasım, üçüncü tur). "En yakın dip" adımı
+         yalnız belgedeki İLK gizli satırı ve yalnız BİR kez deniyordu. İki
+         eksik ölçüldü (gerçek sayfa + sahte sağlayıcı, 1440; Günün Grafiği
+         paneli dip butonuyla 60 piksel uzadıktan sonra): ana kolon kısaydı,
+         sıradaki analiz satırı (63) açılınca fark 27 piksel ÖTEKİ yöne
+         döndü ve orada kaldı — oysa yan kolonda Günün Grafiği'nin 42
+         piksellik yedek satırı farkı 15'e indiriyordu, sorulmadı. Artık
+         her turda kolonlar yeniden ölçülür, kısa kolondaki HER listenin ilk
+         gizli satırı aday olur ve farkı en çok küçülten açılır; fark
+         küçülmüyorsa durur. Liste içinde sıra atlanmaz (aday hep listenin
+         ilk gizlisi); her tur farkı kesin küçülttüğü için salınmaz, tavan
+         yine de dört tur. Son ölçüm (kolon dipleri farkı, iki tema aynı):
+         1600: 31 (63 piksellik satırın taşması 32 ≥ 31: kapalı) · 1440:
+         27 → 14 · 1280: 5 · 1024: 14. En kötü hâl yarım satır boyu. */
+      for (let tur = 0; tur < 4; tur++) {
+        const a = dip(ana);
+        const y = dip(yan);
+        const kalan = Math.abs(a - y);
+        if (kalan <= 0) break;
+        const kisaKolon = a < y ? "main" : "side";
+        const gorulen = new Set<Element | null>();
+        let enIyi: HTMLElement | null = null;
+        let enIyiTasma = kalan;
+        for (const satir of yedek) {
+          if (!satir.hidden || satir.closest("[data-col]")?.getAttribute("data-col") !== kisaKolon) continue;
+          if (gorulen.has(satir.parentElement)) continue;
+          gorulen.add(satir.parentElement);
+          satir.hidden = false;
+          const boy = satir.getBoundingClientRect().height;
+          satir.hidden = true;
+          if (boy > 0 && boy - kalan < enIyiTasma) {
+            enIyi = satir;
+            enIyiTasma = boy - kalan;
+          }
         }
+        if (!enIyi) break;
+        enIyi.hidden = false;
       }
     };
 

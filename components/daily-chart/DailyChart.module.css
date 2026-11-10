@@ -16,10 +16,43 @@
      artık karo + ad + değer + kulvar tek blok ve satırlar arası hava eşit;
      kulvar adın başında (x=+52) — karonun yanında, eskiden karonun altındaki
      boş sütundan kopuktu. Ad kesilmez, gerekirse iki satıra iner. */
-.thumb { display: flex; flex-direction: column; gap: 10px; min-width: 0; }
-.thumbList { display: flex; flex-direction: column; margin-inline: -16px; }
-@media (min-width: 640px) { .thumbList { margin-inline: -20px; } }
-.thumbList > li { animation: thumb-in 360ms var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 40ms); }
+/* `--pad`: gövdenin yan payı; liste, grup başlığı ve dip onunla kenardan
+   kenara taşar. `thumb-rows`: görünen satırların CSS sayacı (dipteki
+   "5 / 6 Kalem"); `hidden` satır `display:none` olduğu için sayılmaz. */
+.thumb { --pad: 16px; display: flex; flex-direction: column; min-width: 0; counter-reset: thumb-rows; }
+@media (min-width: 640px) { .thumb { --pad: 20px; } }
+.thumbList { display: flex; flex-direction: column; margin-inline: calc(var(--pad) * -1); }
+.thumbList > li { counter-increment: thumb-rows; }
+/* 10 KASIM: `thumb-in` kalktı — satırlar opaklık 0'dan, 40 ms kademeyle
+   geliyordu; liste satırı çizim değil, metin soluklaşarak girmez
+   (`.claude/rules/hareket.md`). Hareket yalnız çubukta (`.bar-fill`). */
+
+/* ---------------------------------------------------- GRUP (10 Kasım)
+   Karışık grafiğin iki yönü — gerekçe ChartThumb.tsx. Başlık satırla aynı
+   ızgarada (26 | ad | sayaç): yön ikonu karoların, ad adların, sayaç
+   değerlerin hattında; yan koldaki Günün Hareketleri'nin grup başlığıyla
+   aynı kalıp (HomeLanes.module.css → `.groupHead`). İkon karesiz, rengi
+   yön. İkinci grup kıl çizgiyle ayrılır.
+   Ölçüldü (348 piksellik kolon, altı kalem 5↑ 1↓, 1440, reduced-motion,
+   iki tema): başlık 28 piksel, satır 42, özne satırı 58, dip 51; panel
+   368 → 466 (beş satır açık, sayaç "5 / 6 Kalem"), doldurucu altıncıyı
+   açınca sayaç kalkar (gerçek sayfa, başlık iki satır: 501 → 543). 390: 385 → 483. Öteki şekiller (3, 5, 8, 12
+   kalem; tek yönlü; pay; öncesi) 236–466; yatay taşma 0, kutusundan taşan
+   öğe 0 (390 / 768 / 1024 / 1440). */
+.thumbGroup + .thumbGroup, div + .thumbGroup, .thumbGroup + div { margin-top: 6px; }
+.thumbGroup + .thumbGroup { padding-top: 6px; border-top: 1px solid var(--line-soft); margin-inline: calc(var(--pad) * -1); padding-inline: var(--pad); }
+.groupHead {
+  display: grid;
+  grid-template-columns: 26px minmax(0, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  min-height: 28px;
+  margin: 0;
+}
+.groupIcon { display: grid; place-items: center; color: var(--up); }
+.groupIcon[data-tone="down"] { color: var(--down); }
+.groupLabel { color: var(--text-strong); font-size: var(--text-tiny); font-weight: 700; line-height: 1.3; }
+.groupCount { color: var(--text-muted); font-size: var(--text-tiny); line-height: 1.3; white-space: nowrap; }
 .thumbRow {
   display: grid;
   grid-template-columns: 26px minmax(0, 1fr) auto;
@@ -36,6 +69,15 @@
 .thumbRow:not([data-bar]) { padding-block: 4px; }
 .thumbRow[data-bare] { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name value" "lane lane"; }
 @media (min-width: 640px) { .thumbRow { padding-inline: 20px; } }
+/* ÖZNE (10 Kasım): bir yanda tek kalan kalem. Yönün yıkama tonu kenardan
+   kenara (panonun vurgulu kartıyla aynı ton, ChartBoard.module.css →
+   `.tile[data-emph]`), adının üstünde yön renginde küçük etiket. */
+.thumbRow[data-subject="down"] { background: var(--down-wash); }
+.thumbRow[data-subject="up"] { background: var(--up-wash); }
+.thumbRole { display: block; margin-bottom: 1px; color: var(--up); font-size: var(--text-nano); font-weight: 700; line-height: 1.25; letter-spacing: 0; }
+.thumbRole[data-tone="down"] { color: var(--down); }
+/* Değer adın hattında (etiketin değil): iki satırlık ad hücresinin dibine. */
+.thumbRow[data-subject] > .thumbValue { align-self: end; }
 a.thumbRow:hover { background: var(--primary-tint); }
 a.thumbRow:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; }
 .thumbMark { grid-area: mark; display: grid; place-items: center; width: 26px; height: 26px; }
@@ -78,22 +120,43 @@ a.thumbRow:focus-visible { outline: 2px solid var(--line-focus); outline-offset:
 .bar[data-from="right"]::after { right: auto; left: 0; }
 /* İki yönlü küçük hâlde sıfır çizgisi (25 Ekim): kulvar `overflow: hidden`
    olduğu için çizgi kulvarın içinde, çubuğun üstünde. */
-.lane[data-zero]::after { content: ""; position: absolute; inset-block: 0; left: var(--zero); width: 1.5px; translate: -50% 0; background: var(--line-strong); }
+.lane[data-zero]::after { content: ""; position: absolute; inset-block: -3px; left: var(--zero); width: 1.5px; translate: -50% 0; background: var(--line-strong); }
+/* 10 Kasım: sıfır çizgisi kulvardan 3'er piksel taşar (kulvarın içindeydi)
+   — satırlar gruplanınca çizgi bütün satırlarda aynı x'te bir EKSEN olarak
+   okunsun; ölçü yan koldaki şeritlerin sıfır çizgisiyle aynı
+   (HomeLanes.module.css → `.track::after`). */
 /* Pay şeridi tek yığın; dilimler arasında 2 piksel zemin (ArticleBody `pay`).
    10 → 8 piksel (6 Kasım): sitenin ince grafik dili. */
-.shareStrip { display: flex; gap: 2px; height: 8px; border-radius: 999px; overflow: hidden; }
+.shareStrip { display: flex; gap: 2px; height: 8px; margin-bottom: 10px; border-radius: 999px; overflow: hidden; }
 .shareStrip > span { display: block; height: 100%; }
 /* `oncesi` değişimi: listenin altında hairline'la ayrılmış künye satırı. */
-.thumbFoot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; padding-top: 8px; border-top: 1px solid var(--line-soft); font-size: var(--text-tiny); color: var(--text-muted); }
-/* Katlanan satırların bağlantısı adın hizasında (16 + 26 + 10 = 52). */
-.moreRow { display: flex; padding: 4px 16px 4px 52px; }
-@media (min-width: 640px) { .moreRow { padding-inline: 56px 20px; } }
-.more { display: inline-flex; align-items: center; gap: 5px; min-height: 32px; font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); transition: color 180ms var(--ease-brand); }
-.more:hover { color: var(--primary); }
-.more:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 4px; }
-/* Yalnız opaklık (10 Kasım): satırlar 4 piksel kayarak geliyordu
-   (soluklaş-ve-kay). */
-@keyframes thumb-in { from { opacity: 0; } }
+.thumbFoot { display: flex; align-items: baseline; justify-content: space-between; gap: 12px; margin-top: 8px; padding-top: 8px; border-top: 1px solid var(--line-soft); font-size: var(--text-tiny); color: var(--text-muted); }
+/* ---------------------------------------------------------- DİP (10 Kasım)
+   Listenin altında kıl çizgi, solda sayaç, sağda grafiğin sayfasına giden
+   tek buton (`ButtonLink ghost sm`: sitenin butonu, 32 piksel; telefonda
+   dokunma alanı 44, `.tap-44`). Ortadaki "N Kalem Daha" bağlantısının yerini
+   aldı — gerekçe ChartThumb.tsx.
+   SAYAÇ YALNIZ EKSİK VARKEN: gizli satır (`li[hidden]`) ya da hiç
+   basılmamış kalem (`data-cut`) varsa görünür; `FillColumn` hepsini açınca
+   kendiliğinden kalkar. `:has()` burada kökte değil panelin kendi kabında
+   (kural yalnız `html:has()` için; kap on iki satır). Görünen sayı CSS
+   sayacından: doldurucu satır açtıkça artar, metinle çelişemez. */
+.thumbEnd {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin: 8px calc(var(--pad) * -1) 0;
+  padding: 10px var(--pad) 4px;
+  border-top: 1px solid var(--line-soft);
+}
+.thumbFoot + .thumbEnd { margin-top: 8px; }
+.thumbCount { display: none; color: var(--text-muted); font-size: var(--text-tiny); line-height: 1.3; white-space: nowrap; }
+.thumb[data-cut] .thumbCount,
+.thumb:has(li[hidden]) .thumbCount { display: inline; }
+.thumbCount > i { font-style: normal; color: var(--text-body); font-weight: 600; }
+.thumbCount > i::before { content: counter(thumb-rows); }
+.thumbOpen { margin-left: auto; }
 
 /* ---------------------------------------------------------------- ARŞİV
    Izgara: 390'da tek sütun, 768'de iki, 1280'de üç. Kart tıklanabilir
@@ -169,6 +232,8 @@ a.stepBtn:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 
    kenardan kenara ışıklansın diye negatif payla taşar (`.thumbList`).
    Alt pay 16 → 8 (6 Kasım): son satırın kendi 7 piksellik dolgusu var. */
 .homeBody { display: flex; flex-direction: column; gap: 12px; padding: 0 16px 8px; }
+/* 10 Kasım: alt pay dipteki butonun altında (8 / 10 piksel + dibin kendi
+   4'ü): buton ile panel kenarı arası başlığın üst payına yakın (14). */
 @media (min-width: 640px) { .homeBody { padding: 0 20px 10px; } }
 .homeHead { display: flex; flex-direction: column; gap: 3px; }
 .homeTitle { font-size: var(--text-read); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; color: var(--text-strong); transition: color 180ms var(--ease-brand); }
@@ -178,6 +243,6 @@ a.stepBtn:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 
 /* Eğri her geçişte açıkça `--ease-brand` (25 Ekim düzeltmesi: üç geçiş
    eğrisizdi); hareketi azaltan okuyucuda renk değişimi anında. */
 @media (prefers-reduced-motion: reduce) {
-  .card, .navLink, .homeTitle, .stepBtn, .toolBtn, .openLink, .thumbRow, .more { transition: none; }
-  .thumbList > li, .bar { animation: none; }
+  .card, .navLink, .homeTitle, .stepBtn, .toolBtn, .openLink, .thumbRow { transition: none; }
+  .bar { animation: none; }
 }

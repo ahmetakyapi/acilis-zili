@@ -47,11 +47,15 @@ export async function DailyChartPanel({ locale, t, nowMs }: { locale: Locale; t:
  * `SessionAgeTag` Son Seansın Silueti'nde kalıyor — orada başlık günü
  * söylemiyor.
  *
+ * 10 Kasım: gövdenin dibinde grafiğin sayfasına giden buton ve (satır
+ * eksikse) sayaç; karışık grafik iki grup — gerekçe `ChartThumb.tsx`.
+ * Kart dışa açık: önizleme rotası sahte kayıtla ölçebilsin.
+ *
  * Grafik başlığının altında bloğun etiketi ("Nasdaq 100'ün En Çok
  * Düşenleri, Günlük Değişim %"): satırların neyi ölçtüğünü söyleyen tek
  * yer (sayfada `caption`).
  */
-function DailyChartCard({
+export function DailyChartCard({
   chart,
   logos,
   locale,

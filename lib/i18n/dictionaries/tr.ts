@@ -2685,7 +2685,7 @@ const tr = {
     boardMedian: "Medyan",
     boardKeyMember: "Üye",
     boardKeyBench: "Ölçüt Fonu",
-    boardNote: "Bütün şeritler aynı ölçekte; ölçeği aşan üye şeridin ucunda durur.",
+    boardNote: "Şerit sıfırdan temanın medyanına uzanır; bütün şeritler aynı ölçekte.",
     gapLabel: "Aradaki Fark",
     gapPoints: "{points} Puan",
     largest: "En Büyük Üye",

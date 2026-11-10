@@ -5,6 +5,7 @@ import { LogoTile, Panel, PanelHeader, Skeleton } from "@/components/ui/primitiv
 import { themeDek, themeTitle } from "@/content/themes";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { ThemeBoard as ThemeBoardData, ThemeCard } from "@/lib/theme-board";
+import { barScale } from "@/lib/theme-view";
 import { cn, directionOf, directionText, formatPercent, NO_VALUE } from "@/lib/utils";
 import { RollingFigure } from "./RollingFigure";
 import styles from "./ThemeBoard.module.css";
@@ -73,11 +74,18 @@ export function ThemeBoard({
         return (b.median ?? 0) - (a.median ?? 0);
       })
     : board.cards;
-  const scale = board.scale;
+  const anyBenchValue = (card: ThemeCard) => benches[card.theme.slug];
+  /* Ölçek medyanlardan (gerekçe lib/theme-view.ts → `barScale`). */
+  const scale = board.scale === null
+    ? null
+    : barScale(board.cards.filter(inScale).flatMap((card) => {
+        const bench = anyBenchValue(card);
+        return bench === undefined ? [card.median!] : [card.median!, bench];
+      }));
   const pre = board.phase === "pre-market";
   const closed = board.phase === "lastClose";
-  const clippedLow = scale !== null && sorted.some((card) => inScale(card) && card.points.some((p) => p.change < -scale));
-  const clippedHigh = scale !== null && sorted.some((card) => inScale(card) && card.points.some((p) => p.change > scale));
+  const clippedLow = false;
+  const clippedHigh = false;
   const anyBench = sorted.some((card) => inScale(card) && benches[card.theme.slug] !== undefined);
 
   return (
@@ -191,8 +199,7 @@ export function ThemeBoard({
       </div>
       {/* Künye panelin İÇİNDE, hairline ile (ekran düzeni 6): şeridin üç imi. */}
       <p className={styles.legend}>
-        <span><i className={styles.keyTick} aria-hidden />{t.themes.boardKeyMember}</span>
-        <span><i className={styles.keyKnob} aria-hidden />{t.themes.benchMedian}</span>
+        <span><i className={styles.keyBar} aria-hidden />{t.themes.benchMedian}</span>
         {anyBench && <span><i className={styles.keyBench} aria-hidden />{t.themes.boardKeyBench}</span>}
         <span className={styles.legendNote}>{t.themes.boardNote}</span>
       </p>

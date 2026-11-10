@@ -96,9 +96,8 @@
 .legend { display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin:0; padding:11px 20px 12px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; line-height:1.5; }
 .legend > span { display:inline-flex; align-items:center; gap:7px; }
 .legendNote { flex:1 1 260px; }
-.keyTick { display:block; width:2px; height:12px; border-radius:1px; background:var(--flat); }
-.keyKnob { display:block; width:9px; height:9px; border-radius:50%; background:var(--text-strong); }
-.keyBench { display:block; width:8px; height:8px; margin-inline:1px; border:1.5px solid var(--text-strong); border-radius:2px; rotate:45deg; }
+.keyBar { display:block; width:22px; height:8px; border-radius:0 999px 999px 0; background:var(--up); }
+.keyBench { display:block; width:2px; height:14px; border-radius:1px; background:var(--text-strong); }
 
 @media(prefers-reduced-motion:reduce) { .row::before, .name, .arrow { transition:none; } .row:hover .arrow { transform:none; } }
 

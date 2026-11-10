@@ -1,7 +1,7 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import { median, type MoveSet } from "@/lib/theme-stats";
-import { spreadScale } from "@/lib/theme-view";
+import { barScale } from "@/lib/theme-view";
 import type { ThemeRow } from "@/lib/themes-data";
 import { cn, directionOf, directionText, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./ThemeDetail.module.css";
@@ -72,7 +72,7 @@ export function ThemeReading({
     mid !== null && benchmark !== null && benchmark.changePct !== null && themeSession === benchSession;
   const diff = comparable ? mid - benchmark.changePct! : null;
   const scale = moves && moves.values.length > 0
-    ? spreadScale([...moves.values, ...(comparable ? [benchmark.changePct!] : [])])
+    ? barScale([...(mid === null ? [] : [mid]), ...(comparable ? [benchmark.changePct!] : [])])
     : null;
   const points = data && moves
     ? data.rows.flatMap((row, i) => (moves.included[i] ? [{ symbol: row.symbol, change: row.changePct! }] : []))
@@ -80,8 +80,8 @@ export function ThemeReading({
   const up = moves ? moves.values.filter((value) => value > 0).length : 0;
   const down = moves ? moves.values.filter((value) => value < 0).length : 0;
   const total = moves?.values.length ?? 0;
-  const clippedLow = scale !== null && points.some((point) => point.change < -scale);
-  const clippedHigh = scale !== null && points.some((point) => point.change > scale);
+  const clippedLow = false;
+  const clippedHigh = false;
 
   return (
     <div className={styles.reading} aria-busy={data === null || undefined}>

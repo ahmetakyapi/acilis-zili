@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { heatOf, splitSmall, spreadPosition, spreadScale, squarify } from "../lib/theme-view";
+import { heatOf, splitSmall, spreadPosition, spreadScale, squarify, barScale } from "../lib/theme-view";
 
 /**
  * Tema ekranlarının çizim hesapları (gerekçe `lib/theme-view.ts`).
@@ -73,4 +73,13 @@ test("küçük üyeler tek karoda toplanır, tek küçük üye gruplanmaz", () =
 
   assert.deepEqual(splitSmall([0, 5, 5], 0.4), { kept: [1, 2], grouped: [] });
   assert.deepEqual(splitSmall([], 0.1), { kept: [], grouped: [] });
+});
+
+test("barScale: en büyük mutlak medyanın oturduğu ilk basamak; tabanı ±%0,5", () => {
+  assert.equal(barScale([]), 0.5);
+  assert.equal(barScale([0.18, -0.35, 0.47]), 0.5);
+  assert.equal(barScale([0.83, -0.35]), 1);
+  assert.equal(barScale([-1.4, 0.2]), 2);
+  assert.equal(barScale([6.2]), 8);
+  assert.equal(barScale([120]), 50);
 });

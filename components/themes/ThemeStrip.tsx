@@ -1,4 +1,3 @@
-import type { CSSProperties } from "react";
 import { spreadPosition } from "@/lib/theme-view";
 import { cn } from "@/lib/utils";
 import styles from "./ThemeStrip.module.css";
@@ -27,7 +26,6 @@ import styles from "./ThemeStrip.module.css";
 export type StripPoint = { symbol: string; change: number };
 
 export function ThemeStrip({
-  points,
   median,
   bench,
   scale,
@@ -49,28 +47,28 @@ export function ThemeStrip({
       <span className={styles.lane} aria-hidden />
       {scale !== null && (
         <>
-          <span className={styles.ticks} aria-hidden>
-            {points.map((point) => (
-              <i
-                key={point.symbol}
-                data-tone={point.change > 0 ? "up" : point.change < 0 ? "down" : "flat"}
-                style={{ left: `${at(point.change).toFixed(2)}%` }}
-              />
-            ))}
-          </span>
-          {bench !== undefined && (
-            <i
-              className={styles.bench}
-              aria-hidden
-              style={{ left: `${at(bench).toFixed(2)}%`, "--d": (50 - at(bench)).toFixed(2) } as CSSProperties}
-            />
-          )}
+          {/* KALIN YATAY ŞERİT (10 Kasım, sahibinin itirazı: "böyle nokta
+              nokta ne anlatıyor anlamıyorum; çizgi grafiği yerine yatayda uzun
+              kalın çizgi seviyorum"). İlk hâlde her üye bir çentik, medyan
+              düğmeli bir çizgi, ölçüt içi boş bir kareydi: üç ayrı im aynı
+              şeritte ve okur neye bakacağını bilmiyordu. Şimdi şerit TEK şey
+              söylüyor: sıfırdan temanın medyanına uzanan dolu çubuk, yönü
+              renginde. Üyelerin dağılımı tabloda ve haritada; burada yok.
+              Ölçüt fonu ince, koyu bir çentik olarak kaldı (dışarıdan kıyas). */}
           {median !== null && (
             <i
-              className={styles.knob}
+              className={cn("bar-fill", styles.fill)}
               aria-hidden
-              style={{ left: `${at(median).toFixed(2)}%`, "--d": (50 - at(median)).toFixed(2) } as CSSProperties}
+              data-tone={median > 0 ? "up" : median < 0 ? "down" : "flat"}
+              style={
+                median >= 0
+                  ? { left: "50%", width: `${Math.max(at(median) - 50, 0.6).toFixed(2)}%` }
+                  : { right: "50%", width: `${Math.max(50 - at(median), 0.6).toFixed(2)}%` }
+              }
             />
+          )}
+          {bench !== undefined && (
+            <i className={styles.bench} aria-hidden style={{ left: `${at(bench).toFixed(2)}%` }} />
           )}
         </>
       )}

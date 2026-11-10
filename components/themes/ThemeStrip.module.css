@@ -10,27 +10,10 @@
 .strip { position:relative; display:block; height:var(--strip-h,32px); container-type:inline-size; }
 .strip::before { content:""; position:absolute; left:50%; top:calc(var(--axis-over,0px) * -1); bottom:calc(var(--axis-over,0px) * -1); width:1px; margin-left:-.5px; background:var(--line-strong); }
 .lane { position:absolute; left:0; right:0; top:calc(50% - 2.5px); height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
-.ticks { position:absolute; inset:0; }
-.ticks > i { position:absolute; top:calc(50% - var(--tick-h,14px) / 2); height:var(--tick-h,14px); width:2px; margin-left:-1px; border-radius:1px; background:var(--flat); }
-.ticks > i[data-tone="up"] { background:var(--up); }
-.ticks > i[data-tone="down"] { background:var(--down); }
-/* Medyan: tepesinde düğme taşıyan 3 piksellik çizgi; çentik kalabalığından
-   düğmeyle ayrılır (29 Eylül kararı, `.card .tickMedian` — aynı im). */
-.knob { position:absolute; top:calc(50% - var(--tick-h,14px) / 2 - 2px); bottom:calc(50% - var(--tick-h,14px) / 2 - 2px); width:3px; margin-left:-1.5px; border-radius:2px; background:var(--text-strong); }
-.knob::before { content:""; position:absolute; left:50%; top:-5px; width:9px; height:9px; margin-left:-4.5px; border-radius:50%; background:var(--text-strong); box-shadow:0 0 0 2px var(--strip-surface, var(--premium-surface)); }
-/* Ölçüt fonu: içi boş kare im (45° dönük). Dolu düğme temanın kendisi,
-   boş im dışarıdan bir kıyas. */
-.bench { position:absolute; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border:1.5px solid var(--text-strong); border-radius:2px; background:var(--strip-surface, var(--premium-surface)); rotate:45deg; }
-
-/* Hareket: şerit sıfırdan iki yana açılır, medyan ve ölçüt yerine kayar.
-   Neden: çentiklerin sıfırdan dağıldığı görülür; "yayılım" çizimin kendisi
-   olur. Kademe `--step`, tavan 5 adım = 200 ms: son şerit 200 + `--draw`
-   (700) = 900 ms'de biter (açılış koreografisi tavanı; 10 adımla 1.060
-   ölçüldü). Ekranın altındaki şerit çağıranın `data-draw` kapısıyla son
-   karede bekler (globals.css). */
-@media(prefers-reduced-motion:no-preference) {
-  .ticks { animation:strip-open var(--draw) var(--ease-brand) both; animation-delay:calc(min(var(--i, 0), 5) * var(--step)); }
-  .knob, .bench { animation:strip-travel var(--draw) var(--ease-brand) both; animation-delay:calc(min(var(--i, 0), 5) * var(--step)); }
-}
-@keyframes strip-open { from { clip-path:inset(0 50%); } to { clip-path:inset(0 -4px); } }
-@keyframes strip-travel { from { translate:calc(var(--d, 0) * 1cqw) 0; } }
+/* Dolu çubuk: kulvardan KALIN (8 piksel; kulvar 5). Sahibinin tercihi
+   kalın yatay şerit (10 Kasım); dış ucu yuvarlak, sıfıra dayanan ucu düz. */
+.fill { position:absolute; top:calc(50% - var(--bar-h,8px) / 2); height:var(--bar-h,8px); border-radius:0 999px 999px 0; background:var(--flat); transform-origin:left center; animation-delay:calc(min(var(--i, 0), 5) * var(--step)); }
+.fill[data-tone="up"] { background:var(--up); }
+.fill[data-tone="down"] { background:var(--down); border-radius:999px 0 0 999px; transform-origin:right center; }
+/* Ölçüt fonu: ince koyu çentik. */
+.bench { position:absolute; top:calc(50% - 9px); width:2px; height:18px; margin-left:-1px; border-radius:1px; background:var(--text-strong); box-shadow:0 0 0 2px var(--strip-surface, var(--premium-surface)); }

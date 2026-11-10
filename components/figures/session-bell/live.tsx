@@ -82,6 +82,16 @@ export type BellLabels = {
   previewHeading: string | null;
 };
 
+/** "16:43 TR" → ["16:43", "TR"]: rakam display ölçüde, dilim eki künye. */
+const splitClock = (clock: string): [string, string] => {
+  const at = clock.indexOf(" ");
+  return at === -1 ? [clock, ""] : [clock.slice(0, at), clock.slice(at + 1)];
+};
+
+/** Seansın geçen payı (0–1): şeridin dolgusu. `counts` değilse 0 (önizleme günü). */
+const elapsedShare = (minutes: number, from: number, to: number, counts: boolean) =>
+  counts ? Math.max(0, Math.min(1, (minutes - from) / (to - from))) : 0;
+
 const BellIcon = () => (
   <svg viewBox="0 0 20 20" aria-hidden="true">
     <path d="M10 3a5 5 0 0 0-5 5v3.2L3.6 14h12.8L15 11.2V8a5 5 0 0 0-5-5Zm-2 12.5a2 2 0 0 0 4 0" />
@@ -194,9 +204,12 @@ export function SessionBellLive({
         badge.textContent = text.sessions[kind];
       }
       const [clockA, clockB] = clockOf(minutes, day, text).split(" · ");
+      const [clockTime, clockTag] = splitClock(clockA);
       const a = el.querySelector("[data-clock-a]");
+      const tag = el.querySelector("[data-clock-tag]");
       const b = el.querySelector("[data-clock-b]");
-      if (a) a.textContent = clockA;
+      if (a) a.textContent = clockTime;
+      if (tag) tag.textContent = clockTag;
       if (b) b.textContent = clockB ?? "";
       const count = el.querySelector("[data-count]");
       if (count) {
@@ -229,11 +242,15 @@ export function SessionBellLive({
         for (const seg of segs) {
           const from = Number(seg.dataset.from);
           const to = Number(seg.dataset.to);
-          if (m0 >= from && m0 < to) {
+          /* Şeridin dolan kısmı (10 Kasım): seansın ibrenin geçtiği payı.
+             Önizleme gününde canlı saat o günün çizelgesinde değil; dolgu
+             yalnız gezinirken ve oynatırken yürür (gerekçe bell.css →
+             "Seans çizelgesi"). Yalnız `transform` (scaleX). */
+          seg.style.setProperty("--p", elapsedShare(m0, from, to, exploring || day.tradingToday).toFixed(4));
+          if (out && m0 >= from && m0 < to) {
             const bar = barOf(seg);
             x = bar.left + ((m0 - from) / (to - from)) * bar.width;
             out = false;
-            break;
           }
         }
         if (out && segs.length) {
@@ -242,7 +259,9 @@ export function SessionBellLive({
           x = m0 >= Number(segs[segs.length - 1].dataset.to) && m0 < DAY ? last.left + last.width : first.left;
         }
         marker.style.transform = `translateX(${x.toFixed(1)}px)`;
-        marker.toggleAttribute("data-out", out);
+        /* Önizleme gününde canlı saat o günün çizelgesinde değil: im sönük
+           (10 Kasım; ray dolgusuyla aynı kural). */
+        marker.toggleAttribute("data-out", out || (!exploring && !day.tradingToday));
       }
 
       const playBtn = el.querySelector<HTMLElement>("[data-play]");
@@ -483,8 +502,16 @@ export function SessionBellLive({
         <span className="sb-badge" data-badge="" data-kind={liveSessionAt(nowMinutes, day)}>
           {text.sessions[liveSessionAt(nowMinutes, day)]}
         </span>
+        {/* SAAT BİR GÖSTERGE (10 Kasım). "16:43 TR" tek kalın satırdı (26/800)
+            ve dilim eki rakamla aynı ağırlıkta bağırıyordu. Rakam display
+            ölçüde (panelin en anlamlı değeri: ibrenin gösterdiği saat,
+            gezinirken ve oynatırken akar), ek ve ikinci saat sessiz künye.
+            `paint` üç parçayı ayrı yazar (`splitClock`). */}
         <span className="sb-clock" data-clock="">
-          <b data-clock-a="">{clockOf(nowMinutes, day, text).split(" · ")[0]}</b>
+          <b>
+            <span className="numeral" data-clock-a="">{splitClock(clockOf(nowMinutes, day, text).split(" · ")[0])[0]}</span>
+            <i data-clock-tag="">{splitClock(clockOf(nowMinutes, day, text).split(" · ")[0])[1]}</i>
+          </b>
           <span data-clock-b="">{clockOf(nowMinutes, day, text).split(" · ")[1] ?? ""}</span>
         </span>
         {/* ZİL BİLDİRİMİ BU HAPIN İÇİNDE (25 Ekim). Bildirim sahnenin sol
@@ -505,9 +532,11 @@ export function SessionBellLive({
           </span>
           <span data-toast="" aria-live="polite" />
         </span>
-        {/* Simge 320–379'da tek başına kalıyor: orada rozet ve bu düğme aynı
-            satırda ve yazılı düğme "Akşam Seansı" rozetine biniyordu
-            (237 piksellik satıra 128 + 8 + 114, ölçüldü 25 Ekim). */}
+        {/* Telefonda (≤ 639) yalnız simge: saatin yanında duruyor ve yazılı
+            hâli 30 piksellik saatle aynı satıra sığmıyor (10 Kasım, bell.css).
+            Önce yalnız 320–379'da simgeydi (25 Ekim: yazılı düğme "Akşam
+            Seansı" rozetine biniyordu). Geniş ekranda "Günü Oynat"ın
+            yanında: ikisi saatin taşıyıcı denetimleri. */}
         <button type="button" className="sb-back" onClick={goLive}>
           <svg viewBox="0 0 20 20" aria-hidden="true">
             <path d="M4.2 7.6A6.2 6.2 0 1 1 3.8 11M4 3.6v4h4" />
@@ -564,28 +593,34 @@ export function SessionBellLive({
                 data-from={chip.from}
                 data-to={chip.to}
                 data-active={liveSessionAt(nowMinutes, day) === chip.kind ? "" : undefined}
+                style={{ "--p": elapsedShare(((nowMinutes % DAY) + DAY) % DAY, chip.from, chip.to, day.tradingToday).toFixed(4) } as React.CSSProperties}
                 onClick={() => play(chip.kind, sessionPlan(shown.current, { kind: chip.kind, from: chip.from, to: chip.to }))}
               >
-                <span className="sb-seg-name">
-                  <SessionIcon kind={chip.kind} />
-                  {chip.name}
+                <span className="sb-seg-face">
+                  <span className="sb-seg-name">
+                    <SessionIcon kind={chip.kind} />
+                    {chip.name}
+                  </span>
+                  <span className="sb-seg-time">{chip.tr}</span>
+                  <span className="sb-seg-sub">{chip.ny}</span>
                 </span>
-                <span className="sb-seg-time">{chip.tr}</span>
-                <span className="sb-seg-sub">{chip.ny}</span>
+                {/* Şerit kartın ALTINDA, kart genişliğinde: üç şerit yan yana
+                    günün rayı. İçindeki dolgu seansın geçen payı. */}
                 <span className="sb-seg-bar" aria-hidden="true">
-                  {chip.kind === "regular" ? (
-                    <>
-                      <i className="sb-mark" data-at="open">
-                        <BellIcon />
-                      </i>
-                      <i className="sb-mark" data-at="close">
-                        <BellIcon />
-                      </i>
-                    </>
-                  ) : null}
+                  <i className="sb-seg-fill" />
                 </span>
               </button>
             ))}
+            {/* ZİL İMLERİ İKİ SEANSIN ARASINDA (10 Kasım): zil tam o sınırda
+                çalar. Asıl seansın şeridinin içindeydiler ve şeridin iki
+                ucunu örtüyorlardı; şimdi ön seans | asıl seans ve asıl
+                seans | akşam seansı boşluklarının ortasında. */}
+            <i className="sb-mark" data-at="open" aria-hidden="true">
+              <BellIcon />
+            </i>
+            <i className="sb-mark" data-at="close" aria-hidden="true">
+              <BellIcon />
+            </i>
             <span className="sb-marker" data-marker="" aria-hidden="true" />
           </div>
           <button type="button" className="sb-play" data-play="" onClick={() => play("day", dayPlan(shown.current, day))}>

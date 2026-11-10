@@ -2165,7 +2165,7 @@ const en: typeof tr = {
     boardMedian: "Median",
     boardKeyMember: "Member",
     boardKeyBench: "Benchmark Fund",
-    boardNote: "All strips share one scale; a member beyond it sits at the edge of the strip.",
+    boardNote: "Each bar runs from zero to the theme median; all bars share one scale.",
     gapLabel: "Gap Between Them",
     gapPoints: "{points} Points",
     largest: "Largest Member",

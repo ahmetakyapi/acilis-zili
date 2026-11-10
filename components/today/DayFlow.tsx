@@ -579,7 +579,9 @@ function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, 
     {events.length > 0 ? <>
       {/* Listenin başlığı ekran okuyucuda; görünen sayı başlığın yanındaki hapta. */}
       <h3 className="sr-only">{labels.events}</h3>
-      <ol className={styles.timeline}>
+      {/* `data-draw`: kapalı satırların küçük sapma çizgileri ekrana girince
+          bir kez çizilir (`DrawGate`, `.claude/rules/hareket.md`). */}
+      <ol className={styles.timeline} data-draw>
         {events.map((event, index) => {
           const open = openId === event.id;
           const past = event.timeEt !== null && minutesOf(event.timeEt) <= now;
@@ -591,6 +593,12 @@ function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, 
           const done = DONE.has(status);
           const KindIcon = event.kind === "earnings" ? Buildings : ChartLineUp;
           const deviation = event.kind === "event" && event.actual ? event.deviation : undefined;
+          /* TEK ŞİRKETLİ BİLANÇO (10 Kasım): şirketin sürprizi sapma hapının
+             diliyle (yön oku + söz); "1/1 Beklentiyi Aştı" tek şirkette bir
+             orandı ve ıskalayan şirkette "0/1 Beklentiyi Aştı" diyordu. */
+          const surprise = event.kind === "earnings" ? member?.epsSurprise : undefined;
+          const surpriseDir = surprise ? (surprise.direction === "beat" ? "above" : surprise.direction === "miss" ? "below" : "inline") : undefined;
+          const pendingEps = event.kind === "earnings" && member && !member.eps ? member.epsEstimate : undefined;
           return <Fragment key={event.id}>
             {index === dividerAt && nowMark}
             {/* SATIRIN HİYERARŞİSİ (6 Kasım, sahibinin isteği: "kolay okuyup
@@ -601,11 +609,20 @@ function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, 
                 söyler: geçmiş sakin dolu + onay işareti, sıradaki çerçeveli,
                 açık olan marka mavisi. Satırın TAMAMI tek buton (saat ve
                 düğüm dahil); açık satır gömülü tonda bir kart. */}
-            <li className={styles.tlRow} data-event-id={event.id} data-open={open || undefined} data-past={past || undefined} data-kind={event.kind} data-status={status}>
+            <li className={styles.tlRow} style={{ "--i": Math.min(index, 10) } as CSSProperties} data-event-id={event.id} data-open={open || undefined} data-past={past || undefined} data-kind={event.kind} data-status={status}>
               <button type="button" className={styles.tlHead} onClick={() => toggle(event.id)} aria-expanded={open} aria-controls={bodyId}>
                 <span className={styles.tlTime} data-unknown={!event.timeEt}><b className="numeral" aria-label={event.timeEt ? undefined : labels.timeUnknown}>{event.timeEt ? timeOf(event) : NO_VALUE}</b>{event.timeEt && <small>{shown.tags.primary}</small>}</span>
-                <span className={styles.tlNode} aria-hidden="true">
-                  <KindIcon size={16} weight={open ? "bold" : "regular"} />
+                {/* DÜĞÜM TÜRÜ BİÇİMİYLE AYIRIR (10 Kasım). Veri olayı daire +
+                    çizgi ikonu; bilanço KÖŞELİ karo: tek şirketse şirketin
+                    logosu (omurga şirketlerin logolarıyla okunur, telefonda
+                    logo için başlığın altında açılan ayrı satır kalkar), çok
+                    şirketse binalar ikonu ve logolar sağda. Önce ikisi de
+                    aynı dairede 16 piksellik birer ikondu; logo satırın en
+                    sağında, okun yanında tek başına duruyordu. */}
+                <span className={styles.tlNode} data-shape={event.kind === "earnings" ? "tile" : undefined} data-logo={event.kind === "earnings" && member ? true : undefined} aria-hidden="true">
+                  {event.kind === "earnings" && member
+                    ? <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="sm" className={styles.tlNodeLogo} />
+                    : <KindIcon size={16} weight={open ? "bold" : "regular"} />}
                   {done && <i className={styles.tlTick}><Check size={8} weight="bold" /></i>}
                 </span>
                 <span className={styles.tlSummary}>
@@ -626,7 +643,27 @@ function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, 
                     okunmadığını söyledi — hap tek satıra sığıyor, satır
                     uzamıyor (ölçüm CSS'te). */}
                 <span className={styles.tlAside}>
-                  {event.kind === "earnings" && event.members?.length ? <MemberMarks members={event.members} labels={labels} /> : null}
+                  {event.kind === "earnings" && event.members && event.members.length > 1 ? <MemberMarks members={event.members} labels={labels} /> : null}
+                  {surprise && surpriseDir && (
+                    <span className={styles.devPill} data-dir={surpriseDir}>
+                      {surpriseDir === "above" ? <ArrowUp size={12} weight="bold" aria-hidden /> : surpriseDir === "below" ? <ArrowDown size={12} weight="bold" aria-hidden /> : <Equals size={12} weight="bold" aria-hidden />}
+                      {labels[surprise.direction]}
+                      {surprise.pct && <span className="numeral">{surprise.pct}</span>}
+                    </span>
+                  )}
+                  {/* BEKLENTİ ↔ GERÇEKLEŞEN, KAPALI SATIRDA ÇİZGİYLE (10 Kasım).
+                      Hap yönü sözle söylüyor; yanındaki küçük sapma çizgisi
+                      (takvim kartının `DeviationLine`ı, küçük hâl: dik çizgi
+                      beklenti, nokta gerçekleşen, çentik önceki) ne KADAR
+                      saptığını gösteriyor. Yalnız geniş ekranda ve satır
+                      kapalıyken: açık satırın gövdesinde büyüğü var, telefonda
+                      değer ile hap satırı zaten dolu. Açık satırda
+                      `visibility` ile saklanır (yeri kalır: hap ve değer
+                      satır açılırken kaymaz; `display` ile saklansaydı her
+                      kapanışta noktanın animasyonu baştan oynardı). */}
+                  {deviation && lineLabels && (
+                    <DeviationLine deviation={deviation} below={lineLabels.sideBelow} above={lineLabels.sideAbove} baseLabel={deviation.base === "forecast" ? labels.forecast : labels.previous} motion={false} compact className={styles.tlDev} />
+                  )}
                   {deviation && (
                     <span className={styles.devPill} data-dir={deviation.direction}>
                       {deviation.direction === "above" ? <ArrowUp size={12} weight="bold" aria-hidden /> : deviation.direction === "below" ? <ArrowDown size={12} weight="bold" aria-hidden /> : <Equals size={12} weight="bold" aria-hidden />}
@@ -634,9 +671,13 @@ function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, 
                     </span>
                   )}
                   {value && valueLabel ? (
-                    <span className={styles.tlValue} data-with-pill={deviation ? true : undefined}><small>{valueLabel}</small><b className="numeral">{value}</b></span>
+                    <span className={styles.tlValue} data-with-pill={deviation || surprise ? true : undefined}><small>{valueLabel}</small><b className="numeral">{value}</b></span>
                   ) : event.kind === "event" && event.forecast ? (
                     <span className={styles.tlValue} data-pending><small>{labels.forecast}</small><b className="numeral">{event.forecast}</b></span>
+                  ) : pendingEps ? (
+                    /* Açıklanmamış tek şirketli bilanço da neyi beklediğini
+                       söyler (veri satırının "Beklenti 224 Bin"i gibi). */
+                    <span className={styles.tlValue} data-pending><small>{labels.epsEstimate}</small><b className="numeral">{pendingEps}</b></span>
                   ) : null}
                 </span>
                 <CaretDown size={15} weight="bold" aria-hidden className={styles.tlCaret} />
@@ -704,10 +745,10 @@ function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, 
     </> : shown.hiddenEarnings > 0 ? (
       /* Akış boş ama gün boş DEĞİL: eşiğin altındaki bilançolar var. "Açıklama
          yok" demek aynı sayfadaki bilanço paneliyle çelişirdi. */
-      <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{labels.emptyMajorTitle}</h3><p>{(viewingToday ? labels.emptyMajorHint : labels.emptyMajorDayHint).replace("{count}", String(shown.hiddenEarnings))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link></p></div></div>
+      <div className={styles.empty}><span><CalendarBlank size={22} weight="duotone" /></span><div><h3>{labels.emptyMajorTitle}</h3><p>{(viewingToday ? labels.emptyMajorHint : labels.emptyMajorDayHint).replace("{count}", String(shown.hiddenEarnings))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link></p></div></div>
     ) : viewingToday && preview && preview.events.length > 0 ? (
       <DayPreview preview={preview} locale={locale} labels={labels} onOpen={() => goTo(preview.dateEt)} />
-    ) : <div className={styles.empty}><span><CalendarBlank size={32} weight="duotone" /></span><div><h3>{viewingToday ? labels.emptyTitle : labels.emptyDayTitle}</h3><p>{viewingToday ? labels.emptyHint : labels.emptyDayHint}</p></div></div>}
+    ) : <div className={styles.empty}><span><CalendarBlank size={22} weight="duotone" /></span><div><h3>{viewingToday ? labels.emptyTitle : labels.emptyDayTitle}</h3><p>{viewingToday ? labels.emptyHint : labels.emptyDayHint}</p></div></div>}
     </div>
     {viewingToday && snapshot.sourceDelayed && <p className={styles.sourceDelay}>{labels.sourceDelayed}</p>}
     <span className="sr-only" role="status" aria-live="polite">{announcement}</span>

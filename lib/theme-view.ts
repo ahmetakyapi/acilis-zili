@@ -49,6 +49,20 @@ export function spreadScale(values: readonly number[]): number {
   return SCALE_STEPS.find((step) => peak <= step) ?? SCALE_STEPS[SCALE_STEPS.length - 1];
 }
 
+/**
+ * MEDYAN ÇUBUĞUNUN ÖLÇEĞİ (10 Kasım). Şerit artık üye çentiklerini değil
+ * yalnız temanın medyanını (ve ölçüt fonunu) çiziyor; üyelerin %90'lık
+ * dilimine göre kurulan `spreadScale` (en az ±%2) medyan çubuklarını kısa
+ * bırakırdı (±%0,8'lik medyan kulvarın beşte ikisi). Ölçek en büyük mutlak
+ * değerin oturduğu ilk basamak; en küçük basamak ±%0,5.
+ */
+const BAR_STEPS = [0.5, 1, 2, 3, 5, 8, 10, 15, 20, 30, 50] as const;
+
+export function barScale(values: readonly number[]): number {
+  const peak = values.reduce((max, value) => Math.max(max, Math.abs(value)), 0);
+  return BAR_STEPS.find((step) => peak <= step) ?? BAR_STEPS[BAR_STEPS.length - 1];
+}
+
 /** Değerin şeritteki yeri, 0-100 (50 sıfır). Tavanı aşan uca yapışır. */
 export function spreadPosition(value: number, scale: number): number {
   const clamped = Math.max(-scale, Math.min(scale, value));

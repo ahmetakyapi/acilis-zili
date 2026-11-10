@@ -41,6 +41,18 @@ export const dailyChartTr = {
     weekday: "{day} Grafiği",
     earlier: "Son Seansın Grafiği",
   },
+  /* Ana sayfa panelinin gövdesi (10 Kasım; gerekçe `ChartThumb.tsx`):
+     karışık grafiğin iki grubu, tek kalan kalemin etiketi, dipteki sayaç
+     ve grafiğin sayfasına giden buton. `{shown}` CSS sayacıyla dolar. */
+  home: {
+    up: "Yükselenler",
+    down: "Düşenler",
+    groupCount: "{n} Kalem",
+    onlyUp: "Tek Yükselen",
+    onlyDown: "Tek Düşen",
+    count: "{shown} / {total} Kalem",
+    open: "Grafiği İncele",
+  },
   /* Bülten sayısının altındaki bağlantı. */
   briefLink: "O Günün Grafiği",
   menuHint: "Her Gün Tek Grafik",
@@ -84,8 +96,6 @@ export const dailyChartTr = {
     marketNote: "{adv} Yükseldi, {dec} Düştü",
     scaleTitle: "Tek Ölçek",
     scaleNote: "Her karttaki çubuk sıfırdan aynı ölçekte uzar.",
-    /* Ana sayfa küçük hâlinde katlanan satırlar. */
-    moreRows: "{n} Kalem Daha",
     shiftChange: "Değişim",
     landscapeShort: "Yatay",
     portraitShort: "Dikey",
@@ -148,6 +158,15 @@ export const dailyChartEn: typeof dailyChartTr = {
     weekday: "{day}'s Chart",
     earlier: "Last Session's Chart",
   },
+  home: {
+    up: "Gainers",
+    down: "Decliners",
+    groupCount: "{n} Items",
+    onlyUp: "The Only Gainer",
+    onlyDown: "The Only Decliner",
+    count: "{shown} / {total} Items",
+    open: "View the Chart",
+  },
   briefLink: "That Day's Chart",
   menuHint: "One Chart Every Day",
   landscapeAlt: "{title} · {date} · Chart of the Day",
@@ -184,7 +203,6 @@ export const dailyChartEn: typeof dailyChartTr = {
     marketNote: "{adv} Advanced, {dec} Declined",
     scaleTitle: "One Scale",
     scaleNote: "Every card's bar grows from zero on the same scale.",
-    moreRows: "{n} More",
     shiftChange: "Change",
     landscapeShort: "Landscape",
     portraitShort: "Portrait",
