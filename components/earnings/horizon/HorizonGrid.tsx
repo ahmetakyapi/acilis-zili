@@ -4,6 +4,7 @@ import { Suspense, use, useLayoutEffect, useRef, useState, type CSSProperties } 
 import { ArrowUpRight } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { buttonClass, LogoTile, TimingChip, type TimingTone } from "@/components/ui/primitives";
+import { KarneStrip } from "@/components/earnings/KarneStrip";
 import { karneSlots, type KarneMark, type KarneSlot, type TileTier } from "@/lib/earnings-horizon";
 import type { WeekLane } from "@/lib/earnings-week";
 import { NO_VALUE } from "@/lib/utils";
@@ -98,6 +99,12 @@ export type HorizonDay = {
   density: number;
   /** Haftanın en kalabalık günü (`peakDay`): başlıkta "Zirve" rozeti. */
   peak: boolean;
+  /** Geniş ekranda günün karo sütunu (`horizonShape`); 0 = karosuz gün,
+      ince şerit. */
+  columns: number;
+  /** Yarım günde kapanış sonrası penceresinin o güne özgü saati ("~21:00");
+      öteki günlerde null (eksendeki saat geçerli). */
+  amcNote: string | null;
   lanes: Record<WeekLane, HorizonTile[]>;
   /** Hücreye sığmayan şirket sayısı (`capCell`). */
   more: Record<WeekLane, number>;
@@ -138,6 +145,7 @@ type Labels = {
   hint: string;
   pickDay: string;
   more: string;
+  dayList: string;
 };
 
 type Karne = Promise<Record<string, KarneMark[]>>;
@@ -164,6 +172,7 @@ export function HorizonGrid({
   initialDay,
   labels,
   monday,
+  rows = 1,
 }: {
   /** Ufkun haftası — geçişin yönü bundan (bkz. `lastMonday`). */
   monday?: string;
@@ -174,6 +183,8 @@ export function HorizonGrid({
   /** Telefonda açık gün — cümlenin andığı zirve günü. */
   initialDay: string | null;
   labels: Labels;
+  /** Hücredeki karo sırası (`horizonShape`). */
+  rows?: number;
 }) {
   const [selected, setSelected] = useState<string | null>(initial);
   const [activeDay, setActiveDay] = useState<string | null>(initialDay ?? days[0]?.date ?? null);
@@ -201,6 +212,63 @@ export function HorizonGrid({
     if (first) setSelected(first.symbol);
   };
 
+  /* IZGARA VERİNİN ŞEKLİNDE (10 Kasım 2026, sahibinin sözü: "boş günler
+     olunca kötü duruyor; orayı çok güzel ele almak lazım, her şekle uygun
+     olmalı"). Beş eşit gün × üç sabit satır vardı: karosuz cuma 229×395
+     piksellik gri alan, on karolu pazartesi iki sıraya sıkışık, boş dilim
+     "Yok" yazılı kutu. Şimdi (≥1180):
+       - Sütun HATLARI karo birimi: gün, `columns` kadar birim kaplar
+         (`horizonShape`), gün kutusu ve hücreleri bu hatları `subgrid` ile
+         paylaşır, yani her karo aynı genişlikte ve seyrek haftada birim
+         kendiliğinden genişler (karo zengin karta döner, CSS kap sorgusu).
+       - Karosuz gün dar, çerçeveli bir ŞERİT: gün, ölçer, sayı. Tam tatil
+         taralı. Hafta beş günüyle yerinde, yer kaplamadan.
+       - Haftada hiç dolmayan pencerenin satırı yok (sunucu `lanes`i süzer).
+       - Günün yoğunluğu başlıktaki dikey ÖLÇER: eşit olmayan sütunlarda
+         yatay şerit yanlış okunurdu (oran × farklı genişlik); dikey ölçer
+         beş günde aynı boyda, yan yana haftanın ritmi.
+     Telefon ve tablet (gün seçici + tek gün) aynı veriyi okur; ölçer
+     seçicide de aynı çizim. Ölçüm `EarningsHorizon.module.css` sonunda. */
+  const quiet = all.length === 0;
+  const tracks: string[] = quiet ? [] : ["max-content"];
+  const placed = days.map((day) => {
+    if (quiet) {
+      tracks.push("minmax(0, 1fr)");
+      return { start: tracks.length, span: 1 };
+    }
+    tracks.push("var(--hz-gutter)");
+    const start = tracks.length + 1;
+    if (day.columns > 0) for (let index = 0; index < day.columns; index += 1) tracks.push("minmax(0, 1fr)");
+    else tracks.push("var(--hz-spine)");
+    return { start, span: Math.max(1, day.columns) };
+  });
+
+  const countNode = (day: HorizonDay) => {
+    if (day.closed) return <p className={styles.dayCount}>{labels.marketClosed}</p>;
+    /* SAYI KOYU, BİRİM SOLUK (10 Kasım): "307 Şirket" tek ağırlıkta 12
+       pikseldi; sayılar birimleriyle aynı gürültüde okunuyordu. Sayı
+       `day.count`, metnin kalanı sözlükteki kalıptan (sıra dile göre
+       değişebilir). Sayı o günün tam listesine bağlantı: karosuz günde
+       tek çıkış yolu bu. */
+    const parts = day.countText.split(String(day.count)).map((part, index) => (
+      <span key={index}>
+        {index > 0 && <b>{day.count}</b>}
+        {part}
+      </span>
+    ));
+    if (day.count === 0) return <p className={`figure ${styles.dayCount}`}>{parts}</p>;
+    const label = labels.dayList.replace("{day}", day.weekday).replace("{count}", String(day.count));
+    return day.moreHref.startsWith("#") ? (
+      <a href={day.moreHref} className={`figure ${styles.dayCount}`} aria-label={label}>
+        {parts}
+      </a>
+    ) : (
+      <Link href={day.moreHref} prefetch={false} className={`figure ${styles.dayCount}`} aria-label={label}>
+        {parts}
+      </Link>
+    );
+  };
+
   return (
     <>
       <div className={styles.picker} role="group" aria-label={labels.pickDay}>
@@ -217,89 +285,84 @@ export function HorizonGrid({
             <span className={styles.pickName}>{day.short}</span>
             <span className={`figure ${styles.pickNumber}`}>{day.dayNumber}</span>
             <span className={`figure ${styles.pickCount}`}>{day.closed ? NO_VALUE : day.count}</span>
-            <span className={styles.density} aria-hidden>
-              <span style={{ "--ratio": day.density } as CSSProperties} />
-            </span>
+            <Meter ratio={day.closed ? 0 : day.density} />
             {day.peak && <span className="sr-only">{labels.peakLabel}</span>}
           </button>
         ))}
       </div>
-      <div ref={gridRef} className={styles.grid} style={{ "--lanes": lanes.length } as CSSProperties}>
+      <div
+        ref={gridRef}
+        className={styles.grid}
+        data-quiet={quiet || undefined}
+        data-rows={rows}
+        style={{ "--lanes": Math.max(1, lanes.length), "--tracks": tracks.join(" ") } as CSSProperties}
+      >
         {/* Sol eksen yalnız geniş ekranda; her hücrede aynı ad dar ekranda
             görünür, geniş ekranda ekran okuyucuya kalır. */}
-        <div className={styles.axis} aria-hidden>
-          <span />
-          {lanes.map((lane) => (
-            <span key={lane.key} className={styles.axisLane} data-lane={lane.key}>
-              <TimingChip tone={lane.tone} size="sm">
-                {lane.title}
-              </TimingChip>
-              {lane.clock && (
-                <span className={styles.axisClock}>
-                  <span className="figure">{lane.clock}</span>
-                  <span className={`figure ${styles.axisClockAlt}`}>{lane.clockAlt}</span>
-                </span>
-              )}
-            </span>
-          ))}
-        </div>
+        {!quiet && (
+          <div className={styles.axis} aria-hidden>
+            <span />
+            {lanes.map((lane) => (
+              <span key={lane.key} className={styles.axisLane} data-lane={lane.key}>
+                <TimingChip tone={lane.tone} size="sm">
+                  {lane.title}
+                </TimingChip>
+                {lane.clock && (
+                  <span className={styles.axisClock}>
+                    <span className="figure">{lane.clock}</span>
+                    <span className={`figure ${styles.axisClockAlt}`}>{lane.clockAlt}</span>
+                  </span>
+                )}
+              </span>
+            ))}
+          </div>
+        )}
 
-        {days.map((day) => (
+        {days.map((day, dayIndex) => (
           <section
             key={day.date}
             className={styles.day}
             data-state={day.state}
+            data-columns={day.columns}
+            data-closed={day.closed || undefined}
+            data-peak={day.peak || undefined}
             data-active={activeDay === day.date || undefined}
             aria-labelledby={`ufuk-${day.date}`}
+            style={{ "--start": placed[dayIndex].start, "--span": placed[dayIndex].span } as CSSProperties}
           >
-            {/* GÜN BAŞLIĞI TEK BLOK (kart turu): üstte numara + ad ve
-                rozet (bugün / zirve), altta yoğunluk çizgisi ve günün tüm
-                açıklayanlarının sayısı. Rozet adın yanında yer bulsun diye
-                sayı çizginin ucuna indi; blok yine iki satır. */}
+            {/* GÜN BAŞLIĞI: solda ölçer, yanında numara + ad (dar sütunda
+                kısa ad) ve rozet (bugün / zirve), altında günün tüm
+                açıklayanlarının sayısı. Başlık kendi genişliğine göre
+                dizilir (kap sorgusu): gün iki birimlik de olabilir, on dört
+                birimlik de. */}
             <header className={styles.dayHead}>
-              <h3 id={`ufuk-${day.date}`} className={styles.dayName}>
-                <span className={`figure ${styles.dayNumber}`}>{day.dayNumber}</span>
-                <span className={styles.dayWeekday}>{day.weekday}</span>
-              </h3>
-              {(day.state === "today" || day.peak) && (
-                <span className={styles.dayTags}>
-                  {day.state === "today" && <span className={styles.todayTag}>{labels.today}</span>}
-                  {day.peak && (
-                    <span className={styles.peakTag} title={labels.peakLabel}>
-                      <span aria-hidden>{labels.peak}</span>
-                      <span className="sr-only">{labels.peakLabel}</span>
-                    </span>
-                  )}
-                </span>
-              )}
-              {/* Günün yoğunluğu bir UZUNLUK: en kalabalık gün tam. */}
-              <span className={styles.density} aria-hidden>
-                <span style={{ "--ratio": day.density } as CSSProperties} />
-              </span>
-              {/* SAYI KOYU, BİRİM SOLUK (10 Kasım): "307 Şirket" tek
-                  ağırlıkta 12 pikseldi; beş sütunda sayılar birimleriyle
-                  aynı gürültüde okunuyordu. Sayı `day.count`, metnin kalanı
-                  sözlükteki kalıptan (sıra dile göre değişebilir). */}
-              <p className={`figure ${styles.dayCount}`}>
-                {day.closed
-                  ? NO_VALUE
-                  : day.countText.split(String(day.count)).map((part, index) => (
-                      <span key={index}>
-                        {index > 0 && <b>{day.count}</b>}
-                        {part}
-                      </span>
-                    ))}
-              </p>
+              <div className={styles.dayHeadIn}>
+                <Meter ratio={day.closed ? 0 : day.density} />
+                <h3 id={`ufuk-${day.date}`} className={styles.dayName}>
+                  <span className={`figure ${styles.dayNumber}`}>{day.dayNumber}</span>
+                  <span className={styles.dayWeekday}>{day.weekday}</span>
+                  {/* Dar başlıkta tam ad yerine kısa ad (CSS kap sorgusu
+                      birini gösterir, öteki `display: none`). */}
+                  <span className={styles.dayShort}>{day.short}</span>
+                </h3>
+                {/* Rozetler ayrı satırlarda (bugün adın, zirve sayının
+                    yanında): ikisi aynı güne düşünce gün adı kırpılmasın. */}
+                {day.state === "today" && <span className={styles.todayTag}>{labels.today}</span>}
+                {day.peak && (
+                  <span className={styles.peakTag} title={labels.peakLabel}>
+                    <span aria-hidden>{labels.peak}</span>
+                    <span className="sr-only">{labels.peakLabel}</span>
+                  </span>
+                )}
+                {countNode(day)}
+              </div>
             </header>
             {day.closed ? (
               <p className={styles.closed}>{labels.marketClosed}</p>
-            ) : lanes.every((lane) => day.lanes[lane.key].length === 0) ? (
-              /* TAMAMEN BOŞ GÜN TEK BOŞ DURUM (10 Kasım, görsel kalite turu).
-                 Kayda değer şirketi olmayan günde (cuma: 45 küçük şirket)
-                 sütun üç boş gri hücreydi, 1440'ta 229×395 piksel düz ton
-                 — kırık bir yükleme gibi okunuyordu. Şimdi sütunun
-                 ortasında tek sakin satır ve o günün tam listesine bağlantı
-                 (`moreHref`; sayı gün başlığındakiyle aynı `countText`).
+            ) : day.columns === 0 ? (
+              /* KAROSUZ GÜN. Geniş ekranda şeridin kendisi cevap (başlıktaki
+                 sayı bağlantı); bu satır yalnız telefonda ve tablette, gün
+                 seçiciden o gün açıldığında: tek satır + günün tam listesi.
                  Sahne yok: panel içi boş durum kuralı. */
               <p className={styles.voidDay}>
                 <span>{labels.emptyDay}</span>
@@ -328,8 +391,13 @@ export function HorizonGrid({
                       <TimingChip tone={lane.tone} size="sm">
                         {lane.title}
                       </TimingChip>
-                      {lane.clock && <span className={`figure ${styles.laneClock}`}>{lane.clock}</span>}
+                      {lane.clock && (
+                        <span className={`figure ${styles.laneClock}`}>{lane.key === "amc" && day.amcNote ? day.amcNote : lane.clock}</span>
+                      )}
                     </p>
+                    {lane.key === "amc" && day.amcNote && tiles.length > 0 && (
+                      <span className={`figure ${styles.laneNote}`}>{day.amcNote}</span>
+                    )}
                     {tiles.length > 0 ? (
                       <ul className={styles.tiles}>
                         {tiles.map((tile, index) => (
@@ -344,7 +412,7 @@ export function HorizonGrid({
                           />
                         ))}
                         {more > 0 && (
-                          <li className={styles.tileItem} style={{ "--i": order.size } as CSSProperties}>
+                          <li className={styles.tileItem} data-more style={{ "--i": order.size } as CSSProperties}>
                             {day.moreHref.startsWith("#") ? (
                               <a href={day.moreHref} className={`tap-44 ${styles.more}`} aria-label={moreLabel}>
                                 {moreText}
@@ -358,7 +426,13 @@ export function HorizonGrid({
                         )}
                       </ul>
                     ) : (
-                      <span className={styles.laneEmpty}>{labels.emptyLane}</span>
+                      /* Boş değer sitenin her yerinde "–" (10 Kasım tutarlılık
+                         denetimi; ortalanmış gri "Yok" kalktı). Ekran
+                         okuyucu sözcüğü duyar. */
+                      <span className={styles.laneEmpty}>
+                        <span aria-hidden>{NO_VALUE}</span>
+                        <span className="sr-only">{labels.emptyLane}</span>
+                      </span>
                     )}
                   </div>
                 );
@@ -368,8 +442,18 @@ export function HorizonGrid({
         ))}
       </div>
 
-      <Readout tile={current} karne={karne} labels={labels} />
+      {!quiet && <Readout tile={current} karne={karne} labels={labels} />}
     </>
+  );
+}
+
+/** Günün yoğunluğu (o günün tüm açıklayanları / haftanın en kalabalık günü)
+    dikey bir ölçer: kulvar üstünde alttan dolan şerit. */
+function Meter({ ratio }: { ratio: number }) {
+  return (
+    <span className={styles.meter} aria-hidden>
+      <span style={{ "--ratio": ratio } as CSSProperties} />
+    </span>
   );
 }
 
@@ -452,17 +536,12 @@ function TileSquares({ karne, symbol }: { karne: Karne; symbol: string }) {
   return <Squares slots={karneSlots(use(karne)[symbol] ?? [])} />;
 }
 
-/** Dört parça, eskiden yeniye: yeşil dolu = aşıldı, kırmızı içi boş =
-    aşılmadı, soluk = veri yok. `null` = yükleniyor (dört soluk yuva, aynı yükseklik). */
+/** Dört parça, eskiden yeniye. Çizim ve renk kuralı ortak bileşende
+    (`KarneStrip`, 10 Kasım: karne her ekranda aynı çizim); burada yalnız
+    yuva sayısı (`karneSlots`) ve boy. `null` = yükleniyor (dört soluk yuva,
+    aynı yükseklik). */
 function Squares({ slots, large = false }: { slots: KarneSlot[] | null; large?: boolean }) {
-  const shown = slots ?? karneSlots([]);
-  return (
-    <span aria-hidden className={styles.squares} data-large={large || undefined} data-pending={slots === null || undefined}>
-      {shown.map((mark, index) => (
-        <i key={index} className={styles.square} data-mark={mark} />
-      ))}
-    </span>
-  );
+  return <KarneStrip marks={slots ?? karneSlots([])} size={large ? "md" : "sm"} pending={slots === null} className={styles.squares} />;
 }
 
 function ReadoutKarne({ karne, symbol, labels }: { karne: Karne; symbol: string; labels: Labels }) {
@@ -515,18 +594,27 @@ function Readout({ tile, karne, labels }: { tile: HorizonTile | null; karne: Kar
             </div>
           </div>
           <dl className={styles.readoutFacts}>
-            <div>
-              <dt>{labels.revenueEstimate}</dt>
-              <dd className="numeral">{tile.revenueText ?? NO_VALUE}</dd>
-            </div>
-            <div>
-              <dt>{labels.epsEstimate}</dt>
-              <dd className="numeral">{tile.epsText ?? NO_VALUE}</dd>
-            </div>
-            <div>
-              <dt>{labels.marketCap}</dt>
-              <dd className="numeral">{tile.capText ?? NO_VALUE}</dd>
-            </div>
+            {/* EKSİK ÖLÇÜ YER TUTMAZ (10 Kasım): beklentisi olmayan küçük
+                şirkette şerit "Gelir Beklentisi –" basıyordu. Bilinmeyen
+                ölçünün sütunu hiç çizilmez; kalanlar eşit paylaşır. */}
+            {tile.revenueText && (
+              <div>
+                <dt>{labels.revenueEstimate}</dt>
+                <dd className="numeral">{tile.revenueText}</dd>
+              </div>
+            )}
+            {tile.epsText && (
+              <div>
+                <dt>{labels.epsEstimate}</dt>
+                <dd className="numeral">{tile.epsText}</dd>
+              </div>
+            )}
+            {tile.capText && (
+              <div>
+                <dt>{labels.marketCap}</dt>
+                <dd className="numeral">{tile.capText}</dd>
+              </div>
+            )}
             {/* Açıklanmışsa gerçekleşen EPS, beklentiye göre yön rengiyle
                 ve glifle (renk tek taşıyıcı değil). */}
             {tile.epsActualText && (

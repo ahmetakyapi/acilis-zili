@@ -3,6 +3,7 @@ import type { CSSProperties } from "react";
 import { PlayOnView } from "@/components/motion/PlayOnView";
 import type { VoteOutcome } from "@/lib/earnings-vote";
 import { cn } from "@/lib/utils";
+import { KarneStrip } from "@/components/earnings/KarneStrip";
 import css from "./CompanyEarnings.module.css";
 
 /**
@@ -44,10 +45,16 @@ export function BeatRecordCard({
     <section className={css.karne} aria-label={title}>
       <div className={css.karneHead}>
         <p className={css.karneLabel}>{title}</p>
-        <p className={cn("figure", css.karneValue)}>
-          {beats}
-          <span>/{cells.length}</span>
-        </p>
+        {/* Karnenin ortak çizimi (`KarneStrip`, 10 Kasım): ufkun karosundaki
+            şeridin aynısı, sayının yanında. Hücreler aşağıda ayrıntıyı
+            verir; şerit ile "4/4" aynı şeyi iki dilde söyler. */}
+        <span className={css.karneSum}>
+          <KarneStrip marks={cells.map((cell) => cell.outcome)} size="md" />
+          <p className={cn("figure", css.karneValue)}>
+            {beats}
+            <span>/{cells.length}</span>
+          </p>
+        </span>
       </div>
       {/* Tepe şeritleri görününce soldan sırayla çizilir (10 Kasım);
           taban durum bitmiş karne — `PlayOnView`. */}

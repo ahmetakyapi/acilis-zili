@@ -108,6 +108,10 @@ export const earningsSeasonTr = {
        kez geçtiği (oyun bağlamı; sonuçla aynı eşik). */
     recordTitle: "Beklenti Karnesi",
     recordNote: "Son {n} çeyrekte EPS beklentisini {beats} kez geçti.",
+    /** Karne yokken sağ hücre: oyun sorusunun eşiği (`VoteThreshold`). */
+    thresholdTitle: "Eşik: EPS Beklentisi",
+    thresholdNote:
+      "Açıklanan EPS bu sayının üstündeyse Geçer, altındaysa Kaçırır kazanır. Yarım sentin altındaki fark beklentiye denk sayılır ve puanlanmaz.",
     errors: {
       auth: "Oturumun kapanmış; tekrar giriş yap.",
       input: "Oy okunamadı; sayfayı yenileyip tekrar dene.",
@@ -253,6 +257,9 @@ export const earningsSeasonEn: typeof earningsSeasonTr = {
     recordEstimate: "Estimate",
     recordTitle: "Beat Record",
     recordNote: "Beat the EPS estimate in {beats} of the last {n} quarters.",
+    thresholdTitle: "The Bar: EPS Estimate",
+    thresholdNote:
+      "Reported EPS above this number means Beat wins; below it, Miss wins. A gap under half a cent counts as in line and is not scored.",
     errors: {
       auth: "Your session has ended; please sign in again.",
       input: "Couldn't read that vote; refresh the page and try again.",

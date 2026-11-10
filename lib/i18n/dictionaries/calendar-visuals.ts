@@ -38,6 +38,10 @@ export const calendarVisualsTr = {
     leadLater: "{range} haftasında {count} bilanço var",
     /** Hafta gezinmesi (8 Kasım): seçilen haftada kayda değer şirket yok. */
     emptyWeek: "Seçilen haftanın takviminde henüz kayda değer bilanço yok.",
+    /** Kayda değer şirketi olmayan haftada tepe cümlesinin devamı. */
+    quietWeek: "Hiçbiri kayda değer büyüklükte değil; günün sayısı o günün tam listesini açar.",
+    /** Gün başlığındaki sayının bağlantı etiketi (ekran okuyucu). */
+    dayList: "{day} günü açıklayan {count} şirketin listesi",
     /** Hafta adımının ekran okuyucu etiketi. */
     weekNav: "Ufkun haftası",
     peakMany: "; en büyükleri {day} {window}: {symbols}.",
@@ -135,6 +139,8 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     leadEarlier: "{count} companies reported in the week of {range}",
     leadLater: "{count} reports in the week of {range}",
     emptyWeek: "No notable reports on the selected week's calendar yet.",
+    quietWeek: "None is large enough to be notable; a day's count opens that day's full list.",
+    dayList: "The list of {count} companies reporting on {day}",
     weekNav: "Horizon week",
     peakMany: "; the largest come {day} {window}: {symbols}.",
     peakOne: "; the largest comes {day} {window}: {symbols}.",

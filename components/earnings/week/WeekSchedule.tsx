@@ -247,7 +247,10 @@ function Row({
         )}
       </span>
 
-      <span className={styles.figs}>
+      {/* Ölçü sayısı CSS'e (10 Kasım, ikinci tur): telefonda dört ölçü
+          `auto-fit` ile 3 + 1 diziliyor, "Değer" tek başına ikinci sıraya
+          düşüyordu (390, canlı ekran). Dört ölçü 2 × 2, üç ölçü tek sıra. */}
+      <span className={styles.figs} data-figs={hasActuals ? 4 : 3}>
         <span className={styles.fig}>
           <span className={styles.label}>{e.epsShort}</span>
           <span className={cn("figure", styles.value, !eps && styles.none)}>{eps ?? NO_VALUE}</span>

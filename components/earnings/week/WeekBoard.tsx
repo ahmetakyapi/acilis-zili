@@ -93,9 +93,20 @@ export function WeekBoard({
 }) {
   /* "Saati Belirsiz" satırı yalnızca haftada öyle bir şirket varsa açılıyor;
      yoksa beş sütunun altında boş bir şerit dururdu. */
-  const lanes = laneSpecs(t).filter(
-    (lane) => lane.key !== "other" || days.some((day) => day.other.length > 0),
-  );
+  /* 10 Kasım (ikinci tur): kural ÜÇ şeride genişledi. Yalnız kapanış
+     sonrası açıklanan haftada "Açılış Öncesi" satırı beş boş hücreydi;
+     haftada hiç dolmayan şeridin satırı basılmaz (ufkun kuralı,
+     `EarningsHorizon`). Tamamen boş haftada eksen iki ana şeritle kalır. */
+  const filledLanes = laneSpecs(t).filter((lane) => days.some((day) => !day.closed && day[lane.key].length > 0));
+  const lanes = filledLanes.length > 0 ? filledLanes : laneSpecs(t).filter((lane) => lane.key !== "other");
+  /* BOŞ GÜN YER KAPLAMAZ (10 Kasım, ikinci tur; ufukla aynı dil). Beş eşit
+     sütunda şirketsiz ya da kapalı gün, bütün şeritler boyunca taralı bir
+     kutu ve ortasında "Kayda değer bilanço yok" yazısıydı: canlı haftada
+     cuma 222×330 piksel (1440). Geniş ekranda boş günün sütunu dar bir
+     şerit (`--wb-spine`), dolu günler kalan genişliği eşit paylaşır;
+     tarama yalnız TAM TATİLDE kalır (kapalı piyasa bir bilgi), sıradan boş
+     günde "0 Şirket" sayacı yeter. Ölçüm `WeekBoard.module.css` sonunda. */
+  const tracks = ["max-content", ...days.map((day) => (day.closed || countOf(day) === 0 ? "var(--wb-spine)" : "minmax(0, 1fr)"))].join(" ");
   const peak = Math.max(1, ...days.map(countOf));
   const open = days.find((day) => !day.closed) ?? days[0];
   /* Karonun çizgisi HAFTANIN en büyüğüne göre, günün değil: gün ölçeğinde
@@ -109,7 +120,7 @@ export function WeekBoard({
   return (
     <div
       className={styles.board}
-      style={{ "--lanes": lanes.length } as CSSProperties}
+      style={{ "--lanes": lanes.length, "--tracks": tracks } as CSSProperties}
     >
       {/* Sol eksen: yalnızca geniş ekranda görünür, ekran okuyucudan gizli —
           her hücrenin içinde aynı ad `sr-only` olarak duruyor. */}
@@ -192,13 +203,16 @@ function DayColumn({
       aria-labelledby={`week-day-${day.date}`}
       data-state={state}
       data-empty={empty || undefined}
+      data-closed={day.closed ? "" : undefined}
       style={{ "--i": index } as CSSProperties}
     >
       <header className={styles.dayHead}>
         <div className={styles.dayTitle}>
           {/* Gün başlığı bir h3: panelin h2'si "En Çok Beklenenler". */}
           <h3 id={`week-day-${day.date}`} className={styles.dayName}>
-            {label.weekday}
+            <span className={styles.dayNameFull}>{label.weekday}</span>
+            {/* Boş günün dar şeridinde kısa ad (geniş ekran; CSS biri gösterir). */}
+            <span className={styles.dayNameShort}>{label.short}</span>
           </h3>
           {state === "today" && <span className={styles.todayTag}>{t.calendar.today}</span>}
         </div>

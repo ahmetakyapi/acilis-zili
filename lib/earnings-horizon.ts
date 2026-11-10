@@ -330,3 +330,90 @@ export async function runKarneRound(
     gider (8 Kasım). Takvim verisi birkaç haftadan sonra seyreliyor; sınırsız
     `?hafta=` zinciri tarayıcılara boş sayfa üretirdi. */
 export const HORIZON_NAV_WEEKS = 8;
+
+/* --------------------------------------------------------------------------
+   Veriye göre kurulan ızgara (10 Kasım 2026, sahibinin sözü: "boş günler
+   olunca kötü duruyor; her şekle uygun olmalı")
+   -------------------------------------------------------------------------- */
+
+/**
+ * Geniş ekranda ufkun toplam KARO SÜTUNU bütçesi. Eski ızgara beş eşit gün
+ * × dört sütundu (yine 20): 1440'ta birim ~55, 1180'de ~45 piksel, yani
+ * karo boyu en yoğun haftada eskisiyle aynı kalır. Fark: sütunlar günlere
+ * EŞİT değil, günün ihtiyacı kadar dağıtılıyor.
+ */
+export const HORIZON_COLUMNS = 20;
+/** Açılış öncesi / kapanış sonrası hücresinde en çok bu kadar karo sırası;
+    saati belirsiz satırı her zaman tek sıra (`OTHER_MAX_SLOTS` gerekçesi). */
+export const HORIZON_LANE_ROWS = 2;
+/** Toplam sütun bu sayıya vardığında (dar birim) dolu gün en az iki sütun
+    alır: tek sütunluk (~55 piksel) güne gün başlığı sığmıyor. */
+const HORIZON_TIGHT_FROM = 12;
+
+export type HorizonNeed = { bmo: number; amc: number; other: number };
+export type HorizonShape = {
+  /** Gün başına karo sütunu; 0 = kayda değer şirketi olmayan gün (ince şerit). */
+  columns: number[];
+  /** Açılış öncesi / kapanış sonrası hücresindeki karo sırası (1 ya da 2). */
+  rows: number;
+};
+
+/**
+ * Haftanın ŞEKLİ: hangi gün kaç karo sütunu alır, hücreler kaç sıra.
+ *
+ * Eski ızgara her güne dört sütun veriyordu: on karolu pazartesi iki sıraya
+ * sıkışırken tek karolu salı ve hiç karosu olmayan cuma aynı genişlikte gri
+ * alan olarak duruyordu. Kural:
+ *   1. Karosuz gün sütun almaz (çizimde ince bir şerit; bütçeden bir birim
+ *      düşer, şeridin kapladığı yer).
+ *   2. Önce TEK SIRA denenir: günün ihtiyacı en kalabalık penceresi kadar
+ *      sütun. Sığıyorsa panel en kısa hâlinde.
+ *   3. Sığmazsa iki sıra (ihtiyaç yarıya iner).
+ *   4. O da sığmazsa bütçe ihtiyaçla orantılı bölünür (en büyük kalan
+ *      yöntemi); hücreye sığmayan kuyruk "+N" çipine kalır (`capCell`).
+ * Toplam sütun bütçenin ALTINDA kalabilir: seyrek haftada birim genişler ve
+ * karo zengin karta dönüşür (ad, piyasa değeri; çizim kabın genişliğinden
+ * karar verir), boş sütun basılmaz.
+ */
+export function horizonShape(needs: readonly HorizonNeed[], budget: number = HORIZON_COLUMNS): HorizonShape {
+  const filled = needs.map((need) => need.bmo + need.amc + need.other > 0);
+  const count = filled.filter(Boolean).length;
+  if (count === 0) return { columns: needs.map(() => 0), rows: 1 };
+  const room = Math.max(count, budget - (needs.length - count));
+  const want = (rows: number) =>
+    needs.map((need, index) =>
+      filled[index] ? Math.max(1, Math.ceil(need.bmo / rows), Math.ceil(need.amc / rows), need.other) : 0,
+    );
+  const sum = (values: readonly number[]) => values.reduce((total, value) => total + value, 0);
+  /* Dar birimde tek sütunluk günleri ikiye çıkar (yer varsa). */
+  const widen = (columns: number[]) => {
+    if (sum(columns) < HORIZON_TIGHT_FROM) return columns;
+    const next = [...columns];
+    for (let index = 0; index < next.length && sum(next) < room; index += 1) if (next[index] === 1) next[index] = 2;
+    return next;
+  };
+  for (const rows of [1, HORIZON_LANE_ROWS]) {
+    const columns = want(rows);
+    if (sum(columns) <= room) return { columns: widen(columns), rows };
+  }
+  const wanted = want(HORIZON_LANE_ROWS);
+  const total = sum(wanted);
+  const floor = room >= count * 2 ? 2 : 1;
+  const columns = wanted.map((value) => (value === 0 ? 0 : Math.max(floor, Math.floor((value * room) / total))));
+  /* Tabanlar bütçeyi aşarsa en geniş günden geri al; artan birim en büyük
+     kalana gider. */
+  while (sum(columns) > room) columns[columns.indexOf(Math.max(...columns))] -= 1;
+  const remainder = wanted.map((value, index) => (value === 0 ? -1 : (value * room) / total - columns[index]));
+  while (sum(columns) < room) {
+    const index = remainder.indexOf(Math.max(...remainder));
+    if (remainder[index] < 0) break;
+    columns[index] += 1;
+    remainder[index] -= 1;
+  }
+  return { columns, rows: HORIZON_LANE_ROWS };
+}
+
+/** Hücrenin yuva tavanı: sütun × sıra (saati belirsiz tek sıra). */
+export function shapeSlots(columns: number, rows: number, lane: WeekLane): number {
+  return Math.max(1, columns) * (lane === "other" ? 1 : rows);
+}

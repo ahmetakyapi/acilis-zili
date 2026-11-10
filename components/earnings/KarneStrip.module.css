@@ -1,0 +1,25 @@
+/* Beklenti karnesi şeridi — gerekçe ve sözleşme `KarneStrip.tsx`.
+   Ölçüler ufkun 6 Kasım / 10 Kasım turlarından (karo 6, okuma şeridi 80×7);
+   "lg" bilanço sayfasının karne başlığı için. */
+.strip { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 2px; width: 100%; }
+.strip > i { display: block; height: 6px; border-radius: 3px; background: var(--line-soft); }
+.strip > i[data-mark="beat"] { background: var(--up); }
+/* Aşılmadı içi boş: `--up` ile `--down`un parlaklığı yakın, renk körü okur
+   küçük parçada yalnız renkten ayıramaz. */
+.strip > i[data-mark="miss"] { background: transparent; box-shadow: inset 0 0 0 1.5px var(--down); }
+.strip > i[data-mark="inline"] { background: var(--line-strong); }
+
+.strip[data-size="md"] { width: 80px; flex-shrink: 0; gap: 3px; }
+.strip[data-size="md"] > i { height: 7px; border-radius: 4px; }
+.strip[data-size="lg"] { gap: 4px; }
+.strip[data-size="lg"] > i { height: 8px; border-radius: 4px; }
+.strip[data-size="key"] { display: inline-grid; width: 14px; flex-shrink: 0; }
+.strip[data-size="key"] > i { height: 6px; }
+
+/* ŞERİT BÜTÜN OLARAK AÇILIR: kırpma soldan sağa, bir kez (yalnız
+   `clip-path`, kompozitör). Bekleyen şerit (veri yolda) oynamaz; veri
+   gelince öğe yeniden kurulur ve o an çizilir. Lejant örneği oynamaz. */
+@media (prefers-reduced-motion: no-preference) {
+  .strip:not([data-pending], [data-size="key"]) { animation: karne-open 520ms var(--ease-brand) both; animation-delay: var(--karne-delay, 0ms); }
+}
+@keyframes karne-open { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }

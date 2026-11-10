@@ -98,13 +98,15 @@
 .todayTag {
   grid-area: tag;
   justify-self: end;
-  padding: 1px 8px;
+  /* 22 / 12 / 600, yan dolgu 8: sayfadaki bütün "Bugün" rozetleri aynı
+     (10 Kasım tutarlılık denetimi; 20 piksel ve 650 idi). */
+  padding: 0 8px;
   border-radius: 999px;
   background: var(--primary);
   color: var(--on-primary);
   font-size: var(--text-nano);
-  font-weight: 650;
-  line-height: 18px;
+  font-weight: 600;
+  line-height: 22px;
 }
 
 .dayNumber {
@@ -1054,4 +1056,46 @@
   .navLink:hover > svg {
     transform: none;
   }
+}
+
+/* ==========================================================================
+   BOŞ GÜN ŞERİDİ (10 Kasım 2026, ikinci tur). Gerekçe `WeekBoard.tsx` →
+   "BOŞ GÜN YER KAPLAMAZ"; ufkun diliyle aynı (`EarningsHorizon.module.css`
+   → "VERİYE GÖRE IZGARA"): dolu gün ton, boş gün yalnız çerçeve, tam tatil
+   taralı.
+   ========================================================================== */
+.dayNameShort { display: none; }
+@media (min-width: 1100px) {
+  .board {
+    --wb-spine: 7rem;
+    grid-template-columns: var(--tracks);
+  }
+  .day[data-empty] { background: transparent; box-shadow: inset 0 0 0 1px var(--line-soft); }
+  .day[data-empty][data-state="today"] { background: var(--primary-tint); box-shadow: inset 0 0 0 1px var(--primary-faint); }
+  .day[data-empty] .dayHead {
+    grid-template-columns: auto minmax(0, 1fr);
+    grid-template-areas:
+      "number title"
+      "number count"
+      "density density";
+  }
+  /* Şeritte ay yazılmaz (yanındaki günlerde yazılı); başlık dolu günlerle
+     aynı iki satır kalır, alt ızgaranın başlık satırı uzamaz. */
+  .day[data-empty] .dayMonth { display: none; }
+  .day[data-empty] .dayCount { justify-self: start; }
+  .day[data-empty] .todayTag { display: none; }
+  .day[data-empty] .dayNameFull { display: none; }
+  .day[data-empty] .dayNameShort { display: inline; }
+  /* Sıradan boş günde yazı yok: sayaç "0 Şirket" diyor. Tam tatilde tarama
+     ve "Piyasa Kapalı". */
+  .day[data-empty]:not([data-closed]) .dayEmpty { display: none; }
+  .day[data-closed] .dayEmpty { margin: 0.2rem 0.3rem 0.3rem; padding: 0.6rem 0.4rem; }
+}
+
+/* Telefonda "Saati Belirsiz" şeridi tam genişlik (10 Kasım, ikinci tur): üç
+   şerit iki sütuna dizilince üçüncüsü tek başına sol yarıda kalıyor, sağı
+   boş duruyordu (390; salı günü 171 x 330 piksel). Tam genişlikte karolar
+   iki sütun. */
+@media (max-width: 1099px) {
+  .lane[data-lane="other"] { grid-column: 1 / -1; }
 }

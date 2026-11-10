@@ -20,6 +20,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { SessionLane, type SessionLaneWindow } from "@/components/earnings/SessionLane";
 import { closeMinutesFor, daysBetweenEt, SESSION_BOUNDS, type MarketHoliday } from "@/lib/market-hours";
 import { clockOf, timePair, zoneTag } from "@/lib/session-clock";
+import { epsSurprise } from "@/lib/earnings-week";
 import { isSpotlight } from "@/lib/spotlight";
 import { cn, formatMoneyCompact, formatEtDateLong, formatPrice, NO_VALUE, plural } from "@/lib/utils";
 import type { EarningsRow } from "@/lib/schema";
@@ -369,6 +370,9 @@ function DaySection({
   const voteOf = (row: EarningsRow) => cardVote(row, vote);
   const midVotes = mid.map(voteOf);
   const midHasVote = midVotes.some((view) => view !== null);
+  /* Mini kartların büyüklük çizgisinin ölçeği: günün mini kartlarının en
+     büyüğü (baş kartlar ayrı katman, ölçeğe girmez). */
+  const midPeak = Math.max(0, ...mid.map((row) => meta[row.symbol]?.marketCap ?? 0));
   const voteNode = (view: VoteView) => (
     <EarningsVote
       view={view}
@@ -422,7 +426,9 @@ function DaySection({
               orada yok, burada da kalktı. */}
           <span
             className={cn(
-              "rounded-full px-2 py-0.5 text-nano font-bold",
+              /* 22 / 12 / 600, yan dolgu 8: ufkun ve haftalık sekmenin "Bugün"
+                 rozetiyle aynı ölçü (10 Kasım tutarlılık denetimi; 700 idi). */
+              "inline-flex h-[22px] items-center rounded-full px-2 text-nano font-semibold leading-none",
               away === 0
                 ? "bg-primary text-on-primary"
                 : "bg-surface-elevated text-soft",
@@ -629,6 +635,11 @@ function DaySection({
       {mid.length > 0 && (
         <div
           data-motion-stagger
+          /* ARA GENİŞLİKTE SÜTUN SAYISI KART SAYISINDAN (10 Kasım, ikinci
+             tur). `auto-fit` 1024'te altı kartı 154 piksele indiriyor, adlar
+             "CoreWea…" diye kırpılıyordu; kurallar ve ölçüm
+             `EarningsCalendar.module.css` → "ARA GENİŞLİK". */
+          data-count={mid.length >= 4 ? mid.length : undefined}
           className={cn(
             "mt-2.5 grid gap-2.5",
             styles.miniGrid,
@@ -639,6 +650,19 @@ function DaySection({
         >
           {mid.map((row, index) => {
             const m = meta[row.symbol];
+            /* DURUM ŞERİDİ VE BÜYÜKLÜK ÇİZGİSİ (10 Kasım, tutarlılık
+               denetimi). Otuz mini kart aynı ağırlıkta, çizimsiz duruyordu;
+               ana sayfanın bilanço kartı aynı kavramı 3 piksellik tepe
+               şeridiyle çiziyor. Şerit artık HER kartta: analiz varsa görüş
+               tonu (önceki karar, `data-verdict`), yoksa ve bilanço
+               açıklandıysa sonucun yönü (EPS beklentiye göre; `epsSurprise`,
+               haftalık sekmeyle aynı kural), henüz açıklanmadıysa nötr.
+               Çizim eldeki veriden: kartın zaten yazdığı piyasa değeri,
+               günün mini kartlarının en büyüğüne oranla 5 piksellik şerit
+               ("karşılaştırılan büyüklük bir de çizgi"). Değer yoksa çizim
+               de yok; sayı kartta yazılı olduğu için çizgi `aria-hidden`. */
+            const result = epsSurprise(row.epsActual, row.epsEstimate)?.direction;
+            const capRatio = m?.marketCap && midPeak > 0 ? m.marketCap / midPeak : null;
             const midVote = midVotes[index];
             const timing = timingOf(row.hour, t);
             const { headline, rest, capNote } = cardFigures(
@@ -673,6 +697,7 @@ function DaySection({
                 className={cn("panel-hover relative grid h-full min-w-0 grid-rows-subgrid gap-[11px] rounded-lg border border-line bg-surface-solid p-3.5 transition-colors", styles.miniCard)}
                 style={{ gridRow: `span ${3 + (midHasBadge ? 1 : 0) + (midHasVote ? 1 : 0)}` }}
                 data-verdict={badge ? verdictOf(badge.verdict) : undefined}
+                data-result={result}
               >
                 {/* Bilanço sayfasına — gerekçe hero kartında. */}
                 <Link
@@ -839,6 +864,11 @@ function DaySection({
                         </div>
                       ))}
                     </dl>
+                  )}
+                  {capRatio !== null && (
+                    <span aria-hidden className={styles.capLane}>
+                      <span className="bar-fill" style={{ width: `${Math.max(3, capRatio * 100)}%` }} />
+                    </span>
                   )}
                 </div>
                 {/* ROZET ÖLÇÜLERİN ALTINDA (10 Kasım): kimlik ile ölçüler

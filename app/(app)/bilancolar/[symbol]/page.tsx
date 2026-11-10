@@ -9,6 +9,7 @@ import { AddToCalendar } from "@/components/earnings/AddToCalendar";
 import { timingOf } from "@/components/earnings/EarningsCalendar";
 import { SymbolAnalyses } from "@/components/earnings/SymbolAnalyses";
 import { BeatRecordCard } from "@/components/earnings/company/BeatRecordCard";
+import { VoteThreshold } from "@/components/earnings/company/VoteThreshold";
 import { CompanyIdentity } from "@/components/earnings/company/CompanyIdentity";
 import { NextReport } from "@/components/earnings/company/NextReport";
 import css from "@/components/earnings/company/CompanyEarnings.module.css";
@@ -225,6 +226,10 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
           .replace("{actual}", formatPrice(row.epsActual, locale, { currency }))
           .replace("{estimate}", formatPrice(row.epsEstimate, locale, { currency }))
       : null;
+  /* Karnesiz panelin sağ hücresi: açık oylamanın eşiği (sıradaki çeyreğin
+     EPS beklentisi). Oylama açık değilse ya da beklenti yoksa basılmaz. */
+  const voteThreshold =
+    nextView && data.next && data.next.epsEstimate !== null ? formatPrice(data.next.epsEstimate, locale, { currency }) : null;
   const accuracy = record?.available ? record.accuracy : null;
   const accuracyPct = accuracy ? accuracyPercent(accuracy) : null;
 
@@ -383,7 +388,11 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
                 hissenin beklenti karnesi. Okur "geçer mi" derken şirketin
                 son dört çeyreğine bakıyordu ve o sayı hisse sayfasının
                 dibindeydi. Karne yoksa (sağlayıcı düştü) tek kolon. */}
-            <div className={karne ? css.voteGrid : undefined}>
+            {/* KARNE YOKSA EŞİK (10 Kasım, ikinci tur): tek kolonda oy
+                kartlarının sağı ~700 piksel boş kalıyordu. Karnesiz panelin
+                sağ hücresi oyun sorusunun eşiği (`VoteThreshold`); beklenti
+                de yoksa tek kolon. */}
+            <div className={karne || voteThreshold ? css.voteGrid : undefined}>
               <div className={css.voteMain}>
                 {nextView && (
                   <EarningsVote
@@ -415,6 +424,14 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
                   </div>
                 )}
               </div>
+              {!karne && voteThreshold && (
+                <VoteThreshold
+                  title={v.thresholdTitle}
+                  value={voteThreshold}
+                  note={v.thresholdNote}
+                  labels={{ beat: v.beat, miss: v.miss }}
+                />
+              )}
               {karne && (
                 <BeatRecordCard
                   cells={karne.cells}
