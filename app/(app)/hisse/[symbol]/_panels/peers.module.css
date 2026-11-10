@@ -1,0 +1,68 @@
+/* Aynı Sektörden Şirketler — satır (10 Kasım 2026, gece). Karar kaydı
+   PeersCard.tsx başında ("TARİHÇE — PİYASA DEĞERİ ÇUBUĞU"). Ayrı dosya:
+   eski kurallar ../stock.module.css → `.peerList` / `.peerRow`da duruyor
+   (o dosya bu turun kapsamı dışında; artık kullanılmıyor).
+
+   Satır ortak tablo ailesinin ölçülerinde (components/markets/
+   BoardTable.module.css): logo 36 (telefonda 32), sembol 16/700, ad 13,5
+   gövde mürekkebi, piyasa değeri 15/600 koyu ve doğrudan, günlük değişim
+   `MoveFigure` (8 piksellik sıfır ortalı çubuk + 19/700 yüzde; telefonda
+   17/700, çubuk sayının altında). `MoveFigure` kulvar boyunu tablonun
+   değişkenlerinden okur; burada satır verir (`--day-lane`). */
+.list { display:grid; grid-template-columns:minmax(0,1fr); padding:4px 20px 14px; }
+.item { min-width:0; }
+.row {
+  --day-lane:72px; --week-lane:40px;
+  display:grid; grid-template-columns:36px minmax(0,1fr) auto minmax(150px,auto); align-items:center; gap:14px;
+  min-height:60px; margin-inline:-10px; padding:8px 10px; border-radius:12px;
+  transition:background-color .18s var(--ease-brand);
+}
+.item + .item .row { box-shadow:0 -1px 0 var(--line-soft); }
+a.row:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+a.row:active { scale:.992; }
+@media(hover:hover) and (pointer:fine) {
+  a.row:hover { background:var(--primary-tint); }
+  a.row:hover .symbol { color:var(--primary-ink); }
+}
+/* Sayfanın şirketi: etkileşim tonu + sol kenarda 3 piksellik mavi (tablonun
+   satır cevabıyla aynı im; burada kalıcı — "buradasın"). */
+.item .row[data-self] { background:var(--primary-tint); box-shadow:inset 3px 0 var(--primary); }
+.item:has(.row[data-self]) + .item .row { box-shadow:none; }
+
+.logo.logo { width:36px; height:36px; }
+.id { display:flex; flex-direction:column; gap:1px; min-width:0; }
+.symbol { color:var(--text-strong); font-size:16px; font-weight:700; line-height:20px; letter-spacing:-.015em; transition:color .18s var(--ease-brand); }
+.name { overflow:hidden; color:var(--text-body); font-size:13.5px; line-height:18px; white-space:nowrap; text-overflow:ellipsis; }
+.cap { display:flex; flex-direction:column; align-items:flex-end; gap:1px; white-space:nowrap; }
+.cap > b { color:var(--text-strong); font-size:15px; font-weight:600; line-height:20px; letter-spacing:-.01em; }
+.cap > b.none { color:var(--text-muted); font-weight:400; }
+.cap > span { color:var(--text-muted); font-size:12px; line-height:16px; }
+.move { display:flex; justify-content:flex-end; min-width:0; }
+
+/* İki sütun, beşe dört (1100+; eski listenin kararı): sütun sütun okunur. */
+@media(min-width:1100px) {
+  .list { grid-auto-flow:column; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(5,auto); column-gap:44px; }
+  .item:nth-child(6) .row:not([data-self]) { box-shadow:none; }
+}
+/* Telefon: logo 32, sütun aralığı 10; değişim sütunu içeriği kadar (yüzde
+   üstte, çubuk altında — `MoveFigure`ın telefon düzeni). Satır 60: dokunma
+   hedefi 44'ün üstünde. */
+@media(max-width:639px) {
+  .list { padding:2px 16px 10px; }
+  .row { grid-template-columns:32px minmax(0,1fr) auto auto; gap:10px; margin-inline:-8px; padding:8px; }
+  .logo.logo { width:32px; height:32px; }
+  .symbol { font-size:15px; line-height:19px; }
+  .name { font-size:13px; line-height:17px; }
+  .cap > b { font-size:14px; }
+}
+@media(prefers-reduced-motion:reduce) { .row, .symbol { transition:none; } a.row:active { scale:none; } }
+
+/* ÖLÇÜM (10 Kasım 2026, gece; /hisse/NVDA, gerçek sayfa + sahte sağlayıcı,
+   dokuz satır, iki tema; önce = cd7e83b):
+   - Satır 52 → 60; panel 1440'ta 377 (iki sütun 5 + 4), 390'da 435 (beş
+     satır açık, kalanı katlı). Sayfa boyu 1440'ta aynı (9.129), 390'da
+     13.960 → 13.940 (logaritma künyesi kalktı).
+   - Sütunlar 1440: logo 36 · kimlik 319 · piyasa değeri 56 · değişim 163
+     (çubuk 72 + yüzde 19/700). 390: 32 · 137 · 53 · 69 (yüzde 17/700 üstte,
+     çubuk altında). Çubuk 8, kulvar 5; kırpılan metin 0 (uzun ad üç
+     noktayla), panelden taşan öğe 0; 390–1440 altı genişlikte taşma 0. */

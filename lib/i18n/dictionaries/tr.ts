@@ -936,6 +936,9 @@ const tr = {
     },
     /* Kapaktaki yatay fiyat ölçeği (`LevelScale`). */
     levelScale: "Fiyat Ölçeği",
+    /* Kart rayındaki çentik adları (`LevelTrack`): kısa hâller. */
+    railZone: "Bölge",
+    railSell: "Tepki {n}",
     changedToBuy: "Ala Döndü",
     changedToHold: "Tuta Döndü",
     changedToSell: "Sata Döndü",

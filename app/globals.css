@@ -1949,6 +1949,44 @@ html.theme-switching::view-transition-new(root) {
   animation-name: none !important;
 }
 
+/* DEĞER ÇUBUĞU — tek ortak çizim (10 Kasım 2026, gece; sahibinin sözü:
+   "standart haline gelsin ve göze hitap etsin; mobilde de kolay okunsun
+   webde de"). Aynı üç kural (5 piksellik kulvar, 8 piksellik dolu çubuk,
+   2 piksellik koyu çentik) aynı akşam yedi modülde elle kopyalanmıştı
+   (Skor Kartı, PeerStrip, Kural Kural, MetricBands, makro Bir Bakışta,
+   DeviationLine, atlas) ve kalan ekranlarda dolgu hâlâ kulvarla aynı 5
+   pikseldi (ScaleBar, SizeBar, pay şeritleri). Tek kaynak burası; kural
+   `.claude/rules/arayuz.md` → "Büyüklük KALIN YATAY ŞERİTLE okunur".
+
+   KULLANIM (sınıflar TSX'te; modülde yalnız YER ve değişken):
+     <span class="value-lane" data-draw>
+       <i class="value-bar bar-fill" data-tone="up" style="left:0;width:42%" />
+       <i class="value-notch" style="left:50%" />
+     </span>
+   - Kulvarın genişliği/kenar boşluğu çağıranın; boyu `--lane-h` (5).
+   - Çubuğun yeri (`left`/`right`, `width`) satır içi; boyu `--bar-h` (8;
+     satırın kahramanıysa 12–14). Ton: `data-tone` (yön) ya da çağıranın
+     `--bar-tone` değişkeni (görüş/durum tonu); hiçbiri yoksa büyüklük tonu
+     `--bar-soft`. Modül `.value-bar`ın `background`ını EZMEZ (modüller
+     arası sıra garanti değil), değişken verir.
+   - `data-end`: çubuğun YUVARLAK ucu. "end" sağ uç (sıfıra/kıyasa dayanan
+     sol uç düz), "start" sol uç; "start" sola büyür (`bar-fill`in kaynağı
+     burada sağa alınır). İkisi de yoksa iki uç yuvarlak.
+   - Çentik kulvarı `--notch-out` (4) kadar aşar; kıyas imi (medyan, eşik,
+     stop, hedef) çubuğun ÜSTÜNDE. `data-quiet`: ikincil çentik.
+   Ölçüm (gerçek sayfalar, 390 ve 1440, iki tema): geçirilen bütün
+   çubuklarda hesaplanan boy 8, kulvar 5, çentik 2 × 13; ayrıntı çağıran
+   modüllerin yorumlarında. */
+.value-lane { position:relative; display:block; height:var(--lane-h,5px); border-radius:999px; background:var(--lane-tone,var(--line-soft)); }
+.value-bar { position:absolute; top:calc(50% - var(--bar-h,8px) / 2); height:var(--bar-h,8px); border-radius:999px; background:var(--bar-tone,var(--bar-soft)); }
+.value-bar[data-tone="up"] { background:var(--up); }
+.value-bar[data-tone="down"] { background:var(--down); }
+.value-bar[data-tone="flat"] { background:var(--flat); }
+.value-bar[data-end="end"] { border-radius:0 999px 999px 0; }
+.value-bar[data-end="start"] { border-radius:999px 0 0 999px; transform-origin:right center; }
+.value-notch { position:absolute; top:calc(var(--notch-out,4px) * -1); bottom:calc(var(--notch-out,4px) * -1); width:2px; margin-left:-1px; border-radius:1px; background:var(--notch-tone,var(--text-strong)); }
+.value-notch[data-quiet] { background:var(--line-strong); }
+
 /* PANELLER GİRERKEN BELİRİYOR — kaydırma güdümlü, JavaScript yok.
    Neden: 3–7 bin piksellik sayfalarda tempo; alt bölümler tek seferde
    yığılmak yerine kaydırdıkça geliyor.

@@ -1,18 +1,20 @@
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { Rows, SquaresFour, X } from "@phosphor-icons/react/dist/ssr";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
+import { BoardSortHead, BoardTableSkeleton, CompanyCell, MoreBand, board, rowStep } from "@/components/markets/BoardTable";
+import { RowTap } from "@/components/markets/RowFlip";
 import { SizeBar, UniverseLane } from "@/components/screener/Lanes";
+import tbl from "@/components/screener/ScreenerTable.module.css";
 import { MetricBands, type MetricKind } from "@/components/screener/MetricBands";
 import visual from "@/components/screener/ScreenerVisuals.module.css";
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import { FilterChip } from "@/components/ui/FilterChip";
 import { LoadingFallback } from "@/components/ui/LoadingState";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
-import { LinkedRows } from "@/components/companies/LinkedRows";
 import { ScreenQueryBox } from "@/components/screener/ScreenQueryBox";
 import {
   DataStamp,
@@ -22,7 +24,6 @@ import {
   Panel,
   PanelHeader,
   Skeleton,
-  SkeletonRow,
 } from "@/components/ui/primitives";
 import { indexMemberOf, primaryOnly } from "@/db/seed/indices";
 import { getCompanies, getStatus, liveMarketCap, type CompanyRow } from "@/lib/data";
@@ -187,43 +188,24 @@ function formatRatio(value: number | null, locale: Locale): string {
   }).format(value);
 }
 
-function SortHead({
-  label,
-  href,
-  active,
-  dir,
-  className,
-  hint,
-}: {
-  label: string;
-  href: string;
-  active: boolean;
-  dir: SortDir;
-  className?: string;
-  hint?: string;
-}) {
+/* TARİHÇE — `SortHead` (15 Ekim → 10 Kasım). Bu sayfanın kendi sıralama
+   başlığı vardı: 8 piksellik üçgen glifleri (▼ ▲ ▽), `text-nano` etiket.
+   10 Kasım (gece): tablo ortak aileye geçti, başlık `BoardSortHead`
+   (components/markets/BoardTable.tsx; ikon, `aria-sort`, 44 piksellik
+   dokunma hedefi, sıralı sütunda 2 piksellik mavi çizgi). */
+
+/**
+ * Sayı hücresinin içi: sayı + (yalnız SIRALANAN sütunda) kalın çubuk.
+ * Genişte çubuk sayının solunda, telefonda altında (ortak tablonun
+ * `MoveFigure` düzeni). Çubuk yoksa hücre yalnız sayı.
+ */
+function Figure({ lane, children }: { lane: ReactNode; children: ReactNode }) {
+  if (!lane) return <>{children}</>;
   return (
-    <th
-      scope="col"
-      aria-sort={active ? (dir === "desc" ? "descending" : "ascending") : "none"}
-      className={cn("px-1.5 py-2.5 text-right font-semibold sm:px-3", className)}
-    >
-      {/* Dokunma hedefi ve scroll={false} — gerekçeler /sirketler SortHead'de. */}
-      <Link
-        href={href}
-        scroll={false}
-        title={hint}
-        className={cn(
-          "-my-3.5 inline-flex min-h-11 items-center gap-1 py-3.5 transition-colors hover:text-primary sm:-my-2 sm:min-h-8 sm:py-2",
-          active && "text-primary",
-        )}
-      >
-        {label}
-        <span aria-hidden className="numeral text-micro text-primary-ink">
-          {active ? (dir === "desc" ? "▼" : "▲") : "▽"}
-        </span>
-      </Link>
-    </th>
+    <span className={tbl.figure}>
+      {lane}
+      <span>{children}</span>
+    </span>
   );
 }
 
@@ -542,7 +524,24 @@ async function ScreenerTable({
 
   return (
     <>
-      <Panel className={styles.tablePanel}>
+      {/* ORTAK TABLO AİLESİ (10 Kasım 2026, gece; sahibinin sözü: "standart
+          haline gelsin ve göze hitap etsin; mobilde de kolay okunsun webde
+          de"). Tablo kendi Tailwind sınıflarıyla kuruluydu: logo 30/34,
+          sembol 14/700, ad soluk 12, sayılar 13–14, satır ~58, kulvarlar 5
+          piksel, başlıkta 8 piksellik üçgen; telefonda `table-fixed` dört
+          sütun (Marj, ROE, Borç ve Sektör gizli). Şimdi Endeks Bileşenleri
+          ve Şirketler ile AYNI parça (components/markets/BoardTable.tsx +
+          .module.css; bu tablonun sütunları
+          components/screener/ScreenerTable.module.css): logo 40 (telefonda
+          32), sembol 16/700, ad 14 gövde, satır 62 / 56; sayılar 15/600,
+          sıralanan sütun 16/700 ve yanında 8 piksellik dolu çubuk
+          (`data-draw` + `bar-fill`, kademe `rowStep`); satırın tamamı
+          bağlantı (`RowTap`; eski `LinkedRows` yerine). TELEFON: `table-fixed`
+          kalktı ("Kaydırma saklanmaz", arayuz.md): Şirket sütunu sabit,
+          altı ölçünün HEPSİ tabloda ve kap yana kayar (önce üçü gizliydi).
+          Ölçüm ScreenerTable.module.css sonunda. */}
+      <Panel id="screener-table" className={cn(board.panel, tbl.panel)} data-fit="lg">
+        <RowTap scope="screener-table" />
         <PanelHeader
           action={<ViewSwitch view={view} paramsFor={paramsFor} labels={t.toolVisuals.screener} />}
           title={
@@ -632,7 +631,7 @@ async function ScreenerTable({
           {view !== "kart" && (
           <ScrollEdges
             className={cn(
-              styles.tableScroll,
+              board.scroller,
               view === "auto" && visual.autoTable,
               "scroll-x focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)",
             )}
@@ -641,188 +640,98 @@ async function ScreenerTable({
             aria-label={L.title}
             fixedStart
           >
-            <table className="w-full table-fixed text-sm sm:table-auto sm:min-w-[760px]">
+            <table className={cn(board.table, tbl.table)}>
               <thead>
-                <tr className="border-b border-line text-left text-nano text-muted">
-                  <th className="hidden w-10 px-4 py-2.5 font-semibold sm:table-cell sm:px-5">#</th>
-                  <th className="px-3 py-2.5 font-semibold">{L.company}</th>
-                  <th className="hidden px-3 py-2.5 font-semibold lg:table-cell">{L.sector}</th>
-                  <SortHead
-                    label={L.colFk}
-                    href={sortHref("fk")}
-                    active={sort === "fk"}
-                    dir={dir}
-                    hint={L.colFkHint}
-                    className="w-[58px] sm:w-auto"
-                  />
-                  <SortHead
-                    label={L.colGrowth}
-                    href={sortHref("buyume")}
-                    active={sort === "buyume"}
-                    dir={dir}
-                    hint={L.colGrowthHint}
-                    className="w-[76px] sm:w-auto"
-                  />
-                  <SortHead
-                    label={L.colMargin}
-                    href={sortHref("marj")}
-                    active={sort === "marj"}
-                    dir={dir}
-                    hint={L.colMarginHint}
-                    className="hidden sm:table-cell"
-                  />
-                  <SortHead
-                    label={L.colRoe}
-                    href={sortHref("roe")}
-                    active={sort === "roe"}
-                    dir={dir}
-                    hint={L.colRoeHint}
-                    className="hidden md:table-cell"
-                  />
-                  <SortHead
-                    label={L.colDebt}
-                    href={sortHref("borc")}
-                    active={sort === "borc"}
-                    dir={dir}
-                    hint={L.colDebtHint}
-                    className="hidden lg:table-cell"
-                  />
-                  <SortHead
-                    label={L.colCap}
-                    href={sortHref("cap")}
-                    active={sort === "cap"}
-                    dir={dir}
-                    className="w-[74px] pr-4 sm:w-auto sm:pr-5"
-                  />
+                <tr>
+                  <th scope="col" className={board.rankHead}>#</th>
+                  <th scope="col" className={board.companyHead}>{L.company}</th>
+                  <th scope="col" className={cn(board.tagHead, tbl.sectorHead)}>{L.sector}</th>
+                  <BoardSortHead label={L.colFk} href={sortHref("fk")} active={sort === "fk"} dir={dir} hint={L.colFkHint} className={tbl.numHead} />
+                  <BoardSortHead label={L.colGrowth} href={sortHref("buyume")} active={sort === "buyume"} dir={dir} hint={L.colGrowthHint} className={tbl.numHead} />
+                  <BoardSortHead label={L.colMargin} href={sortHref("marj")} active={sort === "marj"} dir={dir} hint={L.colMarginHint} className={tbl.numHead} />
+                  <BoardSortHead label={L.colRoe} href={sortHref("roe")} active={sort === "roe"} dir={dir} hint={L.colRoeHint} className={tbl.numHead} />
+                  <BoardSortHead label={L.colDebt} href={sortHref("borc")} active={sort === "borc"} dir={dir} hint={L.colDebtHint} className={tbl.numHead} />
+                  <BoardSortHead label={L.colCap} href={sortHref("cap")} active={sort === "cap"} dir={dir} className={tbl.numHead} />
                 </tr>
               </thead>
-              <LinkedRows data-motion-stagger className="divide-y divide-line-soft">
+              {/* Satırın tamamı gezinir — `RowTap`, panelin başında. */}
+              <tbody>
                 {shown.map((row, index) => {
                   const m = row.metrics;
                   const lane = laneOf(row);
-                  /* Kulvar yalnız SIRALANAN sütunda: altı sütunun hepsinde
-                     ray, satırı çizgi yığınına çeviriyordu. */
+                  /* Çubuk yalnız SIRALANAN sütunda: altı sütunun hepsinde
+                     ray, satırı çizgi yığınına çeviriyordu. Piyasa değeri
+                     sırasında çubuk listenin en büyüğüne göre (`SizeBar`);
+                     başka sırada piyasa değeri yalnız yazılır (`arayuz.md` →
+                     "Piyasa değeri gibi büyüklükler doğrudan YAZILIR";
+                     önce her satırda 5 piksellik çubuğu vardı). */
                   const laneFor = (key: SortKey) =>
-                    key === sort && lane ? <UniverseLane position={lane.p} title={lane.title} className="[--lane-max:72px]" /> : null;
+                    key !== sort
+                      ? null
+                      : key === "cap"
+                        ? row.cap
+                          ? <SizeBar ratio={row.cap / peakCap} className={tbl.figLane} />
+                          : null
+                        : lane && <UniverseLane position={lane.p} title={lane.title} className={tbl.figLane} />;
+                  const cell = (key: SortKey) => cn("numeral", tbl.num, key === sort ? tbl.lead : board.strong);
+                  const debt = m.debtToEquity !== null && m.debtToEquity >= 0 ? m.debtToEquity : null;
+                  const none = <span className={board.none}>{NO_VALUE}</span>;
                   return (
-                    <tr key={row.symbol} className="cursor-pointer transition-colors hover:bg-primary-tint">
-                      <td className="numeral hidden px-4 py-3 text-xs text-muted sm:table-cell sm:px-5">
-                        {index + 1}
-                      </td>
-                      <td className="py-3 pl-3 pr-1.5 sm:px-3">
-                        <Link
-                          href={`/hisse/${row.symbol}`}
-                          prefetch={false}
-                          className="flex min-h-11 items-center gap-2 sm:min-h-0 sm:gap-2.5"
-                        >
-                          <LogoTile
-                            symbol={row.symbol}
-                            logoUrl={row.company.logoUrl}
-                            className="size-[30px] sm:size-[34px]"
-                          />
-                          <span className="min-w-0">
-                            <span className="block text-base font-bold leading-[18px] text-strong">
-                              {row.symbol}
-                            </span>
-                            <span className="block truncate text-tiny leading-[15px] text-muted">
-                              {row.company.name}
-                            </span>
-                          </span>
-                        </Link>
-                      </td>
-                      <td className="hidden max-w-44 truncate px-3 py-3 text-small text-soft lg:table-cell">
-                        {sectorLabel(row.sector, locale) ?? row.sector}
-                      </td>
-                      <td className="numeral px-1.5 py-3 text-right text-read font-semibold text-strong sm:px-3">
-                        {formatRatio(row.fk, locale)}
-                        {laneFor("fk")}
+                    <tr key={row.symbol} data-row={row.symbol} data-draw style={rowStep(index)}>
+                      <td className={cn("numeral", board.rank)}>{index + 1}</td>
+                      <CompanyCell symbol={row.symbol} name={row.company.name} logoUrl={row.company.logoUrl} />
+                      <td className={cn(board.tag, tbl.sector)}>{sectorLabel(row.sector, locale) ?? row.sector}</td>
+                      <td className={cell("fk")} data-sorted={sort === "fk" || undefined}>
+                        <Figure lane={laneFor("fk")}>{row.fk !== null ? formatRatio(row.fk, locale) : none}</Figure>
                       </td>
                       {/* Büyüme bir DEĞİŞİM — yön rengi meşru. Marj, ROE ve
                           borç seviye ölçüleri: renk yok, işaret sayının içinde. */}
-                      <td className="numeral px-1.5 py-3 text-right text-read sm:px-3">
-                        {m.revenueGrowthTTMYoy !== null ? (
-                          <span
-                            className={cn(
-                              "font-semibold",
-                              directionText(directionOf(m.revenueGrowthTTMYoy)),
-                            )}
-                          >
-                            {formatPercent(m.revenueGrowthTTMYoy, locale, 1)}
-                          </span>
-                        ) : (
-                          <span className="text-xs text-muted">{NO_VALUE}</span>
-                        )}
-                        {laneFor("buyume")}
+                      <td className={cell("buyume")} data-sorted={sort === "buyume" || undefined}>
+                        <Figure lane={laneFor("buyume")}>
+                          {m.revenueGrowthTTMYoy !== null ? (
+                            <span className={directionText(directionOf(m.revenueGrowthTTMYoy))}>
+                              {formatPercent(m.revenueGrowthTTMYoy, locale, 1)}
+                            </span>
+                          ) : none}
+                        </Figure>
                       </td>
-                      <td className="numeral hidden px-3 py-3 text-right text-read text-body sm:table-cell">
-                        {m.netProfitMarginTTM !== null
-                          ? formatPercent(m.netProfitMarginTTM, locale, 1)
-                          : NO_VALUE}
-                        {laneFor("marj")}
+                      <td className={cell("marj")} data-sorted={sort === "marj" || undefined}>
+                        <Figure lane={laneFor("marj")}>{m.netProfitMarginTTM !== null ? formatPercent(m.netProfitMarginTTM, locale, 1) : none}</Figure>
                       </td>
-                      <td className="numeral hidden px-3 py-3 text-right text-read text-body md:table-cell">
-                        {m.roeTTM !== null ? formatPercent(m.roeTTM, locale, 1) : NO_VALUE}
-                        {laneFor("roe")}
+                      <td className={cell("roe")} data-sorted={sort === "roe" || undefined}>
+                        <Figure lane={laneFor("roe")}>{m.roeTTM !== null ? formatPercent(m.roeTTM, locale, 1) : none}</Figure>
                       </td>
-                      <td className="numeral hidden px-3 py-3 text-right text-read text-body lg:table-cell">
-                        {formatRatio(
-                          m.debtToEquity !== null && m.debtToEquity >= 0 ? m.debtToEquity : null,
-                          locale,
-                        )}
-                        {laneFor("borc")}
+                      <td className={cell("borc")} data-sorted={sort === "borc" || undefined}>
+                        <Figure lane={laneFor("borc")}>{debt !== null ? formatRatio(debt, locale) : none}</Figure>
                       </td>
-                      <td className="numeral py-3 pl-1 pr-3 text-right text-small font-semibold text-body sm:px-3 sm:pr-5 sm:text-base">
-                        {row.cap ? (
-                          <>
-                            {formatMoneyCompact(row.cap, locale)}
-                            <SizeBar ratio={row.cap / peakCap} />
-                          </>
-                        ) : (
-                          NO_VALUE
-                        )}
+                      <td className={cell("cap")} data-sorted={sort === "cap" || undefined}>
+                        <Figure lane={laneFor("cap")}>{row.cap ? formatMoneyCompact(row.cap, locale) : none}</Figure>
                       </td>
                     </tr>
                   );
                 })}
-              </LinkedRows>
+              </tbody>
             </table>
           </ScrollEdges>
           )}
-          <p className={visual.laneLegend}>{t.toolVisuals.screener.laneLegend}</p>
+          <p className={board.note}>{t.toolVisuals.screener.laneLegend}</p>
           </>
         )}
 
+        {/* Devamı bandı ortak parça (`MoreBand`): sayaç + kalın ilerleme
+            şeridi + buton, tek grupta solda (eski bant iki uca geriliydi ve
+            şeridi 5 piksellikti). */}
         {hasMore && (
-          <div className="flex flex-wrap items-center justify-between gap-3 border-t border-line px-4 py-3 sm:px-5">
-            <div className="min-w-0">
-              <p className="numeral text-small text-muted">
-                {L.showing.replace("{n}", String(shown.length)).replace("{total}", String(total))}
-              </p>
-              <span
-                aria-hidden
-                className="mt-1.5 block h-[var(--lane-h,5px)] w-28 overflow-hidden rounded-full bg-(--line-soft)"
-              >
-                <span
-                  data-motion-draw="line"
-                  className={cn("block h-full rounded-full", visual.progressFill)}
-                  style={{ width: `${Math.min(100, (shown.length / Math.max(1, total)) * 100)}%` }}
-                />
-              </span>
-            </div>
-            <Link
-              href={paramsFor({ adet: Math.min(limit, total) + PAGE_STEP })}
-              scroll={false}
-              className="inline-flex min-h-11 items-center rounded-md border border-line bg-surface px-4 text-base font-semibold text-body transition-[color,background-color,border-color,scale] hover:border-line-strong hover:text-strong active:scale-[0.97] motion-reduce:active:scale-100 sm:min-h-10"
-            >
-              {L.showMore}
-            </Link>
-          </div>
+          <MoreBand
+            count={L.showing.replace("{n}", String(shown.length)).replace("{total}", String(total))}
+            share={(shown.length / Math.max(1, total)) * 100}
+            href={paramsFor({ adet: Math.min(limit, total) + PAGE_STEP })}
+            label={L.showMore}
+          />
         )}
 
         {/* Kapsam künyesi panelin İÇİNDE, hairline üstünde (CLAUDE.md). */}
-        <p className="border-t border-line px-4 py-3 text-small leading-relaxed text-muted sm:px-5">
-          {L.coverage.replace("{n}", String(rows.length))}
-        </p>
+        <p className={board.note}>{L.coverage.replace("{n}", String(rows.length))}</p>
       </Panel>
 
       {/* SONUCUN GÖRÜNÜMÜ — kümenin şekli (sektör şeridi + dağılım) TABLONUN
@@ -874,14 +783,15 @@ async function ScreenerTable({
                     172 piksellik boşluk) — öteki altı sektör "Diğer 6 Sektör"
                     diye saklanıyordu. Genişte (≥1024) bütün sektörler birer satır:
                     ad, 5 piksellik pay şeridi (en kalabalık sektöre göre), sayı,
-                    yüzde. Aynı `sectorMix`, yeni veri yok. Dar ekranda eski
+                    yüzde (10 Kasım gece: şerit 5 → 8 piksel dolu çubuk, kulvar 5; ortak
+                    `value-bar`). Aynı `sectorMix`, yeni veri yok. Dar ekranda eski
                     künye (ilk beş + "Diğer") kalır: orada sütun zaten dolu. */}
                 <ul className={visual.legend} data-draw>
                   {sectorMix.map(({ sector, count, label }, index) => (
                     <li key={sector} data-rest={index >= LEGEND_LIMIT || undefined}>
                       <span className={visual.legendName}>{label}</span>
-                      <span aria-hidden className={visual.legendLane}>
-                        <i className="bar-fill" style={{ width: `${(count / (sectorMix[0]?.count || count)) * 100}%` }} />
+                      <span aria-hidden className={cn("value-lane", visual.legendLane)}>
+                        <i className="value-bar bar-fill" style={{ left: 0, width: `${(count / (sectorMix[0]?.count || count)) * 100}%` }} />
                       </span>
                       <span className="numeral">{count}</span>
                       <span className="numeral text-muted">{t.toolVisuals.companies.sharePct.replace("{p}", String(sharePercent(count / filtered.length)))}</span>
@@ -1045,8 +955,12 @@ function ActiveFilters({
 function ScreenerSkeleton() {
   /* Özet paneli de iskelette (25 Ekim): yalnız tablo iskeleti basılınca
      gelen özet (~420 piksel) tabloyu aşağı itiyordu. */
+  /* 10 Kasım (gece): tablo iskeleti ortak parçanın (`BoardTableSkeleton`,
+     gerçek satır ölçüleriyle: 62 / 56); sıra gerçek sayfayla aynı — tablo
+     önce, özet sonra (iskelette tersti). */
   return (
     <>
+    <BoardTableSkeleton rows={12} />
     <Panel>
       <div className="flex min-h-12 items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
         <Skeleton className="h-3 w-36" />
@@ -1056,23 +970,6 @@ function ScreenerSkeleton() {
         <Skeleton className="h-4 w-full max-w-xl" />
         <Skeleton className="h-4 w-2/3 max-w-md" />
         <Skeleton className="mt-3 h-11 w-full" />
-      </div>
-    </Panel>
-    <Panel>
-      <div className="flex min-h-12 items-center justify-between gap-4 px-4 py-3.5 sm:px-5">
-        <Skeleton className="h-3 w-36" />
-        <Skeleton className="h-2.5 w-16" />
-      </div>
-      <div className="flex h-9 items-center gap-6 border-b border-line bg-surface-sunken px-4 sm:px-5">
-        <Skeleton className="h-2 w-20" />
-        <Skeleton className="h-2 w-12" />
-        <Skeleton className="ml-auto h-2 w-14" />
-        <Skeleton className="h-2 w-14" />
-      </div>
-      <div className="flex flex-col gap-px">
-        {Array.from({ length: 12 }).map((_, i) => (
-          <SkeletonRow key={i} />
-        ))}
       </div>
     </Panel>
     </>
@@ -1140,6 +1037,14 @@ function ViewSwitch({
  * borç gizli kalıyordu; kart her hisseyi bir bakışta okutuyor: sıralanan
  * ölçü büyük puntoyla ve evren içindeki yeriyle, öteki ölçüler altta ızgara,
  * piyasa değeri büyüklük çubuğuyla. Kartın tamamı hissenin bağlantısı.
+ *
+ * 10 Kasım 2026 (gece), standart turu: kimlik tablo ailesinin ölçüsüne
+ * (logo 34 → 36, sembol 15 → 16/700, ad soluk 12 → gövde 13), ana ölçünün
+ * çubuğu 5 → 8 piksel (ortak değer çubuğu; `data-draw` + `bar-fill`).
+ * Alt ızgaradaki ikinci piyasa değeri çubuğu KALKTI: kartın tek çizimi
+ * sıralanan ölçünün çubuğu; piyasa değeri orada yalnız yazılır
+ * ("büyüklükler doğrudan yazılır"), piyasa değerine göre sıralıyken çubuk
+ * zaten ana ölçüde.
  */
 function ScreenerCards({
   rows,
@@ -1163,7 +1068,7 @@ function ScreenerCards({
   /* Izgarada sıralanan ölçü tekrar edilmez; dört hücre her zaman dolu. */
   const figures = (["fk", "buyume", "marj", "roe", "borc"] as SortKey[]).filter((key) => key !== sort).slice(0, 3);
   return (
-    <ul className={cn(visual.cards, auto && visual.autoCards)} data-motion-stagger>
+    <ul className={cn(visual.cards, auto && visual.autoCards)}>
       {rows.map((row) => {
         const lane = laneOf(row);
         const growth = row.metrics.revenueGrowthTTMYoy;
@@ -1171,10 +1076,11 @@ function ScreenerCards({
            yardımcıları eziyor (CLAUDE.md, Tailwind v4 katman notu). */
         const growthDir = growth === null || growth === 0 ? undefined : growth > 0 ? "up" : "down";
         return (
-          <li key={row.symbol}>
+          /* `data-draw`: kartın çubukları kart ekrana girince dolar (DrawGate). */
+          <li key={row.symbol} data-draw>
             <Link href={`/hisse/${row.symbol}`} prefetch={false} className={visual.card}>
               <span className={visual.cardHead}>
-                <LogoTile symbol={row.symbol} logoUrl={row.company.logoUrl} className="size-[34px]" />
+                <LogoTile symbol={row.symbol} logoUrl={row.company.logoUrl} size="lg" className={visual.cardLogo} />
                 <span className="min-w-0">
                   <b className={visual.cardSymbol}>{row.symbol}</b>
                   <span className={visual.cardName}>{row.company.name}</span>
@@ -1205,7 +1111,6 @@ function ScreenerCards({
                   <span>
                     <span className={visual.cardLabel}>{t.screener.colCap}</span>
                     <b className="numeral">{formatMetric(row, "cap", locale)}</b>
-                    {row.cap ? <SizeBar ratio={row.cap / peakCap} className={visual.cardBar} /> : null}
                   </span>
                 )}
               </span>

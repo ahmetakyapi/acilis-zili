@@ -76,15 +76,15 @@
 .legend li { display: inline-flex; align-items: baseline; gap: 6px; }
 .legendName { color: var(--text-strong); font-weight: 600; }
 .legendRest { color: var(--text-muted); }
-.legendLane, .legend li[data-rest] { display: none; }
+.legend .legendLane, .legend li[data-rest] { display: none; }
 /* Genişte sıralı liste (gerekçe page.tsx → "KÜNYE GENİŞTE SIRALI LİSTE"):
    ad | pay şeridi | sayı | yüzde; satırlar ortak sütunları paylaşır. */
 @media (min-width: 1024px) {
   .legend { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content max-content; gap: 0 12px; margin-top: 6px; }
   .legend li, .legend li[data-rest] { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; min-height: 24px; }
   .legend li > :global(.numeral) { text-align: right; }
-  .legendLane { display: block; height: 5px; border-radius: 999px; background: var(--line-soft); }
-  .legendLane > i { display: block; height: 100%; border-radius: 999px; background: var(--bar-soft); }
+  /* Kulvar/çubuk ortak sınıfta (`value-lane` / `value-bar`); dolgu 5 → 8. */
+  .legend .legendLane { display: block; }
   .legend .legendRest { display: none; }
 }
 
@@ -137,13 +137,16 @@
 .card:hover { border-color: var(--line-focus); background: var(--primary-tint); }
 .card:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
 .cardHead { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 10px; }
-.cardSymbol { display: block; color: var(--text-strong); font-size: 15px; font-weight: 700; line-height: 18px; }
-.cardName { display: block; overflow: hidden; color: var(--text-muted); font-size: 12px; line-height: 16px; white-space: nowrap; text-overflow: ellipsis; }
+/* 10 Kasım (gece): kimlik tablo ailesinin ölçüsünde (gerekçe page.tsx →
+   ScreenerCards). */
+.cardLogo.cardLogo { width: 36px; height: 36px; }
+.cardSymbol { display: block; color: var(--text-strong); font-size: 16px; font-weight: 700; line-height: 20px; letter-spacing: -.015em; }
+.cardName { display: block; overflow: hidden; color: var(--text-body); font-size: 13px; line-height: 17px; white-space: nowrap; text-overflow: ellipsis; }
 .cardSector { max-width: 9rem; overflow: hidden; color: var(--text-soft); font-size:12px; font-weight: 600; text-align: right; white-space: nowrap; text-overflow: ellipsis; }
 .cardMain { display: grid; grid-template-columns: auto 1fr; align-items: end; gap: 2px 12px; }
 .cardMain .cardLabel { grid-column: 1 / -1; }
 .cardValue { color: var(--text-strong); font-size: 26px; line-height: 1.1; font-weight: 700; letter-spacing: -0.03em; }
-.cardMain .cardLane { --lane-max: none; margin: 0 0 9px; }
+.cardMain .cardLane { --lane-max: none; margin: 0 0 10px; }
 .cardLabel { display: block; color: var(--text-muted); font-size:12px; font-weight: 600; line-height: 1.3; }
 .cardFigures { display: grid; grid-auto-flow: column; grid-auto-columns: minmax(0, 1fr); gap: 10px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
 .cardFigures { grid-template-rows: auto auto auto; row-gap: 2px; }
@@ -152,17 +155,13 @@
 .cardFigures > span { display: grid; grid-row: span 3; grid-template-rows: subgrid; align-items: end; min-width: 0; }
 .cardFigures > span > .cardLabel { align-self: start; }
 .cardFigures b { color: var(--text-strong); font-size: 14px; font-weight: 600; white-space: nowrap; }
-.cardFigures .cardBar { --lane-max: none; margin: 3px 0 0; }
 /* Büyüme bir değişim: yön rengi (öteki ölçüler seviye, renksiz). */
 .card [data-dir="up"] { color: var(--up); }
 .card [data-dir="down"] { color: var(--down); }
 
-.laneLegend { padding: 10px 16px 0; color: var(--text-muted); font-size: 12.5px; line-height: 1.55; }
-@media (min-width: 640px) { .laneLegend { padding: 10px 20px 0; } }
-@media (min-width: 1024px) { .laneLegend { padding: 10px 24px 0; } }
-
-/* "60 / 514" sayacının çizgisi — büyüklük, yumuşak mavi. */
-.progressFill { background: var(--bar-soft); }
+/* 10 Kasım (gece): kulvar künyesi ve "60 / 514" sayacı ortak tablo
+   parçasının (`board.note`, `MoreBand`); buradaki `.laneLegend` ve
+   `.progressFill` silindi. */
 
 /* Özet iskeleti — gerçek panelin yüksekliğine yakın (telefonda şerit + küme alt alta). */
 /* Ölçüldü (25 Ekim, süzgeçsiz): panel 634 / 568 / 397 piksel, başlık 48.

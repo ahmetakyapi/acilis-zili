@@ -251,8 +251,8 @@ function FundTile({
             {/* Aynı ölçek bütün kartlarda: %0-100 takip edilen sermaye. Ton
                 kapaktaki sermaye şeridiyle aynı (`--bar-soft`): Buffett'ın
                 kapaktaki parçası ile kartındaki çizgisi aynı büyüklük. */}
-            <span className={styles.lane} aria-hidden>
-              <i data-motion-draw="line" style={{ width: `${Math.max(share, 0.6)}%` }} />
+            <span className="value-lane" aria-hidden>
+              <i className="value-bar" data-motion-draw="line" style={{ left: 0, width: `${Math.max(share, 0.6)}%` }} />
             </span>
           </>
         ) : (

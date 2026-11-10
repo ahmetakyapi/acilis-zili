@@ -40,9 +40,10 @@
 table.emWide { max-width:none; }
 table.emWide td.emLaneCell { width:100%; padding-inline:14px; }
 .emLane { position:relative; display:block; min-width:120px; height:15px; }
-.emLane::before { content:""; position:absolute; inset-inline:0; top:50%; height:var(--lane-h,5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
+/* 10 Kasım (gece): kulvar ve çubuk ortak sınıflarda (`value-lane`,
+   `value-bar`; globals.css → "DEĞER ÇUBUĞU"); buradaki kopyalar silindi. */
+.emLane > .emLaneTrack { position:absolute; inset-inline:0; top:5px; }
 .emLaneBand { position:absolute; inset-block:0; border-radius:4px; background:color-mix(in srgb, var(--text-strong) 7%, transparent); box-shadow:inset 1px 0 var(--line-strong), inset -1px 0 var(--line-strong); }
 .emLaneZero { position:absolute; inset-block:1px; left:50%; width:1px; background:var(--line-strong); }
 /* 10 Kasım: çubuk 5 → 8 piksel (kulvar 5); sıfıra dayanan uç düz, dış uç yuvarlak. */
-.emLaneBar { position:absolute; top:calc(50% - 4px); height:8px; border-radius:0 999px 999px 0; background:var(--up); }
-.emLaneBar[data-dir="down"] { border-radius:999px 0 0 999px; background:var(--down); }
+

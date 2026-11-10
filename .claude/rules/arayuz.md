@@ -123,7 +123,9 @@ kontrastlar sahibinin makinesindeki `~/dev-starter/knowledge/themes/acilis-zili.
   (16/700), küçük kart başlığı 14/700, bölüm başlığı
   `clamp(25px,2.8vw,36px)`/600; display sayı 700, harf aralığı −0,03em;
   ağırlıklar 400/600/700 (550/650/750/850 ara basamak yok); metin tabanı 12
-  piksel; şerit 5 piksel, uçlar 999, kulvar `--line-soft`, dolgu opak; mini
+  piksel; şerit 5 piksel, uçlar 999, kulvar `--line-soft`, dolgu opak;
+  değerin çubuğu ortak sınıflarla — `value-lane` (5) / `value-bar` (8) /
+  `value-notch` (2), globals.css → "DEĞER ÇUBUĞU"; modülde kopyası yazılmaz; mini
   grafik çizgisi 2 piksel; halka 6 piksel; etiket çipi 22/12/600 dolgu 8;
   zaman çipi `TimingChip`, değişim hapı `ChangePill`, karne
   `components/earnings/KarneStrip.tsx`; boş değer "–" + `text-muted`.

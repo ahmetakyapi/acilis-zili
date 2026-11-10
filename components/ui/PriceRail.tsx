@@ -38,6 +38,26 @@ import styles from "./PriceRail.module.css";
  * oturuyor. `travel` işareti varsa canlı nokta hayalet noktadan kalkıp
  * yerine kayıyor (`data-motion-draw="travel"`, `data-delta` yüzde puan).
  * Azaltılmış harekette ve JavaScript'siz son hâl doğrudan basılır.
+ *
+ * `bar` KİPİ — ATLAS DİLİ (10 Kasım 2026, gece; sahibinin sözü: "nokta nokta
+ * ne anlatıyor anlamıyorum; yatayda uzun kalın çizgi seviyorum", ana
+ * oturumun kararı: "okur çentiğin ne olduğunu lejantta aramasın"). Hisse
+ * sayfasının Hareketli Ortalamalar cetvelinde fiyat 14 piksellik NOKTAYDI,
+ * ortalamalar yön renginde kısa soluk çentiklerdi (10 piksel, %55). `bar`
+ * verilince ray teknik atlasın ve kart rayının diliyle çizilir:
+ *   · eksen 2 piksellik oluk yerine 5 piksellik KULVAR;
+ *   · canlı fiyat nokta değil: TABANDAN fiyata 8 piksellik dolu çubuk
+ *     (ortak `value-bar`, ton `--bar-soft`) ve ucunda koyu dik "şimdi" imi.
+ *     Taban `range` bandının alt ucu (52 hafta dibi); bant yoksa ölçeğin
+ *     solu;
+ *   · çentikler çubuğun ÜSTÜNDE ince KOYU mürekkep (`value-notch`, 2 × 14);
+ *     ne oldukları adlarıyla yazılı (etiket yerleşimi aynı). Yön artık
+ *     çentiğin renginde değil: fiyatın ortalamanın üstünde mi altında mı
+ *     olduğu çubuğun ucunun çentiği geçip geçmediğinden ve yanındaki
+ *     tablodaki yüzdeden okunuyor.
+ * Varsayılan (kip kapalı) çizim piksel piksel aynı: bilanço kapağındaki
+ * fiyat merdiveni (`ReportCover`) hâlâ noktalı dilde — o ekran bu turun
+ * kapsamı dışında, geçiş kararı ana oturumun.
  */
 
 export type RailBandTone = "entry" | "range" | "up" | "down";
@@ -149,12 +169,15 @@ export function PriceRail({
   marks,
   size = "sm",
   pad = 0.06,
+  bar = false,
   className,
 }: {
   marks: readonly RailMark[];
   size?: "sm" | "md";
   /** Eksenin iki ucuna eklenen pay, aralığın oranı olarak. */
   pad?: number;
+  /** Atlas dili: tabandan fiyata kalın çubuk, koyu adlı çentikler (gerekçe üstte). */
+  bar?: boolean;
   className?: string;
 }) {
   const values = marks
@@ -205,19 +228,19 @@ export function PriceRail({
     travel && live && Math.abs(travel.to - live.at) < 1e-9 ? (frac(travel.from) - frac(travel.to)) * 100 : null;
 
   return (
-    <div className={[styles.rail, className].filter(Boolean).join(" ")} data-size={size} aria-hidden>
+    <div className={[styles.rail, className].filter(Boolean).join(" ")} data-size={size} data-bar={bar || undefined} aria-hidden>
       <div
         className={styles.frame}
         style={frameVars}
       >
         <div className={styles.track}>
-          <span className={styles.axis} />
+          <span className={bar ? `value-lane ${styles.axis}` : styles.axis} />
           {marks.map((mark, index) =>
             mark.kind === "void" ? (
               <span key={`void-${index}`} className={styles.void} style={{ width: pct(mark.to) }} />
             ) : null,
           )}
-          {(bands.length > 0 || segments.length > 0) && (
+          {(bands.length > 0 || segments.length > 0 || (bar && live)) && (
             <span className={styles.legs} data-motion-stagger>
               {bands.map((mark, index) => (
                 <span
@@ -228,6 +251,20 @@ export function PriceRail({
                   style={span(mark.from, mark.to, 6)}
                 />
               ))}
+              {/* Atlas dili: tabandan (52 hafta dibi; yoksa ölçeğin solu)
+                  fiyata dolu çubuk. En az 4 piksel. */}
+              {bar && live && (() => {
+                const range = bands.find((mark) => (mark.tone ?? "range") === "range");
+                const base = range ? Math.min(range.from, range.to) : lo;
+                return (
+                  <span
+                    className="value-bar"
+                    data-end="end"
+                    data-motion-draw="line"
+                    style={{ ...span(base, live.at, 4), transformOrigin: "left center" }}
+                  />
+                );
+              })()}
               {segments.map((mark, index) => (
                 <span
                   key={`seg-${index}`}
@@ -245,6 +282,9 @@ export function PriceRail({
           {travel && <span className={styles.travel} style={span(travel.from, travel.to, 0)} />}
           {marks.map((mark, index) => {
             if (mark.kind === "tick") {
+              if (bar) {
+                return <span key={`tick-${index}`} className="value-notch" style={{ left: pct(mark.at) }} />;
+              }
               return (
                 <span
                   key={`tick-${index}`}
@@ -261,6 +301,9 @@ export function PriceRail({
             }
             if (mark.variant === "ghost") {
               return <span key={`pt-${index}`} className={styles.ghost} style={{ left: pct(mark.at) }} />;
+            }
+            if (bar) {
+              return <span key={`pt-${index}`} className={styles.now} style={{ left: pct(mark.at) }} />;
             }
             return (
               <span

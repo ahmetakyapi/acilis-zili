@@ -22,12 +22,12 @@ import styles from "./Lanes.module.css";
 export function SizeBar({ ratio, className }: { ratio: number; className?: string }) {
   const pct = Math.min(1, Math.max(0, ratio)) * 100;
   return (
-    <span aria-hidden data-motion-track className={cn(styles.lane, styles.end, className)}>
-      <span
-        className={styles.size}
-        data-motion-draw="line"
-        style={{ width: `${pct}%`, marginLeft: `${100 - pct}%`, transformOrigin: "right center" }}
-      />
+    /* 10 Kasım (gece), değer çubuğu standardı: dolgu kulvarla aynı 5
+       pikseldi, şimdi 8 (kulvar 5); sınıflar ortak (`value-lane`,
+       `value-bar` — globals.css). Çizim `bar-fill` ile (kaynak sağda:
+       çubuk sayının sağ kenarından büyür); kapı satırın/kartın `data-draw`ı. */
+    <span aria-hidden className={cn("value-lane", styles.lane, styles.end, className)}>
+      <span className="value-bar bar-fill" style={{ left: `${100 - pct}%`, width: `${pct}%`, transformOrigin: "right center" }} />
     </span>
   );
 }
@@ -43,7 +43,9 @@ export function SizeBar({ ratio, className }: { ratio: number; className?: strin
  * rayda göz imi arıyor, komşu sütundaki dolu piyasa değeri çubuğuyla aynı
  * dilde okunmuyordu. Şimdi 8 piksellik dolu çubuk (kulvar 5), dış ucu
  * yuvarlak; ortanca çubuğun ÜSTÜNDE ince koyu çentik (tek kıyas imi).
- * Sözleşme (prop'lar) aynı; çağıran değişmedi.
+ * Sözleşme (prop'lar) aynı; çağıran değişmedi. Aynı gece: kurallar ortak
+ * sınıfa taşındı (`value-lane` / `value-bar` / `value-notch`); ölçüler aynı
+ * (kulvar 5, çubuk 8, çentik 2 × 13 — önce/sonra ölçüldü, /tarama).
  */
 export function UniverseLane({
   position,
@@ -57,10 +59,10 @@ export function UniverseLane({
 }) {
   const pct = Math.min(1, Math.max(0, position)) * 100;
   return (
-    <span aria-hidden title={title} data-motion-track className={cn(styles.lane, styles.end, styles.universe, className)}>
+    <span aria-hidden title={title} className={cn("value-lane", styles.lane, styles.end, className)}>
       {/* En az 3: en alttaki hissede de çubuğun ucu görünsün (boş kulvar "veri yok" gibi okunur). */}
-      <span className={styles.rank} data-motion-draw="line" style={{ width: `${Math.max(pct, 3)}%`, transformOrigin: "left center" }} />
-      <span className={styles.medianNotch} />
+      <span className="value-bar bar-fill" style={{ left: 0, width: `${Math.max(pct, 3)}%` }} />
+      <span className="value-notch" style={{ left: "50%" }} />
     </span>
   );
 }

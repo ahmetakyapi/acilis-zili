@@ -43,10 +43,6 @@ export const stockVisualsTr = {
 
   /** Pozisyonun hisse adedi: "228 Mn Adet". */
   sharesUnit: "{n} Adet",
-  /* ---- Aynı Sektörden Şirketler: piyasa değeri ---- */
-  capLogNote:
-    "Çubuk piyasa değerini logaritmik ölçekte gösterir: sol uç {floor}, sağ uç listenin en büyüğü; her eşit adım on kat.",
-
   /* ---- Kural Kural: eşik kulvarı ---- */
   colGauge: "Eşik ve Değer",
   gaugeAria: "Eşik {t}, değer {v}",
@@ -84,9 +80,6 @@ export const stockVisualsEn: typeof stockVisualsTr = {
   dekStories: "{n} Lens Stories",
 
   sharesUnit: "{n} Shares",
-  capLogNote:
-    "Bars show market cap on a log scale: the left end is {floor}, the right end the largest in the list; each equal step is ten times.",
-
   colGauge: "Threshold and Value",
   gaugeAria: "Threshold {t}, value {v}",
   gaugeNote:

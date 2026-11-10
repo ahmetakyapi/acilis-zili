@@ -61,14 +61,14 @@ export function DeviationLine({
   return (
     <div className={cn(styles.line, className)} aria-hidden data-dir={deviation.direction} data-size={compact ? "compact" : undefined} data-motion-track={motion || undefined}>
       <div className={styles.rail}>
-        <span className={styles.axis} />
+        <span className={cn("value-lane", styles.axis)} />
         {/* Beklentiden gerçekleşene uzanan bacak: sıfırdan açılıyor. */}
         {moves && (
           <span
-            className={styles.leg}
+            className="value-bar"
             data-motion-draw={motion ? "line" : undefined}
             data-leg
-            data-side={actual > HALF ? "above" : "below"}
+            data-end={actual > HALF ? "end" : "start"}
             style={{
               left: `${Math.min(HALF, actual)}%`,
               width: `${Math.abs(actual - HALF)}%`,
@@ -76,7 +76,7 @@ export function DeviationLine({
             }}
           />
         )}
-        <span className={styles.zero} />
+        <span className="value-notch" style={{ left: "50%" }} />
         {deviation.previousAt !== null && (
           <span className={styles.previous} style={{ left: `${pos(deviation.previousAt)}%` }} />
         )}

@@ -233,8 +233,8 @@ function TopPositions({
                 <strong className="numeral">{formatWeight(position.weight, locale)}</strong>
                 <small className="numeral">{formatMoneyCompact(position.value, locale)}</small>
               </span>
-              <span className={styles.lane} aria-hidden>
-                <i data-motion-draw="line" style={{ width: `${(position.weight / peak) * 100}%` }} />
+              <span className="value-lane" aria-hidden>
+                <i className="value-bar" data-motion-draw="line" style={{ left: 0, width: `${(position.weight / peak) * 100}%` }} />
               </span>
               {compared && (
                 <span className={styles.topMove}>

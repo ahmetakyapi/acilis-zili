@@ -35,18 +35,12 @@
 
 /* ---- Kulvar (hedef ölçeği, önceki → bu ay, sıfırdan fark) ----
    Üstte 20 piksellik etiket şeridi, ortada kulvar, altta uçlar. */
-.scale { position:relative; padding-top:22px; }
-.track { position:relative; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
-/* Çubuk 8 piksel (kulvar 5). Tek parçaysa iki ucu yuvarlak; iki parçalı
-   çubukta (`data-end`) yalnız DIŞ uç yuvarlak, ek yeri düz. */
-.fill { position:absolute; top:calc(50% - 4px); height:8px; border-radius:999px; background:var(--flat); }
-.fill[data-end="start"] { border-radius:999px 0 0 999px; }
-.fill[data-end="end"] { border-radius:0 999px 999px 0; }
-.fill[data-grow="left"] { transform-origin:right center; }
-.fill[data-tone="alert"] { background:var(--brass); }
-.fill[data-tone="up"] { background:var(--up); }
-.fill[data-tone="down"] { background:var(--down); }
-.tick { position:absolute; top:-5px; width:2px; height:15px; margin-left:-1px; border-radius:1px; background:var(--text-strong); }
+/* 10 Kasım (gece): kulvar, çubuk ve çentik ortak sınıflarda (`value-lane`,
+   `value-bar`, `value-notch`; globals.css → "DEĞER ÇUBUĞU"); buradaki
+   kopyalar (`.track`, `.fill`, `.tick`) silindi. Nötr ton burada `--flat`
+   (mavi yok: bu bant etkileşim tonundan uzak duruyor), uyarı pirinç
+   (`--bar-tone`, MacroGauges.tsx), yön `data-tone`. Çentik 15 piksel. */
+.scale { position:relative; padding-top:22px; --bar-tone:var(--flat); --notch-out:5px; }
 /* Hedef/eşik ya da önceki ayın etiketi, işaretin tam üstünde; kenara
    yakınsa kenara yaslanıyor (MacroGauges.tsx → `edge`). Kulvarın kendi
    iç payı yok (nokta kalktı, 10 Kasım). */

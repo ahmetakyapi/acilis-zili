@@ -2,7 +2,7 @@ import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { ladderOf, type Level } from "@/lib/technical";
 import { spreadLabels } from "@/lib/technical-visuals";
-import { formatPrice } from "@/lib/utils";
+import { cn, formatPrice } from "@/lib/utils";
 import styles from "./LevelScale.module.css";
 
 /* Etiketler arası en az pay (eksenin oranı): 1024'te eksen ~930 piksel,
@@ -35,8 +35,22 @@ type Mark = { key: string; kind: Level["kind"] | "sellLevel" | "price"; at: numb
  * imleç. Kaynak aynı beş sayı (`ladderOf`) — merdivenle aynı fonksiyon.
  *
  * Çizim `aria-hidden`; sayılar hemen altındaki kartlarda metin olarak var.
- * Giriş: imleç fiyata soldan kayar (bir kez, `--ease-brand`); hareketi
- * azaltana son kare.
+ *
+ * ATLAS DİLİ (10 Kasım 2026, gece; sahibinin sözü: "nokta nokta ne anlatıyor
+ * anlamıyorum; yatayda uzun kalın çizgi seviyorum"). Fiyat 14 piksellik
+ * NOKTAYDI ve iki yanına en yakın seviyelere 5 piksellik yön renkli iki
+ * şerit uzanıyordu; çentikler renkliydi (hedef yeşil, stop kırmızı, bölge
+ * mavi). Şimdi kart rayı ve atlasla aynı tek okuma: TABANDAN (stop; yoksa
+ * fiyatın altındaki en yakın destek, o da yoksa ölçeğin solu) FİYATA 8 piksellik dolu çubuk (ortak `value-bar`,
+ * `--bar-soft`; fiyat stopun altındaysa stoptan sola, düşüş tonunda), ucu
+ * "şimdi" — koyu dik im, adı ve sayısı tepesinde. Seviyeler çubuğun
+ * ÜSTÜNDE ince koyu çentik (`value-notch`), adları zaten altında yazılı
+ * (anlam rengi adda kaldı); bölge bir aralık, çentiği yok, bandı var.
+ * En yakın seviyelere uzanan iki şerit kalktı: uzaklık alttaki kartlarda
+ * yüzdeyle yazılı ve çubukla aynı eksende üçüncü bir katmandı.
+ * Giriş: çubuk tabandan fiyata dolar (`bar-fill`, bir kez); hareketi
+ * azaltana son kare. (Önce: imleç ve şeritler modülün kendi keyframes'i
+ * ile giriyordu; ortak sınıfa geçti.)
  */
 export function LevelScale({
   price,
@@ -113,28 +127,38 @@ export function LevelScale({
   );
   const labelAt = marks.map((mark) => (mark.kind === "price" ? mark.at : spread[levelMarks.indexOf(mark)]!));
   const entry = levels.find((level) => level.kind === "entry");
-  /* Fiyattan iki yandaki EN YAKIN seviyeye şerit — kartların "Fiyata
-     Uzaklık" yüzdesinin çizgisi; renk yön (yukarı yükseliş, aşağı düşüş),
-     kartlardaki yüzdenin rengiyle aynı. */
-  const edges = levels.flatMap((level) => (level.high !== undefined ? [level.price, level.high] : [level.price]));
-  const above = edges.filter((value) => value > price).sort((a, b) => a - b)[0];
-  const below = edges.filter((value) => value < price).sort((a, b) => b - a)[0];
+  /* Çubuğun tabanı: stop; yoksa fiyatın altındaki en yakın destek (kart
+     rayı ve atlasla aynı sıfır); o da yoksa ölçeğin solu. */
+  const stopLevel = levels.find((level) => level.kind === "stop");
+  const supportBelow = levels
+    .filter((level) => level.kind === "support" && level.price <= price)
+    .sort((a, b) => b.price - a.price)[0];
+  const baseAt = stopLevel ? at(stopLevel.price) : supportBelow ? at(supportBelow.price) : 0;
+  const priceAt = at(price);
+  const belowBase = priceAt < baseAt;
   const pct = (fraction: number) => `${(fraction * 100).toFixed(2)}%`;
 
   return (
     <div className={styles.scale} aria-hidden>
       <span className={styles.caption}>{t.technical.levelScale}</span>
       <div className={styles.axis}>
-        <span className={styles.lane} />
         {entry && entry.high !== undefined && (
           <span className={styles.band} style={{ left: pct(at(entry.price)), width: pct(at(entry.high) - at(entry.price)) }} />
         )}
-        {above !== undefined && (
-          <span className={styles.leg} data-tone="up" style={{ left: pct(at(price)), width: pct(at(above) - at(price)) }} />
-        )}
-        {below !== undefined && (
-          <span className={styles.leg} data-tone="down" data-from="end" style={{ left: pct(at(below)), width: pct(at(price) - at(below)) }} />
-        )}
+        <span className={cn("value-lane", styles.lane)}>
+          <span
+            className="value-bar bar-fill"
+            data-end={belowBase ? "start" : "end"}
+            data-tone={belowBase ? "down" : undefined}
+            style={{ left: pct(Math.min(baseAt, priceAt)), width: pct(Math.max(Math.abs(priceAt - baseAt), 0.004)) }}
+          />
+          {marks
+            .filter((mark) => mark.kind !== "price" && mark.kind !== "entry")
+            .map((mark) => (
+              <span key={mark.key} className="value-notch" style={{ left: pct(mark.at) }} />
+            ))}
+          <span className={styles.now} style={{ left: pct(priceAt) }} />
+        </span>
         {marks.map((mark, index) => {
           const shift = labelAt[index]! - mark.at;
           return (
@@ -146,7 +170,6 @@ export function LevelScale({
               data-align={mark.kind === "price" ? (mark.at < 0.14 ? "start" : mark.at > 0.86 ? "end" : undefined) : undefined}
               style={{ left: pct(mark.at) }}
             >
-              <span className={styles.tick} />
               {/* İtilen etiketin kayması eksen oranında; `cqw` eksenin kendi
                   genişliği (eksen `container-type: inline-size`). */}
               <span className={styles.label} style={{ "--shift": `${(shift * 100).toFixed(2)}cqw` } as React.CSSProperties}>

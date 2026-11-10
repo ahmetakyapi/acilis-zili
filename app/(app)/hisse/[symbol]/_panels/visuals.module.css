@@ -10,15 +10,12 @@
    hemen altında ve hücre genişliğinde. 10 Kasım: 11 piksellik nokta ve
    ölçek dışı halkası kalktı; çubuk 5 → 8 piksel (gerekçe PeerStrip.tsx). */
 .peer { display:flex; flex-direction:column; gap:5px; margin-top:4px; min-width:0; }
-.peerRail { position:relative; display:block; height:15px; }
-.peerRail::before { content:""; position:absolute; inset-inline:0; top:50%; height:var(--lane-h,5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
-/* Renk kararı (25 Ekim son düzeltme): büyüklük şeridi markanın mavi
-   ailesinin YUMUŞAK tonu, sitenin tek büyüklük token'ı `--bar-soft`
-   (globals.css; önceden burada `--primary-soft` %45 vardı, ScaleBar'dan
-   farklı bir mavi), doygun etkileşim mavisi değil; medyan en koyu mürekkep. */
-.peerGap { position:absolute; top:calc(50% - 4px); height:8px; border-radius:0 999px 999px 0; background:var(--bar-soft); }
-.peerGap[data-side="below"] { border-radius:999px 0 0 999px; }
-.peerMedian { position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-strong); }
+/* 10 Kasım (gece): kulvar, çubuk ve çentik ortak sınıflarda (`value-lane`,
+   `value-bar`, `value-notch`; globals.css → "DEĞER ÇUBUĞU"); buradaki
+   kopyalar silindi. Kulvar 15 piksellik satırın ortasında (5 + 5 + 5),
+   çentik satır boyunca. Renk kararı (25 Ekim): büyüklük `--bar-soft`
+   (ortak varsayılan), medyan en koyu mürekkep. */
+.peerRail { margin-block:5px; --notch-out:5px; }
 .peerCaption { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0 10px; color:var(--text-muted); font-size:12px; line-height:1.35; letter-spacing:0; }
 .peerCaption > span:first-child { color:var(--text-body); }
 

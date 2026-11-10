@@ -1,3 +1,4 @@
+import type React from "react";
 import { cn } from "@/lib/utils";
 
 /**
@@ -67,17 +68,23 @@ export function ScaleBar({
        Gözlemci küçülen çubuğu değil RAYI izler: /piyasalar 390px'de
        sağdaki sıfır noktası x=377, kaydırıcı kenarı x=372. Eksi çubuğun
        giriş pozu dışarıda kalınca görünür soldaki kısmı da hiç açılmıyordu. */
+    /* DEĞER ÇUBUĞU STANDARDI (10 Kasım 2026, gece). Dolgu kulvarla aynı 5
+       pikseldi (ince şerit dönemi); sahibinin kararıyla ("yatayda uzun kalın
+       çizgi") dolgu 8, kulvar 5 — ortak sınıflar `value-lane` / `value-bar`
+       (globals.css → "DEĞER ÇUBUĞU"). Sıfıra dayanan uç düz, dış uç yuvarlak;
+       işaretsiz çubuk sağa yaslı ve iki ucu yuvarlak. Ölçüldü
+       (/karsilastir, 1440 ve 390, iki tema): kulvar 5, dolgu 8; kulvarın
+       yeri ve genişliği (128 tavan, sağa yaslı) değişmedi. */
     <span
       aria-hidden
       data-motion-track
-      className={cn(
-        "mt-1.5 ml-auto block h-[var(--lane-h,5px)] w-full max-w-[128px] rounded-full bg-(--line-soft)",
-        className,
-      )}
+      className={cn("value-lane mt-1.5 ml-auto w-full max-w-[128px]", className)}
     >
       <span
-        className="block h-full rounded-full"
+        className="value-bar"
         data-motion-draw="line"
+        data-tone={tone === "signal" ? (eksi ? "down" : "up") : undefined}
+        data-end={signed ? (eksi ? "start" : "end") : undefined}
         style={{
           /* Çizgi sıfırdan açılıyor (MotionExperience): işaretli rayda
              sıfır ortada, işaretsizde sağ uçta. */
@@ -85,22 +92,15 @@ export function ScaleBar({
           ...(signed
             ? {
                 /* Sıfır tam ortada: artı sağa, eksi sola açılıyor. */
-                marginLeft: eksi ? `${50 - yuzde / 2}%` : "50%",
+                left: eksi ? `${50 - yuzde / 2}%` : "50%",
                 width: `${yuzde / 2}%`,
               }
-            : { marginLeft: `${100 - yuzde}%`, width: `${yuzde}%` }),
-          background:
-            tone === "signal"
-              ? eksi
-                ? "var(--down)"
-                : "var(--up)"
-              : emphasis
-                ? "var(--primary)"
-                : /* BÜYÜKLÜK YUMUŞAK MAVİDE (25 Ekim, site geneli renk
-                     kararı): piyasa değeri, F/K, ağırlık gibi büyüklükler
-                     `--bar-soft`; doygun `--primary` yalnız etkileşim ve
-                     seçili satır (`emphasis`). Kalınlık `--lane-h`. */
-                  "var(--bar-soft)",
+            : { left: `${100 - yuzde}%`, width: `${yuzde}%` }),
+          /* BÜYÜKLÜK YUMUŞAK MAVİDE (25 Ekim, site geneli renk kararı):
+             piyasa değeri, F/K, ağırlık gibi büyüklükler `--bar-soft`
+             (ortak sınıfın varsayılanı); doygun `--primary` yalnız
+             etkileşim ve seçili satır (`emphasis`). Yön tonu `data-tone`. */
+          ...(tone !== "signal" && emphasis ? ({ "--bar-tone": "var(--primary)" } as React.CSSProperties) : {}),
         }}
       />
     </span>
@@ -140,16 +140,12 @@ export function RangeTrack({ position }: { position: number | null }) {
     >
       {yer !== null && (
         <>
+          {/* Dipten fiyata 8 piksellik dolu çubuk (10 Kasım, değer çubuğu
+              standardı); imle biten uç düz. Konum bir büyüklük, yargı
+              değil: yumuşak mavi (25 Ekim renk kararı). */}
+          <span className="value-bar" data-end="start" style={{ left: 0, width: `${yer * 100}%`, transformOrigin: "left center" }} />
           <span
-            className="absolute inset-y-0 left-0 rounded-full"
-            style={{
-              width: `${yer * 100}%`,
-              /* Konum bir büyüklük, yargı değil: yumuşak mavi (25 Ekim renk kararı). */
-              background: "var(--bar-soft)",
-            }}
-          />
-          <span
-            className="absolute top-1/2 h-[9px] w-[3px] -translate-x-1/2 -translate-y-1/2 rounded-full bg-(--text-strong)"
+            className="value-notch"
             style={{ left: `${yer * 100}%` }}
           />
         </>

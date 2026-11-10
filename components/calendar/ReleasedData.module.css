@@ -59,12 +59,16 @@
    DeviationLine.tsx). */
 .line { display: flex; flex-direction: column; gap: 4px; margin-top: 2px; }
 .rail { position: relative; height: 24px; container-type: inline-size; }
-.axis { position: absolute; inset: 9.5px 0 auto; height: 5px; border-radius: 999px; background: var(--line-soft); }
-.leg { position: absolute; top: 8px; height: 8px; border-radius: 0 999px 999px 0; background: var(--flat); }
-.leg[data-side="below"] { border-radius: 999px 0 0 999px; }
-.line[data-dir="above"] .leg { background: var(--up); }
-.line[data-dir="below"] .leg { background: var(--down); }
-.zero { position: absolute; top: 3px; left: 50%; width: 2px; height: 18px; margin-left: -1px; border-radius: 1px; background: var(--text-strong); }
+/* 10 Kasım (gece): kulvar, çubuk ve sıfır çentiği ortak sınıflarda
+   (`value-lane`, `value-bar`, `value-notch`; globals.css → "DEĞER ÇUBUĞU");
+   buradaki kopyalar silindi. Modülde yalnız yer ve ton: çubuk rayın
+   ortasında (24'te 8. piksel, küçük hâlde 3.), sıfır çentiği rayı 3 piksel
+   içeriden keser (18; küçük hâlde 12). Ölçüler önce/sonra aynı. */
+.line { --bar-tone: var(--flat); }
+.line[data-dir="above"] { --bar-tone: var(--up); }
+.line[data-dir="below"] { --bar-tone: var(--down); }
+.rail { --notch-out: -3px; }
+.rail > .axis { position: absolute; inset: 9.5px 0 auto; }
 .previous { position: absolute; top: 7px; width: 3px; height: 10px; margin-left: -1.5px; border-radius: 2px; background: var(--text-muted); opacity: .7; }
 
 /* KÜÇÜK HÂL (6 Kasım, inceleme; `DeviationLine compact`): bülten kartının
@@ -73,9 +77,8 @@
    Uç adları yok (karoda taban künyesi ve yön yazılı). */
 .line[data-size="compact"] { gap: 0; margin-top: 0; }
 .line[data-size="compact"] .rail { height: 14px; }
-.line[data-size="compact"] .axis { top: 4.5px; }
-.line[data-size="compact"] .leg { top: 3px; }
-.line[data-size="compact"] .zero { top: 1px; height: 12px; }
+.line[data-size="compact"] .rail { --notch-out: -1px; }
+.line[data-size="compact"] .rail > .axis { top: 4.5px; }
 .line[data-size="compact"] .previous { top: 3px; height: 8px; }
 
 /* Uç adları: yön sözle de yazılı. Orta künye sıfırın adı (Beklenti ya da,

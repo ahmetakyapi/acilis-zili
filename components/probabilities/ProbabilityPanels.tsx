@@ -26,7 +26,7 @@ import {
   type ProbEvent,
 } from "@/lib/probabilities";
 import { readerDayOffset, TR_ZONE, formatInZone, zoneDateKey } from "@/lib/session-clock";
-import { formatEtDateCompact, formatPercentPlain, formatPrice, relativeDayLabel } from "@/lib/utils";
+import { cn, formatEtDateCompact, formatPercentPlain, formatPrice, relativeDayLabel } from "@/lib/utils";
 import { ProbabilityLine, type LineRow, type LineSeries } from "./ProbabilityLine";
 import { ProbabilityStack, RatePath, RecessionHistory, etOf, pct, shareMap, shareText } from "./ProbabilityParts";
 import styles from "./Probabilities.module.css";
@@ -539,9 +539,9 @@ export function CpiPanel({ snapshot, locale, t }: { snapshot: ProbabilitySnapsho
           {steps.map((step) => (
             <li key={step.threshold}>
               <span>{p.cpiAbove.replace("{n}", formatPrice(step.threshold, locale, { digits: 1 }))}</span>
-              <span className={styles.lane} aria-hidden>
-                <span data-motion-draw="line" style={{ width: `${step.above * 100}%` }} />
-                <i className={styles.ladderMid} />
+              <span className={cn("value-lane", styles.lane)} aria-hidden>
+                <span className="value-bar" data-motion-draw="line" style={{ left: 0, width: `${step.above * 100}%` }} />
+                <i className="value-notch" data-quiet style={{ left: "50%" }} />
               </span>
               <b>{pct(step.above, locale)}</b>
             </li>
@@ -594,8 +594,8 @@ export function NotesPanel({ t, locale }: { t: Dictionary; locale: Locale }) {
           <div className={styles.priceViz} role="img" aria-label={p.notePriceAria}>
             <b className="numeral">{p.notePriceFrom}</b>
             <ArrowRight size={12} weight="bold" aria-hidden />
-            <span className={styles.priceLane} aria-hidden>
-              <span />
+            <span className={cn("value-lane", styles.priceLane)} aria-hidden>
+              <span className="value-bar" style={{ left: 0, width: "63%" }} />
             </span>
             <b className="numeral">{p.notePriceTo}</b>
           </div>

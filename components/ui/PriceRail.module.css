@@ -135,6 +135,29 @@
   box-shadow: 0 0 0 3px var(--rail-ground), 0 0 0 4px var(--rail-live, var(--primary));
 }
 
+/* ---- `bar` kipi: atlas dili (10 Kasım 2026, gece; gerekçe PriceRail.tsx
+   → "`bar` KİPİ") ----
+   Kulvar, çubuk ve çentik ortak sınıflarda (`value-lane`, `value-bar`,
+   `value-notch`; globals.css → "DEĞER ÇUBUĞU"). Ray yine 24 piksel, her öğe
+   12. pikselde ortalı: kulvar 9,5 + 5, çubuk 8 + 8, bant 5 + 14, çentik
+   5 + 14, "şimdi" 1 + 22. Ölçüldü (/hisse/NVDA ve fon dalı /hisse/SPY, 390
+   ve 1440, iki tema): kulvar 5, çubuk 8, kart ve sayfa boyu aynı. */
+.rail[data-bar] .track { --notch-out: -5px; }
+/* Çift seçici: `.axis`in 2 piksellik oluk ölçüleri ortak `value-lane` ile
+   aynı özgüllükte; sıra garanti değil (ölçüldü: kulvar 2 piksel basıldı). */
+.rail[data-bar] .track > .axis { position: absolute; inset-inline: 0; top: 9.5px; height: 5px; border-radius: 999px; background: var(--line-soft); }
+/* "Şimdi" çentiklerden ayrışsın: 4 × 22 (çentik 2 × 14), zemin halesiyle. */
+.now {
+  position: absolute;
+  top: 1px;
+  width: 4px;
+  height: 22px;
+  margin-left: -2px;
+  border-radius: 2px;
+  background: var(--text-strong);
+  box-shadow: 0 0 0 2px var(--rail-ground);
+}
+
 /* ---- Etiketler ----
    Yerleşim sunucuda üç genişlik için hesaplanıyor (gerekçe bileşende):
    `-n` öznitelikleri 240, `-m` 340, `-w` 480 piksel varsayımı. Kap ilgili
@@ -185,6 +208,6 @@
 }
 
 @media (forced-colors: active) {
-  .axis, .segment, .tick, .live { forced-color-adjust: none; background: CanvasText; }
+  .axis, .segment, .tick, .live, .now { forced-color-adjust: none; background: CanvasText; }
   .band { forced-color-adjust: none; box-shadow: inset 0 0 0 1px CanvasText; }
 }

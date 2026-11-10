@@ -687,6 +687,8 @@ const en: typeof tr = {
       average: "Avg",
     },
     levelScale: "Price Scale",
+    railZone: "Zone",
+    railSell: "Bounce {n}",
     changedToBuy: "Turned Buy",
     changedToHold: "Turned Hold",
     changedToSell: "Turned Sell",

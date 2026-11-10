@@ -2368,3 +2368,29 @@ label.distHead { cursor:pointer; }
   .coverRail .riskHead:has(.railWhy) { display:none; }
 }
 
+
+/* ---- Kart rayı ATLAS DİLİNDE (10 Kasım 2026, gece) ----
+   Gerekçe LevelTrack.tsx → "ATLAS DİLİ". Kulvar, çubuk ve çentik ortak
+   sınıflarda (`value-lane`, `value-bar`, `value-notch`; globals.css →
+   "DEĞER ÇUBUĞU"): kulvar 5, tabandan fiyata dolu çubuk 8 (`--bar-soft`;
+   stopun altında düşüş tonu), çentik 2 × 14 koyu mürekkep (sessiz çentik
+   `--line-strong`). Yukarıdaki `.trackSeg`, `.trackTick`, `.trackPrice`
+   kuralları artık kullanılmıyor (yön renkli bacak, renkli çentik, fiyat
+   noktası kalktı); tarihçe olarak duruyor. Ray 24 piksel; her öğe 12.
+   pikselde ortalı: kulvar 9,5 + 5, çubuk 8 + 8, bant 5 + 14, çentik 5 + 14,
+   "şimdi" 1 + 22, halka 8 + 8. Adlar rayın altında tek satır (ray 24 +
+   4 + 14 = 42 piksel yer tutar). */
+.track { --notch-out:-5px; }
+.track > .trackLine { position:absolute; left:0; right:0; top:9.5px; }
+.track[data-named] { margin-bottom:18px; }
+/* "Şimdi": çubuğun ucunda 4 × 22 koyu dik im (çentik 2 × 14; ayrışsın), kart zemininden 2 piksellik
+   hale (ortak tablonun gün aralığı imiyle aynı: BoardTable `.rangeNow`). */
+.trackNow { position:absolute; top:1px; width:4px; height:22px; margin-left:-2px; border-radius:2px; background:var(--text-strong); box-shadow:0 0 0 2px var(--premium-surface); }
+.trackName { position:absolute; top:28px; font-size:12px; font-weight:600; line-height:14px; color:var(--text-body); white-space:nowrap; translate:calc(-50% + var(--shift, 0cqw)) 0; }
+.trackName[data-kind="stop"], .trackName[data-kind="sellLevel"] { color:var(--down); }
+.trackName[data-kind="target"] { color:var(--up); }
+.trackName[data-kind="zone"] { color:var(--primary-ink); }
+/* ÖLÇÜM (10 Kasım 2026, gece; /teknik, 16 kart, iki tema): ray 316 (390) ve
+   382 (1440) piksel; çubuk 8, çentik 2 × 14; adlar arasında çakışma 0, rayın
+   dışına taşan ad 0; sayfada yatay taşma 0. Kart, ad satırı kadar uzadı:
+   sayfa 1440'ta 5.659 → 5.767, 390'da 10.955 → 11.243. */

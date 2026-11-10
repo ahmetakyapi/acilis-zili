@@ -7,7 +7,7 @@ import directory from "@/components/motion/DirectoryExperience.module.css";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import { SymbolPicker } from "@/components/screening/SymbolPicker";
 import styles from "@/components/screening/Screening.module.css";
-import { QuickCards, RuleCards, ScoreLane, WeightShare } from "@/components/screening/ScreeningIndex";
+import { QuickCards, RuleCards, WeightShare } from "@/components/screening/ScreeningIndex";
 import index from "@/components/screening/ScreeningIndex.module.css";
 import { Panel, PanelHeader, Skeleton } from "@/components/ui/primitives";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
@@ -164,17 +164,14 @@ async function QuickLook({ locale, t }: { locale: Locale; t: Dictionary }) {
       {rows.length === 0 ? (
         <p className={styles.intro}>{S.quickUnavailable}</p>
       ) : (
-        <>
-        <ScoreLane
-          rows={rows.map((row) => ({ symbol: row.symbol, score: row.result.score ?? 0, band: row.result.band }))}
-          bands={S.bands}
-          V={t.toolVisuals.screening}
-        />
+        /* TEK YAPI (10 Kasım, gece): ayrı "Puan Sırası" listesi kalktı;
+           kartlar puana göre sıralı ve puanı kalın çubukla veriyor
+           (gerekçe ScreeningIndex.tsx → "TARİHÇE — PUAN SIRASI LİSTESİ"). */
         <QuickCards
           rows={rows.map((row) => ({ symbol: row.symbol, name: row.name, logoUrl: row.logoUrl, score: row.result.score, band: row.result.band }))}
           bands={S.bands}
+          V={t.toolVisuals.screening}
         />
-        </>
       )}
       <p className={styles.quickNote}>{S.quickNote}</p>
     </Panel>
@@ -187,7 +184,8 @@ async function QuickLook({ locale, t }: { locale: Locale; t: Dictionary }) {
  * genel iskelet ~300 piksel tutuyordu, gelen panel (kulvar + 16 kart)
  * 1440'ta ~650; akış inince altındaki Kurallar paneli aşağı zıplıyordu
  * (soğuk önbellekte CLS 0,05–0,16 ölçüldü). Kulvar kutusu ve kart ızgarası
- * aynı sınıflarla basılıyor.
+ * aynı sınıflarla basılıyor. 10 Kasım (gece): puan listesi kalktı; iskelet
+ * lejant kutusu + puan çubuklu kartlar.
  */
 function QuickSkeleton({ count }: { count: number }) {
   return (
@@ -196,23 +194,27 @@ function QuickSkeleton({ count }: { count: number }) {
         <Skeleton className="h-3 w-28" />
         <Skeleton className="h-2.5 w-40" />
       </div>
-      <div className={index.laneSkeleton}>
-        <Skeleton className="h-3 w-40" />
-        <Skeleton className="h-2.5 w-72 max-w-full" />
+      <div className={index.quickWrap}>
+        <div className={index.laneSkeleton}>
+          <Skeleton className="h-3 w-72 max-w-full" />
+          <Skeleton className="h-2.5 w-56 max-w-full" />
+        </div>
+        <ul className={index.quick} aria-hidden>
+          {Array.from({ length: count }).map((_, i) => (
+            <li key={i}>
+              <div className={index.cardSkeleton}>
+                <Skeleton className="size-9 rounded-lg" />
+                <span className="grid gap-1.5">
+                  <Skeleton className="h-3.5 w-14" />
+                  <Skeleton className="h-2.5 w-24" />
+                </span>
+                <Skeleton className="h-6 w-9" />
+                <Skeleton className="col-span-full h-2 w-full rounded-full" />
+              </div>
+            </li>
+          ))}
+        </ul>
       </div>
-      <ul className={index.quick} aria-hidden>
-        {Array.from({ length: count }).map((_, i) => (
-          <li key={i} className={index.cardSkeleton}>
-            <Skeleton className="size-8 rounded-lg" />
-            <span className="grid gap-1.5">
-              <Skeleton className="h-3 w-14" />
-              <Skeleton className="h-2.5 w-24" />
-              <Skeleton className="h-2.5 w-16" />
-            </span>
-            <Skeleton className="size-[46px] rounded-full" />
-          </li>
-        ))}
-      </ul>
     </Panel>
   );
 }

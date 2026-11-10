@@ -2,16 +2,16 @@
    Gerekçe ScreeningIndex.tsx başında. Görüş renkleri (güncel karar):
    güçlü/değer yeşil, karışık pirinç, zayıf/elenen kırmızı. */
 
-:is(.laneTrack > i, .zoneLegend li, .quickCard)[data-band="strong"] { --band: var(--up); --band-ink: var(--up); --zone-mix: 10%; }
-:is(.laneTrack > i, .zoneLegend li, .quickCard)[data-band="worth"] { --band: var(--up); --band-ink: var(--up); --zone-mix: 5%; }
-:is(.laneTrack > i, .zoneLegend li, .quickCard)[data-band="mixed"] { --band: var(--brass); --band-ink: var(--brass-ink); --zone-mix: 8%; }
-:is(.laneTrack > i, .zoneLegend li, .quickCard):is([data-band="weak"], [data-band="eliminated"]) { --band: var(--down); --band-ink: var(--down); --zone-mix: 6%; }
-:is(.laneTrack > i, .zoneLegend li, .quickCard)[data-band="limited"] { --band: var(--text-muted); --band-ink: var(--text-muted); --zone-mix: 4%; }
+:is(.zoneLegend li, .quickCard)[data-band="strong"] { --band: var(--up); --band-ink: var(--up); --zone-mix: 10%; }
+:is(.zoneLegend li, .quickCard)[data-band="worth"] { --band: var(--up); --band-ink: var(--up); --zone-mix: 5%; }
+:is(.zoneLegend li, .quickCard)[data-band="mixed"] { --band: var(--brass); --band-ink: var(--brass-ink); --zone-mix: 8%; }
+:is(.zoneLegend li, .quickCard):is([data-band="weak"], [data-band="eliminated"]) { --band: var(--down); --band-ink: var(--down); --zone-mix: 6%; }
+:is(.zoneLegend li, .quickCard)[data-band="limited"] { --band: var(--text-muted); --band-ink: var(--text-muted); --zone-mix: 4%; }
 
 /* ---- Kapak: 100 puanın paylaşımı (gerekçe ScreeningIndex.tsx → WeightShare) ----
    Dilim nötr mürekkep: ağırlık bir büyüklük, görüş ya da etkileşim değil
-   (eski çubuklar yumuşak mavideydi). Kulvar `--line-soft`, dilim 5 px —
-   sitenin ince şerit dili. Satır aralığı 1440'ta sol sütunla dengeli:
+   (eski çubuklar yumuşak mavideydi). Kulvar `--line-soft` 5 px, dilim 8 px
+   (10 Kasım gece; önce 5). Satır aralığı 1440'ta sol sütunla dengeli:
    kapak iki sütunu ortalıyor, ölçüm raporda. */
 .share { display: grid; gap: 14px; min-width: 0; }
 .shareHint { margin-top: -10px; color: var(--text-muted); font-size: 12.5px; line-height: 1.5; }
@@ -19,8 +19,11 @@
 .shareRow { display: grid; grid-template-columns: minmax(0, 1fr) auto; align-items: baseline; gap: 6px 12px; min-width: 0; }
 .shareName { min-width: 0; color: var(--text-body); font-size: 13.5px; font-weight: 600; }
 .shareValue { color: var(--text-strong); font-size: 13.5px; font-weight: 600; white-space: nowrap; }
-.shareRail { grid-column: 1 / -1; position: relative; height: 5px; border-radius: 999px; background: var(--line-soft); }
-.shareRail > span { position: absolute; top: 0; bottom: 0; border-radius: 999px; background: color-mix(in srgb, var(--text-strong) 78%, transparent); transform-origin: left center; }
+/* 10 Kasım (gece), değer çubuğu standardı: dilim kulvarla aynı 5 pikseldi;
+   kulvar 5, dilim 8 (ortak `value-lane` / `value-bar`), ton aynı nötr
+   mürekkep (değişkenle). */
+.shareRail { grid-column: 1 / -1; margin-block: 2px; --bar-tone: color-mix(in srgb, var(--text-strong) 78%, transparent); }
+.shareRail > span { transform-origin: left center; }
 /* Kapak girişi kardeş kapaklarla aynı kalıpta (9 Ekim deseni, 14 Ekim'de
    buraya): MotionExperience ilk ekrandaki öğeye dokunmadığı için giriş
    CSS'te ve yüklemede bir kez — dilimler kendi başlangıcından, 55 ms
@@ -78,79 +81,96 @@
 .ringFill { fill: none; stroke: color-mix(in srgb, var(--text-strong) 78%, transparent); stroke-width: 4.9; stroke-linecap: round; } /* kapaktaki pay cetveliyle aynı nötr mürekkep: ağırlık büyüklük, etkileşim değil (6 Kasım) */
 .ring b { color: var(--text-strong); font-size: 13px; font-weight: 700; }
 
-/* ---- Puan sırası (gerekçe ScreeningIndex.tsx → ScoreLane) ----
-   10 Kasım: noktalı kulvar, etiketler ve bant zeminleri kalktı. Satır:
-   sembol | 5 piksellik kulvarda 8 piksellik dolu çubuk | puan. İki sütun,
-   sütunlar yukarıdan aşağı dolar (`--half` satır). */
-.lane { display: grid; gap: 12px; margin: 0 16px 6px; padding: 4px 0 18px; border-bottom: 1px solid var(--line-soft); }
-@media (min-width: 900px) { .lane { margin: 0 24px 8px; } }
-.laneHead { display: grid; gap: 2px; color: var(--text-strong); font-size: 14px; font-weight: 600; }
-.laneHint { color: var(--text-muted); font-size: 12.5px; font-weight: 400; line-height: 1.5; }
-.laneRows { display: grid; grid-auto-flow: column; grid-template-columns: repeat(2, minmax(0, 1fr)); grid-template-rows: repeat(var(--half), auto); column-gap: 20px; }
-@media (min-width: 900px) { .laneRows { column-gap: 40px; } }
-.laneRow { display: grid; grid-template-columns: 5ch minmax(0, 1fr) 3ch; align-items: center; gap: 10px; min-height: 28px; }
-.laneSymbol { color: var(--text-strong); font-family: var(--font-mono); font-size: 12.5px; font-weight: 700; }
-.laneTrack { position: relative; display: block; height: 5px; border-radius: 999px; background: var(--line-soft); }
-.laneTrack > i { position: absolute; left: 0; top: calc(50% - 4px); height: 8px; border-radius: 999px; background: var(--band); animation-delay: calc(min(var(--i, 0), 10) * var(--step)); }
-.laneRow b { color: var(--text-strong); font-size: 14px; font-weight: 700; text-align: right; }
+/* ---- Hızlı bakış: lejant + puana göre sıralı kartlar ----
+   Gerekçe ScreeningIndex.tsx → "TARİHÇE — PUAN SIRASI LİSTESİ" ve
+   `QuickCards`. 10 Kasım (gece): ayrı puan listesi (`.lane`, `.laneRows`,
+   `.laneTrack`) kalktı; kartta halka yerine 0–100 kalın puan çubuğu.
+
+   KART: logo 36 | sembol 16/700 + ad 13 gövde | puan 28/700; altında tam
+   genişlikte çubuk (kulvar 5, dolgu 12 — kartın kahramanı; ortak
+   `value-lane` / `value-bar`, ton `--band`), dipte ikonlu bant satırı.
+
+   IZGARA HER SAYIDA DOLU BİTER (teknik listesindeki çözüm, `arayuz.md` →
+   "Boşluk esnetilmez, doldurulur"): ızgara 12 birim; kart dört sütunda 3,
+   iki sütunda 6 birim tutar. Son satırda artan kartlar satırı paylaşır:
+   dört sütunda 1 artan tam satır, 2 artan yarı yarıya, 3 artan üçte bir;
+   iki sütunda tek artan tam satır. Ölçüm dosyanın sonunda. */
+.quickWrap { display: grid; gap: 12px; padding: 2px 16px 18px; }
+@media (min-width: 900px) { .quickWrap { padding: 2px 24px 22px; } }
+.quickHead { display: grid; gap: 8px; }
+.laneHint { max-width: 78ch; color: var(--text-body); font-size: 13px; line-height: 1.5; }
 .zoneLegend { display: flex; flex-wrap: wrap; gap: 6px 16px; }
 .zoneLegend li { display: flex; align-items: center; gap: 6px; color: var(--band-ink); font-size: 12px; font-weight: 600; white-space: nowrap; }
 .zoneLegend li :global(.numeral) { color: var(--text-muted); font-weight: 600; }
 .zoneSwatch { flex: none; width: 14px; height: 8px; border-radius: 999px; background: var(--band); }
 
-/* ---- Hızlı bakış kartları (gerekçe ScreeningIndex.tsx → QuickCards) ---- */
-.quick { list-style: none; margin: 0; padding: 4px 16px 20px; display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 15rem), 1fr)); gap: 12px; }
-@media (min-width: 900px) { .quick { padding: 4px 24px 24px; } }
-/* DÖRT SÜTUN (6 Kasım). auto-fill 1440'ta beş sütun açıyordu ve 16
-   hisselik listede son satırda NBIS tek başına kalıyordu (5+5+5+1). Liste
-   `TECHNICAL_SYMBOLS` ile 16; dört sütun 4×4 tam oturuyor ve kart 243 →
-   ~310 piksel, uzun şirket adı da tek satıra sığıyor. */
-@media (min-width: 1100px) { .quick { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.quick { list-style: none; margin: 0; padding: 0; display: grid; grid-template-columns: minmax(0, 1fr); gap: 10px; }
+.quick > li { min-width: 0; }
+@media (min-width: 640px) {
+  .quick { grid-template-columns: repeat(12, minmax(0, 1fr)); gap: 12px; }
+  .quick > li { grid-column: span 6; }
+  .quick > li:nth-child(2n+1):nth-last-child(1) { grid-column: 1 / -1; }
+}
+@media (min-width: 1100px) {
+  .quick > li { grid-column: span 3; }
+  .quick > li:nth-child(2n+1):nth-last-child(1) { grid-column: span 3; }
+  .quick > li:nth-child(4n+1):nth-last-child(1) { grid-column: 1 / -1; }
+  .quick > li:nth-child(4n+1):nth-last-child(2), .quick > li:nth-child(4n+2):nth-last-child(1) { grid-column: span 6; }
+  .quick > li:nth-child(4n+1):nth-last-child(3), .quick > li:nth-child(4n+2):nth-last-child(2), .quick > li:nth-child(4n+3):nth-last-child(1) { grid-column: span 4; }
+}
 .quickCard {
+  --bar-tone: var(--band); --bar-h: 12px;
   position: relative;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  grid-template-areas: "logo sym dial" "co co co" "band band band";
+  grid-template-areas: "logo id score" "lane lane lane" "band band band";
   align-items: center;
-  column-gap: 10px;
+  gap: 12px;
   height: 100%;
   overflow: hidden;
-  padding: 15px 14px 12px;
+  padding: 16px 16px 13px;
   border: 1px solid var(--line);
   border-radius: 16px;
   background: var(--surface);
-  transition: border-color 250ms var(--ease-brand), background-color 180ms var(--ease-brand);
+  transition: border-color 250ms var(--ease-brand), background-color 180ms var(--ease-brand), scale 120ms var(--ease-brand);
 }
 /* Durum şeridi: kartın tepesinde 3 px, bandın renginde. */
 .quickCard::before { content: ""; position: absolute; inset: 0 0 auto; height: 3px; background: var(--band); }
-.quickCard:hover { border-color: var(--line-focus); }
 .quickCard:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
-.quickCard > :first-child { grid-area: logo; }
-.quickSymbol { grid-area: sym; min-width: 0; color: var(--text-strong); font-size: 16px; font-weight: 700; letter-spacing: -.01em; }
-.quickCard > :global(*):nth-child(3) { grid-area: dial; }
-.quickCo { grid-area: co; min-width: 0; margin-top: 4px; overflow: hidden; color: var(--text-muted); font-size: 12.5px; white-space: nowrap; text-overflow: ellipsis; }
-.quickBand { grid-area: band; display: flex; align-items: center; gap: 6px; margin-top: 9px; padding-top: 9px; border-top: 1px solid var(--line-soft); color: var(--band-ink); font-size: 12.5px; font-weight: 600; white-space: nowrap; }
-.quickBand svg { flex: none; }
-/* 1100 ALTINDA kart bir LİSTE SATIRI: tek ya da iki sütunda üç katlı kart
-   (136 px) panelı uzatıyordu — 640–1099'da kartlar 1.192 piksel tuttu
-   (ölçüldü, 6 Kasım). Logo solda, sembol / ad / bant üst üste, halka
-   sağda; bu genişliklerde kart 270+ piksel, ada ~150–200 piksel kalıyor.
-   1100+'da beş sütunlu ızgarada kart 242 piksele iniyor: orada ad kartın
-   tam genişliğinde (üstteki düzen). */
-@media (max-width: 1099.98px) {
-  .quick { gap: 10px; }
-  .quickCard { grid-template-areas: "logo sym dial" "logo co dial" "logo band dial"; column-gap: 12px; padding: 13px 14px 12px; }
-  .quickCard > :first-child { align-self: start; margin-top: -4px; }
-  .quickCo { margin-top: 1px; }
-  .quickBand { margin-top: 5px; padding-top: 0; border-top: 0; }
+.quickCard:active { scale: .992; }
+@media (hover: hover) and (pointer: fine) {
+  .quickCard:hover { border-color: var(--line-focus); background: var(--primary-tint); }
+  .quickCard:hover .quickSymbol { color: var(--primary-ink); }
 }
+.quickLogo.quickLogo { grid-area: logo; width: 36px; height: 36px; }
+.quickId { grid-area: id; display: grid; gap: 1px; min-width: 0; }
+.quickSymbol { color: var(--text-strong); font-size: 16px; font-weight: 700; line-height: 20px; letter-spacing: -.015em; transition: color 180ms var(--ease-brand); }
+.quickCo { min-width: 0; overflow: hidden; color: var(--text-body); font-size: 13px; line-height: 17px; white-space: nowrap; text-overflow: ellipsis; }
+.quickScore { grid-area: score; color: var(--text-strong); font-size: 28px; font-weight: 700; line-height: 1; letter-spacing: -.03em; }
+.quickScore[data-empty] { color: var(--text-muted); font-size: 16px; font-weight: 400; letter-spacing: 0; }
+/* Çubuk kulvarı 3,5 piksel aşar (12 − 5); pay satır aralığında. */
+.quickCard > .quickLane { grid-area: lane; margin-block: 3px; }
+.quickLane :global(.value-bar) { animation-delay: calc(var(--i, 0) * var(--step)); }
+.quickBand { grid-area: band; display: flex; align-items: center; gap: 6px; color: var(--band-ink); font-size: 12.5px; font-weight: 600; line-height: 16px; white-space: nowrap; }
+.quickBand svg { flex: none; }
+@media (max-width: 639.98px) {
+  .quickCard { gap: 10px 12px; padding: 14px 14px 12px; }
+}
+@media (prefers-reduced-motion: reduce) { .quickCard, .quickSymbol { transition: none; } .quickCard:active { scale: none; } }
 
-/* Hızlı bakış iskeleti — gerçek kulvar ve kart ölçüleriyle (gerekçe page.tsx). */
-/* Yükseklikler gerçek sayfada ölçüldü (16 hisse). 6 Kasım: noktalı kulvar
-   390'da 282, 640–1099'da 209, 1100+'da 169. 10 Kasım (puan sırası, iki
-   sütun kalın çubuk): 900 altında 374, üstünde 331. Kart 1100 altında 95,
-   üstünde 136. */
-.laneSkeleton { display: grid; align-content: start; gap: 8px; height: 374px; margin: 0 16px 6px; padding-top: 4px; border-bottom: 1px solid var(--line-soft); }
-@media (min-width: 900px) { .laneSkeleton { height: 331px; margin: 0 24px 8px; } }
-.cardSkeleton { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 95px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; }
-@media (min-width: 1100px) { .cardSkeleton { min-height: 136px; } }
+/* Hızlı bakış iskeleti — gerçek lejant ve kart ölçüleriyle (gerekçe
+   page.tsx). 10 Kasım (gece, tek yapı): lejant kutusu ve kart yükseklikleri
+   yeniden ölçüldü (dosya sonu). */
+.laneSkeleton { display: grid; align-content: start; gap: 8px; min-height: 46px; }
+.cardSkeleton { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; align-items: center; gap: 12px; min-height: 120px; padding: 14px; border: 1px solid var(--line); border-radius: 16px; }
+@media (max-width: 639.98px) { .cardSkeleton { min-height: 113px; } }
+
+/* ÖLÇÜM (10 Kasım 2026, gece; önce = cd7e83b, aynı sahte veriyle 16 hisse):
+   - Sayfa boyu 1440'ta 3.788 → 3.465 (liste 331 piksel kalktı, kart 136 →
+     120); 390'da 8.357 → 8.395 (liste 374 kalktı, kart 95 → 113: çubuk ve
+     28 piksellik puan karta girdi).
+   - Kart 120 (640+), 113 (telefon); çubuk 12, kulvar 5; kırpılan metin 0.
+   - Izgara, geçici önizlemede 1 / 2 / 3 / 5 / 6 / 7 / 13 kartla: 390'da tek
+     sütun; 768'de 2+…(+1 tam satır); 1100 ve 1440'ta 4+1 (tam satır), 4+2
+     (yarı yarıya), 4+3 (üçte bir), 3 (üçte bir), 2 (yarı yarıya) — son satır
+     her sayıda ızgaranın genişliğini dolduruyor; yatay taşma 0, iki tema. */

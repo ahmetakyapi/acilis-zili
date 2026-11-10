@@ -183,6 +183,7 @@ export async function ExpectedMovePanel({
                       <td className={craft.emLaneCell} aria-hidden>
                         {row.movePct !== null && laneMax > 0 && (
                           <span className={craft.emLane}>
+                            <i className={cn("value-lane", craft.emLaneTrack)} />
                             {implied && (
                               <i
                                 className={craft.emLaneBand}
@@ -191,8 +192,9 @@ export async function ExpectedMovePanel({
                             )}
                             <i className={craft.emLaneZero} />
                             <i
-                              className={craft.emLaneBar}
-                              data-dir={row.movePct < 0 ? "down" : "up"}
+                              className="value-bar"
+                              data-tone={row.movePct < 0 ? "down" : "up"}
+                              data-end={row.movePct < 0 ? "start" : "end"}
                               data-motion-draw="line"
                               style={{
                                 left: `${Math.min(50, laneX(row.movePct))}%`,
@@ -253,9 +255,9 @@ export async function ExpectedMovePanel({
  */
 function ReadingBar({ ratio }: { ratio: number }) {
   return (
-    <dd aria-hidden className={styles.readingTrack}>
+    <dd aria-hidden className={cn("value-lane", styles.readingTrack)}>
       {/* Şerit görünüme girince soldan dolar (ortak sözleşme, `line`). */}
-      <i data-motion-draw="line" style={{ width: `${Math.max(0, Math.min(1, ratio)) * 100}%` }} />
+      <i className="value-bar" data-motion-draw="line" style={{ left: 0, width: `${Math.max(0, Math.min(1, ratio)) * 100}%` }} />
     </dd>
   );
 }

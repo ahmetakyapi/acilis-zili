@@ -458,8 +458,8 @@ function InsiderRow({
       <td className={cn("numeral", open ? "font-semibold text-strong" : "text-muted")} data-empty={trade.value === null || undefined}>
         {trade.value !== null ? formatMoneyCompact(trade.value, locale) : NO_VALUE}
         {barPct !== null && (
-          <span aria-hidden className={styles.valueBar} data-side={side}>
-            <i style={{ width: `${barPct}%` }} />
+          <span aria-hidden className={cn("value-lane", styles.valueBar)}>
+            <i className="value-bar" data-tone={side} style={{ right: 0, width: `${barPct}%` }} />
           </span>
         )}
       </td>

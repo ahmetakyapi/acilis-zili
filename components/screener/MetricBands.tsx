@@ -122,9 +122,9 @@ export function MetricBands({
           return (
             <li key={`${band.lo}-${band.hi}`} className={styles.row} style={{ ["--i" as string]: index }}>
               <span className={`numeral ${styles.range}`}>{bandLabel(band, kind, locale, labels)}</span>
-              <span aria-hidden className={styles.lane}>
+              <span aria-hidden className="value-lane">
                 {band.count > 0 && (
-                  <i className="bar-fill" style={{ width: `${Math.max((band.count / peak) * 100, 1.5).toFixed(2)}%` }} />
+                  <i className="value-bar bar-fill" style={{ left: 0, width: `${Math.max((band.count / peak) * 100, 1.5).toFixed(2)}%` }} />
                 )}
               </span>
               <span className={`numeral ${styles.count}`}>

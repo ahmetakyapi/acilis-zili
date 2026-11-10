@@ -259,16 +259,18 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 }
 
 /* ---------------------------------------------------------------- TÜFE */
-/* TÜFE merdiveni: sitenin ince kulvar dili (5 piksel `--line-soft`). */
+/* TÜFE merdiveni: sitenin kulvar dili. 10 Kasım (gece), değer çubuğu
+   standardı: kulvar 6 → 5, dolgu 6 → 8 (kulvarı aşan dolu çubuk), %50
+   çizgisi 1 → 2 piksellik sessiz çentik; kurallar ortak sınıflarda
+   (`value-lane` / `value-bar` / `value-notch`, globals.css). Ton aynı:
+   "evet" olasılığı (`--odds-yes`). */
 .ladder { display: flex; flex-direction: column; gap: 9px; margin: 0; padding: 0; list-style: none; }
 .ladder li { display: grid; grid-template-columns: 5.5rem minmax(0, 1fr) 3rem; align-items: center; gap: 10px; font-size: var(--text-tiny); }
 /* Eşik etiketinde tablo rakamı YOK: dar virgül/nokta tablo genişliğine
    açılıp "%0 , 1" gibi okunuyordu (ölçüldü). */
 .ladder li > span:first-child { color: var(--text-body); white-space: nowrap; }
 .ladder li > b { text-align: right; font-weight: 600; color: var(--text-strong); }
-.lane { position: relative; height: 6px; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
-.lane > span { position: absolute; inset-block: 0; left: 0; border-radius: 999px; background: var(--odds-yes); }
-.ladderMid { position: absolute; top: -3px; bottom: -3px; left: 50%; width: 1px; background: var(--line-strong); }
+.lane, .priceLane { --bar-tone: var(--odds-yes); }
 
 /* ---------------------------------------------------------------- KÜNYE */
 .note { margin: 0; font-size: var(--text-tiny); line-height: 1.55; color: var(--text-muted); }
@@ -296,8 +298,7 @@ div.cardFoot { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16p
 /* Fiyat → olasılık: kontrat fiyatı, ok, kulvarda %63 dolu şerit, yüzde. */
 .priceViz { display: flex; align-items: center; gap: 6px; min-height: 26px; font-size: var(--text-small); color: var(--text-muted); }
 .priceViz > b { font-weight: 700; color: var(--text-strong); white-space: nowrap; }
-.priceLane { position: relative; flex: 1; min-width: 40px; height: var(--lane-h, 5px); border-radius: 999px; background: var(--line-soft); overflow: hidden; }
-.priceLane > span { position: absolute; inset-block: 0; left: 0; width: 63%; border-radius: 999px; background: var(--odds-yes); }
+.priceLane { flex: 1; min-width: 40px; }
 .colorChips { display: flex; flex-wrap: wrap; gap: 3px; margin: 2px 0 0; padding: 0; list-style: none; }
 .colorChips li { display: inline-flex; align-items: center; gap: 4px; padding: 1px 5px 1px 4px; border-radius: 999px; background: var(--premium-surface); font-size: var(--text-nano); line-height: 1.5; color: var(--text-body); }
 .colorChips i { display: inline-block; width: 8px; height: 8px; border-radius: 2px; background: var(--tone); flex: none; }

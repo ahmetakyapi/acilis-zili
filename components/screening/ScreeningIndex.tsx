@@ -20,7 +20,7 @@ import { CATEGORY_WEIGHTS, ELIMINATED_CAP, type Band, type CheckId, type ScreenC
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
 import { SCORE_BAND_FLOORS } from "@/lib/tool-visuals";
-import { MiniDial } from "./ScreenVisuals";
+import { NO_VALUE } from "@/lib/utils";
 import styles from "./ScreeningIndex.module.css";
 
 /**
@@ -167,9 +167,9 @@ export function WeightShare({
             <li key={item.key} className={styles.shareRow}>
               <span className={styles.shareName}>{names[item.key]}</span>
               <b className={`numeral ${styles.shareValue}`}>{V.weightPoints.replace("{n}", String(item.weight))}</b>
-              <span className={styles.shareRail} aria-hidden>
+              <span className={`value-lane ${styles.shareRail}`} aria-hidden>
                 {/* `--i`: giriş kademesi (CSS share-in). */}
-                <span style={{ left: `${from}%`, width: `${(item.weight / total) * 100}%`, "--i": i } as CSSProperties} />
+                <span className="value-bar" style={{ left: `${from}%`, width: `${(item.weight / total) * 100}%`, "--i": i } as CSSProperties} />
               </span>
             </li>
           );
@@ -180,7 +180,7 @@ export function WeightShare({
 }
 
 /* -------------------------------------------------------------------------
-   Hızlı bakış: puan kulvarı
+   Hızlı bakış: puan bantları
    ------------------------------------------------------------------------- */
 
 /** Bant → puan aralığı (en yüksekten). Eleme/veri yetersiz ayrı aralık açmaz:
@@ -193,89 +193,23 @@ const ZONES = [
 ] as const;
 
 /**
- * PUAN SIRASI — her hisse bir satır, satırın KALIN çubuğu puanı.
+ * TARİHÇE — PUAN SIRASI LİSTESİ (25 Ekim → 10 Kasım). Kartların üstünde ayrı
+ * bir blok vardı: önce "Puanlar Tek Kulvarda" (tek rayda her hisse için 12
+ * piksellik nokta, çizgiyle bağlı sembol etiketleri, arkada dört bant
+ * yıkaması; ray 40'tan başlıyordu), 10 Kasım akşamı "Puan Sırası" (sembol,
+ * sıfırdan puana 8 piksellik çubuk, puan; iki sütun). İkisinin de gerekçesi
+ * aynıydı: kartlar puanı tek tek halkayla veriyor, on altı hissenin
+ * birbirine göre yeri ancak hepsini okuyarak çıkıyordu.
  *
- * Kartlar puanı tek tek halkayla veriyor; on altı hissenin birbirine göre
- * nerede durduğu (kaçı aynı bantta, en yüksekle en düşük arası ne kadar)
- * ancak hepsini okuyarak çıkıyordu. Bu blok o soruyu tek bakışta veriyor.
- *
- * 10 Kasım 2026: NOKTALI KULVAR KALKTI. Önceki hâl ("Puanlar Tek Kulvarda",
- * 25 Ekim; 6 Kasım'da bant zeminleri eklendi) tek bir rayın üstünde her
- * hisse için 12 piksellik bir nokta, noktadan çizgiyle bağlanan sembol
- * etiketi (üstte ve altta ikişer satır, çakışma çözücüyle) ve arkada dört
- * bant yıkamasıydı; ray 40'tan başlıyordu. Sahibinin itirazı (Temalar
- * panosundaki çentikler için; "başka buna uyarlanacak ekran varsa onları da
- * yapalım"): "böyle nokta nokta ne anlatıyor anlamıyorum; çizgi grafiği
- * yerine yatayda uzun KALIN çizgi seviyorum." Okurun çözmesi gerekenler:
- * hangi etiket hangi noktanın (79 ile 80 arasındaki üç nokta dört etikete
- * çizgiyle bağlıydı), rayın sıfırdan değil 40'tan başladığı, zeminin bant
- * olduğu.
- *
- * Şimdi: sembol, SIFIRDAN puana uzanan 8 piksellik dolu çubuk (kulvar 5),
- * puan. Çubuğun rengi bandından (görüş paleti: güçlü yeşil, karışık
- * pirinç, zayıf kırmızı; kartlardaki halkayla aynı). Bantların aralığı
- * çizimde değil lejantta yazılı. Satırlar puana göre sıralı; her genişlikte
- * iki sütun (sol sütun üst yarı). Ölçek 0–100: çubuğun boyu puanın kendisi,
- * yakınlaştırma yok. Satır bağlantı DEĞİL: hemen altındaki kartlar aynı
- * on altı hissenin bağlantısı; ikinci bir bağlantı listesi telefonda 44
- * piksellik satır isterdi (ölçüldü, 390: tek sütun bağlantılı liste 662
- * piksel; iki sütun düz satır 318).
- *
- * Çakışma çözücü (`laneLabelLayout`, lib/tool-visuals.ts) artık ekranda
- * kullanılmıyor; testi duruyor.
+ * 10 Kasım 2026 (gece), ana oturumun kararı: liste ile altındaki on altı
+ * kart AYNI PUANLARI İKİ KEZ gösteriyordu (ölçüldü, 1440: liste 331 + kartlar
+ * 616 piksel; 390: 374 + 1.700). TEK YAPI: liste kalktı, kartlar puana göre
+ * sıralı ve kartın çizimi halka değil 0–100 kalın puan çubuğu (bant
+ * renginde) + büyük puan. Listenin cevapladığı soru ("kim nerede") artık
+ * kartların sırasından ve alt alta/yan yana aynı ölçekteki çubuklardan
+ * okunuyor; bantların aralığı lejantta. Çakışma çözücü (`laneLabelLayout`,
+ * lib/tool-visuals.ts) ekranda kullanılmıyor; testi duruyor.
  */
-export function ScoreLane({
-  rows,
-  bands,
-  V,
-}: {
-  rows: { symbol: string; score: number; band: Band | null }[];
-  bands: Dictionary["screening"]["bands"];
-  V: Dictionary["toolVisuals"]["screening"];
-}) {
-  if (rows.length < 2) return null;
-  const sorted = [...rows].sort((a, b) => b.score - a.score || a.symbol.localeCompare(b.symbol));
-  return (
-    <figure className={styles.lane}>
-      <figcaption className={styles.laneHead}>
-        <span>{V.laneTitle}</span>
-        <span className={styles.laneHint}>{V.laneHint}</span>
-      </figcaption>
-      <ol className={styles.laneRows} style={{ "--half": Math.ceil(sorted.length / 2) } as CSSProperties} data-draw>
-        {sorted.map((row, i) => (
-          <li key={row.symbol} className={styles.laneRow} style={{ "--i": i } as CSSProperties}>
-            <span className={styles.laneSymbol}>{row.symbol}</span>
-            <span className={styles.laneTrack} aria-hidden>
-              <i
-                className="bar-fill"
-                data-band={row.band ?? "limited"}
-                style={{ width: `${Math.max(Math.min(100, row.score), 1.5)}%` }}
-              />
-            </span>
-            <b className="numeral">{row.score}</b>
-          </li>
-        ))}
-      </ol>
-      {/* Bantların aralığı lejantta (çizimde bölge zemini yok). Zayıf bant
-          alt sınırsız: "<50" (6 Kasım, inceleme). */}
-      <ul className={styles.zoneLegend}>
-        {ZONES.map((zone) => (
-          <li key={zone.band} data-band={zone.band}>
-            <span className={styles.zoneSwatch} aria-hidden />
-            {bands[zone.band]}
-            <span className="numeral">
-              {zone.band === "strong"
-                ? V.zoneFrom.replace("{n}", String(zone.from))
-                : zone.band === "weak"
-                  ? `<${zone.to}`
-                  : `${zone.from}–${zone.to - 1}`}
-            </span>
-          </li>
-        ))}
-      </ul>
-    </figure>
-  );
-}
 
 /* -------------------------------------------------------------------------
    Hızlı bakış: kartlar
@@ -296,32 +230,87 @@ type QuickRow = { symbol: string; name: string; logoUrl: string | null; score: n
  * HIZLI BAKIŞ KARTI (6 Kasım). Bant kartın tepesindeki 3 piksellik şeritte
  * (bilanço, teknik ve risk kartlarıyla aynı dil) ve altta ikonlu satırda:
  * renk tek başına taşımasın, şekil de söylesin (VerdictPill gerekçesi).
- * Logo sembolün satırında, halkayla aynı hatta; şirket adı kartın tam
- * genişliğinde — üç sütunun ortasındayken 1440'ta 96 piksele düşüp
- * "Advanced Micro De..." diye kesiliyordu.
+ * Logo sembolün satırında; şirket adı sembolün altında.
+ *
+ * 10 Kasım 2026 (gece) — TEK YAPI (gerekçe yukarıda, "TARİHÇE"):
+ * - Kartlar PUANA GÖRE sıralı (yüksekten; puanı olmayan sonda, sonra
+ *   sembol). Sıra bir alım listesi değil; panelin dibindeki not söylüyor.
+ * - Halka (`MiniDial`, 46 piksel) yerine kartın tam genişliğinde 0–100
+ *   KALIN puan çubuğu: kulvar 5, çubuk 12 (satırın kahramanı — `arayuz.md`
+ *   → "Büyüklük KALIN YATAY ŞERİTLE okunur"), bant renginde; ortak
+ *   `value-lane` / `value-bar` (globals.css). Ölçek her kartta aynı (0–100):
+ *   yan yana kartlarda uzun çubuk yüksek puan.
+ * - En büyük punto puanın kendisi (28/700; önce halkanın içinde 15 piksel).
+ * - Puanı olmayan hissede (veri yetersiz) çubuk HİÇ çizilmez, sayı "–":
+ *   sıfır uzunluk "sıfır puan" demek olurdu.
+ * - Izgara her sayıda dolu biter: artan kartlar son satırı paylaşır
+ *   (CSS, ScreeningIndex.module.css → `.quick`; teknik listesindeki çözüm).
+ * Çizim `bar-fill` ile dolar; kapı ızgaranın `data-draw`ında, kademe ilk on
+ * kartta (`--i`).
  */
-export function QuickCards({ rows, bands }: { rows: readonly QuickRow[]; bands: Dictionary["screening"]["bands"] }) {
+export function QuickCards({
+  rows,
+  bands,
+  V,
+}: {
+  rows: readonly QuickRow[];
+  bands: Dictionary["screening"]["bands"];
+  V: Dictionary["toolVisuals"]["screening"];
+}) {
+  const sorted = [...rows].sort((a, b) => (b.score ?? -1) - (a.score ?? -1) || a.symbol.localeCompare(b.symbol));
   return (
-    <ul className={styles.quick}>
-      {rows.map((row) => {
-        const Glyph = row.band ? BAND_ICONS[row.band] : null;
-        return (
-          <li key={row.symbol}>
-            <Link href={`/hisse-secimi/${row.symbol}`} className={styles.quickCard} data-band={row.band ?? "limited"} data-motion-action>
-              <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
-              <strong className={styles.quickSymbol}>{row.symbol}</strong>
-              <MiniDial score={row.score} band={row.band} />
-              <span className={styles.quickCo} title={row.name}>{row.name}</span>
-              {row.band && Glyph && (
-                <span className={styles.quickBand}>
-                  <Glyph size={14} weight={row.band === "strong" ? "fill" : "bold"} aria-hidden />
-                  {bands[row.band]}
+    <div className={styles.quickWrap}>
+      <div className={styles.quickHead}>
+        <p className={styles.laneHint}>{V.laneHint}</p>
+        {/* Bantların aralığı lejantta (çizimde bölge zemini yok). Zayıf bant
+            alt sınırsız: "<50" (6 Kasım, inceleme). */}
+        <ul className={styles.zoneLegend}>
+          {ZONES.map((zone) => (
+            <li key={zone.band} data-band={zone.band}>
+              <span className={styles.zoneSwatch} aria-hidden />
+              {bands[zone.band]}
+              <span className="numeral">
+                {zone.band === "strong"
+                  ? V.zoneFrom.replace("{n}", String(zone.from))
+                  : zone.band === "weak"
+                    ? `<${zone.to}`
+                    : `${zone.from}–${zone.to - 1}`}
+              </span>
+            </li>
+          ))}
+        </ul>
+      </div>
+      <ul className={styles.quick} data-draw>
+        {sorted.map((row, index) => {
+          const Glyph = row.band ? BAND_ICONS[row.band] : null;
+          return (
+            <li key={row.symbol} style={{ "--i": Math.min(index, 10) } as CSSProperties}>
+              <Link href={`/hisse-secimi/${row.symbol}`} className={styles.quickCard} data-band={row.band ?? "limited"} data-motion-action>
+                <LogoTile symbol={row.symbol} logoUrl={row.logoUrl} size="lg" className={styles.quickLogo} />
+                <span className={styles.quickId}>
+                  <strong className={styles.quickSymbol}>{row.symbol}</strong>
+                  <span className={styles.quickCo} title={row.name}>{row.name}</span>
                 </span>
-              )}
-            </Link>
-          </li>
-        );
-      })}
-    </ul>
+                <b className={`numeral ${styles.quickScore}`} data-empty={row.score === null || undefined}>
+                  {row.score ?? NO_VALUE}
+                  {row.score !== null && <span className="sr-only"> / 100</span>}
+                </b>
+                <span className={`value-lane ${styles.quickLane}`} aria-hidden>
+                  {row.score !== null && (
+                    <i className="value-bar bar-fill" style={{ left: 0, width: `${Math.max(Math.min(100, row.score), 1.5)}%` }} />
+                  )}
+                </span>
+                {row.band && Glyph && (
+                  <span className={styles.quickBand}>
+                    <Glyph size={14} weight={row.band === "strong" ? "fill" : "bold"} aria-hidden />
+                    {bands[row.band]}
+                  </span>
+                )}
+              </Link>
+            </li>
+          );
+        })}
+      </ul>
+    </div>
   );
 }

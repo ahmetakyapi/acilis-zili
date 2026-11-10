@@ -1,4 +1,7 @@
+import type { CSSProperties } from "react";
 import type { VerdictKey } from "@/lib/analysis";
+import { spreadLabels } from "@/lib/technical-visuals";
+import { cn } from "@/lib/utils";
 import styles from "./Technical.module.css";
 
 /* Halka ile nokta arasındaki en küçük mesafe. MU'da fiyat analizden beri
@@ -20,6 +23,19 @@ import styles from "./Technical.module.css";
    316, 1440'ta 382, 1024'te 433 piksel (ölçüldü). */
 const THEN_CLEAR_PX = 17;
 const THEN_RAIL_TIERS = [240, 300, 380] as const;
+
+/* ÇENTİK ADLARI (10 Kasım gece). Etiketler rayın altında tek satır; yakın
+   çentiklerin adları itilir (`spreadLabels`, kapak ölçeğiyle aynı yardımcı),
+   çentik yerinde kalır. Pay rayın oranı: en dar ray 246 piksel (320'lik
+   telefon), en uzun ad ("Hedef 1", "Direnç") ~46 piksel + 8 boşluk → 0,22;
+   uçlarda yarım etiket payı 0,09. En çok dört ad: üçüncü hedef ve ikincil
+   destek/dirençler adsız, sessiz çentik (sayıları plan şeridinde). */
+const NAME_GAP = 0.22;
+const NAME_EDGE = 0.09;
+const NAMED_TARGETS = 2;
+
+/** Çentik adları — `PlanRail` sözlükten verir. */
+export type TrackNames = { stop: string; zone: string; target: string; sell: string; support: string; resistance: string };
 
 /** Rayın üstüne çizilen bir bacak: `from` ölçümün başladığı yer (çapa). */
 export type TrackSegment = { from: number; to: number; tone: "up" | "down" | "flat" };
@@ -61,6 +77,32 @@ export type TrackSegment = { from: number; to: number; tone: "up" | "down" | "fl
  * (`data-travel-from`, `TechnicalBoard`); azaltılmış harekette ve
  * JavaScript'siz yalnızca iki işaret durur.
  *
+ * ATLAS DİLİ: NOKTA DEĞİL KALIN ÇUBUK, ÇENTİKLER ADLI (10 Kasım 2026, gece;
+ * sahibinin sözü: "nokta nokta ne anlatıyor anlamıyorum; yatayda uzun kalın
+ * çizgi seviyorum" ve ana oturumun kararı: "okur çentiğin ne olduğunu
+ * lejantta aramasın"). Rayda altı ayrı im vardı: kulvar, bant, yön renginde
+ * iki bacak (risk kırmızı, getiri yeşil), renkli çentikler, analiz anının
+ * halkası ve fiyatın 14 piksellik NOKTASI; hiçbirinin adı yazılı değildi
+ * (adlar yandaki plan şeridinde, eşleştirme okura kalıyordu). Şimdi teknik
+ * atlasının satırıyla aynı tek okuma (`PlanAtlasView`):
+ *   · TABANDAN FİYATA 8 piksellik dolu çubuk (ortak `value-bar`): taban
+ *     stop; stop yoksa fiyatın altındaki en yakın destek (atlasın SAT
+ *     satırıyla aynı sıfır), o da yoksa ölçeğin solu. Çubuğun ucu "şimdi" — koyu, kalın bir
+ *     dik im. Fiyat stopun altındaysa çubuk stoptan SOLA uzar, düşüş
+ *     tonunda.
+ *   · Stop, hedefler ve (plansız kartta) en yakın destek ile direnç çubuğun
+ *     ÜSTÜNDE ince koyu çentik (`value-notch`) ve ADI altında yazılı; ad
+ *     anlam rengini taşır (stop/tepki düşüş, hedef yükseliş). Alım bölgesi
+ *     bir aralık olduğu için bant, adı ortasında.
+ *   · Yön renkli bacaklar (`segments`) rayda ÇİZİLMİYOR: çubukla üst üste
+ *     üçüncü bir katmandı. Bacakların sayıları altındaki satırda aynen
+ *     duruyor (`PlanRail`); uzunlukları artık adlı çentiklerin arasından
+ *     okunuyor. `segments` prop'u yalnız ölçeği genişletir (bacağın ucu
+ *     eksende kalsın).
+ *   · Noktanın halkadan yola çıkma hareketi (`data-travel-from`) kalktı:
+ *     hareket veriyi çizen öğede — çubuk tabandan fiyata dolar
+ *     (`data-motion-draw="line"`); halka (analiz anı) yerinde duruyor.
+ *
  * `size="lg"` PROP'U DA KALKTI: CSS'teki `lg` ölçüsü detay kapağından
  * çizgi çıkarılırken silinmişti (Technical.module.css → "`lg` ÖLÇÜSÜ
  * KALKTI"), prop hiçbir şeye bağlı değildi.
@@ -76,6 +118,7 @@ export function LevelTrack({
   verdict,
   segments = [],
   snapshotPrice = null,
+  names,
 }: {
   price: number | null;
   entryLow: number | null;
@@ -89,6 +132,8 @@ export function LevelTrack({
   segments?: readonly TrackSegment[];
   /** Analiz anındaki fiyat — yalnızca canlı fiyattan anlamlı ölçüde farklıysa. */
   snapshotPrice?: number | null;
+  /** Çentik adları; verilmezse çentikler adsız kalır. */
+  names?: TrackNames;
 }) {
   const hasEntry = entryLow !== null && entryHigh !== null;
   const sellSide = verdict === "sell";
@@ -120,77 +165,102 @@ export function LevelTrack({
   const thenFit = THEN_RAIL_TIERS.find((tier) => tier * thenShare >= THEN_CLEAR_PX);
   const then = thenFit !== undefined ? snapshotPrice : null;
 
+  const share = (value: number) => (value - lo) / (hi - lo);
+
+  /* Çubuk: tabandan fiyata. Taban stop; stop yoksa fiyatın altındaki en
+     yakın destek (atlasın SAT satırıyla aynı sıfır; alttaki "Desteğe" bacağı
+     çubuğun boyu olur); o da yoksa ölçeğin solu. */
+  const supportBelow = price === null ? undefined : [...supports].filter((v) => v <= price).sort((x, y) => y - x)[0];
+  const base = stop ?? (showLevels ? supportBelow : undefined) ?? lo;
+  const below = price !== null && price < base;
+
+  /* Adlı çentikler ve adsız (sessiz) kalanlar. */
+  type Named = { key: string; at: number; name: string; kind: "stop" | "target" | "sellLevel" | "support" | "resistance" | "zone"; notch: boolean };
+  const named: Named[] = [];
+  const quiet: { key: string; at: number }[] = [];
+  if (stop !== null) named.push({ key: "stop", at: share(stop), name: names?.stop ?? "", kind: "stop", notch: true });
+  if (hasEntry) named.push({ key: "zone", at: share((entryLow + entryHigh) / 2), name: names?.zone ?? "", kind: "zone", notch: false });
+  targets.forEach((value, index) => {
+    if (index < NAMED_TARGETS) {
+      named.push({ key: `t-${value}`, at: share(value), name: ((sellSide ? names?.sell : names?.target) ?? "").replace("{n}", String(index + 1)), kind: targetKind, notch: true });
+    } else quiet.push({ key: `t-${value}`, at: share(value) });
+  });
+  if (showLevels) {
+    /* En yakın destek ve direnç adlı (bacak satırının anlattığı ikisi);
+       ötekiler sessiz çentik. */
+    const nearSupport = price === null ? undefined : [...supports].filter((v) => v <= price).sort((x, y) => y - x)[0] ?? [...supports].sort((x, y) => y - x)[0];
+    const nearResistance = price === null ? undefined : [...resistances].filter((v) => v >= price).sort((x, y) => x - y)[0] ?? [...resistances].sort((x, y) => x - y)[0];
+    for (const value of supports) {
+      if (value === nearSupport) named.push({ key: `s-${value}`, at: share(value), name: names?.support ?? "", kind: "support", notch: true });
+      else quiet.push({ key: `s-${value}`, at: share(value) });
+    }
+    for (const value of resistances) {
+      if (value === nearResistance) named.push({ key: `r-${value}`, at: share(value), name: names?.resistance ?? "", kind: "resistance", notch: true });
+      else quiet.push({ key: `r-${value}`, at: share(value) });
+    }
+  }
+  const labelled = names ? named.filter((mark) => mark.name) : [];
+  const spread = spreadLabels(labelled.map((mark) => mark.at), NAME_GAP, NAME_EDGE, 1 - NAME_EDGE);
+
   return (
-    <div className={styles.track} aria-hidden>
-      <span className={styles.trackLine} />
+    <div className={styles.track} aria-hidden data-named={labelled.length > 0 || undefined}>
+      <span className={cn("value-lane", styles.trackLine)} />
       {stop !== null && <span className={styles.trackVoid} style={{ width: pos(stop) }} />}
-      {/* BANT BACAKLARIN ALTINDA, OPAK (23 Eylül). Bacaklardan sonra ve
-          yarı saydam boyanıyordu: risk bacağı stoptan bölgenin TEPESİNE
-          uzandığı için kırmızı çizgi bandın içinden soluk bir leke olarak
-          görünüyordu (MU, 1440, ekran görüntüsü). Bant artık alan, bacak
-          veri: bant önce ve kartın yüzeyine karışmış opak tonla çiziliyor
-          (eksen altında kalıyor), bacak üstünden net bir çizgi olarak
-          geçip bölgenin tepesinde bitiyor. */}
+      {/* BANT ÇUBUĞUN ALTINDA, OPAK (23 Eylül kararı; o gün "bacakların
+          altında"). Bant alan, çubuk veri: bant önce ve kartın yüzeyine
+          karışmış opak tonla çiziliyor, çubuk üstünden geçiyor. */}
       {hasEntry && (
         <span
           className={styles.trackBand}
-          data-motion-draw="line"
           style={{
             left: pos(entryLow),
             width: `max(6px, calc(${pos(entryHigh)} - ${pos(entryLow)}))`,
           }}
         />
       )}
-      {/* Bacak en az 4 piksel: 1 : 8 gibi bir kurulumda kısa bacak
-          tamamen kaybolmasın (bant için aynı karar, 6 piksel). */}
-      {segments.map((segment) => (
+      {/* En az 4 piksel: fiyat tabanın dibindeyken de çubuğun yönü görünsün. */}
+      {price !== null && (
         <span
-          key={`${segment.tone}-${segment.from}-${segment.to}`}
-          className={styles.trackSeg}
-          data-tone={segment.tone}
+          className="value-bar"
           data-motion-draw="line"
+          data-end={below ? "start" : "end"}
+          data-tone={below ? "down" : undefined}
           style={{
-            left: pos(Math.min(segment.from, segment.to)),
-            width: `max(4px, calc(${pos(Math.max(segment.from, segment.to))} - ${pos(Math.min(segment.from, segment.to))}))`,
-            transformOrigin: segment.from <= segment.to ? "left center" : "right center",
+            left: pos(Math.min(base, price)),
+            width: `max(4px, calc(${pos(Math.max(base, price))} - ${pos(Math.min(base, price))}))`,
+            transformOrigin: below ? "right center" : "left center",
           }}
         />
-      ))}
-      {showLevels &&
-        [...supports.map((v) => ["support", v] as const), ...resistances.map((v) => ["resistance", v] as const)].map(
-          ([kind, value]) => (
-            <span key={`${kind}-${value}`} className={styles.trackTick} data-kind={kind} style={{ left: pos(value) }} />
-          ),
-        )}
-      {stop !== null && (
-        <span className={styles.trackTick} data-kind="stop" style={{ left: pos(stop) }} />
       )}
-      {targets.map((value) => (
-        <span key={`t-${value}`} className={styles.trackTick} data-kind={targetKind} style={{ left: pos(value) }} />
+      {quiet.map((mark) => (
+        <span key={mark.key} className="value-notch" data-quiet style={{ left: `${mark.at * 100}%` }} />
+      ))}
+      {named.filter((mark) => mark.notch).map((mark) => (
+        <span key={mark.key} className="value-notch" style={{ left: `${mark.at * 100}%` }} />
       ))}
       {/* En dar rayda (240) bile sığan halka koşulsuz; ötekiler eşiğini
-          taşıyor. `data-travel-ring`: gizlenen halkadan nokta da yola
-          çıkmıyor (`TechnicalBoard`). */}
+          taşıyor. */}
       {then !== null && (
         <span
           className={styles.trackThen}
-          data-travel-ring
           data-fit={thenFit === THEN_RAIL_TIERS[0] ? undefined : thenFit}
           style={{ left: pos(then) }}
         />
       )}
-      {/* `spark-dot`: ortak sistemin nokta girişi — bant çizildikten sonra
-          fiyat yerine oturuyor. Ortalama `margin` ile, `transform` ile değil:
-          giriş animasyonu dönüşümü yönetiyor, ikisi çakışınca nokta bitişte
-          yarım genişlik sıçrıyordu. Yolculuk ayrı `translate` özelliğiyle
-          (`TechnicalBoard`), dönüşüme dokunmadan. */}
-      {price !== null && (
+      {/* "Şimdi": çubuğun ucunda koyu dik im (nokta değil). */}
+      {price !== null && <span className={styles.trackNow} style={{ left: pos(price) }} />}
+      {labelled.map((mark, index) => (
         <span
-          className={`${styles.trackPrice} spark-dot`}
-          style={{ left: pos(price) }}
-          data-travel-from={then !== null ? pos(then) : undefined}
-        />
-      )}
+          key={`n-${mark.key}`}
+          className={styles.trackName}
+          data-kind={mark.kind}
+          /* İtilen adın kayması rayın oranında; `cqw` rayın kendi genişliği
+             (kap `.rail`, `container-type: inline-size`). */
+          style={{ left: `${mark.at * 100}%`, "--shift": `${((spread[index]! - mark.at) * 100).toFixed(2)}cqw` } as CSSProperties}
+        >
+          {mark.name}
+        </span>
+      ))}
     </div>
   );
 }
