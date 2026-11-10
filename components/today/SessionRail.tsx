@@ -9,10 +9,12 @@ import styles from "./SessionRail.module.css";
 
 /** Şeridin ilerleme adımı: saniye geri sayımda, şerit dakikanın işi. */
 const TICK_MS = 60_000;
-/** İşaretlerin merkezden merkeze en küçük aralığı (rozetin kendi boyu + nefes).
- *  Rozet artık saati de taşıyor ("01 15:30", ~62 piksel); 30 piksellik eski
- *  aralık yalnız numaraya göreydi. */
-const MARKER_GAP_PX = 68;
+/** Rozetin taban eni ("01 15:30"): numara + saat + dolgu, 13 punto. */
+const MARKER_WIDTH_PX = 62;
+/** Aynı dakikada birden çok olay varsa rozete eklenen "+n"in eni. */
+const MARKER_MORE_PX = 20;
+/** İki rozetin kenarları arasındaki en küçük nefes. */
+const MARKER_AIR_PX = 6;
 
 const minutesOf = (time: string) => {
   const [h, m] = time.split(":").map(Number);
@@ -25,14 +27,23 @@ const minutesOf = (time: string) => {
  * gerekçesi ölçülerle yazılıydı: 14:00 ile 14:30 telefonda 14 piksel
  * arayla düşüyor, rozetler birbirinin rakamını kesiyordu). Çentik gerçek
  * saatte kalır, kayan yalnızca rozet.
+ *
+ * ARALIK ROZETİN KENDİ ENİNDEN (10 Kasım). Merkezden merkeze sabit 68
+ * pikseldi ve yalnız "01 15:30" rozetine (62) göreydi; "+1" taşıyan rozet
+ * 78 piksel: canlıda (10 Kasım, 1440) "01 16:00" ile "02 16:30 +1" yan
+ * yana 0 piksel arayla, tek bir kutu gibi duruyordu (kenarlar 294 / 294).
+ * Artık komşu iki rozetin yarı enleri + 6 piksel nefes (enler tahmini:
+ * 62, "+n" ile 82; gerçek rozet 1–2 piksel dar). Ölçüm (sahte veri, 1440,
+ * 16:00 · 16:30 +1 · 17:15 kümesi): rozetler arası 8 ve 9 piksel.
  */
-function spread(points: number[], width: number, gap: number): number[] {
+function spread(points: number[], width: number, widths: number[]): number[] {
   if (width <= 0) return points.map((p) => p * width);
-  const half = gap / 2;
-  const order = points.map((p, i) => ({ i, x: p * width })).sort((a, b) => a.x - b.x);
-  for (let k = 1; k < order.length; k++) order[k]!.x = Math.max(order[k]!.x, order[k - 1]!.x + gap);
+  const order = points.map((p, i) => ({ i, x: p * width, w: widths[i] ?? MARKER_WIDTH_PX })).sort((a, b) => a.x - b.x);
+  const gap = (a: { w: number }, b: { w: number }) => (a.w + b.w) / 2 + MARKER_AIR_PX;
+  for (let k = 1; k < order.length; k++) order[k]!.x = Math.max(order[k]!.x, order[k - 1]!.x + gap(order[k - 1]!, order[k]!));
   for (let k = order.length - 1; k >= 0; k--) {
-    const ceiling = k === order.length - 1 ? width - half : order[k + 1]!.x - gap;
+    const half = order[k]!.w / 2;
+    const ceiling = k === order.length - 1 ? width - half : order[k + 1]!.x - gap(order[k]!, order[k + 1]!);
     order[k]!.x = Math.max(half, Math.min(order[k]!.x, ceiling));
   }
   const out = new Array<number>(points.length);
@@ -174,7 +185,15 @@ export function SessionRail({
       }))
       .sort((a, b) => a.at - b.at);
   }, [snapshot, day, minutes]);
-  const xs = useMemo(() => spread(groups.map((group) => group.at), width, MARKER_GAP_PX), [groups, width]);
+  const xs = useMemo(
+    () =>
+      spread(
+        groups.map((group) => group.at),
+        width,
+        groups.map((group) => MARKER_WIDTH_PX + (group.events.length > 1 ? MARKER_MORE_PX : 0)),
+      ),
+    [groups, width],
+  );
 
   function choose(id: string) {
     requestFlowSelect(id);

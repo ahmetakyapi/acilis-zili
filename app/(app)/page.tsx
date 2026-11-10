@@ -18,6 +18,7 @@ import { FillColumn } from "@/components/today/FillColumn";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { RailSection } from "@/components/today/home/RailSection";
+import { DrawOnView } from "@/components/today/home/DrawOnView";
 import { IndexSkeleton, IndexStrip } from "@/components/today/home/IndexStrip";
 import { YieldCard } from "@/components/today/home/YieldCard";
 import { WorldStrip } from "@/components/today/home/WorldStrip";
@@ -474,6 +475,10 @@ export default async function TodayPage() {
           </Suspense>
         </div>
 
+        {/* ÇİZİMLER GÖRÜNÜNCE OYNAR (10 Kasım): veri çizimi taşıyan panellerin
+            sarmalı `DrawOnView` — ek kutu değil, aynı `data-home-section`
+            sarmalının kendisi (boş kalınca `:empty` ile ızgaradan düşmeye
+            devam eder). Gerekçe ve eşik bileşende. */}
         {/* ---- Portföy ya da Piyasa Nabzı ----
              Mercek'in altında, çünkü ikisi de "sana ne anlatıyor" bloğu:
              biri olayın mekanizmasını, öteki senin pozisyonlarını. Portföyü
@@ -481,11 +486,11 @@ export default async function TodayPage() {
              kalsaydı kolon dengesi yalnızca portföy tutanlar için kurulurdu
              (ölçüm ve gerekçe `PortfolioSlot`). Yükleme yedeği iki hâlin
              ortak iskeleti: başlık ve üç satır. */}
-        <div id="portfoy-ozeti" data-home-section="portfolio">
+        <DrawOnView id="portfoy-ozeti" data-home-section="portfolio">
           <Suspense fallback={<PanelSkeleton rows={3} />}>
             <PortfolioSlot locale={locale} t={t} />
           </Suspense>
-        </div>
+        </DrawOnView>
 
         {/* ---- Bugün bilanço açıklayanlar ---- */}
         <div id="bugun-bilanco" data-home-section="earnings">
@@ -509,11 +514,11 @@ export default async function TodayPage() {
              iniyor ve yoğun bir bilanço gününde diğer tarafa geçse bile küçük
              kalıyor. İçerik olarak da yeri burası: üstündeki bilanço listesi
              "bugün kim açıklıyor", bu panel "açıklayanlar ne yaptı". */}
-        <div id="bilanco-analizleri" data-home-section="analyses" className={styles.analyses}>
+        <DrawOnView id="bilanco-analizleri" data-home-section="analyses" className={styles.analyses}>
           <Suspense fallback={<PanelSkeleton rows={5} />}>
             <LatestAnalyses locale={locale} t={t} />
           </Suspense>
-        </div>
+        </DrawOnView>
 
       </div>
 
@@ -532,21 +537,21 @@ export default async function TodayPage() {
             mekanizmasında kapatacak yalnızca bir gizli satır vardı. */}
         {/* Dünya piyasaları en üstte: "bugün borsalar ne yapmış" sorusunun
             ABD'den sonraki halkası. */}
-        <div id="dunya-piyasalari" data-home-section="world">
+        <DrawOnView id="dunya-piyasalari" data-home-section="world">
           <Suspense fallback={<PanelSkeleton rows={5} footer />}>
             <WorldStrip locale={locale} t={t} />
           </Suspense>
-        </div>
+        </DrawOnView>
 
         {/* ---- Günün hareketleri ----
              SIRA ÖLÇEKTEN İNCEYE. Üstteki iki panel endeksleri ve dünyayı
              gösteriyor, yani "borsa bugün ne yaptı"; bu panel aynı soruyu
              bir basamak inceden soruyor: tek tek hangi isimler taşıdı. */}
-        <div data-home-section="movers">
+        <DrawOnView data-home-section="movers">
           <Suspense fallback={<PanelSkeleton rows={6} footer />}>
             <DayMovers locale={locale} t={t} />
           </Suspense>
-        </div>
+        </DrawOnView>
 
         {/* ---- Günün Grafiği (24 Ekim) ----
              Teknik panelin ÜSTÜNDE (28 Ekim, sahibinin isteği; önce
@@ -579,11 +584,11 @@ export default async function TodayPage() {
              (1440/1600'de ~40). Kolon boyları o günün verisiyle oynuyor, bu
              sayılar 11 Eylül akşamının verisi.
              Pano boşsa panel hiç basılmıyor, yer tutucu yok. */}
-        <div data-home-section="technical">
+        <DrawOnView data-home-section="technical">
           <Suspense fallback={null}>
             <TechnicalPanel locale={locale} t={t} />
           </Suspense>
-        </div>
+        </DrawOnView>
 
         {/* ---- Hisseyi Bil (24 Ekim; 25 Ekim'de buraya indi) ----
              Bir dönem seans zilinin altında, ızgaranın DIŞINDA tam genişlik
@@ -596,11 +601,11 @@ export default async function TodayPage() {
              TodayExperience.module.css). Ölçümler `PuzzleTeaser.tsx`. */}
         <PuzzleTeaser day={puzzleDay} number={puzzleNumber(puzzleDay)} labels={t.stockPuzzle} />
 
-        <div data-home-section="yields">
+        <DrawOnView data-home-section="yields">
           <Suspense fallback={<PanelSkeleton rows={3} footer />}>
             <YieldCard locale={locale} t={t} />
           </Suspense>
-        </div>
+        </DrawOnView>
 
         {/* Burada bir "Petrol ve Korku Endeksi" kartı vardı; kaldırıldı.
             Brent, FRED'in EIA spot serisinden geliyordu ve o seri günlerce
@@ -611,11 +616,11 @@ export default async function TodayPage() {
             hiçbirinde canlı emtia spotu yok, o yüzden metrik düştü.
             Korku Endeksi (VIX) ise günlük geliyor ve yaşıyor: alt şeritte
             her sayfada, /piyasalar'da bantlı göstergesiyle. */}
-        <div data-home-section="macro">
+        <DrawOnView data-home-section="macro">
           <Suspense fallback={<PanelSkeleton rows={3} footer />}>
             <MacroSummary locale={locale} t={t} />
           </Suspense>
-        </div>
+        </DrawOnView>
 
         {/* ---- Ekonomik takvim ----
              ANA KOLONDAN BURAYA TAŞINDI. İkisi de kısa, tarifeli listeler:
@@ -670,11 +675,11 @@ export default async function TodayPage() {
            (sahne düzenleri kap eniyle, `SkyScene.module.css`) ve yan
            kolona girse iki kolonun dengesini kendi boyu kadar bozardı.
            Gerekçe ve veri `SkylineStrip.tsx`; yer tutucu ölçüsünü ayırıyor. */}
-      <div data-home-section="skyline" className="min-w-0 lg:col-span-2 lg:row-start-3">
+      <DrawOnView data-home-section="skyline" className="min-w-0 lg:col-span-2 lg:row-start-3">
         <Suspense fallback={<SkylineStripSkeleton />}>
           <SkylineStrip status={status} locale={locale} t={t} nowMs={nowMs} />
         </Suspense>
-      </div>
+      </DrawOnView>
 
       {/* ---- Öne çıkan haberler ----
            TAM GENİŞLİK BANT, KUTU DEĞİL. Haberler bir süre sol kolonda,

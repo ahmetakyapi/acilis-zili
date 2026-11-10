@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { SpotlightCard } from "@/components/motion/PremiumMotion";
 import { DataStamp, type DataStampLabels } from "@/components/ui/primitives";
-import { Sparkline } from "@/components/ui/Sparkline";
+import { Sparkline, sparkFrame } from "@/components/ui/Sparkline";
 import type { Locale } from "@/lib/i18n/config";
 import type { MarketSession } from "@/lib/market-hours";
 import { cn, directionOf, directionText, formatPercent, formatPrice } from "@/lib/utils";
@@ -69,6 +69,7 @@ export function IndexLive({
   weeks,
   domain,
   openAt,
+  closeAt,
   session,
   locale,
   labels,
@@ -80,6 +81,8 @@ export function IndexLive({
   weeks: Record<string, WeekLine>;
   domain: [number, number];
   openAt: number;
+  /** Asıl seansın kapanışı (unix saniye) — kıvılcım sahnesinin seans bandı. */
+  closeAt: number;
   session: MarketSession;
   locale: Locale;
   labels: IndexLiveLabels;
@@ -222,6 +225,7 @@ export function IndexLive({
               week={weeks[symbol]}
               domain={domain}
               openAt={openAt}
+              closeAt={closeAt}
               locale={locale}
               labels={labels}
               flash={flash[symbol]}
@@ -248,6 +252,7 @@ function IndexCard({
   week,
   domain,
   openAt,
+  closeAt,
   locale,
   labels,
   flash,
@@ -259,6 +264,7 @@ function IndexCard({
   week?: WeekLine;
   domain: [number, number];
   openAt: number;
+  closeAt: number;
   locale: Locale;
   labels: IndexLiveLabels;
   flash?: { n: number; tone: "up" | "down" };
@@ -348,15 +354,14 @@ function IndexCard({
           {note && <p className={styles.indexBasis}>{note}</p>}
         </div>
         {sparkOk && points.length > 1 && (
-          <Sparkline
+          <SessionStage
             points={points}
-            title={`${label} · 1D`}
-            tone={tone}
-            height={40}
             baseline={quote.prevClose}
             domain={domain}
-            split={openAt}
-            className={styles.indexSpark}
+            openAt={openAt}
+            closeAt={closeAt}
+            tone={tone}
+            title={`${label} · 1D`}
           />
         )}
         {week && showWeek && (
@@ -376,5 +381,82 @@ function IndexCard({
         )}
       </SpotlightCard>
     </Link>
+  );
+}
+
+/**
+ * KIVILCIM SAHNESİ (10 Kasım, görsel tur). Çizgi seans eksenine zamanıyla
+ * oturuyor (Sparkline → "SEANS EKSENİ") ve bu doğru; ama açılış öncesinin
+ * ilk saatinde çizgi kartın soldaki %6'sında bir kıpırtı, gerisi kesik
+ * taban çizgisiydi: canlı ekranda (12:58 TR, 1440) çizgi 213 piksellik
+ * alanın 12 pikselini tutuyordu ve dört kart "grafik yüklenmemiş" gibi
+ * okunuyordu. Eksen DEĞİŞMEDİ (ölçeği oynatmak şekli sayıdan koparırdı);
+ * boş kalan kısım artık ne olduğunu söylüyor, hepsi elde olan veriden:
+ *  - ASIL SEANS BANDI: açılış ile kapanış zili arası çukur tonda bir alan
+ *    (kahramandaki zil şeridinin bandıyla aynı eksen, `sessionDomain`).
+ *    Çizgi banda girmeden "seans henüz başlamadı", girince "seansın şu
+ *    kadarı geçti" diye okunuyor.
+ *  - SON İŞLEM NOKTASI: çizginin ucunda yön renginde 6 piksellik nokta;
+ *    kısa çizgi bir çizim hatası değil "şimdi burada" imi oluyor.
+ * İkisi de SVG'nin dışında HTML: `preserveAspectRatio="none"` daireyi
+ * elipse çeviriyor; konumlar eğrinin kendi ölçeğinden (`sparkFrame`).
+ * Nokta çizgi yerine varınca belirir (marka eğrisi; azaltılmış harekette
+ * son kare). Ölçüm TodayExperience.module.css → `.indexStage`.
+ */
+function SessionStage({
+  points,
+  baseline,
+  domain,
+  openAt,
+  closeAt,
+  tone,
+  title,
+}: {
+  points: { time: number; value: number }[];
+  baseline: number | null;
+  domain: [number, number];
+  openAt: number;
+  closeAt: number;
+  tone: "up" | "down" | "flat";
+  title: string;
+}) {
+  const width = 200;
+  const height = 40;
+  const frame = sparkFrame({ points, width, height, baseline, domain });
+  if (!frame) return null;
+  const last = frame.shown[frame.shown.length - 1]!;
+  const open = frame.xShare(openAt);
+  const close = frame.xShare(closeAt);
+  const pct = (share: number) => `${(share * 100).toFixed(2)}%`;
+  return (
+    <div className={cn(styles.indexSpark, styles.indexStage)}>
+      {open !== null && close !== null && close > open && (
+        <span
+          aria-hidden
+          className={styles.stageBand}
+          style={{ left: pct(open), width: pct(close - open) }}
+        />
+      )}
+      <Sparkline
+        points={points}
+        title={title}
+        tone={tone}
+        width={width}
+        height={height}
+        baseline={baseline}
+        domain={domain}
+        split={openAt}
+        className={styles.stageLine}
+      />
+      <span
+        aria-hidden
+        className={styles.stageNow}
+        data-tone={tone}
+        style={{
+          left: pct(frame.xOf(last, frame.shown.length - 1) / width),
+          top: pct(frame.yOf(last.value) / height),
+        }}
+      />
+    </div>
   );
 }

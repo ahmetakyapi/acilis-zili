@@ -100,3 +100,34 @@
 .impact i:nth-child(3) { height: 11px; }
 .impact[data-level="medium"] i:nth-child(-n+2) { background: var(--impact-med); }
 .impact[data-level="high"] i { background: var(--impact-high); }
+.impact[data-level="low"] i:nth-child(1) { background: var(--impact-low, var(--text-muted)); }
+
+/* ---- BUGÜNÜN TAKVİMİ (10 Kasım) ----
+   Gerekçe Schedule.tsx → ScheduleListView. Haftaya Bakış ile aynı aile:
+   aynı önem çubuğu, aynı başlık puntosu, aynı `subgrid` (saat ve değer
+   sütunu `max-content`, sıkışmaz). Zemin nötr; önceki hâlde yüksek önemli
+   satır `--down-wash` doluydu.
+   Ölçüm (başsız Chrome, sahte veri: iki yüksek, bir orta, bir düşük olay;
+   390 ve 1440, iki tema): yatay taşma 0, hiçbir hücre satırı aşmıyor,
+   satır zemini saydam (önce yüksek satırda `--down-wash`), satır 57
+   piksel; olay adına yan kolonda (1440) 164, 390'da 176 piksel kalıyor
+   ("Ekim Çekirdek TÜFE Verisi" tek satır). */
+.today {
+  --pad: 16px;
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr) max-content max-content;
+  column-gap: 12px;
+  margin: 0; padding: 0; list-style: none;
+}
+@media (min-width: 640px) { .today { --pad: 20px; } }
+.todayRow {
+  display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center;
+  padding: 12px var(--pad); border-top: 1px solid var(--line);
+}
+.todayTime { display: grid; gap: 2px; font-size: var(--text-read); font-weight: 600; line-height: 1.15; color: var(--text-body); white-space: nowrap; }
+.todayTime small { font-size: var(--text-tiny); font-weight: 500; color: var(--text-muted); }
+.todayRow[data-high] .todayTime > span { font-weight: 750; color: var(--text-strong); }
+.todayValue { display: grid; gap: 2px; justify-items: end; font-size: var(--text-read); font-weight: 550; line-height: 1.15; color: var(--text-body); white-space: nowrap; }
+.todayValue small { font-size: var(--text-tiny); font-weight: 500; color: var(--text-muted); }
+.todayValue[data-actual] > span { font-weight: 750; color: var(--text-strong); }
+.todayRow .impact { align-self: center; height: 11px; padding-bottom: 0; }

@@ -11,6 +11,7 @@ import { analysisHref, verdictLabel, verdictOf, } from "@/lib/analysis";
 import { cn, formatEtDateCompact, formatPercentPlain } from "@/lib/utils";
 import { MetricStrip } from "@/components/earnings/MetricStrip";
 import { robustScale } from "@/lib/analysis-visuals";
+import rowStyles from "./LatestAnalyses.module.css";
 
 /* Sol kolonun yedek kapasitesi — gerekçe `LatestAnalyses` içinde. */
 const ANALYSES_BASE = 5;
@@ -55,6 +56,44 @@ export async function LatestAnalyses({
   const meta = await getSymbolNames([
     ...new Set(analyses.map((row) => row.symbol)),
   ]);
+  return (
+    <LatestAnalysesView
+      analyses={analyses}
+      logos={Object.fromEntries(Object.entries(meta).map(([symbol, row]) => [symbol, row?.logoUrl ?? null]))}
+      locale={locale}
+      t={t}
+    />
+  );
+}
+
+type AnalysisListRow = Pick<
+  Awaited<ReturnType<typeof getAnalyses>>[number],
+  | "symbol"
+  | "period"
+  | "periodLabel"
+  | "company"
+  | "reportDate"
+  | "headline"
+  | "locale"
+  | "verdict"
+  | "score"
+  | "revenueYoyPct"
+  | "epsSurprisePct"
+  | "reactionPct"
+>;
+
+/** Son analizlerin saf görünümü — veri `LatestAnalyses`te (`olcum` skill'i). */
+export function LatestAnalysesView({
+  analyses,
+  logos,
+  locale,
+  t,
+}: {
+  analyses: readonly AnalysisListRow[];
+  logos: Record<string, string | null | undefined>;
+  locale: Locale;
+  t: Dictionary;
+}) {
   /* Öne çıkan kartın üç ölçüsü listenin ortak ölçeğinde — kartın şeridi
      aşağıdaki satırların büyüklüğüyle aynı dilde okunsun. */
   const scales = {
@@ -75,10 +114,10 @@ export async function LatestAnalyses({
           <PanelLink href="/bilancolar/analizler">{t.common.showAll}</PanelLink>
         }
       />
-      <ul className="divide-y divide-line-soft">
+      <ul className={cn("divide-y divide-line-soft", rowStyles.list)}>
         {analyses.map((row, index) => {
           const verdict = verdictOf(row.verdict);
-          const logo = meta[row.symbol]?.logoUrl;
+          const logo = logos[row.symbol];
           if (index === 0) {
             /* ÖNE ÇIKAN KART (31 Ekim). Halka "/ 100" paydası, altta küçük
                bir "Oku" ve ikinci kez yazılmış bir AL hapı taşıyordu;
@@ -142,7 +181,7 @@ export async function LatestAnalyses({
               <Link
                 href={analysisHref(row.symbol, row.period)}
                 prefetch={false}
-                className="flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint sm:gap-5 sm:px-5"
+                className={cn("flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint sm:gap-5 sm:px-5", rowStyles.row)}
               >
                 <LogoTile symbol={row.symbol} logoUrl={logo} size="md" />
                 <span className="min-w-0 flex-1">
@@ -162,17 +201,38 @@ export async function LatestAnalyses({
                     kartın ölçüsü aynı ölçekte burada da çizili, dar ekranda
                     yer açmak için gizli. Haplar eşit genişlikte
                     (VerdictPill → "EŞİT GENİŞLİK"), sütun hizası bozulmuyor. */}
-                {row.reactionPct !== null && (
-                  <span className="hidden w-28 shrink-0 sm:grid sm:gap-1">
-                    <span className="flex items-baseline justify-between gap-2 text-nano font-semibold whitespace-nowrap text-muted">
-                      {L.reaction}
-                      <b className={cn("numeral text-tiny font-extrabold", row.reactionPct >= 0 ? "text-up" : "text-down")}>
-                        {row.reactionPct >= 0 ? "▲" : "▼"} {formatPercentPlain(row.reactionPct, locale, 1)}
-                      </b>
+                {/* ÜÇ ÖLÇÜ, KARTLA AYNI SIRA (10 Kasım, görsel tur). Öne çıkan
+                    kart Gelir · HBK Sürprizi · İlk Tepki'yi üç kutuda
+                    gösterirken satırlar yalnız tepkiyi taşıyordu: kart çok
+                    yoğun, satırlar çok seyrek okunuyor, aynı listenin iki
+                    hâli iki ayrı panel gibi duruyordu. Satır artık aynı üç
+                    ölçüyü aynı sırada, aynı ortak ölçekte ve aynı şeritle
+                    (`MetricStrip`) taşıyor; değeri olmayan ölçünün hücresi
+                    boş kalır ama sütun yerini tutar, haplar ve şeritler
+                    her satırda aynı hatta. Kaç ölçünün sığdığına PANELİN
+                    eni karar veriyor (kap sorgusu; gerekçe ve ölçüm
+                    LatestAnalyses.module.css). */}
+                <span className={rowStyles.metrics}>
+                  {[
+                    { key: "revenue", label: L.revenue, value: row.revenueYoyPct, digits: 0, scale: scales.revenue },
+                    { key: "eps", label: L.eps, value: row.epsSurprisePct, digits: 1, scale: scales.eps },
+                    { key: "reaction", label: L.reaction, value: row.reactionPct, digits: 1, scale: scales.reaction },
+                  ].map((figure) => (
+                    <span key={figure.key} className={rowStyles.metric} data-key={figure.key}>
+                      {figure.value !== null && (
+                        <>
+                          <span className={rowStyles.metricHead}>
+                            {figure.label}
+                            <b className={cn("numeral", figure.value >= 0 ? "text-up" : "text-down")}>
+                              {figure.value >= 0 ? "▲" : "▼"} {formatPercentPlain(figure.value, locale, figure.digits)}
+                            </b>
+                          </span>
+                          <MetricStrip value={figure.value} scale={figure.scale} />
+                        </>
+                      )}
                     </span>
-                    <MetricStrip value={row.reactionPct} scale={scales.reaction} />
-                  </span>
-                )}
+                  ))}
+                </span>
                 <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} score={row.score} />
               </Link>
             </li>

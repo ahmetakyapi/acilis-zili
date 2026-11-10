@@ -12,7 +12,10 @@ import {
 import { getAnalysisBadges, getEarningsBetweenResult, getHolidays, getSymbolNames } from "@/lib/data";
 import { isTradingDay, nextTradingDay, todayEt } from "@/lib/market-hours";
 import { type Dictionary, type Locale } from "@/lib/i18n";
-import { formatPrice } from "@/lib/utils";
+import { epsSurprise, revenueSurprise, type Surprise } from "@/lib/earnings-week";
+import type { AnalysisBadge as AnalysisBadgeData } from "@/lib/data";
+import { cn, formatMoneyCompact, formatPercentPlain, formatPrice } from "@/lib/utils";
+import styles from "./EarningsToday.module.css";
 import { ListSkeleton } from "@/components/today/home/ListSkeleton";
 
 /** Başlıksız iskelet — panelin kendi başlığı bileşenin içinde. */
@@ -112,6 +115,78 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
     { from: today, to: today },
   );
 
+  return (
+    <EarningsTodayView
+      title={title}
+      total={rows.length}
+      rows={shown.map((row) => ({
+        id: row.id,
+        symbol: row.symbol,
+        reportDate: row.reportDate,
+        hour: row.hour,
+        epsEstimate: row.epsEstimate,
+        epsActual: row.epsActual,
+        revenueEstimate: row.revenueEstimate,
+        revenueActual: row.revenueActual,
+        name: names[row.symbol]?.name ?? "",
+        logoUrl: names[row.symbol]?.logoUrl ?? null,
+        currency: names[row.symbol]?.currency ?? null,
+      }))}
+      badges={badges}
+      locale={locale}
+      t={t}
+    />
+  );
+}
+
+export type EarningsTodayRow = {
+  id: string;
+  symbol: string;
+  reportDate: string;
+  hour: string | null;
+  epsEstimate: number | null;
+  epsActual: number | null;
+  revenueEstimate: number | null;
+  revenueActual: number | null;
+  name: string;
+  logoUrl: string | null;
+  currency: string | null;
+};
+
+/**
+ * Bugün bilanço açıklayanlar — saf görünüm (veri `EarningsToday`de;
+ * `olcum` skill'i: yükleyici ile çizim ayrı).
+ *
+ * İKİ ÖLÇÜ VE KARNE (10 Kasım, görsel tur). Satırın sağında tek bir sayı
+ * ("12,33 $ / EPS Beklentisi") duruyordu ve satır açıklamadan SONRA da aynı
+ * kalıyordu: takvim satırı gelir beklentisini, açıklanan HBK'yı ve
+ * açıklanan geliri zaten taşıyor (`earnings_calendar`), ana sayfa hiçbirini
+ * göstermiyordu. Artık iki ölçü yan yana, haftalık bilanço panosunun ve
+ * gün akışının diliyle (`epsSurprise` / `revenueSurprise`, aynı eşikler):
+ *  - AÇIKLANMADIYSA beklenti gövde tonunda, künyesi "HBK" / "Gelir".
+ *  - AÇIKLANDIYSA sayı açıklanan değer, güçlü mürekkeple; yanında karne
+ *    imi (▲ aştı, ▼ kaçırdı, = hizada; biçim + renk, yalnız renk değil) ve
+ *    sapma yüzdesi. Renk yalnız bu imde: yön.
+ *  - Değer hiç yoksa hücre boş kalır ama sütun yerini tutar (hat bozulmaz).
+ * Yeni veri çağrısı yok; sütunlar `max-content`, beş satırda aynı hatta.
+ * Ölçüm EarningsToday.module.css başında.
+ */
+export function EarningsTodayView({
+  title,
+  total,
+  rows: shown,
+  badges,
+  locale,
+  t,
+}: {
+  title: string;
+  /** Günün toplam şirket sayısı — liste kırpıldıysa künyede. */
+  total: number;
+  rows: readonly EarningsTodayRow[];
+  badges: Record<string, AnalysisBadgeData | undefined>;
+  locale: Locale;
+  t: Dictionary;
+}) {
   const hourLabel: Record<string, string> = {
     bmo: t.earnings.beforeOpen,
     amc: t.earnings.afterClose,
@@ -136,9 +211,9 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
            "6 şirketin 6 tanesi" diyor — hiçbir şey söylemeyen bir cümle.
            Aynı kalıp /mercek arşivinde de var. */
         meta={
-          rows.length > shown.length
+          total > shown.length
             ? t.today.earningsCount
-                .replace("{total}", String(rows.length))
+                .replace("{total}", String(total))
                 .replace("{n}", String(shown.length))
             : undefined
         }
@@ -154,7 +229,7 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
           sütunlardan düşüyor ve sabit 5,5rem'de "EPS Beklentisi" iki
           satıra kırılıyordu (ölçüldü, 1280). Sütun aralığı da burada;
           subgrid onu üstten alıyor. */}
-      <ul className="grid grid-cols-[auto_minmax(0,1fr)_max-content] gap-x-3 sm:grid-cols-[auto_minmax(0,1fr)_max-content_max-content] sm:gap-x-4">
+      <ul className={cn("grid grid-cols-[auto_minmax(0,1fr)_max-content] gap-x-3 sm:grid-cols-[auto_minmax(0,1fr)_max-content_max-content_max-content] sm:gap-x-4", styles.list)}>
       {shown.map((row) => {
         const badge = badges[`${row.symbol}:${row.reportDate}`];
         return (
@@ -173,7 +248,7 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
           >
             <Link
               href={`/hisse/${row.symbol}`}
-              aria-label={`${row.symbol} ${names[row.symbol]?.name ?? ""}`}
+              aria-label={`${row.symbol} ${row.name}`}
               className="absolute inset-0"
             />
             {/* LOGO VE İKİ SATIRLI KİMLİK. Satır "WMT ......... Walmart Inc"
@@ -183,7 +258,7 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
                 Aynı sayfada aynı bilgi iki farklı ağırlıkta duruyordu. */}
             <LogoTile
               symbol={row.symbol}
-              logoUrl={names[row.symbol]?.logoUrl}
+              logoUrl={row.logoUrl}
               size="md"
             />
             <span className="min-w-0 flex-1">
@@ -191,7 +266,7 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
                 {row.symbol}
               </span>
               <span className="block truncate text-tiny leading-tight text-muted">
-                {names[row.symbol]?.name ?? ""}
+                {row.name}
               </span>
             </span>
             {/* BİLİNMEYEN SAAT ROZET DEĞİL, KÜNYE (28 Eylül). 28 Eylül'de beş
@@ -215,22 +290,66 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
                 {t.earnings.timeUnknown}
               </span>
             )}
-            {row.epsEstimate !== null ? (
-              <span className="hidden text-right sm:block">
-                <span className="numeral block text-base font-semibold leading-tight text-body">
-                  {formatPrice(row.epsEstimate, locale, { currency: true })}
-                </span>
-                <span className="block whitespace-nowrap text-tiny leading-tight text-muted">
-                  {t.earnings.epsEstimate}
-                </span>
-              </span>
-            ) : (
-              <span aria-hidden className="hidden sm:block" />
-            )}
+            <Figure
+              label={t.earnings.epsEstimateShort}
+              estimate={row.epsEstimate}
+              actual={row.epsActual}
+              surprise={epsSurprise(row.epsActual, row.epsEstimate)}
+              format={(value) => formatPrice(value, locale, { currency: row.currency ?? true })}
+              locale={locale}
+              t={t}
+            />
+            <Figure
+              label={t.earnings.revenueShort}
+              estimate={row.revenueEstimate}
+              actual={row.revenueActual}
+              surprise={revenueSurprise(row.revenueActual, row.revenueEstimate)}
+              format={(value) => formatMoneyCompact(value, locale, row.currency)}
+              locale={locale}
+              t={t}
+            />
           </li>
         );
       })}
       </ul>
     </Panel>
+  );
+}
+
+/** Tek ölçü hücresi: beklenti ya da açıklanan değer + karne imi. */
+function Figure({
+  label,
+  estimate,
+  actual,
+  surprise,
+  format,
+  locale,
+  t,
+}: {
+  label: string;
+  estimate: number | null;
+  actual: number | null;
+  surprise: Surprise | null;
+  format: (value: number) => string;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const value = actual ?? estimate;
+  if (value === null) return <span aria-hidden className="hidden sm:block" />;
+  const reported = actual !== null;
+  return (
+    <span className={cn("hidden sm:grid", styles.figure)} data-reported={reported || undefined}>
+      <span className={cn("numeral", styles.figureValue)}>{format(value)}</span>
+      <span className={styles.figureNote}>
+        {label}
+        {!reported && <span className="sr-only"> · {t.calendar.forecast}</span>}
+        {surprise && (
+          <b className={cn("numeral", styles.figureMark)} data-dir={surprise.direction}>
+            {surprise.direction === "beat" ? "▲" : surprise.direction === "miss" ? "▼" : "="}
+            {surprise.ratio !== null && ` ${formatPercentPlain(Math.abs(surprise.ratio) * 100, locale, 0)}`}
+          </b>
+        )}
+      </span>
+    </span>
   );
 }
