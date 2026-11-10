@@ -7,6 +7,7 @@ import {
   REST_SLICE,
   laneLabelLayout,
   median,
+  metricBands,
   percentileRank,
   quantile,
   screenerSentence,
@@ -220,4 +221,49 @@ test("yığılı şeritler: aralıklı ve toplam genişlik korunur", () => {
   const last = geo[geo.length - 1];
   assert.ok(Math.abs(last.cx + last.cw - 1000) < 1e-9);
   assert.ok(Math.abs(last.vx + last.vw - 1000) < 1e-9);
+});
+
+test("metricBands: log ölçekte 1-2-5 sınırları, uçlar açık, sayım toplamı korunur", () => {
+  const values = [6.8e9, 1.2e10, 4.5e10, 4.6e10, 9e10, 1.5e11, 4e11, 5.1e12];
+  const bands = metricBands(values, "log");
+  assert.ok(bands.length >= 2 && bands.length <= 7);
+  assert.equal(bands[0].lo, null);
+  assert.equal(bands[bands.length - 1].hi, null);
+  assert.equal(bands.reduce((sum, band) => sum + band.count, 0), values.length);
+  for (let i = 1; i < bands.length; i += 1) assert.equal(bands[i].lo, bands[i - 1].hi);
+  /* Sınırlar yuvarlak: mantis 1, 2, 3 ya da 5. */
+  for (const band of bands.slice(1)) {
+    const mantissa = Number((band.lo! / 10 ** Math.floor(Math.log10(band.lo!))).toPrecision(6));
+    assert.ok([1, 2, 3, 5].includes(mantissa), String(band.lo));
+  }
+  /* Üyeler girdi sırasını taşır: en büyük değer son basamakta. */
+  assert.ok(bands[bands.length - 1].members.includes(7));
+});
+
+test("metricBands: doğrusalda sıfır bir sınır, uçtaki dev değer merdiveni germez", () => {
+  const values = [-12, -3, 1, 4, 8, 15, 16, 22, 23, 31, 38, 44, 4500];
+  const bands = metricBands(values, "linear");
+  assert.ok(bands.length <= 7);
+  assert.equal(bands.reduce((sum, band) => sum + band.count, 0), values.length);
+  assert.ok(bands.some((band) => band.lo === 0 || band.hi === 0));
+  /* 4.500 son açık basamakta; sınırlar onun yanına gitmez. */
+  assert.ok((bands[bands.length - 1].lo ?? 0) < 100);
+  assert.equal(bands[bands.length - 1].members.at(-1), 12);
+});
+
+test("metricBands: boş, tek değer ve log ölçekte eksi değer", () => {
+  assert.deepEqual(metricBands([], "linear"), []);
+  const flat = metricBands([5, 5, 5], "linear");
+  assert.equal(flat.reduce((sum, band) => sum + band.count, 0), 3);
+  const log = metricBands([-4, 0, 10, 100], "log");
+  assert.equal(log.reduce((sum, band) => sum + band.count, 0), 2);
+  assert.equal(metricBands([0.1 + 0.2, 0.9], "linear").every((band) => String(band.lo ?? 0).length < 8), true);
+});
+
+test("metricBands: log ölçekte dar aralık doğrusal yuvarlak adımlara düşer", () => {
+  /* F/K: orta yüzde seksen 22–58; 1-2-5 merdiveni yalnız 50'yi verirdi. */
+  const values = [9, 21, 23, 26, 29, 31, 34, 38, 41, 44, 47, 52, 55, 59, 61, 410];
+  const bands = metricBands(values, "log");
+  assert.ok(bands.length >= 4, String(bands.length));
+  assert.equal(bands.reduce((sum, band) => sum + band.count, 0), values.length);
 });

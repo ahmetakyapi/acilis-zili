@@ -143,6 +143,112 @@ export function fitSwarm(
 }
 
 /* -------------------------------------------------------------------------
+   Ölçü basamakları (/tarama "Dağılım" bloğu)
+
+   10 Kasım 2026: arı kümesi (her hisse bir nokta) sahibinin itirazıyla
+   kalktı ("böyle nokta nokta ne anlatıyor anlamıyorum; yatayda uzun kalın
+   çizgi seviyorum"). Dağılım artık basamak basamak okunuyor: her basamak
+   bir satır, satırın kalın çubuğu o aralıktaki hisse SAYISI. Sınırlar
+   yuvarlak sayılar (1-2-5 merdiveni); iki uç açık ("< 10", "≥ 200") ki
+   uçtaki tek bir dev değer (F/K 4.500) merdiveni germesin. Küme
+   yardımcıları (`swarmDomain`, `swarmLayout`, `fitSwarm`) artık ekranda
+   kullanılmıyor.
+   ------------------------------------------------------------------------- */
+
+export type MetricBand = {
+  /** Alt sınır (dahil); null = açık uç ("< hi"). */
+  lo: number | null;
+  /** Üst sınır (hariç); null = açık uç ("≥ lo"). */
+  hi: number | null;
+  count: number;
+  /** Basamağa düşen değerlerin dizideki sıraları (girdi sırasıyla). */
+  members: number[];
+};
+
+/** 1-2-5 merdiveninin sıkıdan seyreğe adımları (onluk içi çarpanlar). */
+const LOG_LADDERS: readonly (readonly number[])[] = [[1, 2, 5], [1, 3], [1]];
+const LINEAR_STEPS = [1, 2, 2.5, 5, 10] as const;
+/** Açık uçlara bırakılan pay (her yanda). */
+const BAND_TAIL = 0.1;
+
+/** Kayan nokta artığını (0,30000000000000004) siler; sınırlar etikete gider. */
+const tidy = (n: number) => Number(n.toPrecision(12));
+
+function logEdges(lo: number, hi: number, maxBands: number): number[] {
+  const from = Math.floor(Math.log10(lo)) - 1;
+  const to = Math.ceil(Math.log10(hi)) + 1;
+  for (const ladder of LOG_LADDERS) {
+    const edges: number[] = [];
+    for (let e = from; e <= to; e += 1) for (const m of ladder) edges.push(tidy(m * 10 ** e));
+    const inside = edges.filter((edge) => edge > lo && edge < hi);
+    if (inside.length + 1 <= maxBands) {
+      /* Dar aralık (orta yüzde seksen bir onluğun içinde: F/K 20–60): 1-2-5
+         merdiveni iki basamak veriyordu (ölçüldü, "50 Altı / 50 ve Üstü").
+         Orada doğrusal yuvarlak adımlar daha çok basamak çıkarıyorsa onlar. */
+      const linear = linearEdges(lo, hi, maxBands);
+      return linear.length > inside.length && inside.length < 3 ? linear : inside;
+    }
+  }
+  /* Çok geniş aralık: onlukları seyrelt (her 2., 3. … onluk). */
+  for (let skip = 2; skip <= 12; skip += 1) {
+    const inside: number[] = [];
+    for (let e = Math.ceil(from / skip) * skip; e <= to; e += skip) {
+      const edge = tidy(10 ** e);
+      if (edge > lo && edge < hi) inside.push(edge);
+    }
+    if (inside.length + 1 <= maxBands) return inside;
+  }
+  return [];
+}
+
+function linearEdges(lo: number, hi: number, maxBands: number): number[] {
+  const span = hi - lo;
+  if (!(span > 0)) return [];
+  const magnitude = 10 ** Math.floor(Math.log10(span / maxBands));
+  for (const scale of [magnitude, magnitude * 10, magnitude * 100]) {
+    for (const m of LINEAR_STEPS) {
+      const step = m * scale;
+      const inside: number[] = [];
+      for (let k = Math.floor(lo / step) + 1; k * step < hi; k += 1) inside.push(tidy(k * step));
+      if (inside.length >= 1 && inside.length + 1 <= maxBands) return inside;
+    }
+  }
+  return [];
+}
+
+/**
+ * Değerleri en çok `maxBands` basamağa böler. Log ölçekte yalnız artı
+ * değerler sayılır (kümeyle aynı kural); sınırlar orta yüzde seksenin
+ * içinden seçilir, uçtakiler açık basamaklara düşer. Hepsi aynı değerse ya
+ * da sınır bulunamazsa tek basamak döner (iki ucu açık).
+ */
+export function metricBands(values: readonly number[], scale: SwarmScale, maxBands = 7): MetricBand[] {
+  const usable = values
+    .map((value, index) => ({ value, index }))
+    .filter(({ value }) => Number.isFinite(value) && (scale === "linear" || value > 0));
+  if (usable.length === 0) return [];
+  /* Sınırlar ORTA yüzde seksenin içinden (%10–%90): iki açık uç en az
+     onda birer hisse taşır, aradaki basamaklar boş kalmaz. Kümenin %4–%96
+     alanı az hisseli sonuçta (13 hisse, biri F/K 4.500) aradeğerle 2.361'e
+     uzuyor ve dört basamağı boş bırakıyordu (ölçüldü, testte). */
+  const sorted = usable.map(({ value }) => value).sort((a, b) => a - b);
+  const lo = quantile(sorted, BAND_TAIL)!;
+  const hi = quantile(sorted, 1 - BAND_TAIL)!;
+  const edges = !(hi > lo) ? [] : scale === "log" ? logEdges(lo, hi, maxBands) : linearEdges(lo, hi, maxBands);
+  const bands: MetricBand[] = [];
+  for (let i = 0; i <= edges.length; i += 1) {
+    bands.push({ lo: i === 0 ? null : edges[i - 1], hi: i === edges.length ? null : edges[i], count: 0, members: [] });
+  }
+  for (const { value, index } of usable) {
+    let at = 0;
+    while (at < edges.length && value >= edges[at]) at += 1;
+    bands[at].count += 1;
+    bands[at].members.push(index);
+  }
+  return bands;
+}
+
+/* -------------------------------------------------------------------------
    Pay dağılımı (sektör şeritleri)
    ------------------------------------------------------------------------- */
 

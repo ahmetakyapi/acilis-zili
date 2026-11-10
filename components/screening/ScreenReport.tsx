@@ -155,11 +155,20 @@ function CheckGroup({
 const LABEL_EDGE = 14;
 
 /**
- * Eşik kulvarı (25 Ekim) — eşik çentik, değer nokta, aradaki fark çubuk.
+ * Eşik kulvarı (25 Ekim) — eşik çentik, aradaki fark çubuk.
  * Ölçek ve gerekçe lib/screening-gauge.ts. Çubuğun rengi satırın durumu
  * (rozetle aynı `--st`): geçen farkı yeşil, kalan farkı kırmızı uzanır;
- * bu ekranda renk zaten kuralın hükmü, yeni bir hüküm değil. Geçme tarafı
- * kulvarda soluk zeminle işaretli: "en az" kuralında sağ, "en fazla"da sol.
+ * bu ekranda renk zaten kuralın hükmü, yeni bir hüküm değil.
+ *
+ * TEK ÇUBUK + TEK İM (10 Kasım 2026, sahibinin sözü: "böyle nokta nokta ne
+ * anlatıyor anlamıyorum; yatayda uzun kalın çizgi seviyorum"). Kulvarda
+ * beş katman vardı: geçme tarafının soluk zemini, dikkat sınırının ince
+ * çentiği, eşik çentiği, 5 piksellik fark çubuğu ve değerin 11 piksellik
+ * noktası (ölçek dışında içi boş halka). Kalan: eşikten değere uzanan 8
+ * piksellik dolu çubuk (kulvar 5; dış ucu yuvarlak, eşiğe dayanan ucu düz)
+ * ve etiketli eşik çentiği. Çubuğun ucu değerin yeri; nokta onu ikinci kez
+ * söylüyordu. Dikkat sınırı satırın rozetinde ("Dikkat"), geçme tarafı
+ * çubuğun renginde okunuyor.
  */
 function ThresholdLane({ check, value, locale, t, v }: { check: Check; value: string; locale: string; t: T; v: V }) {
   const gauge = gaugeOf(check);
@@ -169,33 +178,27 @@ function ThresholdLane({ check, value, locale, t, v }: { check: Check; value: st
   const threshold = (formatCheckValue({ ...check, value: gauge.spec.pass }, locale, t, "cell") ?? "")
     .replace(/^\+\s?/, "")
     .replace(/[.,]0(?!\d)/, "");
-  const from = Math.min(gauge.valueAt, gauge.passAt);
   const width = Math.abs(gauge.valueAt - gauge.passAt);
-  const zone =
-    gauge.spec.side === "min"
-      ? { left: `${gauge.passAt}%`, right: 0 }
-      : { left: 0, right: `${100 - gauge.passAt}%` };
+  const left = gauge.valueAt < gauge.passAt;
   const align = gauge.passAt < LABEL_EDGE ? "start" : gauge.passAt > 100 - LABEL_EDGE ? "end" : "center";
   const aria = v.gaugeAria.replace("{t}", threshold).replace("{v}", value);
   return (
     <span className={styles.lane} role="img" aria-label={aria} title={aria}>
       <span className={styles.laneRail} aria-hidden>
-        <i className={styles.laneZone} style={zone} />
-        {gauge.warnAt !== null && <i className={styles.laneWarn} style={{ left: `${gauge.warnAt}%` }} />}
         {width > 0.5 && (
           <i
             className={styles.laneGap}
+            data-side={left ? "below" : "above"}
             data-motion-draw="line"
             style={{
-              left: `${from}%`,
+              ...(left ? { right: `${100 - gauge.passAt}%` } : { left: `${gauge.passAt}%` }),
               width: `${width}%`,
               /* Fark eşikten büyüyor: değer eşiğin solundaysa sağdan sola. */
-              transformOrigin: gauge.valueAt < gauge.passAt ? "right center" : "left center",
+              transformOrigin: left ? "right center" : "left center",
             }}
           />
         )}
         <i className={styles.lanePass} style={{ left: `${gauge.passAt}%` }} />
-        <i className={styles.laneDot} data-clipped={gauge.clipped !== 0 ? "" : undefined} style={{ left: `${gauge.valueAt}%` }} />
       </span>
       <span className={styles.laneLabel} data-align={align} style={{ left: `${gauge.passAt}%` }} aria-hidden>
         {threshold}

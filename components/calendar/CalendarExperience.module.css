@@ -435,7 +435,8 @@ a.cell[aria-current="true"] .cellNum strong { color:var(--primary-ink); }
 /* Lejant işaretleri — çizgidekilerle aynı biçim ve ton (ReleasedData.module.css → `.key`). */
 .valueKey { display:inline-block; flex:none; }
 /* Biçim çizgideki ROLDEN (`data-mark` ← `legendMark`, 6 Kasım, inceleme). */
-.valueKey[data-mark="dot"] { width:8px; height:8px; border-radius:50%; background:var(--flat); }
+/* 10 Kasım: gerçekleşenin imi nokta değil kalın çubuk (DeviationLine). */
+.valueKey[data-mark="dot"] { width:14px; height:8px; border-radius:999px; background:var(--flat); }
 .value[data-dir="above"] .valueKey[data-mark="dot"] { background:var(--up); }
 .value[data-dir="below"] .valueKey[data-mark="dot"] { background:var(--down); }
 .valueKey[data-mark="zero"] { width:2px; height:12px; border-radius:1px; background:var(--text-strong); }

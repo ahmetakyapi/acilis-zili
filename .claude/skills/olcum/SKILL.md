@@ -39,9 +39,10 @@ NODE_OPTIONS="--require $PWD/.claude/skills/olcum/sahte-saglayici.cjs" \
 npx next start -p 3110        # ya da: npx next dev -p 31xx
 ```
 
-Kapatırken yalnız KENDİ portunun süreç ağacını öldür
-(`pkill -f "next (dev|start) -p <port>"` ve onun `next-server` çocuğu);
-çıplak `pkill -f next-server` öteki ajanların sunucusunu da kapatır. Port
+Kapatırken yalnız KENDİ portunu kapat: `fuser -k <port>/tcp`. `next start`
+`next-server` adıyla koşar; `pkill -f "next start -p <port>"` onu yakalamaz
+(dört ajan aynı tuzağa düştü, 10 Kasım), çıplak `pkill -f next-server` ise
+öteki ajanların sunucusunu da kapatır. Port
 doluysa eski derlemenin sunucusu kalmıştır ve ölçüm hata sayfasını çeker
 (`boy=900` görürsen şüphelen; 10 Kasım). Betik dış adresleri engeller
 (günlükte `[mock-fetch] engellendi`), canlı veritabanına ulaşılamaz. İçerik

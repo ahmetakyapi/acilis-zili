@@ -21,42 +21,25 @@
   background: var(--bar-soft);
 }
 
-/* Konum: kulvar + ortanca çentiği + im. İm kulvardan taşar (9 px) ki
-   5 piksellik rayda göz onu bulsun; çentik kulvar boyunda, daha soluk. */
+/* Konum: kulvar (5) + sıfırdan yüzdeliğe KALIN dolu çubuk (8) + üstünde
+   ince ortanca çentiği. 10 Kasım: 3×11 piksellik tek im kalktı (gerekçe
+   Lanes.tsx → UniverseLane). */
 .universe { overflow: visible; }
+.rank {
+  position: absolute;
+  left: 0;
+  top: calc(50% - 4px);
+  height: 8px;
+  border-radius: 999px;
+  background: var(--bar-soft);
+}
 .medianNotch {
   position: absolute;
   left: 50%;
-  top: -2px;
-  bottom: -2px;
-  width: 1px;
-  background: var(--line-strong);
-}
-.mark {
-  position: absolute;
-  top: 50%;
-  width: 3px;
-  height: 11px;
-  border-radius: 2px;
+  top: -4px;
+  bottom: -4px;
+  width: 2px;
+  margin-left: -1px;
+  border-radius: 1px;
   background: var(--text-strong);
-  translate: -50% -50%;
 }
-
-/* Yön: sıfır ortada. */
-.direction { overflow: visible; }
-.zero {
-  position: absolute;
-  left: 50%;
-  top: -2px;
-  bottom: -2px;
-  width: 1px;
-  background: var(--line-strong);
-}
-.move {
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  border-radius: 999px;
-}
-.move[data-dir="up"] { background: var(--up); }
-.move[data-dir="down"] { background: var(--down); }

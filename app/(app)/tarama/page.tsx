@@ -6,7 +6,7 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import styles from "@/components/motion/DirectoryExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
 import { SizeBar, UniverseLane } from "@/components/screener/Lanes";
-import { MetricSwarm, type SwarmKind } from "@/components/screener/MetricSwarm";
+import { MetricBands, type MetricKind } from "@/components/screener/MetricBands";
 import visual from "@/components/screener/ScreenerVisuals.module.css";
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import { FilterChip } from "@/components/ui/FilterChip";
@@ -158,8 +158,8 @@ function conditionValue(c: ScreenCondition, locale: Locale): string {
 const VIEWS = ["kart", "tablo"] as const;
 type ViewKey = (typeof VIEWS)[number] | "auto";
 
-/** Ölçünün kümede nasıl çizildiği: piyasa değeri log ölçekte para, oranlar sayı. */
-const METRIC_KIND: Record<SortKey, SwarmKind> = {
+/** Ölçünün dağılımda nasıl yazıldığı: piyasa değeri para, oranlar sayı. */
+const METRIC_KIND: Record<SortKey, MetricKind> = {
   cap: "money",
   fk: "ratio",
   buyume: "percent",
@@ -915,25 +915,28 @@ async function ScreenerTable({
               {swarmPoints.length === 0 ? (
                 <p className={visual.empty}>{V.swarmEmpty}</p>
               ) : (
-                <MetricSwarm
+                <MetricBands
                   points={swarmPoints}
                   /* F/K da log: yalnız pozitif (zarar edende boş) ve sağa çok
-                     çarpık — doğrusalda büyüme süzgecinin kümesi sol kenara
-                     yığılıyordu (25 Ekim ekran görüntüsü). */
+                     çarpık — doğrusal sınırlarla hisselerin çoğu ilk
+                     basamağa yığılırdı (25 Ekim, küme için aynı gözlem). */
                   scale={sort === "cap" || sort === "fk" ? "log" : "linear"}
                   kind={METRIC_KIND[sort]}
                   universeMedian={isFiltered ? median(universe) : null}
                   missing={filtered.length - swarmPoints.length}
                   locale={locale}
                   labels={{
-                    aria: V.swarmAria.replace("{metric}", sortLabels[sort]).replace("{n}", String(swarmPoints.length)),
-                    hint: V.swarmHint,
-                    median: V.swarmMedian,
-                    universe: V.swarmUniverse,
-                    log: V.swarmLog,
-                    clipped: V.swarmClipped,
+                    medianLabel: V.distMedian,
+                    universe: V.distUniverse,
+                    below: V.distBelow,
+                    above: V.distAbove,
+                    between: V.distBetween,
+                    all: V.distAll,
+                    count: V.distCount,
+                    more: V.distMore,
+                    hint: V.distHint,
+                    namesHint: V.distNamesHint,
                     missing: V.swarmMissing,
-                    open: V.open,
                   }}
                 />
               )}

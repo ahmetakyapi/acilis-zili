@@ -6,20 +6,19 @@
 
 /* ---------- Sektör kulvarı (PeerStrip) ----------
    Skor kartı şeridinin ölçüleri (depth.module.css → .strip): 5 px kulvar,
-   2 px medyan, 11 px nokta. Kulvar hücrenin altında, değerin hemen altında
-   ve hücre genişliğinde; künye iki uçta, dar hücrede alt alta. */
+   8 px dolu çubuk, 2 px medyan çentiği. Kulvar hücrenin altında, değerin
+   hemen altında ve hücre genişliğinde. 10 Kasım: 11 piksellik nokta ve
+   ölçek dışı halkası kalktı; çubuk 5 → 8 piksel (gerekçe PeerStrip.tsx). */
 .peer { display:flex; flex-direction:column; gap:5px; margin-top:4px; min-width:0; }
-.peerRail { position:relative; display:block; height:15px; margin-inline:5px; container-type:inline-size; }
-.peerRail::before { content:""; position:absolute; inset-inline:-5px; top:50%; height:var(--lane-h,5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
+.peerRail { position:relative; display:block; height:15px; }
+.peerRail::before { content:""; position:absolute; inset-inline:0; top:50%; height:var(--lane-h,5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
 /* Renk kararı (25 Ekim son düzeltme): büyüklük şeridi markanın mavi
    ailesinin YUMUŞAK tonu, sitenin tek büyüklük token'ı `--bar-soft`
    (globals.css; önceden burada `--primary-soft` %45 vardı, ScaleBar'dan
-   farklı bir mavi), doygun etkileşim mavisi değil; nokta en koyu mürekkep. */
-.peerGap { position:absolute; top:50%; height:var(--lane-h,5px); translate:0 -50%; background:var(--bar-soft); }
-.peerMedian { position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-muted); }
-.peerDot { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border:2px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--text-strong); box-sizing:border-box; }
-/* Ölçeğin dışında: içi boş halka — "kulvarın ötesinde" demek. */
-.peerDot[data-clipped] { background:var(--premium-surface,var(--surface-solid)); box-shadow:inset 0 0 0 2px var(--text-strong); }
+   farklı bir mavi), doygun etkileşim mavisi değil; medyan en koyu mürekkep. */
+.peerGap { position:absolute; top:calc(50% - 4px); height:8px; border-radius:0 999px 999px 0; background:var(--bar-soft); }
+.peerGap[data-side="below"] { border-radius:999px 0 0 999px; }
+.peerMedian { position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-strong); }
 .peerCaption { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0 10px; color:var(--text-muted); font-size:12px; line-height:1.35; letter-spacing:0; }
 .peerCaption > span:first-child { color:var(--text-body); }
 

@@ -131,7 +131,8 @@ kontrastlar sahibinin makinesindeki `~/dev-starter/knowledge/themes/acilis-zili.
   (sahibinin sözü, 10 Kasım: "böyle nokta nokta ne anlatıyor anlamıyorum;
   yatayda uzun kalın çizgi seviyorum"). Bir satırın tek bir değeri varsa
   (medyan, değişim, pay) sıfırdan o değere uzanan dolu çubuk çizilir (8
-  piksel, yönü renginde; kulvar 5). Dağılım çentikleri, onluk eksende nokta,
+  piksel, yönü renginde; kulvar 5; satırın kahramanıysa 12–14 piksele
+  çıkar — `components/themes/ThemeBoard.tsx`). Dağılım çentikleri, onluk eksende nokta,
   düğmeli im gibi okurun çözmesi gereken çizimler kullanılmaz; ayrıntı
   tabloya ya da haritaya gider. Piyasa değeri gibi büyüklükler doğrudan
   YAZILIR (aynı gün, Endeks Bileşenleri). Örnek `components/themes/ThemeStrip.tsx`.

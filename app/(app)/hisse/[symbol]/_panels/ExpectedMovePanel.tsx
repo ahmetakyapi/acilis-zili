@@ -17,13 +17,12 @@ import {
   NO_VALUE,
 } from "@/lib/utils";
 import { earningsWindow } from "./earnings-time";
-import { ExpectedMoveFigure } from "./ExpectedMoveFigure";
 import styles from "./depth.module.css";
 import craft from "./craft.module.css";
 
-/** Figür için en az bu kadar ölçülmüş rapor; tek nokta bir dağılım değil. */
-const MIN_FIG_MOVES = 2;
-/** Geçmiş satırlarının kulvarında uç payı: figürün `SCALE_PAD`i ile aynı. */
+/** Okuma cümlesi için en az bu kadar ölçülmüş rapor; tek rapor bir sayım değil. */
+const MIN_READOUT_MOVES = 2;
+/** Geçmiş satırlarının kulvarında uç payı: en uzun çubuk kenara yapışmasın. */
 const LANE_PAD = 1.15;
 
 /**
@@ -57,11 +56,9 @@ export async function ExpectedMovePanel({
   const measured = data.history.filter((row) => row.movePct !== null);
   /* Satırlarda eksi bir hareket varsa ölçek işaretli (sıfır ortada);
      CompareScale'ın kuralı. Üstteki iki okuma mutlak büyüklük, işaretsiz. */
-  /* Figürün noktaları tarih sırasıyla, eskiden yeniye (kademe o sırada). */
-  const figMoves = measured
-    .flatMap((row) => (row.movePct === null ? [] : [{ date: row.date, pct: row.movePct }]))
-    .sort((a, b) => a.date.localeCompare(b.date));
-  /* Geçmiş satırlarının kulvarı: figürün ekseni (sıfır ortada, uçta pay). */
+  /* Okuma cümlesi: ölçülmüş raporların kaçı fiyatlanan bandın dışında. */
+  const outside = implied ? measured.filter((row) => Math.abs(row.movePct!) > implied.pct).length : 0;
+  /* Geçmiş satırlarının kulvarı: sıfır ortada, uçta pay. */
   const laneMax = Math.max(implied?.pct ?? 0, ...measured.map((row) => Math.abs(row.movePct!))) * LANE_PAD;
   const laneX = (value: number) => 50 + (value / laneMax) * 50;
   const scaleMax = Math.max(implied?.pct ?? 0, data.average?.avg ?? 0, ...measured.map((row) => Math.abs(row.movePct!)));
@@ -75,17 +72,19 @@ export async function ExpectedMovePanel({
         meta={`${formatEtDateLong(next.date, locale)} · ${when.approx ?? when.window}`}
       />
       <div className={styles.body}>
-        {/* Ana görsel ölçülerin ÜSTÜNDE (CLAUDE.md "Ekran düzeni" 3 → 4):
-            bant ile geçmiş hareketler aynı eksende. İki ölçülmüş rapordan
-            azsa figür bir şey göstermiyor, basılmıyor. */}
-        {implied && measured.length >= MIN_FIG_MOVES && (
-          <ExpectedMoveFigure
-            band={implied.pct}
-            moves={figMoves}
-            locale={locale}
-            d={d}
-          />
-        )}
+        {/* NOKTALI FİGÜR KALKTI (10 Kasım 2026). Ölçülerin üstünde "Bant ve
+            Geçmiş Raporlar" figürü vardı (12 Ekim, `ExpectedMoveFigure`):
+            gri bandın üstünde rapor başına 11 piksellik bir nokta, üstünde
+            yüzde etiketi, altında "±%10,0". Sahibinin itirazı (aynı gün,
+            Temalar panosundaki çentikler için; "başka ekran varsa onları
+            da yapalım"): "böyle nokta nokta ne anlatıyor anlamıyorum;
+            yatayda uzun kalın çizgi seviyorum." Aynı bilgi aşağıdaki
+            satırlarda zaten AYNI eksende ve çubukla duruyor (her rapor bir
+            satır: bant gri şerit, hareket renkli çubuk); figür onu nokta
+            diliyle bir kez daha söylüyordu. Kalan iki şey satırların
+            başına taşındı: çizimin okunuşu ve "kaç rapor bandı aştı"
+            cümlesi. Canlıda ölçüldü (NVDA, 1440, iki rapor): figür bloğu
+            ~165 piksel tutuyordu; yerine 20 piksellik tek satır. */}
         {/* KOMPAKT (30 Eylül, sahibinin isteği). Telefonda panel 1.220
             piksel tutuyordu: iki okuma alt alta, "Gösterge Fiyat" kendi
             satırında, tek raporluk geçmiş için başlık satırlı bir tablo ve
@@ -139,6 +138,20 @@ export async function ExpectedMovePanel({
         {data.history.length > 0 && (
           <>
             <p className="border-t border-line-soft pt-3 text-tiny font-semibold text-strong">{d.emHistory}</p>
+            {implied && (
+              <p className={styles.emReadout}>
+                {measured.length >= MIN_READOUT_MOVES && (
+                  <>
+                    <b>
+                      {(outside === 0 ? d.emFigReadoutNone : d.emFigReadout)
+                        .replace("{n}", String(measured.length))
+                        .replace("{k}", String(outside))}
+                    </b>{" "}
+                  </>
+                )}
+                {d.emFigHint.replace("{band}", formatPercentPlain(implied.pct, locale, 1))}
+              </p>
+            )}
             <ScrollEdges className="scroll-x" tabIndex={0} role="region" aria-label={d.emHistory}>
               <table className={cn(styles.table, styles.historyTable, styles.emTable, craft.emWide)}>
                 <thead className="sr-only">
@@ -161,11 +174,12 @@ export async function ExpectedMovePanel({
                           pikselde bitiyor, 1440'ta panelin sağ 650 pikseli
                           boş kalıyordu; hareket de 80 piksellik bir çubuktu.
                           Kulvar artık tarih ile yüzde arasındaki bütün yeri
-                          alıyor ve figürle AYNI eksende: sıfır ortada, gri
+                          alıyor: sıfır ortada, gri
                           şerit opsiyonların fiyatladığı bant, renkli çubuk o
                           raporun hareketi. Bandı aşan rapor şeridin dışına
-                          taşan çubukla okunuyor. Çizim `aria-hidden`; sayı
-                          yanındaki hücrede. */}
+                          taşan çubukla okunuyor. Çubuk 8 piksel (kulvar 5):
+                          kalın yatay şerit kuralı, dış ucu yuvarlak. Çizim
+                          `aria-hidden`; sayı yanındaki hücrede. */}
                       <td className={craft.emLaneCell} aria-hidden>
                         {row.movePct !== null && laneMax > 0 && (
                           <span className={craft.emLane}>

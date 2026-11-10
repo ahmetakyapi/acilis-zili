@@ -23,7 +23,7 @@ export const calendarVisualsTr = {
     sideAbove: "Üstünde",
     /** Çizginin ne anlattığı — paneldeki tek açıklama satırı. */
     legend:
-      "Çizginin ortası beklenti; nokta gerçekleşen, gri çentik önceki değer. Renk yalnız yönü söyler: yüksek çıkmanın iyi mi kötü mü olduğu veriye göre değişir.",
+      "Ortadaki koyu çentik beklenti; çubuk beklentiden gerçekleşene uzanır, gri çentik önceki değer. Renk yalnız yönü söyler: yüksek çıkmanın iyi mi kötü mü olduğu veriye göre değişir.",
     /** Birimlerin künyedeki yazımı (Title Case). */
     unitPoint: "Puan",
     unitThousand: "Bin",
@@ -127,7 +127,7 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     sideBelow: "Below",
     sideAbove: "Above",
     legend:
-      "The middle of the line is the forecast; the dot is the actual, the gray notch the previous reading. Color shows direction only: whether a higher number is good or bad depends on the release.",
+      "The dark notch in the middle is the forecast; the bar runs from it to the actual, the gray notch is the previous reading. Color shows direction only: whether a higher number is good or bad depends on the release.",
     unitPoint: "pp",
     unitThousand: "K",
   },

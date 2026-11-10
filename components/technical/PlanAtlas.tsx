@@ -25,13 +25,15 @@ const GROUP_ORDER: readonly VerdictKey[] = ["buy", "hold", "sell"];
  * sorusu on altı rozetin tek tek okunmasıydı (telefonda ~9.000 piksel). Bu
  * panel aynı soruyu tek ekranda cevaplıyor: her hisse bir satır, ölçek
  * ortak (stop = 0, ilk hedef = 1; gerekçe `lib/technical-visuals.ts`),
- * satırlar fiyatın plandaki yerine göre sıralı — noktalar bir köşegen
- * çiziyor ve köşegenden kopan satır kendini gösteriyor.
+ * satırlar fiyatın plandaki yerine göre sıralı — çubuklar kısadan uzuna
+ * bir merdiven kuruyor ve merdivenden kopan satır kendini gösteriyor
+ * (10 Kasım: fiyat noktası yerine stoptan fiyata uzanan kalın çubuk;
+ * gerekçe `PlanAtlasView`).
  *
  * VERİ KARTLA AYNI KAYNAKTAN. Fiyat kartın fiyatı (canlı kotasyon, yoksa
  * analiz anı), konum kartın `planPosition`ı, tepedeki cümle pano araç
  * çubuğunun sayılarıyla aynı `atlasSummary`den. Kotasyonu olmayan satırın
- * noktası içi boş halka ve künyesi "Analiz Anında": eski bir fiyat seans
+ * çubuğu içi boş (yalnız kenar) ve künyesi "Analiz Anında": eski bir fiyat seans
  * içi gibi basılmıyor (CLAUDE.md, veri dürüstlüğü 4).
  *
  * Sunucu bileşeni: bütün sayılar burada biçimleniyor; istemci adası
@@ -212,7 +214,6 @@ export function PlanAtlas({
         legendSnapshot: v.legendSnapshot,
         legendStop: v.legendStop,
         legendTarget: v.legendTarget,
-        legendLevel: v.legendLevel,
         noLevels: v.noLevels,
         noPlan: v.noPlan,
         details: v.details,

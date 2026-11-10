@@ -549,6 +549,9 @@ const tr = {
        gibi iki satırda kalıyor. */
     strongestPreMarket: "Açılış Öncesi En Güçlü Tema",
     weakestPreMarket: "Açılış Öncesi En Zayıf Tema",
+    /* Uç tema kartının yükselen / düşen şeridi (MarketTexture → ExtremeCard). */
+    membersUp: "Üye Yükseliyor",
+    membersDown: "Üye Düşüyor",
   },
 
   calendar: {
@@ -2694,7 +2697,9 @@ const tr = {
     boardMedian: "Medyan",
     boardKeyMember: "Üye",
     boardKeyBench: "Ölçüt Fonu",
-    boardNote: "Şerit sıfırdan temanın medyanına uzanır; bütün şeritler aynı ölçekte.",
+    boardNote: "Çubuk sıfırdan temanın medyanına uzanır, bütün çubuklar aynı ölçekte. Her karo bir üye: rengi günlük değişimi, üstüne gelince sembolü ve yüzdesi.",
+    /* GÖRSEL SIRALAMA (10 Kasım akşamı): üye ısı şeridinin künyesi. */
+    boardKeyHeat: "Üyeler, Zayıftan Güçlüye",
     gapLabel: "Aradaki Fark",
     gapPoints: "{points} Puan",
     largest: "En Büyük Üye",
@@ -2858,6 +2863,9 @@ const tr = {
     playing: "Oynatılıyor",
     openBell: "Açılış Zili",
     closeBell: "Kapanış Zili",
+    /* Gün şeridinde zil rozetlerinin altı: "Açılış 17:30". */
+    openShort: "Açılış",
+    closeShort: "Kapanış",
     chipsLabel: "Seanslar: dokun, o seansı oynat",
     /* Yalnız ince işaretçide görünür (bell.css `.sb-hint`): dokunmatikte
        seans kartları ve not aynı işi görüyor. */
@@ -3202,11 +3210,9 @@ const tr = {
       "bad-spot": "Hisse fiyatı alınamadığı için oran kurulamadı.",
     },
     emHistory: "Geçmiş Raporların Ertesinde",
-    emFigTitle: "Bant ve Geçmiş Raporlar",
-    emFigHint: "Gri bant opsiyonların fiyatladığı aralık; her nokta bir raporun ertesindeki hareket, en eskisi ilk düşer.",
+    emFigHint: "Gri şerit opsiyonların fiyatladığı ±{band} aralık; renkli çubuk o raporun ertesindeki hareket.",
     emFigReadout: "Son {n} raporun {k} tanesi bandın dışına çıktı.",
     emFigReadoutNone: "Son {n} raporun hepsi bandın içinde kaldı.",
-    emFigAria: "Opsiyonların fiyatladığı ±{band} bant; son {n} raporun {k} tanesi bandın dışında kaldı.",
     emAverage: "Ortalama Mutlak Hareket",
     emAverageCount: "Son {n} Rapor",
     emAverageTooFew: "Ortalama için en az {n} ölçülmüş rapor gerekiyor.",
@@ -3257,7 +3263,7 @@ const tr = {
       momentum: "6 Aylık Getiri",
     },
     scNote:
-      "Aynı GICS sektöründeki endeks üyeleri arasında konum; not ya da tavsiye değil. Dolu şerit şirketin yüzdeliği, dikey çizgi sektörün medyanı. Değerleme canlı fiyatla kurulur.",
+      "Aynı GICS sektöründeki endeks üyeleri arasında konum; not ya da tavsiye değil. Dolu şerit şirketin yüzdeliği kadar uzar, üstündeki koyu çentik sektörün medyanı. Değerleme canlı fiyatla kurulur.",
     scStrip: "Sektördeki {n} şirketin dağılımı: medyan {m}, bu şirket {p}",
     scScale: { low: "Sektörün Altı", mid: "Medyan", high: "Sektörün Üstü" },
     scScaleShort: { low: "Alt", mid: "Medyan", high: "Üst" },
@@ -5034,14 +5040,13 @@ const tr = {
     sentenceStopNone: "hiçbiri stopa %3'ten yakın değil",
     sentenceBelowOne: "{n} tanesi stopun altında",
     sentenceBelowMany: "{n} tanesi stopun altında",
-    scaleNote: "Her satır kendi planının ölçeğinde: stop 0, ilk hedef 1. Satırlar fiyatın plandaki yerine göre sıralı.",
+    scaleNote: "Her satır kendi planının ölçeğinde: stop 0, ilk hedef 1. Çubuk stoptan fiyatın bugünkü yerine uzanır; satırlar çubuğun boyuna göre sıralı.",
     priceBasis: "Fiyat",
     legendZone: "Alım Bölgesi",
     legendPrice: "Fiyat",
     legendSnapshot: "Analiz Anındaki Fiyat",
     legendStop: "Stop",
     legendTarget: "Hedef",
-    legendLevel: "Destek / Direnç",
     axisStop: "Stop",
     axisTarget: "1. Hedef",
     axisSupport: "Destek",
