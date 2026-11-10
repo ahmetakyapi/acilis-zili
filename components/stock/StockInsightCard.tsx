@@ -213,8 +213,8 @@ function EarningsFigureView({ insight, locale, labels }: { insight: EarningsInsi
             ).map(([label, value, kind], j) => (
               <div key={label} className={styles.metricRow} style={{ "--j": j } as CSSProperties}>
                 <span className={styles.metricRowLabel}>{label}</span>
-                <div className={styles.metricTrack}>
-                  <i className={styles.metricBar} data-kind={kind} style={{ width: `${Math.max(3, (Math.abs(value) / scale) * 100)}%` }} />
+                <div className="value-lane">
+                  <i className={cn("value-bar", styles.metricBar)} data-kind={kind} style={{ width: `${Math.max(3, (Math.abs(value) / scale) * 100)}%` }} />
                 </div>
                 <span className={styles.metricValue}>{item.format(value)}</span>
               </div>

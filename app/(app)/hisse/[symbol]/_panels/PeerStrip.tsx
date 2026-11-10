@@ -1,4 +1,5 @@
 import type { PeerSpread } from "@/lib/peer-spread";
+import { cn } from "@/lib/utils";
 import styles from "./visuals.module.css";
 
 /**
@@ -37,10 +38,10 @@ export function PeerStrip({
   const growsLeft = spread.at < spread.medianAt;
   return (
     <span className={styles.peer} role="img" aria-label={aria} title={aria}>
-      <span className={styles.peerRail} aria-hidden>
+      <span className={cn("value-lane", styles.peerRail)} aria-hidden>
         <i
-          className={styles.peerGap}
-          data-side={growsLeft ? "below" : "above"}
+          className="value-bar"
+          data-end={growsLeft ? "start" : "end"}
           data-motion-draw="line"
           /* En az 1,5: medyanın dibindeki değerde de çubuğun yönü görünsün. */
           style={{
@@ -49,7 +50,7 @@ export function PeerStrip({
             transformOrigin: growsLeft ? "right center" : "left center",
           }}
         />
-        <i className={styles.peerMedian} style={{ left: `${spread.medianAt}%` }} />
+        <i className="value-notch" style={{ left: `${spread.medianAt}%` }} />
       </span>
       {/* Künye TEK SATIR: konum. Medyanın sayısı ekran okuyucu adında ve
           üzerine gelince (`title`); görünür ikinci satır kartı iki ızgara

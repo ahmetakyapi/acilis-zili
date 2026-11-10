@@ -160,7 +160,7 @@ export function PlanAtlasView({
                           <i className={styles.guide} data-at="one" />
                           {g ? (
                             <>
-                              <i className={styles.lane} />
+                              <i className={cn("value-lane", styles.lane)} />
                               {g.zone && (
                                 <i
                                   className={cn(styles.zone, styles.zoneBand)}
@@ -180,12 +180,17 @@ export function PlanAtlasView({
                                   (kıyas), alım bölgesi bir aralık olduğu için bant.
                                   Destek/dirençler ve ikinci hedef satırın
                                   ayrıntısında (sayıyla) ve planın kendi sayfasında.
-                                  Fiyat stopun altındaysa çubuk sıfırdan SOLA uzar. */}
+                                  Fiyat stopun altındaysa çubuk sıfırdan SOLA uzar.
+                                  Aynı gece (değer çubuğu standardı): çubuk, kulvar ve
+                                  çentik ortak sınıflarda (`value-*`, globals.css);
+                                  nötr ton `--flat` → `--bar-soft` — 16 satır koyu gri
+                                  çubuk haritayı ağırlaştırıyordu; yön taşıyan satır
+                                  yine yeşil/kırmızı, büyüklük sitenin yumuşak mavisi. */}
                               <i
-                                className={cn("bar-fill", styles.fill)}
+                                className={cn("value-bar bar-fill", styles.fill)}
                                 data-snapshot={row.fromSnapshot || undefined}
                                 data-tone={row.distanceTone}
-                                data-side={g.at < axis.zero ? "below" : "above"}
+                                data-end={g.at < axis.zero ? "start" : "end"}
                                 style={{
                                   ...(g.at < axis.zero
                                     ? { right: `${((1 - axis.zero) * 100).toFixed(2)}%` }
@@ -196,7 +201,7 @@ export function PlanAtlasView({
                               {g.ticks
                                 .filter((tick) => MAIN_TICKS.has(tick.kind))
                                 .map((tick, k) => (
-                                  <i key={`${tick.kind}-${k}`} className={styles.tick} data-kind={tick.kind} style={{ "--at": tick.at } as Vars} />
+                                  <i key={`${tick.kind}-${k}`} className={cn("value-notch", styles.tick)} data-kind={tick.kind} style={{ "--at": tick.at } as Vars} />
                                 ))}
                             </>
                           ) : (

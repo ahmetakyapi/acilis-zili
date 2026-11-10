@@ -13,8 +13,9 @@
 .rows { display: grid; grid-template-columns: max-content minmax(0, 1fr) max-content max-content; gap: 0 12px; }
 .row { display: grid; grid-column: 1 / -1; grid-template-columns: subgrid; align-items: center; min-height: 30px; padding-block: 3px; }
 .range { color: var(--text-strong); font-size: 13px; font-weight: 600; white-space: nowrap; }
-.lane { position: relative; display: block; height: 5px; border-radius: 999px; background: var(--line-soft); }
-.lane > i { position: absolute; left: 0; top: calc(50% - 4px); height: 8px; border-radius: 999px; background: var(--bar-soft); animation-delay: calc(min(var(--i, 0), 8) * var(--step)); }
+/* Kulvar ve çubuk ortak sınıflarda (globals.css → "DEĞER ÇUBUĞU"; 10 Kasım
+   gece, buradaki kopya silindi — ölçüler aynı). Modülde yalnız kademe. */
+.row :global(.value-bar) { animation-delay: calc(min(var(--i, 0), 8) * var(--step)); }
 .count { color: var(--text-strong); font-size: 13px; text-align: right; }
 .count b { font-weight: 700; }
 .share { min-width: 3ch; color: var(--text-muted); font-size: 12px; text-align: right; }

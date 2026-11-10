@@ -54,8 +54,8 @@ export function PositionRow({ row }: { row: PositionRowView }) {
       <td className={styles.colWeight}>
         <span className={styles.weightCell}>
           <span className="numeral">{row.weight}</span>
-          <span className={styles.weightTrack} aria-hidden>
-            <i style={{ width: `${row.bar}%` }} />
+          <span className={cn("value-lane", styles.weightTrack)} aria-hidden>
+            <i className="value-bar" style={{ left: 0, width: `${row.bar}%` }} />
           </span>
         </span>
       </td>

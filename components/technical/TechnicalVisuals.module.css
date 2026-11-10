@@ -33,8 +33,8 @@
 .legendZone { width:18px; height:10px; border-radius:4px; }
 /* 10 Kasım: fiyat noktası → kalın çubuk (gerekçe PlanAtlasView). Lejant imi
    satırdaki çubuğun kendisi. */
-.legendBar { width:18px; height:8px; border-radius:999px; background:var(--flat); }
-.legendBar[data-snapshot] { background:transparent; box-shadow:inset 0 0 0 2px var(--flat); }
+.legendBar { width:18px; height:8px; border-radius:999px; background:var(--bar-soft); }
+.legendBar[data-snapshot] { background:transparent; box-shadow:inset 0 0 0 2px var(--bar-soft); }
 .legendTick { width:2px; height:14px; border-radius:1px; background:var(--text-muted); }
 .legendTick[data-kind="stop"] { background:var(--down); }
 .legendTick[data-kind="target"] { background:var(--up); }
@@ -70,22 +70,25 @@
 .track { position:relative; height:24px; }
 .guide { position:absolute; top:-10px; bottom:-10px; left:calc(var(--zero) * 100%); width:1px; background:var(--line-soft); }
 .guide[data-at="one"] { left:calc(var(--one) * 100%); }
-.lane { position:absolute; inset:50% 0 auto; height:var(--lane-h, 5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
+/* 10 Kasım (gece): kulvar, çubuk ve çentik ortak sınıflarda (`value-lane`,
+   `value-bar`, `value-notch`; globals.css → "DEĞER ÇUBUĞU"); buradaki
+   kopyalar silindi, modülde yalnız yer, ton ve kademe kaldı. */
+.track { --notch-out:-5px; }
+.track > .lane { position:absolute; inset:9.5px 0 auto; }
 /* Planın kendisi (0 → 1) kulvarın içinde bir ton koyu. */
 .lane::after { content:""; position:absolute; inset:0 calc((1 - var(--one)) * 100%) 0 calc(var(--zero) * 100%); border-radius:inherit; background:var(--line); }
 .zone { position:absolute; top:50%; left:calc(var(--from) * 100%); width:calc((var(--to) - var(--from)) * 100%); min-width:3px; height:14px; margin-top:-7px; }
-.tick { position:absolute; top:50%; left:calc(var(--at) * 100%); width:2px; height:14px; margin:-7px 0 0 -1px; border-radius:1px; background:var(--text-muted); }
-.tick[data-kind="stop"], .tick[data-kind="sell"] { background:var(--down); }
-.tick[data-kind="target"] { background:var(--up); }
-.tick[data-kind="support"], .tick[data-kind="resistance"] { background:var(--text-muted); }
+/* Çentik 2 × 14 (ortak sınıf; iz 24 piksel, 5'er içeriden); rengi anlamdan. */
+.tick { left:calc(var(--at) * 100%); --notch-tone:var(--text-muted); }
+.tick[data-kind="stop"], .tick[data-kind="sell"] { --notch-tone:var(--down); }
+.tick[data-kind="target"] { --notch-tone:var(--up); }
 /* FİYAT ÇUBUĞU: stoptan (0) fiyata, 8 piksel (kulvar 5); dış ucu yuvarlak,
    sıfıra dayanan ucu düz. Ton yön taşıyorsa ondan (bölgede `--up`, stop
-   altında `--down`), yoksa nötr `--flat`. Analiz anındaki fiyat içi boş. */
-.fill { position:absolute; top:calc(50% - 4px); height:8px; border-radius:0 999px 999px 0; background:var(--flat); transform-origin:left center; animation-delay:calc(min(var(--i, 0), 10) * var(--step)); }
-.fill[data-side="below"] { border-radius:999px 0 0 999px; transform-origin:right center; }
-.fill[data-tone="up"] { background:var(--up); }
-.fill[data-tone="down"] { background:var(--down); }
-.fill[data-snapshot] { background:var(--premium-surface); box-shadow:inset 0 0 0 2px var(--flat); }
+   altında `--down`), yoksa büyüklük tonu `--bar-soft` (10 Kasım gece:
+   `--flat` idi, 16 satırda ağır duruyordu — sahibinin kararı). Analiz
+   anındaki fiyat içi boş. */
+.fill { animation-delay:calc(min(var(--i, 0), 10) * var(--step)); }
+.track > .fill[data-snapshot] { background:var(--premium-surface); box-shadow:inset 0 0 0 2px var(--bar-soft); }
 .noLevels { position:absolute; inset:0; display:flex; align-items:center; font-size:12px; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 
 .distance { text-align:right; font-size:12.5px; font-weight:600; color:var(--text-body); white-space:nowrap; }

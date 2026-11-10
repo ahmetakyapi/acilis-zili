@@ -174,8 +174,10 @@
 .measureUnit { font-size:14px; font-weight:600; letter-spacing:0; color:var(--text-body); }
 .tile[data-closed] .measure > strong { color:var(--text-body); }
 /* Kulvar ve şerit: ölçek bütün kartlarda %0-100. */
-.lane { display:block; height:var(--lane-h, 5px); overflow:hidden; border-radius:999px; background:var(--line-soft); }
-.lane > i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); transform-origin:left center; }
+/* 10 Kasım (gece), değer çubuğu standardı: pay şeridinin dolgusu kulvarla
+   aynı 5 pikseldi; şimdi kulvar 5, dolgu 8 ve kurallar ortak sınıflarda
+   (`value-lane` / `value-bar`; globals.css → "DEĞER ÇUBUĞU"). Buradaki
+   `.lane` kopyası silindi; ton aynı (`--bar-soft`). */
 /* Kongre kartı: alış ve satış SAYISININ payı, yön renginde. */
 .split { display:flex; gap:2px; height:var(--lane-h, 5px); overflow:hidden; border-radius:999px; }
 .split > i { display:block; min-width:2px; height:100%; transform-origin:left center; }

@@ -1,17 +1,15 @@
-import Image from "next/image";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import styles from "../stock.module.css";
-import visuals from "./visuals.module.css";
+import peerStyles from "./peers.module.css";
 import { CompanyCards } from "@/components/ui/CompanyCards";
-import { ChangePill, EmptyValue, Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
-import { ScaleBar } from "@/components/markets/CompareScale";
+import { LogoTile, Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
+import { MoveFigure, rowStep } from "@/components/markets/BoardTable";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getQuotes } from "@/lib/providers";
 import { indexMemberOf, peersOf } from "@/db/seed/indices";
 import { subIndustryName } from "@/db/seed/sub-industries";
-import { formatMoneyCompact, formatPrice, NO_VALUE } from "@/lib/utils";
-import { logScale } from "@/lib/peer-spread";
+import { cn, formatMoneyCompact, formatPrice, NO_VALUE } from "@/lib/utils";
 import { FoldToggle } from "@/components/ui/FoldToggle";
 
 /** Telefonda açık gelen satır (28 Eylül, Gündem'i kısaltma işi). Dokuz satır
@@ -28,13 +26,35 @@ const PEER_FOLD = 5;
  * boşluğun içinde gösteriyordu. Kartların söylemediği asıl şey şuydu: bu
  * şirket sektörünün NERESİNDE? Sayfanın şirketi listede hiç yoktu. Artık
  * dokuz satır, piyasa değerine göre sıralı; sayfanın şirketi vurgulu satırda
- * kendi sırasında, çubuk büyüklüğü UZUNLUK olarak veriyor (CLAUDE.md
- * "Karşılaştırılan her büyüklük bir de çizgi olarak okunur", `ScaleBar`).
+ * kendi sırasında.
  *
  * Piyasa değeri profil kartıyla AYNI kural (`liveMarketCap`): NVDA satırı
  * profilin tek büyük okumasıyla aynı sayı. FİYATTA ÇUBUK YOK — farklı
  * şirketlerin hisse fiyatları karşılaştırılabilir değil (CompareScale).
  * Sınıflandırma GICS'ten; aynı şirketin ikinci hisse sınıfı listeye girmez.
+ *
+ * TARİHÇE — PİYASA DEĞERİ ÇUBUĞU (24 Eylül → 10 Kasım). Liste ilk hâlinde
+ * piyasa değerini bir de uzunluk olarak veriyordu (`ScaleBar`; CLAUDE.md
+ * "Karşılaştırılan her büyüklük bir de çizgi olarak okunur"); 25 Ekim'de
+ * çubuk LOGARİTMİK ölçeğe geçti (`logScale`, lib/peer-spread.ts: doğrusalda
+ * en büyük şirketin dışındakiler nokta kadar kalıyordu) ve panelin dibine
+ * "sol uç 100 Mr $, her eşit adım on kat" künyesi eklendi.
+ *
+ * 10 Kasım 2026 (gece), sahibinin kararı: "piyasa değerini direkt yazsak
+ * daha doğru" ve "nokta/eksen çözdürme". Logaritmik çubuk okurun çözmesi
+ * gereken bir çizimdi: iki kat uzun çubuk iki kat büyük şirket demiyordu,
+ * bunu söylemek için ayrı bir künye cümlesi gerekiyordu. ÇUBUK VE KÜNYE
+ * KALKTI; piyasa değeri koyu mürekkeple doğrudan yazılıyor (Endeks
+ * Bileşenleri'yle aynı karar, `arayuz.md` → "Piyasa değeri gibi büyüklükler
+ * doğrudan YAZILIR"); sıra zaten büyüklüğü söylüyor. Satırın çizimi artık
+ * GÜNLÜK DEĞİŞİM: sıfır ortalı 8 piksellik kalın çubuk ve yön renginde
+ * güçlü yüzde — ortak tablo parçasının `MoveFigure`ı (ölçek sabit,
+ * lib/market-scales.ts; Şirketler ve Endeks Bileşenleri ile aynı uzunluk
+ * aynı hareket). Kimlik de aynı aileye büyüdü: logo 28 → 36 (telefonda
+ * 32), sembol 14 → 16/700, ad soluk 12 → gövde 13,5. Fiyat piyasa
+ * değerinin altında sessiz künye (karşılaştırılmaz, ama okur arıyor).
+ * `logScale` ve testi lib'de duruyor (başka kullanıcısı kalmadı; silme
+ * kararı ana oturumun). Ölçüm peers.module.css sonunda.
  */
 export async function PeersCard({
   symbol,
@@ -73,9 +93,6 @@ export async function PeersCard({
       cap: liveMarketCap(meta[row.symbol], quotes[row.symbol]?.price ?? null),
     }))
     .sort((a, b) => (b.cap ?? -1) - (a.cap ?? -1));
-  /* Log ölçek (25 Ekim son düzeltme; gerekçe `logScale`): doğrusalda
-     en büyük şirketin dışındakiler nokta kadar kalıyordu. */
-  const capScale = logScale(rows.map((row) => row.cap ?? 0));
   const folded = (index: number, self: boolean) => index >= PEER_FOLD && !self;
   const foldCount = rows.filter((row, index) => folded(index, row.self)).length;
 
@@ -105,55 +122,37 @@ export async function PeersCard({
         more={t.stockDepth.peersShowMore.replace("{n}", String(foldCount))}
         less={t.common.less}
       >
-      <ol className={styles.peerList}>
+      {/* `data-draw`: çubuklar liste ekrana girince dolar (DrawGate);
+          kademe satırda (`rowStep`). */}
+      <ol className={peerStyles.list} data-draw>
         {rows.map((row, index) => {
           const quote = quotes[row.symbol];
-          const logo = meta[row.symbol]?.logoUrl;
           const body = (
             <>
-              {logo ? (
-                <span className={styles.peerLogo}>
-                  <Image src={logo} alt="" width={28} height={28} />
-                </span>
-              ) : (
-                <span className={styles.peerMonogram} aria-hidden>
-                  {row.symbol.slice(0, 1)}
-                </span>
-              )}
-              <span className="min-w-0">
-                <span className="numeral block text-sm font-bold text-strong">{row.symbol}</span>
-                <span className="block truncate text-xs text-muted">{row.name}</span>
+              <LogoTile symbol={row.symbol} logoUrl={meta[row.symbol]?.logoUrl} size="lg" className={peerStyles.logo} />
+              <span className={peerStyles.id}>
+                <span className={peerStyles.symbol}>{row.symbol}</span>
+                <span className={peerStyles.name} title={row.name}>{row.name}</span>
               </span>
-              <span className="min-w-0 text-right">
-                <span className="numeral block text-xs font-semibold text-strong">
+              <span className={peerStyles.cap}>
+                <b className={cn("numeral", row.cap === null && peerStyles.none)}>
                   {row.cap !== null ? formatMoneyCompact(row.cap, locale) : NO_VALUE}
-                </span>
-                {row.cap !== null && capScale && (
-                  <ScaleBar ratio={capScale.ratio(row.cap)} signed={false} emphasis={row.self} />
-                )}
+                </b>
+                {quote && <span className="numeral">{formatPrice(quote.price, locale, { currency: true })}</span>}
               </span>
-              <span className={styles.peerQuote}>
-                {quote ? (
-                  <>
-                    <span className="numeral text-xs text-body">
-                      {formatPrice(quote.price, locale, { currency: true })}
-                    </span>
-                    <ChangePill changePct={quote.changePct} locale={locale} size="sm" />
-                  </>
-                ) : (
-                  <EmptyValue label={t.common.noData} className="text-xs text-muted" />
-                )}
+              <span className={peerStyles.move}>
+                <MoveFigure value={quote ? quote.changePct : null} locale={locale} />
               </span>
             </>
           );
           return (
-            <li key={row.symbol} className="min-w-0" data-fold={folded(index, row.self) ? "" : undefined}>
+            <li key={row.symbol} className={peerStyles.item} data-fold={folded(index, row.self) ? "" : undefined} style={rowStep(index)}>
               {row.self ? (
-                <div className={styles.peerRow} data-self aria-current="page">
+                <div className={peerStyles.row} data-self aria-current="page">
                   {body}
                 </div>
               ) : (
-                <Link href={`/hisse/${row.symbol}`} className={styles.peerRow} data-cc={row.symbol}>
+                <Link href={`/hisse/${row.symbol}`} className={peerStyles.row} data-cc={row.symbol}>
                   {body}
                 </Link>
               )}
@@ -162,11 +161,6 @@ export async function PeersCard({
         })}
       </ol>
       </FoldToggle>
-      {capScale && (
-        <p className={visuals.weightNote}>
-          {t.stockVisuals.capLogNote.replace("{floor}", formatMoneyCompact(capScale.floor, locale))}
-        </p>
-      )}
       {/* ŞİRKET KARTI — bu listenin satırları VE Şirket Özeti'ndeki logo
           şeridi (StockSummary: aynı sıralamanın ilk beşi, yani bu sekizin
           alt kümesi). Kayıt burada çünkü paket burada: kart satırın

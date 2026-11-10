@@ -4,7 +4,7 @@ import type { Dictionary } from "@/lib/i18n";
 import { SCREEN_CATEGORIES, type Check, type CheckStatus, type ScreenCategory } from "@/lib/screening";
 import type { ScreenData } from "@/lib/screening-data";
 import { gaugeOf } from "@/lib/screening-gauge";
-import { NO_VALUE } from "@/lib/utils";
+import { cn, NO_VALUE } from "@/lib/utils";
 import { checkSentence, formatCheckValue } from "./format";
 import styles from "./Screening.module.css";
 
@@ -48,8 +48,8 @@ export function CategoryPanel({ data, t }: { data: ScreenData; t: T }) {
                 {t.weight.replace("{n}", String(entry.weight))} ·{" "}
                 {t.measured.replace("{m}", String(entry.measured)).replace("{n}", String(entry.total))}
               </span>
-              <span className={styles.track} aria-hidden="true">
-                {entry.score !== null && <span style={{ width: `${Math.max(entry.score, 2)}%` }} />}
+              <span className={cn("value-lane", styles.track)} aria-hidden="true">
+                {entry.score !== null && <span className="value-bar" style={{ left: 0, width: `${Math.max(entry.score, 2)}%` }} />}
               </span>
             </div>
           );
@@ -185,10 +185,11 @@ function ThresholdLane({ check, value, locale, t, v }: { check: Check; value: st
   return (
     <span className={styles.lane} role="img" aria-label={aria} title={aria}>
       <span className={styles.laneRail} aria-hidden>
+        <i className={cn("value-lane", styles.laneTrack)} />
         {width > 0.5 && (
           <i
-            className={styles.laneGap}
-            data-side={left ? "below" : "above"}
+            className="value-bar"
+            data-end={left ? "start" : "end"}
             data-motion-draw="line"
             style={{
               ...(left ? { right: `${100 - gauge.passAt}%` } : { left: `${gauge.passAt}%` }),
@@ -198,7 +199,7 @@ function ThresholdLane({ check, value, locale, t, v }: { check: Check; value: st
             }}
           />
         )}
-        <i className={styles.lanePass} style={{ left: `${gauge.passAt}%` }} />
+        <i className="value-notch" style={{ left: `${gauge.passAt}%` }} />
       </span>
       <span className={styles.laneLabel} data-align={align} style={{ left: `${gauge.passAt}%` }} aria-hidden>
         {threshold}

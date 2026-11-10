@@ -160,8 +160,10 @@ a.topCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:2p
 .topFigure { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 8px; }
 .topFigure > strong { font-size:24px; font-weight:700; line-height:1; letter-spacing:-.03em; color:var(--text-strong); }
 .topFigure > small { font-size:13px; color:var(--text-body); }
-.lane { display:block; height:var(--lane-h, 5px); overflow:hidden; border-radius:999px; background:var(--line-soft); }
-.lane > i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); transform-origin:left center; }
+/* 10 Kasım (gece), değer çubuğu standardı: pay şeridinin dolgusu kulvarla
+   aynı 5 pikseldi; şimdi kulvar 5, dolgu 8 ve kurallar ortak sınıflarda
+   (`value-lane` / `value-bar`; globals.css → "DEĞER ÇUBUĞU"). Buradaki
+   `.lane` kopyası silindi; ton aynı (`--bar-soft`). */
 .topMove { display:flex; flex-wrap:wrap; gap:6px; margin-top:auto; }
 .topRest { padding:0 20px 14px; font-size:13px; color:var(--text-muted); }
 @media(max-width:639px) { .topRest { padding:0 16px 12px; } }
@@ -253,8 +255,8 @@ a.company:hover b { color:var(--primary-ink); }
 .weightCell { display:flex; flex-direction:column; gap:5px; }
 /* 4/2 doygun mavi → 5/999 `--bar-soft` (10 Kasım): büyüklük dolgusu sitenin
    tek büyüklük tonu; doygun etkileşim mavisi veri çiziminde yok (25 Ekim). */
-.weightTrack { display:block; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
-.weightTrack i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); }
+/* 10 Kasım (gece): dolgu 5 → 8 (kulvar 5), ortak `value-lane` / `value-bar`;
+   burada yalnız yer. */
 /* Açılır kalan bir `<details>` idi, artık düğme (gerekçe `PositionsMore`);
    görünüşü aynı. Kalanın tablosu başlık satırı taşımıyor — sütunlar hemen
    üstteki tablonunkiyle aynı. */
@@ -360,7 +362,8 @@ a.company:hover b { color:var(--primary-ink); }
   .historyValue { grid-area:value; min-width:4.5rem; text-align:right; }
   .historyTrack { grid-area:track; height:var(--lane-h,5px); justify-content:flex-start; align-items:center; border-bottom:0; border-radius:999px; background:var(--line-soft); }
   .historyTrack i[data-axis="y"] { display:none; }
-  .historyTrack i[data-axis="x"] { display:block; width:var(--share); height:100%; border-radius:999px; transform-origin:left center; }
+  /* 10 Kasım (gece): yatay çubuk 5 → 8 (kulvar 5). */
+  .historyTrack i[data-axis="x"] { display:block; flex:none; width:var(--share); height:8px; border-radius:999px; transform-origin:left center; }
 }
 
 /* ---- Kongre: hisse bazında ---------------------------------------------- */
@@ -373,7 +376,8 @@ a.company:hover b { color:var(--primary-ink); }
 }
 .tickerBars { display:flex; flex-direction:column; gap:4px; min-width:0; }
 .tickerBars > span { position:relative; display:flex; align-items:center; gap:8px; height:16px; }
-.tickerBars i { display:block; height:var(--lane-h,5px); min-width:0; border-radius:999px; background:var(--up); transform-origin:left center; }
+/* 10 Kasım (gece): 5 → 8 piksel (kalın çubuk kuralı; kulvarsız, sıfırdan sayıya). */
+.tickerBars i { display:block; height:var(--bar-h,8px); min-width:0; border-radius:999px; background:var(--up); transform-origin:left center; }
 .tickerBars [data-tone="down"] i { background:var(--down); }
 .tickerBars b { flex-shrink:0; font-size:12px; font-weight:600; color:var(--text-body); white-space:nowrap; }
 .tickerLast { font-size:12px; color:var(--text-muted); white-space:nowrap; }

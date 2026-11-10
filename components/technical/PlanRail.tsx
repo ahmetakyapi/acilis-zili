@@ -30,6 +30,12 @@ type Leg = { key: string; name: string; tone: TrackSegment["tone"]; abs: number 
  *     okunuyor. Bacaklar artık rayın kendi fiyat ekseninde, yani uzunlukları
  *     tutarlarla orantılı ve seviyelerle aynı yerde.
  *   · Çizim yalnızca görsel; sayıların tamamı bacak satırında.
+ *   10 Kasım (gece): bacaklar rayda artık yön renkli iki çizgi olarak
+ *   BOYANMIYOR — ray atlas diline geçti (tabandan fiyata tek kalın çubuk,
+ *   adlı çentikler; gerekçe LevelTrack → "ATLAS DİLİ"). `segments` yalnız
+ *   ölçeği kuruyor; bacakların adı, tutarı ve yüzdesi alttaki satırda
+ *   aynen duruyor ve uzunlukları adlı çentiklerin (Stop, Bölge, Hedef 1)
+ *   arasından okunuyor.
  *
  * SAT VE BÖLGESİZ TUT DA BACAK ALIYOR. SAT kartında risk şeridi yoktu ve
  * ızgaranın paylaşılan satırı komşu AL/TUT kartlarına göre açıldığı için
@@ -160,6 +166,16 @@ export function PlanRail({
         verdict={verdict}
         segments={segments}
         snapshotPrice={snapshotPrice}
+        /* Çentiklerin adı rayın altında (10 Kasım gece; gerekçe LevelTrack
+           → "ATLAS DİLİ"). */
+        names={{
+          stop: t.technical.stop,
+          zone: t.technical.railZone,
+          target: t.technical.target,
+          sell: t.technical.railSell,
+          support: t.technical.support,
+          resistance: t.technical.resistance,
+        }}
       />
       {legs.length > 0 && (
         <p className={styles.riskLegs}>

@@ -202,10 +202,13 @@ function ScoreStrip({
 }) {
   return (
     <span className={styles.strip} role="img" aria-label={label}>
-      <span className={styles.stripRail} aria-hidden>
-        <i data-motion-draw="line" style={{ width: `${percentile}%` }} />
+      {/* Ortak değer çubuğu (10 Kasım gece; globals.css → "DEĞER ÇUBUĞU"):
+          kulvar 5, dolgu 8, medyan çubuğun üstünde 2 piksellik çentik.
+          Buradaki kopya kurallar (depth.module.css) silindi; ölçü aynı. */}
+      <span className="value-lane" aria-hidden>
+        <i className="value-bar" data-motion-draw="line" style={{ left: 0, width: `${percentile}%` }} />
+        {median !== null && <i className="value-notch" style={{ left: `${median}%` }} />}
       </span>
-      {median !== null && <i aria-hidden className={styles.stripMedian} style={{ left: `${median}%` }} />}
     </span>
   );
 }

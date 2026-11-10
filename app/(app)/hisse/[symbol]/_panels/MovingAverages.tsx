@@ -111,7 +111,10 @@ export async function MovingAverages({
        gövdenin üst dolgusu tümüyle kalktı; satırın kendi `py-2`si zaten
        nefes alacak kadar. Ölçüldü: kart 245 → 190 piksel. */
     <div className={styles.averagesBody}>
-      <PriceRail marks={marks} className={styles.averagesRail} />
+      {/* `bar`: cetvel atlas dilinde (10 Kasım gece) — 52 hafta dibinden
+          fiyata kalın çubuk, ortalamalar çubuğun üstünde koyu adlı çentik
+          (gerekçe components/ui/PriceRail.tsx → "`bar` KİPİ"). */}
+      <PriceRail marks={marks} bar className={styles.averagesRail} />
       {/* BİR YILLIK YOL (10 Kasım 2026): cetvel bugünü, çizim oraya nasıl
           gelindiğini gösteriyor ve kolonun artan yerini alıyor (gerekçe ve
           ölçüm AveragesChart.tsx). Fon dalında kart tek başına; orada da

@@ -1,45 +1,13 @@
 /* Satır içi kulvarlar — gerekçe Lanes.tsx başında. */
+/* 10 Kasım (gece): kulvarın boyu/zemini, dolgu ve çentik ortak sınıflarda
+   (globals.css → "DEĞER ÇUBUĞU": kulvar 5, dolgu 8 `--bar-soft`, çentik 2
+   piksel koyu mürekkep). Burada yalnız YER: genişlik tavanı, üst pay, sağa
+   yaslama. Eski kopyalar (`.size` 5 piksel dolgu, `.rank`, `.medianNotch`)
+   silindi. */
 .lane {
-  position: relative;
-  display: block;
   width: 100%;
   /* Tavan değişkenle: modül CSS'i katmansız, `max-w-*` yardımcısını ezerdi. */
   max-width: var(--lane-max, 96px);
-  height: var(--lane-h, 5px);
   margin-top: 6px;
-  border-radius: 999px;
-  background: var(--line-soft);
 }
 .end { margin-left: auto; }
-
-/* Büyüklük: markanın YUMUŞAK mavisi (güncel renk kararı, 25 Ekim) —
-   doygun etkileşim mavisi (`--primary`) değil, gri de değil. */
-.size {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: var(--bar-soft);
-}
-
-/* Konum: kulvar (5) + sıfırdan yüzdeliğe KALIN dolu çubuk (8) + üstünde
-   ince ortanca çentiği. 10 Kasım: 3×11 piksellik tek im kalktı (gerekçe
-   Lanes.tsx → UniverseLane). */
-.universe { overflow: visible; }
-.rank {
-  position: absolute;
-  left: 0;
-  top: calc(50% - 4px);
-  height: 8px;
-  border-radius: 999px;
-  background: var(--bar-soft);
-}
-.medianNotch {
-  position: absolute;
-  left: 50%;
-  top: -4px;
-  bottom: -4px;
-  width: 2px;
-  margin-left: -1px;
-  border-radius: 1px;
-  background: var(--text-strong);
-}

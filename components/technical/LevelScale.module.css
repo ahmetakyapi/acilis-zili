@@ -6,48 +6,31 @@
 .scale { display:grid; gap:6px; min-width:0; }
 .caption { font-size:12px; font-weight:700; line-height:1.3; color:var(--text-muted); }
 .axis { position:relative; height:96px; container-type:inline-size; }
-.lane { position:absolute; top:40px; right:0; left:0; height:5px; border-radius:999px; background:var(--line-soft); }
-/* 10 Kasım (tek çizim ailesi): bant 13 piksel düz `--primary-faint` idi;
-   kart rayı ve merdivenle aynı reçete (14 piksel, yarıçap 5, yıkama + iç
-   kenar). Çentik 15 → 14. Fiyat imi 3×28'lik imleçti; ailenin fiyat imi
-   koyu mürekkep nokta (kart rayı, atlas, pivot rayı, şirket sayfasının 52
-   hafta ekseni) — etiketi yine tepesinde. */
+/* 10 Kasım (gece), ATLAS DİLİ (gerekçe LevelScale.tsx): kulvar, çubuk ve
+   çentik ortak sınıflarda (`value-lane`, `value-bar`, `value-notch`;
+   globals.css → "DEĞER ÇUBUĞU"). Kulvar 5 (40. pikselde), tabandan fiyata
+   dolu çubuk 8, çentik 2 × 14 koyu mürekkep, "şimdi" 4 × 22 koyu dik im.
+   Buradaki eski kurallar (`.leg` yön şeritleri, renkli `.tick`, 14
+   piksellik fiyat noktası, `scale-leg` / `scale-cursor` keyframes) silindi;
+   bant kart rayı ve merdivenle aynı reçete (14 piksel, yarıçap 5, yıkama +
+   iç kenar — 10 Kasım "tek çizim ailesi"). Ölçüldü (/teknik/NVDA, MU, AAPL;
+   1440, iki tema): kulvar 5, çubuk 8, eksen kutusu ve sayfa boyu aynı. */
+.axis > .lane { position:absolute; top:40px; right:0; left:0; --notch-out:4.5px; }
 .band { position:absolute; top:35.5px; height:14px; border-radius:5px; background:linear-gradient(var(--primary-wash), var(--primary-wash)), var(--premium-surface); box-shadow:inset 0 0 0 1px var(--primary-faint); }
-/* Fiyattan en yakın iki seviyeye şerit: kulvarın üstünde, yön renginde. */
-.leg { position:absolute; top:40px; height:5px; border-radius:999px; background:var(--up); transform-origin:left center; animation:scale-leg var(--draw) var(--ease-brand) both; }
-.leg[data-tone="down"] { background:var(--down); }
-.leg[data-from="end"] { transform-origin:right center; }
-@keyframes scale-leg { from { transform:scaleX(0); } }
+.now { position:absolute; top:-8.5px; width:4px; height:22px; margin-left:-2px; border-radius:2px; background:var(--text-strong); box-shadow:0 0 0 2px var(--premium-surface); }
 .mark { position:absolute; top:0; bottom:0; width:0; }
-.tick { position:absolute; top:35.5px; left:-1px; width:2px; height:14px; border-radius:1px; background:var(--line-strong); }
-.mark[data-kind="target"] .tick { background:var(--up); }
-.mark[data-kind="sellLevel"] .tick, .mark[data-kind="stop"] .tick { background:var(--down); }
-.mark[data-kind="entry"] .tick { background:var(--primary); }
 .label { position:absolute; top:57px; left:0; display:grid; justify-items:center; gap:2px; text-align:center; white-space:nowrap; translate:calc(-50% + var(--shift, 0cqw)) 0; }
 .label small { font-size:12px; font-weight:600; line-height:1.2; color:var(--text-muted); }
 .label b { font-size:13.5px; font-weight:700; line-height:1.2; letter-spacing:-.01em; color:var(--text-strong); }
 .mark[data-kind="target"] .label small { color:var(--up); }
 .mark[data-kind="sellLevel"] .label small, .mark[data-kind="stop"] .label small { color:var(--down); }
 
-/* Fiyat: koyu mürekkep imleç (merdiven ve kart rayıyla aynı), etiketi üstte. */
+/* Fiyat: adı ve sayısı çubuğun ucundaki "şimdi" iminin tepesinde. */
 .mark[data-kind="price"] { z-index:1; }
-.mark[data-kind="price"] .tick { top:35.5px; left:-7px; width:14px; height:14px; border-radius:50%; background:var(--text-strong); box-shadow:0 0 0 3px var(--premium-surface); }
 .mark[data-kind="price"] .label { top:8px; display:flex; align-items:baseline; gap:6px; translate:-50% 0; }
 .mark[data-kind="price"] .label b { font-size:15px; }
 .mark[data-kind="price"][data-align="start"] .label { translate:-12px 0; }
 .mark[data-kind="price"][data-align="end"] .label { translate:calc(-100% + 12px) 0; }
-
-/* Giriş: şerit fiyattan seviyeye uzar, imleç ardından belirir — bir kez.
-   10 Kasım (hareket merdiveni): imleç eksenin solundan `left` ile 900 ms
-   kayıyordu (yerleşim özelliği canlandırılmaz; etiketi de sayıyla birlikte
-   sürükleniyordu, yani metin kayıyordu) ve şerit 600 ms bekleyip
-   başlıyordu; toplam 1.300 ms. Artık şerit `--draw`, imleç `--mark` ile
-   400 ms'de belirir. */
-.mark[data-kind="price"] { animation:scale-cursor var(--mark) var(--ease-brand) 400ms both; }
-/* 10 Kasım: im opaklık 0'dan beliriyordu; açılışta hiçbir çizim 0'dan
-   başlamaz (LCP) — nokta küçükten yerine oturur. */
-@keyframes scale-cursor { from { opacity:.4; scale:.6; } }
-@media (prefers-reduced-motion: reduce) { .mark[data-kind="price"], .leg { animation:none; } }
 
 /* Telefonda yok: 330 piksellik eksende beş etiket sığmıyor; aynı plan
    aşağıdaki fiyat merdiveninde dikey eksende, etiketleriyle duruyor. */

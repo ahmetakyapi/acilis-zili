@@ -48,6 +48,7 @@ paths:
 |---|---|---|
 | Mini grafik çizgisi çizilsin | `.spark-line` / `.spark-area` / `.spark-dot` (globals.css) | Kırpmayla açılır; kesik çizgi DEĞİL (ölçek tuzağı yorumda) |
 | Şerit/çubuk dolsun | `.bar-fill` | `scaleX`, kaynak solda |
+| Değerin çubuğu (kulvar 5, dolgu 8, çentik 2) | `.value-lane` / `.value-bar` / `.value-notch` (globals.css → "DEĞER ÇUBUĞU") | `class="value-bar bar-fill"` + `data-draw`; ton `data-tone` ya da `--bar-tone`, yuvarlak uç `data-end`; modülde yalnız yer ve değişken, kopya kural yazılmaz |
 | Puan halkası | `.ring-fill` + `--ring-circumference` | `components/earnings/ScoreRing.tsx` |
 | Panel belirişi, panel başlığının yükselişi | kendiliğinden (`.panel`, `h2`; `data-rise-scope`, `data-no-rise`) | Kaydırma güdümlü, JS yok |
 | Ekranın altındaki figür görünce oynasın | `components/motion/PlayOnView.tsx` (`data-armed` → `data-play`) | Taban durum bitmiş figür |

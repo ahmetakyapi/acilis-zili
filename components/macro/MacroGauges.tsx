@@ -108,6 +108,10 @@ export function MacroGauges({ title, gauges }: { title: string; gauges: GaugeVie
   );
 }
 
+/* Uyarı tonu (hedefin/eşiğin ötesi): ortak çubuğun rengi değişkenle verilir
+   (`--bar-tone`; globals.css → "DEĞER ÇUBUĞU"). */
+const ALERT_TONE = { "--bar-tone": "var(--brass)" } as React.CSSProperties;
+
 const pct = (ratio: number) => `${(ratio * 100).toFixed(2)}%`;
 
 /** Üstteki etiket kulvarın kenarına yakınsa ortalanmaz, kenara yaslanır (taşmasın). */
@@ -122,14 +126,14 @@ function Visual({ visual, alert }: { visual: GaugeVisual; alert: boolean }) {
     return (
       <div className={styles.scale}>
         <span className={`${styles.mark} numeral`} data-edge={edge(visual.ref)} style={{ left: pct(visual.ref) }}>{visual.refLabel}</span>
-        <div className={styles.track} data-draw>
+        <div className="value-lane" data-draw>
           {/* Sıfırdan değere tek çubuk; hedefi/eşiği aşan parça uyarı tonunda.
               En az %1,5: sıfırdaki değerde (Sahm 0,00) çubuğun başı görünsün. */}
-          <span className={`bar-fill ${styles.fill}`} data-end={over ? "start" : undefined} style={{ left: 0, width: pct(Math.max(below, 0.015)) }} />
+          <span className="value-bar bar-fill" data-end={over ? "start" : undefined} style={{ left: 0, width: pct(Math.max(below, 0.015)), transformOrigin: "left center" }} />
           {over && (
-            <span className={`bar-fill ${styles.fill}`} data-end="end" data-tone={alert ? "alert" : undefined} style={{ left: pct(visual.ref), width: pct(visual.at - visual.ref) }} />
+            <span className="value-bar bar-fill" data-end="end" style={{ left: pct(visual.ref), width: pct(visual.at - visual.ref), ...(alert ? ALERT_TONE : null) }} />
           )}
-          <span className={styles.tick} style={{ left: pct(visual.ref) }} />
+          <span className="value-notch" style={{ left: pct(visual.ref) }} />
         </div>
         <div className={`${styles.ends} numeral`}><span>{visual.lo}</span><span>{visual.hi}</span></div>
       </div>
@@ -143,22 +147,21 @@ function Visual({ visual, alert }: { visual: GaugeVisual; alert: boolean }) {
         {from !== null && visual.fromLabel && (
           <span className={`${styles.mark} numeral`} data-muted="" data-edge={edge(from)} style={{ left: pct(from) }}>{visual.fromLabel}</span>
         )}
-        <div className={styles.track} data-draw>
+        <div className="value-lane" data-draw>
           {from !== null ? (
             <>
               {/* Önceki aydan bu aya: çubuğun yuvarlak ucu bu ay. */}
               <span
-                className={`bar-fill ${styles.fill}`}
+                className="value-bar bar-fill"
                 data-end={left ? "start" : "end"}
-                data-grow={left ? "left" : undefined}
                 data-tone={visual.tone}
                 style={{ left: pct(Math.min(from, to)), width: pct(Math.max(Math.abs(to - from), 0.015)) }}
               />
-              <span className={styles.tick} style={{ left: pct(from) }} />
+              <span className="value-notch" style={{ left: pct(from) }} />
             </>
           ) : (
             /* Değişmedi: aralığın başından bu aya nötr çubuk (yön yok). */
-            <span className={`bar-fill ${styles.fill}`} style={{ left: 0, width: pct(Math.max(to, 0.015)) }} />
+            <span className="value-bar bar-fill" style={{ left: 0, width: pct(Math.max(to, 0.015)) }} />
           )}
         </div>
         <div className={`${styles.ends} numeral`}><span>{visual.lo}</span><span className={styles.range}>{visual.range}</span><span>{visual.hi}</span></div>
@@ -172,15 +175,13 @@ function Visual({ visual, alert }: { visual: GaugeVisual; alert: boolean }) {
   return (
     <div className={styles.scale}>
       <span className={`${styles.mark} numeral`} data-muted="" style={{ left: "50%" }}>{visual.zeroLabel}</span>
-      <div className={styles.track} data-draw>
+      <div className="value-lane" data-draw>
         <span
-          className={`bar-fill ${styles.fill}`}
+          className="value-bar bar-fill"
           data-end={negative ? "start" : "end"}
-          data-grow={negative ? "left" : undefined}
-          data-tone={alert ? "alert" : undefined}
-          style={negative ? { right: "50%", width: pct(Math.max(half, 1.5) / 100) } : { left: "50%", width: pct(Math.max(half, 1.5) / 100) }}
+          style={{ ...(negative ? { right: "50%" } : { left: "50%" }), width: pct(Math.max(half, 1.5) / 100), ...(alert ? ALERT_TONE : null) }}
         />
-        <span className={styles.tick} style={{ left: "50%" }} />
+        <span className="value-notch" style={{ left: "50%" }} />
       </div>
       <div className={styles.ends}><span>{visual.lo}</span><span>{visual.hi}</span></div>
     </div>

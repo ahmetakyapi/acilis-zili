@@ -175,11 +175,13 @@
 .verdict[data-verdict="miss"] { background: var(--down-wash); color: var(--down); }
 .metricRow { display: grid; grid-template-columns: 84px minmax(0, 1fr) 76px; align-items: center; gap: 10px; }
 .metricRowLabel { font-size: var(--text-base); color: var(--text-muted); }
-.metricTrack { height: 5px; border-radius: 3px; background: var(--line-soft); }
-.metricBar { display: block; height: 100%; border-radius: 3px; background: var(--text-muted); transform-origin: left; }
-.metricBar[data-kind="beat"] { background: var(--up); }
-.metricBar[data-kind="miss"] { background: var(--down); }
-.metricBar[data-kind="inline"] { background: var(--text-body); }
+/* 10 Kasım (gece), değer çubuğu standardı: dolgu kulvarla aynı 5 pikseldi
+   (yarıçap 3); kulvar 5 / 999, dolgu 8 — ortak `value-lane` / `value-bar`
+   (globals.css). Burada yalnız ton (değişkenle) ve giriş. */
+.metricBar { left: 0; --bar-tone: var(--text-muted); transform-origin: left; }
+.metricBar[data-kind="beat"] { --bar-tone: var(--up); }
+.metricBar[data-kind="miss"] { --bar-tone: var(--down); }
+.metricBar[data-kind="inline"] { --bar-tone: var(--text-body); }
 .metricValue { font-size: var(--text-base); font-weight: 700; text-align: right; white-space: nowrap; color: var(--text-strong); }
 
 /* ---- Giriş hareketi ----

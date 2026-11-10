@@ -49,8 +49,9 @@
 .reading dt { color:var(--text-muted); font-size:12px; font-weight:500; }
 .readingValue { color:var(--text-strong); font-size:clamp(22px,2vw,28px); font-weight:700; line-height:1.15; letter-spacing:-.03em; }
 /* Okuma çubuğu sayının altında, soldan dolar: iki okuma aynı eksende. */
-.readingTrack { position:relative; width:100%; max-width:200px; height:var(--lane-h,5px); margin-top:6px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
-.readingTrack > i { position:absolute; inset-block:0; left:0; border-radius:999px; background:var(--bar-soft); }
+/* 10 Kasım (gece): dolgu kulvarla aynı 5 pikseldi; değer çubuğu standardı
+   (kulvar 5, dolgu 8 — ortak `value-lane` / `value-bar`). Burada yalnız yer. */
+.readingTrack { width:100%; max-width:200px; margin-top:6px; }
 .readingMeta { color:var(--text-muted); font-size:var(--text-nano); line-height:1.45; }
 
 /* Tablolar — dar ekranda kendi kabında kayar, etiket sütunu sabit
@@ -176,15 +177,15 @@
    kulvarı aşan tek ince çizgi; işaret konunun kendisi.
    10 Kasım: yuvarlak işaret kalktı, dolu kısım 8 piksel (aşağıda). Şeridin
    `margin-inline`i duruyor: ölçek başlığı (`.axisScale`) ona hizalı. */
-.strip { grid-area:strip; position:relative; display:block; height:18px; margin-inline:6px; container-type:inline-size; }
-.stripRail { position:absolute; inset-inline:0; top:50%; height:var(--lane-h,5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
-/* Renk kararı (25 Ekim son düzeltme): yüzdelik bir büyüklük, etkileşim
-   değil; şerit sitenin tek büyüklük tonu `--bar-soft` (önce doygun
-   `--primary` %55, sonra `--primary-soft` %60 idi), nokta en koyu mürekkep. */
-.stripRail > i { position:absolute; left:0; top:calc(50% - 4px); display:block; height:8px; border-radius:999px; background:var(--bar-soft); }
-/* 10 Kasım: 13 piksellik nokta kalktı, dolu şerit 5 → 8 piksel (kulvar 5);
-   medyan şeridin ÜSTÜNDE koyu ince çentik (gerekçe ScoreStrip). */
-.stripMedian { position:absolute; top:0; bottom:0; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-strong); }
+/* 10 Kasım (gece): kulvar, dolgu ve çentik ORTAK sınıflarda (`value-lane`,
+   `value-bar`, `value-notch` — globals.css → "DEĞER ÇUBUĞU"); buradaki üç
+   kopya kural (`.stripRail`, `.stripRail > i`, `.stripMedian`) silindi.
+   Şerit 18 piksellik satırda ortalı; çentik satır boyunca (6,5 + 5 + 6,5).
+   Renk kararı (25 Ekim): yüzdelik bir büyüklük, ton `--bar-soft` (ortak
+   sınıfın varsayılanı); medyan en koyu mürekkep. Önce/sonra ölçüldü
+   (NVDA, 1440/390): kulvar 5, dolgu 8, çentik 2 × 18 — aynı. */
+.strip { grid-area:strip; position:relative; display:flex; align-items:center; height:18px; margin-inline:6px; container-type:inline-size; --notch-out:6.5px; }
+.strip > :global(.value-lane) { flex:1 1 auto; }
 /* Ölçek başlığı: satırla aynı üç sütun; yazılar şerit sütununun solunda,
    ortasında ve sağında (şeridin `margin-inline`i kadar içeride). */
 /* 12 PİKSEL (14 Ekim): 11,5 sitenin metin tabanının altındaydı (globals.css
@@ -387,10 +388,10 @@
    durunca tutarı satırın geri kalanından 8 piksel yukarı itiyordu
    (1440, görüldü); hücrenin dibine mutlak konumlu, sayı hatta kalıyor. */
 .insiderTable td:last-child { position:relative; }
-.valueBar { position:absolute; right:0; bottom:9px; display:flex; justify-content:flex-end; width:72px; height:5px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
-.valueBar > i { display:block; min-width:2px; height:100%; border-radius:999px; }
-.valueBar[data-side="up"] > i { background:var(--up); }
-.valueBar[data-side="down"] > i { background:var(--down); }
+/* 10 Kasım (gece), değer çubuğu standardı: dolgu 5 → 8 (kulvar 5), ortak
+   `value-lane` / `value-bar`; yön tonu `data-tone`. Burada yalnız yer. */
+.insiderTable .valueBar { position:absolute; right:0; bottom:9px; width:72px; }
+.valueBar > i { min-width:2px; }
 
 /* "Nasıl Okunur": yöntem notları kapalı gelen bir açılır satırda. Özet
    satırı 32 piksel dokunma yüksekliğinde, ok CSS ile. */

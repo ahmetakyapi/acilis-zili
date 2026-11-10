@@ -1,0 +1,68 @@
+/* --------------------------------------------------------------------------
+   /tarama tablosu — ortak tablo ailesinin BU tabloya ait sütunları
+   (10 Kasım 2026, gece). Karar kaydı app/(app)/tarama/page.tsx → "ORTAK
+   TABLO AİLESİ". Başlık, sıralama imi, kimlik hücresi, satır cevabı, devamı
+   bandı ve künye components/markets/BoardTable.module.css'te; burada yalnız
+   değişkenler (çift sınıf `.panel .table`: modüller arası sıra garanti
+   değil) ve sayı hücresinin iç düzeni.
+   -------------------------------------------------------------------------- */
+
+.panel h2 { font-size:16px; letter-spacing:-.015em; }
+
+/* ---- Sektör: künye sütunu, yalnız sığdığı yerde (1280+) ---- */
+.sectorHead, .sector { display:none; }
+
+/* ---- Sayı sütunları: içeriği kadar; fazla genişlik Şirket'e ---- */
+.table :is(.num, .numHead) { width:1%; }
+/* Sıralanan sütunun sayısı satırın EN GÜÇLÜ sayısı (16/700); ötekiler ortak
+   parçanın `strong`u (15/600 — telefonda 14). */
+.lead { color:var(--text-strong); font-size:15px; font-weight:700; letter-spacing:-.015em; }
+
+/* ---- Sayı + kalın çubuk (yalnız sıralanan sütunda) ----
+   Telefonda sayı üstte, çubuk altında; 640+ çubuk sayının solunda (ortak
+   tablonun `MoveFigure` düzeni). Çubuk ortak değer çubuğu (kulvar 5, dolgu
+   8 — components/screener/Lanes.tsx); burada yalnız boyu ve yeri. */
+.figure { display:grid; grid-template-columns:auto; justify-content:end; align-items:center; gap:7px 12px; }
+.figure > .figLane { order:2; width:var(--fig-lane,64px); max-width:none; margin:0; }
+.figure > span { min-width:5.4ch; text-align:right; }
+
+@media(max-width:639px) {
+  /* Şirket sabit (ortak parça, 136); ilk ekranda iki ölçü, kalanı kaydırınca. */
+  .panel .table { --cell-pad:9px; }
+}
+@media(min-width:640px) {
+  .lead { font-size:16px; }
+  .figure { grid-template-columns:var(--fig-lane,64px) auto; }
+  .figure > .figLane { order:0; }
+  .panel .table { --fig-lane:56px; }
+}
+@media(min-width:1024px) {
+  .panel .table { --cell-pad:10px; --name-max:170px; --fig-lane:64px; }
+}
+@media(min-width:1280px) {
+  .sectorHead, .sector { display:table-cell; }
+  .table :is(.sectorHead, .sector) { width:1%; }
+  .panel .table { --cell-pad:14px; --name-max:230px; --tag-max:170px; --fig-lane:88px; }
+}
+@media(min-width:1440px) {
+  .panel .table { --cell-pad:18px; --name-max:280px; --tag-max:200px; --fig-lane:112px; }
+}
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM (10 Kasım 2026, gece; gerçek sayfa + sahte sağlayıcı, 60 satır, iki
+   tema; önce = aynı gün cd7e83b, aynı sahte veriyle)
+   - Satır 58 → 62 (telefonda 56); logo 34/30 → 40/32; sembol 14 → 16/700,
+     ad soluk 12 → gövde 14; sayılar 13–14 → 15/600, sıralanan sütun 16/700
+     (telefonda 15/700); çubuk 5 → 8 (kulvar 5), çentik 2 × 13.
+   - 1440: kap 1318 = içerik 1318. Sütunlar: sıra 36 · Şirket 379 · Sektör
+     156 · sıralanan ölçü 215 (çubuk 112 + sayı) · öteki ölçüler 92–133.
+     Sayfa 5.830 → 5.540 (devamı bandı ve künyeler tek satıra indi).
+   - 1280: 1198 = 1198. 1024: 974 = 974 (Sektör burada gizli).
+   - 640 / 768: içerik 891, kap 590 / 718 → kap kayar, Şirket sabit.
+   - 390 (`?gorunum=tablo`): Şirket 136 (sabit) + iki ölçü 82 + 82 = 300, kap
+     352; kalan dört ölçü kaydırınca (içerik 660). Önce `table-fixed` dört
+     sütun, üç ölçü hiç yoktu. Sıralama başlığının dokunma hedefi 44.
+     Sayfada yatay taşma 0 (390–1440, altı genişlik).
+   - Çizim: `bar-fill` 1440'ta yüklemede 6 çubuk oynuyor, 57'si kapıda
+     (`data-armed`) bekliyor; hareketi azaltana son kare.
+   -------------------------------------------------------------------------- */
