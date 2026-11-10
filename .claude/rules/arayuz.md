@@ -30,9 +30,17 @@ paths:
   (`components/markets/CompareScale.tsx`). Çubuk büyüklüktür, yargı değil:
   renk yalnız işaretten gelir; karşılaştırılamayan ölçüde (farklı hisse
   fiyatları) çubuk HİÇ basılmaz.
-- **Kaydırma saklanmaz.** Sığmayan tablo `table-fixed` ile kaba zorlanmaz
-  (değer komşu hücreye biner); taban genişlik + kaydırma + sabit etiket
-  sütunu + "devamı var" işareti.
+- **Tablo telefonda YATAY KAYMAZ** (sahibinin sözü, 10 Kasım: "listeleri
+  kaydırmadan kullanalım, kompakt olsun, yeterli bilgi gözüksün; tablolar
+  sağa sola kaymasın"). Üç düzen: < 640 kompakt liste satırı (kimlik + en
+  önemli iki sayı + kalın çubuk; sıralanan ölçü öne çıkar — `phoneSlots`;
+  sıralama başlık satırı yerine `BoardSortMenu`; satırın tamamı ayrıntı
+  sayfasına gider), 640–1023 yalnız sığan sütunlarla tablo,
+  ≥ 1024 tam tablo. Her kırılımda tablo kabında `scrollWidth − clientWidth`
+  ≤ 1 ölçülür. Sığmayan tablo `table-fixed` ile kaba zorlanmaz (değer komşu
+  hücreye biner); sütun düşer. Kaydırma yalnız tablo olmayan şeritlerde
+  (çip/sekme, grafik, zaman çizelgesi) kalır. Eski "taban genişlik +
+  kaydırma + sabit etiket sütunu" kuralı bu tarihte kalktı.
 - **Büyük sayfalar panellere bölünür**, yeni panel kendi dosyasında:
   `app/(app)/hisse/[symbol]/_panels/`, `components/today/home/`,
   `components/earnings/report/`.
