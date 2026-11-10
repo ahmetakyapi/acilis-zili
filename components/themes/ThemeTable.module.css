@@ -34,162 +34,76 @@
    1318; katlı on iki satır 552 → 720. 1024: kap 974 = içerik 974, kulvar
    314. 390: satır 56, logo 32, sembol 15, yüzde 16; kap 352, içerik 560
    (kayar, Şirket sabit); sayfada yatay taşma 0.
+
+   GECE, ORTAK PARÇA (aynı gün, üçüncü tur; ana oturumun kararı). Yukarıdaki
+   "içe aktarılmadı, yeniden kuruldu" kopyası SİLİNDİ: başlık, sıralama imi,
+   kimlik, kalın çubuk, sayı ölçüleri, satır cevabı ve künye
+   components/markets/BoardTable.module.css'ten (panel `board.panel` +
+   `data-fit="lg"`, app/(app)/tema/[slug]/page.tsx). Kullanılmayan
+   `.capLane/.capTick/.capDot/.capAxis` (onluk eksen, sabah kalkmıştı) da
+   gitti. Bu modülde yalnız BU tablonun sütunları: fazla genişlik Değişim
+   şeridine gider (`--day-lane` esnek), sayı sütunları içeriği kadar.
+   Değişkenler `.wrap .table` ile verilir (çift sınıf: modüller arası sıra
+   garanti değil). Sonra ölçümü dosya sonunda, "ÖLÇÜM 3".
    -------------------------------------------------------------------------- */
 
-.wrap { --fold-inset:20px; scroll-margin-top:100px; border-top:1px solid var(--line); }
+.wrap { --fold-inset:16px; scroll-margin-top:100px; border-top:1px solid var(--line); }
 
-.table { width:100%; min-width:560px; border-collapse:separate; border-spacing:0; font-size:var(--text-base); }
-.table th, .table td { padding:0 12px; vertical-align:middle; white-space:nowrap; }
-.table thead th { height:40px; border-bottom:1px solid var(--line); background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; text-align:right; }
-.table tbody :is(td, th) { height:56px; border-top:1px solid var(--line-soft); font-weight:400; }
-.table tbody tr:first-child :is(td, th) { border-top:0; }
+/* Durum değiştiren başlık bir `a[role=button]`: imleç ve odak halkası. */
+.sortButton { cursor:pointer; }
+.sortButton:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:4px; }
 
-/* ---- Başlık ---- */
-.rankHead, .rank { display:none; }
-.sortWrap { display:inline-flex; align-items:center; justify-content:flex-end; gap:14px; vertical-align:middle; }
-.sortLink { position:relative; display:inline-flex; align-items:center; gap:5px; min-height:44px; margin-block:-4px; color:var(--text-body); cursor:pointer; transition:color .18s var(--ease-brand); }
-.sortIcon { flex:none; color:var(--text-muted); opacity:.7; transition:opacity .18s var(--ease-brand), color .18s var(--ease-brand); }
-.sortCell[data-active] .sortLink { color:var(--primary-ink); }
-.sortCell[data-active] .sortIcon { color:var(--primary-ink); opacity:1; }
-/* Sıralı sütunun imi: başlığın dibinde 2 piksellik mavi çizgi (seçim bir
-   etkileşim durumu; mavi burada anlam taşıyor). */
-.sortCell[data-active] .sortLink::after { content:""; position:absolute; left:0; right:0; bottom:1px; height:2px; border-radius:1px; background:var(--primary); }
-@media(hover:hover) and (pointer:fine) {
-  .sortLink:hover { color:var(--text-strong); }
-  .sortLink:hover .sortIcon { opacity:1; color:var(--text-strong); }
-  .sortCell[data-active] .sortLink:hover, .sortCell[data-active] .sortLink:hover .sortIcon { color:var(--primary-ink); }
-}
-.sortLink:active { scale:.97; }
-.sortLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:4px; }
+/* Son kapanış cümlesi yalnız telefonda: 640+ satırın kendi yazısı var. */
+.staleNote { display:inline; }
 
-/* ---- Şirket (sabit etiket sütunu) ---- */
-.companyHead, .company { position:sticky; left:0; z-index:1; text-align:left !important; }
-.table thead .companyHead { z-index:3; padding-left:16px; }
-.company { padding:0 !important; background:var(--premium-surface); }
-.companyLink { display:flex; align-items:center; gap:10px; min-width:0; height:55px; padding:0 10px 0 16px; color:inherit; }
-.logo { width:32px !important; height:32px !important; }
-.companyText { display:flex; flex-direction:column; min-width:0; }
-.symbol { color:var(--text-strong); font-size:15px; font-weight:700; line-height:19px; letter-spacing:-.01em; transition:color .18s var(--ease-brand); }
-.name { overflow:hidden; max-width:84px; color:var(--text-body); font-size:12px; line-height:16px; text-overflow:ellipsis; }
-.companyLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
-
-/* ---- Değişim: ayrışan şerit + sayı ---- */
-.change { display:grid; grid-template-columns:minmax(40px,1fr) 68px; align-items:center; gap:8px; }
-.changeNum { font-size:16px; font-weight:700; text-align:right; letter-spacing:-.02em; }
-.lane { position:relative; display:block; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
-/* Dolgu kulvardan KALIN: 8 piksel (kulvar 5), ortak şerit kuralı. */
-.fill { position:absolute; top:-1.5px; bottom:-1.5px; left:0; min-width:3px; border-radius:999px; background:var(--flat); }
-.fill[data-tone="up"] { background:var(--up); }
-.fill[data-tone="down"] { background:var(--down); }
-/* Sıfır ortada: artı sağa, eksi sola. Sıfır çizgisi rayı 3'er piksel aşar. */
-.table[data-signed] .lane::after { content:""; position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; margin-left:-.5px; background:var(--line-strong); }
-.table[data-signed] .fill { left:50%; border-radius:0 999px 999px 0; }
-.table[data-signed] .fill[data-tone="down"] { left:auto; right:50%; border-radius:999px 0 0 999px; }
-/* Yüzdesi son kapanışa ait satır: şerit yok. 640+ yerinde yazı, telefonda
-   (yazı 36 piksele sığmaz) kesikli kulvar + tablonun dibinde künye. */
-.stale { display:flex; justify-content:flex-end; min-width:0; }
-.staleText { display:none; color:var(--text-muted); font-size:12px; }
-.staleLane { display:block; width:100%; height:0; border-top:1px dashed var(--line-strong); }
-
-.price { width:1%; color:var(--text-strong); font-size:15px; font-weight:600; text-align:right; }
-
-/* ---- Piyasa değeri: sayı + onluk eksende nokta ---- */
-.capCell, .capHead { width:auto; }
-.table .capHead, .table .capCell { padding-left:26px; }
-.cap { display:block; color:var(--text-body); text-align:right; }
-.capValue { font-size:15px; font-weight:700; color:var(--text-strong); }
-.capLane { position:relative; display:block; height:1px; background:var(--line); }
-.capTick { position:absolute; top:-3px; width:1px; height:7px; margin-left:-.5px; background:var(--line-strong); }
-.capDot { position:absolute; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%; background:var(--primary); opacity:.62; }
-.capHead .sortWrap { display:flex; justify-content:flex-end; }
-.capHead .sortLink { justify-self:end; }
-.capAxis { position:relative; display:block; width:112px; height:14px; color:var(--text-muted); font-size:12px; font-weight:600; line-height:14px; }
-.capAxis > span { position:absolute; top:0; translate:-50% 0; }
-.table tr > :last-child { padding-right:16px; }
-
-/* ---- Satır cevabı: ton + sol kenarda 3 piksellik mavi. Sabit hücre
-   saydam tonu alamaz (altından kayan sayılar içinden okunurdu): opak
-   eşdeğeri. ---- */
-.table tbody tr { transition:background-color .18s var(--ease-brand); }
-.table tbody tr:focus-within { background:var(--primary-tint); }
-.table tbody tr:focus-within .company { background:color-mix(in srgb, var(--primary) 5%, var(--premium-surface)); box-shadow:inset 3px 0 var(--primary); }
-@media(hover:hover) {
-  .table tbody tr:hover { background:var(--primary-tint); }
-  .table tbody tr:hover .company { background:color-mix(in srgb, var(--primary) 5%, var(--premium-surface)); box-shadow:inset 3px 0 var(--primary); }
-  .table tbody tr:hover .symbol { color:var(--primary-ink); }
-}
-
-.note { margin:0; padding:10px 16px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; line-height:1.6; }
-
-/* ---- 640+: sıra numarası gelir, ad genişler ---- */
-@media(min-width:640px) {
-  .table th, .table td { padding-inline:14px; }
-  .table tbody :is(td, th) { height:60px; }
-  .rankHead, .rank { display:table-cell; width:1%; padding:0 2px 0 20px !important; color:var(--text-muted); font-size:12px; text-align:right !important; }
-  .table thead .companyHead { padding-left:14px; }
-  .companyLink { gap:12px; height:59px; padding:0 14px; }
-  .logo { width:36px !important; height:36px !important; }
-  .symbol { font-size:16px; line-height:20px; }
-  .name { max-width:170px; font-size:14px; line-height:18px; }
-  .change { grid-template-columns:minmax(72px,1fr) 84px; gap:14px; }
-  .changeNum { font-size:18px; }
-  .staleText { display:block; }
-  .staleLane, .note { display:none; }
-  .table tr > :last-child { padding-right:20px; }
-  .sortLink { min-height:32px; }
-  /* Satır imi satırın SOL kenarında: 640+ ilk hücre sıra numarası. */
-  .table tbody tr:is(:hover, :focus-within) .company { box-shadow:none; }
-  .table tbody tr:focus-within .rank { box-shadow:inset 3px 0 var(--primary); }
-}
-@media(min-width:640px) and (hover:hover) { .table tbody tr:hover .rank { box-shadow:inset 3px 0 var(--primary); } }
-
-/* ---- 640–1023: dar şeritler. 768'de içerik 750, kap 718 ölçüldü: 32
-   piksel için kap kayıyor, eksenin son noktası solma kuşağına giriyordu.
-   Değişim kulvarı 72 → 48, eksen 112 → 88: 768'de tablo kaba sığar. ---- */
-@media(min-width:640px) and (max-width:1023px) {
-  .change { grid-template-columns:minmax(48px,1fr) 84px; gap:12px; }
-  .table .capHead, .table .capCell { padding-left:16px; }
-  .capAxis { width:88px; }
-}
-/* ---- 1024+: tablo kaba sığar; kap kaymaz, başlık belgeye yapışır.
-   640–1023'te kap KAYAR, Şirket sabit kalır. ---- */
-@media(min-width:1024px) {
-  .wrap .scroller { overflow:visible; }
-  .table { min-width:0; }
-  .table thead th { position:sticky; top:var(--app-bar-h, 0px); z-index:2; }
-  .company { position:static; background:transparent; }
-  .table tbody tr:is(:hover, :focus-within) .company { background:transparent; }
-  .capCell, .capHead { width:1%; }
-}
-/* ---- 1024+: tek katlı kimlik, geniş şeritler ---- */
-@media(min-width:1024px) {
-  /* Kimlik İKİ KATLI kalır (10 Kasım akşamı; sabah burada sembol ve ad tek
-     hattaydı): 60 piksellik satırda sembol 16 üstte, ad 14 altta. */
-  .name { max-width:none; }
-  .company { width:1%; max-width:300px; }
-  .companyLink { max-width:300px; }
-  .capAxis { width:132px; }
-  .change { grid-template-columns:minmax(96px,1fr) 84px; gap:16px; }
-}
-@media(min-width:1280px) { .company, .companyLink { max-width:420px; } }
-
-/* ---- Telefon (<640): ilk ekran kuralı ----
-   Şirket (sabit, 120) + Değişim (kulvar 36 + sayı) + Fiyat ≈ 304 piksel,
-   352 piksellik kabın içinde; sağdaki 34 piksellik solma kuşağında piyasa
-   değeri sütununun başı görünür — "devamı var" (ölçü ailesinden,
-   MembersTable.module.css). */
+/* ---- Telefon (<640): ilk ekranda Şirket (sabit 136, ortak parça) +
+   Değişim + Fiyat; Piyasa Değeri solma kuşağında başlar. Sayı sütunları
+   içeriği kadar. ---- */
 @media(max-width:639px) {
-  .wrap { --fold-inset:16px; }
-  .table th, .table td { padding-inline:6px; }
-  .company { width:120px; min-width:120px; max-width:120px; }
-  .companyLink { gap:8px; padding:0 6px 0 14px; }
-  .table thead .companyHead { padding-left:14px; }
-  .name { max-width:66px; }
-  .changeCell, .changeHead { width:1%; }
-  .change { grid-template-columns:36px 68px; gap:6px; }
+  .changeCell, .changeHead, .priceCell, .priceHead { width:1%; }
+  /* Başlıklar iki satır ("Günlük / Değişim", "Son Fiyat / ($)"): tek satırda
+     başlık sütunu içeriğinden geniş tutuyordu (Değişim 122, Fiyat 101;
+     toplam 359 > solma kuşağının solu 318) ve Fiyat ilk ekranın dışındaydı. */
+  .table thead :is(.changeHead, .priceHead) { white-space:normal; line-height:14px; }
+  .table thead :is(.changeHead, .priceHead) a { max-width:7.2ch; text-align:right; }
+  /* "Son Fiyat / ($)": 7,2 ch'de üç satıra kırılıp 40 piksellik başlıktan
+     taşıyordu (ilk tur görüntüsü). */
+  .table thead .priceHead a { max-width:9.6ch; }
 }
 
-@media(prefers-reduced-motion:reduce) {
-  .table tbody tr, .symbol, .sortLink, .sortIcon { transition:none; }
-  .sortLink:active { scale:none; }
+/* ---- 640+: tablo kaba sığar (dört sütun; 640'ta içerik 590). Fazla
+   genişlik DEĞİŞİM ŞERİDİNE: Şirket ve sayı sütunları içeriği kadar
+   (`width:1%`), Değişim sütunu kalanı alır ve kulvar esner (`1fr`). ---- */
+@media(min-width:640px) {
+  .wrap { --fold-inset:20px; }
+  .wrap .table { --day-lane:minmax(56px,1fr); --name-max:170px; }
+  .table :is(.priceCell, .priceHead, .capCell, .capHead) { width:1%; }
+  .table :global(th[scope="row"]) { width:1%; }
+  .staleNote { display:none; }
 }
+@media(min-width:1024px) {
+  .wrap .table { --cell-pad:16px; --name-max:240px; --day-lane:minmax(96px,1fr); }
+}
+@media(min-width:1280px) {
+  .wrap .table { --cell-pad:20px; --name-max:300px; }
+}
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM 3 — gece turu, ortak parça (10 Kasım 2026)
+   Gerçek sayfa + sahte sağlayıcı, Yarı İletkenler 21 üye (12 açık), iki
+   tema; önce = "AKŞAM, KİMLİK BÜYÜDÜ" ölçümü.
+   - Satır 60 → 62 (telefon 56, aynı); logo 36 → 40 (telefon 32); yüzde
+     18/700 → 19/700 (telefon 16 → 17); fiyat 15/400 → 16/700 (telefon
+     15/700); sembol 16/700, ad 14 — Endeks Bileşenleri ve Şirketler'le aynı.
+   - 1440: kap 1318 = içerik; sıra 33 · Şirket 249 · Değişim 776 (kulvar
+     645) · Fiyat 125 · Piyasa Değeri 135. 1280: 1198 = 1198 (kulvar 525).
+     1024: 974 = 974 (kulvar 321). 768: 718 = 718 (kulvar 85).
+   - 390: Şirket 136 + Değişim 85 + Fiyat 66 = 287 < solma kuşağının solu
+     318: üçü ilk ekranda (önce Fiyat dışarıdaydı: 120 + 122 + 97 = 339);
+     içerik 560 → 403, kap 352.
+   - Ölçek: en büyük üyeye göre → `laneSpan` (±%3 sakin, ±%10 sert); künyede
+     yazıyor. Sıralamada çubuk eni değişmiyor (ortak görünen satırlarda
+     fark 0), 17 satır `translate` ile kayıyor, kaydırma konumu farkı 0;
+     fiyat hücresine basış hisse sayfasına gidiyor.
+   - Yatay taşma 0, hücresinden taşan öğe 0, kırpılan başlık 0.
+   -------------------------------------------------------------------------- */

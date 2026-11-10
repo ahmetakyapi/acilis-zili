@@ -1,4 +1,4 @@
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { ArrowDown, ArrowUp, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { RollingFigure } from "@/components/themes/RollingFigure";
 import { CompanyCards } from "@/components/ui/CompanyCards";
@@ -609,11 +609,18 @@ function ExtremeCard({
             {down > 0 && <i className="bar-fill" data-part="down" style={{ flexGrow: down }} />}
           </span>
           <span className={styles.splitLegend} aria-hidden>
-            <span>
-              <b className="numeral text-up">{up}</b> {t.today.membersUp}
+            {/* Telefonda yarım kart (130 piksel): "10 Üye Yükseliyor" iki
+                satıra kırılıyordu (ölçüldü, kart 263). Kısa söz denendi
+                ("10 Yükselen"): TR sığdı, EN ("10 Advancers · 7 Decliners")
+                yine kırıldı. Telefonda söz yerine yön OKU — /tema panosunun
+                satırındaki "↑ 10 · ↓ 7" ile aynı im, iki dilde tek satır. */}
+            <span className="text-up">
+              <ArrowUp weight="bold" size={12} className={styles.splitIcon} />
+              <b className="numeral">{up}</b> <span className={styles.splitLong}>{t.today.membersUp}</span>
             </span>
-            <span>
-              <b className="numeral text-down">{down}</b> {t.today.membersDown}
+            <span className="text-down">
+              <ArrowDown weight="bold" size={12} className={styles.splitIcon} />
+              <b className="numeral">{down}</b> <span className={styles.splitLong}>{t.today.membersDown}</span>
             </span>
           </span>
         </span>

@@ -7,7 +7,7 @@ import { getQuotes } from "@/lib/providers";
 import { WORLD_MARKETS } from "@/db/seed/symbols";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { sharedLaneScale, WORLD_LANE_FLOOR } from "@/lib/home-figures";
-import { cn, directionOf, directionWash, formatPercent, formatPercentPlain } from "@/lib/utils";
+import { cn, directionOf, directionText, formatPercent, formatPercentPlain } from "@/lib/utils";
 import styles from "./HomeLanes.module.css";
 
 /**
@@ -127,6 +127,16 @@ type WorldRow = {
  * - Bayrak 32 piksellik karo, kimlik + şerit bloğunun boyunda.
  * - Yüzde hap (up/down wash), şeridin ucunda değer noktası (`HomeLane`).
  * Ölçümler HomeLanes.module.css başında.
+ *
+ * ÜÇÜNCÜ TUR (10 Kasım gece, ana oturumun kararı): bandın dili. İnce şerit
+ * + uç noktası + renkli hap yerine 10 piksellik DOLU çubuk ve hapsız, yön
+ * renginde 17/700 yüzde; ülke adı 15/600 (gerekçe HomeLane.tsx,
+ * HomeLanes.module.css). SON KAPANIŞ satırı bandın kararına geçti: bu
+ * seansta işlem görmeyen ülkenin çubuğu çizilmiyor (önce soluk çubuktu),
+ * kulvarın yerinde "Son Kapanış" künyesi duruyor, yüzdesi soluk ve ortak
+ * ölçeğe girmiyor — başka bir günün hareketi bugünün cetveline konmaz.
+ * Hepsi son kapanıştaysa (hafta sonu) çubuklar çizilir: hepsi aynı günü
+ * anlatıyor, dönemi dipnot söylüyor.
  */
 function WorldStripView({
   locale,
@@ -145,14 +155,16 @@ function WorldStripView({
   fetchedAt?: Date | string | null;
   stale?: boolean;
 }) {
+  /** Bu satır ortak cetvelde mi: karışık günde son kapanıştaki ülke değil. */
+  const onScale = (row: WorldRow) => row.changePct !== null && (allLastClose || !row.lastClose);
   const scale = sharedLaneScale(
-    rows.map((row) => row.changePct),
+    rows.map((row) => (onScale(row) ? row.changePct : null)),
     WORLD_LANE_FLOOR,
   );
   return (
     <Panel>
       <PanelHeader title={t.today.worldMarkets} tone="title" />
-      <div className={styles.desk}>
+      <div className={styles.desk} data-draw>
         <LaneAxis
           scale={scale}
           locale={locale}
@@ -162,6 +174,7 @@ function WorldStripView({
         <ul>
         {rows.map((market, index) => {
           const lastClose = market.lastClose;
+          const drawn = onScale(market);
           const tone = directionOf(market.changePct);
           const value = formatPercent(market.changePct, locale);
           return (
@@ -172,7 +185,7 @@ function WorldStripView({
                   .replace("{name}", market.name)
                   .replace("{symbol}", market.symbol)
                   .replace("{value}", lastClose ? `${value} (${t.market.lastClose})` : value)}. ${market.tracks}`}
-                className={cn(styles.row, "border-t border-line-soft px-4 py-2.5 transition-colors hover:bg-primary-tint sm:px-5")}
+                className={cn(styles.row, "border-t border-line-soft px-4 py-[7px] transition-colors hover:bg-primary-tint sm:px-5")}
               >
                 <span aria-hidden className={styles.lead}>
                   <span className={styles.flag}>{market.flag}</span>
@@ -188,14 +201,9 @@ function WorldStripView({
                       olarak sarar (HomeLanes `.ident`), kesilmez; 12 punto
                       tabanı korunuyor. */}
                   <span className={styles.ident}>
-                    <span className="text-read font-semibold text-strong">{market.name}</span>
+                    <span className={styles.name}>{market.name}</span>
                     <span className={styles.symbol}>{market.symbol}</span>
                     <span className={styles.identMeta}>{market.index}</span>
-                    {lastClose && (
-                      <span className={cn(styles.identMeta, "font-semibold text-body")}>
-                        {t.market.lastClose}
-                      </span>
-                    )}
                   </span>
                 </span>
                 {/* Satırın değeri YALNIZCA yüzde.
@@ -209,22 +217,25 @@ function WorldStripView({
                     CLAUDE.md → veri dürüstlüğü). Yüzde ise gerçekten
                     anlamlı: fonun o günkü yönü.
                     HAP (8 Kasım): yön zemini wash'ta; son kapanış ve %0,00
-                    nötr zeminde — bu seansın yönü değil (veri dürüstlüğü 4). */}
+                    nötr zeminde — bu seansın yönü değil (veri dürüstlüğü 4).
+                    10 Kasım gece: HAP KALKTI — yön renginde 17/700 sayı.
+                    Renk son kapanışta da işaretten (15 Ekim kararı, bantla
+                    aynı); cetvele girmeyen satırda sayı soluk. */}
                 <span aria-hidden className={styles.value}>
                   <span
-                    data-pill=""
-                    className={cn(
-                      "numeral",
-                      styles.pill,
-                      lastClose ? "bg-surface-sunken font-semibold text-body" : directionWash(tone),
-                    )}
+                    className={cn("numeral", styles.pct, tone === "flat" ? "text-muted" : directionText(tone))}
+                    data-quiet={!drawn || undefined}
                   >
                     {value}
                   </span>
                 </span>
                 {market.changePct !== null && (
                   <span className={styles.laneCell}>
-                    <HomeLane change={market.changePct} scale={scale} index={index} muted={lastClose} />
+                    {drawn ? (
+                      <HomeLane change={market.changePct} scale={scale} index={index} />
+                    ) : (
+                      <span aria-hidden className={styles.laneNote}>{t.market.lastClose}</span>
+                    )}
                   </span>
                 )}
               </Link>

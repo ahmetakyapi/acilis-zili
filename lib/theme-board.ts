@@ -5,7 +5,6 @@ import { getStatus, getSymbolNames } from "@/lib/data";
 import { logoSrc } from "@/lib/logos";
 import { getQuotes } from "@/lib/providers";
 import { median, sameSessionMoves, themePhase, type ThemePhase } from "@/lib/theme-stats";
-import { spreadScale } from "@/lib/theme-view";
 import { katilimMembers, katilimPool, themeRow, themeUniverse } from "@/lib/themes-data";
 
 /**
@@ -40,8 +39,6 @@ export type ThemeCard = {
 
 export type ThemeBoard = {
   cards: ThemeCard[];
-  /** Dağılım şeritlerinin ortak ölçeği; yedekte bilinmiyor. */
-  scale: number | null;
   leader: string | null;
   laggard: string | null;
   /** Künyenin penceresi: "Günün", "Açılış Öncesi" ya da "Son Kapanış". */
@@ -107,13 +104,15 @@ export const loadThemeBoard = cache(async function loadThemeBoard() {
     }),
   );
 
-  /* Sıralama ve ortak ölçek yalnızca AYNI SEANSI anlatan medyanlardan:
+  /* Sıralama ve ortak küme yalnızca AYNI SEANSI anlatan medyanlardan:
      son kapanışa kalmış bir temanın medyanı bu seansın medyanlarıyla aynı
      çizgiye konmuyor. */
   const sessionCount = cards.filter((card) => card.basis === "session").length;
   const scaleBasis: "session" | "lastClose" = sessionCount > 0 ? "session" : "lastClose";
   const comparable = cards.filter((card) => card.basis === scaleBasis && card.median !== null);
-  const scale = spreadScale(comparable.flatMap((card) => card.points.map((point) => point.change)));
+  /* `board.scale` (dağılım çentiklerinin ortak ölçeği, `spreadScale`) 10 Kasım
+     gecesi kalktı: çentik şeritleri aynı gün silinmişti (`SpreadStrip`),
+     alanı okuyan tek yer panonun "veri var mı" sorusuydu (artık `basis`). */
 
   /* Günün öne çıkanı yalnızca canlı seansta ve en az iki tema varken:
      son kapanışa "günün en güçlüsü" demek dünü bugün diye anlatmak olurdu. */
@@ -123,7 +122,6 @@ export const loadThemeBoard = cache(async function loadThemeBoard() {
 
   const board: ThemeBoard = {
     cards,
-    scale,
     leader: ranked[0]?.theme.slug ?? null,
     laggard: ranked.length > 1 ? ranked[ranked.length - 1].theme.slug : null,
     phase: comparable.length > 0 ? themePhase(scaleBasis, status.session) : null,

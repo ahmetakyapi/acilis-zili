@@ -34,7 +34,7 @@ import {
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
-import { DAY_LANE_SPAN, WEEK_LANE_SPAN } from "@/lib/market-scales";
+import { DAY_LANE_SPAN, WEEK_LANE_SPAN, laneModeOf, laneOver, laneSpan } from "@/lib/market-scales";
 import { getQuotesWithin, getWeeklyChanges } from "@/lib/providers";
 import {
   SECTOR_GROUPS,
@@ -129,7 +129,10 @@ const QUOTE_BUDGET_MS = 2500;
    ±%3 / ±%8 kullanıyordu: aynı hareket iki tabloda iki ayrı uzunluktu.
    İkisi de artık `DAY_LANE_SPAN` / `WEEK_LANE_SPAN` okur
    (lib/market-scales.ts; ısı haritası ve sektör tablosuyla aynı eşikler).
-   Eşiği aşan hareket kolu doldurur; büyüklüğünü yanındaki sayı söyler. */
+   Eşiği aşan hareket kolu doldurur; büyüklüğünü yanındaki sayı söyler.
+   10 Kasım (gece, ikinci tur): o sabitler artık TABAN; ölçek listeye göre
+   açılır (`laneSpan`, gerekçe lib/market-scales.ts). Hesap tabloda,
+   "KULVAR ÖLÇEĞİ LİSTEDEN". */
 
 /** Kategori çipi — etiket + o gruptaki şirket sayısı. */
 function SectorChip({
@@ -624,6 +627,23 @@ async function CompaniesTable({
   const showVolume = sort === "hacim" || rows.some((r) => quotes[r.symbol]?.volume != null);
   /** "İlk üç" vurgusu yalnız hareket sıralamalarında (gerekçe MembersTable.tsx). */
   const leadSort = sort === "degisim" || sort === "hafta";
+  /* KULVAR ÖLÇEĞİ LİSTEDEN (10 Kasım gece; Endeks Bileşenleri'yle aynı
+     fonksiyon ve aynı tabanlar). Sabit ±%3'te dizinin "en çok artan"
+     sıralamasında ilk altmış satırın TAMAMI dolu koldu (küçük şirketlerde
+     %10–%40'lık günler olağan). Ölçek bu sıralamanın kotasyonu çekilen
+     BÜTÜN satırlarından (`candidates`; yalnız basılan dilimden değil):
+     "Daha Fazla Göster" çubukları yeniden çizdirmez. Tek istisna piyasa
+     değeri sırası: orada kotasyon yalnız adaylar için çekiliyor (dilim + 40,
+     yukarıda), liste uzadıkça aday kümesi de büyür ve basamak nadiren
+     oynayabilir — bin sembollük turu ölçek için geri getirmek o kararın
+     kazancını silerdi. */
+  const daySpan = laneSpan(candidates.map((row) => quotes[row.symbol]?.changePct), DAY_LANE_SPAN, laneModeOf(sort === "degisim", dir));
+  const weekSpan = laneSpan(candidates.map((row) => weekly[row.symbol]), WEEK_LANE_SPAN, laneModeOf(sort === "hafta", dir));
+  const anyOver = rows.some((row) => {
+    const change = quotes[row.symbol]?.changePct;
+    const week = weekly[row.symbol];
+    return (change != null && laneOver(change, daySpan)) || (week != null && laneOver(week, weekSpan));
+  });
   const compareHref =
     rows.length >= 2
       ? `/karsilastir?semboller=${rows.slice(0, 4).map((row) => row.symbol).join(",")}`
@@ -813,6 +833,25 @@ async function CompaniesTable({
                     dir={dir}
                     className={table.changeHead}
                   />
+                  {/* TELEFONDA PİYASA DEĞERİ FİYATIN ÖNÜNDE (10 Kasım gece, ana
+                      oturumun kararı). Tablonun varsayılan sırası piyasa
+                      değeri; gece turunda sütun telefonda kaydırmanın
+                      arkasına düşmüştü ve okur ilk ekranda listenin neye
+                      göre dizildiğini göremiyordu. Tablo hücresi CSS ile
+                      yer değiştirmez: sütun İKİ KEZ basılır, <640'ta bu
+                      (öndeki) kopya, 640+ asıl yerindeki görünür; gizli
+                      kopya `display:none` (yardımcı teknolojiye de yok).
+                      Yalnız Şirketler'de; Endeks Bileşenleri'nde sıra aynı.
+                      Başlık telefonda iki satır ("Piyasa / Değeri"): tek
+                      satırda sütun 111 piksel tutuyor, Fiyat solma kuşağına
+                      giriyordu (ölçüm CompanyTable.module.css → "ÖLÇÜM 3"). */}
+                  <BoardSortHead
+                    label={t.market.marketCap}
+                    href={sortHref("cap")}
+                    active={sort === "cap"}
+                    dir={dir}
+                    className={cn(table.capHead, table.capPhone)}
+                  />
                   <BoardSortHead
                     label={t.companies.price}
                     href={sortHref("fiyat")}
@@ -845,7 +884,7 @@ async function CompaniesTable({
                     href={sortHref("cap")}
                     active={sort === "cap"}
                     dir={dir}
-                    className={table.capHead}
+                    className={cn(table.capHead, table.capWide)}
                   />
                   {showVolume && (
                     <BoardSortHead
@@ -891,7 +930,7 @@ async function CompaniesTable({
                       {/* Yön bir de çizgi: sıfır ortada, ölçek sabit
                           (`ZeroBar`; gerekçe lib/market-scales.ts). */}
                       <td className={table.changeCell} data-sorted={sort === "degisim" || undefined}>
-                        <MoveFigure value={quote ? quote.changePct : null} locale={locale} />
+                        <MoveFigure value={quote ? quote.changePct : null} span={daySpan} locale={locale} />
                       </td>
                       {/* Fiyat satırın ÇAPASI: değişim, hafta, piyasa değeri
                           ve hacim hep ona göre okunuyor. Diğerleriyle aynı
@@ -900,6 +939,10 @@ async function CompaniesTable({
                           ölçüldü: `.price` 700 yazıyordu, `.table tbody td`
                           özgüllükle 400 basıyordu; ortak parçada genel hücre
                           kuralı `:where()` içinde, tuzak kapandı.) */}
+                      {/* Telefon kopyası — gerekçe başlıkta. */}
+                      <td className={cn("numeral", board.strong, table.capCell, table.capPhone, !cap && board.none)} data-sorted={sort === "cap" || undefined}>
+                        {cap ? formatMoneyCompact(cap, locale) : NO_VALUE}
+                      </td>
                       <td className={cn("numeral", board.price, table.priceCell, !quote && board.none)} data-sorted={sort === "fiyat" || undefined}>
                         {quote ? formatPrice(quote.price, locale) : NO_VALUE}
                       </td>
@@ -908,7 +951,7 @@ async function CompaniesTable({
                           dilde okunsun. Ölçek ayrı (hafta geniş oynar),
                           sabiti lib/market-scales.ts'te. */}
                       <td className={table.weekCell} data-sorted={sort === "hafta" || undefined}>
-                        <MoveFigure value={week ?? null} weight="week" locale={locale} />
+                        <MoveFigure value={week ?? null} weight="week" span={weekSpan} locale={locale} />
                       </td>
                       {/* Piyasa değeri telefonda da kendi sütununda. Bir
                           süre fiyatın altına ikinci satır olarak konmuştu:
@@ -916,8 +959,9 @@ async function CompaniesTable({
                           üst üste bindirdiği için satır "fiyat 178,19 / 105
                           milyar" diye tek bir bilgi gibi okunuyordu. Ayrı
                           sütunda ikisi de kendi başlığının altında duruyor
-                          (10 Kasım gecesinden beri telefonda kaydırınca). */}
-                      <td className={cn("numeral", board.strong, table.capCell, !cap && board.none)} data-sorted={sort === "cap" || undefined}>
+                          (10 Kasım gecesi telefonda kaydırmanın arkasına
+                          düştü; aynı gece Fiyat'ın ÖNÜNE alındı — başlıkta). */}
+                      <td className={cn("numeral", board.strong, table.capCell, table.capWide, !cap && board.none)} data-sorted={sort === "cap" || undefined}>
                         {cap ? formatMoneyCompact(cap, locale) : NO_VALUE}
                       </td>
                       {showVolume && (
@@ -974,13 +1018,15 @@ async function CompaniesTable({
             label={t.companies.showMore}
           />
         )}
-        {/* KÜNYE: şeritlerin sabit ölçeği ve haftalığın tanımı — Endeks
-            Bileşenleri'ndeki cümlelerin aynısı (aynı ölçek, aynı söz). */}
+        {/* KÜNYE: şeritlerin ölçeği (gece turundan beri listenin gerçek
+            ölçeği) ve haftalığın tanımı — Endeks Bileşenleri'ndeki
+            cümlelerin aynısı (aynı fonksiyon, aynı söz). */}
         {rows.length > 0 && (
           <p className={board.note}>
             {t.markets.laneScaleNote
-              .replace("{day}", `±${formatPercentPlain(DAY_LANE_SPAN, locale, 0)}`)
-              .replace("{week}", `±${formatPercentPlain(WEEK_LANE_SPAN, locale, 0)}`)}
+              .replace("{day}", `±${formatPercentPlain(daySpan, locale, 0)}`)
+              .replace("{week}", `±${formatPercentPlain(weekSpan, locale, 0)}`)}
+            {anyOver && ` ${t.markets.laneOverNote}`}
             {` ${t.markets.weekNote}`}
           </p>
         )}

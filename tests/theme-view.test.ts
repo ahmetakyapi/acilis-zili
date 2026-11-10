@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { heatOf, splitSmall, spreadPosition, spreadScale, squarify, barScale } from "../lib/theme-view";
+import { BOARD_MIN_SPAN, boardAxis, heatOf, splitSmall, spreadPosition, spreadScale, squarify, barScale } from "../lib/theme-view";
 
 /**
  * Tema ekranlarının çizim hesapları (gerekçe `lib/theme-view.ts`).
@@ -82,4 +82,31 @@ test("barScale: en büyük mutlak medyanın oturduğu ilk basamak; tabanı ±%0,
   assert.equal(barScale([-1.4, 0.2]), 2);
   assert.equal(barScale([6.2]), 8);
   assert.equal(barScale([120]), 50);
+});
+
+test("pano ekseni: sıfır günün aralığındaki yerinde, en uzun çubuk uca dayanır", () => {
+  const mixed = boardAxis([0.83, 0.4, -0.35, 0.1]);
+  assert.ok(Math.abs(mixed.zero - (0.35 / 1.18) * 100) < 1e-9, "sıfır düşüşün payı kadar içeride");
+  assert.ok(Math.abs(mixed.zero + 0.83 * mixed.unit - 100) < 1e-9, "en güçlü çubuk sağ uca dayanır");
+  assert.ok(Math.abs(mixed.zero - 0.35 * mixed.unit) < 1e-9, "en zayıf çubuk sol uca dayanır");
+  assert.ok(mixed.neg && mixed.pos);
+});
+
+test("pano ekseni: tek yönlü günde sıfır kenarda, sütunun tamamı çubuğa", () => {
+  const up = boardAxis([1.2, 0.6, 0.2]);
+  assert.equal(up.zero, 0);
+  assert.equal(up.neg, false);
+  assert.ok(Math.abs(1.2 * up.unit - 100) < 1e-9);
+  const down = boardAxis([-2, -0.5]);
+  assert.equal(down.zero, 100);
+  assert.equal(down.pos, false);
+});
+
+test("pano ekseni: sakin gün büyük gün gibi görünmez; veri yoksa sıfır ortada", () => {
+  const calm = boardAxis([0.05, -0.03]);
+  assert.equal(calm.unit, 100 / BOARD_MIN_SPAN, "aralık tabanın altındaysa birim tabandan");
+  assert.ok(0.05 * calm.unit < 100 - calm.zero, "çubuk uca varmaz");
+  const empty = boardAxis([]);
+  assert.deepEqual(empty, { zero: 50, unit: 100 / BOARD_MIN_SPAN, neg: false, pos: false });
+  assert.equal(boardAxis([0, 0]).zero, 50);
 });

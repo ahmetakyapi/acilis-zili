@@ -13,37 +13,44 @@ import styles from "./HomeLanes.module.css";
  * Dil aynı: `--line-soft` kulvar, ortada `--line-strong` sıfır, 5 piksel,
  * renk yalnız işaretten. Ölçek panel başına TEK (`sharedLaneScale`).
  *
- * `muted`: yüzde bu seansın değil son kapanışın (veri dürüstlüğü 4) —
- * boy doğru, renk `--flat`.
+ * 10 KASIM (gece) — KALIN ÇUBUK, NOKTA YOK (ana oturumun kararı; sahibinin
+ * aynı günkü sözü: "böyle nokta nokta ne anlatıyor anlamıyorum; yatayda
+ * uzun kalın çizgi seviyorum"). 8 Kasım'ın lolipopu (5 piksellik ince dolgu
+ * + ucunda 9 piksellik nokta) tam da o itirazın çizimiydi ve aynı sayfadaki
+ * "Sektörler ve Temalar" bandı (`RankBars`) aynı gün kalın çubuğa geçmişti:
+ * yan ray başka bir dil konuşuyordu. Şimdi bandın dili: 5 piksellik kulvarın
+ * üstünde sıfırdan değere uzanan 10 piksellik DOLU çubuk (eksen tarafı düz,
+ * uzak ucu yuvarlak), nokta yok. Çizim globals'ın `bar-fill`i (modüldeki
+ * `lane-grow` / `lane-dot` keyframes'i silindi; katalogda karşılığı vardı),
+ * kapı panelin `data-draw`ında, kademe `--i` × `--step` (en çok 10 satır).
+ * `RankBars` doğrudan kullanılmadı: onun satırı ad | kulvar | yüzde ve
+ * kırılımları görüntü alanına göre; ray 350 pikselde iki katlı, işaret
+ * sütunlu (bayrak / logo) ve kapsayıcı sorgulu. Ölçüler ve tonlar aynı.
+ *
+ * Sıfır ORTADA (bantta veriden): iki panel de iki yönlü okunuyor
+ * (yükselenler / düşenler alt alta tek ayrışan grafik) ve eksenin üstündeki
+ * etiket simetrik ±ölçek.
  */
 export function HomeLane({
   change,
   scale,
   index = 0,
-  muted = false,
 }: {
   change: number;
   scale: number;
   /** Giriş sırası (gecikme). */
   index?: number;
-  muted?: boolean;
 }) {
   const dir = directionOf(change);
   const len = scale > 0 ? (Math.min(Math.abs(change), scale) / scale) * 50 : 0;
   return (
-    <span
-      aria-hidden
-      data-lane=""
-      data-dir={dir}
-      data-muted={muted || undefined}
-      className={styles.track}
-      style={{ "--len": `${len}%`, "--i": index } as CSSProperties}
-    >
+    <span aria-hidden data-lane="" className={styles.track}>
       {dir !== "flat" && (
-        <>
-          <span className={styles.fill} />
-          <span className={styles.dot} />
-        </>
+        <i
+          className={cn("bar-fill", styles.bar)}
+          data-dir={dir}
+          style={{ width: `${len.toFixed(2)}%`, "--i": Math.min(index, 10) } as CSSProperties}
+        />
       )}
     </span>
   );

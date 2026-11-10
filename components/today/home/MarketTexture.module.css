@@ -28,7 +28,13 @@
    · 30 Eylül — telefonda iki kart yan yana, `subgrid` ile ortak satırlar
      (ad iki satıra kırılınca rakamlar farklı hatta duruyordu). Kartlar
      artık telefonda alt alta ve tam genişlikte: yan yana 153 piksellik
-     kartta logolar örtüşüyordu, ad iki satırdı. */
+     kartta logolar örtüşüyordu, ad iki satırdı.
+   · 10 Kasım gece — telefonda kartlar YENİDEN yan yana (ana oturumun
+     kararı: bant 390'da 1.181 → 1.481 piksele çıkmıştı, hedef ≤ 1.250).
+     Alt alta iki tam kart 482 piksel tutuyordu. 30 Eylül'ün iki kusuru bu
+     kez yok: logolar örtüşmüyor (üç hücre, bindirmesiz) ve iki kartın
+     satırları `subgrid` ile ortak. Kural ve ölçüm aşağıda, "TELEFON: İKİ
+     YARIM KART". */
 
 /* BANT BAŞLIĞI (10 Ekim). Başlık bir kademe büyüdü (28 → 40 tavan): bant
    kahramanın hemen altındaki ilk tam genişlik satır ve sayfanın ikinci
@@ -172,13 +178,14 @@
 .stampSkeleton { width:180px; height:17px; border-radius:4px; }
 
 /* ---- İki uç tema ----
-   Sıralamaların altında yan yana iki kart (≥768), telefonda alt alta.
+   Sıralamaların altında yan yana iki kart (her genişlikte; 10 Kasım gecesine
+   kadar 768'in altında alt altaydı).
    Zemin çukur ton, tepede 3 piksellik yön şeridi (31 Ekim: nötr zemin +
    şerit; pembe/yeşil dolgu değil). İçerik sırası: künye → ad ve display
    medyan (bandın en iri sayısı: en anlamlı değer) → üyeler → yükselen /
    düşen şeridi. */
-.extremes { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; min-width:0; }
-@media (min-width:768px) { .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; } }
+.extremes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; min-width:0; }
+@media (min-width:768px) { .extremes { gap:16px; } }
 .extreme {
   position:relative; display:flex; flex-direction:column; gap:14px; min-width:0;
   padding:19px 20px 18px; border-radius:16px; background:var(--surface-sunken); color:inherit;
@@ -239,6 +246,8 @@ a.extreme:active { transform:scale(.992); }
 .splitBar i[data-part="down"] { background:var(--down); transform-origin:right center; }
 .splitLegend { display:flex; justify-content:space-between; gap:12px; color:var(--text-body); font-size:12px; font-weight:600; line-height:1.3; }
 .splitLegend b { font-size:14px; font-weight:700; }
+.splitLong { color:var(--text-body); }
+.splitIcon { display:none; }
 
 /* Yedek, gerçek kartın boyunda (ölçüm dosyanın sonunda). */
 .extremeSkeleton { height:233px; border-radius:16px; }
@@ -248,6 +257,43 @@ a.extreme:active { transform:scale(.992); }
   .extreme::after { left:16px; right:16px; }
   .extremeTitle { font-size:19px; }
   .extremeSkeleton { height:234px; }
+}
+/* TELEFON: İKİ YARIM KART (10 Kasım gece). 390'da kart 154 piksel, içi 130.
+   Tam kartın içeriği oraya sığmaz; yarım kart ELER, sıkıştırmaz:
+   · sıra: künye → medyan (28/700, kartın en iri sayısı) → ad (15/700, iki
+     satıra kadar) → üç üye → yükselen/düşen şeridi;
+   · üye hücresi: 32 piksellik logo ve ALTINDA tek satır yüzde (sembol
+     çıkar: logo kimliktir, sembol kartın bağlandığı tema sayfasında);
+   · iki kartın beş katı ORTAK satırlarda (`subgrid`): künye ya da ad bir
+     kartta iki satıra inerse öteki kartın medyanı, logoları ve şeridi yine
+     aynı hatta durur (30 Eylül'ün kararı).
+   Dokunma hedefi kartın tamamı (154 × ~215). */
+@media (max-width:639px) {
+  .extremes { gap:10px; grid-template-rows:repeat(5,auto); }
+  .extreme { display:grid; grid-template-rows:subgrid; grid-row:span 5; gap:0; padding:15px 12px 13px; border-radius:14px; }
+  .extreme::after { left:12px; right:12px; }
+  .extremeHead, .extremeId { display:contents; }
+  .extremeTop { grid-row:1; align-items:flex-start; justify-content:space-between; }
+  .extremeFigure { grid-row:2; margin-top:7px; font-size:28px; line-height:1.1; translate:none; }
+  .extremeTitle { grid-row:3; margin-top:3px; font-size:15px; line-height:1.25; letter-spacing:-.015em; }
+  .members { grid-row:4; grid-template-columns:repeat(3,minmax(0,1fr)); column-gap:4px; margin-top:11px; }
+  .memberLogo { margin-bottom:3px; }
+  .memberLogo > span { width:32px; height:32px; }
+  .memberSym { display:none; }
+  .memberPct { font-size:12px; letter-spacing:-.02em; }
+  .split { grid-row:5; gap:5px; margin-top:11px; }
+  .splitBar { height:8px; }
+  .splitLegend { gap:4px; }
+  .splitLegend b { font-size:13px; }
+  .splitLong { display:none; }
+  .splitLegend > span { display:inline-flex; align-items:center; gap:3px; }
+  .splitIcon { display:block; }
+  .extremeEmpty { display:flex; }
+  .extremeSkeleton { height:247px; border-radius:14px; }
+  /* Bölüm bağlantıları ("Sektör Tablosu", "Tüm Temalar") 32 piksellik
+     satırda; dokunma alanı düzeni oynatmadan 44'e açılır. */
+  .partLink { position:relative; }
+  .partLink::after { content:""; position:absolute; inset:-6px -4px; }
 }
 
 @media (prefers-reduced-motion:reduce) {
@@ -287,3 +333,18 @@ a.extreme:active { transform:scale(.992); }
    rakam yuvarlanması; opaklığı 0'dan başlayan 0; reduced-motion'da son
    kare. Ana kolon ile yan rayın dipleri değişmedi (bant kendi ızgara
    satırında): 1440 −17, 1280 −19, 1024 +4 piksel. */
+
+/* ÖLÇÜM 10 KASIM 2026, GECE — telefonda iki yarım kart (gerçek sayfa +
+   sahte sağlayıcı, 390 × 844, TR ve EN, iki tema; önce = aynı gün akşam
+   turu, aynı sahte veri):
+     bant boyu     TR 1.461 → 1.226 · EN 1.246 (hedef ≤ 1.250; brifteki 1.481
+                   canlı veriyle, sahte veride 1.461)
+     uç kartları   320 × 230 + 320 × 240 alt alta (482) → 155 × 247 yan yana
+     kart içi      medyan 34 → 28/700 · ad 19 → 15/700 · logo 36 → 32, üç
+                   üye, yüzde logonun altında 12/700 · şerit 12 → 8 piksel
+     denenenler    alt alta kısaltılmış tam kart (kart ~170, bant ~1.305:
+                   hedefin üstünde); yarım kartta "10 Üye Yükseliyor" künyesi
+                   (iki satır, kart 263, bant 1.242) → kısa söz (EN yine iki
+                   satır, 1.282) → yön oku (iki dilde tek satır)
+   640+ değişmedi (1024: 900 · 1280: 909 · 1440: 913; 768: 1.084 → 1.079).
+   Yatay taşma 0, kırpılan metin 0, 12 pikselin altında yazı 0. */

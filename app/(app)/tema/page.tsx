@@ -1,21 +1,18 @@
 import { PageShare } from "@/components/article/PageShare";
 import { Suspense } from "react";
-import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import polish from "@/components/motion/UtilityExperience.module.css";
-import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { GuideHint } from "@/components/article/GuideHint";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { ThemeBoard } from "@/components/themes/ThemeBoard";
 import styles from "@/components/themes/ThemeBoard.module.css";
 import { CompanyCards } from "@/components/ui/CompanyCards";
-import { DataStamp, LogoTile } from "@/components/ui/primitives";
-import { themeTitle } from "@/content/themes";
+import { DataStamp } from "@/components/ui/primitives";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { pageMetadata } from "@/lib/page-meta";
-import { loadThemeBoard, themePlaceholders, type ThemeCard } from "@/lib/theme-board";
-import { cn, directionOf, directionText, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
+import { loadThemeBoard, themePlaceholders } from "@/lib/theme-board";
+import { cn, formatPrice, NO_VALUE } from "@/lib/utils";
 
 export const generateMetadata = pageMetadata({
   path: "/tema",
@@ -64,8 +61,9 @@ export const generateMetadata = pageMetadata({
  * oynatmasın) eş boylu satırlarda kendiliğinden sağlanıyor: yedek aynı on
  * satırı editoryal sırayla basıyor (gerekçe ThemeBoard.tsx).
  *
- * `ThemeRanking` ve `SpreadStrip` ana sayfanın "Sektörler ve Temalar"
- * bandında yaşamaya devam ediyor; bu sayfa artık onları kullanmıyor.
+ * (Sabahki not: `ThemeRanking` ve `SpreadStrip` ana sayfanın bandında
+ * yaşıyordu. İkisi de aynı gün SİLİNDİ: bant `RankBars`a geçti —
+ * components/today/home/MarketTexture.tsx.)
  *
  * AKŞAM, GÖRSEL SIRALAMA (10 Kasım, ikinci tur; sahibi: "Temalar ekranını
  * daha görsel yapmak için…"). Sabahki pano okunaklı ama kuruydu (68
@@ -74,6 +72,16 @@ export const generateMetadata = pageMetadata({
  * aralığı kadar) ve içeride ne var (üye ısı şeridi + iki uç üye adıyla).
  * Ölçüt çentiği panodan kalktı, kapaktaki "Aradaki Fark" iki noktadan kalın
  * çubuğa döndü. Karar kaydı ThemeBoard.tsx, ölçüm ThemeBoard.module.css.
+ *
+ * GECE, KAPAK KOMPAKT BANT (10 Kasım, üçüncü tur; ana oturumun kararı).
+ * Satırlar 68 → 110 piksele büyüyünce 1440×900 ilk ekrana sığan tema 6'dan
+ * 3'e indi: 280 piksellik kapak (başlık, açıklama, Paylaş, yön oranı, iki uç
+ * kutusu, fark çubuğu) ekranın üçte birini tutuyordu ve iki uç kutusu
+ * panonun ZATEN gösterdiğini (01 ve son satır, yönünün tonunda) ikinci kez
+ * yazıyordu. Şimdi kapak Bilançolar'ın kompakt bandı (`DirectoryHeader
+ * compact`): başlık, tek cümle ve Paylaş solda; sağda tek özet — temaların
+ * yönü (oran çubuğu) ve iki uç arasındaki fark. İki uç kutusu KALKTI.
+ * Ölçüm ThemeBoard.module.css → "ÖLÇÜM 3".
  */
 export default async function ThemesIndexPage() {
   const { locale, t } = await getI18n();
@@ -91,24 +99,21 @@ export default async function ThemesIndexPage() {
     <MotionExperience className={polish.page}>
       <BreadcrumbJsonLd locale={locale} items={[{ name: t.themes.title, path: "/tema" }]} />
       <DirectoryHeader
+        compact
         title={t.themes.title}
         description={t.themes.subtitle}
-        share={<PageShare path="/tema" title={t.themes.title} locale={locale} t={t} />}
+        share={<PageShare compactOnMobile align="right" path="/tema" title={t.themes.title} locale={locale} t={t} />}
         visual={
-          <Suspense fallback={<HeroSummary part="ends" summary={null} locale={locale} t={t} />}>
-            <LiveHeroSummary part="ends" locale={locale} t={t} />
+          <Suspense fallback={<HeroSummary summary={null} t={t} locale={locale} />}>
+            <LiveHeroSummary locale={locale} t={t} />
           </Suspense>
         }
-      >
-        <Suspense fallback={<HeroSummary part="breadth" summary={null} locale={locale} t={t} />}>
-          <LiveHeroSummary part="breadth" locale={locale} t={t} />
-        </Suspense>
-      </DirectoryHeader>
+      />
 
       <Suspense
         fallback={
           <ThemeBoard
-            board={{ cards: placeholders, scale: null, leader: null, laggard: null, phase: null }}
+            board={{ cards: placeholders, leader: null, laggard: null, phase: null }}
             basis={null}
             locale={locale}
             t={t}
@@ -140,11 +145,6 @@ export default async function ThemesIndexPage() {
  * 376 → 277 piksel ve pano ilk ekranda.
  * Veri `loadThemeBoard`dan, istek içinde önbellekli; yeni bir istek yok.
  *
- * En güçlü ve en zayıf YALNIZCA ortak seans kümesi varken (panodaki
- * çiplerle aynı kural, lib/theme-board.ts); yoksa iki kutu tireyle, aynı
- * boyda basılıyor (veri inince kapak oynamıyor). Son kapanışa kalmış günde
- * künye "Son Kapanış" diyor ve sayılar nötr: dünü bugün diye anlatmıyor.
- *
  * DÖRT KUTU YERİNE TEK YÜZEY (29 Eylül, sahibinin isteği: "görselliği daha
  * üst seviyeye"). Dört eşit kutu sıralamanın sayılarını ikinci kez
  * YAZIYORDU. Özet panonun söylemediğini gösteriyor: yükselen ve düşen tema
@@ -152,8 +152,21 @@ export default async function ThemesIndexPage() {
  * tanesinin artıda olduğunu okutmuyor), iki uç tema ve (10 Kasım) ikisinin
  * ARASINDAKİ FARK: aynı eksende iki nokta, aralarında çizgi, yanında puan
  * (akşam: noktalar kalktı, en zayıftan en güçlüye 8 piksellik dolu çubuk).
- * Kapağın en büyük puntosu iki ucun medyanında. Hepsi aynı `comparable`
- * kümesinden. Kutu değil ton: tek çukur yüzey, bölümler hairline ile.
+ * Hepsi aynı `comparable` kümesinden. Kutu değil ton.
+ *
+ * GECE, TEK SIRA (10 Kasım, üçüncü tur). İki uç kutusu (ad, logolar, 36
+ * puntoluk medyan) KALKTI: pano aynı iki temayı 01 ve son satırda, yönünün
+ * tonunda, adıyla, logolarıyla ve 22 puntoluk medyanıyla zaten gösteriyor;
+ * kapakta ikinci kez yazmak 110 piksellik iki satıra mal oluyordu. Kalan
+ * iki şey panonun SÖYLEMEDİĞİ: kaç tema artıda (oran çubuğu) ve iki uç
+ * arasındaki fark (puan; fark çubuğu da kalktı — tek sayı, pano iki ucu
+ * aynı eksende çiziyor). Özet kompakt bandın sağında, başlıkla aynı boyda
+ * (iki satır, 48 piksel); 1024'ün altında başlığın altına iner.
+ *
+ * Son kapanışa kalmış günde künye "Son Kapanış" diyor ve sayılar nötr: dünü
+ * bugün diye anlatmıyor. Fark yalnız ortak seans kümesinde iki uç varken
+ * (panodaki tonla aynı kural, lib/theme-board.ts); yoksa tire, aynı boyda
+ * (veri inince kapak oynamıyor).
  */
 type HeroSummaryData = {
   rising: number;
@@ -163,28 +176,18 @@ type HeroSummaryData = {
   session: boolean;
   preMarket: boolean;
   lastClose: boolean;
-  leader: ThemeCard | null;
-  laggard: ThemeCard | null;
+  /** En güçlü ile en zayıf temanın medyan farkı, puan; iki uç yoksa `null`. */
+  gap: number | null;
 };
 
-/** Uç temanın yanında gösterilen logo sayısı. 1440'ta uç kutusu 273 piksel:
-    dört 22'lik logo (97) + ad sığıyor; beşincide "Kilo İlaçları (GLP-1)"
-    gibi uzun ad kesiliyordu. Telefonda iki logo (ThemeBoard.module.css).
-    10 Kasım akşamı: logolar 22 → 26 piksel ("logolar az daha büyüyebilir"),
-    dördüyle ad yine kesildi ("Kilo İlaçları (G…", 1440); üç logo (86). */
-const EXTREME_LOGOS = 3;
-/** Fark çizgisinde uç noktanın eksenin yarısından aldığı pay, yüzde. */
-const GAP_REACH = 44;
-
-type HeroPart = "breadth" | "ends";
-
-async function LiveHeroSummary({ part, locale, t }: { part: HeroPart; locale: Locale; t: Dictionary }) {
+async function LiveHeroSummary({ locale, t }: { locale: Locale; t: Dictionary }) {
   const { board, scaleBasis } = await loadThemeBoard();
   const comparable = board.cards.filter((card) => card.basis === scaleBasis && card.median !== null);
-  const bySlug = (slug: string | null) => board.cards.find((card) => card.theme.slug === slug) ?? null;
+  const medianOf = (slug: string | null) => board.cards.find((card) => card.theme.slug === slug)?.median ?? null;
+  const lead = medianOf(board.leader);
+  const lag = medianOf(board.laggard);
   return (
     <HeroSummary
-      part={part}
       summary={{
         rising: comparable.filter((card) => card.median! > 0).length,
         falling: comparable.filter((card) => card.median! < 0).length,
@@ -192,8 +195,7 @@ async function LiveHeroSummary({ part, locale, t }: { part: HeroPart; locale: Lo
         session: scaleBasis === "session",
         preMarket: board.phase === "pre-market",
         lastClose: board.phase === "lastClose",
-        leader: bySlug(board.leader),
-        laggard: bySlug(board.laggard),
+        gap: lead !== null && lag !== null ? lead - lag : null,
       }}
       locale={locale}
       t={t}
@@ -201,138 +203,52 @@ async function LiveHeroSummary({ part, locale, t }: { part: HeroPart; locale: Lo
   );
 }
 
-function HeroSummary({ part, summary, locale, t }: { part: HeroPart; summary: HeroSummaryData | null; locale: Locale; t: Dictionary }) {
+function HeroSummary({ summary, locale, t }: { summary: HeroSummaryData | null; locale: Locale; t: Dictionary }) {
   const tone = (kind: "up" | "down") =>
     summary === null ? "text-muted" : summary.session ? (kind === "up" ? "text-up" : "text-down") : "text-body";
   const neutral = !summary?.session;
   const total = summary?.total ?? 0;
   const flat = total - (summary?.rising ?? 0) - (summary?.falling ?? 0);
-  const leader = summary?.leader ?? null;
-  const laggard = summary?.laggard ?? null;
-  const end = (card: ThemeCard | null, label: string) =>
-    card && card.median !== null ? (
-      <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.hEnd}>
-        <span className={styles.endLabel}>
-          <span className={styles.label}>{label}</span>
-          <ArrowUpRight weight="bold" size={13} className={styles.endArrow} aria-hidden />
-        </span>
-        <b className={cn("numeral", styles.endFig, directionText(directionOf(card.median)))}>
-          {formatPercent(card.median, locale)}
-        </b>
-        <span className={styles.endBody}>
-          <span className={styles.endLogos} aria-hidden>
-            {card.members.slice(0, EXTREME_LOGOS).map((member) => (
-              <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="sm" />
-            ))}
-          </span>
-          <span className={styles.endName}>{themeTitle(card.theme, locale)}</span>
-        </span>
-      </Link>
-    ) : (
-      /* Yedek aynı üç satır: veri inince kapak oynamıyor. */
-      <div className={styles.hEnd}>
-        <span className={styles.endLabel}>
-          <span className={styles.label}>{label}</span>
-        </span>
-        <b className={cn("numeral text-muted", styles.endFig)}>{NO_VALUE}</b>
-        <span className={styles.endBody}>
-          <span className={cn(styles.endName, "text-muted")}>{NO_VALUE}</span>
-        </span>
-      </div>
-    );
-
-  const peak = leader?.median != null && laggard?.median != null
-    ? Math.max(Math.abs(leader.median), Math.abs(laggard.median))
-    : 0;
-  const at = (value: number) => 50 + (peak > 0 ? (value / peak) * GAP_REACH : 0);
-
-  if (part === "breadth") return (
-    <div className={cn(styles.summary, styles.summaryLead)}>
-      <div className={styles.breadth}>
-        <div className={styles.breadthHead}>
-          <span className={styles.label}>
-            {t.themes.themesBreadth}
-            {summary && (!summary.session || summary.lastClose)
-              ? ` · ${t.themes.medianLastClose}`
-              : summary?.preMarket
-                ? ` · ${t.themes.medianPreMarket}`
-                : ""}
-          </span>
-          <span className={styles.counts}>
-            <b className={cn("numeral", tone("up"))}>{summary ? summary.rising : NO_VALUE}</b>
-            {t.themes.up}
-            <span aria-hidden className={styles.countSep} />
-            <b className={cn("numeral", tone("down"))}>{summary ? summary.falling : NO_VALUE}</b>
-            {t.themes.down}
-          </span>
-        </div>
-        {/* Oranın çizgisi: yükselen soldan, düşen sağdan; yatay kalan
-            ortada. Nötr kümede yön rengi yok ama iki parça iki tonda
-            kalıyor — oran son kapanışta da okunur. */}
-        <span className={styles.bar8} aria-hidden>
-          {total > 0 && (
-            <>
-              {summary!.rising > 0 && (
-                <i data-tone={neutral ? "neutral-up" : "up"} data-motion-draw="line" style={{ flexGrow: summary!.rising, transformOrigin: "left center" }} />
-              )}
-              {flat > 0 && <i data-tone="flat" style={{ flexGrow: flat }} />}
-              {summary!.falling > 0 && (
-                <i data-tone={neutral ? "neutral-down" : "down"} data-motion-draw="line" style={{ flexGrow: summary!.falling, transformOrigin: "right center" }} />
-              )}
-            </>
-          )}
-        </span>
-      </div>
-    </div>
-  );
+  const gap = summary?.gap ?? null;
 
   return (
-    <div className={styles.summary}>
-          <div className={styles.ends2}>
-            {end(
-              leader,
-              summary?.preMarket ? t.themes.strongestPre : summary?.lastClose ? t.themes.strongestClose : t.themes.strongest,
-            )}
-            {end(
-              laggard,
-              summary?.preMarket ? t.themes.weakestPre : summary?.lastClose ? t.themes.weakestClose : t.themes.weakest,
-            )}
-          </div>
-          {/* ARADAKİ FARK KALIN ÇUBUK (10 Kasım akşamı; sabah iki nokta ve
-              aralarında ince çizgiydi — sahibinin itirazı: "nokta nokta ne
-              anlatıyor anlamıyorum; yatayda uzun kalın çizgi seviyorum"). En
-              zayıftan en güçlüye dolu çubuk; sıfırın solu düşüş, sağı
-              yükseliş renginde. İkisi de aynı yandaysa çubuk o yanda, en
-              zayıftan en güçlüye uzanır. */}
-          <div className={styles.gap}>
-            <span className={styles.label}>{t.themes.gapLabel}</span>
-            <span className={styles.gapTrack} aria-hidden>
-              {peak > 0 && (
-                <>
-                  {laggard!.median! < 0 && (
-                    <i
-                      className={cn("bar-fill", styles.gapBar)}
-                      data-tone="down"
-                      style={{ left: `${at(laggard!.median!)}%`, right: `${100 - at(Math.min(leader!.median!, 0))}%` }}
-                    />
-                  )}
-                  {leader!.median! > 0 && (
-                    <i
-                      className={cn("bar-fill", styles.gapBar)}
-                      data-tone="up"
-                      style={{ left: `${at(Math.max(laggard!.median!, 0))}%`, right: `${100 - at(leader!.median!)}%` }}
-                    />
-                  )}
-                  <i className={styles.gapZero} style={{ left: "50%" }} />
-                </>
-              )}
-            </span>
-            <b className={cn("numeral", styles.gapValue, peak > 0 ? undefined : "text-muted")}>
-              {peak > 0
-                ? t.themes.gapPoints.replace("{points}", formatPrice(leader!.median! - laggard!.median!, locale))
-                : NO_VALUE}
-            </b>
-          </div>
+    <div className={styles.pulse}>
+      <div className={styles.pulseHead}>
+        <span className={styles.label}>
+          {t.themes.themesBreadth}
+          {summary && (!summary.session || summary.lastClose)
+            ? ` · ${t.themes.medianLastClose}`
+            : summary?.preMarket
+              ? ` · ${t.themes.medianPreMarket}`
+              : ""}
+        </span>
+        <span className={styles.counts}>
+          <b className={cn("numeral", tone("up"))}>{summary ? summary.rising : NO_VALUE}</b>
+          {t.themes.up}
+          <span aria-hidden className={styles.countSep} />
+          <b className={cn("numeral", tone("down"))}>{summary ? summary.falling : NO_VALUE}</b>
+          {t.themes.down}
+        </span>
+      </div>
+      {/* Oranın çizgisi: yükselen soldan, düşen sağdan; yatay kalan
+          ortada. Nötr kümede yön rengi yok ama iki parça iki tonda
+          kalıyor — oran son kapanışta da okunur. Çizim globals'ın
+          `bar-fill`i (gece: `data-motion-draw` kapısı `data-draw`a geçti). */}
+      <span className={styles.bar8} data-draw aria-hidden>
+        {total > 0 && (
+          <>
+            {summary!.rising > 0 && <i className="bar-fill" data-tone={neutral ? "neutral-up" : "up"} style={{ flexGrow: summary!.rising }} />}
+            {flat > 0 && <i data-tone="flat" style={{ flexGrow: flat }} />}
+            {summary!.falling > 0 && <i className="bar-fill" data-tone={neutral ? "neutral-down" : "down"} style={{ flexGrow: summary!.falling }} />}
+          </>
+        )}
+      </span>
+      <p className={styles.pulseGap}>
+        <span className={styles.label}>{t.themes.gapLabel}</span>
+        <b className={cn("numeral", gap === null && "text-muted")}>
+          {gap !== null ? t.themes.gapPoints.replace("{points}", formatPrice(gap, locale)) : NO_VALUE}
+        </b>
+      </p>
     </div>
   );
 }

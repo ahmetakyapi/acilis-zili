@@ -79,7 +79,8 @@ export function histogramShare(value: number): number {
 /* ---- Bileşen tablosunun satır içi ölçekleri ---- */
 
 /**
- * Yön kulvarlarının SABİT ölçeği (10 Kasım 2026): tam kol kaç yüzde.
+ * Yön kulvarlarının ölçek TABANI (10 Kasım 2026): tam kol en az kaç yüzde.
+ * (Sabah SABİT ölçekti; gece listeye göre açılır oldu — aşağıda `laneSpan`.)
  *
  * Tablo şeridi listenin en büyük hareketine göre ölçekliyordu; "Daha Fazla
  * Göster"e ya da başka sekmeye basınca aynı %1 başka uzunlukta çiziliyordu
@@ -97,6 +98,86 @@ export function histogramShare(value: number): number {
  */
 export const DAY_LANE_SPAN = HISTOGRAM_LIMIT;
 export const WEEK_LANE_SPAN = 8;
+
+/**
+ * ÖLÇEK LİSTEYE GÖRE AÇILIR; SABİT ARTIK TABAN (10 Kasım, gece — ana
+ * oturumun kararı, sahibinin sözü: "mantıklı bulduklarını uygula; standart
+ * haline gelsin ve göze hitap etsin").
+ *
+ * Sabit ±%3 ölçekte "en çok düşen" sıralamasının ilk satırları AYNI boydaydı
+ * (−%9,34, −%3,88, −%3,01: üçü de dolu kol; farkı yalnız sayı söylüyordu).
+ * Ölçek şimdi listenin dağılımından, okunur bir basamağa yuvarlanarak
+ * (`LANE_STEPS`); taban eski sabit (günlük ±%3, haftalık ±%8): sakin günde
+ * ±%0,4'lük hareketler kolu doldurup büyük bir gün gibi görünmez.
+ *
+ * İKİ OKUMA, AYNI LİSTE (`mode`):
+ * - "body" (olağan sıra: ad, fiyat, piyasa değeri…): mutlak değişimlerin
+ *   90. yüzdeliği. Görünen satırlar listenin gövdesidir; uçtaki onda bir
+ *   ölçeği belirlemez (tek bir %20'lik satır herkesi çizgiye indirirdi —
+ *   `spreadScale`, lib/theme-view.ts ile aynı ders).
+ * - "rise" / "fall" (liste O DEĞİŞİME göre sıralıyken; azalan sırada
+ *   "rise", artanda "fall"): görünen satırlar listenin o yöndeki UCUDUR ve
+ *   gövdenin ölçeğinde hepsi dolu kol olurdu — kararın çıkış noktası. Ölçek
+ *   o yönün ucundan: yükselenlerin (ya da düşenlerin) en büyük İKİNCİSİ,
+ *   büyük listede o yöndeki ilk yüzde birin eşiği. Tek uç değer yine
+ *   ölçeği belirlemez, kola dayanır. (İlk denemede üçüncüydü: −%3,88 ve
+ *   −%3,01'in önde olduğu listede ölçek tabanda kaldı ve ikisi yine aynı
+ *   dolu koldu — ölçüldü.) YÖNE GÖRE, çünkü ilk denemede iki
+ *   yönün ortak ucu kullanıldı ve en sert hareketlerin hepsi yükseliş olan
+ *   günde "en çok düşenler" ±%15'lik cetvelde ~15 piksellik çubuklara indi
+ *   (ölçüldü, 1440; kol 60 piksel). Yön değişince görünen satırların TAMAMI
+ *   değişir; korunacak bir süreklilik yok.
+ * Hesap listenin TAMAMINDAN (yalnız açık satırlardan değil): "Daha Fazla
+ * Göster" ölçeği oynatmaz, açık satırların çubukları yeniden çizilmez.
+ * Ölçek sıralama ölçüsü ya da yönü değişince değişebilir; künye her zaman
+ * gerçek ölçeği yazar (`laneScaleNote`).
+ *
+ * Ölçeği aşan çubuk kola dayanır ve ucunda kesik taşır (`laneOver`;
+ * BoardTable.module.css → `.fill[data-over]`): "bu çubuk burada bitmiyor".
+ * Ana oturumun önerisi tek okumaydı (bütün listenin 90. yüzdeliği); o hâlde
+ * 100 üyeli endekste "en çok düşen" sıralamasının ilk satırları yine aynı
+ * boyda kalıyordu: −%9,34 · −%3,88 · −%3,01 örneğinde gövdenin 90.
+ * yüzdeliği %3'ün altında, üçü de dolu kol (tests/market-scales.test.ts).
+ */
+export const LANE_STEPS = [3, 5, 8, 10, 15, 20, 30, 50] as const;
+const LANE_BODY_QUANTILE = 0.9;
+/** Uç okumasında ölçeği belirleyen sıra: o yöndeki yüzde bir, en az ikinci. */
+const LANE_TAIL_SHARE = 0.01;
+const LANE_TAIL_MIN_RANK = 2;
+
+export type LaneMode = "body" | "rise" | "fall";
+
+/** Sıralama ölçüsü bu değişimse yönüne göre uç okuması, değilse gövde. */
+export function laneModeOf(sortedByThis: boolean, dir: "asc" | "desc"): LaneMode {
+  return sortedByThis ? (dir === "desc" ? "rise" : "fall") : "body";
+}
+
+/** Kulvarın tam kolu, yüzde: `floor`dan küçük olmaz, `LANE_STEPS` basamağına oturur. */
+export function laneSpan(values: readonly (number | null | undefined)[], floor: number, mode: LaneMode = "body"): number {
+  const known = values.filter((value): value is number => typeof value === "number" && Number.isFinite(value));
+  let mark = 0;
+  if (mode === "body") {
+    const sorted = known.map((value) => Math.abs(value)).sort((a, b) => a - b);
+    if (sorted.length > 0) mark = sorted[Math.max(0, Math.ceil(sorted.length * LANE_BODY_QUANTILE) - 1)];
+  } else {
+    /* O yöndeki değerler, büyüklüğe göre artan; sıra yönün kendi sayısından.
+       Yönde sıradan az değer varsa en küçüğü ölçer (tek düşenli günde o
+       tek satır taşmasın). */
+    const side = known.filter((value) => (mode === "rise" ? value > 0 : value < 0)).map((value) => Math.abs(value)).sort((a, b) => a - b);
+    if (side.length > 0) {
+      const rank = Math.max(LANE_TAIL_MIN_RANK, Math.ceil(side.length * LANE_TAIL_SHARE));
+      mark = side[Math.max(0, side.length - rank)];
+    }
+  }
+  const need = Math.max(floor, mark);
+  /* Kayan nokta payı: tam %5'lik hareket 5 basamağında kalır. */
+  return LANE_STEPS.find((step) => need <= step + 1e-9) ?? LANE_STEPS[LANE_STEPS.length - 1];
+}
+
+/** Değer ölçeği aşıyor mu — çubuk kola dayanır, ucunda kesik taşır. */
+export function laneOver(value: number, span: number): boolean {
+  return Number.isFinite(value) && span > 0 && Math.abs(value) > span + 1e-9;
+}
 /** "Büyük hareket" eşiği — günlük kulvarın dolduğu yer; satırda yüzde hap zemini alır. */
 export const BIG_MOVE = HISTOGRAM_LIMIT;
 

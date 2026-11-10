@@ -35,6 +35,14 @@
      piyasa değeri 15/600 güçlü mürekkep, haftalık 14/600, künyeler 12 soluk.
    Ölçümler çağıran modüllerin sonunda ("ÖLÇÜM 3").
 
+   GECE, İKİNCİ TUR (aynı gün): çubuk ölçeği çağıranın listesinden
+   (`MoveFigure span`, lib/market-scales.ts → `laneSpan`), ölçeği aşan çubuk
+   kesik uçlu (`.fill[data-over]`), ölçek dışı satır künyeli
+   (`MoveFigure note`). Temalar tablosu da bu parçaya geçti
+   (components/themes/ThemeTable.tsx): üç tablo, tek satır. Ölçümler:
+   MembersTable.module.css → "ÖLÇÜM 4", CompanyTable.module.css → "ÖLÇÜM 3",
+   ThemeTable.module.css → "ÖLÇÜM 3".
+
    BAŞKA TABLO (ör. Temalar) NASIL KULLANIR: `import board from
    "@/components/markets/BoardTable.module.css"`, `<Panel
    className={board.panel}>`, `<table className={board.table}>`, hücreler
@@ -116,7 +124,8 @@
 /* ---- Sıfır ortalı KALIN çubuk (`ZeroBar`) ----
    Kulvar 5, çubuk 8 (haftalık 6): çubuk kulvardan taşar, "dolu" okunur.
    Sıfır çizgisi kulvarı 5'er piksel aşar; alt alta satırlarda tek bir
-   eksen çizer. Ölçek SABİT (lib/market-scales.ts → `laneArm`). */
+   eksen çizer. Ölçek çağıranın listesinden (lib/market-scales.ts →
+   `laneSpan`; sabah SABİT ±%3 / ±%8'di, şimdi o değerler taban). */
 .lane { position:relative; display:block; width:var(--lane-w,100%); height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
 .lane::after { content:""; position:absolute; top:-5px; bottom:-5px; left:50%; width:1px; margin-left:-.5px; background:var(--line-strong); }
 .fill { position:absolute; top:calc((var(--lane-h,5px) - var(--bar-h,8px)) / 2); left:50%; height:var(--bar-h,8px); min-width:3px; border-radius:0 999px 999px 0; background:var(--up); animation-delay:calc(var(--i, 0) * var(--step)); }
@@ -125,6 +134,17 @@
    `.claude/rules/hareket.md` → Tuzaklar). */
 .fill[data-tone="down"] { left:auto; right:50%; border-radius:999px 0 0 999px; background:var(--down); transform-origin:right center; }
 .lane[data-weight="week"] { --bar-h:6px; }
+/* TAŞAN ÇUBUK (10 Kasım gece; `laneOver`): ölçeği aşan değer kola dayanır,
+   ucundan 4 piksel içeride 2 piksellik KESİK taşır (eksen kırığı). Kesik
+   panel zemininde: çubuğun içinde bir boşluk, yeni bir im değil. Uçtaki
+   parça 4 piksel, dış ucu yuvarlak kalır. */
+.fill[data-over]::after { content:""; position:absolute; top:0; bottom:0; right:4px; width:2px; background:var(--premium-surface); }
+.fill[data-over][data-tone="down"]::after { right:auto; left:4px; }
+/* Ölçek dışı satırın künyesi (`MoveFigure note`): çubuğun yerinde yazı;
+   telefonda yazı sığmaz, kesikli kulvar (künye tablonun dibinde). */
+.moveNote { display:flex; align-items:center; justify-content:flex-end; order:2; min-width:0; color:var(--text-muted); font-size:12px; }
+.moveNote > span { display:none; white-space:nowrap; }
+.moveNote > i { display:block; width:100%; height:0; border-top:1px dashed var(--line-strong); }
 
 /* ---- Değişim hücresi: çubuk + sayı ----
    Günlük: telefonda sayı üstte, çubuk ALTINDA (ilk ekranda Şirket + Değişim
@@ -220,7 +240,9 @@
   .symbol { font-size:16px; line-height:20px; }
   .name { font-size:14px; line-height:18px; }
   .move { grid-template-columns:var(--day-lane) auto; }
-  .move > .lane { order:0; }
+  .move > .lane, .moveNote { order:0; }
+  .moveNote > span { display:inline; }
+  .moveNote > i { display:none; }
   .pct { min-width:6.6ch; padding:4px 7px; margin:-4px -7px; font-size:19px; line-height:22px; letter-spacing:-.025em; }
   .move[data-weight="week"] .pct { font-size:14px; }
   .price { font-size:16px; }
