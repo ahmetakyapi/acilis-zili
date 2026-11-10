@@ -338,8 +338,10 @@
 .flowPanel .sectionHeading p { font-size:var(--text-small); }
 
 /* ---- Pano ---- */
-.dashboard { display:grid; grid-template-columns:minmax(0,1fr) 350px; gap:28px 24px; }
-.dashboard > [data-col] { gap:24px; }
+.dashboard { display:grid; grid-template-columns:minmax(0,1fr) 350px; gap:24px; }
+/* Kolon parçası: panelleri alt alta dizen düz bir yığın (eski `flex
+   flex-col gap-5` sınıfları). Telefonda ve tablette `display:contents`. */
+.run { display:flex; min-width:0; flex-direction:column; gap:24px; }
 .dashboard :global(.panel) { border-radius:var(--radius-panel); }
 /* At 390px the world/movers headings started at 4397/4817px, after both
    earnings panels. Flatten only the single-column layout: streamed content
@@ -496,10 +498,42 @@
 /* Basışta kart hafifçe çöker (ortak ölçü: kart 0,992, buton 0,97). */
 .indexLink:active .indexCard { scale:.992; }
 
+/* KAYDIRMALI İKİ KOLON (10 Kasım gecesi). DOM telefon sırasında: sektör
+   bandı, sol-bugün, sağ-bugün, sol-dün, sağ-arka plan, zil, künye
+   (page.tsx). İki kolon ızgarada DÖRT parça ve parçalar satırları kaydırarak
+   kaplıyor:
+
+     satır 1   bant (tam genişlik)
+     satır 2   sol-bugün   │ sağ-bugün
+     satır 3   sol-dün     │ sağ-bugün (devam)
+     satır 4   sol-dün (d.)│ sağ-arka plan          ← `1fr`
+
+   Satır 2'nin boyu sol-bugünden geliyor (orada tek satırlık öğe o).
+   Sağ-bugünün artanı satır 3'e iniyor; sol-dün iki satıra yayılıp esnek
+   satırı (4) kestiği için artanı YALNIZ oraya dağıtılıyor (CSS Grid,
+   "esnek izi kesen öğeler"). Sonuç: sol-dün sol-bugünün hemen altından,
+   sağ-arka plan sağ-bugünün hemen altından başlıyor, aralık her zaman 24;
+   kolonlar birbirinin satırına kilitlenmiyor ve fark iki tek parça
+   kolondaki gibi kısa kolonun DİBİNDE kalıyor (`FillColumn` kapatıyor).
+   Ölçü: esnek satır 3. satırdayken (ilk deneme) sol kolon uzun kalınca
+   fark sağ parçaların ARASINDA açılıyordu — kapalı seansta 1024'te 531
+   piksel (gerçek sayfa + sahte sağlayıcı). 4. satırda o boşluk ancak
+   sol-bugün sağ-bugünden uzunsa açılır: sol-bugün iki panel (bilanço,
+   haberler; 1440'ta ~920), sağ-bugün dört (~2.230). Statik ızgarayla
+   dört durum denendi (sol üst/sağ üst/sol alt/sağ alt boyları); yalnız
+   o durumda sağ ara > 0. Doldurucu yine iki ölçüyü birlikte kapatıyor:
+   dip farkı + parça arası boşluk.
+   `align-items:start`: parça kendi içeriği kadar; ızgara satırı geremez. */
 @media (min-width:1024px) {
-  .dashboard > [data-col="main"] { grid-column:1; grid-row:2; }
-  .dashboard > [data-col="side"] { grid-column:2; grid-row:2; }
+  .dashboard { grid-template-rows:auto auto auto 1fr; align-items:start; }
   .dashboard > [data-home-section="texture"] { grid-column:1 / -1; grid-row:1; }
+  .runMainToday { grid-column:1; grid-row:2; }
+  .runSideToday { grid-column:2; grid-row:2 / 4; }
+  .runMainPast { grid-column:1; grid-row:3 / 5; }
+  .runSidePast { grid-column:2; grid-row:4; }
+  .dashboard > .wideRow { grid-column:1 / -1; }
+  .dashboard > [data-home-section="session-bell"] { grid-row:5; }
+  .dashboard > [data-home-section="sources"] { grid-row:6; }
   /* KAHRAMAN KAYDIRINCA GERİ ÇEKİLİR (8 Ekim). Sayfa aşağı indikçe sayaç
      ve endeks destesi kartın içinde hafifçe küçülüp soluyor; kart kendisi
      yerinde, kenarı ve zemini sabit. Altından gelen panel önde, kahraman
@@ -547,7 +581,16 @@
   .toplineBells { grid-area:bells; padding:0; border-left:0; }
   .dashboard { grid-template-columns:minmax(0,1fr); }
   .dashboard > [data-col] { display:contents; }
-  /* Telefonda okuma sırası: günün özeti, sektörler ve temalar, dünya,
+  /* SIRA ARTIK DOM'DA, `order` İLE DEĞİL (10 Kasım gecesi). Aşağıdaki
+     notlar eski sıranın tarihçesi; kuralları kalktı. Kolonlar düzleşip her
+     bölüme `order` veriliyordu: görsel sıra DOM'dan ayrışıyor, Tab ve ekran
+     okuyucu masaüstü sırasını okuyordu (390'da 115 odaklanabilir öğede altı
+     geri sıçrama, ilk kırkında üç — ölçüldü). Sahibinin şikâyeti de bu
+     sıranın kendisiydi: dünün bülteni 2.352., dünkü seansın silüeti 5.292.,
+     haberler 11.686. pikseldeydi. Yeni sıra ve gerekçesi page.tsx'te
+     (panonun başı); ölçüm aşağıda, "KAYDIRMALI İKİ KOLON".
+
+     Eski not — Telefonda okuma sırası: günün özeti, sektörler ve temalar, dünya,
      hareketler, teknik görünüm, mercek, portföy (ya da Nabız), bilanço
      (bugün açıklayanlar · analizler), ölçüler (tahvil · makro), takvim,
      listeler, haber akışı, künye.
@@ -581,9 +624,6 @@
 
      Masaüstünde hiçbir şey değişmiyor: bu blok yalnızca 1024'ün altında
      çalışıyor, iki kolonlu düzende paneller kendi kolonlarında kalıyor. */
-  .dashboard [data-home-section="brief"] { order:1; }
-  .dashboard [data-home-section="world"] { order:3; }
-  .dashboard [data-home-section="movers"] { order:4; }
   /* GEÇMİŞ SEANS BUGÜNÜN ARDINDA (28 Ekim, sahibinin isteği: "teknik
      analizin üstüne alalım… ana sayfa önce bugünü anlatmalı"). Son
      Seansın Silueti kahramanın hemen altındaydı ve seans açıkken dünü
@@ -591,37 +631,20 @@
      Grafiği → teknik görünüm. İkisi de "Dünkü Seans" künyesi taşıyor
      (SessionAgeTag.tsx). Günün Grafiği'nin sırası bir dönem yazılmamıştı
      ve `order:0` ile özetin ÜSTÜNE çıkıyordu (25 Ekim, ölçüldü). */
-  .dashboard [data-home-section="skyline"] { order:5; }
-  .dashboard [data-home-section="daily-chart"] { order:6; }
-  .dashboard [data-home-section="technical"] { order:7; }
-  .dashboard [data-home-section="stories"] { order:8; }
   /* Portföy ya da Nabız yuvası Mercek'in ardında, masaüstündeki sırayla aynı. */
-  .dashboard [data-home-section="portfolio"] { order:9; }
-  .dashboard [data-home-section="earnings"] { order:10; }
-  .dashboard [data-home-section="analyses"] { order:11; }
   /* Hisseyi Bil analizlerin ardında (eşit sırada belge sırası: ana kolon
      önce). Telefonda bir oyun daveti sayfanın asıl içeriğinin önüne geçmez. */
-  .dashboard [data-home-section="puzzle"] { order:11; }
-  .dashboard [data-home-section="yields"] { order:12; }
-  .dashboard [data-home-section="macro"] { order:13; }
-  .dashboard [data-home-section="schedule"] { order:14; }
-  .dashboard [data-home-section="week"] { order:15; }
-  .dashboard [data-home-section="watchlist"] { order:16; }
   /* SEKTÖRLER VE TEMALAR GÜNÜN ÖZETİNİN HEMEN ALTINDA (29 Eylül, sahibinin
      isteği). Bir dönem analizlerin ardındaydı ve 10.725 piksellik sayfanın
      7.210. pikselinde duruyordu (390, ölçüldü); 28 Eylül'de hareketlerin
      ardına çıktı, şimdi bir basamak daha: masaüstünde bant iki kolonun
      ÜSTÜNDE, telefonda da günün özetinden sonraki ilk blok. Özet günü
      anlatıyor, bant o günün sektör ve tema dağılımını. */
-  .dashboard [data-home-section="texture"] { order:2; }
-  .dashboard [data-home-section="news"] { order:18; }
-  .dashboard [data-home-section="sources"] { order:19; }
   /* GİRİŞ YAPMAMIŞ OKUYUCUNUN FAVORİLERİ BİLANÇOLARIN ARDINDA (24 Eylül).
      Panel onun için bir davet satırı (page.tsx → WatchlistSummary); günün
      bilançolarından ve analizlerden önce durması, sayfanın asıl içeriğine
      varmadan bir girişle karşılaşmak demekti. Giriş yapmış okuyucunun
      sırası değişmiyor — orada liste gerçekten onun listesi. */
-  .dashboard [data-home-section="watchlist"]:has(a[href$="/giris"]) { order:17; }
 }
 
 /* TABLETTE İKİ KOLON (768–1023). Tek kolonda kahraman 768'de 683 piksel
@@ -657,14 +680,20 @@
      dibinde. Tam genişlik bölümler satırı yalnız tuttuğu için etkilenmiyor. */
   .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="schedule"],[data-home-section="week"],[data-home-section="technical"],[data-home-section="watchlist"]) { align-self:stretch; display:flex; flex-direction:column; }
   .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="technical"],[data-home-section="watchlist"]) > :last-child { flex:1 0 auto; }
-  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"],[data-home-section="puzzle"],[data-home-section="daily-chart"],[data-home-section="skyline"]) { grid-column:1 / -1; }
-  /* Teknik görünüm tablette favorilerle eş: yerleşim sırası öyle kuruluyor
-     (yan yana duracak iki panel ardışık olmalı). */
-  .dashboard [data-home-section="technical"] { order:16; }
-  /* Favoriler bir davet satırıysa (giriş yok) sona iniyor ve teknik panel
-     eşsiz kalıyor; o hâlde tam genişlikte. */
-  .dashboard:has([data-home-section="watchlist"] a[href$="/giris"]) [data-home-section="technical"] { grid-column:1 / -1; }
-  .dashboard [data-home-section="watchlist"]:has(a[href$="/giris"]) { grid-column:1 / -1; }
+  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"],[data-home-section="puzzle"],[data-home-section="daily-chart"],[data-home-section="skyline"],[data-home-section="session-bell"],[data-home-section="technical"]) { grid-column:1 / -1; }
+  /* ÇİFTLER DOM SIRASINDAN (10 Kasım gecesi). Sıra artık DOM'da (page.tsx)
+     ve yan yana duracak iki panel ardışık olmak zorunda; `order` ile eş
+     kurulmuyor. Bugünün parçası: hareketler | dünya (misafir) ya da
+     hareketler | favoriler (giriş yapmış), ardından nabız ve teknik tam
+     genişlikte (teknik eskiden favorilerle eşti; o eş artık ayrı
+     parçalarda). Arka plan: tahvil | makro, takvim | hafta. Takvim boş
+     günde basılmıyor (`:empty`); hafta o zaman eşsiz ve tam genişlikte
+     (kardeş seçicisi — kökte `:has()` yok). Davet satırı tam genişlikte.
+     Oturum bilgisi sayfadan (`data-signed-in`), `:has(a[href$="/giris"])`
+     yerine. */
+  .dashboard[data-signed-in] [data-home-section="world"] { grid-column:1 / -1; }
+  .dashboard:not([data-signed-in]) [data-home-section="watchlist"] { grid-column:1 / -1; }
+  .dashboard [data-home-section="schedule"]:empty + [data-home-section="week"] { grid-column:1 / -1; }
 }
 
 @media (max-width:767px) {
@@ -674,8 +703,9 @@
      ilk ekranların ABD'nin kendi gündemine (hareketler, teknik, mercek,
      bilanço) ayrılması istendi. Sıra değeri tahvil ile aynı (12) ve DOM'da
      tahvilden önce geldiği için hemen üstüne oturuyor. Tablette dokunulmadı:
-     orada dünya ile hareketler yan yana bir çift. */
-  .dashboard [data-home-section="world"] { order:12; }
+     orada dünya ile hareketler yan yana bir çift.
+     10 KASIM GECESİ: kural kalktı (sıra DOM'da, page.tsx); dünya artık
+     hareketlerin ve favorilerin ardında, bugünün parçasında. */
   .page { gap:18px; }
   .hero { padding:18px; overflow:hidden; }
   /* KIRILABİLİR SATIR. 390'da künye ile saat tek satır (13 piksel pay);

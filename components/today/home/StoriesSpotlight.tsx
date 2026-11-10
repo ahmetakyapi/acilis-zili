@@ -35,6 +35,8 @@ import { StoryFigure, storyFigureOf, type StoryFigureBlock } from "@/components/
  */
 /** Manşet kadrosunda en çok kaç logo — fazlası "+n" olarak sayılır. */
 const STORY_CAST_MAX = 4;
+/** Arşivde her zaman görünen satır; fazlası doldurucunun yedeği (aşağıda). */
+const ARCHIVE_BASE = 2;
 
 export async function StoriesSpotlight({
   locale,
@@ -269,12 +271,21 @@ function StoriesSpotlightView({
            yol listenin DİBİNDE, yalnızca telefonda: başlıktaki "Tümünü
            Gör" iki ekran yukarıda kalıyor. Masaüstünde DOM ve görünüm
            aynı; blok ana kolonda ve kolon dengesi ondan etkilenmiyor
-           (FillColumn yalnızca ≥1024'te çalışıyor, ölçüldü). */
+           (FillColumn yalnızca ≥1024'te çalışıyor, ölçüldü).
+           ÜÇÜNCÜ SATIR YEDEK (10 Kasım gecesi). Mercek artık sol kolonun
+           alt parçasının sonunda ve sol kolon 1024'te sağdan uzun
+           kalıyordu: kaydırmalı ızgarada fark sağ parçaların ARASINDA 84
+           piksellik boşluk olarak açılıyordu (gerçek sayfa + sahte
+           sağlayıcı; sağın yedekleri tükenmişti). Satır `hidden` +
+           `data-fill`: geniş ekranda yer varsa doldurucu açıyor, yoksa
+           kolon onsuz kısalıyor. JS kapalıyken iki satır, telefonla aynı. */
         <ul className={`${styles.storyArchive} border-t border-primary-faint bg-surface-solid`} data-motion-stagger>
           {rest.map((story, index) => (
             <li
               key={story.slug}
               className="border-t border-line-soft first:border-t-0"
+              data-fill={index >= ARCHIVE_BASE ? "" : undefined}
+              hidden={index >= ARCHIVE_BASE}
             >
               <Link
                 href={withLocale(`/mercek/${story.slug}`, locale)}
@@ -328,7 +339,7 @@ function StoriesSpotlightView({
           ))}
         </ul>
       )}
-      {rest.length > 2 && (
+      {rest.length > ARCHIVE_BASE && (
         <Link
           href={withLocale("/mercek", locale)}
           prefetch={false}

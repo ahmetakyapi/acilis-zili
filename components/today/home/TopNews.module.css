@@ -149,6 +149,14 @@
   .rowTime { padding-right:10px; }
   .rowTime time { font-size:13px; }
   .thumb { width:44px; height:44px; }
+  /* TELEFONDA DÖRT BAŞLIK (10 Kasım gecesi). Bölüm sayfanın dibinden
+     bugünün parçasına, bilançonun ardına çıktı (page.tsx); orada manşet +
+     beş satır 906 piksel tutuyor ve hareketleri bir ekran aşağı itiyordu
+     (390, ölçüldü). Manşet + üç satır; kalanı başlıktaki "Tümünü Gör"
+     (/haberler). Manşetsiz günde dört satır. Gizli satırlar `display:none`:
+     odak sırasına ve ekran okuyucuya girmiyor. */
+  .withLead .list > .rowItem:nth-child(n+4),
+  .grid:not(.withLead) .list > .rowItem:nth-child(n+5) { display:none; }
 }
 
 @media (prefers-reduced-motion:reduce) {
