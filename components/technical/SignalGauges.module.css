@@ -12,7 +12,7 @@
 .fill[data-tone="down"] { background:var(--down); }
 .fill[data-tone="primary"] { background:var(--primary); }
 .tick { position:absolute; bottom:2px; width:2px; height:13px; margin-left:-1px; border-radius:1px; background:var(--line-strong); }
-.tick small { position:absolute; bottom:calc(100% + 3px); left:50%; font-size:10.5px; font-weight:650; line-height:1; color:var(--text-muted); white-space:nowrap; translate:-50% 0; }
+.tick small { position:absolute; bottom:calc(100% + 3px); left:50%; font-size:12px; font-weight:600; line-height:1; color:var(--text-muted); white-space:nowrap; translate:-50% 0; }
 .tick[data-align="end"] small { translate:-100% 0; left:100%; }
 .tick[data-align="start"] small { translate:0 0; left:0; }
 .dot { position:absolute; bottom:3px; width:11px; height:11px; margin-left:-5.5px; border:2px solid var(--surface-solid); border-radius:50%; background:var(--text-strong); }
@@ -32,10 +32,11 @@
 .rsiDot { fill:var(--text-strong); stroke:var(--surface-solid); stroke-width:2; }
 .rsiText { font-size:17px; font-weight:700; letter-spacing:-.02em; fill:var(--text-strong); }
 
-/* Giriş — bir kez; şerit/yay önce, nokta en son. */
-.fill { animation:gauge-grow 800ms var(--ease-brand) 120ms both; }
-.rsiValue { animation:gauge-arc 900ms var(--ease-brand) 120ms both; }
-.dot, .rsiDot { animation:gauge-dot 320ms var(--ease-brand) 760ms both; }
+/* Giriş — bir kez; şerit/yay önce, nokta en son. 10 Kasım: süreler
+   800/900/320 ms idi, merdivene bağlandı (`--draw`, `--mark`). */
+.fill { animation:gauge-grow var(--draw) var(--ease-brand) both; }
+.rsiValue { animation:gauge-arc var(--draw) var(--ease-brand) both; }
+.dot, .rsiDot { animation:gauge-dot var(--mark) var(--ease-brand) 400ms both; }
 @keyframes gauge-grow { from { transform:scaleX(0); } }
 @keyframes gauge-arc { from { stroke-dashoffset:1; } }
 @keyframes gauge-dot { from { opacity:0; } }

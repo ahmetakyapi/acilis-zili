@@ -38,7 +38,7 @@
    ekran görüntüsüyle görüldü). */
 .pulseBar { position:relative; z-index:3; display:flex; gap:3px; height:10px; }
 .pulseSlice { position:relative; display:flex; min-width:10px; padding:17px 0; margin:-17px 0; border:0; background:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
-.pulseSlice > span[data-motion-draw] { flex:1; border-radius:999px; transform-origin:left center; transition:filter .2s var(--ease-brand); }
+.pulseSlice > span[data-motion-draw] { flex:1; border-radius:999px; transform-origin:left center; transition:filter 180ms var(--ease-brand); }
 .pulseSlice:focus-visible { outline:none; }
 .pulseSlice:focus-visible > span[data-motion-draw] { outline:2px solid var(--line-focus); outline-offset:2px; }
 .pulseSlice[data-open] > span[data-motion-draw] { filter:brightness(1.12) saturate(1.1); box-shadow:0 0 0 2px var(--surface), 0 0 0 3px currentColor; }
@@ -56,7 +56,7 @@
    oynar; YALNIZ opaklık — konum `translate` ile veriliyor ve kenar
    varyantları `translate:none` kullanıyor, transform'a dokunma. */
 .pulseTip { animation:pulse-tip-in 160ms var(--ease-brand) both; position:absolute; bottom:calc(100% - 4px); left:50%; z-index:5; display:inline-flex; align-items:baseline; gap:8px; padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-fixed); box-shadow:0 6px 18px -8px color-mix(in srgb, var(--text-strong) 35%, transparent); font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; translate:-50% 0; pointer-events:none; }
-.pulseTip b { font-size:12.5px; font-weight:750; letter-spacing:.03em; color:var(--text-muted); }
+.pulseTip b { font-size:12.5px; font-weight:700; letter-spacing:.03em; color:var(--text-muted); }
 .pulseSlice[data-verdict="buy"] .pulseTip b { color:var(--up); }
 .pulseSlice[data-verdict="hold"] .pulseTip b { color:var(--brass-ink); }
 .pulseSlice[data-verdict="sell"] .pulseTip b { color:var(--down); }
@@ -94,7 +94,7 @@
 @media (hover:hover) and (pointer:fine) {
   .pulseStance:not(.pulseStanceStatic):hover { filter:brightness(1.08); }
 }
-.pulseStancePending { color:var(--text-muted); font-weight:650; }
+.pulseStancePending { color:var(--text-muted); font-weight:600; }
 .pulseStancePending b { color:var(--text-muted); }
 /* Logosu soluk: sembol takipte ama henüz söyleyecek bir şeyi yok. */
 .pulseLogoPending { opacity:.5; filter:grayscale(1); }
@@ -162,8 +162,11 @@
    tanıttığı kartların sembolünden (h3, 19 piksel) küçüktü: bölümün en zayıf
    başlığı oydu ve göz onu atlayıp "MU"ya iniyordu. Merdiven artık h1 (~40) >
    h2 (22-28) > h3 (19) > gövde (14). Ton `main h2`nin marka mürekkebi
-   (globals.css) — kısa başlık, belgeli istisna. */
-.boardTitle { font-size:clamp(22px, 1.1vw + 12px, 28px); line-height:1.15; font-weight:650; letter-spacing:-.03em; }
+   (globals.css) — kısa başlık, belgeli istisna.
+   10 Kasım (ortak ölçüler): bölüm başlığı sitede tek ölçü,
+   `clamp(25px,2.8vw,36px)` / 600 (ana sayfa, şirket ve bilanço sayfasıyla
+   aynı); burada 22–28 / 650 idi. Merdiven korunuyor: h1 > h2 (25–36) > h3. */
+.boardTitle { font-size:clamp(25px,2.8vw,36px); line-height:1.1; font-weight:600; letter-spacing:-.035em; }
 /* PANO KÜNYESİ — üç sayı, kıl çizgiyle ayrık (hesabı ve gerekçesi
    page.tsx'te). Nokta ayracı değil çizgi: bu sayfada nokta künye
    ayracı ve bir satırda birden fazlası yasak (tasarım kuralı). Renk yalnızca
@@ -173,7 +176,7 @@
 .proximity > div { display:flex; align-items:baseline; gap:6px; padding-inline:12px; border-left:1px solid var(--line); }
 .proximity > div:first-child { padding-left:0; border-left:0; }
 .proximity dt { font-size:12.5px; font-weight:600; color:var(--text-muted); }
-.proximity dd { margin:0; font-size:15px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); }
+.proximity dd { margin:0; font-size:15px; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); }
 .proximity [data-tone="up"] dd { color:var(--up); }
 .proximity [data-tone="down"] dd { color:var(--down); }
 @media (min-width:1100px) {
@@ -196,7 +199,7 @@
 .filter:has(input[data-i="3"]:checked) { --i:3; }
 .filter legend { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
 .filter input { position:absolute; opacity:0; pointer-events:none; }
-.filter label { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:7px 12px; border-radius:calc(var(--radius-lg) - 4px); font-size:13px; font-weight:600; white-space:nowrap; color:var(--text-body); cursor:pointer; transition:color .2s var(--ease-brand); }
+.filter label { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:7px 12px; border-radius:calc(var(--radius-lg) - 4px); font-size:13px; font-weight:600; white-space:nowrap; color:var(--text-body); cursor:pointer; transition:color 180ms var(--ease-brand); }
 .filter label b { font-weight:600; letter-spacing:-.02em; color:var(--text-muted); }
 .filter label:hover { color:var(--text-strong); }
 .filter input:checked + label { color:var(--primary-ink); }
@@ -204,7 +207,7 @@
    `--primary-ink` beyaz başparmak üstünde #5596c8'e iniyordu: 13 piksellik
    metinde 3,19:1, AA'nın altı (koyu temada 4,50, sınırda; ölçüldü). Tam
    ton ve bir kademe ince ağırlık: etiketten ayrışıyor, kontrast düşmüyor. */
-.filter input:checked + label b { color:var(--primary-ink); font-weight:500; }
+.filter input:checked + label b { color:var(--primary-ink); font-weight:600; }
 .filter input:focus-visible + label { outline:2px solid var(--line-focus); outline-offset:2px; }
 @media (prefers-reduced-motion: reduce) {
   .filter::before { transition:none; }
@@ -225,10 +228,11 @@
    alt satıra sarıyor, hiçbir şey kesilmiyor.
    Pano aralığı 18'den 14'e: bandın dolgusu ile eksi payı birbirini
    götürüyor, yani süzgeçle künye ve ilk kart arasında görünen boşluk da
-   14. Başlık 21 piksel — kartın sembolünden (19) büyük kalıyor. */
+   14. Başlık kartın sembolünden (19) büyük kalıyor. */
 @media (max-width: 767px) {
   .board { gap:14px; }
-  .boardTitle { font-size:21px; }
+  /* 10 Kasım: telefonda 21 pikseldi; bölüm başlığının tabanı 25 (ortak ölçü). */
+  .boardTitle { font-size:25px; }
   .boardToolbar { position:static; display:contents; }
   .filterBar { position:sticky; top:var(--app-bar-h); z-index:15; margin-block:-8px; padding-block:8px; background:var(--page-bg); }
   .filter label { min-height:40px; padding:8px; gap:5px; }
@@ -259,15 +263,19 @@
    kez yükseliyor — sayfa başlığının imzasıyla aynı kural: içerik önce tam
    görünüp sonra sönmüyor. Ekranın altındaki kartları kaydırma girişi
    (MotionExperience) yönetiyor; onun duraklatılmış animasyonu bunun
-   önünde. */
-.board:has(input[value="all"]:checked) .cell { animation:board-settle-a 300ms var(--ease-brand) backwards; }
-.board:has(input[value="buy"]:checked) .cell { animation:board-settle-b 300ms var(--ease-brand) backwards; }
-.board:has(input[value="hold"]:checked) .cell { animation:board-settle-c 300ms var(--ease-brand) backwards; }
-.board:has(input[value="sell"]:checked) .cell { animation:board-settle-d 300ms var(--ease-brand) backwards; }
-@keyframes board-settle-a { from { opacity:.4; transform:translate3d(0,10px,0); } }
-@keyframes board-settle-b { from { opacity:.4; transform:translate3d(0,10px,0); } }
-@keyframes board-settle-c { from { opacity:.4; transform:translate3d(0,10px,0); } }
-@keyframes board-settle-d { from { opacity:.4; transform:translate3d(0,10px,0); } }
+   önünde.
+
+   10 Kasım (hareket kuralı: panel ve metin kayarak girmez): kartlar 10
+   piksel aşağıdan yükseliyordu; artık yalnız TON oturuyor (opaklık
+   0,4 → 1, 250 ms — panel kenarı süresi). Ad değiştirme düzeni aynı. */
+.board:has(input[value="all"]:checked) .cell { animation:board-settle-a 250ms var(--ease-brand) backwards; }
+.board:has(input[value="buy"]:checked) .cell { animation:board-settle-b 250ms var(--ease-brand) backwards; }
+.board:has(input[value="hold"]:checked) .cell { animation:board-settle-c 250ms var(--ease-brand) backwards; }
+.board:has(input[value="sell"]:checked) .cell { animation:board-settle-d 250ms var(--ease-brand) backwards; }
+@keyframes board-settle-a { from { opacity:.4; } }
+@keyframes board-settle-b { from { opacity:.4; } }
+@keyframes board-settle-c { from { opacity:.4; } }
+@keyframes board-settle-d { from { opacity:.4; } }
 @media (prefers-reduced-motion: reduce) { .board .cell { animation:none !important; } }
 
 /* ---- Kart ızgarası ----
@@ -335,7 +343,7 @@
      şeridi (okuma, çizim değil). */
   .card:has(> .cardFoldInput:not(:checked)) :is(.cardThesis, .gaugeBox) { display:none; }
   /* Kartı kaplayan bağlantının (z-1) üstünde; dokunma hedefi 44. */
-  .cardFold { position:relative; z-index:3; display:inline-flex; align-self:flex-start; align-items:center; gap:6px; min-height:44px; margin-block:-10px -12px; color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; }
+  .cardFold { position:relative; z-index:3; display:inline-flex; align-self:flex-start; align-items:center; gap:6px; min-height:44px; margin-block:-10px -12px; color:var(--primary-ink); font-size:12.5px; font-weight:600; cursor:pointer; }
   .cardFold svg { transition:transform var(--default-transition-duration) var(--ease-brand); }
   .cardFoldInput:checked ~ .cardFold svg { transform:rotate(180deg); }
   .cardFoldInput:checked ~ .cardFold .cardFoldMore, .cardFoldInput:not(:checked) ~ .cardFold .cardFoldLess { display:none; }
@@ -387,7 +395,7 @@
    eziliyordu; 23 Eylül'de buraya katlandı. Yarıçap tokenlı: `--radius-sm`
    (hap, değişim rozeti, plan rozeti aynı ölçekte). Görüşü kartta taşıyan
    tek işaret yine bu hap — renkli üst kenar reddedildi (bkz. `.card`). */
-.stance { display:inline-flex; align-items:center; padding:6px 12px; border-radius:999px; font-size:14px; font-weight:800; letter-spacing:.06em; line-height:1.15; }
+.stance { display:inline-flex; align-items:center; padding:6px 12px; border-radius:999px; font-size:14px; font-weight:700; letter-spacing:.06em; line-height:1.15; }
 .change { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border:1px solid currentColor; border-radius:var(--radius-sm); font-size:12px; font-weight:700; white-space:nowrap; }
 /* Fiyat satırı: etiket ve plana göre yer aynı satırda, sayı altında büyük. */
 .cardQuote { container:tquote / inline-size; min-width:0; }
@@ -405,7 +413,7 @@
 @container tquote (max-width: 369px) {
   .quoteGrid { grid-template-areas:"label plan" "price price"; }
 }
-.cardQuoteLabel { color:var(--text-muted); font-size:12px; font-weight:500; }
+.cardQuoteLabel { color:var(--text-muted); font-size:12px; font-weight:400; }
 .cardPrice { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
 .cardPrice strong { font-size:27px; line-height:1.1; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
 /* Plan konumu: fiyatın alım planına göre yeri, tek kısa etiket. Ton
@@ -441,8 +449,8 @@
 .cardPlan { display:grid; gap:12px; align-content:start; }
 /* CÜMLE VE ANI. Künye cümlenin başında (gerekçe TechnicalCard'da). */
 .cardThesis { display:flex; min-width:0; flex-direction:column; gap:5px; }
-.thesisStamp { display:flex; flex-wrap:wrap; justify-content:space-between; gap:2px 12px; font-size:12px; line-height:1.35; font-weight:500; color:var(--text-muted); }
-.thesisStamp b { font-weight:650; color:var(--text-body); }
+.thesisStamp { display:flex; flex-wrap:wrap; justify-content:space-between; gap:2px 12px; font-size:12px; line-height:1.35; font-weight:400; color:var(--text-muted); }
+.thesisStamp b { font-weight:600; color:var(--text-body); }
 .cardHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; color:var(--text-body); font-size:14px; line-height:1.6; text-wrap:pretty; }
 /* KIRPMA GENİŞLİĞE GÖRE (23 Eylül). Üç satır her genişlikte geçerliydi ve
    kartın tek "neden" cümlesi dar düzende sonundan kesiliyordu — MU 390'da
@@ -465,8 +473,8 @@
 .gauges:empty { row-gap:0; }
 .gauges > li { display:grid; grid-template-rows:subgrid; grid-row:span 2; min-width:0; }
 .gaugeHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 5px; min-width:0; line-height:1.3; }
-.gaugeName { font-size:12px; font-weight:650; letter-spacing:.01em; color:var(--text-muted); }
-.gaugeValue { font-size:13.5px; font-weight:650; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
+.gaugeName { font-size:12px; font-weight:600; letter-spacing:.01em; color:var(--text-muted); }
+.gaugeValue { font-size:13.5px; font-weight:600; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
 .gaugeValue[data-tone="up"] { color:var(--up); }
 .gaugeValue[data-tone="down"] { color:var(--down); }
 .gaugeTags { display:flex; align-self:center; gap:8px; }
@@ -508,7 +516,7 @@
    AYAK 29 EYLÜL'DE KALKTI: etiket ayaktan cümlenin künyesine çıktı,
    "Analizi Oku" işareti sembolün yanındaki oka döndü (`.cardGo`). Ayağın
    kıl çizgisi ve iç payı kartın 46 pikseliydi (1440, ölçüldü). */
-.staleTag { display:inline-flex; padding:1px 7px; border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-strong); font-weight:650; }
+.staleTag { display:inline-flex; padding:1px 7px; border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-strong); font-weight:600; }
 .cardSymbol .cardLink { display:inline-flex; align-items:center; gap:3px; }
 .cardGo { flex:none; color:var(--primary-ink); transition:transform var(--default-transition-duration) var(--ease-brand); }
 .card:hover .cardGo { transform:translate(2px,-2px); }
@@ -543,10 +551,10 @@
    kutunun üç satırı üç noktalı çizgiyle bir form gibi duruyordu. Yol hâlâ
    çizili, ama sayıdan önce görülmüyor. */
 .planCell::after { content:""; order:1; flex:1 1 8px; min-width:8px; margin-inline:8px; border-bottom:1px dotted var(--line); position:relative; top:-4px; }
-.planCell dd { order:2; min-width:0; margin-left:auto; font-size:15px; line-height:1.25; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); text-align:right; }
+.planCell dd { order:2; min-width:0; margin-left:auto; font-size:15px; line-height:1.25; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); text-align:right; }
 .planCell dd > span { white-space:nowrap; }
 .planItem { white-space:nowrap; }
-.planSep { color:var(--text-muted); font-weight:500; }
+.planSep { color:var(--text-muted); font-weight:400; }
 /* SATIŞ SEVİYELERİ RENKLİ VE KOYU. Üç hedef, öteki iki hücreyle aynı gri
    ağırlıkta "265,10 · 274,35 · 287,30 $" diye duruyordu ve planın en çok
    sayı taşıyan hücresi en az göze çarpanıydı. Sayılar artık hedefin kendi
@@ -580,7 +588,7 @@
    alındı: 320'de her kartı 60 piksel uzatıyordu (üç satırın üçü de iki
    satıra çıkıyor, ölçüldü) ve sayılar sağ kenardaki hizasını kaybediyordu. */
 .planCell[data-kind="entry"] dd { white-space:nowrap; }
-.planEmpty { font-weight:500; color:var(--text-muted); }
+.planEmpty { font-weight:400; color:var(--text-muted); }
 /* ---- Plan rayı: künye, ray, bacaklar ----
    Üç satır, tek çizim (gerekçe PlanRail.tsx içinde). Bacak adları ton
    rengini, ham tutar `--text-strong`u taşıyor: renk bacağı raydaki parçaya
@@ -749,7 +757,7 @@
    parçası, künye değil. */
 .coverHead { display:flex; width:100%; align-items:center; justify-content:space-between; gap:10px 16px; }
 .coverNameLink { display:flex; max-width:100%; min-width:0; align-items:center; gap:14px; color:inherit; }
-.coverIdentity h1 { display:flex; align-items:center; gap:.16em; font-size:clamp(32px, 3.2vw, 44px); line-height:1.02; letter-spacing:-.05em; font-weight:650; color:var(--text-strong); }
+.coverIdentity h1 { display:flex; align-items:center; gap:.16em; font-size:clamp(32px, 3.2vw, 44px); line-height:1.02; letter-spacing:-.05em; font-weight:700; color:var(--text-strong); }
 .coverGo { flex:none; width:.4em; height:.4em; color:var(--text-muted); transition:color .18s var(--ease-brand), transform .18s var(--ease-brand); }
 .coverNameLink:is(:hover, :focus-visible) .coverGo { color:var(--primary); transform:translate(1.5px,-1.5px); }
 /* Azaltılmış harekette ok yerinde, yalnızca rengi dönüyor (kartın okuyla aynı karar). */
@@ -771,14 +779,14 @@
    onlarla aynı dile geldi. Ekran okuyucu etiketi okumaya devam ediyor. */
 .stanceRow { display:flex; flex:none; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:8px 12px; }
 .stanceLabel { font-size:12px; font-weight:700; letter-spacing:0; color:var(--text-muted); }
-.stancePill { display:inline-flex; align-items:center; padding:9px 22px; border-radius:999px; font-size:clamp(19px,1.7vw,22px); font-weight:800; letter-spacing:.07em; line-height:1.1; }
+.stancePill { display:inline-flex; align-items:center; padding:9px 22px; border-radius:999px; font-size:clamp(19px,1.7vw,22px); font-weight:700; letter-spacing:.07em; line-height:1.1; }
 /* BAŞLIK CÜMLESİ KAPAĞIN İKİNCİ SESİ. 17 punto/1,6 ile gövde metniyle aynı
    ölçüdeydi ve kapakta sekiz blok arasında kayboluyordu: görüş çipi bir
    kelime, bu cümle o kelimenin GEREKÇESİ ve okuyucunun ilk okuduğu tam
    cümle. Ölçek 19-25 arası, satır aralığı 1,5'e, aralık -0,022'ye iniyor —
    editoryal bir giriş cümlesi ritmi. Genişlik 54ch: daha uzun satırlar
    telefonda değil masaüstünde okumayı zorlaştırıyor. */
-.coverHeadline { max-width:54ch; color:var(--text-strong); font-size:clamp(19px, 1.35vw, 25px); line-height:1.5; font-weight:550; letter-spacing:-.022em; text-wrap:pretty; }
+.coverHeadline { max-width:54ch; color:var(--text-strong); font-size:clamp(19px, 1.35vw, 25px); line-height:1.5; font-weight:600; letter-spacing:-.022em; text-wrap:pretty; }
 /* Planın okuması — sol şerit tonu okumanın tonu: bölgede yükseliş, stop
    altı ve SAT düşüş, bekleyiş nötr. */
 /* DURUM VURGUSU TEPEDE (31 Ekim, görsel denetim). Okuma kutusu sol
@@ -823,7 +831,7 @@
 /* Çizimli değer: kelime solda, çizim sağ uçta, aynı satırda (5 Kasım 2026). */
 .signalValue[data-art] { display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; gap:10px; }
 .signalDetail { align-self:start; text-wrap:pretty; font-size:12px; line-height:1.45; color:var(--text-muted); }
-.signal strong { display:block; font-size:19px; line-height:1.15; font-weight:650; letter-spacing:-.03em; color:var(--text-strong); }
+.signal strong { display:block; font-size:19px; line-height:1.15; font-weight:700; letter-spacing:-.03em; color:var(--text-strong); }
 
 /* Bölüm gezinmesi — şirket sayfasındaki `chapterNav` ile aynı dil (gölge
    23 Eylül'de kalktı, aşağıda).
@@ -846,7 +854,12 @@
 }
 
 /* ---- Bölüm başlığı ---- */
-.sectionTitle { font-size:19px; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
+/* 10 Kasım (ortak ölçüler): panel h2 19 pikseldi; `PanelHeader` ölçüsü
+   16/700 (aynı sayfadaki "Şirket Analizi" paneli zaten 16 idi, altındaki
+   paneller 19). Panelin DIŞINDA duran bölüm başlığı ("Göstergeler")
+   bölüm ölçüsünü alır: `.sectionLead`. */
+.sectionTitle { font-size:16px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.sectionTitle.sectionLead { font-size:clamp(25px,2.8vw,36px); line-height:1.1; font-weight:600; letter-spacing:-.035em; }
 .block { display:flex; min-width:0; flex-direction:column; gap:14px; padding:22px 24px; border:1px solid var(--line); border-color:var(--edge-top) var(--edge-side) var(--edge-bottom); border-radius:20px; background:var(--premium-surface); box-shadow:var(--premium-shadow); }
 .blockHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 14px; }
 .blockNote { font-size:12px; color:var(--text-muted); }
@@ -858,7 +871,7 @@
    blok dağılmıyor. */
 .proseStack { display:flex; flex-direction:column; gap:12px; }
 .prose { color:var(--text-body); font-size:15px; line-height:1.75; text-wrap:pretty; }
-.proseLede { color:var(--text-strong); font-size:16.5px; line-height:1.65; font-weight:450; letter-spacing:-.005em; text-wrap:pretty; }
+.proseLede { color:var(--text-strong); font-size:16.5px; line-height:1.65; font-weight:400; letter-spacing:-.005em; text-wrap:pretty; }
 .footHint { font-size:12px; line-height:1.55; color:var(--text-muted); }
 
 /* ---- Fiyat haritası ----
@@ -887,7 +900,7 @@
 .scenario::before { content:""; position:absolute; top:-1px; left:16px; right:16px; height:3px; border-radius:0 0 3px 3px; background:var(--scenario-tone); }
 .scenario[data-tone="up"] { --scenario-tone:var(--up); }
 .scenario[data-tone="down"] { --scenario-tone:var(--down); }
-.scenario h3 { display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:750; letter-spacing:.01em; }
+.scenario h3 { display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:700; letter-spacing:.01em; }
 .scenario h3 svg { flex:none; }
 .scenario[data-tone="up"] h3 { color:var(--up); }
 .scenario[data-tone="down"] h3 { color:var(--down); }
@@ -921,18 +934,25 @@
    sıfırı %60 soluk gri, hacim 8 piksel ve her oranda mavi, 52 haftalık
    bant kırmızıdan yeşile DEGRADE (degrade veri panelinde kimlik dışı ve
    bandın ucu "iyi/kötü" demiyor). */
-.deviation { position:relative; grid-column:1/-1; height:5px; margin:4px 0 2px; border-radius:3px; background:var(--line-soft); }
+/* 10 Kasım (ortak ölçüler): uçlar 3 piksel yarıçaplı ve dolgular %70–85
+   opaktı; şerit ucu 999, dolgu opak. Hacim satırlarının büyüklük şeridi
+   (`.volumeBar`) aynı kulvar; oran grubu (`.volumeRatio`) kartın dibinde. */
+.deviation { position:relative; grid-column:1/-1; height:5px; margin:4px 0 2px; border-radius:999px; background:var(--line-soft); }
+.volumeBar { grid-column:1/-1; height:5px; margin:4px 0 2px; border-radius:999px; background:var(--line-soft); }
+.volumeBar > span { display:block; height:100%; border-radius:999px; background:var(--text-muted); transform-origin:left center; }
+.volumeBar[data-heavy] > span { background:var(--primary); }
+.volumeRatio { display:flex; flex-direction:column; gap:9px; margin-top:auto; padding-top:4px; }
 .deviation > i { position:absolute; top:-3px; left:50%; width:1px; height:11px; background:var(--line-strong); }
-.deviation > span { position:absolute; top:0; bottom:0; border-radius:3px; opacity:.85; }
-.ratioTrack { position:relative; height:5px; border-radius:3px; background:var(--line-soft); }
-.ratioTrack > span { position:absolute; left:0; top:0; bottom:0; border-radius:3px; background:var(--text-muted); opacity:.7; transform-origin:left center; }
-.ratioTrack[data-heavy] > span { background:var(--primary); opacity:.85; }
+.deviation > span { position:absolute; top:0; bottom:0; border-radius:999px; }
+.ratioTrack { position:relative; height:5px; border-radius:999px; background:var(--line-soft); }
+.ratioTrack > span { position:absolute; left:0; top:0; bottom:0; border-radius:999px; background:var(--text-muted); transform-origin:left center; }
+.ratioTrack[data-heavy] > span { background:var(--primary); }
 .ratioTrack > i { position:absolute; top:-3px; width:1px; height:11px; background:var(--line-strong); }
 .volumeScale { position:relative; height:12px; margin-top:-5px; color:var(--text-muted); font-size:12px; }
 .volumeScale > span { position:absolute; }
 .volumeScale > span:nth-child(2) { left:33.333%; transform:translateX(-50%); }
 .volumeScale > span:last-child { right:0; }
-.band { position:relative; height:5px; border-radius:3px; background:var(--line-soft); }
+.band { position:relative; height:5px; border-radius:999px; background:var(--line-soft); }
 /* İşaret fiyat: düz mürekkep, mavi değil — bant yön söylemiyor. */
 .band > span { position:absolute; top:-4px; width:3px; height:13px; border-radius:2px; background:var(--text-strong); transform:translateX(-1.5px); box-shadow:0 0 0 2px var(--premium-surface); }
 /* KUTUNUN AÇIKLAMASI — başlığın altında, sayıların üstünde.
@@ -943,7 +963,7 @@
 .indicatorLead { margin:-2px 0 2px; font-size:12.5px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
 /* Pivot satırında kısaltma ve adı: kalın kısaltma, yanında sessiz ad. */
 .pivotLabel { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 7px; }
-.pivotLabel b { font-weight:750; letter-spacing:.01em; color:var(--text-strong); }
+.pivotLabel b { font-weight:700; letter-spacing:.01em; color:var(--text-strong); }
 .pivotLabel span { font-size:var(--text-nano); font-weight:600; color:var(--text-muted); }
 .indicatorNote { font-size:12px; line-height:1.55; color:var(--text-muted); text-wrap:pretty; }
 /* RSI yarım daire: 0-100'lük sınırlı bir okuma, uydurma bir zaman serisi
@@ -963,13 +983,13 @@
 .dialMarker[data-zone="oversold"] { fill:var(--up); }
 /* Pivot merdiveni — gerekçe `PivotPanel`. */
 .pivotLadder { display:grid; gap:6px; padding:6px 0 2px; }
-.pivotRail { position:relative; height:5px; margin-inline:8px; border-radius:3px; background:var(--line-soft); }
+.pivotRail { position:relative; height:5px; margin-inline:8px; border-radius:999px; background:var(--line-soft); }
 .pivotRail > span { position:absolute; top:0; bottom:0; border-radius:3px; opacity:.85; }
 .pivotRail > i { position:absolute; top:-3px; width:1px; height:11px; margin-left:-.5px; background:var(--line-strong); }
 .pivotRail > i[data-pivot] { top:-4px; height:13px; width:2px; margin-left:-1px; background:var(--text-muted); }
 .pivotRail > b { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--text-strong); box-shadow:0 0 0 2px var(--premium-surface); }
 .pivotRail > b[data-out] { background:var(--premium-surface); box-shadow:inset 0 0 0 2px var(--text-strong); }
-.pivotTicks { position:relative; height:14px; margin-inline:8px; font-size:11px; font-weight:700; line-height:14px; letter-spacing:.02em; color:var(--text-muted); }
+.pivotTicks { position:relative; height:14px; margin-inline:8px; font-size:12px; font-weight:700; line-height:14px; letter-spacing:.02em; color:var(--text-muted); }
 .pivotTicks > span { position:absolute; transform:translateX(-50%); }
 .rsiDial text { fill:var(--text-muted); font-size:10px; }
 .rsiValue { position:absolute; bottom:8%; left:0; right:0; text-align:center; color:var(--text-strong); font-size:30px; font-weight:600; line-height:1; letter-spacing:-.045em; }
@@ -979,7 +999,7 @@
 .rsiZones i { width:6px; height:6px; border-radius:50%; background:var(--text-muted); }
 .rsiZones i[data-zone="low"] { background:var(--up); }
 .rsiZones i[data-zone="high"] { background:var(--down); }
-.rsiZones b { grid-column:2; color:var(--text-muted); font-size:12px; font-weight:500; }
+.rsiZones b { grid-column:2; color:var(--text-muted); font-size:12px; font-weight:400; }
 
 /* ---- Liste ve tablo ---- */
 .watch { display:flex; flex-direction:column; gap:9px; padding-left:18px; list-style:disc; color:var(--text-body); font-size:14px; line-height:1.6; }
@@ -1107,7 +1127,7 @@
   border: 1px solid var(--line);
   border-radius: 22px;
   background: var(--premium-surface);
-  transition: border-color .2s var(--ease-brand);
+  transition: border-color 250ms var(--ease-brand);
 }
 /* HOVER YALNIZCA KENARLIK TONU (23 Eylül) — liste kartıyla aynı karar
    (`.card`): kart iki piksel kalkıp gölgesini büyütüyordu. */
@@ -1119,7 +1139,7 @@
    kuralına aykırıydı ve kapaktaki kalktı. Görüşün rengi hapta. */
 
 .stockCardHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
-.stockCardMeta { font-size:var(--text-nano); font-weight:650; letter-spacing:.03em; color:var(--text-muted); white-space:nowrap; }
+.stockCardMeta { font-size:var(--text-nano); font-weight:600; letter-spacing:.03em; color:var(--text-muted); white-space:nowrap; }
 
 .stockCardStance { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; }
 .stockCardLink { display:inline-flex; color:inherit; }
@@ -1150,7 +1170,7 @@
 /* Kartın ayak satırı: solda "Analizi Oku", sağda sıradaki yayın. Dar
    kapta alt alta düşüyor — kart 354 pikselde de duruyor. */
 .stockCardFootRow { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
-.stockCardNext { font-size:var(--text-nano); font-weight:650; letter-spacing:.02em; color:var(--text-muted); white-space:nowrap; }
+.stockCardNext { font-size:var(--text-nano); font-weight:600; letter-spacing:.02em; color:var(--text-muted); white-space:nowrap; }
 
 /* ---- Çıkış kartları: öteki şirketler ----
    Izgara kart genişliğine göre sarıyor: ölçüldü, 390'da iki sütun, 768'de
@@ -1180,16 +1200,16 @@
 .moreCard:is(:hover, :focus-visible) { border-color:var(--primary-faint); background:var(--primary-tint); }
 .moreHead { display:flex; align-items:flex-start; gap:9px; min-width:0; }
 .moreIdentity { display:grid; min-width:0; }
-.moreIdentity strong { font-size:14px; font-weight:750; line-height:1.15; letter-spacing:-.02em; color:var(--text-strong); }
+.moreIdentity strong { font-size:14px; font-weight:700; line-height:1.15; letter-spacing:-.02em; color:var(--text-strong); }
 /* Ad KIRPILMIYOR, SARIYOR. Tek satır + üç nokta 150 piksellik kartta
    "NVIDIA Corporati…" üretiyordu; iki satırlık kutu adı tam gösteriyor
    ve satır ızgarayı bozmuyor — kartlar `height:100%` ile satır boyunca
    eşitleniyor. */
 .moreIdentity span { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:var(--text-nano); font-weight:600; line-height:1.3; color:var(--text-muted); }
 .moreFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 8px; grid-row:3; }
-.moreSoon { padding:2px 0; font-size:var(--text-nano); font-weight:650; line-height:1.45; color:var(--text-muted); white-space:nowrap; }
+.moreSoon { padding:2px 0; font-size:var(--text-nano); font-weight:600; line-height:1.45; color:var(--text-muted); white-space:nowrap; }
 .moreChange { font-size:12.5px; font-weight:700; white-space:nowrap; }
-.moreAll { font-size:12px; font-weight:650; color:var(--primary); }
+.moreAll { font-size:12px; font-weight:600; color:var(--primary); }
 .moreAll:hover { color:var(--primary-hover); }
 
 /* 21 September, after the publication/alignment fixes: the directory cover
@@ -1207,7 +1227,7 @@
 .pulseDialGuide { stroke:var(--line-soft); stroke-width:1; }
 .pulseDialCore { fill:var(--primary-tint); stroke:var(--primary-faint); stroke-width:.5; }
 .pulseDial > span { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
-.pulseDial strong { font-size:32px; font-weight:550; line-height:1; letter-spacing:-.055em; color:var(--text-strong); }
+.pulseDial strong { font-size:32px; font-weight:600; line-height:1; letter-spacing:-.055em; color:var(--text-strong); }
 .pulseDial small { font-size:12px; color:var(--text-muted); }
 .pulse[data-variant="directory"] > .pulseBar { display:none; }
 .pulse[data-variant="directory"] > :is(.pulseRows, .distLegend) { grid-column:2; grid-row:2; }
@@ -1248,15 +1268,15 @@
    gölge taşıyordu. Hepsi düz yüzeye döndü, bloklar gölgesiz. Kalan
    degradeler yön taşıyanlar: senaryo ve seviye kutularındaki
    yükseliş/düşüş yıkamaları. Bölüm başlığının çubuğu düz birincil. */
-.indicatorSummary { border:1px solid var(--line); border-radius:16px; padding:18px; background:var(--premium-surface); }
+.indicatorSummary { border:1px solid var(--line); border-radius:var(--radius-panel); padding:18px; background:var(--premium-surface); }
 /* Cam (yarı saydam zemin + bulanıklık) kalktı: proje cam kullanmıyor ve
    yapışan çubuğun arkasında artık opak bir bant var (PremiumMotion →
    `.sectionNav::before`). Dinlenme hâlinde zemin sayfanın kendisi. */
 .sectionNav { border-radius:12px; background:var(--page-bg); }
-.block { border-radius:18px; box-shadow:none; }
+.block { border-radius:var(--radius-panel); box-shadow:none; }
 .block > .sectionTitle,.blockHead { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
 .blockHead .sectionTitle { display:flex; align-items:center; gap:9px; }
-.blockHead .sectionTitle::before { content:""; width:5px; height:17px; border-radius:3px; background:var(--primary); }
+.blockHead .sectionTitle::before { content:""; width:5px; height:.95em; border-radius:999px; background:var(--primary); }
 .indicatorTitle svg { width:22px; height:22px; padding:3px; border-radius:6px; background:var(--primary-wash); }
 .moreCard { background:var(--premium-surface); }
 .table tbody tr { transition:background 180ms var(--ease-brand); }
@@ -1310,11 +1330,18 @@
   .notesPanel .planNotes .mapNotes { grid-template-columns:minmax(0,1fr); gap:14px; }
 }
 .notesPanel .planNotes { display:flex; flex-direction:column; gap:14px; min-width:0; }
-.notesPanel .planNotes > h2 { font-size:15px; }
-.notesPanel .planNotes .mapNotes { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:18px 28px; margin:0; padding:0; border:0; }
+/* 10 Kasım: başlık 15 pikseldi; panel h2 ortak ölçüsü 16/700.
+   SÜTUN SAYISI NOT SAYISI KADAR (10 Kasım). Izgara hep üç sütundu: tek
+   notlu planda (SAT görüşünde yalnız "Nerede Satılır", TUT'ta yalnız
+   "Alım Bölgesi") metin panelin üçte birine sıkışıp dört satıra kırılıyor,
+   kalan üçte iki boş duruyordu (ölçüldü, 1440, 663 piksellik panel: metin
+   sütunu 191 piksel, sağında 420 piksel boş). `auto-fit` boş sütunu
+   kapatır: bir not tam genişlik, iki not yarım, üç not eskisi gibi. */
+.notesPanel .planNotes > h2 { font-size:16px; }
+.notesPanel .planNotes .mapNotes { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,180px),1fr)); gap:18px 28px; margin:0; padding:0; border:0; }
 .notesPanel .planNotes .mapNotes > div { display:flex; flex-direction:column; gap:6px; padding-left:12px; border-left:2px solid var(--primary-faint); }
 .notesPanel .planNotes .mapNotes dt { font-size:12px; color:var(--primary-ink); }
-.notesPanel .planNotes .mapNotes dd { font-size:13.5px; line-height:1.6; color:var(--text-body); }
+.notesPanel .planNotes .mapNotes dd { max-width:72ch; font-size:13.5px; line-height:1.6; color:var(--text-body); }
 /* KÜNYE HARİTANIN ALTINA OTURUYOR. `margin-top:auto` gerilmiş bir flex
    kolonda iki kolon arasındaki yükseklik farkının TAMAMINI haritanın dibi
    ile künyesi arasına yığıyordu: ölçüldü (altı sembol × 1024/1280/1440 =
@@ -1335,13 +1362,13 @@
  .indicator { display:grid; grid-template-rows:subgrid; grid-row:span 3; gap:12px; }
 }
 .volumeContext { display:flex; flex-direction:column; gap:8px; margin-top:2px; padding:14px 0 0; border-top:1px solid var(--line-soft); }
-.volumeContext h3 { display:flex; align-items:center; gap:8px; color:var(--primary-ink); font-size:13px; font-weight:650; }
+.volumeContext h3 { display:flex; align-items:center; gap:8px; color:var(--primary-ink); font-size:13px; font-weight:700; }
 .volumeContext .prose { font-size:14px; line-height:1.65; }
 .watchPanel { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:start; gap:24px; background:var(--premium-surface); }
-.watchPanel > .sectionTitle { padding:0; border:0; font-size:17px; }
+.watchPanel > .sectionTitle { padding:0; border:0; }
 .watchPanel .watch { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); list-style:none; padding:0; gap:20px; counter-reset:watch; }
 .watchPanel .watch li { position:relative; padding-left:28px; counter-increment:watch; }
-.watchPanel .watch li::before { content:counter(watch,decimal-leading-zero); position:absolute; top:1px; left:0; color:var(--primary); font-size:12px; font-weight:650; }
+.watchPanel .watch li::before { content:counter(watch,decimal-leading-zero); position:absolute; top:1px; left:0; color:var(--primary); font-size:12px; font-weight:600; }
 @media(max-width:1023px) {
  .analysisGrid { grid-template-columns:minmax(0,1fr); grid-template-areas:"map" "notes" "reading"; }
  .watchPanel { grid-template-columns:minmax(0,1fr); gap:16px; }
@@ -1443,7 +1470,7 @@
 .pulseKey li::before { content:""; width:8px; height:8px; border-radius:999px; background:var(--verdict-hold); }
 .pulseKey li[data-verdict="buy"]::before { background:var(--verdict-buy); }
 .pulseKey li[data-verdict="sell"]::before { background:var(--verdict-sell); }
-.pulseKey b { font-weight:650; letter-spacing:0; color:var(--text-strong); }
+.pulseKey b { font-weight:600; letter-spacing:0; color:var(--text-strong); }
 @media (max-width: 767px) {
   .directoryHeader .pulse[data-variant="directory"] > .pulseRows { display:none; }
   .directoryHeader .pulse[data-variant="directory"] > .pulseKey { display:flex; }
@@ -1478,9 +1505,9 @@
    than a large isolated verdict followed by another display headline. */
 .coverThesis { display:flex; flex-direction:column; gap:10px; margin-top:auto; padding:14px 16px; border-radius:12px; background:var(--surface-sunken); }
 .coverThesis .stanceRow { justify-content:space-between; gap:8px; }
-.thesisLabel { font-size:12px; font-weight:650; letter-spacing:.02em; color:var(--text-muted); }
+.thesisLabel { font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
 .coverThesis .stancePill { padding:5px 12px; font-size:14px; }
-.coverThesis .coverHeadline { max-width:none; font-size:16px; line-height:1.65; font-weight:500; letter-spacing:-.01em; }
+.coverThesis .coverHeadline { max-width:none; font-size:16px; line-height:1.65; font-weight:400; letter-spacing:-.01em; }
 .planOverview { display:grid; grid-template-columns:minmax(0,1fr) 240px; gap:24px; align-items:stretch; }
 .planOverview[data-has-risk="false"] { grid-template-columns:minmax(0,1fr); }
 /* PLAN KARTLARI ÜSTTEN HİZALI, SÜTUNLAR İÇERİĞE GÖRE (24 Eylül).
@@ -1700,16 +1727,21 @@
    yapıyordu (ölçüldü, 1440). Kenarın içinde, altı yuvarlatılmış bir sekme
    işareti gibi duruyor. */
 /* 25 Ekim: şerit görüş üçlüsünün yumuşak tonunda; TUT pirinç, mavi değil (pano başı gerekçe). */
-.card::before { content:""; position:absolute; z-index:1; top:-1px; left:28px; right:28px; height:3px; border-radius:0 0 3px 3px; background:var(--verdict-hold); transform-origin:left center; animation:card-accent 720ms var(--ease-brand) 120ms both; }
+.card::before { content:""; position:absolute; z-index:1; top:-1px; left:28px; right:28px; height:3px; border-radius:0 0 3px 3px; background:var(--verdict-hold); transform-origin:left center; animation:card-accent var(--draw) var(--ease-brand) both; }
 .card[data-verdict="buy"]::before { background:var(--verdict-buy); }
 .card[data-verdict="sell"]::before { background:var(--verdict-sell); }
 @keyframes card-accent { from { transform:scaleX(0); } }
-.card { transition:border-color var(--default-transition-duration) var(--ease-brand), translate .28s var(--ease-brand); }
-.card .cardHead > :first-child { transition:scale .28s var(--ease-brand); }
-@media(hover:hover) and (pointer:fine) {
- .card:hover { translate:0 -3px; }
- .card:hover .cardHead > :first-child { scale:1.06; }
-}
+/* 10 Kasım: şerit yüklemede oynuyordu; on altı kartın on üçü ilk ekranın
+   altında (1440×900) ve çizim görülmeden bitiyordu. Kart `data-draw`
+   taşıyor (TechnicalCard.tsx). Genel kapı kuralı (`[data-draw][data-armed] *`)
+   sözde öğeye ulaşmadığı için şeridin bekleme hâli burada yazılı. */
+.card[data-draw][data-armed]::before { animation-name:none; }
+/* 10 Kasım (hover'da kaldırma/büyüme yok, `.panel-hover` "zıplamaz"):
+   kart 3 piksel kalkıyor, logosu 1,06 büyüyordu. Geri bildirim artık
+   yalnız kenar tonu (`.card:hover`, 250 ms); hareket yalnız bağlantı okunda (`.cardGo`,
+   (2,−2)). Basışta çökme 0,992 (ortak ölçü). */
+.card { transition:border-color 250ms var(--ease-brand), scale 180ms var(--ease-brand); }
+.card:active { scale:.992; }
 /* Okunurluk: 10–11,5 piksellik künyeler 12'ye, soluk tonlar gövde tonuna. */
 .card .cardSymbol { font-size:20px; }
 .card .cardCompany { font-size:13px; color:var(--text-body); }
@@ -1721,9 +1753,8 @@
 .card .gaugeTags i { font-size:12px; color:var(--text-body); }
 @media(prefers-reduced-motion:reduce) {
  .card::before { animation:none; }
- .card, .card .cardHead > :first-child { transition:none; }
- .card:hover { translate:none; }
- .card:hover .cardHead > :first-child { scale:none; }
+ .card { transition:none; }
+ .card:active { scale:none; }
 }
 
 /* ---- Görüşler ne demek (`StanceGuide`) ----
@@ -1735,10 +1766,10 @@
 .stanceGuide[data-tone="up"] { box-shadow:inset 3px 0 var(--verdict-buy); }
 .stanceGuide[data-tone="down"] { box-shadow:inset 3px 0 var(--verdict-sell); }
 .stanceGuide[data-tone="flat"] { box-shadow:inset 3px 0 var(--verdict-hold); }
-.stanceGuideLink { display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:650; color:var(--primary); }
+.stanceGuideLink { display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:600; color:var(--primary); }
 .stanceGuideLink:hover { color:var(--primary-hover); }
 .stanceLead { max-width:72ch; color:var(--text-strong); font-size:16px; line-height:1.65; text-wrap:pretty; }
-.stancePill { display:inline-flex; width:max-content; align-items:center; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:750; letter-spacing:.04em; }
+.stancePill { display:inline-flex; width:max-content; align-items:center; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:.04em; }
 .stanceGrid { display:grid; grid-template-columns:minmax(0,1fr); gap:0; border-top:1px solid var(--line-soft); }
 .stanceGrid > div { display:grid; align-content:start; gap:6px; padding:16px 0; border-bottom:1px solid var(--line-soft); }
 .stanceGrid dt, .stanceCases dt { font-size:12px; font-weight:700; letter-spacing:.03em; color:var(--text-muted); }
@@ -1772,7 +1803,7 @@
 .stanceCases { display:grid; gap:12px; padding-top:12px; border-top:1px solid var(--line-soft); }
 .stanceCases > div { display:grid; gap:4px; }
 .stanceCases dd { color:var(--text-body); font-size:14px; line-height:1.65; text-wrap:pretty; }
-.stanceMore > summary { display:flex; align-items:center; gap:6px; min-height:44px; color:var(--primary-ink); font-size:13px; font-weight:650; cursor:pointer; list-style:none; }
+.stanceMore > summary { display:flex; align-items:center; gap:6px; min-height:44px; color:var(--primary-ink); font-size:13px; font-weight:600; cursor:pointer; list-style:none; }
 .stanceMore > summary::-webkit-details-marker { display:none; }
 .stanceMore > summary::after { content:""; width:7px; height:7px; margin-left:2px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:translateY(-2px) rotate(45deg); transition:transform .2s var(--ease-brand); }
 .stanceMore[open] > summary::after { transform:translateY(1px) rotate(-135deg); }
@@ -1792,6 +1823,8 @@
 .historyScale { display:flex; justify-content:space-between; gap:12px; }
 .historyScale > .numeral { font-weight:600; letter-spacing:0; }
 .historyCount { margin-left:8px; font-size:12px; font-weight:600; color:var(--text-muted); }
+/* Plansız yayının tek hücresi (gerekçe PlanHistory.tsx). */
+.historyTable td.historyPlanless { font-size:12.5px; color:var(--text-muted); }
 /* Planın Seyri Tek Harita'nın dilinde (25 Ekim): 5 piksellik kulvar, alım
    bölgesi Tek Harita'daki bantla AYNI sınıf (`TechnicalVisuals.module.css`
    → `.zoneBand`, alım planının yumuşak yeşili), stop kırmızı çentik. Bant
@@ -1811,6 +1844,7 @@
   .historyTable td[data-cell="entry"] { grid-column:1 / 3; }
   .historyTable td[data-cell="stop"] { grid-column:3; justify-self:end; }
   .historyTable td[data-cell="track"] { grid-column:1 / -1; width:auto; min-width:0; margin-top:2px; }
+  .historyTable td[data-cell="planless"] { grid-column:1 / -1; }
   .historyCount { margin-left:6px; }
 }
 
@@ -1971,15 +2005,15 @@
 .ladderLabel { position:absolute; left:0; right:0; display:grid; gap:1px; padding:0 2px 0 8px; translate:0 calc(-100% + 9.5px); }
 .ladderName { display:flex; align-items:center; gap:6px; min-width:0; font-size:12px; line-height:16px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
 .ladderName .mapCrossed { padding:0 6px; line-height:15px; }
-.ladderName .delayBadge { padding:0 6px; font-size:10.5px; line-height:15px; }
+.ladderName .delayBadge { padding:0 6px; font-size:12px; line-height:15px; }
 .ladderValue { display:flex; align-items:baseline; justify-content:space-between; gap:8px; white-space:nowrap; }
-.ladderValue strong { font-size:15px; line-height:19px; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); }
+.ladderValue strong { font-size:15px; line-height:19px; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); }
 .ladderAway { font-size:12px; font-weight:600; color:var(--text-muted); }
 .ladderLabel[data-kind="target"] .ladderName { color:var(--up); }
 .ladderLabel:is([data-kind="stop"],[data-kind="sellLevel"]) .ladderName { color:var(--down); }
 .ladderLabel[data-kind="entry"] .ladderName { color:var(--primary-ink); }
 .ladderLabel[data-kind="price"] .ladderName { color:var(--text-strong); font-weight:700; }
-.ladderLabel[data-kind="price"] .ladderValue strong { font-size:16px; font-weight:750; }
+.ladderLabel[data-kind="price"] .ladderValue strong { font-size:16px; font-weight:700; }
 .mapPanel .ladder { max-width:620px; }
 @media (max-width:639px) {
   .ladder { --label-w:clamp(160px, 56%, 220px); }
@@ -2006,7 +2040,7 @@
 .openRange { --open-ground:linear-gradient(var(--surface-sunken), var(--surface-sunken)), var(--premium-surface); display:flex; min-width:0; flex-direction:column; gap:8px; padding:10px 14px 11px; border-radius:var(--radius-lg); background:var(--surface-sunken); }
 .openHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 10px; }
 .openTag { display:inline-flex; flex:none; align-items:center; gap:5px; padding:0 9px 0 7px; border-radius:999px; background:var(--brass-wash); color:var(--brass-ink); font-size:12.5px; line-height:22px; font-weight:700; white-space:nowrap; }
-.openState { font-size:12.5px; line-height:1.35; font-weight:650; color:var(--text-body); }
+.openState { font-size:12.5px; line-height:1.35; font-weight:600; color:var(--text-body); }
 
 /* Eksen: üstte uzaklık, altında 5 piksellik kulvar. Yatay pay 7: uçtaki
    çentik ve imleç kutunun iç kenarına yapışmasın. */
@@ -2024,7 +2058,7 @@
    için halka gölgeyle değil katmanlı zeminle: aynı bileşim, aynı ton. */
 .openNow { position:absolute; top:26.5px; width:20px; height:20px; margin:-10px 0 0 -10px; border-radius:50%; background:radial-gradient(circle closest-side, var(--text-strong) 70%, transparent 72%), var(--open-ground); }
 .openNow b { position:absolute; bottom:calc(100% + 6px); left:50%; translate:-50% 0; font-size:12.5px; line-height:16px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
-.openNow b .numeral { font-size:15px; font-weight:750; color:var(--text-strong); }
+.openNow b .numeral { font-size:15px; font-weight:700; color:var(--text-strong); }
 .openNow[data-align="start"] b { left:-2px; translate:0 0; }
 .openNow[data-align="end"] b { left:auto; right:-2px; translate:0 0; }
 
@@ -2032,7 +2066,7 @@
 .openEnds > div { display:flex; align-items:baseline; gap:6px; min-width:0; }
 .openEnds > div[data-side="sell"] { margin-left:auto; }
 .openEnds dt { font-size:12.5px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
-.openEnds dd { font-size:14.5px; line-height:1.3; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
+.openEnds dd { font-size:14.5px; line-height:1.3; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
 .openEndPct { font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
 .openWatch { margin-top:auto; padding-top:7px; border-top:1px solid var(--line-soft); font-size:12.5px; line-height:1.45; color:var(--text-body); text-wrap:pretty; }
 
@@ -2046,7 +2080,7 @@
 .openRange[data-size="lg"] .openTag { font-size:13.5px; line-height:26px; padding:0 11px 0 9px; }
 .openRange[data-size="lg"] .openState { font-size:14px; }
 .openRange[data-size="lg"] .openAxis { height:76px; margin:4px 10px 0; }
-.openRange[data-size="lg"] :is(.openLane, .openSeg) { top:36px; height:6px; }
+.openRange[data-size="lg"] :is(.openLane, .openSeg) { top:36px; height:5px; }
 .openRange[data-size="lg"] .openTick { top:28px; height:22px; background:var(--line-strong); }
 .openRange[data-size="lg"] .openNow { top:39px; width:24px; height:24px; margin:-12px 0 0 -12px; }
 .openRange[data-size="lg"] .openPct { top:calc(100% + 9px); bottom:auto; font-size:13px; }
@@ -2082,7 +2116,7 @@
 .distRow { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; align-items:center; row-gap:9px; min-width:0; }
 .distHead { display:inline-flex; align-items:center; gap:8px; min-width:0; }
 label.distHead { cursor:pointer; }
-.distCount { min-width:1.4ch; font-size:19px; font-weight:650; line-height:1; letter-spacing:-.035em; color:var(--text-strong); }
+.distCount { min-width:1.4ch; font-size:19px; font-weight:700; line-height:1; letter-spacing:-.035em; color:var(--text-strong); }
 .distShare { font-size:12px; font-weight:600; color:var(--text-muted); }
 .distPending { display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:999px; background:var(--surface-sunken); font-size:12px; font-weight:700; color:var(--text-muted); }
 .distTrack { position:relative; height:5px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
@@ -2106,10 +2140,10 @@ label.distHead { cursor:pointer; }
 .distLogos .distLogo:focus-visible { outline-color:var(--line-focus); }
 .distLogos .distLogo[data-card-open] { outline-color:var(--primary); }
 /* Şerit soldan kendi payına uzar, bir kez; hareketi azaltana son kare. */
-.distTrack i { animation:dist-grow 800ms var(--ease-brand) both; }
-.distRow:nth-child(2) .distTrack i { animation-delay:90ms; }
-.distRow:nth-child(3) .distTrack i { animation-delay:180ms; }
-.distRow:nth-child(4) .distTrack i { animation-delay:270ms; }
+.distTrack i { animation:dist-grow var(--draw) var(--ease-brand) both; }
+.distRow:nth-child(2) .distTrack i { animation-delay:calc(var(--step) * 2); }
+.distRow:nth-child(3) .distTrack i { animation-delay:calc(var(--step) * 4); }
+.distRow:nth-child(4) .distTrack i { animation-delay:calc(var(--step) * 6); }
 @keyframes dist-grow { from { transform:scaleX(0); } }
 @media (prefers-reduced-motion: reduce) { .distTrack i { animation:none; } }
 /* Telefonda logolar yok (gerekçe "TELEFONDA LOGO SATIRLARI YOK", yukarıda);
@@ -2117,4 +2151,12 @@ label.distHead { cursor:pointer; }
 @media (max-width: 767px) {
   .distLegend { row-gap:10px; }
   .distLogos { display:none; }
+}
+
+/* 10 Kasım: telefonda dağılım satırının süzgeç etiketi 125 × 28 pikseldi
+   (dokunma hedefi < 44). Görünür ölçü aynı; hedef yukarı ve aşağı 8 piksel
+   büyür (satır aralığı 10, komşu satırla en çok 6 piksel örtüşür). */
+@media (max-width: 767px) {
+  label.distHead { position:relative; }
+  label.distHead::after { content:""; position:absolute; inset:-8px 0; }
 }

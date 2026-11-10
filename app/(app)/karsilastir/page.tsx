@@ -763,20 +763,35 @@ export async function CompareBoard({
       <PageHeader
         title={heading?.title ?? t.compare.title}
         subtitle={heading?.subtitle ?? t.compare.subtitle}
-        action={<CompareRangeControl labels={labels} />}
+        /* PAYLAŞ (30 Eylül). Adres sunucudan: semboller ve para birimi
+           kalıcı adreste. Aralık istemcide değişiyor (sunucuya gidilmiyor),
+           o yüzden paylaşılan bağlantı sayfanın AÇILDIĞI aralığı taşır.
+           10 Kasım: Paylaş, başlık kartı ile ilk panel arasında tek başına
+           bir satırdı (1440'ta satırın 1.260 pikseli boş; başlıktan ilk
+           panele 60 piksel, öteki ekranlarda 24). Artık denetimlerin
+           yanında, aralık rayının solunda; paneller arası boşluk ortak
+           ölçüde (`--page-section-gap`). */
+        action={
+          <div className="flex min-w-0 items-center justify-end gap-x-2 gap-y-1 max-sm:w-full max-sm:justify-between">
+            {symbols.length > 0 && (
+              <PageShare
+                compactOnMobile
+                align="right"
+                path={sharePath ?? compareHref(symbols, range, currency)}
+                title={heading?.title ?? `${symbols.join(" · ")} · ${t.compare.title}`}
+                locale={locale}
+                t={t}
+                className="max-sm:order-last"
+              />
+            )}
+            {/* Telefonda ray kendi içinde kayar (ScrollEdges), Paylaş sağında
+                aynı satırda kalır; sarmalayıcı rayın daralmasına izin verir. */}
+            <div className="min-w-0">
+              <CompareRangeControl labels={labels} />
+            </div>
+          </div>
+        }
       />
-      {/* PAYLAŞ (30 Eylül). Adres sunucudan: semboller ve para birimi
-          kalıcı adreste. Aralık istemcide değişiyor (sunucuya gidilmiyor),
-          o yüzden paylaşılan bağlantı sayfanın AÇILDIĞI aralığı taşır. */}
-      {symbols.length > 0 && (
-        <PageShare
-          path={sharePath ?? compareHref(symbols, range, currency)}
-          title={heading?.title ?? `${symbols.join(" · ")} · ${t.compare.title}`}
-          locale={locale}
-          t={t}
-          className="-mt-3 -ml-2 w-fit"
-        />
-      )}
 
       {lead}
 
@@ -900,7 +915,7 @@ export async function CompareBoard({
                      zemini (`--panel-fixed`) geniş ekranda panelin
                      zemininden bir ton ayrı duruyor ve tablonun solunda
                      sebepsiz bir şerit bırakıyordu. */
-                  className="sticky left-0 z-10 w-[104px] bg-(--panel-fixed) px-2.5 py-2.5 font-medium sm:static sm:z-auto sm:w-[168px] sm:bg-transparent sm:px-4 md:px-5"
+                  className="sticky left-0 z-10 w-[104px] bg-(--panel-fixed) px-2.5 py-2.5 font-normal sm:static sm:z-auto sm:w-[168px] sm:bg-transparent sm:px-4 md:px-5"
                 >
                   {t.compare.metric}
                 </th>
@@ -963,7 +978,7 @@ export async function CompareBoard({
                     >
                       <th
                         scope="row"
-                        className="sticky left-0 z-10 bg-(--panel-fixed) px-2.5 py-2.5 text-left text-small font-medium text-muted sm:static sm:z-auto sm:bg-transparent sm:px-4 md:px-5"
+                        className="sticky left-0 z-10 bg-(--panel-fixed) px-2.5 py-2.5 text-left text-small font-normal text-muted sm:static sm:z-auto sm:bg-transparent sm:px-4 md:px-5"
                       >
                         {row.label}
                         {row.caption && (

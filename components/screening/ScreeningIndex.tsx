@@ -75,9 +75,22 @@ export function RuleCards({
   S: Dictionary["screening"];
   V: Dictionary["toolVisuals"]["screening"];
 }) {
+  /* SIRA AĞIRLIĞA GÖRE (10 Kasım). Kartlar `SCREEN_CATEGORIES` sırasında
+     basılıyordu (Büyüme, Kârlılık, Sağlık / Fiyat Gücü, Sahiplik, Katalizör):
+     kapaktaki pay cetveli ise ağırlık sırasında, yani aynı sayfada iki ayrı
+     sıra vardı; ızgara satırı kartları eş boya gerdiği için de 2 kurallı
+     Kârlılık 4 kurallı Büyüme'nin yanında altı 96 piksel boş duruyordu
+     (ölçüldü, 1440; iki satırda toplam dört kartın altı boş). Ağırlığa,
+     eşitlikte kural sayısına göre dizilince satırlar 4-4-3 ve 2-3-3 kural:
+     boş bant satır başına en çok bir kuralın boyu (48 piksel). Eleme her
+     zaman başta (tam genişlik kapı). */
+  const ordered = [...categories].sort((a, b) => {
+    if (a === "gate" || b === "gate") return a === b ? 0 : a === "gate" ? -1 : 1;
+    return CATEGORY_WEIGHTS[b] - CATEGORY_WEIGHTS[a] || rules[b].length - rules[a].length;
+  });
   return (
     <div className={styles.rules} data-motion-stagger>
-      {categories.map((category) => {
+      {ordered.map((category) => {
         const Glyph = ICONS[category];
         const gate = category === "gate";
         return (
@@ -269,7 +282,7 @@ export function ScoreLane({
   const ticks = [lo, ...zones.slice(0, -1).map((zone) => zone.end), 100];
 
   return (
-    <figure className={styles.lane}>
+    <figure className={styles.lane} data-draw>
       <figcaption className={styles.laneHead}>
         <span>{V.laneTitle}</span>
         <span className={styles.laneHint}>{V.laneHint}</span>

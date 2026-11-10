@@ -731,7 +731,7 @@ export function MotionExperience({ children, className }: { children: ReactNode;
              JS çizimleri 1000/650, modül CSS'leri 520–1100 ms'di; merdiven
              globals.css → `--draw`). */
           duration: spark || arc || bar || ring || travel || line || area || dot ? 700 : settle ? 320 : 420,
-          delay: settle ? 0 : delay + (area ? 220 : dot ? 700 : travel ? 150 : 0),
+          delay: settle ? 0 : delay + (area ? 220 : dot ? 400 : travel ? 150 : 0),
           easing: EASE_BRAND, fill: "both",
         });
         animation.pause();

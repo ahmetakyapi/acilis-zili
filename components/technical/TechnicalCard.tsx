@@ -219,7 +219,7 @@ export function TechnicalCard({
        ama ışıma duruyordu. Hover artık yalnızca kenarlık tonu. Spot kartın
        verdiği `isolation` CSS'te `.card` üzerinde; kaplama bağlantısının
        (`.cardLink::after`, z-1) yerel yığını ona bağlı. */
-    <div className={styles.card} data-verdict={verdict}>
+    <div className={styles.card} data-verdict={verdict} data-draw>
       {/* TELEFONDA KATLI (9 Ekim). Kart 390'da 516 piksel, panoda on altı
           kart: sayfa 11.944 piksel, on dört ekran boyu (ölçüldü). Telefonda
           açık kalan kimlik, fiyat ve planın üç seviyesi ("nereden alınır,

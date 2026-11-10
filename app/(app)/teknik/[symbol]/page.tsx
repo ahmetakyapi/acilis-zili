@@ -394,7 +394,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       <Reveal>
         <section id="technical-indicators" className="flex flex-col gap-4">
           <div className={styles.blockHead}>
-            <h2 className={styles.sectionTitle}>{t.technical.indicators}</h2>
+            <h2 className={`${styles.sectionTitle} ${styles.sectionLead}`}>{t.technical.indicators}</h2>
             {row.snapshot.lastSession && (
               <span className={styles.blockNote}>
                 {(live && quote?.realtime ? t.technical.snapshotNoteRealtime : t.technical.snapshotNote).replace("{date}", formatEtDateCompact(row.snapshot.lastSession, locale))}

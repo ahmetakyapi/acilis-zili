@@ -113,7 +113,7 @@ export function PlanAtlasView({
       </header>
 
       <div className={styles.body}>
-        <div className={styles.groups} aria-label={copy.label}>
+        <div className={styles.groups} aria-label={copy.label} data-draw>
           {groups.map((group, groupIndex) => (
             <div key={group.verdict} className={styles.group} role="group" aria-labelledby={`atlas-${group.verdict}`}>
               <div className={styles.groupHead}>

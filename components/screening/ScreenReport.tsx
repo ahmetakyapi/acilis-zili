@@ -4,6 +4,7 @@ import type { Dictionary } from "@/lib/i18n";
 import { SCREEN_CATEGORIES, type Check, type CheckStatus, type ScreenCategory } from "@/lib/screening";
 import type { ScreenData } from "@/lib/screening-data";
 import { gaugeOf } from "@/lib/screening-gauge";
+import { NO_VALUE } from "@/lib/utils";
 import { checkSentence, formatCheckValue } from "./format";
 import styles from "./Screening.module.css";
 
@@ -122,10 +123,24 @@ function CheckGroup({
               <span className={styles.rowName}>{t.checks[check.id].name}</span>
               <span className={styles.rowRule}>{t.checks[check.id].rule}</span>
               <span className={styles.rowValue} data-empty={value === null}>
-                {value ?? "—"}
+                {value ?? NO_VALUE /* tek işaret "–" (lib/utils); uzun çizgi "—" idi (10 Kasım) */}
               </span>
               <span className={styles.rowStatus}>
-                <span className={styles.status}>{statusLabel(check, data, t)}</span>
+                {/* İKONLU HAP (10 Kasım). Durum noktalı bir rozetti; sitenin
+                    yerleşik dili noktalı rozet yerine ikonlu hap
+                    (`.claude/rules/arayuz.md` → Görsel Dil) ve aynı panelin
+                    altındaki güçlü/zayıf yanlar zaten bu üç ikonu kullanıyor.
+                    Ölçülemeyen kuralda ikon yok: hüküm de yok. */}
+                <span className={styles.status}>
+                  {check.status === "pass" ? (
+                    <CheckCircle size={13} weight="fill" aria-hidden="true" />
+                  ) : check.status === "warn" ? (
+                    <WarningCircle size={13} weight="fill" aria-hidden="true" />
+                  ) : check.status === "fail" ? (
+                    <XCircle size={13} weight="fill" aria-hidden="true" />
+                  ) : null}
+                  {statusLabel(check, data, t)}
+                </span>
               </span>
               {value !== null && <ThresholdLane check={check} value={value} locale={locale} t={t} v={v} />}
             </li>
