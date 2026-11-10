@@ -50,7 +50,7 @@
 .title { margin: 0; font-size: var(--text-lead); font-weight: 700; letter-spacing: -0.015em; white-space: nowrap; }
 .all {
   display: inline-flex;
-  min-height: 40px;
+  min-height: 44px;
   align-items: center;
   gap: 4px;
   margin-block: -8px;

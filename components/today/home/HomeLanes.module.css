@@ -214,6 +214,12 @@
   background: var(--down);
   transform-origin: right center;
 }
+/* TAŞAN ÇUBUK (10 Kasım, telefon turu; `laneOverflows`): ölçeği aşan değer
+   kola dayanır, uzak ucundan 4 piksel içeride 2 piksellik kesik taşır
+   (BoardTable.module.css → `.fill[data-over]` ile aynı im). Kesik panel
+   zemininde: çubuğun içinde bir boşluk. */
+.bar[data-over]::after { content: ""; position: absolute; top: 0; bottom: 0; right: 4px; width: 2px; background: var(--premium-surface); }
+.bar[data-over][data-dir="down"]::after { right: auto; left: 4px; }
 /* Çubuksuz satırın künyesi ("Son Kapanış"): kulvarın yerinde, aynı boyda
    bir kat (satır boyu öteki satırlarla aynı kalır). */
 .laneNote { display: block; color: var(--text-muted); font-size: 12px; font-weight: 600; line-height: 10px; white-space: nowrap; }

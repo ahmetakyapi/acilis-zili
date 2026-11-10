@@ -26,8 +26,8 @@
 .progress li { display:grid; gap:7px; min-width:0; opacity:.5; transition:opacity 400ms var(--ease-brand); }
 .progress li[data-state="done"], .progress li[data-state="active"], .progress li[data-state="open"] { opacity:1; }
 /* Çip metni `--text-body`: `--text-muted` koyu temanın mavi zemininde 4,06 kalıyordu. */
-.chip { display:flex; align-items:baseline; gap:6px; min-width:0; font-size:11.5px; font-weight:650; color:var(--text-body); white-space:nowrap; }
-.chip b { font-size:10.5px; font-weight:750; letter-spacing:.06em; color:var(--primary-ink); }
+.chip { display:flex; align-items:baseline; gap:6px; min-width:0; font-size:12px; font-weight:650; color:var(--text-body); white-space:nowrap; }
+.chip b { font-size:12px; font-weight:750; letter-spacing:.06em; color:var(--primary-ink); }
 .chip em { font-style:normal; overflow:hidden; text-overflow:ellipsis; }
 [data-state="active"] .chip, [data-state="open"] .chip { color:var(--text-strong); }
 .bar { position:relative; display:block; height:3px; border-radius:999px; background:var(--line-strong); overflow:hidden; transition:background-color 300ms var(--ease-brand); }

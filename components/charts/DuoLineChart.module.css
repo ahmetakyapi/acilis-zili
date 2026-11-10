@@ -19,7 +19,7 @@
   right: 0;
   translate: 0 -115%;
   padding: 0 2px;
-  font-size: 10.5px;
+  font-size: 12px;
   line-height: 1;
   color: var(--text-muted);
   background: color-mix(in srgb, var(--premium-surface) 82%, transparent);
@@ -91,7 +91,7 @@
 .axis {
   position: relative;
   height: 14px;
-  font-size: 11px;
+  font-size: 12px;
   line-height: 14px;
   color: var(--text-muted);
 }

@@ -57,7 +57,8 @@
    düğmenin kendi genişliğine göre: (100% − 44px) / 2, yani −6 piksel. Komşu
    paylaş düğmesiyle aralık bu yüzden 12 (kapaklarda `gap-3`): 32 + 12 = 44,
    iki alan kesişmiyor. Seçici `tap-44` ile birlikte: genel kuralı ezsin,
-   640 üstünde (genel kural orada alanı kapatıyor) hiçbir şey açmasın. */
-@media (max-width: 639px) {
-  .hit:global(.tap-44)::after { inset-inline: calc((100% - 44px) / 2); }
-}
+   640 üstünde (genel kural orada alanı kapatıyor) hiçbir şey açmasın.
+   10 Kasım (telefon turu): bu ezme KALKTI. Genel `.tap-44` artık dar
+   hedefi yatayda da 44'e açıyor (aynı formül: `(100% − 44px) / 2`, dar
+   hedefte); buradaki kopya gereksiz kaldı. Aralık kuralı (32 + 12 = 44)
+   aynen geçerli. */

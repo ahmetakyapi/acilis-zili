@@ -104,7 +104,7 @@ export function AnalysisSearchField({
           aria-label={labels.searchPlaceholder}
           aria-controls="analysis-archive"
           className={cn(
-            "h-10 w-full min-w-0 rounded-md border border-line bg-surface pl-9 pr-9 text-base text-strong",
+            "h-11 w-full sm:h-10 min-w-0 rounded-md border border-line bg-surface pl-9 pr-9 text-base text-strong",
             "placeholder:text-muted focus:border-line-focus focus:outline-none",
             // Safari'nin kendi temizleme düğmesi bizimkiyle üst üste biniyor.
             "[&::-webkit-search-cancel-button]:hidden",

@@ -1,4 +1,5 @@
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import { VerdictPill } from "@/components/ui/VerdictPill";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { verdictLabel, type VerdictKey } from "@/lib/analysis";
@@ -97,6 +98,20 @@ export function StanceGuide({
         {guideLink}
       </div>
       <p className={styles.stanceLead}>{copy.meaning}</p>
+      {/* TELEFONDA KATLI (10 Kasım, telefon turu) — pano yerleşiminin 29
+          Eylül kararıyla aynı dil. Görüşün anlamı (yukarıdaki cümle) her
+          ekranda açık; "yoksa / varsa / kademeli mi" ve öteki görüşler
+          telefonda "Ne Yapmalı?"ya dokununca YERİNDE açılıyor. Ölçüldü
+          (390, /teknik/NVDA): panel 1.010 → 250 piksel, sayfa 10.4 bin
+          pikselin ~%7'si. 640'tan geniş ekranda anahtar yok, her şey açık
+          (`FoldToggle phone`). Kapaktaki "SAT Ne Demek?" bağlantısı yine
+          bu panele iner. */}
+      <FoldToggle id={`${id ?? "stance"}-fold`} hiddenCount={1} more={g.whatToDo} less={t.compact.less} phone>
+      {/* `data-fold` düz bir sarmalayıcıda: anahtar geniş ekranda
+          `display:revert` yazıyor, ızgaralı öğenin kendisinde olsaydı
+          ızgarayı blok akışına düşürürdü. */}
+      <div>
+      <div data-fold>
       <dl className={styles.stanceGrid}>
         <div>
           <dt>{g.noPosition}</dt>
@@ -127,6 +142,9 @@ export function StanceGuide({
           <b>{g.stickyTitle}.</b> {g.sticky}
         </p>
       </div>
+      </div>
+      </div>
+      </FoldToggle>
     </section>
   );
 }

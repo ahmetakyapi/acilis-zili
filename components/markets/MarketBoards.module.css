@@ -65,8 +65,10 @@
 .basis { display:block; margin-top:3px; font-size:var(--text-nano); font-weight:600; color:var(--text-body); }
 /* Renk `--text-body` (10 Ekim): başlık hücresinden miras alınan sönük ton
    10–11 puntoda 4,48:1 ölçüldü, eşiğin hemen altında. */
-.sortLink { display:inline-flex; align-items:center; gap:4px; min-height:44px; margin-block:-12px; color:var(--text-body); transition:color .2s var(--ease-brand); }
-@media(min-width:640px) { .sortLink { min-height:32px; margin-block:-8px; } }
+/* Telefonda en az 44 GENİŞLİK de (10 Kasım, telefon turu): "1G" başlığı
+   28×44 idi. Sağa yaslı sütunda metin sağda kalır (`justify-content`). */
+.sortLink { display:inline-flex; align-items:center; justify-content:flex-end; gap:4px; min-width:44px; min-height:44px; margin-block:-12px; color:var(--text-body); transition:color .2s var(--ease-brand); }
+@media(min-width:640px) { .sortLink { min-width:0; min-height:32px; margin-block:-8px; } }
 .sortLink:hover, .sortLink[data-active] { color:var(--primary); }
 .groupRow th { padding-top:12px; padding-bottom:6px; text-align:left; }
 .table tbody:not(:first-of-type) .groupRow { border-top:1px solid var(--line); }
@@ -249,7 +251,7 @@
 
 /* ---- Nabız: kadran ---- */
 .gaugeMarker { fill:var(--text-strong); stroke:var(--premium-surface); stroke-width:3px; }
-.gaugeEnd { fill:var(--text-muted); font-size:8.5px; font-weight:600; }
+.gaugeEnd { fill:var(--text-muted); font-size:9.4px; font-weight:600; }
 .gaugeReading { margin-top:-38px; }
 .gaugeCompact + .gaugeReading { margin-top:-28px; }
 

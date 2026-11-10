@@ -73,7 +73,9 @@ export function GuideHint({
             className="panel panel-hover row-span-2 grid min-w-0 grid-cols-[auto_minmax(0,1fr)_auto] grid-rows-subgrid gap-x-3 gap-y-0.5 p-3.5 transition-colors"
           >
             <span className="row-span-2 grid place-items-center">
-              <GlyphTile glyph={article.glyph} size={36} />
+              {/* 36 → 44 (10 Kasım, telefon turu): üç harfli işaret 10,08 →
+                  12,32 piksel; kart boyu değişmedi (ölçüm GlyphTile.tsx). */}
+              <GlyphTile glyph={article.glyph} size={44} />
             </span>
             <span className="row-span-2 grid grid-rows-subgrid gap-y-0.5">
               <span className="block self-start text-base font-bold text-strong">

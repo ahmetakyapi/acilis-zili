@@ -67,6 +67,9 @@
 .thumbRow[data-bar] { grid-template-areas: "mark name value" "mark lane lane"; }
 /* Çubuksuz satır (pay, ölçeksiz liste) tek hat: 40 → 34. */
 .thumbRow:not([data-bar]) { padding-block: 4px; }
+/* Telefonda BAĞLANTI olan satır 44 (10 Kasım, telefon turu; ölçüldü 390:
+   çubuklu satır 352×42). Bağlantısız satır eski boyunda. */
+@media (max-width: 639px) { a.thumbRow { min-height: 44px; } }
 .thumbRow[data-bare] { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name value" "lane lane"; }
 @media (min-width: 640px) { .thumbRow { padding-inline: 20px; } }
 /* ÖZNE (10 Kasım): bir yanda tek kalan kalem. Yönün yıkama tonu kenardan
@@ -238,6 +241,10 @@ a.stepBtn:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 
 .homeHead { display: flex; flex-direction: column; gap: 3px; }
 .homeTitle { font-size: var(--text-read); font-weight: 700; line-height: 1.3; letter-spacing: -0.01em; color: var(--text-strong); transition: color 180ms var(--ease-brand); }
 .homeTitle:hover { color: var(--primary); }
+/* Telefonda başlık bağlantısı 44 (10 Kasım, telefon turu; ölçüldü 390:
+   320×36, iki satırlık başlık). Görünür metin aynı; alan yukarı ve aşağı
+   eşit açılır. Altındaki künye bağlantı değil, komşu hedef yok. */
+@media (max-width: 639px) { .homeTitle { position: relative; } .homeTitle::after { content: ""; position: absolute; inset: 50% 0 auto; height: max(100%, 44px); translate: 0 -50%; } }
 .homeLabel { font-size: var(--text-tiny); line-height: 1.4; color: var(--text-muted); }
 
 /* Eğri her geçişte açıkça `--ease-brand` (25 Ekim düzeltmesi: üç geçiş

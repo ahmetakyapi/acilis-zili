@@ -49,8 +49,8 @@
 .reportMeta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; min-width:0; }
 .byline { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:13px; color:var(--text-muted); }
 .byline b { font-weight:700; color:var(--text-strong); }
-.byline i { font-style:normal; padding:1px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:11.5px; font-weight:650; }
-.bylineAvatar { width:24px; height:24px; border-radius:50%; font-size:10px; }
+.byline i { font-style:normal; padding:1px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:650; }
+.bylineAvatar { width:26px; height:26px; border-radius:50%; font-size:12.7px; }
 /* Yeniden üret: ok dairesi üzerine gelince bir tur döner (tek küçük öğe — yaylı eğri serbest). */
 .regen svg { width:15px; height:15px; fill:none; stroke:currentColor; stroke-width:2.2; stroke-linecap:round; stroke-linejoin:round; transition:rotate 620ms var(--ease-spring-soft); }
 .regen:hover svg { rotate:360deg; }
@@ -127,7 +127,7 @@
 .latest[data-verdict="buy"] b { color:var(--up); }
 .latest[data-verdict="sell"] b { color:var(--down); }
 .latest[data-verdict="hold"] b { color:var(--brass-ink); }
-.latest small { font-size:11.5px; font-weight:500; color:var(--text-muted); }
+.latest small { font-size:12px; font-weight:500; color:var(--text-muted); }
 
 /* Çıkış: önce soru ve seçenekler yukarı kaçar, sonra durum ve hak; düğmenin
    yazısı kapanır, ok dairesi mürekkep damlasına döner ve kâğıda oturur.
@@ -176,7 +176,7 @@
 [data-verdict="insufficient"] > .historyVerdict { color:var(--text-muted); }
 .historyAuthor { display:flex; align-items:center; gap:7px; min-width:0; font-size:13px; font-weight:600; color:var(--text-body); }
 .historyAuthor > span:last-child { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; max-width:12em; }
-.historyTags { display:flex; justify-content:flex-end; gap:6px; font-family:var(--font-mono); font-size:11.5px; color:var(--text-muted); }
+.historyTags { display:flex; justify-content:flex-end; gap:6px; font-family:var(--font-mono); font-size:12px; color:var(--text-muted); }
 .historyTags b { font-family:var(--font-sans); padding:2px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-weight:650; white-space:nowrap; }
 
 /* ---- Claude paneli (ClaudeCta.tsx): sayfanın kendi okumasından SONRA ----
@@ -272,7 +272,7 @@
   .deskTitle { flex:none; max-width:100%; }
   .deskSpark { display:grid; flex:1 1 128px; grid-template-columns:minmax(0,1fr); gap:2px; justify-items:end; container-type:inline-size; }
   .deskSpark svg { width:100%; height:30px; }
-  .deskSpark figcaption { gap:0 6px; font-size:11.5px; }
+  .deskSpark figcaption { gap:0 6px; font-size:12px; }
   .deskSpark figcaption b { font-size:12px; }
   .deskSpark figcaption [data-range] { display:none; }
   /* ŞERİT KENDİ SATIRINDA TEK HAT (25 Ekim son düzeltme). Başlık uzunken (EN iki
@@ -330,8 +330,8 @@ a.tlRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px
 .tlRingEmpty { flex:none; width:30px; height:30px; border-radius:50%; border:2px solid var(--line); box-sizing:border-box; }
 .tlBy { display:flex; align-items:center; gap:8px; min-width:0; font-size:12.5px; font-weight:600; color:var(--text-body); }
 .tlName { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
-.tlBy i { flex:none; font-style:normal; padding:1px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:11px; font-weight:650; }
-.tlAvatar { flex:none; width:22px; height:22px; border-radius:50%; font-size:9.5px; }
+.tlBy i { flex:none; font-style:normal; padding:1px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:650; }
+.tlAvatar { flex:none; width:26px; height:26px; border-radius:50%; font-size:12.7px; }
 .tlMore { display:inline-flex; align-items:center; min-height:44px; font-size:13px; font-weight:650; color:var(--primary-ink); white-space:nowrap; }
 .tlMore:hover { color:var(--text-strong); }
 .tlNext { margin:6px 16px 0; padding:14px 0 16px; border-top:1px solid var(--line); }

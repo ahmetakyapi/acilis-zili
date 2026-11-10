@@ -160,8 +160,14 @@ export async function SiteFooter() {
                            ve alt bilgi ekranın en dibinde, başparmağın en zor
                            nişan aldığı yerde duruyor. Masaüstünde eski ölçü
                            korunuyor — orada fare var, yüksek satırlar sütunu
-                           gereksiz uzatıyordu. */
-                        className="footer-link -my-1 flex min-h-11 items-center py-1 text-base text-body transition-colors hover:text-primary sm:min-h-0 sm:inline-block"
+                           gereksiz uzatıyordu.
+                           10 Kasım (telefon turu): telefonda `-my-1` kalktı ve
+                           `min-w-11` geldi. Eksi boşluk 44 piksellik satırları
+                           36 piksel adımla diziyor, alttaki bağlantı üsttekinin
+                           son 8 pikselini örtüyordu; kısa adlar ("Makro", "RSS")
+                           38 ve 24 piksel genişlikteydi (ölçüldü 390: alan
+                           36×34). Alt bilgi telefonda ~140 piksel uzadı. */
+                        className="footer-link flex min-h-11 min-w-11 items-center text-base text-body transition-colors hover:text-primary sm:-my-1 sm:inline-block sm:min-h-0 sm:min-w-0 sm:py-1"
                       >
                         {link.label}
                       </Link>
@@ -183,12 +189,17 @@ export async function SiteFooter() {
           kendi yüksekliğini korur. `.tap-44` telefonda kalan 12 pikseli de
           kapatıyor: burası sayfanın en dibi, başparmağın en zor nişan aldığı
           yer ve ölçüldüğünde 33 piksel çıkıyordu — sitenin kendi standardı
-          44. Görünür satır aynı kalıyor. */}
-      <div className={`${polish.footerBase} flex flex-wrap items-center gap-x-4 gap-y-2 text-tiny text-muted`}>
+          44. Görünür satır aynı kalıyor.
+          10 Kasım (telefon turu): `.tap-44` burada işe YARAMIYORDU; satır
+          sarıyor ve 26 piksellik satır adımında alt satırın görünmez alanı
+          üsttekini örtüyordu (ölçüldü 390: "Hakkında" 51×34, alt yarısı
+          komşuda; globals.css `.tap-44` → "iki yerde işe yaramaz" 2. madde).
+          Telefonda gerçek ölçü: `min-h-11 min-w-11`, satır aralığı 0. */}
+      <div className={`${polish.footerBase} flex flex-wrap items-center gap-x-4 gap-y-0 text-tiny text-muted sm:gap-y-2`}>
         <span>{t.footer.copyright}</span>
         <Link
           href="/kvkk"
-          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
+          className="inline-flex min-h-11 min-w-11 items-center transition-colors hover:text-primary sm:-my-2 sm:min-h-8 sm:min-w-0 sm:py-2"
         >
           {t.footer.privacy}
         </Link>
@@ -196,7 +207,7 @@ export async function SiteFooter() {
             kadar güvenebilirim" sorusunu cevaplıyor (kvkk/page.tsx başı). */}
         <Link
           href="/hakkinda"
-          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
+          className="inline-flex min-h-11 min-w-11 items-center transition-colors hover:text-primary sm:-my-2 sm:min-h-8 sm:min-w-0 sm:py-2"
         >
           {t.about.footerLink}
         </Link>
@@ -205,13 +216,13 @@ export async function SiteFooter() {
             telefonda /menu'nün sonunda da var. */}
         <Link
           href="/yenilikler"
-          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
+          className="inline-flex min-h-11 min-w-11 items-center transition-colors hover:text-primary sm:-my-2 sm:min-h-8 sm:min-w-0 sm:py-2"
         >
           {t.changelog.title}
         </Link>
         <a
           href={`mailto:${CONTACT_EMAIL}`}
-          className="tap-44 -my-2 inline-flex min-h-8 items-center py-2 transition-colors hover:text-primary"
+          className="inline-flex min-h-11 min-w-11 items-center transition-colors hover:text-primary sm:-my-2 sm:min-h-8 sm:min-w-0 sm:py-2"
         >
           {t.footer.contact}
         </a>
@@ -220,7 +231,7 @@ export async function SiteFooter() {
           href={GITHUB_URL}
           target="_blank"
           rel="noreferrer noopener"
-          className="tap-44 -my-2 inline-flex min-h-8 items-center gap-1.5 py-2 transition-colors hover:text-primary sm:ml-auto"
+          className="inline-flex min-h-11 items-center gap-1.5 transition-colors hover:text-primary sm:-my-2 sm:ml-auto sm:min-h-8 sm:py-2"
         >
           <GithubLogo weight="fill" size={14} aria-hidden />
           {t.footer.builtBy}

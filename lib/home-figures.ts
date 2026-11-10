@@ -30,17 +30,38 @@ export const WORLD_LANE_FLOOR = 1;
 export const MOVERS_LANE_FLOOR = 3;
 
 /**
- * Panelin bütün satırları için TEK ölçek: en büyük mutlak değer ya da taban.
- * Satır başına ölçek her satırı rayın ucuna götürür ve kıyas kaybolur
- * (CLAUDE.md "karşılaştırılan büyüklük bir de ÇİZGİ olarak okunur").
- * Bilinmeyen değer (null) hesaba girmez.
+ * Panelin bütün satırları için TEK ölçek. Satır başına ölçek her satırı
+ * rayın ucuna götürür ve kıyas kaybolur (CLAUDE.md "karşılaştırılan büyüklük
+ * bir de ÇİZGİ olarak okunur"). Bilinmeyen değer (null) hesaba girmez.
+ *
+ * KARAR GEÇMİŞİ. 8 Kasım: en büyük mutlak değer ya da taban. 10 Kasım
+ * (telefon turu): TEK UÇ DEĞER ÖLÇEĞİ BELİRLEMEZ — tabloların kuralı
+ * (`lib/market-scales.ts` → `laneSpan`: ölçek uçtan İKİNCİ değerden, aşan
+ * çubuk kola dayanır ve kesik uç taşır). Eski hâlde tek uç değerli günde
+ * (−%6,93 · −%1,54 · −%1,20 …) öteki beş çubuk 13 piksele iniyordu
+ * (390, kol 135 piksel) ve panel "bir satır + beş çizgi" gibi okunuyordu.
+ * Uç değer: en büyük mutlak değer ikincinin `LANE_OUTLIER_RATIO` katını
+ * aşıyorsa. O gün ölçek ikinci değerdir (tabandan küçük olmaz); uç satır
+ * kola dayanır (`laneOverflows`), büyüklüğünü yanındaki sayı söyler. Olağan
+ * günde (en büyük ikinciye yakın) ölçek eskisi gibi en büyük değer: hiçbir
+ * çubuk kesik taşımaz. Üçten az değerde "uç" tanımsız, en büyük değer.
  */
+export const LANE_OUTLIER_RATIO = 1.5;
+
 export function sharedLaneScale(values: readonly (number | null | undefined)[], floor: number): number {
-  let max = floor;
+  const sizes: number[] = [];
   for (const value of values) {
-    if (typeof value === "number" && Number.isFinite(value)) max = Math.max(max, Math.abs(value));
+    if (typeof value === "number" && Number.isFinite(value)) sizes.push(Math.abs(value));
   }
-  return max;
+  sizes.sort((a, b) => b - a);
+  const [top = 0, second = 0] = sizes;
+  const outlier = sizes.length >= 3 && top > second * LANE_OUTLIER_RATIO;
+  return Math.max(floor, outlier ? second : top);
+}
+
+/** Değer ortak ölçeği aşıyor mu — çubuk kola dayanır, ucunda kesik taşır. */
+export function laneOverflows(value: number | null | undefined, scale: number): boolean {
+  return typeof value === "number" && Number.isFinite(value) && scale > 0 && Math.abs(value) > scale + 1e-9;
 }
 
 /* --------------------------------------------------------------------------

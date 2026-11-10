@@ -59,7 +59,7 @@
 .stage { display: block; width: 100%; height: auto; max-height: var(--film-h, 240px); animation: nf-cut .45s var(--ease-brand) both; }
 
 .caption { display: flex; align-items: baseline; gap: 10px; min-width: 0; }
-.counter { flex: none; font-family: var(--font-mono); font-size: 11.5px; font-weight: 800; color: var(--primary-ink); }
+.counter { flex: none; font-family: var(--font-mono); font-size: 12px; font-weight: 800; color: var(--primary-ink); }
 .title { min-width: 0; font-size: 15px; font-weight: 800; letter-spacing: -.01em; color: var(--text-strong); animation: nf-rise .45s var(--ease-brand) both; }
 /* Sahne adı manşet mürekkebiyle (küçük punto aile: -tight, 13–16 pikselde AA). */
 @supports ((-webkit-background-clip: text) or (background-clip: text)) {

@@ -112,7 +112,7 @@ export default async function CommunityPostPage(props: PageProps<"/topluluk/[slu
                     icon={post.author.avatar?.icon ?? null}
                     color={post.author.avatar?.color}
                     initials={initialsOf(post.author.username, locale)}
-                    className="size-7 rounded-full text-[11px]"
+                    className="size-7 rounded-full text-[12.7px]"
                   />
                   {post.author.username}
                 </Link>

@@ -276,7 +276,10 @@
   .summaryIcon { grid-column:1; grid-row:1 / span 3; align-self:start; width:32px; height:32px; border-radius:10px; }
   .summaryLabel, .summaryFact dd { grid-column:2; }
   .summaryFact dd { font-size:15px; text-wrap:pretty; }
-  .summaryPeers { margin-top:4px; }
+  /* Aralık 6 → 18 (10 Kasım, telefon turu): logo 26 piksel, adım 44; `.tap-44`
+     artık yatayda da 44 açıyor ve komşu alanlar tam bitişiyor (beş logo 202
+     piksel, satır 300+). Önce: alan 26×44, adım 32. */
+  .summaryPeers { margin-top:4px; column-gap:18px; }
 }
 /* TELEFONDA TEK SATIR KÜNYE (30 Eylül, "burayı da iyileştirelim"). Bir
    önceki sürüm her bilgiyi iki satıra koyuyordu (etiket üstte, değer altta)

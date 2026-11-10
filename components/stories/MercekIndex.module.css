@@ -74,7 +74,7 @@
 .filtersLabel { flex-shrink:0; font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
 .chips { display:flex; min-width:0; flex-wrap:nowrap; align-items:center; gap:6px; overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:none; scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent; padding-block:2px 6px; }
 .chips > * { flex-shrink:0; }
-.chips a { min-height:40px; font-size:12px; transition:color 180ms var(--ease-brand),background-color 180ms var(--ease-brand); }
+.chips a { min-height:44px; font-size:12px; transition:color 180ms var(--ease-brand),background-color 180ms var(--ease-brand); }
 .chips a:not([aria-current]):hover { background:var(--primary-tint); }
 @media(min-width:1024px) {
   .filters { flex-direction:row; align-items:center; justify-content:flex-end; gap:12px; }

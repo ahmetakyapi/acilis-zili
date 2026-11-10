@@ -229,7 +229,7 @@
 .dateTile > span {
   padding: 2px 0 1px;
   background: var(--primary-wash);
-  font-size: 10px;
+  font-size: 12px;
   font-weight: 700;
   letter-spacing: .02em;
   color: var(--primary-ink);

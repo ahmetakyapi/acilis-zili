@@ -116,11 +116,16 @@
    (`--bar-soft`); seçili harfte metinle aynı renk. Süzgeç değişince
    genişlik markanın eğrisiyle kayıyor. */
 .letter { position:relative; }
+/* TELEFONDA HARF 44×44 (10 Kasım, telefon turu). Dizin zaten yatay kayan
+   tek satır; harfler 36×40 idi ve aralarında 1 piksel vardı: 26 hedefin
+   26'sı 44'ün altındaydı (ölçüldü 390). Satır uzar (936 → 1170 piksel),
+   kenar solması "devamı var"ı söylemeye devam ediyor. */
+@media(max-width:767px) { .letter { min-width:44px; height:44px; } }
 .letterBar { position:absolute; left:50%; bottom:2px; width:16px; height:3px; translate:-50% 0; border-radius:2px; background:var(--bar-soft); transform:scaleX(var(--share, 0)); transition:transform .45s var(--ease-brand); pointer-events:none; }
 .letter[aria-pressed="true"] .letterBar { background:currentColor; }
 @media(prefers-reduced-motion:reduce) { .letterBar { transition:none; } }
 .letter:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
-@media(max-width:767px) { .letter { min-width:36px; height:40px; } }
+/* (10 Kasım telefon turuna dek burada 36×40 yazıyordu; yukarıdaki 44×44 kuralı geçerli.) */
 
 .resultCount { display:flex; align-items:center; gap:12px; font-size:12px; font-weight:400; color:var(--text-muted); white-space:nowrap; }
 .clearAll { min-height:32px; font-weight:600; color:var(--primary-ink); }
@@ -165,6 +170,8 @@
 .sectionOpen { display:inline-flex; flex-shrink:0; min-height:34px; align-items:center; gap:6px; padding:0 12px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:600; color:var(--primary-ink); cursor:pointer; transition:background-color 180ms var(--ease-brand),border-color 250ms var(--ease-brand),scale 200ms var(--ease-brand); }
 .sectionOpen > svg { transition:translate 200ms var(--ease-brand); }
 .sectionOpen:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+/* Telefonda 34 → 44 ve 40 → 44 (10 Kasım, telefon turu; ölçüldü 390). */
+@media(max-width:767px) { .sectionOpen, .spotlightLink { min-height:44px; } }
 .sectionOpen:hover > svg { translate:2px 0; }
 .sectionOpen:active { scale:.97; }
 .sectionOpen:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }

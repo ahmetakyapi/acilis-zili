@@ -607,7 +607,23 @@ export function ReportCover({
                 )}
               </p>
               {ladderMarks.length >= 2 && (
-                <PriceRail marks={ladderMarks} className={styles.priceLadder} />
+                /* ATLAS DİLİ (10 Kasım, telefon turu; gerekçe
+                   components/ui/PriceRail.tsx → "BİLANÇO KAPAĞI DA `bar`
+                   KİPİNDE"): bilanço günü kapanışından bugüne yön renginde
+                   kalın çubuk, "Bilanço Günü" ve "Hedef" adlı çentik. */
+                <PriceRail
+                  marks={ladderMarks}
+                  bar
+                  barFrom={row.price ?? undefined}
+                  barTone={
+                    live && row.price !== null && live.quote.price !== row.price
+                      ? live.quote.price > row.price
+                        ? "up"
+                        : "down"
+                      : undefined
+                  }
+                  className={styles.priceLadder}
+                />
               )}
             </div>
 

@@ -1,5 +1,6 @@
 import type { CSSProperties } from "react";
 import { type Locale } from "@/lib/i18n";
+import { laneOverflows } from "@/lib/home-figures";
 import { cn, directionOf, formatPercent } from "@/lib/utils";
 import styles from "./HomeLanes.module.css";
 
@@ -27,6 +28,12 @@ import styles from "./HomeLanes.module.css";
  * kırılımları görüntü alanına göre; ray 350 pikselde iki katlı, işaret
  * sütunlu (bayrak / logo) ve kapsayıcı sorgulu. Ölçüler ve tonlar aynı.
  *
+ * 10 KASIM (telefon turu) — TEK UÇ DEĞER ÖLÇEĞİ BELİRLEMEZ: ölçek artık
+ * `sharedLaneScale`in ikinci-değer kuralından; aşan çubuk kola dayanır,
+ * ucundan 4 piksel içeride 2 piksellik kesik taşır (`data-over`). Ölçüm:
+ * 390, kol 135 piksel; −%6,93 · −%1,54 · −%1,20 gününde öteki çubuklar
+ * 13–30 → 105–135 piksel.
+ *
  * Sıfır ORTADA (bantta veriden): iki panel de iki yönlü okunuyor
  * (yükselenler / düşenler alt alta tek ayrışan grafik) ve eksenin üstündeki
  * etiket simetrik ±ölçek.
@@ -42,6 +49,9 @@ export function HomeLane({
   index?: number;
 }) {
   const dir = directionOf(change);
+  /* Ölçeği aşan değer (tek uç değerli gün; `sharedLaneScale`) kola dayanır
+     ve ucunda kesik taşır: tabloların dili (BoardTable → `.fill[data-over]`). */
+  const over = laneOverflows(change, scale);
   const len = scale > 0 ? (Math.min(Math.abs(change), scale) / scale) * 50 : 0;
   return (
     <span aria-hidden data-lane="" className={styles.track}>
@@ -49,6 +59,7 @@ export function HomeLane({
         <i
           className={cn("bar-fill", styles.bar)}
           data-dir={dir}
+          data-over={over ? "" : undefined}
           style={{ width: `${len.toFixed(2)}%`, "--i": Math.min(index, 10) } as CSSProperties}
         />
       )}

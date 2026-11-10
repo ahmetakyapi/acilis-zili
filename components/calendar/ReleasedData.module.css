@@ -92,7 +92,7 @@
 .verdict { display: inline-flex; align-items: baseline; gap: 5px; font-size: 14px; font-weight: 700; line-height: 18px; color: var(--text-body); }
 .verdict[data-dir="above"] { color: var(--up); }
 .verdict[data-dir="below"] { color: var(--down); }
-.glyph { font-size: .78em; }
+.glyph { font-size: max(.78em, 12px); }
 .verdictSecondary { font-size: 12px; font-weight: 600; line-height: 16px; color: var(--text-muted); }
 
 /* Düz sayı olmayan değerlerde (aralık) eski rozet. */

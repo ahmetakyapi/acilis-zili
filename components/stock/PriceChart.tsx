@@ -576,7 +576,7 @@ export function PriceChart({
            next/font'un ürettiği adı elle yazmak bir sonraki sürümde
            kırılırdı. */
         fontFamily: getComputedStyle(document.body).fontFamily,
-        fontSize: 11,
+        fontSize: 12,
         attributionLogo: false,
       },
       grid: {

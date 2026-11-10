@@ -144,4 +144,10 @@
    sağda boş bir ray parçası kalmıyor. */
 @media (max-width: 639px) {
   .root[data-compact="true"] .controls > .segment:first-child { flex:0 0 100%; justify-content:space-between; }
+  /* DÜĞMELER RAYI DOLDURUR (10 Kasım, telefon turu). Sekiz aralık metin
+     genişliğinde (31 piksel) ve aralarında boşlukla duruyordu: dokunma
+     hedefi 31×44, aradaki boşluğa düşen dokunuş boşa gidiyordu. `flex:1`
+     ile ray sekize bölünür: 390'da 38×44, 360'ta 34×44 (ölçüldü), ölü boşluk 2
+     piksel. 44'e ancak bir aralığı atarak çıkılır; atılmadı. */
+  .root[data-compact="true"] .controls > .segment:first-child > .segmentButton { flex:1 1 0; min-width:0; padding-inline:0; }
 }

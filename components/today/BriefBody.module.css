@@ -12,6 +12,9 @@
    düzeyinde (`components/layout/ExpandInPlace.tsx`); bu, JS gelmeden önceki
    güvence. */
 .toggle { overflow-anchor:none; }
+/* Telefonda 40 → 44 (10 Kasım, telefon turu; ölçüldü 390: 110×40). Açık
+   hâlde dibe taşınan düğmenin ayrılan yeri de 4 piksel büyür. */
+@media(max-width:639px) { .toggle { min-height:44px; } .disclosure[open] { padding-bottom:58px; } }
 @media(prefers-reduced-motion:reduce) { .toggle { transition:none; } }
 
 /* ZAMAN RAYI (26 Eylül) — kartta girişten sonraki paragraflar. Solda ince

@@ -293,7 +293,10 @@ a.extreme:active { transform:scale(.992); }
   /* Bölüm bağlantıları ("Sektör Tablosu", "Tüm Temalar") 32 piksellik
      satırda; dokunma alanı düzeni oynatmadan 44'e açılır. */
   .partLink { position:relative; }
-  .partLink::after { content:""; position:absolute; inset:-6px -4px; }
+  /* 10 Kasım (telefon turu): buradaki `::after { inset:-6px -4px }` SİLİNDİ.
+     Bağlantı `PanelLink` (zaten `.tap-44`); iki kural aynı sözde öğede
+     çakışıyor, `top:-6px` ile `translate:0 -50%` birleşip alanı 22 piksel
+     yukarı kaydırıyordu (ölçüldü 390: alan 84×32, altı künyede). */
 }
 
 @media (prefers-reduced-motion:reduce) {
@@ -348,3 +351,9 @@ a.extreme:active { transform:scale(.992); }
                    satır, 1.282) → yön oku (iki dilde tek satır)
    640+ değişmedi (1024: 900 · 1280: 909 · 1440: 913; 768: 1.084 → 1.079).
    Yatay taşma 0, kırpılan metin 0, 12 pikselin altında yazı 0. */
+
+/* 360 (10 Kasım, telefon turu): uç tema kartında üç üye yüzdesi 36 piksellik
+   sütunlara sığmıyor, "+%0,9+%0,8" diye bitişiyordu (ölçüldü 360; kart içi
+   113 piksel). 380 altında iki üye: üçüncü, sıfır boylu ikinci satıra düşer
+   (kırpılır), kalan iki yüzde arasında 20 piksel boşluk. */
+@media (max-width:379px) { .members { grid-template-columns:repeat(2,minmax(0,1fr)); } }
