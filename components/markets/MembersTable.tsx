@@ -9,14 +9,15 @@ import type { CompanyCardExtra } from "@/lib/company-card";
 import type { SymbolMeta } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { quoteBasis, type MarketStatus } from "@/lib/market-hours";
-import { capAxis } from "@/lib/market-scales";
+import { BIG_MOVE, DAY_LANE_SPAN, WEEK_LANE_SPAN, capShares, laneArm } from "@/lib/market-scales";
 import type { Quote } from "@/lib/providers/types";
+import { sectorLabel } from "@/lib/sectors";
 import {
   cn,
   directionOf,
-  formatCompact,
   formatMoneyCompact,
   formatPercent,
+  formatPercentPlain,
   formatPrice,
   NO_VALUE,
 } from "@/lib/utils";
@@ -30,7 +31,7 @@ import {
   type SortKey,
   type TabKey,
 } from "./index-shared";
-import { RowFlip } from "./RowFlip";
+import { RowFlip, RowTap } from "./RowFlip";
 import styles from "./MembersTable.module.css";
 
 /* ---- Tam bileşen tablosu ----
@@ -67,7 +68,7 @@ function SortHead({
   dir: SortDir;
   className?: string;
   align?: "start" | "end";
-  /** Başlığın yanındaki ek (piyasa değeri ekseninin basamak etiketleri). */
+  /** Başlığın yanındaki ek (piyasa değeri sütununda "Pay" alt başlığı). */
   children?: React.ReactNode;
 }) {
   const Icon = active ? (dir === "desc" ? CaretDown : CaretUp) : CaretUpDown;
@@ -106,6 +107,29 @@ function SortHead({
         {children}
       </span>
     </th>
+  );
+}
+
+/**
+ * Yön kulvarı: sıfır ortada, artı sağa, eksi sola; ölçek SABİT
+ * (`laneArm`, lib/market-scales.ts — gerekçe orada). Çizim globals'ın
+ * `bar-fill` sınıfıyla dolar (modülde animasyon ADI yazılmaz,
+ * `.claude/rules/hareket.md` → Tuzaklar); kapı satırın `data-draw`ında.
+ * Tam %0: kulvar ve sıfır çizgisi var, dolgu yok — "değişmedi" bir uzunluk
+ * değil.
+ */
+function Lane({ value, span, className }: { value: number; span: number; className?: string }) {
+  const arm = laneArm(value, span);
+  return (
+    <span className={cn(styles.lane, className)} aria-hidden>
+      {arm > 0 && (
+        <i
+          className={cn("bar-fill", styles.fill)}
+          data-tone={value < 0 ? "down" : "up"}
+          style={{ width: `${arm.toFixed(2)}%` }}
+        />
+      )}
+    </span>
   );
 }
 
@@ -165,6 +189,8 @@ export function MembersTable({
         return row.contribution ?? null;
       case "cap":
         return row.marketCap ?? null;
+      case "hafta":
+        return row.week;
       default:
         return row.quote?.changePct ?? null;
     }
@@ -172,13 +198,14 @@ export function MembersTable({
 
   /* Cubuk olcegi: grubun EN BUYUK mutlak degisimi. Yuzde degerleri
      kendi araliginda kucuk (±%3) oldugu icin sabit bir olcek cubuklari
-     gorunmez yapiyordu. */
-  const peakChange = Math.max(
-    ...rows.map((row) => Math.abs(row.quote?.changePct ?? 0)),
-    0.01,
-  );
-  /* Listede eksi bir değişim var mı — çubuğun sıfırı ortada mı. */
-  const changeSigned = rows.some((row) => (row.quote?.changePct ?? 0) < 0);
+     gorunmez yapiyordu.
+     10 Kasım (akşam): ÖLÇEK SABİT. O karar şeridin sütunun bütün esnek
+     genişliğini (320–541 piksel) kapladığı tablo içindi; sahibinin itirazı
+     "yüzde ve fiyat geri planda kalıyor" — şerit satırın yarısını tutuyordu.
+     Şerit artık sayının yanında 56 piksellik bir yardımcı ve tam kolu
+     `DAY_LANE_SPAN` (±%3; ısı haritasının doyduğu eşik): dar kulvarda
+     "en büyüğe göre" ölçek tek bir uç satır yüzünden herkesi 1 piksele
+     indirirdi (gerekçe ve test: lib/market-scales.ts → `laneArm`). */
   /* PİYASA DEĞERİ BİR DE ÇİZİM (26 Eylül). "Karşılaştırılan her büyüklük bir
      de çizgi olarak okunur" (CLAUDE.md); sütun yalnızca sayıydı ve "hangisi
      ne kadar büyük" basamak basamak okunuyordu.
@@ -189,10 +216,24 @@ export function MembersTable({
      pikselin altındaydı ve sütun "veri gelmemiş" gibi duruyordu (1440,
      canlı ekran, ölçüldü). Logaritmik ÇUBUK yine yasak (uzunluğun sıfırı
      yok); yerine çubuk değil KONUM: her şirket, onluk basamakları çentikli
-     bir eksende bir nokta (`capAxis`, lib/market-scales.ts; testli).
-     Basamak etiketleri sütun başlığında yazılı — ölçeğin doğrusal olmadığı
-     saklanmıyor. Nokta bir yargı değil, yumuşak mavide (`--bar-soft`). */
-  const axis = capAxis(rows.map((row) => row.marketCap));
+     bir eksende bir nokta.
+     10 Kasım (akşam), sahibinin itirazı — "piyasa değerini de direkt yazsak
+     daha doğru olacak": NOKTA EKSENİ KALKTI. Eksen sayıyı dolaylı
+     okutuyordu (okur noktanın yerini çentiklere göre çözüp sonra soluk
+     gri sayıya dönüyordu) ve 132 piksel tutuyordu. Şimdi sayının KENDİSİ
+     güçlü mürekkeple (14/600), yanında tek yardımcı: şirketin listedeki
+     toplam piyasa değerinden PAYI (`capShares`, testli). Pay bir sayı,
+     çizim değil — doğrusal çubuğun 3 pikselin altında kalan uçlarını
+     ("%0,07") yazıyla söylüyor; logaritmik çubuk yasağı yerinde. Resmî
+     endeks ağırlığı olmadığı tablo künyesinde yazılı. Dow fiyat ağırlıklı:
+     orada pay yanıltırdı, basılmıyor (Katkı sütunu zaten var). */
+  const shareOf = tab === "dow" ? null : capShares(rows.map((row) => row.marketCap));
+  /* HAFTALIK SÜTUN (10 Kasım, sahibinin isteği). Veri sayfada kuruluyor
+     (`getWeeklyChanges`, Şirketler tablosuyla aynı kaynak). Sağlayıcı bar
+     vermediyse hiçbir satırda değer yoktur ve sütun HİÇ basılmaz ("–"
+     duvarı olmaz); tek tek eksik satırda hücre "–". */
+  const showWeek = rows.some((row) => row.week !== null);
+  const showSector = rows.some((row) => Boolean(row.member.sector));
   /* GÜN ARALIĞI SÜTUNU (10 Kasım). Şirket adı ile Değişim arasında 1320
      piksellik tabloda ~500 piksel boşluk vardı; kotasyon ise günün dibini
      ve tepesini zaten taşıyor (şirket kartında yazıyla duruyordu). Sütun
@@ -200,7 +241,8 @@ export function MembersTable({
      kapanışın çentiği, ondan fiyata dolgu, fiyat noktası. Kural da aynı
      (veri dürüstlüğü 4): kotasyon bu seansa ait değilse (`lastClose`) ya da
      dip/tepe yoksa satırda aralık HİÇ çizilmez; hiçbir satırda yoksa
-     (açılış öncesi) sütun da basılmaz ve boşluğu Değişim şeridi alır. */
+     (açılış öncesi) sütun da basılmaz; boşluk sayı sütunlarının arasına
+     dağılır (kulvarlar tavanlı, şerit yeniden büyümez). */
   const rangeOf = (quote: Quote | undefined) =>
     quote && quote.low !== null && quote.high !== null && quote.high > quote.low &&
     quoteBasis(quote, cards.status) !== "lastClose"
@@ -235,6 +277,7 @@ export function MembersTable({
       className={styles.panel}
       style={{ "--fold-inset": "16px" } as CSSProperties}
       data-range={showRange || undefined}
+      data-week={showWeek || undefined}
     >
       <CompanyCards
         symbols={fresh.map((row) => row.member.symbol)}
@@ -248,6 +291,12 @@ export function MembersTable({
           RowFlip.tsx). Sunucu tabloyu son hâliyle basıyor; bu yaprak yalnız
           eski konumdan yenisine `translate` oynatıyor. */}
       <RowFlip scope="market-members" token={tab} order={`${sort}:${dir}:${limit}`} />
+      {/* SATIRIN TAMAMI HİSSE SAYFASINA GİDER (10 Kasım). Bağlantı yalnız
+          Şirket hücresindeydi; yüzdeye ya da fiyata basan okur hiçbir yere
+          gitmiyordu. Gerçek bağlantı yerinde (klavye, orta tık, şirket
+          kartı); bu yaprak satırın geri kalanına basışı ona taşıyor
+          (gerekçe RowFlip.tsx → `RowTap`). */}
+      <RowTap scope="market-members" />
       {/* Sayaç başlıkta: tablo kırpılıyor ve okuyucu tıklamadan önce
           listenin ne kadarını gördüğünü bilmeli. Aynı kalıp ana sayfadaki
           bilanço panelinde ve /mercek arşivinde de var. */}
@@ -313,8 +362,25 @@ export function MembersTable({
             sonra piyasa değeri ve onluk eksendeki noktası. Genişlikler
             `table-fixed` ile değil içerikten: sayı sütunları `width:1%` +
             `nowrap`, Şirket tavanlı, kalan her piksel Değişim şeridinde.
-            Sonra ölçümü: MembersTable.module.css başında. */}
-        <table className={styles.table} data-signed={changeSigned || undefined}>
+            Sonra ölçümü: MembersTable.module.css başında.
+
+            10 Kasım (akşam), sahibinin canlı ekrana itirazı: "yüzdeyi ve
+            fiyatı daha gözle seçilebilir şekle alalım". YÜZDE VE FİYAT
+            KAHRAMAN. Esnek şerit satırın yarısını (320–541 piksel) tutup
+            asıl iki sayıyı 15 piksel ve soluk bırakıyordu. Yeni hiyerarşi:
+            günlük değişim satırın en güçlü sayısı (17/700, yön renginde;
+            yön İŞARETLE söylenir, ok yok — `formatPercent` zaten +/−
+            basıyor, ok ikinci kez söylerdi); fiyat ikinci (15/700, güçlü
+            mürekkep); haftalık ve piyasa değeri üçüncü (13–14/600); gün
+            aralığı ve pay künye (12, soluk). Şerit YARDIMCI: sayının hemen
+            solunda 56 piksel, sabit ölçekli (`Lane`). |%| ≥ 3 olan satırda
+            yüzde yön renginin yıkamasında bir hap zemini alır
+            (`data-big`): büyük hareket bir bakışta seçilir, öteki satırlar
+            zeminsiz kaldığı için renk duvarı olmaz. Sıra: Şirket · Değişim
+            · Fiyat · Haftalık · Gün Aralığı · Piyasa Değeri (+Pay) · Katkı.
+            Tabular rakam yok (tests/no-tabular-nums.test.ts): hiza sağa
+            yaslı sayı ve sabit `ch` genişliğinden. */}
+        <table className={styles.table}>
           <caption className="sr-only">{INDEX_TABS.find((entry) => entry.key === tab)?.label} · {t.markets.constituents}</caption>
           <thead>
             <tr>
@@ -327,6 +393,15 @@ export function MembersTable({
                 align="start"
                 className={styles.companyHead}
               />
+              {/* SEKTÖR (10 Kasım akşam). Kulvarlar daralınca Şirket adı ile
+                  Değişim arasında, gün aralığının basılmadığı kapalı piyasada
+                  1440'ta ~370 piksel boş kaldı (ölçüldü). Boşluk esnetilmez,
+                  doldurulur: üyelik listesi her şirketin GICS ana sektörünü
+                  zaten taşıyor (db/seed/indices.ts) — Şirketler tablosunun
+                  da ikinci sütunu. Yalnız sığdığı yerde basılır (1280+ ve
+                  gün aralığı ya da haftalık sütun yokken; CSS), hiçbir
+                  üyede sektör yoksa hiç. */}
+              {showSector && <th scope="col" className={styles.sectorHead}>{t.companies.sector}</th>}
               {/* Değişim fiyattan önce — bkz. /sirketler tablosu. */}
               <SortHead
                 label={t.companies.change}
@@ -340,7 +415,17 @@ export function MembersTable({
                 href={sortHref(tab, "fiyat", sort, dir, limit, basePath)}
                 active={sort === "fiyat"}
                 dir={dir}
+                className={styles.priceHead}
               />
+              {showWeek && (
+                <SortHead
+                  label={t.companies.weekChange}
+                  href={sortHref(tab, "hafta", sort, dir, limit, basePath)}
+                  active={sort === "hafta"}
+                  dir={dir}
+                  className={styles.weekHead}
+                />
+              )}
               {showRange && (
                 <th scope="col" className={styles.rangeHead}>{t.markets.dayRange}</th>
               )}
@@ -349,25 +434,9 @@ export function MembersTable({
                 href={sortHref(tab, "cap", sort, dir, limit, basePath)}
                 active={sort === "cap"}
                 dir={dir}
-                className={styles.capHead}
+                className={cn(styles.capHead, shareOf && styles.capShared)}
               >
-                {axis && (
-                  <span className={cn("numeral", styles.capAxis)} aria-hidden>
-                    {/* DÖRTTEN FAZLA BASAMAKTA ETİKET BİR ATLAR (10 Kasım): künye
-                        tabanı 12 piksele çekilince beş etiket 132 piksellik
-                        eksende yine birbirine değdi ("10 Mr100 Mr", ölçüldü).
-                        Çentikler satırlarda TAM kalır; başlıkta en büyük
-                        basamaktan geriye birer atlayarak yazılır. */}
-                    {axis.ticks.map((tick, index) => axis.ticks.length > 4 && (axis.ticks.length - 1 - index) % 2 === 1 ? null : (
-                      <span key={tick} style={{ left: `${(axis.at(tick) * 100).toFixed(2)}%` }}>
-                        {/* "10,0 Mr" → "10 Mr": basamak etiketi tam onluk,
-                            ondalık sıfır yalnız yer kaplıyordu (etiketler
-                            132 piksellik eksende birbirine biniyordu). */}
-                        {formatCompact(tick, locale).replace(/[.,]0+(?=\s|$)/, "")}
-                      </span>
-                    ))}
-                  </span>
-                )}
+                {shareOf && <span className={styles.shareHead}>{t.markets.capShare}</span>}
               </SortHead>
               {showContribution && (
                 <SortHead
@@ -375,6 +444,7 @@ export function MembersTable({
                   href={sortHref(tab, "katki", sort, dir, limit, basePath)}
                   active={sort === "katki"}
                   dir={dir}
+                  className={styles.contributionHead}
                 />
               )}
             </tr>
@@ -384,7 +454,8 @@ export function MembersTable({
               const quote = row.quote;
               const tone = directionOf(quote?.changePct);
               const change = quote?.changePct ?? null;
-              const ratio = change !== null ? Math.min(1, Math.abs(change) / peakChange) : 0;
+              const weekTone = directionOf(row.week);
+              const share = shareOf?.(row.marketCap) ?? null;
               const range = rangeOf(quote);
               const at = (value: number) =>
                 range ? Math.min(100, Math.max(0, ((value - range.low) / (range.high - range.low)) * 100)) : 0;
@@ -395,6 +466,10 @@ export function MembersTable({
                   key={row.member.symbol}
                   data-row={row.member.symbol}
                   data-fold={index >= PHONE_ROWS || undefined}
+                  /* Çizim kapısı satırda: ekranın altındaki satırın
+                     kulvarları son karede bekler, satır görününce dolar
+                     (`components/motion/DrawGate.tsx`). */
+                  data-draw
                 >
                   {/* SIRA NUMARASI LOGOYLA AYNI HATTA (10 Kasım): hücre tepeye
                       yaslıyken "1" logonun 6 piksel üstünde duruyordu. Satır
@@ -433,38 +508,51 @@ export function MembersTable({
                       10 Kasım: aynı dil, sütunun kendi şeridi (`.lane`):
                       96 piksel tavan kalktı, şerit sütunun esnek genişliğini
                       kaplıyor ve sıfır çizgisi her satırda görünüyor
-                      (`--line-strong`); `ScaleBar` öteki ekranlarda aynen. */}
-                  <td className={styles.changeCell}>
+                      (`--line-strong`); `ScaleBar` öteki ekranlarda aynen.
+                      10 Kasım (akşam): esnek şerit geri alındı — sayının
+                      solunda 56 piksel, sabit ölçek, sıfır HER ZAMAN ortada
+                      (listede eksi olmasa da: sabit ölçekte tek yönlü ray
+                      aynı %1'i sekmeden sekmeye başka yere koyardı).
+                      Gerekçe yukarıda, "YÜZDE VE FİYAT KAHRAMAN". */}
+                  {showSector && <td className={styles.sector}>{sectorLabel(row.member.sector, locale) ?? ""}</td>}
+                  <td className={styles.changeCell} data-sorted={sort === "degisim" || undefined}>
                     <span className={styles.change}>
-                      {change !== null ? (
-                        <span className={styles.lane} data-motion-track aria-hidden>
-                          {/* Tam %0: ray ve sıfır çizgisi var, dolgu yok —
-                              "değişmedi" bir uzunluk değil. */}
-                          {change !== 0 && <i
-                            className={styles.fill}
-                            data-tone={tone}
-                            data-motion-draw="line"
-                            style={{
-                              width: `${(changeSigned ? ratio * 50 : ratio * 100).toFixed(2)}%`,
-                              transformOrigin: change < 0 ? "right center" : "left center",
-                            }}
-                          />}
-                        </span>
-                      ) : <span />}
+                      {change !== null ? <Lane value={change} span={DAY_LANE_SPAN} className={styles.dayLane} /> : <span />}
                       <span
                         className={cn(
                           "numeral",
                           styles.changeNum,
                           tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-muted",
                         )}
+                        data-big={(change !== null && Math.abs(change) >= BIG_MOVE) ? tone : undefined}
                       >
                         {quote ? formatPercent(quote.changePct, locale) : NO_VALUE}
                       </span>
                     </span>
                   </td>
-                  <td className={cn("numeral", styles.price)}>
+                  <td className={cn("numeral", styles.price, !quote && styles.none)} data-sorted={sort === "fiyat" || undefined}>
                     {quote ? formatPrice(quote.price, locale) : NO_VALUE}
                   </td>
+                  {showWeek && (
+                    <td className={styles.weekCell} data-sorted={sort === "hafta" || undefined}>
+                      {row.week !== null ? (
+                        <span className={styles.week}>
+                          <Lane value={row.week} span={WEEK_LANE_SPAN} className={styles.weekLane} />
+                          <span
+                            className={cn(
+                              "numeral",
+                              styles.weekNum,
+                              weekTone === "up" ? "text-up" : weekTone === "down" ? "text-down" : "text-muted",
+                            )}
+                          >
+                            {formatPercent(row.week, locale)}
+                          </span>
+                        </span>
+                      ) : (
+                        <span className={styles.none}>{NO_VALUE}</span>
+                      )}
+                    </td>
+                  )}
                   {showRange && (
                     <td className={styles.rangeCell}>
                       {range ? (
@@ -494,25 +582,22 @@ export function MembersTable({
                       )}
                     </td>
                   )}
-                  <td className={styles.capCell}>
-                    <span className={styles.cap}>
-                      <span className="numeral">
+                  <td className={styles.capCell} data-sorted={sort === "cap" || undefined}>
+                    <span className={styles.cap} data-share={shareOf ? "" : undefined}>
+                      <span className={cn("numeral", styles.capNum, !row.marketCap && styles.none)}>
                         {row.marketCap ? formatMoneyCompact(row.marketCap, locale) : NO_VALUE}
                       </span>
-                      {axis && (
-                        <i className={styles.capLane} aria-hidden>
-                          {axis.ticks.map((tick) => (
-                            <span key={tick} className={styles.capTick} style={{ left: `${(axis.at(tick) * 100).toFixed(2)}%` }} />
-                          ))}
-                          {row.marketCap ? (
-                            <b className={styles.capDot} style={{ left: `${(axis.at(row.marketCap) * 100).toFixed(2)}%` }} />
-                          ) : null}
-                        </i>
+                      {shareOf && (
+                        <span className={cn("numeral", styles.share)}>
+                          {/* Onda birin altı iki ondalıkla: S&P 500'ün küçük
+                              üyelerinde pay "%0,0" diye sıfırlanmasın. */}
+                          {share !== null ? formatPercentPlain(share, locale, share >= 10 ? 1 : 2) : ""}
+                        </span>
                       )}
                     </span>
                   </td>
                   {showContribution && (
-                    <td className={cn("numeral", styles.contribution)}>
+                    <td className={cn("numeral", styles.contribution)} data-sorted={sort === "katki" || undefined}>
                       {row.contribution !== null
                         ? approxPoints(row.contribution, locale)
                         : NO_VALUE}
@@ -540,8 +625,8 @@ export function MembersTable({
               .replace("{n}", String(sorted.length))
               .replace("{total}", String(ordered.length))}
           </p>
-          <span className={styles.moreLane} aria-hidden>
-            <i data-motion-draw="line" style={{ width: `${shownShare.toFixed(1)}%` }} />
+          <span className={styles.moreLane} aria-hidden data-draw>
+            <i className="bar-fill" style={{ width: `${shownShare.toFixed(1)}%` }} />
           </span>
           <Link
             href={moreHref}
@@ -556,6 +641,18 @@ export function MembersTable({
         </div>
       )}
 
+      {/* KÜNYE (10 Kasım): tablonun kendi söylemediği üç şey tek düz
+          paragrafta — şeridin ölçeği (sabit, tam boyu yazılı), haftalığın
+          tanımı (5 işlem günü, takvim haftası değil) ve payın resmî ağırlık
+          OLMADIĞI. Sütun yoksa cümlesi de yok. */}
+      <p className={styles.note}>
+        {(showWeek
+          ? t.markets.laneScaleNote.replace("{week}", `±${formatPercentPlain(WEEK_LANE_SPAN, locale, 0)}`)
+          : t.markets.laneScaleNote.replace(/,[^,]*\{week\}/, "")
+        ).replace("{day}", `±${formatPercentPlain(DAY_LANE_SPAN, locale, 0)}`)}
+        {showWeek && ` ${t.markets.weekNote}`}
+        {shareOf && ` ${t.markets.capShareNote}`}
+      </p>
       {showContribution && (
         <p className={styles.note}>{t.markets.contributionHint}</p>
       )}

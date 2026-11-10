@@ -1805,6 +1805,12 @@ const tr = {
     distributionAria: "{n} şirketin günlük değişim dağılımı; medyan {median}.",
     movementScaleFull: "Tam Şerit {pct}",
     openTick: "Açılış",
+    /* 10 Kasım, bileşen tablosu: haftalık sütun, piyasa değeri payı, künye. */
+    capShare: "Pay",
+    capShareNote:
+      "Pay, şirketin piyasa değerinin bu endeksteki şirketlerin toplam piyasa değerine oranıdır; resmî endeks ağırlığı değildir.",
+    laneScaleNote: "Şeritlerin tam boyu: Değişim {day}, Haftalık {week}.",
+    weekNote: "Haftalık, son 5 işlem gününe göre değişimdir; takvim haftası değil, seans sayısı.",
   },
 
   news: {

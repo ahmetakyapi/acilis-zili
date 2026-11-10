@@ -1404,6 +1404,11 @@ const en: typeof tr = {
     distributionAria: "Distribution of daily moves across {n} companies; median {median}.",
     movementScaleFull: "Full Bar {pct}",
     openTick: "Open",
+    capShare: "Share",
+    capShareNote:
+      "Share is the company's market cap as a fraction of the combined market cap of this index's members; it is not the official index weight.",
+    laneScaleNote: "Full bar length: Change {day}, Weekly {week}.",
+    weekNote: "Weekly is the change over the last five trading sessions, not the calendar week.",
   },
 
   news: {

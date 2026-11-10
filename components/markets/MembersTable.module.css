@@ -5,8 +5,8 @@
    Eski kurallar MarketExperience.module.css → `.members`te duruyor (yükleme
    iskeleti hâlâ onları okuyor); tablonun kendisi artık bu modülde.
 
-   ÖLÇÜM (önizleme rotası, sahte veri, Nasdaq 100, 60 satır, iki tema;
-   önce = canlı 8418a2a ekran görüntüsü):
+   ÖLÇÜM 1 — sabah turu (önizleme rotası, sahte veri, Nasdaq 100, 60 satır,
+   iki tema; önce = canlı 8418a2a ekran görüntüsü):
    - 1440: satır 59 → 46 piksel; başlık + gövde 3.580 → 2.800. Şirket adı
      ile Değişim arasındaki ölü boşluk ~500 → 0: Değişim şeridi 96 → 320
      piksel (seans içi, gün aralığı sütunuyla), açılış öncesinde 541.
@@ -19,6 +19,9 @@
      piyasa değeri sütununun başı görünüyor; sayfada yatay taşma 0.
    Yapışkan başlık 1280+ (başlığın tepesi 69 = üst çubuğun dibi, ölçüldü):
    `overflow` görünür olmadan `position:sticky` belgeye değil kaba yapışırdı.
+
+   ÖLÇÜM 2 — akşam turu, "YÜZDE VE FİYAT KAHRAMAN" (gerçek sayfa + sahte
+   sağlayıcı; önce = canlı 78ad602): sayılar dosyanın SONUNDA, "ÖLÇÜM 2".
    -------------------------------------------------------------------------- */
 
 /* `overflow:clip` (hidden değil): köşeyi yuvarlıyor ama kaydırma kabı
@@ -27,9 +30,14 @@
 .panel.panel { overflow:clip; border-radius:var(--radius-panel); background:var(--premium-surface); scroll-margin-top:100px; }
 .panel h2 { font-size:16px; letter-spacing:-.015em; }
 
-.table { width:100%; min-width:704px; border-collapse:separate; border-spacing:0; font-size:var(--text-base); }
+.table { width:100%; border-collapse:separate; border-spacing:0; font-size:var(--text-base); }
 .table th, .table td { padding:0 12px; vertical-align:middle; white-space:nowrap; }
-.table thead th { height:40px; border-block:1px solid var(--line); background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; text-align:right; }
+/* OPAK BAŞLIK (10 Kasım akşam, ölçüldü): `--surface-sunken` saydam bir ton
+   (%4,5 / %26 siyah); başlık 1280+ belgeye yapışınca altından kayan satırın
+   yüzdesi ve fiyatı başlık yazılarının İÇİNDEN okunuyordu (canlıda da).
+   Kardeş tablonun reçetesi (CompanyTable.module.css): opak taban üstünde
+   aynı ton; çizgi iç gölgeden — yapışkan hücrede kenarlık boyanmıyor. */
+.table thead th { height:40px; background:linear-gradient(var(--surface-sunken),var(--surface-sunken)),var(--panel-fixed); box-shadow:inset 0 -1px var(--line), inset 0 1px var(--line); color:var(--text-body); font-size:12px; font-weight:600; text-align:right; }
 .table tbody :is(td, th) { height:48px; border-top:1px solid var(--line-soft); font-weight:400; }
 .table tbody tr:first-child :is(td, th) { border-top:0; }
 
@@ -51,6 +59,12 @@
 }
 .sortLink:active { scale:.97; }
 .rangeHead { text-align:center !important; }
+/* SIRALI SÜTUN GÖVDEDE DE SEÇİLİR (10 Kasım akşam): başlıktaki mavi çizgi
+   yapışkan başlığın olmadığı genişliklerde (<1280) ilk kaydırmada ekrandan
+   çıkıyordu ve okur hangi sayıya göre dizildiğini satırlardan anlayamıyordu.
+   Sütun boyunca çok açık bir etkileşim tonu; satır cevabıyla üst üste
+   biner (hover'da biraz koyulaşır), sayıların rengine dokunmaz. */
+.table tbody td[data-sorted] { background:var(--primary-tint); }
 
 /* ---- Şirket (sabit etiket sütunu) ---- */
 .companyHead, .company { position:sticky; left:0; z-index:1; text-align:left; }
@@ -62,27 +76,52 @@
 .symbol { color:var(--text-strong); font-size:14px; font-weight:700; line-height:17px; letter-spacing:-.01em; }
 .name { overflow:hidden; max-width:84px; color:var(--text-muted); font-size:12px; line-height:15px; text-overflow:ellipsis; }
 
-/* ---- Değişim: ayrışan şerit + sayı ---- */
-.changeCell { width:auto; }
-.change { display:grid; grid-template-columns:minmax(40px,1fr) 7.2ch; align-items:center; gap:8px; }
-.changeNum { font-size:14px; font-weight:700; text-align:right; letter-spacing:-.01em; }
-.lane { position:relative; display:block; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
-.fill { position:absolute; top:0; bottom:0; left:0; min-width:2px; border-radius:999px; background:var(--flat); }
-.fill[data-tone="up"] { background:var(--up); }
-.fill[data-tone="down"] { background:var(--down); }
-/* Sıfır ortada: artı sağa, eksi sola. Sıfır çizgisi rayı 3'er piksel aşar. */
-.table[data-signed] .lane::after { content:""; position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; margin-left:-.5px; background:var(--line-strong); }
-.table[data-signed] .fill { left:50%; border-radius:0 999px 999px 0; }
-.table[data-signed] .fill[data-tone="down"] { left:auto; right:50%; border-radius:999px 0 0 999px; }
+/* ---- Sektör: künye sütunu, yalnız sığdığı yerde (aşağıda 1280+) ---- */
+.sectorHead, .sector { display:none; }
+.table thead .sectorHead { text-align:left; }
+.sector { color:var(--text-body); font-size:13px; text-align:left; }
 
-.price { width:1%; color:var(--text-strong); font-size:14px; font-weight:700; text-align:right; }
+/* ---- Yön kulvarı: sıfır ortada, sabit ölçek (`Lane`) ---- */
+.lane { position:relative; display:block; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
+/* Sıfır çizgisi rayı 3'er piksel aşar. */
+.lane::after { content:""; position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; margin-left:-.5px; background:var(--line-strong); }
+.fill { position:absolute; top:0; bottom:0; left:50%; min-width:2px; border-radius:0 999px 999px 0; background:var(--up); }
+/* Eksi kol sola açılır; `bar-fill` kaynağı solda tutar, burada sağa alınır
+   (modülde yalnız `transform-origin`, animasyon adı değil). */
+.fill[data-tone="down"] { left:auto; right:50%; border-radius:999px 0 0 999px; background:var(--down); transform-origin:right center; }
+
+/* ---- Değişim: satırın EN GÜÇLÜ sayısı ----
+   Sayı sabit `ch` kutusunda sağa yaslı: rakamlar tabular değil
+   (tests/no-tabular-nums.test.ts), hiza kutunun sağ kenarından. Kulvar
+   telefonda yok (ilk ekranda üç sütun), 640+ sayının solunda. */
+.change { display:grid; grid-template-columns:auto; justify-content:end; align-items:center; gap:12px; }
+.dayLane { display:none; }
+.changeNum { box-sizing:content-box; min-width:6.9ch; padding:4px 7px; margin:-4px -7px; border-radius:8px; font-size:17px; font-weight:700; line-height:20px; text-align:right; letter-spacing:-.02em; }
+/* BÜYÜK HAREKET (|%| ≥ 3, `BIG_MOVE`): yön renginin yıkamasında hap zemini.
+   Yalnız eşiği aşan satırda; ötekiler zeminsiz, renk duvarı olmaz. Dolgu
+   negatif kenar boşluğuyla emilir: hap sütun genişliğini ve sağ hizayı
+   değiştirmez. */
+.changeNum[data-big="up"] { background:var(--up-wash); }
+.changeNum[data-big="down"] { background:var(--down-wash); }
+
+/* ---- Fiyat: ikinci ---- */
+/* `.table` öneki şart: `.table tbody :is(td, th)` (0,1,2) düz `.price`i (0,1,0)
+   geçip ağırlığı 400e çekiyordu — canlıda fiyat bu yüzden inceydi (ölçüldü:
+   15px/400). */
+.table .price { color:var(--text-strong); font-size:15px; font-weight:700; text-align:right; letter-spacing:-.015em; }
+.none.none { color:var(--text-muted); font-weight:400; }
+
+/* ---- Haftalık: kulvar + sayı, üçüncü ---- */
+.week { display:grid; grid-template-columns:var(--week-lane,40px) auto; justify-content:end; align-items:center; gap:8px; }
+.weekNum { min-width:6.6ch; font-size:13px; font-weight:600; text-align:right; }
+.weekCell > .none { display:block; text-align:right; }
 
 /* ---- Gün aralığı (endeks kartındaki şeridin satır boyu) ---- */
-.rangeCell { width:1%; }
-.range { display:grid; grid-template-columns:minmax(6ch,auto) 72px minmax(6ch,auto); align-items:center; gap:8px; color:var(--text-muted); font-size:12px; }
+.range { display:grid; grid-template-columns:minmax(6ch,auto) var(--range-lane,64px) minmax(6ch,auto); align-items:center; justify-content:center; gap:8px; color:var(--text-muted); font-size:12px; }
 .range > span:first-child { text-align:right; }
-.rangeLane { position:relative; display:block; height:var(--lane-h,5px); border-radius:3px; background:var(--rail-track); }
-.rangeFill { position:absolute; top:0; bottom:0; border-radius:3px; background:color-mix(in oklab, var(--text-muted) 40%, transparent); }
+.range > span:last-child { text-align:left; }
+.rangeLane { position:relative; display:block; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
+.rangeFill { position:absolute; top:0; bottom:0; border-radius:999px; background:color-mix(in oklab, var(--text-muted) 40%, transparent); }
 .rangeFill[data-tone="up"] { background:color-mix(in oklab, var(--up) 42%, transparent); }
 .rangeFill[data-tone="down"] { background:color-mix(in oklab, var(--down) 42%, transparent); }
 .rangeClose { position:absolute; top:-3px; bottom:-3px; width:2px; margin-left:-1px; border-radius:1px; background:var(--line-strong); }
@@ -91,23 +130,25 @@
 .rangeDot[data-tone="down"] { background:var(--down); }
 .rangeNone { display:block; color:var(--text-muted); text-align:center; }
 
-/* ---- Piyasa değeri: sayı + onluk eksende nokta ---- */
-.capCell, .capHead { width:1%; }
-.cap { display:grid; grid-template-columns:minmax(8ch,auto) 112px; align-items:center; justify-content:end; gap:22px; color:var(--text-body); text-align:right; }
-.capLane { position:relative; display:block; height:1px; background:var(--line); }
-.capTick { position:absolute; top:-3px; width:1px; height:7px; margin-left:-.5px; background:var(--line-strong); }
-.capDot { position:absolute; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%; background:var(--primary); opacity:.62; }
-.capHead .sortWrap { display:grid; grid-template-columns:minmax(8ch,auto) 112px; justify-content:end; gap:22px; }
+/* ---- Piyasa değeri: sayının kendisi + listedeki payı ----
+   Karar ve geçmişi: MembersTable.tsx → "PİYASA DEĞERİ BİR DE ÇİZİM";
+   lib/market-scales.ts → `capShares`. Başlık ile hücre AYNI ızgara:
+   "Piyasa Değeri" sayının, "Pay" yüzdenin sağ kenarında biter. */
+.cap { display:grid; grid-template-columns:auto; justify-content:end; align-items:baseline; gap:10px; text-align:right; }
+.cap[data-share] { grid-template-columns:auto 5.6ch; }
+.capNum { color:var(--text-strong); font-size:14px; font-weight:600; letter-spacing:-.01em; }
+.share { color:var(--text-muted); font-size:12px; }
+.capShared .sortWrap { display:grid; grid-template-columns:auto 5.6ch; justify-content:end; gap:10px; }
 .capHead .sortLink { justify-self:end; }
-.capAxis { position:relative; display:block; width:112px; height:14px; color:var(--text-muted); font-size:12px; font-weight:550; line-height:14px; }
-.capAxis > span { position:absolute; top:0; translate:-50% 0; }
-.contribution { width:1%; color:var(--text-soft, var(--text-body)); text-align:right; }
+.shareHead { color:var(--text-muted); font-weight:400; text-align:right; }
+.contribution { color:var(--text-body); text-align:right; }
 .table tr > :last-child { padding-right:16px; }
 
 /* ---- Satır cevabı: ton + sol kenarda 3 piksellik mavi (yerleşik dil,
    MarketExperience → `.members tbody tr:hover`). Sabit hücre saydam tonu
-   alamaz (altından kayan sayılar içinden okunurdu): opak eşdeğeri. ---- */
-.table tbody tr { transition:background-color .18s var(--ease-brand); }
+   alamaz (altından kayan sayılar içinden okunurdu): opak eşdeğeri.
+   İmleç: satırın tamamı hisse sayfasına gider (`RowTap`). ---- */
+.table tbody tr { cursor:pointer; transition:background-color .18s var(--ease-brand); }
 .table tbody tr:focus-within { background:var(--primary-tint); }
 .table tbody tr:focus-within .company { background:color-mix(in srgb, var(--primary) 5%, var(--premium-surface)); box-shadow:inset 3px 0 var(--primary); }
 .table tbody tr:focus-within .rangeDot { box-shadow:0 0 0 2px color-mix(in srgb, var(--primary) 5%, var(--premium-surface)); }
@@ -123,14 +164,15 @@
 /* ---- Devamı ---- */
 .more { display:flex; flex-wrap:wrap; align-items:center; gap:10px 16px; padding:12px 16px; border-top:1px solid var(--line); }
 .moreCount { color:var(--text-body); font-size:12px; }
-.moreLane { flex:0 1 160px; min-width:72px; height:var(--lane-h,5px); border-radius:3px; background:var(--line-soft); }
-.moreLane > i { display:block; height:100%; border-radius:3px; background:var(--bar-soft); transform-origin:left center; }
-.moreButton { display:inline-flex; align-items:center; gap:7px; min-height:44px; padding-inline:16px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text-strong); font-size:var(--text-base); font-weight:650; transition:border-color .18s var(--ease-brand), background-color .18s var(--ease-brand), scale .12s var(--ease-brand); }
+.moreLane { flex:0 1 160px; min-width:72px; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
+.moreLane > i { display:block; height:100%; border-radius:999px; background:var(--bar-soft); }
+.moreButton { display:inline-flex; align-items:center; gap:7px; min-height:44px; padding-inline:16px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text-strong); font-size:var(--text-base); font-weight:600; transition:border-color .18s var(--ease-brand), background-color .18s var(--ease-brand), scale .12s var(--ease-brand); }
 .moreButton:active { scale:.97; }
 @media(hover:hover) and (pointer:fine) { .moreButton:hover { border-color:var(--primary-faint); background:var(--primary-tint); } }
 .note { padding:10px 16px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; line-height:1.6; }
+.note + .note { padding-top:0; border-top:0; }
 
-/* ---- 640+: sıra numarası gelir, ad genişler ---- */
+/* ---- 640+: sıra numarası ve günlük kulvar gelir, ad genişler ---- */
 @media(min-width:640px) {
   .table th, .table td { padding-inline:14px; }
   .table tbody :is(td, th) { height:46px; }
@@ -138,43 +180,59 @@
   .table thead .companyHead { padding-left:14px; }
   .companyLink { height:45px; padding:0 14px; }
   .name { max-width:150px; }
-  .change { grid-template-columns:minmax(72px,1fr) 7.2ch; gap:14px; }
+  .change { grid-template-columns:var(--day-lane,56px) auto; }
+  .dayLane { display:block; }
   .table tr > :last-child { padding-right:20px; }
   .more, .note { padding-inline:20px; }
   .moreButton { min-height:40px; }
   .sortLink { min-height:32px; }
 }
 
-/* ---- 1280+: tablo kaba sığar (Dow'un katkı sütunuyla en dar hâli 1131,
-   kap 1198 — ölçüldü); kap kaymaz, başlık belgeye yapışır. 1024–1279'da
-   gün aralığıyla içerik 1129, kap 974: orada kap KAYAR, Şirket sabit kalır
-   (ilk denemede 1024'te `overflow:visible` son sütunu panelin dışında
-   kırpıyordu). ---- */
-@media(min-width:1280px) {
-  .panel .scroller { overflow:visible; }
-  .table thead th { position:sticky; top:var(--app-bar-h, 0px); z-index:2; }
-  .company { position:static; background:transparent; }
-  .table tbody tr:is(:hover, :focus-within) .company { background:transparent; }
-}
-/* ---- 1024+: tek katlı kimlik, geniş şeritler ---- */
+/* ---- 1024+: tek katlı kimlik ---- */
 @media(min-width:1024px) {
   .companyText { flex-direction:row; align-items:baseline; gap:9px; }
   .name { max-width:none; font-size:13px; line-height:17px; }
   .company { width:1%; max-width:250px; }
   .companyLink { max-width:250px; }
-  .range { grid-template-columns:minmax(6ch,auto) 88px minmax(6ch,auto); }
-  .cap { grid-template-columns:minmax(8ch,auto) 132px; }
-  .capAxis { width:132px; }
-  .capHead .sortWrap { grid-template-columns:minmax(8ch,auto) 132px; }
-  .change { grid-template-columns:minmax(96px,1fr) 7.2ch; gap:16px; }
+  .week { --week-lane:48px; }
+}
+/* ---- 1280+: tablo kaba sığar; kap kaymaz, başlık belgeye yapışır.
+   1024–1279'da kap KAYAR, Şirket sabit kalır (ilk denemede 1024'te
+   `overflow:visible` son sütunu panelin dışında kırpıyordu).
+
+   FAZLA GENİŞLİK NEREYE (10 Kasım akşam, ölçüldü). İlk denemede bütün
+   sütunlar `auto` idi: tablo fazlayı sütunların doğal genişliğiyle ORANTILI
+   dağıttı ve 1440'ta Gün Aralığı ile Piyasa Değeri arasında 130 piksellik
+   bir çukur açıldı (sayılar sağa yaslı, fazlalık hep sola düşüyor). Şimdi
+   sayı sütunları `width:1%` (içeriği kadar), fazlayı yalnız Şirket alır;
+   sütun araları dolgudan, kulvar boyları değişkenden — ikisi de genişlikle
+   büyür, böylece Şirket'e kalan boşluk adın tavanına yakın kalır. Gün
+   aralığı yokken (açılış öncesi) aynı iş daha geniş dolgu ve kulvarla. ---- */
+@media(min-width:1280px) {
+  .panel .scroller { overflow:visible; }
+  .table thead th { position:sticky; top:var(--app-bar-h, 0px); z-index:2; }
+  .company { position:static; width:auto; max-width:none; background:transparent; }
+  .companyLink { max-width:none; }
+  .table tbody tr:is(:hover, :focus-within) .company { background:transparent; }
+  .table :is(.changeCell, .changeHead, .price, .priceHead, .weekCell, .weekHead, .rangeCell, .rangeHead, .capCell, .capHead, .contribution, .contributionHead) { width:1%; }
+  .table :is(th, td) { padding-inline:16px; }
+  .table { --day-lane:64px; --week-lane:48px; --range-lane:72px; }
+  .panel:is(:not([data-range]), :not([data-week])) :is(.sectorHead, .sector) { display:table-cell; width:1%; }
+  .panel:not([data-range]) .table { --day-lane:96px; --week-lane:72px; }
+  .panel:not([data-range]) .table :is(th, td) { padding-inline:20px; }
 }
 @media(min-width:1440px) {
-  .company, .companyLink { max-width:330px; }
+  .table :is(th, td) { padding-inline:20px; }
+  .table { --day-lane:88px; --week-lane:64px; --range-lane:96px; }
+  .panel:not([data-range]) .table { --day-lane:112px; --week-lane:80px; }
+  .panel:not([data-range]) .table :is(th, td) { padding-inline:24px; }
 }
-/* Gün aralığı yokken (açılış öncesi) Değişim şeridi tablonun yarısını
-   tutardı; şirket adı tavanı açılır, boşluk ikisine bölünür. */
+/* Dolgu kuralları sıra ve Şirket hücresinin kendi dolgusunu ezmesin. */
 @media(min-width:1280px) {
-  .panel:not([data-range]) .company, .panel:not([data-range]) .companyLink { max-width:420px; }
+  .table .rankHead, .table .rank { padding:0 2px 0 20px; }
+  .table .company { padding:0; }
+  .table thead .companyHead { padding-inline:14px; }
+  .table tr > :last-child { padding-right:20px; }
 }
 
 @media(prefers-reduced-motion:reduce) {
@@ -183,28 +241,19 @@
 }
 
 /* ---- Telefon (<640): ilk ekran kuralı ----
-   Şirket (sabit, 132) + Değişim (şerit 44 + sayı) + Fiyat = 330 piksel,
-   352 piksellik kabın içinde; boşluğu piyasa değeri sütunu alır, yoksa
-   otomatik yerleşim fazlayı Şirket'e verip Fiyat'ı ekran dışına itiyordu
-   (ilk ölçüm: Şirket 210, Fiyat x=413). */
+   Şirket sabit; Değişim ve Fiyat kaydırmadan, sağ kenarın 34 piksellik
+   solma kuşağının SOLUNDA biter (maske rakamı soldururdu). Kuşakta
+   Haftalık sütununun kulvarı görünür — "devamı var". Şirket genişliği
+   sabit: otomatik yerleşim fazlayı Şirket'e verip Fiyat'ı ekran dışına
+   itiyordu (ilk ölçüm: Şirket 210, Fiyat x=413). Ölçüm dosya sonunda. */
 @media(max-width:639px) {
-  .table th, .table td { padding-inline:8px; }
-  .company { width:132px; min-width:132px; max-width:132px; }
-  .changeCell, .changeHead { width:1%; }
-  .change { grid-template-columns:44px 7.2ch; }
-  .capCell, .capHead { width:auto; }
-  .cap { justify-content:end; }
-}
-/* Fiyat sağ kenarın 34 piksellik solma kuşağının SOLUNDA bitmeli (maske
-   rakamı soldururdu): Şirket 120 + Değişim 112 + Fiyat ~72 = 304; kuşakta
-   piyasa değeri sütununun başı görünür — "devamı var". */
-@media(max-width:639px) {
-  .table th, .table td { padding-inline:6px; }
-  .company { width:120px; min-width:120px; max-width:120px; }
+  .table th, .table td { padding-inline:7px; }
+  .company { width:126px; min-width:126px; max-width:126px; }
   .companyLink { gap:8px; padding:0 6px 0 14px; }
   .table thead .companyHead { padding-left:14px; }
-  .name { max-width:66px; }
-  .change { grid-template-columns:36px 7.2ch; gap:6px; }
+  .name { max-width:70px; }
+  .changeCell, .changeHead, .price, .priceHead { width:1%; }
+  .changeNum { font-size:16px; min-width:6.6ch; padding-inline:5px; margin-inline:-5px; }
 }
 
 /* Satır imi satırın SOL kenarında: 640+ ilk hücre sıra numarası (ilk
@@ -214,5 +263,37 @@
   .table tbody tr:focus-within .rank { box-shadow:inset 3px 0 var(--primary); }
 }
 @media(min-width:640px) and (hover:hover) { .table tbody tr:hover .rank { box-shadow:inset 3px 0 var(--primary); } }
-/* Fiyat ile Piyasa Değeri başlıkları arasında nefes (ilk ölçüm: 4 piksel). */
-.table .capHead, .table .capCell { padding-left:26px; }
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM 2 — akşam turu, "YÜZDE VE FİYAT KAHRAMAN" (10 Kasım 2026)
+   Gerçek sayfa + sahte sağlayıcı (büyük hareket, tam %0, kotasyonsuz,
+   değersiz ve barsız satırlarla), Nasdaq 100 / S&P 500 / Dow, TR ve EN, iki
+   tema (sayılar temadan bağımsız); önce = canlı 78ad602.
+   - Punto: Değişim 15/700 → 17/700 (telefonda 16); Fiyat 15/400 → 15/700
+     (700 yazılmıştı ama özgüllükten 400 basılıyordu); Piyasa Değeri soluk
+     gri 14/400 → güçlü mürekkep 14/600.
+   - Değişim şeridi: 1440'ta 320–541 → 88 piksel (kapalı piyasada 112),
+     1280'de 64, 640–1279'da 56, telefonda yok. Nokta ekseni 132 → 0.
+   - 1440 seans içi (kap 1318 = içerik 1318 = sütun toplamı): sıra 36 ·
+     Şirket 391 · Değişim 214 · Fiyat 101 · Haftalık 150 · Gün Aralığı 240 ·
+     Piyasa Değeri+Pay 187. Kapalı piyasa: sıra 36 · Şirket 407 · Sektör 168
+     · Değişim 246 · Fiyat 109 · Haftalık 158 · Piyasa Değeri+Pay 195.
+   - 1280: kap 1198 = içerik 1198 (seans içi Şirket 355; Dow, Katkı
+     sütunuyla Şirket 329); kapalıda Sektör sığıyor (Şirket 343).
+   - 1024: seans içi içerik 1059 > kap 974 → kap kayar, Şirket sabit;
+     kapalıda 974 = 974. 768: içerik 1017 / 821, kap 718 → kayar.
+   - 390: Şirket 126 (sabit) + Değişim 81 + Fiyat 75 = 282; fiyatın sağ
+     kenarı 281, solma kuşağının solu 318 — ikisi de ilk ekranda, kuşakta
+     Haftalık kulvarı görünüyor. EN: 283. Satır 48, sayfada yatay taşma 0.
+   - Satır 46 (telefonda 48), değişmedi. Her sayı sütununda metnin sağ kenarı
+     TEK değer (60 satırın 60'ı aynı pikselde; Değişim, Fiyat, Haftalık,
+     Piyasa Değeri, Pay ayrı ayrı). Hücresinden taşan öğe 0, komşu hücreyle
+     çakışan metin 0. Kırpılan ad: 1440/1280'de 0, 1024'te 5, 768'de 1,
+     390'da 27 (üç noktalı, bilinçli; tam ad `title`da).
+   - Çizim: 60 satırda 118 `bar-fill` dolgusu; tablo ekranın altındayken
+     61 kapı kurulu (60 satır + devam şeridi), hepsi son karede; satır
+     görününce dolar. `reducedMotion: "reduce"` altında animasyon 0, dolgu
+     son karede. Sıralamada `RowFlip` 38 satır kaydırdı; kaydırma konumu
+     korunuyor. Fiyat hücresine basış hisse sayfasına gidiyor (`RowTap`).
+   - Yapışkan başlık artık opak (önce: altından kayan satır okunuyordu).
+   -------------------------------------------------------------------------- */
