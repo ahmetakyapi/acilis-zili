@@ -13,22 +13,30 @@
 
 .head { display:grid; gap:8px; }
 /* 10 Kasım: bölüm başlığı ortak ölçüsü (pano başlığıyla aynı; 22–28 / 650 idi). */
-.title { font-size:clamp(25px,2.8vw,36px); line-height:1.1; font-weight:600; letter-spacing:-.035em; }
-/* Ekranın tek cümlesi — veriden (şablon + sayı, `atlasSentence`). */
-.sentence { max-width:62ch; font-size:clamp(16px, .45vw + 13.5px, 19px); line-height:1.4; font-weight:600; letter-spacing:-.01em; color:var(--text-strong); text-wrap:pretty; }
+/* 10 Kasım: başlık bölüm ölçüsündeydi (25–36/600) ve hemen üstündeki
+   "Hisse Planları" ile aynı ağırlıktaydı; sayfada iki eş bölüm başlığı
+   duruyordu. Harita kartların ÖZETİ, bir panel: başlığı panel `h2` ölçüsü
+   (16/700), cümlesi panelin girişi (16–19 → 15–17, 600). Merdiven:
+   h1 > Hisse Planları (25–36) > kart sembolü (19) > panel başlığı (16). */
+.title { font-size:16px; line-height:1.25; font-weight:700; letter-spacing:-.02em; }
+.sentence { max-width:70ch; font-size:clamp(15px, .3vw + 13.5px, 17px); line-height:1.45; font-weight:600; letter-spacing:-.01em; color:var(--text-strong); text-wrap:pretty; }
 .meta { display:flex; flex-wrap:wrap; gap:2px 14px; max-width:90ch; font-size:12.5px; line-height:1.45; color:var(--text-muted); }
 .basis { font-weight:600; color:var(--text-body); white-space:nowrap; }
 
 .legend { display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:2px; font-size:12px; color:var(--text-muted); }
 .legend li { display:inline-flex; align-items:center; gap:6px; }
-.legendZone, .zoneBand { border-radius:3px; background:color-mix(in srgb, var(--up) 30%, transparent); box-shadow:inset 0 0 0 1px color-mix(in srgb, var(--up) 55%, transparent); }
-.legendZone { width:18px; height:10px; }
+/* 10 Kasım (tek çizim ailesi, `Technical.module.css` sonu): bölge burada
+   yeşildi (`--up` %30 + %55 kenar); kart rayı, kapak ölçeği ve merdiven 31
+   Ekim'den beri mavi — bölge bir alan, yön değil. Dolgu ve kenar onlarla
+   aynı reçete. */
+.legendZone, .zoneBand { border-radius:5px; background:linear-gradient(var(--primary-wash), var(--primary-wash)), var(--premium-surface); box-shadow:inset 0 0 0 1px var(--primary-faint); }
+.legendZone { width:18px; height:10px; border-radius:4px; }
 .legendDot { width:10px; height:10px; border-radius:50%; background:var(--text-strong); }
 .legendDot[data-snapshot] { background:transparent; box-shadow:inset 0 0 0 2px var(--text-strong); }
-.legendTick { width:2px; height:12px; border-radius:1px; background:var(--text-muted); }
+.legendTick { width:2px; height:14px; border-radius:1px; background:var(--text-muted); }
 .legendTick[data-kind="stop"] { background:var(--down); }
 .legendTick[data-kind="target"] { background:var(--up); }
-.legendTick[data-kind="level"] { width:1px; height:9px; opacity:.6; }
+.legendTick[data-kind="level"] { height:10px; background:var(--line-strong); }
 
 .body { display:grid; gap:20px; align-items:start; }
 
@@ -64,13 +72,13 @@
 .lane { position:absolute; inset:50% 0 auto; height:var(--lane-h, 5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
 /* Planın kendisi (0 → 1) kulvarın içinde bir ton koyu. */
 .lane::after { content:""; position:absolute; inset:0 calc((1 - var(--one)) * 100%) 0 calc(var(--zero) * 100%); border-radius:inherit; background:var(--line); }
-.zone { position:absolute; top:50%; left:calc(var(--from) * 100%); width:calc((var(--to) - var(--from)) * 100%); min-width:3px; height:12px; margin-top:-6px; }
+.zone { position:absolute; top:50%; left:calc(var(--from) * 100%); width:calc((var(--to) - var(--from)) * 100%); min-width:3px; height:14px; margin-top:-7px; }
 .tick { position:absolute; top:50%; left:calc(var(--at) * 100%); width:2px; height:14px; margin:-7px 0 0 -1px; border-radius:1px; background:var(--text-muted); }
 .tick[data-kind="stop"], .tick[data-kind="sell"] { background:var(--down); }
 .tick[data-kind="target"] { background:var(--up); }
 .tick[data-kind="target2"] { height:10px; margin-top:-5px; background:var(--up); opacity:.55; }
 .tick[data-kind="sell2"] { height:10px; margin-top:-5px; background:var(--down); opacity:.55; }
-.tick[data-kind="level"] { width:1px; height:8px; margin:-4px 0 0; opacity:.5; }
+.tick[data-kind="level"] { width:2px; height:10px; margin:-5px 0 0 -1px; background:var(--line-strong); }
 /* Taşıyıcı izin tam genişliği; `translateX(%)` kendi genişliğine göre,
    yani izin genişliğine göre — nokta `left` değil `transform` ile yürüyor. */
 .carrier { position:absolute; inset:0; pointer-events:none; transform:translateX(calc(var(--at) * 100%)); }
@@ -102,7 +110,9 @@
 .detail { display:grid; gap:8px; }
 .detailHead { display:flex; align-items:center; gap:8px; font-size:17px; line-height:1.2; }
 .detailHead b { font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
-.pill { display:inline-flex; padding:2px 8px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; letter-spacing:.06em; }
+.thesis { display:grid; gap:4px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.thesis span { font-size:12px; font-weight:600; color:var(--text-muted); }
+.thesis p { font-size:13px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
 .detailCompany { margin-top:-4px; font-size:12.5px; color:var(--text-muted); }
 .detailPrice { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 10px; }
 .detailPrice span { font-size:12px; color:var(--text-muted); }

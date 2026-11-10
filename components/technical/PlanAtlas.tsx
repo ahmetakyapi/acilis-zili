@@ -1,4 +1,4 @@
-import { verdictLabel, verdictOf, verdictPillClass, type VerdictKey } from "@/lib/analysis";
+import { verdictLabel, verdictOf, type VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import type { Quote } from "@/lib/providers/types";
 import type { TechnicalAnalysisRow } from "@/lib/schema";
@@ -130,7 +130,6 @@ export function PlanAtlas({
         company,
         verdict,
         stance: verdictLabel(verdict, t),
-        pillClass: verdictPillClass(verdict),
         href: technicalHref(row.symbol),
         geometry,
         fromSnapshot,
@@ -140,6 +139,14 @@ export function PlanAtlas({
         distance,
         distanceTone,
         facts,
+        /* OKUMA PANELİ GEREKÇEYİ DE TAŞIYOR (10 Kasım). Panel yalnız
+           sayılardı ve 1440'ta 372 piksel tutuyordu, yanındaki 16 satırlık
+           çizim 650: altında ~280 piksel boş kalıyordu (ölçüldü). Kartın
+           gerekçe cümlesi (kayıttaki `copy.headline`, yeni veri değil) panele
+           indi: okur satırın üstüne gelince sayıyla birlikte NEDENİ de
+           okuyor. Çevirisi yoksa kartla aynı kural: orijinal metin. */
+        headline: (locale === "en" ? (row.copy.en ?? row.copy.tr) : row.copy.tr).headline,
+        headlineLang: locale === "en" && !row.copy.en ? "tr" : locale,
         /* Plansız ya da çizilemeyen satır grubun sonunda. */
         sortKey: geometry ? geometry.norm : Number.POSITIVE_INFINITY,
       };
@@ -211,6 +218,7 @@ export function PlanAtlas({
         details: v.details,
         openPlan: v.openPlan,
         hint: v.hint,
+        thesis: t.technical.thesisLabel,
       }}
     />
   );

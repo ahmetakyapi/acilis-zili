@@ -298,8 +298,6 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
       <Head
         icon={ChartBar}
         title={t.technical.volume}
-        tag={ratio !== null ? `${formatPrice(ratio, locale, { digits: 1 })}×` : null}
-        tagClass={heavy ? "text-primary-ink" : "text-muted"}
       />
       <Lead>{t.technical.volumeLead}</Lead>
       <div className={styles.indicatorBody}>
@@ -311,6 +309,26 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
             okunur (`.claude/rules/arayuz.md` → Ekran Düzeni): her satırın
             altında aynı ölçekte (üçünün en büyüğü) 5 piksellik şerit. Oran
             künyesi rayının ÜSTÜNE taşındı, ray grubu kartın dibine yaslı. */}
+        {/* ORAN KARTIN SAYISI (10 Kasım, ikinci geçiş). Oran yalnız başlığın
+            sağındaki 12 piksellik künyeydi ve ray grubu kartın dibine
+            yaslıydı: bugünün hacmi yazılmamış kayıtta (iki satır) satırlarla
+            ray arasında yine 56 piksellik boş bant kalıyordu (1440, ölçüldü).
+            Kartın cevabı oran; komşusu ATR kartı gibi display sayı olarak
+            başa çıktı, rayı hemen altında, satırlar onu izliyor. Hiçbir öğe
+            dibe itilmiyor: artan boşluk varsa kartın dibinde tek parça. */}
+        {ratio !== null && (
+          <div className={styles.volumeRatio}>
+            <p className={styles.bigFigure}>
+              {formatPrice(ratio, locale, { digits: 1 })}×
+              <span className="text-small font-semibold text-muted">{t.technical.volumeRatio}</span>
+            </p>
+            <div className={styles.ratioTrack} data-heavy={heavy || undefined} aria-hidden>
+              <span data-motion-draw="bar" style={{ width: `${Math.min(100, (ratio / scale) * 100)}%` }} />
+              <i style={{ left: `${100 / scale}%` }} />
+            </div>
+            <div className={styles.volumeScale} aria-hidden="true"><span>0</span><span>1×</span><span>3×+</span></div>
+          </div>
+        )}
         <dl className={styles.rows}>
           <div className={styles.row}>
             <dt>{t.technical.volumeLast}</dt>
@@ -339,16 +357,6 @@ function VolumePanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; loc
             </div>
           )}
         </dl>
-        {ratio !== null && (
-          <div className={styles.volumeRatio}>
-            <p className={styles.indicatorNote}>{t.technical.volumeRatio}</p>
-            <div className={styles.ratioTrack} data-heavy={heavy || undefined} aria-hidden>
-              <span data-motion-draw="bar" style={{ width: `${Math.min(100, (ratio / scale) * 100)}%` }} />
-              <i style={{ left: `${100 / scale}%` }} />
-            </div>
-            <div className={styles.volumeScale} aria-hidden="true"><span>0</span><span>1×</span><span>3×+</span></div>
-          </div>
-        )}
       </div>
     </section>
   );
