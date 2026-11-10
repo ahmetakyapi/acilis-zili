@@ -80,7 +80,14 @@
 }
 
 /* DÜZENLER, kabın enine göre (`SKY_MODES`, lib/day-skyline.ts). Eşikler
-   orada yazan aralıklarla aynı; değiştirirsen ikisini birden. */
+   orada yazan aralıklarla aynı; değiştirirsen ikisini birden.
+   ŞERİT EŞİĞİ 600'DE KALDI (10 Kasım gecesi, ana sayfa düzen turu): 1024'te
+   ana kolon 602, şerit kabı ~562 pikseldi ve şerit dar (iki sıralı) düzende
+   878 piksel boy alıyordu. Eşiği 550'ye indirmek orta düzeni 562 piksele
+   sokardı: 900 birimlik sahne 0,62'ye ölçeklenir, 15 birimlik etiket ~9
+   piksele iner (metin tabanı 12). Çözüm sayfada: 1024–1279 tablet
+   düzeninde, şerit tam genişlikte (TodayExperience.module.css → "PANO:
+   TABLET DÜZENİ 1279'A KADAR"). */
 .mode { display: none; }
 .root[data-variant="poster"] .mode { gap: 14px; }
 @container (max-width: 559.98px) { .mode[data-mode="narrow"] { display: grid; } }

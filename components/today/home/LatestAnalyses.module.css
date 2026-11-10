@@ -39,7 +39,8 @@
    dünün parçasında, bülten ve silüetin ardında (page.tsx); kart + dört
    satır 814 piksel tutuyordu (390, ölçüldü). Kalanı başlıktaki "Tümünü
    Gör" (/bilancolar/analizler). `display:none`: odak sırasına girmiyor.
-   Doldurucu (`data-fill`) yalnız ≥1024'te çalıştığı için çakışmıyor. */
+   Doldurucu (`data-fill`) yalnız ≥1280'de (10 Kasım gecesine dek ≥1024)
+   çalıştığı için çakışmıyor. */
 @media (max-width: 767px) {
   .list > li:nth-child(n+4) { display: none; }
 }

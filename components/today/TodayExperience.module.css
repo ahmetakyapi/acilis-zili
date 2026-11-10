@@ -523,8 +523,12 @@
    dört durum denendi (sol üst/sağ üst/sol alt/sağ alt boyları); yalnız
    o durumda sağ ara > 0. Doldurucu yine iki ölçüyü birlikte kapatıyor:
    dip farkı + parça arası boşluk.
-   `align-items:start`: parça kendi içeriği kadar; ızgara satırı geremez. */
-@media (min-width:1024px) {
+   `align-items:start`: parça kendi içeriği kadar; ızgara satırı geremez.
+   ≥1280 (10 Kasım gecesi, düzen turu): iki kolonlu ray 1024'te
+   başlıyordu; 1024–1279 artık tablet düzeninde (gerekçe aşağıda, "PANO:
+   TABLET DÜZENİ 1279'A KADAR"). Düzen turunun ölçümü (önce → sonra, üç
+   seans × iki okur, iki tema aynı) bu bloğun sonunda. */
+@media (min-width:1280px) {
   .dashboard { grid-template-rows:auto auto auto 1fr; align-items:start; }
   .dashboard > [data-home-section="texture"] { grid-column:1 / -1; grid-row:1; }
   .runMainToday { grid-column:1; grid-row:2; }
@@ -534,6 +538,21 @@
   .dashboard > .wideRow { grid-column:1 / -1; }
   .dashboard > [data-home-section="session-bell"] { grid-row:5; }
   .dashboard > [data-home-section="sources"] { grid-row:6; }
+}
+/* DÜZEN TURU ÖLÇÜMÜ (10 Kasım gecesi; gerçek sayfa + sahte sağlayıcı,
+   giriş yapmamış ve yapmış okur — portföy altı pozisyon, favoriler on
+   sembol —, üç seans, reduced-motion, iki tema aynı). Kolon dipleri
+   (sol − sağ, son çocuk), önce → sonra:
+     1600  −31…+6 → −21…+16      1440  −27…+2 → −25…+12
+     1280  −21…−4 → −31…+5       1024  −10…+531 → kolon yok (tablet düzeni)
+   Parça arası fazla boşluk her durumda 0. Sayfa boyu 1440: 6.712–7.410 →
+   6.712–7.184; 1024: 7.222–7.351 → 8.983–9.176 (okunan paneller tam
+   genişlikte, kapalı piyasadaki 531 piksellik ölü boşluk yok). Rayın başı
+   1440'ta giriş yapmış okurda: portföy başlığı 3.493 → 2.034, favoriler
+   2.572 → 2.635. Yatay taşma 0, tablo kabında yatay kaydırma 0, çalışan
+   animasyon 0 (360/390/768/1024/1280/1440/1600). Odak sırası ≥1280:
+   akış → bant → sol üst → sağ üst → sol alt → sağ alt → zil (260 sekme). */
+@media (min-width:1024px) {
   /* KAHRAMAN KAYDIRINCA GERİ ÇEKİLİR (8 Ekim). Sayfa aşağı indikçe sayaç
      ve endeks destesi kartın içinde hafifçe küçülüp soluyor; kart kendisi
      yerinde, kenarı ve zemini sabit. Altından gelen panel önde, kahraman
@@ -662,6 +681,26 @@
   .heroMain { grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:24px; }
   .heroCopy { align-self:stretch; }
   .indexDeck { padding:0 0 0 24px; border-top:0; border-left:1px solid var(--line); }
+}
+
+/* PANO: TABLET DÜZENİ 1279'A KADAR (10 Kasım gecesi, düzen turu). Bu
+   kurallar 768–1023 bloğundaydı; 1024–1279 iki kolonlu rayı alıyordu ve
+   orada ana kolon 602 piksel: Son Seansın Silueti dar (iki sıralı,
+   telefonun) düzene düşüp 878 piksel boy alıyor, Mercek manşeti beş
+   satıra kırılıp altında ~170 piksel boşluk bırakıyor, analiz satırları
+   üç ölçüden ikisini düşürüyordu; kapalı piyasada (hareketler "Veri
+   Alınamadı") sol kolon sağdan 531 piksel uzun bitiyordu ve doldurucunun
+   kapatabileceği yedek yoktu (gerçek sayfa + sahte sağlayıcı, ölçüldü).
+   Silüetin orta düzen eşiğini 600'den 550'ye indirmek denendi ve
+   bırakıldı: orta düzen 900 birimlik sahneyi 562 piksele ölçekliyor,
+   etiketler 15 birimden ~9 piksele iniyordu (metin tabanı 12).
+   Şimdi 1024–1279'da okunan paneller tam genişlikte (976), ölçü
+   panelleri ikişerli (476) — tabletle aynı DOM sırası, aynı çiftler;
+   kolon dengesi sorusu yok (`FillColumn` ≥1280). Kahraman bu genişlikte
+   iki kolonlu kalıyor (≥1024 kuralları). Ölçüm "KAYDIRMALI İKİ KOLON"un
+   altında. */
+@media (min-width:768px) and (max-width:1279px) {
+  .dashboard > [data-col] { display:contents; }
   /* TABLETTE ÖLÇÜ PANELLERİ İKİŞER (24 Eylül). Pano 1023'ün altında tek
      sütuna iniyordu ve 768'de her ölçü paneli 720 piksele geriliyordu:
      üç satırlık bir tahvil kartı sayfa genişliğinde, sağ yarısı boş.
@@ -678,9 +717,9 @@
      piksel bitiyordu (768, ölçüldü). Çift bölümler satırın boyuna
      geriliyor, içlerindeki panel kalan yeri alıyor; fark panelin İÇİNDE,
      dibinde. Tam genişlik bölümler satırı yalnız tuttuğu için etkilenmiyor. */
-  .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="schedule"],[data-home-section="week"],[data-home-section="technical"],[data-home-section="watchlist"]) { align-self:stretch; display:flex; flex-direction:column; }
-  .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="technical"],[data-home-section="watchlist"]) > :last-child { flex:1 0 auto; }
-  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="portfolio"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"],[data-home-section="puzzle"],[data-home-section="daily-chart"],[data-home-section="skyline"],[data-home-section="session-bell"],[data-home-section="technical"]) { grid-column:1 / -1; }
+  .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="week"],[data-home-section="technical"],[data-home-section="watchlist"],[data-home-section="portfolio"]) { align-self:stretch; display:flex; flex-direction:column; }
+  .dashboard :is([data-home-section="world"],[data-home-section="movers"],[data-home-section="yields"],[data-home-section="macro"],[data-home-section="technical"],[data-home-section="watchlist"],[data-home-section="portfolio"]) > :last-child { flex:1 0 auto; }
+  .dashboard :is([data-home-section="brief"],[data-home-section="stories"],[data-home-section="earnings"],[data-home-section="analyses"],[data-home-section="texture"],[data-home-section="news"],[data-home-section="sources"],[data-home-section="puzzle"],[data-home-section="daily-chart"],[data-home-section="skyline"],[data-home-section="session-bell"],[data-home-section="technical"]) { grid-column:1 / -1; }
   /* ÇİFTLER DOM SIRASINDAN (10 Kasım gecesi). Sıra artık DOM'da (page.tsx)
      ve yan yana duracak iki panel ardışık olmak zorunda; `order` ile eş
      kurulmuyor. Bugünün parçası: hareketler | dünya (misafir) ya da
@@ -691,9 +730,17 @@
      (kardeş seçicisi — kökte `:has()` yok). Davet satırı tam genişlikte.
      Oturum bilgisi sayfadan (`data-signed-in`), `:has(a[href$="/giris"])`
      yerine. */
-  .dashboard[data-signed-in] [data-home-section="world"] { grid-column:1 / -1; }
-  .dashboard:not([data-signed-in]) [data-home-section="watchlist"] { grid-column:1 / -1; }
-  .dashboard [data-home-section="schedule"]:empty + [data-home-section="week"] { grid-column:1 / -1; }
+  /* DÜZEN TURU (10 Kasım gecesi). Giriş yapmış okurda bugünün parçası
+     artık portföy → favoriler → hareketler → dünya → teknik (page.tsx,
+     "OKURUN KENDİSİ RAYIN BAŞINDA"): iki çift — portföy | favoriler
+     (ikisi de okurun kendisi) ve hareketler | dünya — ardından teknik tam
+     genişlikte. Misafirde hareketler | dünya, Nabız ve teknik tam
+     genişlikte, davet satırı tam genişlikte (eskisi gibi).
+     "Bugünün Takvimi" sayfadan kalktı (gerekçe page.tsx, haftaya bakışın
+     üstü); hafta artık hep eşsiz ve tam genişlikte. Eski kural: takvim
+     boşken (`:empty +`) hafta tam genişlik. */
+  .dashboard:not([data-signed-in]) :is([data-home-section="portfolio"],[data-home-section="watchlist"]) { grid-column:1 / -1; }
+  .dashboard [data-home-section="week"] { grid-column:1 / -1; }
 }
 
 @media (max-width:767px) {

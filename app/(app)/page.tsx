@@ -13,10 +13,10 @@ import { LiveClock } from "@/components/today/LiveClock";
 import { SessionRail } from "@/components/today/SessionRail";
 import { sessionDomain } from "@/components/today/index-feed";
 import { Panel, PanelHeader, PanelLink, Skeleton, PanelSkeleton } from "@/components/ui/primitives";
-import { getStatus, getTodayEvents } from "@/lib/data";
+import { getStatus } from "@/lib/data";
 import { displayZone, formatInZone, nextZoneMidnight, zoneTag } from "@/lib/session-clock";
 import { FillColumn } from "@/components/today/FillColumn";
-import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
+import { getI18n } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
 import { RailSection } from "@/components/today/home/RailSection";
 import { DrawOnView } from "@/components/today/home/DrawOnView";
@@ -24,7 +24,7 @@ import { IndexSkeleton, IndexStrip } from "@/components/today/home/IndexStrip";
 import { YieldCard } from "@/components/today/home/YieldCard";
 import { WorldStrip } from "@/components/today/home/WorldStrip";
 import { BriefCard } from "@/components/today/home/BriefCard";
-import { ScheduleList, WeekAhead } from "@/components/today/home/Schedule";
+import { WeekAhead } from "@/components/today/home/Schedule";
 import { DayMovers } from "@/components/today/home/DayMovers";
 import { EarningsToday, EarningsTodaySkeleton } from "@/components/today/home/EarningsToday";
 import { WatchlistSummary } from "@/components/today/home/WatchlistSummary";
@@ -397,7 +397,16 @@ export default async function TodayPage() {
         her zaman `gap` (gerekçe ve ölçüm TodayExperience.module.css →
         "KAYDIRMALI İKİ KOLON"). Tek DOM'un tek bedeli masaüstünde Tab'ın
         bantlar hâlinde ilerlemesi: sol üst → sağ üst → sol alt → sağ alt;
-        her parça kendi içinde yukarıdan aşağı. */}
+        her parça kendi içinde yukarıdan aşağı.
+
+        DÜZEN TURU (10 Kasım gecesi, sahibinin isteği: "masaüstü dağılımını
+        tekrar gözden geçir… telefondaki düzeni de"). Üç karar: (1) giriş
+        yapmış okurun portföyü ve favorileri sağ rayın BAŞINDA (aşağıda);
+        (2) "Bugünün Takvimi" kalktı, bugünün verileri akışta (haftaya
+        bakışın üstünde gerekçe); (3) iki kolonlu ray 1280'de başlıyor,
+        1024–1279 tablet düzeninde (TodayExperience.module.css → "PANO:
+        TABLET DÜZENİ 1279'A KADAR"). Seans Zili sayfanın kapanışında kaldı
+        (gerekçe bölümün üstünde). */}
     <div className={styles.dashboard} data-signed-in={signedIn ? "" : undefined}>
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
           kaplamaz. Geri sayım sıfıra inince orada kilitleniyor ve yeni güne
@@ -511,9 +520,35 @@ export default async function TodayPage() {
       </div>
 
       {/* ================= Sağ kolon, üst parça: BUGÜNÜN ÖLÇÜLERİ =================
-          Hareketler → (favoriler) → dünya → nabız → teknik. Ölçekten inceye
-          ve ölçüden görüşe. */}
+          Misafir: hareketler → dünya → nabız → teknik (ölçekten inceye,
+          ölçüden görüşe). Giriş yapmış okur: portföy → favoriler →
+          hareketler → dünya → teknik.
+          OKURUN KENDİSİ RAYIN BAŞINDA (10 Kasım gecesi, düzen turu). Portföy
+          yuvası dünyanın, favoriler hareketlerin ardındaydı. Seans içi,
+          giriş yapmış okur (gerçek sayfa + sahte sağlayıcı): 1440'ta
+          portföyün başlığı 3.493 → 2.034 (bilanço panelinin hizasında),
+          favorilerinki 2.572 → 2.635; telefonda (390) portföy 5.434 →
+          3.975, favoriler 4.517 → 4.596, hareketler 3.975 → 5.036.
+          Bir yatırımcının ilk sorusu "benim param ne yaptı";
+          piyasanın geneli onun bağlamı. Yer yine sayfada seçiliyor
+          (`signedIn`); portföyü olmayan hesapta yuvaya Nabız giriyor ve
+          rayı o açıyor. Ölçü TodayExperience.module.css → "KAYDIRMALI İKİ
+          KOLON". */}
       <div data-col="side" data-run="today" className={cn(styles.run, styles.runSideToday)}>
+        {signedIn ? (
+          <>
+            <DrawOnView id="portfoy-ozeti" data-home-section="portfolio">
+              <Suspense fallback={<PanelSkeleton rows={3} />}>
+                <PortfolioSlot locale={locale} t={t} />
+              </Suspense>
+            </DrawOnView>
+            <div data-home-section="watchlist">
+              <Suspense fallback={<PanelSkeleton rows={3} />}>
+                <WatchlistSummary locale={locale} t={t} />
+              </Suspense>
+            </div>
+          </>
+        ) : null}
         {/* ENDEKS ŞERİDİ BURADAN MASTHEAD'E TAŞINDI. Dört endeks piyasanın
             MANŞET sayıları; yan kolonda bir gösterge tablosu satırıydılar,
             oysa "bugün borsa ne yaptı" sorusunun ilk cevabı onlar. Taşınma
@@ -534,18 +569,12 @@ export default async function TodayPage() {
         </DrawOnView>
 
         {/* ---- Favoriler (giriş yapmış okuyucu) ----
-             Liste gerçekten onun listesi: bugünün hareketlerinin hemen
-             ardında. Giriş yapmamış okuyucuya aynı panel bir davet satırı
-             ve o sağ kolonun en dibinde (aşağıda). Yer sayfada seçiliyor
-             (`signedIn`); eskiden `:has(a[href$="/giris"])` + `order` ile
-             telefonda kaydırılıyordu. */}
-        {signedIn ? (
-          <div data-home-section="watchlist">
-            <Suspense fallback={<PanelSkeleton rows={3} />}>
-              <WatchlistSummary locale={locale} t={t} />
-            </Suspense>
-          </div>
-        ) : null}
+             Liste gerçekten onun listesi. Bir dönem bugünün hareketlerinin
+             hemen ardındaydı; 10 Kasım gecesinden beri portföyle birlikte
+             rayın başında (yukarıda). Giriş yapmamış okuyucuya aynı panel
+             bir davet satırı ve o sağ kolonun en dibinde (aşağıda). Yer
+             sayfada seçiliyor (`signedIn`); eskiden `:has(a[href$="/giris"])`
+             + `order` ile telefonda kaydırılıyordu. */}
 
         {/* Dünya piyasaları: "bugün borsalar ne yapmış" sorusunun ABD'den
             sonraki halkası. */}
@@ -567,12 +596,15 @@ export default async function TodayPage() {
              10 KASIM GECESİ: SAĞ KOLONA, DÜNYANIN ARDINA. Mercek'in altında
              ana kolondaydı; nabız günün dokusu (oynaklık, momentum,
              genişlik), dünün okuması değil. Telefonda dünya ile teknik
-             arasında. */}
-        <DrawOnView id="portfoy-ozeti" data-home-section="portfolio">
-          <Suspense fallback={<PanelSkeleton rows={3} />}>
-            <PortfolioSlot locale={locale} t={t} />
-          </Suspense>
-        </DrawOnView>
+             arasında. Giriş yapmış okurda yuva rayın başında (yukarıda);
+             burası yalnız misafirin Nabız'ı. */}
+        {signedIn ? null : (
+          <DrawOnView id="portfoy-ozeti" data-home-section="portfolio">
+            <Suspense fallback={<PanelSkeleton rows={3} />}>
+              <PortfolioSlot locale={locale} t={t} />
+            </Suspense>
+          </DrawOnView>
+        )}
 
         {/* ---- Teknik görünüm ----
              SİTENİN YAZDIĞI İÇERİĞİN ANA SAYFADA KENDİ YERİ VAR; teknik
@@ -708,30 +740,17 @@ export default async function TodayPage() {
           </Suspense>
         </DrawOnView>
 
-        {/* ---- Ekonomik takvim ----
-             ANA KOLONDAN BURAYA TAŞINDI. İkisi de kısa, tarifeli listeler:
-             saat, olayın adı ve bir rakam. Ana kolonda tam genişlikte
-             durduklarında satırın sağ yarısı boş kalıyor ve iki panel,
-             yanlarındaki uzun metinlerle aynı ağırlıkta görünüyordu.
-             ARKA PLANDA KALDI (10 Kasım gecesi). Bugünün olayları zaten
-             sayfanın ikinci bloğunda, "Bugünün Akışı"nda saatleriyle
-             duruyor; bu liste onun tarifeli özeti ve haftaya bakışın
-             komşusu. Akışın altına almak aynı olayları iki kez arka arkaya
-             okutuyordu. */}
-        {/* BOŞ GÜNDE PANEL YOK (9 Ekim). Bugün takvimde veri yokken panel
-            başlığıyla birlikte "planlanmış ekonomik veri yok" diyen bir
-            kutu olarak duruyordu — çoğu gün böyle ve hemen altındaki
-            "Haftaya Bakış" sıradaki veriyi zaten gösteriyor. Sarmal boş
-            kalınca `:empty` onu ızgaradan düşürüyor; doldurma
-            (FillColumn) panelleri izlediği için kolon dengesi kendini
-            yeniden kuruyor. Yedek `null`: veri yerel veritabanından,
-            iskeletin bir an görünüp kaybolması boş günde bir kırpışma olurdu. */}
-        <div data-home-section="schedule">
-          <Suspense fallback={null}>
-            <SchedulePanel locale={locale} t={t} />
-          </Suspense>
-        </div>
-
+        {/* ---- Ekonomik takvim: AKIŞA KATILDI (10 Kasım gecesi, düzen turu) ----
+             Burada "Bugünün Takvimi" paneli dururdu (9 Ekim'den beri boş
+             günde basılmıyordu; bir dönem ana kolondaydı, sonra haftaya
+             bakışın komşusu). Kaldırıldı: bugünün ekonomik verileri sayfanın
+             ikinci bloğu "Bugünün Akışı"nda saatleri, beklentisi ve sonucuyla
+             zaten duruyor (aynı `economic_events` satırları,
+             lib/day-flow-data.ts) ve panel aynı iki TÜFE satırını telefonda
+             9.700. pikselde ikinci kez okutuyordu (canlı, 10 Kasım). Bölünme
+             artık net: BUGÜN akışta, YARIN VE SONRASI aşağıdaki "Haftaya
+             Bakış"ta. Telefonda 173 piksel (390), rayda 121–241 piksel
+             kısalıyor. */}
         <Panel data-home-section="week">
           <PanelHeader
             title={t.today.weekAhead}
@@ -773,7 +792,15 @@ export default async function TodayPage() {
           10 KASIM GECESİ: SAYFANIN SONUNA. Akışın hemen ardındaydı ve
           telefonda bugünün bütün içeriğini 576 piksel aşağı itiyordu; her
           gün aynı şeyi anlatan bir açıklayıcı, günün verisi değil. Tam
-          genişlik satırı korunuyor, yalnız iki kolonun altında. */}
+          genişlik satırı korunuyor, yalnız iki kolonun altında.
+          DÜZEN TURUNDA YERİ TARTIŞILDI VE KALDI (10 Kasım gecesi). Adaylar:
+          akışın ardı (telefonda bugünü yine 576+ piksel iter — sahibinin
+          itirazı), sağ ray (figürün ≥1024 düzeni medya sorgusuyla iki
+          kolonlu, 350 piksellik rayda kırılır — components/figures/
+          session-bell/bell.css), iki kolonun arası (kolonlar o satırda eşit
+          bitmek zorunda; bugün parçaları 1440'ta ~900 / ~2.100, doldurucu
+          kapatamaz, boşluk açılır). Sayfanın kapanışında anlamı da var:
+          günün nasıl işlediği ve sıradaki zil — "yarın 17:30". */}
       <Panel data-home-section="session-bell" className={styles.wideRow}>
         <PanelHeader title={t.sessionBell.title} />
         <SessionBellFigure status={status} nowMs={nowMs} locale={locale} t={t} />
@@ -792,21 +819,5 @@ export default async function TodayPage() {
       </footer>
     </div>
     </MotionExperience>
-  );
-}
-
-/** Bugünün takvimi — bugün veri yoksa hiç basılmıyor (gerekçe yerleştiği yerde). */
-async function SchedulePanel({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const events = await getTodayEvents();
-  if (events.length === 0) return null;
-  return (
-    <Panel>
-      <PanelHeader
-        title={t.today.schedule}
-        tone="title"
-        action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
-      />
-      <ScheduleList locale={locale} t={t} />
-    </Panel>
   );
 }

@@ -271,9 +271,11 @@ function StoriesSpotlightView({
            yol listenin DİBİNDE, yalnızca telefonda: başlıktaki "Tümünü
            Gör" iki ekran yukarıda kalıyor. Masaüstünde DOM ve görünüm
            aynı; blok ana kolonda ve kolon dengesi ondan etkilenmiyor
-           (FillColumn yalnızca ≥1024'te çalışıyor, ölçüldü).
+           (FillColumn yalnızca ≥1280'de çalışıyor — 10 Kasım gecesine dek
+           ≥1024 —, ölçüldü).
            ÜÇÜNCÜ SATIR YEDEK (10 Kasım gecesi). Mercek artık sol kolonun
-           alt parçasının sonunda ve sol kolon 1024'te sağdan uzun
+           alt parçasının sonunda ve sol kolon 1024'te (o gece iki kolonlu;
+           düzen turundan beri 1024–1279 tablet düzeninde) sağdan uzun
            kalıyordu: kaydırmalı ızgarada fark sağ parçaların ARASINDA 84
            piksellik boşluk olarak açılıyordu (gerçek sayfa + sahte
            sağlayıcı; sağın yedekleri tükenmişti). Satır `hidden` +

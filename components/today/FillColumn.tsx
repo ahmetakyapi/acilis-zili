@@ -43,13 +43,17 @@ import { useEffect } from "react";
  * basılıyor, yani sunucu çıktısı taban listedir ve hiçbir şey zıplamıyor;
  * açılan satırlar zaten BOŞ olan alana iner.
  *
- * Yalnızca iki kolonlu düzende (1024px üstü) çalışır; dar ekranda kolon
+ * Yalnızca iki kolonlu düzende (1280px ve üstü; 10 Kasım gecesine dek
+ * 1024) çalışır; dar ekranda kolon
  * kavramı yok ve listeler tabanda kalır (parçalar `display:contents`,
  * telefon sırası DOM sırası — 10 Kasım gecesi).
  */
 export function FillColumn() {
   useEffect(() => {
-    const genis = window.matchMedia("(min-width: 1024px)");
+    /* ≥1280 (10 Kasım gecesi, düzen turu): 1024–1279 tablet düzeninde,
+       kolon yok — gerekçe TodayExperience.module.css → "PANO: TABLET
+       DÜZENİ 1279'A KADAR". */
+    const genis = window.matchMedia("(min-width: 1280px)");
     let kare = 0;
 
     /* KOLON PARÇALI (10 Kasım gecesi). Ana sayfanın DOM'u telefon
