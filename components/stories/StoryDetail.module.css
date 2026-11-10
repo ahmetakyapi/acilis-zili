@@ -1,4 +1,11 @@
-/* OKUMA SAYFASININ İKİ ÖLÇÜSÜ VAR, ÜÇ DEĞİL (23 Eylül). Kapak 1200, özet
+/* 10 Kasım 2026 (Mercek yeniden tasarımı): bu dosyadaki ağırlıklar ortak
+   basamağa çekildi (`.claude/rules/arayuz.md` → Ortak ölçüler: 400/600/700).
+   650 → başlıklarda 700 (manşet, bölüm başlığı, şirket ve içindekiler
+   başlığı), künye ve numaralarda 600; 550 → 600; 500 → 400. Dosya rehber
+   ve topluluk yazısıyla ORTAK: düzeni değiştiren yeni kurallar yalnız
+   Mercek'in bastığı sınıflarda (`.coverCast`, `.endBar`, `.moreHead`).
+
+   OKUMA SAYFASININ İKİ ÖLÇÜSÜ VAR, ÜÇ DEĞİL (23 Eylül). Kapak 1200, özet
    ve kutular 832, metin 672 pikseldi: sol ve sağ kenar her blokta 80
    piksel içeri dışarı sıçrıyor, sayfa merdiven gibi okunuyordu (sahibi:
    "sağdan soldan boşluklar tuhaf"). Şimdi her şey kapak kartının
@@ -22,7 +29,7 @@
 .cover[data-has-aside="false"] { grid-template-columns:minmax(0,1fr); }
 .cover[data-has-aside="false"] .coverCopy { max-width:900px; }
 .coverCopy { min-width:0; display:flex; flex-direction:column; gap:22px; }
-.title { max-width:28ch; font-size:clamp(32px,3.3vw,46px); line-height:1.1; letter-spacing:-.045em; font-weight:650; text-wrap:balance; overflow-wrap:anywhere; }
+.title { max-width:28ch; font-size:clamp(32px,3.3vw,46px); line-height:1.1; letter-spacing:-.045em; font-weight:700; text-wrap:balance; overflow-wrap:anywhere; }
 .dek { max-width:62ch; color:var(--text-body); font-size:16px; line-height:1.8; text-wrap:pretty; }
 .coverFigure { min-width:0; }
 .figure { border:0; border-radius:0; padding:4px 0 4px 24px; background:transparent; gap:18px; border-left:1px solid var(--primary-faint); }
@@ -30,9 +37,9 @@
    13 punto, Title Case, izleme yok. Büyük harfli, aralıklı "RAKAMLARLA"
    hemen yanındaki "Bu Yazıda" ve altındaki "Genel Özet" ile iki ayrı
    etiket sistemi kuruyordu. */
-.figure > figcaption { font-size:13px; font-weight:650; letter-spacing:0; text-transform:none; color:var(--text-strong); }
+.figure > figcaption { font-size:13px; font-weight:600; letter-spacing:0; text-transform:none; color:var(--text-strong); }
 .figure > div { gap:18px 16px; }
-.figure :global(.tote) { overflow-wrap:anywhere; font-size:26px; line-height:1.15; font-weight:550; letter-spacing:-.04em; }
+.figure :global(.tote) { overflow-wrap:anywhere; font-size:26px; line-height:1.15; font-weight:600; letter-spacing:-.04em; }
 .figure :global(.line-clamp-2) { overflow-wrap:anywhere; display:block; -webkit-line-clamp:unset; overflow:visible; font-size:12px; line-height:1.65; margin-top:7px; }
 /* KAPAK RAKAMLARI KARO (8 Kasım, sahibinin isteği: "sağ taraftaki
    sayıları ve bilgileri daha iyi ve görsel sunalım"). Yukarıdaki sol
@@ -63,10 +70,10 @@
    kalıbında (numara sütunu + ad). Dar ekranda basılmıyor — kapak kısa
    kalsın, okuyucu metne insin. */
 .coverToc { min-width:0; padding:4px 0 4px 24px; border-left:1px solid var(--primary-faint); }
-.coverToc > p { margin-bottom:8px; font-size:13px; line-height:1.35; font-weight:650; color:var(--text-strong); }
+.coverToc > p { margin-bottom:8px; font-size:13px; line-height:1.35; font-weight:600; color:var(--text-strong); }
 .coverToc a { display:grid; grid-template-columns:28px minmax(0,1fr); align-items:baseline; min-height:40px; padding:9px 0; border-top:1px solid var(--line-soft); font-size:15px; line-height:1.4; color:var(--text-body); }
 .coverToc li:first-child a { border-top:0; }
-.coverToc a > span:first-child { font-size:12px; font-weight:650; color:var(--primary-ink); }
+.coverToc a > span:first-child { font-size:12px; font-weight:600; color:var(--primary-ink); }
 @media(hover:hover) { .coverToc a:hover > span:last-child { color:var(--primary-hover); } }
 .coverToc a:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:var(--radius-sm); }
 
@@ -79,6 +86,26 @@
  .symbols::-webkit-scrollbar { display:none; }
  .symbols > a { flex-shrink:0; }
 }
+
+/* KADRO ŞERİDİ (10 Kasım 2026). Şirket çipleri manşet sütununun içinde,
+   girişin altındaydı: beş çip iki satıra (2 + 3) sarıyor, sol sütunu 115
+   piksel uzatıyor ve sağdaki "Sayılarla" karoları o uzayan sütunun
+   ortasında, başlığın 100 piksel altında başlayıp altında 150 piksel boş
+   bırakarak yüzüyordu (canlı 1440, softbank yazısı: kapak 517 piksel).
+   Çipler artık kapağın dibinde, iki sütunun altında boydan boya TEK şerit:
+   manşet ve rakamlar aynı boyda yan yana, kadro bir dergi sayfasının künye
+   bandı gibi altta. Ölçüldü (aynı başlık, giriş ve beş çip; 1440): kapak
+   517 → 478 piksel, rakam sütununun üstündeki ve altındaki boşluk ~100 /
+   ~150 → 50 / 50 (ortalı kaldı, sütun kısaldı); 1360'ta 474, 1280'de 466.
+   Yatay taşma 390 / 768 / 1024 / 1280 / 1440'ta 0, iki temada. Etiket
+   ("Yazıda Geçen Şirketler") yalnız ≥768'de; telefonda şerit yatay kayar
+   (aşağıdaki `.symbols` kuralı) ve etiket satır çalmaz.
+   `margin-top:-8px`: ızgaranın 32'lik satır aralığı şeridin üstünde 24'e
+   iner (kapağın iç ritmi 22-24). */
+.coverCast { grid-column:1/-1; display:flex; min-width:0; align-items:center; gap:18px; margin-top:-8px; padding-top:20px; border-top:1px solid var(--line-soft); }
+.coverCastLabel { flex-shrink:0; max-width:92px; font-size:12px; line-height:1.35; font-weight:600; color:var(--text-muted); }
+.coverCast > .symbols { flex:1; }
+@media(max-width:767px) { .coverCast { margin-top:0; padding-top:18px; } .coverCastLabel { display:none; } }
 
 /* --------------------------------------------------------------------------
    Gövde — kapağın altında, KAPAKLA AYNI GENİŞLİKTE
@@ -103,22 +130,26 @@
 /* Şirket kartı: tonla ayrışan yüzey, gölge yok. */
 .companiesInline { padding:18px var(--read-inset) 12px; border:1px solid var(--line); border-radius:var(--radius-xl); background:var(--premium-surface); }
 @media(max-width:639px) { .companiesInline { padding:16px var(--read-inset) 10px; } }
+/* Değeri olmayan şirket kartı basılmıyor (StoryCompanies, 10 Kasım 2026);
+   çerçeveli kap boş bir kutu olarak kalmasın. `:has()` kabın kendi
+   çocuğunda, kökte değil. */
+.companiesInline:not(:has(> *)) { display:none; }
 
 /* Şirketler — adlar sunucuda hemen, getiriler akışla. */
 .companies { display:flex; flex-direction:column; padding-top:18px; border-top:1px solid var(--line); }
 .companies:first-child { padding-top:0; border-top:0; }
-.companiesTitle { font-size:15px; line-height:1.35; font-weight:650; letter-spacing:-.01em; color:var(--text-strong); }
+.companiesTitle { font-size:15px; line-height:1.35; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
 .companiesHead { display:flex; align-items:flex-start; justify-content:space-between; gap:12px; margin-bottom:6px; }
 .companiesStamp { flex-shrink:0; display:flex; flex-direction:column; align-items:flex-end; font-size:12px; line-height:1.35; font-weight:600; color:var(--text-muted); text-align:right; }
-.companiesStamp > span + span { font-weight:500; }
+.companiesStamp > span + span { font-weight:400; }
 .companyRow { display:grid; grid-template-columns:26px minmax(0,1fr) auto; align-items:center; column-gap:10px; min-height:44px; margin-inline:-8px; padding:5px 8px; border-radius:var(--radius-lg); }
 @media(hover:hover) { .companyRow:hover { background:var(--primary-tint); } }
 .companyRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:0; }
 .companyName { min-width:0; }
 .companyName > span:first-child { display:block; font-size:13px; line-height:1.25; font-weight:700; color:var(--text-strong); }
 .companyName > span + span { display:block; overflow:hidden; white-space:nowrap; text-overflow:ellipsis; font-size:12px; line-height:1.35; color:var(--text-muted); }
-.companyValue { display:flex; flex-direction:column; align-items:flex-end; font-size:14px; line-height:1.25; font-weight:650; }
-.companyValue > small { font-size:12px; font-weight:500; color:var(--text-muted); }
+.companyValue { display:flex; flex-direction:column; align-items:flex-end; font-size:14px; line-height:1.25; font-weight:600; }
+.companyValue > small { font-size:12px; font-weight:400; color:var(--text-muted); }
 /* Yüzdenin çizgisi: kulvar kalınlığı tek ölçü (`--lane-h`), genişlik
    sabit ki beş satırın çubukları aynı ölçekte ve aynı hatta bitsin. */
 .companyBar { width:clamp(88px, 24vw, 160px); max-width:none; height:var(--lane-h, 5px); }
@@ -129,21 +160,21 @@
 .tocBox { border:1px solid var(--line); border-radius:var(--radius-xl); background:var(--premium-surface); }
 .tocBox > summary { display:flex; align-items:center; gap:10px; min-height:52px; padding:0 var(--read-inset); cursor:pointer; list-style:none; }
 .tocBox > summary::-webkit-details-marker { display:none; }
-.tocBox > summary > span:first-child { font-size:15px; line-height:1.3; font-weight:650; color:var(--text-strong); }
+.tocBox > summary > span:first-child { font-size:15px; line-height:1.3; font-weight:700; color:var(--text-strong); }
 .tocBox > summary > span:nth-child(2) { font-size:12px; line-height:1.3; color:var(--text-muted); }
 .tocBox > summary > svg { margin-left:auto; flex-shrink:0; color:var(--text-muted); transition:transform var(--default-transition-duration,180ms) var(--ease-brand,var(--ease-brand)); }
 .tocBox[open] > summary > svg { transform:rotate(180deg); }
 .tocBox > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:var(--radius-xl); }
 .tocBox ol { display:flex; flex-direction:column; padding:0 var(--read-inset) 10px; border-top:1px solid var(--line-soft); }
 .tocBox a { display:grid; grid-template-columns:28px minmax(0,1fr); align-items:baseline; min-height:44px; padding:11px 0; font-size:15px; line-height:1.4; color:var(--text-body); }
-.tocBox a > span:first-child { font-size:12px; font-weight:650; color:var(--primary-ink); }
+.tocBox a > span:first-child { font-size:12px; font-weight:600; color:var(--primary-ink); }
 .tocBox li + li a { border-top:1px solid var(--line-soft); }
 
 /* --------------------------------------------------------------------------
    Künye ve arşiv
    -------------------------------------------------------------------------- */
 .sectionHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-.sectionTitle { font-size:16px; line-height:1.3; font-weight:650; letter-spacing:-.01em; color:var(--text-strong); }
+.sectionTitle { font-size:16px; line-height:1.3; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
 .sectionMeta { flex-shrink:0; font-size:12px; line-height:1.35; font-weight:600; color:var(--text-muted); }
 
 /* KAYNAKLAR NUMARALI LİSTE. Yedi bağlantı "Yayıncı — Başlık" ham
@@ -159,8 +190,8 @@
  .sourceList > li:nth-child(2) { border-top:0; }
 }
 .sourceLink { display:grid; grid-template-columns:24px minmax(0,1fr) 14px; align-items:start; column-gap:8px; min-height:56px; padding:10px 0; }
-.sourceLink > span:first-child { padding-top:1px; font-size:12px; line-height:1.35; font-weight:650; color:var(--text-muted); }
-.sourcePublisher { display:block; font-size:12px; line-height:1.35; font-weight:650; color:var(--text-strong); }
+.sourceLink > span:first-child { padding-top:1px; font-size:12px; line-height:1.35; font-weight:600; color:var(--text-muted); }
+.sourcePublisher { display:block; font-size:12px; line-height:1.35; font-weight:600; color:var(--text-strong); }
 .sourceTitle { display:block; margin-top:2px; font-size:14px; line-height:1.45; color:var(--primary-ink); text-wrap:pretty; }
 .sourceLink > svg { margin-top:3px; color:var(--primary); }
 span.sourceLink .sourceTitle { color:var(--text-body); }
@@ -190,12 +221,46 @@ a.sourceLink:focus-visible { outline:2px solid var(--line-focus); outline-offset
 @media(prefers-reduced-motion:reduce) { .moreStories li a > svg, .sourceLink > svg, .tocBox > summary > svg { transition:none; transform:none!important; } }
 
 /* Kapaktaki şirket çipleri (26 Eylül): 40'lık logo, okunur ad, üzerine
-   gelince kalkıp ok açılıyor. Logosu olmayan fon piyasa ikonu alıyor. */
-.symbolChip { display:flex; min-height:52px; align-items:center; gap:10px; padding:6px 14px 6px 6px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), translate .25s var(--ease-brand); }
+   gelince kalkıp ok açılıyor. Logosu olmayan fon piyasa ikonu alıyor.
+   10 Kasım 2026: çip artık KALKMIYOR (`translate:0 -2px` silindi). Hover'da
+   kaldırma sitenin her yerinden kalktı (`.claude/rules/hareket.md`: geri
+   bildirim ton ve kenarla, hareket yalnız okta); bu çip son kalandı.
+   Süreler merdivene çekildi (ton 180 ms, ok 200 ms). */
+.symbolChip { display:flex; min-height:52px; align-items:center; gap:10px; padding:6px 14px 6px 6px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:border-color 180ms var(--ease-brand), background-color 180ms var(--ease-brand); }
 .symbolFund { display:grid; place-items:center; width:40px; height:40px; flex-shrink:0; border-radius:11px; background:var(--primary-wash); color:var(--primary-ink); }
-.symbolArrow { flex-shrink:0; color:var(--primary-ink); opacity:.45; transition:opacity .2s var(--ease-brand), transform .25s var(--ease-brand); }
+.symbolArrow { flex-shrink:0; color:var(--primary-ink); opacity:.45; transition:opacity 180ms var(--ease-brand), transform 200ms var(--ease-brand); }
 @media(hover:hover) and (pointer:fine) {
- .symbolChip:hover { translate:0 -2px; border-color:var(--primary-faint); background:var(--primary-tint); }
+ .symbolChip:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
  .symbolChip:hover .symbolArrow { opacity:1; transform:translate(2px,-2px); }
 }
-@media(prefers-reduced-motion:reduce) { .symbolChip, .symbolArrow { transition:none; } .symbolChip:hover { translate:none; } }
+@media(prefers-reduced-motion:reduce) { .symbolChip, .symbolArrow { transition:none; } .symbolChip:hover .symbolArrow { transform:none; } }
+
+/* --------------------------------------------------------------------------
+   YAZI SONU (10 Kasım 2026)
+
+   Gövdenin dibindeki zil iminden sonra okuyucunun elinde bir şey yoktu:
+   paylaş butonu 6-9 bin piksel yukarıda, manşetin altındaydı; kavramları
+   merak eden için sözlüğe ve rehbere giden yol yalnız sayfanın alt
+   bilgisindeydi. Şerit zil iminin hemen altında, gövdenin kabında: solda
+   paylaş (aynı `ShareButton`, panel yukarı değil aşağı açılır; altında
+   şirket kartı var, yer dar değil), sağda iki bağlantı. Kutu değil, hairline
+   ile ayrılmış tek satır (uyarı ve künye için yeni kutu açılmaz).
+   -------------------------------------------------------------------------- */
+.endBar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 20px; margin-top:20px; padding:14px var(--read-inset) 0; border-top:1px solid var(--line-soft); }
+.endLinks { display:flex; flex-wrap:wrap; align-items:center; gap:4px 14px; font-size:13px; line-height:1.4; color:var(--text-muted); }
+.endLinks a { display:inline-flex; min-height:40px; align-items:center; gap:5px; font-weight:600; color:var(--primary); transition:color 180ms var(--ease-brand); }
+.endLinks a > svg { transition:transform 200ms var(--ease-brand); }
+@media(hover:hover) { .endLinks a:hover { color:var(--primary-hover); } .endLinks a:hover > svg { transform:translateX(3px); } }
+.endLinks a:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:var(--radius-sm); }
+@media(max-width:767px) { .endLinks a { min-height:44px; } }
+
+/* "Arşivden Diğer Yazılar" başlığı ve arşive dönüş AYNI SATIRDA. Dönüş
+   bağlantısı listenin altında, tek başına bir satırdaydı (başlık üstte
+   yalnız, eylem altta yalnız: iki yarım satır). Kaynaklar başlığıyla aynı
+   kalıp (`.sectionHead`: solda ad, sağda künye/eylem). */
+.moreHead { display:flex; align-items:center; justify-content:space-between; gap:12px; }
+.moreHead a { display:inline-flex; min-height:40px; flex-shrink:0; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--primary); transition:color 180ms var(--ease-brand); }
+.moreHead a > svg { transition:transform 200ms var(--ease-brand); }
+@media(hover:hover) { .moreHead a:hover { color:var(--primary-hover); } .moreHead a:hover > svg { transform:translateX(3px); } }
+@media(max-width:767px) { .moreHead a { min-height:44px; } }
+@media(prefers-reduced-motion:reduce) { .endLinks a, .endLinks a > svg, .moreHead a, .moreHead a > svg { transition:none; transform:none!important; } }

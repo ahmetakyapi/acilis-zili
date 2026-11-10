@@ -174,6 +174,16 @@ function CompaniesView({
      koruyor, akış gelince başlık uzamıyor. */
   const blankStamp = !pending && valued.length === 0;
 
+  /* HİÇ DEĞER YOKSA KART HİÇ BASILMAZ (10 Kasım 2026). Olay günü yazılan
+     yazıda henüz olay sonrası kapanış yok; kart o gün yalnız logo + ad
+     basıyordu: kapağın şirket çiplerinin birebir tekrarı ve sağında ~800
+     piksel boş alan (canlı 1440, softbank yazısı: 290 piksellik kart, beş
+     satır, sıfır rakam). Şirket bağlantıları kapağın kadro şeridinde zaten
+     duruyor; ilk kapanıştan sonra kart getirileriyle geri geliyor. Boş
+     kalan kabı sayfa gizliyor (`.companiesInline`, StoryDetail.module.css).
+     Akış yedeği (`pending`) satırları basmaya devam ediyor. */
+  if (blankStamp) return null;
+
   return (
     <section className={styles.companies} aria-busy={pending || undefined}>
       <div className={styles.companiesHead}>

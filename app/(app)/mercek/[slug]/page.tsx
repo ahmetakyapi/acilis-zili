@@ -14,7 +14,7 @@ import {
 import { StoryCompanies, StoryCompaniesFallback } from "@/components/stories/StoryCompanies";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { notFound } from "next/navigation";
-import { ArrowLeft, ArrowUpRight, CaretDown, ChartLineUp } from "@phosphor-icons/react/dist/ssr";
+import { ArrowLeft, ArrowRight, ArrowUpRight, CaretDown, ChartLineUp } from "@phosphor-icons/react/dist/ssr";
 import { logoSrc } from "@/lib/logos";
 import {
   ArticleBody,
@@ -165,7 +165,15 @@ async function MoreStories({
 
   return (
     <nav id="story-more" className={detail.moreStories} aria-label={t.stories.moreStories}>
-      <p className={detail.sectionTitle}>{t.stories.moreStories}</p>
+      {/* Başlık ve arşive dönüş aynı satırda (10 Kasım 2026); gerekçe
+          StoryDetail.module.css → `.moreHead`. */}
+      <div className={detail.moreHead}>
+        <p className={detail.sectionTitle}>{t.stories.moreStories}</p>
+        <Link href="/mercek">
+          {t.stories.backToList}
+          <ArrowRight size={13} weight="bold" aria-hidden />
+        </Link>
+      </div>
       <ul className="flex flex-col">
         {rows.map((story) => (
           <li key={story.slug} data-motion-reveal>
@@ -185,12 +193,6 @@ async function MoreStories({
           </li>
         ))}
       </ul>
-      <Link
-        href="/mercek"
-        className="tap-44 -my-2 inline-flex w-fit min-h-8 items-center py-2 text-small font-semibold text-primary transition-colors hover:text-primary-hover"
-      >
-        {t.stories.backToList}
-      </Link>
     </nav>
   );
 }
@@ -352,7 +354,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
             içinde açılıyor; `.cover` artık taşanı kırpmıyor. */}
         <div className="-mt-3 flex flex-wrap items-center justify-between gap-x-4 gap-y-1">
           <p className="flex flex-wrap items-center gap-x-2.5 gap-y-1 text-small text-muted">
-            <span className="numeral">
+            <span className="numeral font-semibold text-body">
               {formatEtDateLong(story.eventDate, locale)}
             </span>
             <span aria-hidden>·</span>
@@ -388,20 +390,30 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
           </p>
         )}
 
-        {hasCompanies && <StorySymbols symbols={symbols} />}
-        {/* Şirket kartı — kapaktaki çipler ve gövdenin sonundaki şirket
-            listesi. Kartın künyesi fiyatın hangi seansı anlattığını adıyla
-            söylüyor; listenin "Olaydan Bugüne" ölçüsüyle karışmıyor.
-            Kotasyonu kart kendisi soruyor, akışla iniyor. */}
-        {hasCompanies && (
-          <Suspense fallback={null}>
-            <CompanyCards symbols={symbols} />
-          </Suspense>
-        )}
       </div>
       {figure && <ScrollStage className={detail.coverFigure}>
         <StoryFigure block={figure} className={detail.figure} locale={story.locale} />
       </ScrollStage>}
+      {/* KADRO ŞERİDİ: çipler manşet sütunundan çıkıp kapağın dibine,
+          iki sütunun altına indi (10 Kasım 2026; gerekçe ve ölçüm
+          StoryDetail.module.css → `.coverCast`). Çipte GÜNÜN yüzdesi yok
+          ve olmayacak: yazı olay gününün rakamlarını basıyor, yanına
+          bugünün yüzdesi aynı şirketin iki farklı yüzdesini dizerdi
+          (StoryCompanies → "Neden güncel yüzde değil"); "olaydan bugüne"
+          gövdenin sonundaki şirket kartında. */}
+      {hasCompanies && (
+        <div className={detail.coverCast}>
+          <p className={detail.coverCastLabel}>{t.stories.relatedSymbols}</p>
+          <StorySymbols symbols={symbols} />
+          {/* Şirket kartı — kapaktaki çipler ve gövdenin sonundaki şirket
+              listesi. Kartın künyesi fiyatın hangi seansı anlattığını adıyla
+              söylüyor; listenin "Olaydan Bugüne" ölçüsüyle karışmıyor.
+              Kotasyonu kart kendisi soruyor, akışla iniyor. */}
+          <Suspense fallback={null}>
+            <CompanyCards symbols={symbols} />
+          </Suspense>
+        </div>
+      )}
       </header>
       </SpotlightCard>
 
@@ -433,6 +445,9 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
             navLabel={t.stories.tocLabel}
             lang={story.locale}
             containerId="story-reading"
+            minutes={minutes}
+            remainingLabel={t.stories.railRemaining}
+            doneLabel={t.stories.railDone}
           />
         )}
         <div className={detail.mainCol}>
@@ -461,6 +476,29 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
                 kartı ve künye yazının parçası değil, EKİ. Gövdenin kabında
                 duruyor ki sütunun 56'lık aralığı ikinci kez eklenmesin. */}
             <InkCanvas scene="storyEnd" seed={11} className="mx-auto mt-8 block h-15 w-60" />
+            {/* YAZI SONU ŞERİDİ (10 Kasım 2026): paylaş ve kavram
+                bağlantıları, zil iminin hemen altında. Gerekçe
+                StoryDetail.module.css → "YAZI SONU". */}
+            <div className={detail.endBar} lang={locale}>
+              <ShareButton
+                url={absoluteUrl(`/mercek/${story.slug}`, locale)}
+                title={story.title}
+                labels={t.share}
+                align="left"
+                className="-ml-2.5"
+              />
+              <p className={detail.endLinks}>
+                {t.stories.endTerms}
+                <Link href="/sozluk">
+                  {t.stories.endGlossary}
+                  <ArrowRight size={13} weight="bold" aria-hidden />
+                </Link>
+                <Link href="/rehber">
+                  {t.stories.endGuide}
+                  <ArrowRight size={13} weight="bold" aria-hidden />
+                </Link>
+              </p>
+            </div>
           </div>
 
           {/* ŞİRKETLER GÖVDENİN SONUNDA, KAYNAKLARDAN ÖNCE — her genişlikte

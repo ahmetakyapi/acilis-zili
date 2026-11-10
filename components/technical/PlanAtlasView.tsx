@@ -3,6 +3,7 @@
 import { ArrowUpRight, CaretDown } from "@phosphor-icons/react";
 import { useState } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import type { VerdictKey } from "@/lib/analysis";
 import type { AtlasGeometry } from "@/lib/technical-visuals";
 import { cn } from "@/lib/utils";
@@ -13,7 +14,6 @@ export type AtlasRowView = {
   company: string | null;
   verdict: VerdictKey;
   stance: string;
-  pillClass: string;
   href: string;
   geometry: AtlasGeometry | null;
   /** Kotasyon yok, fiyat analiz anından: nokta içi boş halka. */
@@ -24,6 +24,9 @@ export type AtlasRowView = {
   distance: string;
   distanceTone?: "up" | "down";
   facts: { label: string; value: string; tone?: "up" | "down" }[];
+  /** Kartın gerekçe cümlesi (kayıttan) ve dili. */
+  headline: string;
+  headlineLang: string;
 };
 
 export type AtlasGroup = {
@@ -51,6 +54,7 @@ type Copy = {
   details: string;
   openPlan: string;
   hint: string;
+  thesis: string;
 };
 
 type Vars = React.CSSProperties & Record<`--${string}`, string | number>;
@@ -233,7 +237,9 @@ function Detail({ row, copy }: { row: AtlasRowView; copy: Copy }) {
     <div className={styles.detail}>
       <p className={styles.detailHead}>
         <b>{row.symbol}</b>
-        <span className={cn(styles.pill, row.pillClass)}>{row.stance}</span>
+        {/* Görüş hapı tek bileşen (10 Kasım): burada elle `verdictPillClass`
+            hapı vardı, ikonsuz ve köşeli. */}
+        <VerdictPill verdict={row.verdict} label={row.stance} size="xs" />
       </p>
       {row.company && <p className={styles.detailCompany}>{row.company}</p>}
       <p className={styles.detailPrice}>
@@ -250,6 +256,12 @@ function Detail({ row, copy }: { row: AtlasRowView; copy: Copy }) {
             </div>
           ))}
         </dl>
+      )}
+      {row.headline && (
+        <div className={styles.thesis}>
+          <span>{copy.thesis}</span>
+          <p lang={row.headlineLang}>{row.headline}</p>
+        </div>
       )}
       <Link href={row.href} prefetch={false} className={styles.openPlan}>
         {copy.openPlan}

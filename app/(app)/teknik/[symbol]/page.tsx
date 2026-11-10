@@ -200,9 +200,10 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
   const sectionItems = [
     { id: "technical-levels", label: t.technical.priceMap },
     { id: "technical-reading", label: t.technical.summary },
+    /* 10 Kasım: "Dikkat Edilecekler" haritanın altına çıktı (aşağıda). */
+    { id: "technical-watch", label: t.technical.watch },
     { id: "technical-stance", label: t.technical.stanceGuide.detailTitle.replace("{stance}", verdictLabel(verdict, t)) },
     { id: "technical-indicators", label: t.technical.indicators },
-    { id: "technical-watch", label: t.technical.watch },
     ...(history.length > 1 ? [{ id: "technical-history", label: t.technical.history }] : []),
   ];
   const levelProps = {
@@ -283,7 +284,23 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
 
       {/* ---- Fiyat haritası ve değerlendirme ---- */}
       <div className={styles.analysisGrid} data-balance-grid data-notes="full">
-        <section id="technical-levels" className={cn(styles.block, styles.mapPanel)} data-balance="map">
+        {/* SOL KOLON: HARİTA + DİKKAT EDİLECEKLER (10 Kasım). SAT planında
+            harita kısa (alım bölgesi ve stop yok, üç-dört seviye) ve sol kolon
+            sağdan 286 piksel erken bitiyordu (NVDA, 1440, ölçüldü; TUT'ta
+            98); notlar tek satır olduğu için `BalanceNotes` de kapatamıyordu.
+            "Dikkat Edilecekler" sayfanın dibinde, göstergelerden sonra tam
+            genişlikte bir şeritti; oysa içeriği haritadaki seviyelerin
+            yakın takvimi ("164,27'deki dip kırılırsa…"). Artık haritanın
+            hemen altında, aynı kolonda: boşluk esnetilmedi, dolduruldu ve
+            okur seviyeyi gördüğü yerde izleyeceği şeyi okuyor. Kolonun
+            dibini `BalanceNotes` bu sarmalayıcıdan ölçüyor (`data-balance`).
+            Tek kolonlu düzende sıra: harita, notlar, değerlendirme, dikkat
+            edilecekler (CSS `order`). Ölçüm (1440, kolon dip farkı):
+            NVDA/SAT 286 → 127 (notu olmayan kayıtta; tek notlu kayıtta not
+            da haritanın altına inip ~63), AMD/TUT ve AAPL/AL 98 → 24;
+            1024'te 162 / 60. */}
+        <div className={styles.analysisLeft} data-balance="map">
+        <section id="technical-levels" className={cn(styles.block, styles.mapPanel)}>
           <div className={styles.blockHead}>
             <h2 className={styles.sectionTitle}>{t.technical.priceMap}</h2>
           </div>
@@ -304,6 +321,15 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
           <p className={styles.footHint}>{t.technical.priceLevelsNote}</p>
 
         </section>
+        <section id="technical-watch" className={cn(styles.block, styles.watchPanel)}>
+          <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
+          <ul className={styles.watch} lang={copyLang}>
+            {copy.watch.map((item) => (
+              <li key={item}>{tieFigures(item)}</li>
+            ))}
+          </ul>
+        </section>
+        </div>
 
         <div id="technical-reading" className={styles.analysisReading} data-balance="reading">
           <section className={styles.block}>
@@ -409,21 +435,13 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik/[sym
       </Reveal>
 
       {/* Volume interpretation now accompanies the main assessment. Watch
-          items form one shared reading strip, rather than mismatched cards. */}
+          items form one shared reading strip, rather than mismatched cards.
+          10 Kasım: izleme listesi haritanın altına, sol kolona çıktı
+          (yukarıda, `analysisLeft`); burada bölüm kalmadı. */}
       {/* GİRİŞ RİTMİ TEK KARAR (14 Ekim): StanceGuide ve Göstergeler
-          `Reveal` ile girerken aynı derinlikteki bu üç bölüm çıplaktı —
+          `Reveal` ile girerken aynı derinlikteki bölümler çıplaktı —
           sayfanın alt yarısı iki ayrı lehçe konuşuyordu. Künyeler (dipnot,
           damga, rehber) bilerek çıplak. */}
-      <Reveal>
-      <section id="technical-watch" className={cn(styles.block, styles.watchPanel)}>
-        <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
-        <ul className={styles.watch} lang={copyLang}>
-          {copy.watch.map((item) => (
-            <li key={item}>{tieFigures(item)}</li>
-          ))}
-        </ul>
-      </section>
-      </Reveal>
 
       {/* ---- Görüş geçmişi ---- */}
       {history.length > 1 && (

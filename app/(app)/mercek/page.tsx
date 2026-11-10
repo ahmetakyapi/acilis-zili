@@ -336,13 +336,15 @@ async function StoryBoard({
 
   /* On iki sembole kadar çıkabilen bu liste sembol başına ayrı istek
      atıyordu; tek çağrıda çıkıyor. */
-  /* İmza blokları (24 Ekim) — arşiv kartlarının şeridi; manşet kadro
-     tablosunu taşıdığı için imza istemiyor. Gövde değil yalnız aday
-     bloklar iniyor (gerekçe `getStorySignatures`). */
+  /* İmza blokları (24 Ekim) — arşiv kartlarının şeridi. Gövde değil yalnız
+     aday bloklar iniyor (gerekçe `getStorySignatures`).
+     10 Kasım 2026: manşet de imzasını alıyor (önce "kadro tablosunu
+     taşıdığı için istemiyor"du). Kapak artık yazının kendi sayılarıyla
+     açılıyor; aynı tek sorguya bir satır ekleniyor, yeni sorgu yok. */
   const [meta, barsBySymbol, signatures] = await Promise.all([
     getSymbolNames(shownSymbols),
     getChartBarsMulti(curveSymbols, "1Y", status),
-    getStorySignatures(rows.slice(1)),
+    getStorySignatures(rows),
   ]);
 
 
@@ -356,6 +358,15 @@ async function StoryBoard({
         storySinceEvent(barsBySymbol[symbol], story.eventDate, status),
       ),
     }));
+
+  /** Yazının imza bloğu ve (grafik imzasıysa) kapanış serisi. */
+  const signatureOf = (story: StoryIndexRow) => {
+    const block = signatures.get(`${story.slug}:${story.locale}`);
+    if (!block) return null;
+    return block.kind === "chart"
+      ? { block, series: chartSignatureSeries(barsBySymbol[block.symbol], block.range) }
+      : { block };
+  };
 
   return (
     <div className="flex flex-col gap-6">
@@ -380,6 +391,7 @@ async function StoryBoard({
             <LeadStory
               story={lead}
               cast={castOf(lead, 3)}
+              signature={signatureOf(lead)}
               locale={locale}
               t={t}
             />
@@ -400,20 +412,16 @@ async function StoryBoard({
           </Suspense>
 
           {rows.length > 1 && (
-            <section className="flex flex-col gap-4" aria-labelledby="mercek-arsiv">
-              <h2 id="mercek-arsiv" className={mercek.archiveHeading}>
+            <section className="flex flex-col" aria-labelledby="mercek-arsiv">
+              {/* Başlık belge ana hattında, gözde değil; gerekçe
+                  MercekIndex.module.css → `.archiveHeading` (10 Kasım). */}
+              <h2 id="mercek-arsiv" className="sr-only">
                 {t.stories.archive}
               </h2>
               <ArchiveMonths
                 rows={rows.slice(1)}
                 castOf={(story) => castOf(story, 5)}
-                signatureOf={(story) => {
-                  const block = signatures.get(`${story.slug}:${story.locale}`);
-                  if (!block) return null;
-                  return block.kind === "chart"
-                    ? { block, series: chartSignatureSeries(barsBySymbol[block.symbol], block.range) }
-                    : { block };
-                }}
+                signatureOf={signatureOf}
                 locale={locale}
                 t={t}
               />
@@ -459,11 +467,15 @@ async function StoryBoard({
 function BoardSkeleton() {
   return (
     <div className="flex flex-col gap-6">
-      <Skeleton className="h-8 w-64 rounded-full" />
-      <Skeleton className="h-[236px] w-full rounded-xl" />
-      <div className="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+      {/* İskelet gelen düzenin şeklinde (10 Kasım 2026): kapak, ay başlığı,
+          satır boyu ilk kart, üç kart. Önce yuvarlak bir hap ve 236'lık
+          kutuydu; içerik inince her şey 200+ piksel kayıyordu. */}
+      <Skeleton className="h-[420px] w-full rounded-(--radius-feature) lg:h-[500px]" />
+      <Skeleton className="h-7 w-72 rounded-md" />
+      <Skeleton className="h-[220px] w-full rounded-(--radius-panel)" />
+      <div className="grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         {Array.from({ length: 3 }).map((_, index) => (
-          <Skeleton key={index} className="h-[280px] w-full rounded-(--radius-xl)" />
+          <Skeleton key={index} className="h-[380px] w-full rounded-(--radius-panel)" />
         ))}
       </div>
     </div>

@@ -7,14 +7,19 @@
 .caption { font-size:12px; font-weight:700; line-height:1.3; color:var(--text-muted); }
 .axis { position:relative; height:96px; container-type:inline-size; }
 .lane { position:absolute; top:40px; right:0; left:0; height:5px; border-radius:999px; background:var(--line-soft); }
-.band { position:absolute; top:36px; height:13px; border-radius:4px; background:var(--primary-faint); }
+/* 10 Kasım (tek çizim ailesi): bant 13 piksel düz `--primary-faint` idi;
+   kart rayı ve merdivenle aynı reçete (14 piksel, yarıçap 5, yıkama + iç
+   kenar). Çentik 15 → 14. Fiyat imi 3×28'lik imleçti; ailenin fiyat imi
+   koyu mürekkep nokta (kart rayı, atlas, pivot rayı, şirket sayfasının 52
+   hafta ekseni) — etiketi yine tepesinde. */
+.band { position:absolute; top:35.5px; height:14px; border-radius:5px; background:linear-gradient(var(--primary-wash), var(--primary-wash)), var(--premium-surface); box-shadow:inset 0 0 0 1px var(--primary-faint); }
 /* Fiyattan en yakın iki seviyeye şerit: kulvarın üstünde, yön renginde. */
 .leg { position:absolute; top:40px; height:5px; border-radius:999px; background:var(--up); transform-origin:left center; animation:scale-leg var(--draw) var(--ease-brand) both; }
 .leg[data-tone="down"] { background:var(--down); }
 .leg[data-from="end"] { transform-origin:right center; }
 @keyframes scale-leg { from { transform:scaleX(0); } }
 .mark { position:absolute; top:0; bottom:0; width:0; }
-.tick { position:absolute; top:35px; left:-1px; width:2px; height:15px; border-radius:1px; background:var(--line-strong); }
+.tick { position:absolute; top:35.5px; left:-1px; width:2px; height:14px; border-radius:1px; background:var(--line-strong); }
 .mark[data-kind="target"] .tick { background:var(--up); }
 .mark[data-kind="sellLevel"] .tick, .mark[data-kind="stop"] .tick { background:var(--down); }
 .mark[data-kind="entry"] .tick { background:var(--primary); }
@@ -26,8 +31,8 @@
 
 /* Fiyat: koyu mürekkep imleç (merdiven ve kart rayıyla aynı), etiketi üstte. */
 .mark[data-kind="price"] { z-index:1; }
-.mark[data-kind="price"] .tick { top:26px; left:-1.5px; width:3px; height:28px; border-radius:2px; background:var(--text-strong); }
-.mark[data-kind="price"] .label { top:0; display:flex; align-items:baseline; gap:6px; translate:-50% 0; }
+.mark[data-kind="price"] .tick { top:35.5px; left:-7px; width:14px; height:14px; border-radius:50%; background:var(--text-strong); box-shadow:0 0 0 3px var(--premium-surface); }
+.mark[data-kind="price"] .label { top:8px; display:flex; align-items:baseline; gap:6px; translate:-50% 0; }
 .mark[data-kind="price"] .label b { font-size:15px; }
 .mark[data-kind="price"][data-align="start"] .label { translate:-12px 0; }
 .mark[data-kind="price"][data-align="end"] .label { translate:calc(-100% + 12px) 0; }
@@ -39,7 +44,9 @@
    başlıyordu; toplam 1.300 ms. Artık şerit `--draw`, imleç `--mark` ile
    400 ms'de belirir. */
 .mark[data-kind="price"] { animation:scale-cursor var(--mark) var(--ease-brand) 400ms both; }
-@keyframes scale-cursor { from { opacity:0; } }
+/* 10 Kasım: im opaklık 0'dan beliriyordu; açılışta hiçbir çizim 0'dan
+   başlamaz (LCP) — nokta küçükten yerine oturur. */
+@keyframes scale-cursor { from { opacity:.4; scale:.6; } }
 @media (prefers-reduced-motion: reduce) { .mark[data-kind="price"], .leg { animation:none; } }
 
 /* Telefonda yok: 330 piksellik eksende beş etiket sığmıyor; aynı plan

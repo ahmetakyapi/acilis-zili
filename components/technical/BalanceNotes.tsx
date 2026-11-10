@@ -10,8 +10,9 @@ type Placement = (typeof PLACEMENTS)[number];
 /**
  * "Seviyelerin Dayanağı" notlarının yerini VERİYE GÖRE seçer.
  *
- * Teknik detayda iki kolon var: solda fiyat haritası, sağda değerlendirme
- * ve senaryolar. İkisinin boyu sembolün seviye sayısına ve yazılan metnin
+ * Teknik detayda iki kolon var: solda fiyat haritası (10 Kasım'dan beri
+ * altında "Dikkat Edilecekler" — `data-balance="map"` ikisini saran kolon),
+ * sağda değerlendirme ve senaryolar. İkisinin boyu sembolün seviye sayısına ve yazılan metnin
  * uzunluğuna bağlı; hiçbir sabit yerleşim her sembolde dengeli değil
  * (ölçüldü, 23 Eylül, altı sembol): 1440'ta notlar tam genişlikte en iyisi
  * (kolon farkı -175…+99), 1024'te ise sağ kolon daralıp uzuyor ve aynı
@@ -37,6 +38,12 @@ export function BalanceNotes() {
     const reading = grid?.querySelector<HTMLElement>('[data-balance="reading"]');
     const notes = grid?.querySelector<HTMLElement>('[data-balance="notes"]');
     if (!grid || !map || !reading || !notes) return;
+    /* Notu olmayan planda panel basılmıyor (`:empty`, CSS): yerleştirilecek
+       bir şey yok, ölçüm de sıfır kutuyla yanılırdı (10 Kasım). */
+    if (notes.childElementCount === 0) {
+      grid.dataset.notes = "full";
+      return;
+    }
 
     const dead = (placement: Placement) => {
       grid.dataset.notes = placement;
@@ -46,7 +53,11 @@ export function BalanceNotes() {
     };
 
     const balance = () => {
-      const columns = getComputedStyle(grid).gridTemplateColumns.split(" ").filter(Boolean).length;
+      /* Tek kolonlu düzende ızgara esnek sütuna dönüyor (10 Kasım, CSS
+         `order` ile sıralama); esnek kutuda `grid-template-columns` yazılı
+         değeri (iki iz) söylemeye devam eder, o yüzden önce `display`. */
+      const style = getComputedStyle(grid);
+      const columns = style.display === "grid" ? style.gridTemplateColumns.split(" ").filter(Boolean).length : 1;
       if (columns < 2) {
         grid.dataset.notes = "full";
         return;

@@ -47,7 +47,8 @@
 .node[data-segment="done"] + .node[data-segment="done"]::after { animation-delay:calc(var(--step) * 5); }
 .node[data-state="current"] .dot { animation:edition-dot var(--mark) var(--ease-brand) 400ms both; }
 @keyframes edition-fill { from { transform:scaleX(0); } }
-@keyframes edition-dot { from { opacity:0; transform:scale(.4); } }
+/* 10 Kasım: 0 opaklıktan başlıyordu; açılışta hiçbir im 0'dan başlamaz (LCP). */
+@keyframes edition-dot { from { opacity:.4; transform:scale(.4); } }
 @media (prefers-reduced-motion: reduce) {
   .node[data-segment]::after, .node[data-state="current"] .dot { animation:none; }
 }

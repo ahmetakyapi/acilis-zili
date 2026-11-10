@@ -172,13 +172,17 @@
    ayracı ve bir satırda birden fazlası yasak (tasarım kuralı). Renk yalnızca
    sayı sıfırdan büyükken — "0 bölgede" yeşil yazılırsa olmayan bir fırsatı
    varmış gibi gösterir. */
-.proximity { display:flex; flex-wrap:wrap; align-items:baseline; row-gap:4px; margin:0; }
-.proximity > div { display:flex; align-items:baseline; gap:6px; padding-inline:12px; border-left:1px solid var(--line); }
-.proximity > div:first-child { padding-left:0; border-left:0; }
-.proximity dt { font-size:12.5px; font-weight:600; color:var(--text-muted); }
-.proximity dd { margin:0; font-size:15px; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); }
-.proximity [data-tone="up"] dd { color:var(--up); }
-.proximity [data-tone="down"] dd { color:var(--down); }
+.headStats { display:flex; align-items:stretch; margin:16px 0 0; padding-top:14px; border-top:1px solid var(--line-soft); }
+.headStats > div { display:flex; min-width:0; flex-direction:column-reverse; justify-content:flex-end; gap:3px; padding-inline:20px; border-left:1px solid var(--line-soft); }
+.headStats > div:first-child { padding-left:0; border-left:0; }
+.headStats dt { font-size:12px; line-height:1.3; font-weight:600; color:var(--text-muted); }
+/* 10 Kasım: künye başlık kartına çıktı ve ölçü oldu. Sayı display ölçüsünde
+   (700, −0,03em — ortak ölçüler); etiket altında 12/600. Kural aynı: renk
+   yalnız sayı sıfırdan büyükken. Telefonda eski tek satırlık künye
+   (aşağıda, 767): orada üç ölçü kartı 70 piksel uzatırdı. */
+.headStats dd { margin:0; font-size:28px; line-height:1; font-weight:700; letter-spacing:-.03em; color:var(--text-strong); }
+.headStats [data-tone="up"] dd { color:var(--up); }
+.headStats [data-tone="down"] dd { color:var(--down); }
 @media (min-width:1100px) {
   .boardHeading { flex-direction:row; align-items:center; gap:24px; }
 }
@@ -236,9 +240,9 @@
   .boardToolbar { position:static; display:contents; }
   .filterBar { position:sticky; top:var(--app-bar-h); z-index:15; margin-block:-8px; padding-block:8px; background:var(--page-bg); }
   .filter label { min-height:40px; padding:8px; gap:5px; }
-  .proximity > div { padding-inline:10px; }
-  .proximity dt { font-size:12px; }
-  .proximity dd { line-height:1.2; }
+  .headStats { flex-wrap:wrap; align-items:baseline; row-gap:4px; margin-top:12px; padding-top:10px; }
+  .headStats > div { flex-direction:row; align-items:baseline; gap:6px; padding-inline:10px; border-left-color:var(--line); }
+  .headStats dd { font-size:15px; line-height:1.2; font-weight:600; letter-spacing:-.02em; }
 }
 /* DOKUNMATİKTE BÖLME 44 PİKSEL — parmak hedefinin alt sınırı; 40 bir
    kademe altındaydı. Süzgeç 52, yapışık bant dolgusuyla 68 piksel (390,
@@ -295,7 +299,25 @@
    hizasını koruyor. Satır aralığı kart İÇİNDE de geçerli olduğu için
    ızgaranın satır aralığı 14'e indi ve kartlar arasındaki 18 piksel
    hücrenin alt kenarından tamamlanıyor. */
-.grid { display:grid; grid-template-columns:repeat(auto-fill, minmax(min(100%, 340px), 1fr)); column-gap:18px; row-gap:14px; }
+/* IZGARA HER SAYIDA DOLU BİTER (10 Kasım). `auto-fill` ile 16 kart üç
+   sütunda 3-3-3-3-3-1 diziliyor, son kartın yanında 892×449 piksel boş
+   kalıyordu (1440, ölçüldü); süzgeçte de aynısı (SAT 10 → 3-3-3-1, AL 1 →
+   tek kart + 892 piksel boşluk). Sembol sayısı ve görüş dağılımı her
+   yayında değişiyor; kart sırası ise sabit (karar: page.tsx). Çözüm
+   Mercek ızgarasındaki: ARTAN KARTLAR SATIRI PAYLAŞIR. Sütun sayısı artık
+   açık (auto-fill'in eşikleriyle aynı yerde: ızgara 1056'yı geçince üç,
+   698'i geçince iki) ve üç sütun altı izde kuruluyor: artan iki kart
+   üçer iz (satırı ikiye böler), artan tek kart satırın tamamı ve içi yatay
+   (`cellWide` kuralları aşağıda). "Artan"ı CSS sayıyor — görünen kartlar
+   arasında sıra `:nth-child(… of …)` ile, süzgecin kendisi gibi
+   JavaScript'siz. Ölçüm (1440/1280/1024/768, 13–16 sembol, dört süzgeç):
+   son satırın sağında boşluk 0. */
+.grid { display:grid; grid-template-columns:minmax(0,1fr); column-gap:18px; row-gap:14px; }
+@media (min-width:760px) { .grid { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+@media (min-width:1100px) {
+  .grid { grid-template-columns:repeat(6, minmax(0,1fr)); }
+  .cell { grid-column:span 2; }
+}
 /* BEŞ SATIR (29 Eylül): baş, fiyat, plan, gerekçe, ölçüler. Altıncı satır
    "Analizi Oku" ayağıydı; kalkış gerekçesi TechnicalCard'da. */
 .cell { display:grid; grid-template-rows:subgrid; grid-row:span 5; min-width:0; margin-bottom:4px; }
@@ -327,6 +349,92 @@
 /* Kart bir bağlantı (başlıktaki `::after` kaplaması), hover'ı bu yüzden
    var — ve yalnızca kenarlık tonu. */
 .card:hover { border-color:var(--primary-faint); }
+/* ---- Artan kartlar (10 Kasım; gerekçe `.grid`) ----
+   TEK ARTAN KART YATAY: satırın tamamını alıyor ve beş bölümü üç kolona
+   diziliyor — solda kimlik ve fiyat, ortada plan (kartın tek geometrisi,
+   en geniş kolon), sağda üç ölçü ve gerekçe cümlesi. Ortak alt ızgaradan
+   çıkıyor (yanında hizalanacak komşu yok). Ölçüler sağ üstte, cümle
+   altında: ölçü şeridi baş satırıyla aynı boyda (≈50/57 piksel), cümle
+   fiyatla — tersinde üç satırlık cümle baş satırını uzatıp kimlik ile
+   fiyat arasına boşluk açıyordu.
+   İKİ ARTAN KART: üçer iz, yani satırı ikiye bölüyorlar; iç düzen aynı.
+   İki sütunlu düzende (760–1099) artan yalnız tek kart olabilir. */
+@media (min-width:1100px) {
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(2 of [data-verdict]),
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(2 of [data-verdict="buy"]),
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(2 of [data-verdict="hold"]),
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(2 of [data-verdict="sell"]),
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+2 of [data-verdict]):nth-last-child(1 of [data-verdict]),
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+2 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]),
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+2 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]),
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+2 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) { grid-column:span 3; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]),
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]),
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]),
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) { grid-column:1 / -1; grid-row:auto; display:block; margin-bottom:4px; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card { grid-row:auto; grid-template-rows:auto 1fr; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr); grid-template-areas:"head plan gauges" "quote plan thesis"; column-gap:32px; row-gap:14px; align-items:start; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardHead,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardHead,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardHead,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardHead { grid-area:head; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardQuote,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardQuote,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardQuote,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardQuote { grid-area:quote; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardPlan,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardPlan,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardPlan,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardPlan { grid-area:plan; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .gaugeBox,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .gaugeBox,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .gaugeBox,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .gaugeBox { grid-area:gauges; align-self:center; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardThesis,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardThesis,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardThesis,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardThesis { grid-area:thesis; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card .cardHeadline,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card .cardHeadline,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card .cardHeadline,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card .cardHeadline { -webkit-line-clamp:5; }
+}
+@media (min-width:760px) and (max-width:1099px) {
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]),
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]),
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]),
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) { grid-column:1 / -1; grid-row:auto; display:block; margin-bottom:4px; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card { grid-row:auto; grid-template-rows:auto 1fr; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr); grid-template-areas:"head plan gauges" "quote plan thesis"; column-gap:32px; row-gap:14px; align-items:start; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardHead,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardHead,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardHead,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardHead { grid-area:head; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardQuote,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardQuote,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardQuote,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardQuote { grid-area:quote; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardPlan,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardPlan,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardPlan,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardPlan { grid-area:plan; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .gaugeBox,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .gaugeBox,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .gaugeBox,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .gaugeBox { grid-area:gauges; align-self:center; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardThesis,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardThesis,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardThesis,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardThesis { grid-area:thesis; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card .cardHeadline,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card .cardHeadline,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card .cardHeadline,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card .cardHeadline { -webkit-line-clamp:5; }
+}
 /* TELEFONDA KATLAMA (9 Ekim) — gerekçe TechnicalCard. Dar ekranda kartlar
    tek sütun, komşu hizası (subgrid) anlamsız: kart düz bir sütuna dönüyor,
    böylece gizlenen bölümler boş satır ve aralık bırakmıyor. Ölçüm: kart
@@ -738,6 +846,16 @@
    kutularının içinden geçiyordu (ekran görüntüsü). Sahibinin kuralı
    "ışıma yok, derinlik tonla" ve görüş rengi kapakta zaten hapta ve
    okuma kutusunun sol şeridinde. Kapak düz yüzey + kıl kenarlık. */
+/* 10 KASIM: KAPAK YENİDEN KURULDU — dört satırlık defter, yerleşimi
+   `TechnicalCover.module.css`te, gerekçesi `TechnicalCover.tsx` başında.
+   Bu dosyadaki `.cover`, `.coverMain`, `.coverIdentity`, `.coverHead`,
+   `.coverNameLink`, `.coverSide`, `.coverQuote`, `.coverThesis`,
+   `.coverTrack`, `.coverNameText`, `.reading`, `.priceRow`, `.priceNow`,
+   `.priceContext` kuralları (ve aşağıdaki ezme blokları) artık hiçbir öğeye
+   bağlı değil; karar kayıtları tarihçe olarak duruyor. Kapakta hâlâ
+   kullanılanlar: `.coverPlan`, `.plan`, `.change`, `.priceHead`,
+   `.priceLabel`, `.delayBadge`, `.priceNote`, `.stanceGuideLink`,
+   `.signalsCompact`, `.coverRail`. */
 .cover { position:relative; isolation:isolate; overflow:hidden; display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1.15fr); gap:24px 32px; padding:30px 32px 26px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); }
 .coverMain { display:flex; min-width:0; flex-direction:column; gap:16px; }
 /* KİMLİK BİR KOLON, KÜNYE ONUN ALTINDA.
@@ -1364,6 +1482,8 @@
 .volumeContext { display:flex; flex-direction:column; gap:8px; margin-top:2px; padding:14px 0 0; border-top:1px solid var(--line-soft); }
 .volumeContext h3 { display:flex; align-items:center; gap:8px; color:var(--primary-ink); font-size:13px; font-weight:700; }
 .volumeContext .prose { font-size:14px; line-height:1.65; }
+/* 10 Kasım: izleme listesi tam genişlik şeritten sol kolona, haritanın
+   altına taşındı; güncel düzeni dosyanın sonunda ("Detay: sol kolon…"). */
 .watchPanel { display:grid; grid-template-columns:180px minmax(0,1fr); align-items:start; gap:24px; background:var(--premium-surface); }
 .watchPanel > .sectionTitle { padding:0; border:0; }
 .watchPanel .watch { display:grid; grid-template-columns:repeat(auto-fit,minmax(min(100%,220px),1fr)); list-style:none; padding:0; gap:20px; counter-reset:watch; }
@@ -2160,3 +2280,91 @@ label.distHead { cursor:pointer; }
   label.distHead { position:relative; }
   label.distHead::after { content:""; position:absolute; inset:-8px 0; }
 }
+
+/* ---- TEK ÇİZİM AİLESİ (10 Kasım 2026) ----
+   Aynı beş sayı (bölge, stop, hedefler, seviyeler, şimdiki fiyat) altı ayrı
+   çizimde duruyor: kart rayı, atlas satırı, kapak ölçeği, fiyat merdiveni,
+   pivot rayı, 52 hafta bandı. Ölçüldü (1440): bölge bandı 12/13/14 piksel ve
+   üç ayrı dolgu (atlasta yeşil, ötekilerde mavi; 31 Ekim kararı mavi), büyük
+   çentik 12/14/15 piksel, fiyat imi dört biçim (14'lük nokta, 11'lik nokta,
+   3×28 imleç, 3×13 çubuk), halka 5/5,6 piksel. Aile artık tek:
+     kulvar      5 piksel, uçlar 999, `--line-soft`
+     bacak       5 piksel, opak yön rengi
+     bölge       14 piksel, yarıçap 5, `--primary-wash` + 1 piksel
+                 `--primary-faint` iç kenar (alan, yön değil)
+     çentik      2×14 (stop, hedef, satış seviyesi); 2×10 `--line-strong`
+                 (destek/direnç)
+     fiyat       koyu mürekkep NOKTA, zemin renginde hale (yoğun satırda 11,
+                 kartta ve kapakta 14) — şirket sayfasındaki 52 hafta
+                 ekseniyle aynı im
+     halka       6 piksel
+   Renk yalnız anlamdan: kırmızı stop/satış, yeşil hedef, mavi bölge,
+   mürekkep fiyat. Atlasın ve kapak ölçeğinin karşılıkları kendi
+   modüllerinde (`TechnicalVisuals.module.css`, `LevelScale.module.css`). */
+.trackTick { top:5px; height:14px; }
+.trackTick[data-kind="support"], .trackTick[data-kind="resistance"] { top:7px; height:10px; }
+.overviewCell::before { height:3px; }
+/* 52 hafta bandının imi çubuktu (3×13); pivot rayındaki noktayla aynı. */
+.band > span { top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; transform:none; }
+/* Halka 6 piksel: dağılım halkası 160'lık görünüm kutusunda 128 piksel
+   (ölçek 0,8 → 7,5 birim), RSI kadranı 200'lük kutuda ~200 piksel. */
+.pulse[data-variant="directory"] .pulseDial svg { stroke-width:7.5; }
+.rsiDial path { stroke-width:6; }
+.rsiDial .dialTick { stroke-width:1; }
+
+/* ---- Detay: sol kolon, izleme listesi, gösterge kartları (10 Kasım 2026) ----
+   SOL KOLON HARİTA + DİKKAT EDİLECEKLER (gerekçe ve ölçüm page.tsx'te).
+   Sarmalayıcı eski `map` alanını alıyor; `BalanceNotes` dibini ondan ölçer. */
+.analysisLeft { grid-area:map; display:flex; min-width:0; flex-direction:column; gap:18px; }
+.analysisLeft > .mapPanel { grid-area:auto; }
+/* Notu olmayan planda (rutin not yazmamış) panel 46 piksellik boş bir kutu
+   olarak basılıyordu. */
+.notesPanel:empty { display:none; }
+/* İzleme listesi dar kolonda: başlık panel başlığı, maddeler numaralı ve
+   alt alta, aralarında kıl çizgi. Eski şerit düzeni (solda 180 piksellik
+   başlık, sağda yan yana sütunlar) tam genişlik içindi. */
+.watchPanel { display:flex; flex-direction:column; align-items:stretch; gap:0; }
+.watchPanel > .sectionTitle { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
+.watchPanel .watch { display:flex; flex-direction:column; gap:0; }
+.watchPanel .watch li { padding:11px 0 11px 30px; border-bottom:1px solid var(--line-soft); text-wrap:pretty; }
+.watchPanel .watch li:last-child { padding-bottom:0; border-bottom:0; }
+.watchPanel .watch li::before { top:13px; font-family:var(--font-mono); }
+/* Tek kolonlu düzende sarmalayıcı çözülür; sıra harita, değerlendirme,
+   notlar (eskisi gibi haritanın hemen altında), değerlendirme, dikkat
+   edilecekler. */
+@media (max-width:1023px) {
+  .analysisGrid { display:flex; flex-direction:column; }
+  .analysisLeft { display:contents; }
+  .analysisLeft > .mapPanel { order:1; }
+  .analysisReading { order:3; }
+  .notesPanel { order:2; }
+  .analysisLeft > .watchPanel { order:4; }
+}
+
+/* GÖSTERGE KARTINDA ORTADA BOŞLUK YOK. Kartlar satırda eşit boyda (alt
+   ızgara); kısa kartın fazlası `margin-block:auto` ve `margin-top:auto` ile
+   çizimin ÜSTÜNE ya da iki öğenin ARASINA açılıyordu: RSI kadranının üstünde
+   60, hacim satırlarıyla oran rayı arasında 56 piksel (1440, ölçüldü). Kural:
+   gövde tepeden akar; yalnız künye satırı dibe yaslanır; fazlalık kartın
+   dibinde tek parça kalır.
+   RSI: kadran kartın genişliğini kullanıyor (en çok 280 piksel; 210'du),
+   bölge anahtarı yanında değil ALTINDA üç sütun — kadran büyüyünce gövde
+   doluyor (1440: üstte 60 → 0, dipte ≤ 12 piksel). */
+.indicatorBody .rsiReading { flex:none; flex-direction:column; align-items:stretch; gap:14px; margin-block:0; }
+.rsiDial { flex:none; width:100%; max-width:280px; margin-inline:auto; }
+.rsiValue { font-size:36px; font-weight:700; letter-spacing:-.03em; }
+.rsiZones { grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; padding-top:12px; border-top:1px solid var(--line-soft); }
+.rsiZones > span { align-content:start; }
+.volumeRatio { margin-top:0; padding-top:0; gap:10px; }
+.volumeRatio .bigFigure { font-weight:700; letter-spacing:-.03em; }
+.volumeRatio + .rows { margin-top:2px; }
+/* Kapakta telefon rayı — gerekçe `TechnicalCover`. */
+.coverRail { display:none; }
+@media (max-width:767px) {
+  .coverRail { display:block; }
+  .coverPlan:has(.coverRail) .riskComparison { display:none; }
+  /* SAT'ta rayın başı tek cümlelik neden ("Görüş SAT: alım planı yok…");
+     kapakta hemen üstünde "Planın Okuması" aynı şeyi söylüyor. */
+  .coverRail .riskHead:has(.railWhy) { display:none; }
+}
+

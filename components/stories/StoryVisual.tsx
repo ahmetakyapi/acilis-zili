@@ -207,8 +207,20 @@ export function StoryCast({
   const shown = cast.slice(0, 3);
   if (shown.length === 0) return null;
   const rest = total - shown.length;
-  const sharedCloseDate = shown.every(member => member.sinceEvent === null && member.lastClose?.date === shown[0].lastClose?.date)
-    ? shown[0].lastClose?.date ?? null : null;
+  /* ORTAK KAPANIŞ GÜNÜ, KAPANIŞI OLANLAR ARASINDA (10 Kasım 2026). Koşul
+     üç satırın da aynı günü taşımasını istiyordu; kapanışı HİÇ olmayan tek
+     bir şirket (canlıda SFTBY: sağlayıcıda barı yok) ortaklığı bozuyor ve
+     öteki iki satırın her biri kendi "Son Kapanış" + "9 Kas" künyesini
+     basıyordu (aynı iki satır üç kez, başlıkta bir, satırlarda iki). Artık
+     kapanışı olan satırlar aynı gündeyse künye bir kez, başlıkta; kapanışı
+     olmayan satır "–" basar (ortak boş değer kalıbı). */
+  const closes = shown.filter((member) => member.lastClose);
+  const sharedCloseDate =
+    closes.length > 0 &&
+    shown.every((member) => member.sinceEvent === null) &&
+    closes.every((member) => member.lastClose?.date === closes[0].lastClose?.date)
+      ? closes[0].lastClose?.date ?? null
+      : null;
   /* Künyenin ikinci satırı ölçünün BİTTİĞİ gün ("22 Eyl Kapanışı"). Olay
      tarihi burada "21.09.2026" diye, sayının hangi güne kadar olduğunu
      söylemeden duruyordu; yazı sayfasının künyesi zaten kapanışı yazıyor. */
@@ -288,7 +300,7 @@ export function StoryCast({
               >
                 {member.sinceEvent === null && member.lastClose ? (
                   <>{!sharedCloseDate && <small className={styles.readingCaption}>{closeLabel}</small>}
-                    <span className="flex items-baseline justify-end gap-2">
+                    <span className={styles.castClose}>
                       {formatPrice(member.lastClose.price, locale, { currency: true })}
                       {/* Kapanış gününün değişimi (31 Ekim) — fiyatın yanında yön. */}
                       {member.lastClose.dayPct != null && (
@@ -297,7 +309,11 @@ export function StoryCast({
                     </span>
                     {!sharedCloseDate && <small className={styles.readingDate}>{formatEtDateCompact(member.lastClose.date, locale)}</small>}
                   </>
-                ) : member.sinceEvent === null ? null : formatPercent(member.sinceEvent, locale)}
+                ) : member.sinceEvent === null ? (
+                  <span className="text-muted">–</span>
+                ) : (
+                  formatPercent(member.sinceEvent, locale)
+                )}
                 {scale.ratios[index] != null && (
                   <ScaleBar
                     ratio={scale.ratios[index] ?? 0}

@@ -39,7 +39,8 @@
 .dot, .rsiDot { animation:gauge-dot var(--mark) var(--ease-brand) 400ms both; }
 @keyframes gauge-grow { from { transform:scaleX(0); } }
 @keyframes gauge-arc { from { stroke-dashoffset:1; } }
-@keyframes gauge-dot { from { opacity:0; } }
+/* 10 Kasım: 0 opaklıktan başlıyordu; açılışta hiçbir im 0'dan başlamaz (LCP). */
+@keyframes gauge-dot { from { opacity:.35; } }
 @media (prefers-reduced-motion: reduce) {
   .fill, .rsiValue, .dot, .rsiDot { animation:none; }
 }

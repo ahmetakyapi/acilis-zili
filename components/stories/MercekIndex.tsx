@@ -1,4 +1,4 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { StoryCast, type CastMember } from "@/components/stories/StoryVisual";
@@ -88,6 +88,9 @@ export function MercekMasthead({
    MANŞET
    ------------------------------------------------------------------------- */
 
+/** Kartın imza minyatürü ve (yalnız `grafik` imzası için) kapanış serisi. */
+export type ArchiveSignature = { block: SignatureBlock; series?: readonly number[] | null };
+
 /**
  * Manşet — arşivin en yeni yazısı.
  *
@@ -100,21 +103,44 @@ export function MercekMasthead({
  * Başlık sitenin manşet puntosunun bir basamak üstünde (42'ye kadar) çünkü
  * bu ekranın kahramanı o; `max-width: 24ch` iki-üç satıra kırıyor, satır
  * satır degrade (`data-ink="lines"`) ikinci satırı başka tonda başlatmıyor.
- * Künye (tarih, okuma süresi, şirket sayısı) başlığın ALTINDA, eylemle aynı
- * satırda — üst künye yok (CLAUDE.md, ekran düzeni).
+ *
+ * KAPAK YAZININ KENDİ SAYILARIYLA KAPANIYOR (10 Kasım 2026, sahibinin
+ * isteği: "mercek ve temaları da böyle ele alalım"). Kapak üç bölge: solda
+ * metin, sağda kadro, ikisinin altında boydan boya yazının imza bloğu
+ * (`sayilar` karoları, çubuk, öncesi-sonrası, akış, grafik) — bir dergi
+ * kapağının alt bandı gibi. Kapak bir duyuru değil, yazının özeti gibi
+ * okunuyor. İlk denemede blok metin sütununun içindeydi: sütun 628 piksele
+ * uzadı (1440), "Yazıyı Oku" ilk ekranın altına düştü ve yanındaki kadro
+ * sütununda üstte ve altta 130'ar piksel boş gömük zemin kaldı; şeritte
+ * iki sütun kendi boyunda kalıyor.
+ *
+ * KÜNYE BAŞLIĞIN HEMEN ALTINDA (tarih, okuma süresi, şirket sayısı). Önce
+ * eylemle aynı satırda, kartın dibindeydi: başlıktan ~250 piksel uzakta ve
+ * mavi butonun gölgesinde. Üst künye yok (`.claude/rules/arayuz.md` → Ekran
+ * Düzeni); başlığa ait bilgi başlığın altına iner.
+ *
+ * Kadrosu olmayan yazıda (şirketsiz makro yazı) gömük sütun boş kalmıyor:
+ * imza bloğu oraya geçiyor, kart yine iki tonlu.
  */
 export function LeadStory({
   story,
   cast,
+  signature,
   locale,
   t,
 }: {
   story: StoryIndexRow;
   cast: CastMember[];
+  /** Yazının imza bloğu; yoksa kapak başlık + giriş + kadro. */
+  signature?: ArchiveSignature | null;
   locale: Locale;
   t: Dictionary;
 }) {
   const total = story.symbols?.length ?? 0;
+  const figure = signature ? (
+    <StorySignature block={signature.block} series={signature.series} locale={story.locale} scale="cover" />
+  ) : null;
+  const hasCast = cast.length > 0;
 
   return (
     <Link
@@ -123,7 +149,7 @@ export function LeadStory({
       className={styles.lead}
       data-motion-reveal
     >
-      <section className={styles.leadCard} data-has-cast={cast.length > 0}>
+      <section className={styles.leadCard} data-has-aside={hasCast || Boolean(figure)}>
         <div className={styles.leadCopy}>
           {/* Yazı bu dile henüz çevrilmediyse orijinal gösterilir ve dili
               rozetle söylenir; rozet yalnızca o durumda basılıyor. */}
@@ -135,6 +161,30 @@ export function LeadStory({
           <h2 className={styles.leadTitle} data-ink="lines" lang={story.locale}>
             <span className="ink-line">{story.title}</span>
           </h2>
+          <p className={cn("numeral", styles.leadMeta)}>
+            <span className={styles.metaStrong}>
+              {formatEtDateLong(story.eventDate, locale)}
+            </span>
+            {story.readMinutes && (
+              <>
+                <span aria-hidden className={styles.metaDot}>·</span>
+                <span>
+                  {story.readMinutes} {t.stories.readMinutes}
+                </span>
+              </>
+            )}
+            {total > 0 && (
+              <>
+                <span aria-hidden className={styles.metaDot}>·</span>
+                <span>
+                  {plural(total, t.stories.companyCountOne, t.stories.companyCountMany).replace(
+                    "{count}",
+                    String(total),
+                  )}
+                </span>
+              </>
+            )}
+          </p>
           <p className={styles.leadDek} lang={story.locale}>
             {story.dek}
           </p>
@@ -144,34 +194,10 @@ export function LeadStory({
               {t.stories.readStory}
               <ArrowRight weight="bold" size={14} aria-hidden />
             </span>
-            <span className={cn("numeral", styles.leadMeta)}>
-              <span className={styles.metaStrong}>
-                {formatEtDateLong(story.eventDate, locale)}
-              </span>
-              {story.readMinutes && (
-                <>
-                  <span aria-hidden className={styles.metaDot}>·</span>
-                  <span>
-                    {story.readMinutes} {t.stories.readMinutes}
-                  </span>
-                </>
-              )}
-              {total > 0 && (
-                <>
-                  <span aria-hidden className={styles.metaDot}>·</span>
-                  <span>
-                    {plural(total, t.stories.companyCountOne, t.stories.companyCountMany).replace(
-                      "{count}",
-                      String(total),
-                    )}
-                  </span>
-                </>
-              )}
-            </span>
           </div>
         </div>
 
-        {cast.length > 0 && (
+        {hasCast ? (
           <div className={styles.leadAside}>
             <StoryCast
               cast={cast}
@@ -188,7 +214,17 @@ export function LeadStory({
               locale={locale}
             />
           </div>
+        ) : (
+          figure && (
+            <div className={styles.leadAside} data-figure="">
+              {figure}
+            </div>
+          )
         )}
+        {/* Kadro varken imza çizimi kartın dibinde, iki sütunun altında
+            boydan boya bir şerit; dar ekranda girişle kadronun arasına
+            giriyor (`order`, MercekIndex.module.css → `.leadBand`). */}
+        {figure && hasCast && <div className={styles.leadBand}>{figure}</div>}
       </section>
     </Link>
   );
@@ -208,16 +244,70 @@ function monthLabel(key: string, locale: Locale): string {
 }
 
 /**
+ * AYIN RİTMİ — ay başlığının yanındaki gün şeridi (10 Kasım 2026).
+ *
+ * Ayın her günü bir tik; yazı olan gün yükseliyor (bir yazı 10, iki 14,
+ * üç ve fazlası 18 piksel). "Mercek her gün değil, olay olduğunda yazılır"
+ * cümlesi sayfanın dibindeki künyede duruyordu; şerit aynı şeyi veriyle
+ * söylüyor ve ay başlığına, yanındaki "17 Yazı" sayısından fazlasını
+ * katıyor: yazılar ayın hangi günlerine yığıldı. Kaynak yalnız `eventDate`
+ * (kartların zaten bastığı tarih), yeni sorgu yok. Şerit EKRANDAKİ listeden
+ * sayıyor (ay başlığındaki sayıyla aynı kural): "Daha Fazla Göster" yarım
+ * ayı tamamladıkça dolar.
+ *
+ * Renk nötr mürekkep: yön ya da etkileşim söylemiyor (mavi/yeşil kuralı).
+ * Hareket: dolu tikler tabandan yükselir, soldan sağa 12 ms arayla; ay
+ * soldan sağa okunsun diye (`.claude/rules/hareket.md` kataloğunda dikey
+ * tik karşılığı yok, keyframes modülde — `MercekIndex.module.css`).
+ */
+function MonthStrip({
+  monthKey,
+  stories,
+  label,
+}: {
+  monthKey: string;
+  stories: StoryIndexRow[];
+  label: string;
+}) {
+  const [year, month] = monthKey.split("-").map(Number);
+  const days = new Date(Date.UTC(year, month, 0)).getUTCDate();
+  const counts = new Map<number, number>();
+  for (const story of stories) {
+    const day = Number(story.eventDate.slice(8, 10));
+    counts.set(day, (counts.get(day) ?? 0) + 1);
+  }
+  return (
+    <span className={styles.strip} role="img" aria-label={label} data-draw="">
+      {Array.from({ length: days }, (_, index) => {
+        const count = counts.get(index + 1) ?? 0;
+        return (
+          <i
+            key={index}
+            data-n={Math.min(count, 3)}
+            style={count ? ({ "--i": index } as CSSProperties) : undefined}
+          />
+        );
+      })}
+    </span>
+  );
+}
+
+/**
  * Arşiv, AY AY. Yazılar bir OLAYI anlatıyor ve okuyucu arşivde "geçen ay ne
  * olmuştu" diye geziniyor; 24 kartlık düz ızgarada zaman hiçbir yerde
  * okunmuyordu, her kartın tarihini tek tek okumak gerekiyordu. Ay başlığı
  * (`h3`, yanında o aydaki yazı sayısı) ızgarayı zaman çizelgesine çeviriyor.
  * Gruplama EKRANDAKİ listeden: "Daha Fazla Göster" bir sonraki ayı ekliyor,
  * yarım kalan ay da kendi başlığının altında büyüyor.
+ *
+ * AYIN İLK YAZISI SATIR BOYU (10 Kasım 2026). 24 eş kart üç kolonda sekiz
+ * eş satır kuruyordu: bir kart duvarı. Her ayın en yeni yazısı artık satırı
+ * kaplayan yatay kart (metin solda, yazının imza çizimi sağda büyük);
+ * kalanı üç kolonlu ızgara. Bilançolar'daki "günün en büyük şirketi geniş,
+ * ötekiler ızgara" kalıbıyla aynı aile. Hangi kartın geniş olduğu burada
+ * (`data-feature`), ayın SON tek kartınınki CSS'te (`nth-child`; kolon
+ * sayısı kırılıma göre değişiyor).
  */
-/** Kartın imza minyatürü ve (yalnız `grafik` imzası için) kapanış serisi. */
-type ArchiveSignature = { block: SignatureBlock; series?: readonly number[] | null };
-
 export function ArchiveMonths({
   rows,
   castOf,
@@ -242,37 +332,49 @@ export function ArchiveMonths({
 
   return (
     <div className={styles.archive}>
-      {months.map((month) => (
-        <section key={month.key} className={styles.month} aria-labelledby={`ay-${month.key}`}>
-          <div className={styles.monthHead}>
-            <h3 id={`ay-${month.key}`} className={styles.monthTitle}>
-              {monthLabel(month.key, locale)}
-            </h3>
-            <span className={cn("numeral", styles.monthCount)}>
-              {plural(
-                month.stories.length,
-                t.stories.symbolPanelCountOne,
-                t.stories.symbolPanelCountMany,
-              ).replace("{count}", String(month.stories.length))}
-            </span>
-          </div>
-          <div className={styles.grid} data-motion-stagger>
-            {month.stories.map((story) => (
-              <ArchiveCard
-                key={story.slug}
-                story={story}
-                cast={castOf(story)}
-                signature={signatureOf?.(story) ?? null}
-                locale={locale}
-                t={t}
+      {months.map((month) => {
+        const label = monthLabel(month.key, locale);
+        return (
+          <section key={month.key} className={styles.month} aria-labelledby={`ay-${month.key}`}>
+            <div className={styles.monthHead}>
+              <h3 id={`ay-${month.key}`} className={styles.monthTitle}>
+                {label}
+              </h3>
+              <MonthStrip
+                monthKey={month.key}
+                stories={month.stories}
+                label={t.stories.monthStripLabel.replace("{month}", label)}
               />
-            ))}
-          </div>
-        </section>
-      ))}
+              <span className={cn("numeral", styles.monthCount)}>
+                {plural(
+                  month.stories.length,
+                  t.stories.symbolPanelCountOne,
+                  t.stories.symbolPanelCountMany,
+                ).replace("{count}", String(month.stories.length))}
+              </span>
+            </div>
+            <div className={styles.grid} data-motion-stagger>
+              {month.stories.map((story, index) => (
+                <ArchiveCard
+                  key={story.slug}
+                  story={story}
+                  cast={castOf(story)}
+                  signature={signatureOf?.(story) ?? null}
+                  feature={index === 0}
+                  locale={locale}
+                  t={t}
+                />
+              ))}
+            </div>
+          </section>
+        );
+      })}
     </div>
   );
 }
+
+/** Kartın dibindeki kadroda yan yana duran logo; fazlası "+N". */
+const FOOT_LOGOS = 3;
 
 /**
  * Arşiv kartı — kadro şeridi, künye, başlık, giriş, eylem.
@@ -288,6 +390,13 @@ export function ArchiveMonths({
  * bir halka taşıyor (gölge değil, ayraç) — üstteki logo alttakini kesiyor
  * gibi değil, önünde duruyor gibi görünsün diye.
  *
+ * DİPTEKİ KADRO YAN YANA, ÜST ÜSTE DEĞİL (10 Kasım 2026). İmza şeridi
+ * gelince kadro kartın dibine 22 piksellik karolarla, 6 piksel bindirilmiş
+ * inmişti: canlıda dört-beş logo tek bir leke gibi okunuyordu (1440 ve
+ * 390'da bakıldı; hangi şirket olduğu seçilmiyordu). Dipte artık üç logo
+ * aralıklı (yazıda tam dört şirket varsa dördüncüsü de logo), fazlası
+ * "+N". Bindirilmiş yığın yalnız imzasız kartın şeridinde (md karo) kaldı.
+ *
  * Sağdaki rakam ilk şirketin olaydan bugüne getirisi; hesaplanamıyorsa
  * tarihli son kapanış (hafta sonu yazısına uydurma getiri yazılmaz).
  */
@@ -295,12 +404,15 @@ function ArchiveCard({
   story,
   cast,
   signature,
+  feature,
   locale,
   t,
 }: {
   story: StoryIndexRow;
   cast: CastMember[];
   signature: ArchiveSignature | null;
+  /** Ayın ilk yazısı: ≥640'ta satır boyu yatay kart. */
+  feature: boolean;
   locale: Locale;
   t: Dictionary;
 }) {
@@ -318,12 +430,18 @@ function ArchiveCard({
   const figure = signature ? (
     <StorySignature block={signature.block} series={signature.series} locale={story.locale} />
   ) : null;
+  /* RAKAMIN KÜNYESİ HER KARTTA İKİ SATIR (10 Kasım 2026). Son kapanışta
+     künye üç satırdı (sembol · Son Kapanış / fiyat / tarih), getiride iki;
+     aynı sıradaki kartlarda "Oku" 8 piksel farklı hatta duruyordu (canlı
+     1440: 1244 ve 1252). Tarih künyeye girdi ("SPY · 9 Kas Kapanışı"). */
   const reading =
     lead && (lead.sinceEvent !== null || lead.lastClose) ? (
       <span className={styles.reading}>
         <span className={styles.readingCaption}>
           {lead.symbol} ·{" "}
-          {lead.sinceEvent !== null ? t.stories.sinceEvent : t.stories.lastClose}
+          {lead.sinceEvent !== null
+            ? t.stories.sinceEvent
+            : t.stories.closeOn.replace("{date}", formatEtDateCompact(lead.lastClose!.date, locale))}
         </span>
         <span
           className={cn(
@@ -336,18 +454,13 @@ function ArchiveCard({
             ? formatPercent(lead.sinceEvent, locale)
             : formatPrice(lead.lastClose?.price, locale, { currency: true })}
         </span>
-        {lead.sinceEvent === null && lead.lastClose && (
-          <span className={styles.readingCaption}>
-            {formatEtDateCompact(lead.lastClose.date, locale)}
-          </span>
-        )}
       </span>
     ) : null;
-  const stack = (logo: "md" | "xs") => (
-    <span className={styles.stack} data-size={logo}>
+  const stack = (
+    <span className={styles.stack}>
       {shown.map((member) => (
         <span key={member.symbol} className={styles.stackItem}>
-          <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size={logo} card />
+          <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="md" card />
         </span>
       ))}
       {rest > 0 && (
@@ -357,9 +470,24 @@ function ArchiveCard({
       )}
     </span>
   );
+  const footShown = cast.slice(0, total === FOOT_LOGOS + 1 ? FOOT_LOGOS + 1 : FOOT_LOGOS);
+  const footRest = total - footShown.length;
+  const row = (
+    <span className={styles.footLogos}>
+      {footShown.map((member) => (
+        <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="xs" card />
+      ))}
+      {footRest > 0 && <span className={cn("numeral", styles.footMore)}>+{footRest}</span>}
+    </span>
+  );
 
   return (
-    <Link href={`/mercek/${story.slug}`} prefetch={false} className={styles.card}>
+    <Link
+      href={`/mercek/${story.slug}`}
+      prefetch={false}
+      className={styles.card}
+      data-feature={feature ? "" : undefined}
+    >
       <div className={styles.cardBody}>
         {/* h4: sayfa h1 → arşiv h2 → ay h3 → kart. `lang` şart — çevirisi
             olmayan yazı orijinal diliyle sesletilsin. */}
@@ -401,7 +529,7 @@ function ArchiveCard({
       ) : (
         shown.length > 0 && (
           <div className={styles.cardBand}>
-            {stack("md")}
+            {stack}
             {reading}
           </div>
         )
@@ -410,7 +538,7 @@ function ArchiveCard({
       <div className={styles.cardFoot}>
         {figure && shown.length > 0 ? (
           <span className={styles.footCast}>
-            {stack("xs")}
+            {row}
             {reading}
           </span>
         ) : (

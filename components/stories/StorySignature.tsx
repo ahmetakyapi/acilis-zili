@@ -1,3 +1,4 @@
+import type { CSSProperties } from "react";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import type { Block } from "@/components/article/parse-blocks";
 import { SIGNATURE_MAX_ITEMS, type SignatureBlock } from "@/lib/story-signature";
@@ -19,28 +20,50 @@ import styles from "./StorySignature.module.css";
    Dil sitenin grafik diliyle aynı: ince kulvar (`--line-soft`) üstünde
    5 piksellik şerit, renk yalnız işaretten (yükseliş/düşüş), mavi yalnız
    akışın sıra işaretinde. Degrade yok — veri şeridi değil (CLAUDE.md).
+
+   ÜÇ ÖLÇEK, TEK ÇİZİM (10 Kasım 2026, Mercek yeniden tasarımı). Aynı blok
+   üç yerde çiziliyor: arşiv kartında (96 piksellik sabit kutu), satır boyu
+   yatay kartta (kutu kartın boyunda, çizim büyür) ve kapakta (manşetin
+   "Sayılarla" karoları; dört öğeye kadar). Ölçüler CSS değişkeni
+   (`--sig-*`, StorySignature.module.css): yatay kartın kim olduğunu CSS
+   biliyor (ayın son tek kartı `nth-child` ile seçiliyor), o yüzden ölçeği
+   çizen değil KAP veriyor. Kapak ayrı: karo düzeni işaretlemeyi de
+   değiştirdiği için `scale="cover"` ile söyleniyor.
+
+   HAREKET: çubuk `bar-fill`, çizgi `spark-line` (globals.css sınıfları,
+   TSX'te veriliyor; modül CSS'i globals keyframes adına ulaşamıyor —
+   `.claude/rules/hareket.md` → Tuzaklar). Kap `data-draw` taşıyor: ekranın
+   altındaki kart son karede bekler, görününce bir kez çizer (DrawGate).
+   Sunucu son kareyi basıyor; JS yoksa ve hareket azaltılmışsa çizim bitmiş.
    ========================================================================== */
+
+/** Kapakta çizilen en fazla öğe: manşet kartından geniş, dört karo sığıyor. */
+const COVER_MAX = { flow: 4, bars: 4, stats: 4 } as const;
 
 export function StorySignature({
   block,
   locale,
   series,
+  scale = "card",
 }: {
   block: SignatureBlock;
   locale: string;
   /** `grafik` imzası için kapanış serisi; yoksa minyatür çizilmez. */
   series?: readonly number[] | null;
+  /** `cover`: manşetin karoları. Kart ve yatay kart ölçüyü CSS'ten alır. */
+  scale?: "card" | "cover";
 }) {
+  const max = scale === "cover" ? COVER_MAX : SIGNATURE_MAX_ITEMS;
   const body = (() => {
     switch (block.kind) {
       case "flow":
-        return <Flow block={block} />;
+        return <Flow block={block} max={max.flow} />;
       case "shift":
         return <Shift block={block} locale={locale} />;
       case "bars":
-        return <Bars block={block} />;
+        return <Bars block={block} max={max.bars} />;
       case "stats":
-        return <Stats block={block} locale={locale} />;
+        return <Stats block={block} locale={locale} max={max.stats} />;
       case "chart":
         return series && series.length > 1 ? <Line series={series} /> : null;
     }
@@ -51,7 +74,7 @@ export function StorySignature({
   return (
     /* `figure` + `figcaption`: kart bir bağlantı ve ekran okuyucu onu tek
        parça okuyor; minyatür künyesiyle birlikte o okumaya katılıyor. */
-    <figure className={styles.sig} data-kind={block.kind}>
+    <figure className={styles.sig} data-kind={block.kind} data-scale={scale} data-draw="">
       {caption && <figcaption className={styles.caption}>{caption}</figcaption>}
       {body}
     </figure>
@@ -61,15 +84,19 @@ export function StorySignature({
 /* Akış — halkalar soldan sağa, aralarında ince kulvar. Numara mavi: sıra
    bilgisi etkileşim değil ama okuma yönü; yazıdaki akış bloğu da halkayı
    aynı mavi numarayla açıyor. */
-function Flow({ block }: { block: Extract<Block, { kind: "flow" }> }) {
-  const items = block.items.slice(0, SIGNATURE_MAX_ITEMS.flow);
+function Flow({ block, max }: { block: Extract<Block, { kind: "flow" }>; max: number }) {
+  const items = block.items.slice(0, max);
   return (
     <ol className={styles.flow}>
       {items.map((item, index) => (
         <li key={index} className={styles.flowStep}>
           <span aria-hidden className={styles.flowRail}>
             <span className={cn("numeral", styles.flowNum)}>{index + 1}</span>
-            {index < items.length - 1 && <span className={styles.flowLane} />}
+            {index < items.length - 1 && (
+              <span className={styles.flowLane}>
+                <span className={cn("bar-fill", styles.flowFill)} style={{ "--i": index } as CSSProperties} />
+              </span>
+            )}
           </span>
           <span className={styles.flowName}>{item.name}</span>
         </li>
@@ -108,8 +135,8 @@ function Shift({ block, locale }: { block: Extract<Block, { kind: "shift" }>; lo
 /* Çubuk — ad ve değer üstte, 5 piksellik şerit kulvarda. Ölçek grubun en
    büyüğü; yalnız GÖSTERİLEN satırlardan, yazıdakiyle aynı kural. Nötr
    kipte (`::: bar notr`) renk yön söylemez, yazıdaki gibi. */
-function Bars({ block }: { block: Extract<Block, { kind: "bars" }> }) {
-  const items = block.items.slice(0, SIGNATURE_MAX_ITEMS.bars);
+function Bars({ block, max }: { block: Extract<Block, { kind: "bars" }>; max: number }) {
+  const items = block.items.slice(0, max);
   const peak = Math.max(...items.map((item) => Math.abs(item.value)), 0.01);
   return (
     <ul className={styles.bars}>
@@ -120,10 +147,11 @@ function Bars({ block }: { block: Extract<Block, { kind: "bars" }> }) {
             {item.display}
           </span>
           <span aria-hidden className={styles.barLane}>
+            {/* Dolgu `scaleX` ile dolar (`bar-fill`); sıra kademesi `--i`. */}
             <span
-              className={styles.barFill}
+              className={cn("bar-fill", styles.barFill)}
               data-tone={block.neutral ? "flat" : directionOf(item.value)}
-              style={{ width: `${(Math.abs(item.value) / peak) * 100}%` }}
+              style={{ width: `${(Math.abs(item.value) / peak) * 100}%`, "--i": index } as CSSProperties}
             />
           </span>
         </li>
@@ -133,9 +161,9 @@ function Bars({ block }: { block: Extract<Block, { kind: "bars" }> }) {
 }
 
 /* Rakam şeridi — iki rakam ve künyeleri; rakam kartın en iri metni değil
-   (başlık o), bir kademe altında. */
-function Stats({ block, locale }: { block: Extract<Block, { kind: "stats" }>; locale: string }) {
-  const items = block.items.slice(0, SIGNATURE_MAX_ITEMS.stats);
+   (başlık o), bir kademe altında. Kapakta dört karoya kadar. */
+function Stats({ block, locale, max }: { block: Extract<Block, { kind: "stats" }>; locale: string; max: number }) {
+  const items = block.items.slice(0, max);
   return (
     <dl className={styles.stats} data-count={items.length}>
       {/* Künye `dt`, rakam `dd`: ekran okuyucu "Toplam Tutar, 4,2 Mr $"
@@ -173,7 +201,16 @@ function Line({ series }: { series: readonly number[] }) {
       className={styles.line}
       data-tone={tone}
     >
-      <polyline points={points} fill="none" vectorEffect="non-scaling-stroke" />
+      {/* Taban: dönemin ilk kapanışı; çizginin nereden yola çıktığı. */}
+      <line
+        x1="0"
+        x2={width}
+        y1={(height - ((series[0] - min) / span) * height).toFixed(2)}
+        y2={(height - ((series[0] - min) / span) * height).toFixed(2)}
+        vectorEffect="non-scaling-stroke"
+        className={styles.lineBase}
+      />
+      <polyline className="spark-line" points={points} fill="none" vectorEffect="non-scaling-stroke" />
     </svg>
   );
 }

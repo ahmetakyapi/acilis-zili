@@ -176,6 +176,31 @@ export default async function TechnicalPage() {
             <EditionTrack edition={latest} next={next} variant="latest" locale={locale} t={t} />
           </div>
         )}
+        {/* PANO KÜNYESİ BAŞLIK KARTINDA, ÜÇ ÖLÇÜ (10 Kasım). Üç sayı "Hisse
+            Planları" başlığının yanında 15 piksellik bir satırdı; başlık
+            kartında ise yayın şeridinin altı boştu (sağdaki dağılım daha
+            uzun: 1440'ta 89, 1024'te 106 piksel, ölçüldü). Sayfanın ilk
+            sorusu ("hangisi şimdi alınabilir") artık ilk ekranda ve display
+            puntoyla; boşluk esnetilmedi, dolduruldu (1440: 89 → 9 piksel).
+            Telefonda tek satırlık künye olarak kalıyor (CSS `.headStats`):
+            orada başlık kartı zaten 491 piksel. Hesap ve "yakın" kuralı
+            aşağıda, `summary`de; aynı sayılar atlas cümlesinde. */}
+        {board.length > 0 && latest && (
+          <dl className={styles.headStats} aria-label={t.technical.proximityLabel}>
+            <div data-tone={proximity.inZone > 0 ? "up" : undefined}>
+              <dt>{t.technical.proximityInZone}</dt>
+              <dd className="numeral">{proximity.inZone}</dd>
+            </div>
+            <div>
+              <dt>{t.technical.proximityNear}</dt>
+              <dd className="numeral">{proximity.near}</dd>
+            </div>
+            <div data-tone={proximity.belowStop > 0 ? "down" : undefined}>
+              <dt>{t.technical.proximityBelowStop}</dt>
+              <dd className="numeral">{proximity.belowStop}</dd>
+            </div>
+          </dl>
+        )}
       </DirectoryHeader>
 
       {board.length === 0 || !latest ? (
@@ -199,20 +224,8 @@ export default async function TechnicalPage() {
                   "anlamsız", 23 Eylül). Kaldırılınca başlığın tek çocuklu
                   sarmalayıcısı da kalktı. */}
               <h2 id="technical-board" className={styles.boardTitle}>{t.technical.boardTitle}</h2>
-              <dl className={styles.proximity} aria-label={t.technical.proximityLabel}>
-                <div data-tone={proximity.inZone > 0 ? "up" : undefined}>
-                  <dt>{t.technical.proximityInZone}</dt>
-                  <dd className="numeral">{proximity.inZone}</dd>
-                </div>
-                <div>
-                  <dt>{t.technical.proximityNear}</dt>
-                  <dd className="numeral">{proximity.near}</dd>
-                </div>
-                <div data-tone={proximity.belowStop > 0 ? "down" : undefined}>
-                  <dt>{t.technical.proximityBelowStop}</dt>
-                  <dd className="numeral">{proximity.belowStop}</dd>
-                </div>
-              </dl>
+              {/* Üç sayılık pano künyesi 10 Kasım'da başlık kartına çıktı
+                  (`.headStats`, yukarıda); çubukta başlık ve süzgeç kaldı. */}
             </div>
             <div className={styles.filterBar} data-sticky-bar>
               {/* EŞİT BÖLMELİ, KAYAN BAŞPARMAKLI. Dört kelime gri bir izin

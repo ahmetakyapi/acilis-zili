@@ -95,9 +95,11 @@
 }
 /* Kadro sütunu 360 piksel tabanlı: üç satırlık tablo (44'lük logo, ad,
    21 puntoluk getiri + ölçek çizgisi) 320'nin altında adı kırpıyordu. */
-@media(min-width:1024px) { .leadCard[data-has-cast="true"] { grid-template-columns:minmax(0,1.5fr) minmax(360px,1fr); } }
+@media(min-width:1024px) { .leadCard[data-has-aside="true"] { grid-template-columns:minmax(0,1.5fr) minmax(360px,1fr); } }
 
-.leadCopy { display:flex; min-width:0; flex-direction:column; padding:40px 40px 30px; }
+/* 10 Kasım 2026 — kapak yeniden kuruldu (gerekçe MercekIndex.tsx →
+   LeadStory): "metin | kadro" / "imza şeridi". Ölçümler dosyanın sonunda. */
+.leadCopy { display:flex; min-width:0; flex-direction:column; padding:36px 40px 30px; }
 .leadTitle {
   max-width:24ch;
   font-size:clamp(28px,3vw,42px);
@@ -107,11 +109,16 @@
   color:var(--text-strong);
   text-wrap:balance;
 }
-.leadDek { margin-top:20px; max-width:58ch; font-size:16px; line-height:1.72; color:var(--text-body); text-wrap:pretty; }
+.leadMeta { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; margin-top:14px; font-size:13px; color:var(--text-muted); }
+.leadDek { margin-top:18px; max-width:62ch; font-size:16px; line-height:1.72; color:var(--text-body); text-wrap:pretty; }
+/* İMZA ŞERİDİ: kapak ölçeğinde çizim (StorySignature `scale="cover"`),
+   kartın dibinde boydan boya; karolar yan yana (dört `sayilar` karosu
+   1440 ve 1024'te tek satır). Dar ekranda girişle kadronun arasında. */
+.leadBand { min-width:0; padding:22px 40px 28px; border-top:1px solid var(--line-soft); }
 /* Eylem satırı kartın DİBİNE yaslı (`margin-top:auto`): kadro sütunu metinden
    uzun olduğunda boşluk başlıkla giriş arasına değil, girişle eylem arasına
    düşüyor. */
-.leadFoot { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; margin-top:auto; padding-top:28px; }
+.leadFoot { display:flex; flex-wrap:wrap; align-items:center; gap:12px 20px; margin-top:auto; padding-top:24px; }
 .leadCta {
   display:inline-flex; align-items:center; gap:8px;
   min-height:40px; padding:0 18px;
@@ -121,7 +128,6 @@
   transition:background-color 180ms var(--ease-brand);
 }
 .leadCta svg { transition:transform 200ms var(--ease-brand); }
-.leadMeta { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 8px; font-size:13px; color:var(--text-muted); }
 
 .leadAside {
   display:flex; min-width:0; flex-direction:column; justify-content:center;
@@ -129,12 +135,22 @@
   border-top:1px solid var(--line-soft);
   background:var(--surface-sunken);
 }
-@media(min-width:1024px) { .leadAside { border-top:0; border-left:1px solid var(--line-soft); } }
+/* Kadrosuz yazıda gömük sütun imza çizimini taşır; karolar gömük zeminde
+   bir ton AÇIK durur (kartın yüzeyi), aynı tonda kaybolmasın. */
+.leadAside[data-figure] { --sig-tile:var(--premium-surface); }
+.leadAside[data-figure] { --sig-flow:row; --sig-stat-cols:repeat(2,minmax(0,1fr)); --sig-bar-cols:minmax(0,1fr); --sig-odd-span:1/-1; }
+@media(min-width:1024px) {
+  .leadAside { border-top:0; border-left:1px solid var(--line-soft); }
+  .leadBand { grid-column:1/-1; }
+}
+@media(max-width:1023px) { .leadCopy { order:1; } .leadBand { order:2; } .leadAside { order:3; } }
 
 @media(max-width:767px) {
   .leadCopy { padding:24px 20px 22px; }
   .leadTitle { font-size:28px; line-height:1.14; }
+  .leadMeta { margin-top:12px; }
   .leadDek { margin-top:14px; font-size:15px; line-height:1.68; }
+  .leadBand { padding:18px 20px 20px; }
   .leadFoot { padding-top:20px; gap:12px; }
   .leadCta { min-height:44px; }
   .leadAside { padding:16px; }
@@ -144,11 +160,35 @@
 
 .archive { display:flex; flex-direction:column; gap:36px; }
 .month { display:flex; min-width:0; flex-direction:column; gap:16px; }
-.monthHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; padding-top:14px; border-top:1px solid var(--line); }
+.monthHead { display:flex; align-items:baseline; gap:16px; padding-top:14px; border-top:1px solid var(--line); }
 .monthTitle { font-size:22px; line-height:1.2; font-weight:600; letter-spacing:-.03em; color:var(--text-strong); }
 /* Başlık degrade için 0,12em yukarı açılıp geri kalkıyor; yanındaki sayı
    aynı payı kalkmazsa 2-3 piksel aşağıda durur (CLAUDE.md, görsel dil). */
-.monthCount { translate:0 calc(22px * -.12); font-size:13px; font-weight:400; color:var(--text-muted); white-space:nowrap; }
+.monthCount { margin-left:auto; translate:0 calc(22px * -.12); font-size:13px; font-weight:400; color:var(--text-muted); white-space:nowrap; }
+
+/* AYIN RİTMİ (10 Kasım 2026; gerekçe MercekIndex.tsx → MonthStrip). Tik 3,
+   aralık 3: 31 gün 183 piksel. Boş gün 3 piksellik nokta (`--line-strong`),
+   yazılı gün 10/14/18 piksel nötr mürekkep. Şerit başlığın taban çizgisine
+   oturur (esnek kabın tabanı ilk tikin dibi) ve başlıkla aynı 0,12em kalkar.
+   390'da tik 2, aralık 2 (122 piksel): başlık 105 + şerit + "17 Yazı" 44
+   354'lük satıra sığar (390'da yatay taşma 0, ölçüm dosyanın sonunda).
+   Tikin yükselişi küçük im süresinde (`--mark`, 200 ms) ve 12 ms kademeli:
+   ayın 31'i 360 + 200 = 560 ms'de biter (ilk denemede `--draw` ile 1060
+   ms'ydi, açılış tavanını aşıyordu). */
+.strip { display:inline-flex; flex-shrink:0; align-items:flex-end; gap:3px; height:18px; translate:0 calc(22px * -.12); }
+.strip i { display:block; width:3px; height:3px; border-radius:999px; background:var(--line-strong); }
+.strip i[data-n="1"] { height:10px; }
+.strip i[data-n="2"] { height:14px; }
+.strip i[data-n="3"] { height:18px; }
+.strip i:not([data-n="0"]) {
+  background:var(--text-body);
+  transform-origin:center bottom;
+  animation:tickRise var(--mark) var(--ease-brand) both;
+  animation-delay:calc(var(--i, 0) * 12ms);
+}
+/* Dikey tik: katalogdaki `bar-fill` yatay doluyor (scaleX), üç piksellik
+   tikte görünmez; bu ekrana özgü tek keyframes. Opaklık 0'dan başlamaz. */
+@keyframes tickRise { from { transform:scaleY(.2); } }
 
 /* Izgara: 640'ta iki, 1180'de üç kolon. Üç kolon 1280 kapta 405 piksellik
    kart veriyor; dört logo yığını (112) + rakam (≈110) şeride rahat sığıyor. */
@@ -158,14 +198,21 @@
    sayısı ve kart eni aynı (1440'ta 426); fark ayın son satırında: iki
    kart kalınca üçer iz alıp satırı ikiye bölüyorlar. Canlıda ölçüldü:
    Kasım 17 yazı, son satırda iki kart ve sağında 446 piksellik boş yuva
-   (1440). Tek kalan kart zaten satırı kaplıyordu (aşağıda, 5 Kasım). */
+   (1440). Tek kalan kart zaten satırı kaplıyordu (aşağıda, 5 Kasım).
+
+   AYNI GÜN, İKİNCİ ADIM: ayın İLK kartı satır boyu (`data-feature`), o
+   yüzden sıra bir kaydı. Kalan kartlar 2. çocuktan başlıyor: satırı
+   paylaşan iki kart artık `3n+2`/sondan ikinci ve `3n`/son; tek kalan
+   kart `3n+2`/son (iki kolonda `2n`/son). Her sayıda dolu bitiş ölçüldü
+   (ay başına 1, 2, 3, 4, 5, 16, 17 kart; 768/1024/1280/1440): son satırın
+   sağ kenarı ızgaranın sağ kenarında, fark 0 piksel. */
 @media(min-width:1180px) {
   .grid { grid-template-columns:repeat(6,minmax(0,1fr)); }
   .grid > .card { grid-column:span 2; }
-  .grid > .card:nth-child(3n+1):nth-last-child(2),
-  .grid > .card:nth-child(3n+2):last-child { grid-column:span 3; }
-  .grid > .card:nth-child(3n+1):nth-last-child(2) .cardDek,
-  .grid > .card:nth-child(3n+2):last-child .cardDek { -webkit-line-clamp:2; }
+  .grid > .card:nth-child(3n+2):nth-last-child(2),
+  .grid > .card:nth-child(3n):last-child { grid-column:span 3; }
+  .grid > .card:nth-child(3n+2):nth-last-child(2) .cardDek,
+  .grid > .card:nth-child(3n):last-child .cardDek { -webkit-line-clamp:2; }
 }
 /* GENİŞ EKRAN (25 Ekim): çerçeve 1640'tan sonra büyüyor (`components/
    layout/frame.ts`); 1800'de içerik ~1480 piksel ve üç kolonlu kart
@@ -182,8 +229,13 @@
    (`subgrid`): şerit esnek gövdenin dibine itiliyordu ve eylem satırı iki
    satırlık künye taşıyan kartta şerit 16 piksel yukarıda başlıyordu
    (1440, ölçüldü 174/190). Satır aralığı kartın içinde sıfır. */
+/* 10 Kasım 2026: tek kolon `minmax(0,1fr)`. Kolon tanımsızken örtük iz
+   içeriğin en geniş satırına (imza künyesi, `nowrap`) göre açılıyordu:
+   390'da "Oracle Tahvillerinde Hazine Üstü Ek Faiz (Baz Puan)" künyeli
+   kartın gövdesi kartın sağından 9 piksel taşıyordu (ölçüldü 381/372;
+   kart kırptığı için görünmüyor, başlık sağ iç boşluğu yiyordu). */
 .card {
-  display:grid; grid-row:span 3; grid-template-rows:subgrid; row-gap:0; min-width:0;
+  display:grid; grid-row:span 3; grid-template-columns:minmax(0,1fr); grid-template-rows:subgrid; row-gap:0; min-width:0;
   overflow:hidden;
   border:1px solid var(--line);
   border-radius:var(--radius-panel);
@@ -210,20 +262,27 @@
 }
 .reading { display:flex; min-width:0; flex-direction:column; align-items:flex-end; gap:3px; text-align:right; }
 .readingCaption { font-size:12px; line-height:1.35; font-weight:400; color:var(--text-muted); }
-.readingValue { font-size:19px; line-height:1.1; font-weight:700; letter-spacing:-.02em; }
+.readingValue { font-size:19px; line-height:1.1; font-weight:700; letter-spacing:-.03em; }
 
 /* İMZA ŞERİDİ (24 Ekim). Şerit yazının imza bloğunu taşıyınca tek çocuk,
    tam genişlik; yüksekliği minyatürün sabit kutusundan (StorySignature).
-   Logolar ve rakam kartın dibine iniyor (`.footCast`): xs karo, 6 piksel
-   bindirme, rakam künyesiyle iki satır. */
+   Logolar ve rakam kartın dibine iniyor (`.footCast`): xs karo, rakam
+   künyesiyle iki satır.
+   10 Kasım 2026: dipteki karolar bindirilmiyor, 4 piksel aralıkla yan yana
+   (gerekçe MercekIndex.tsx → ArchiveCard); üç karo + "+N" 104 piksel. */
 .cardBand[data-signature] { display:block; padding:14px 16px; }
-.stack[data-size="xs"] { padding-left:6px; }
-.stack[data-size="xs"] .stackItem { margin-left:-6px; border-radius:var(--radius-sm); }
-.stack[data-size="xs"] .stackMore { width:22px; height:22px; font-size:12px; }
+.footLogos { display:flex; flex-shrink:0; align-items:center; gap:4px; }
+.footMore {
+  display:flex; align-items:center; justify-content:center;
+  min-width:22px; height:22px; padding:0 5px;
+  border-radius:var(--radius-sm);
+  background:var(--surface-sunken);
+  font-size:12px; font-weight:600; color:var(--text-muted);
+}
 .footCast { display:flex; min-width:0; align-items:center; gap:10px; }
 .footCast .reading { align-items:flex-start; gap:1px; text-align:left; }
 .footCast .readingCaption { overflow:hidden; max-width:100%; font-size:12px; text-overflow:ellipsis; white-space:nowrap; }
-.footCast .readingValue { font-size:14px; }
+.footCast .readingValue { font-size:14px; letter-spacing:-.01em; }
 
 /* Şeridi olmayan kartta (şirketsiz yazı) eylem yine üçüncü izde. */
 .card > .cardBody { grid-row:1; }
@@ -235,11 +294,12 @@
 .cardDek { margin-top:10px; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; font-size:14px; line-height:1.62; color:var(--text-body); }
 .cardFoot {
   display:flex; align-items:center; justify-content:space-between; gap:12px;
+  min-height:63px;
   margin:18px 20px 0; padding:12px 0 14px;
   border-top:1px solid var(--line-soft);
 }
 .cardSymbols { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; font-weight:600; letter-spacing:.02em; color:var(--text-muted); }
-.cardCta { display:inline-flex; flex-shrink:0; align-items:center; gap:6px; font-size:13px; font-weight:600; color:var(--primary); }
+.cardCta { display:inline-flex; flex-shrink:0; align-items:center; gap:6px; margin-left:auto; font-size:13px; font-weight:600; color:var(--primary); }
 .cardCta svg { transition:transform 200ms var(--ease-brand); }
 
 .metaStrong { font-weight:600; color:var(--text-body); }
@@ -252,7 +312,8 @@
 /* ------------------------------------------------------- ETKİLEŞİM */
 
 /* Üzerine gelince kart tonla karşılık veriyor (`--primary-tint`) ve ok 3
-   piksel ilerliyor; kaldırma, gölge, ölçek yok — komşu kartlar kımıldamaz. */
+   piksel ilerliyor; kaldırma, gölge, ölçek yok — komşu kartlar kımıldamaz.
+   Basışta kart 0,992'ye çöker (`.claude/rules/hareket.md` → hover/basış). */
 @media(hover:hover) and (pointer:fine) {
   .lead:hover .leadCard { border-color:var(--primary); }
   .lead:hover .leadCta { background:var(--primary-hover); }
@@ -262,18 +323,35 @@
 .lead:is(:hover,:focus-visible) .leadCta svg,
 .card:is(:hover,:focus-visible) .cardCta svg { transform:translateX(3px); }
 .lead:focus-visible,.card:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+.card { transition:border-color 250ms var(--ease-brand),background-color 180ms var(--ease-brand),scale var(--mark) var(--ease-brand); }
+.card:active { scale:.992; }
 
 @media(prefers-reduced-motion:reduce) {
   .leadCard,.card,.leadCta,.leadCta svg,.cardCta svg,.chips a { transition:none; }
   .lead:is(:hover,:focus-visible) .leadCta svg,
   .card:is(:hover,:focus-visible) .cardCta svg { transform:none; }
+  .card:active { scale:none; }
+  .strip i:not([data-n="0"]) { animation:none; }
 }
 
 /* Arşiv başlığı — sayfanın ikinci `h2`si; ay başlıklarından bir basamak büyük. */
 /* 10 Kasım 2026: bölüm başlığı ortak basamakta (`.claude/rules/arayuz.md` →
-   Ortak ölçüler): 26/650 → clamp(25px,2.8vw,36px)/600; 1440'ta 36, 390'da 25. */
+   Ortak ölçüler): 26/650 → clamp(25px,2.8vw,36px)/600; 1440'ta 36, 390'da 25.
+   AYNI GÜN: başlık GÖZDEN kalktı, belge ana hattında duruyor (sayfa
+   `sr-only` basıyor). Canlıda "Önceki Yazılar" (36 punto) ile hemen
+   altındaki "Kasım 2026" (22 punto) 64 piksel arayla üst üste iki başlıktı;
+   manşetten sonra gelenin önceki yazılar olduğunu ay başlığı ve tarihler
+   zaten söylüyor. Sınıf, başlık yeniden görünür olursa ölçüyü tutsun diye
+   duruyor. */
 .archiveHeading { font-size:clamp(25px,2.8vw,36px); line-height:1.15; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
-@media(max-width:767px) { .archive { gap:28px; } .monthTitle { font-size:20px; } .monthCount { translate:0 calc(20px * -.12); } }
+@media(max-width:767px) {
+  .archive { gap:28px; }
+  .monthHead { gap:12px; }
+  .monthTitle { font-size:20px; }
+  .monthCount,.strip { translate:0 calc(20px * -.12); }
+  .strip { gap:2px; }
+  .strip i { width:2px; }
+}
 
 /* SATIRDA YALNIZ KALAN KART SATIRI KAPLAR (5 Kasım 2026). Ay grubu sütun
    sayısının katı değilse son kart tek başına kalıyor ve satırın üçte
@@ -282,24 +360,59 @@
    imza verisi sağda kendi kolonunda. Aynı kalıp rehberde
    (`sm:[&>:nth-child(odd):last-child]:col-span-2`). Şeridi olmayan kart
    (şirketsiz yazı) dikey kalır. `:has()` kartın kendi çocuğunda, kökte
-   değil (CLAUDE.md "Kökte :has() yok"). */
+   değil (CLAUDE.md "Kökte :has() yok").
+
+   10 Kasım 2026 — AYNI KALIP AYIN İLK KARTINDA DA (`data-feature`; gerekçe
+   MercekIndex.tsx → ArchiveMonths). İki değişiklik: (1) seçici bir kaydı,
+   çünkü ilk çocuk artık hep satır boyu (iki kolonda tek kalan `2n`/son, üç
+   kolonda `3n+2`/son); (2) yatay kartın şeridi imza çizimini BÜYÜTÜYOR
+   (`--sig-*`): 96 piksellik minyatür ~210 piksellik kutuda ortada küçük
+   kalıyordu (üstünde ve altında ~55 piksel boş). Çubuk satırları 13 punto
+   ve 10 piksel aralıklı, rakam 24 punto, çizgi 72 piksel. Şeridi olmayan
+   kart yine dikey ama satırı kaplar (yanında boş yuva kalmaz). */
 @media (min-width:640px) and (max-width:1179px) {
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBody { grid-column:1; grid-row:1; padding:24px 28px 0; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardFoot { grid-column:1; grid-row:2; margin:18px 28px 0; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand { grid-column:2; grid-row:1/-1; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; margin:20px 20px 20px 0; padding:20px 22px; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand[data-signature] { display:flex; justify-content:center; align-items:stretch; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand .reading { align-items:flex-start; text-align:left; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) > .cardBand .readingValue { font-size:28px; }
-  .grid > .card:nth-child(2n+1):last-child:has(> .cardBand) .cardTitle { font-size:24px; }
+  .grid > .card:is([data-feature], :nth-child(2n):last-child) { grid-column:1/-1; }
+  .grid > .card:is([data-feature], :nth-child(2n):last-child):has(> .cardBand) { display:grid; grid-row:auto; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
+  .grid > .card:is([data-feature], :nth-child(2n):last-child):has(> .cardBand) > .cardBody { grid-column:1; grid-row:1; padding:24px 28px 0; }
+  .grid > .card:is([data-feature], :nth-child(2n):last-child):has(> .cardBand) > .cardFoot { grid-column:1; grid-row:2; margin:18px 28px 0; }
+  .grid > .card:is([data-feature], :nth-child(2n):last-child):has(> .cardBand) > .cardBand { grid-column:2; grid-row:1/-1; align-self:center; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; margin:16px 16px 16px 0; padding:20px 22px; }
+  .grid > .card:is([data-feature], :nth-child(2n):last-child):has(> .cardBand) > .cardBand[data-signature] { display:flex; justify-content:center; align-items:stretch; --sig-h:auto; --sig-gap:14px; --sig-gap-bars:12px; --sig-row-gap:10px; --sig-lane-gap:4px; --sig-name:13px; --sig-caption:13px; --sig-value:24px; --sig-line-h:72px; }
+  .grid > .card:is([data-feature], :nth-child(2n):last-child):has(> .cardBand) > .cardBand .reading { align-items:flex-start; text-align:left; }
+  .grid > .card:is([data-feature], :nth-child(2n):last-child):has(> .cardBand) > .cardBand .readingValue { font-size:28px; }
+  .grid > .card:is([data-feature], :nth-child(2n):last-child) .cardTitle { font-size:24px; }
 }
 @media (min-width:1180px) {
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) { grid-column:1/-1; display:grid; grid-template-columns:minmax(0,1.7fr) minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBody { grid-column:1; grid-row:1; padding:24px 28px 0; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardFoot { grid-column:1; grid-row:2; margin:18px 28px 0; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand { grid-column:2; grid-row:1/-1; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; margin:20px 20px 20px 0; padding:20px 22px; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand[data-signature] { display:flex; justify-content:center; align-items:stretch; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand .reading { align-items:flex-start; text-align:left; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) > .cardBand .readingValue { font-size:28px; }
-  .grid > .card:nth-child(3n+1):last-child:has(> .cardBand) .cardTitle { font-size:24px; }
+  .grid > .card:is([data-feature], :nth-child(3n+2):last-child) { grid-column:1/-1; }
+  .grid > .card:is([data-feature], :nth-child(3n+2):last-child):has(> .cardBand) { display:grid; grid-row:auto; grid-template-columns:minmax(0,1.6fr) minmax(0,1fr); grid-template-rows:minmax(0,1fr) auto; }
+  .grid > .card:is([data-feature], :nth-child(3n+2):last-child):has(> .cardBand) > .cardBody { grid-column:1; grid-row:1; padding:26px 28px 0; }
+  .grid > .card:is([data-feature], :nth-child(3n+2):last-child):has(> .cardBand) > .cardFoot { grid-column:1; grid-row:2; margin:18px 28px 0; }
+  .grid > .card:is([data-feature], :nth-child(3n+2):last-child):has(> .cardBand) > .cardBand { grid-column:2; grid-row:1/-1; align-self:center; flex-direction:column; align-items:flex-start; justify-content:space-between; gap:18px; margin:16px 16px 16px 0; padding:22px 24px; }
+  .grid > .card:is([data-feature], :nth-child(3n+2):last-child):has(> .cardBand) > .cardBand[data-signature] { display:flex; justify-content:center; align-items:stretch; --sig-h:auto; --sig-gap:14px; --sig-gap-bars:12px; --sig-row-gap:10px; --sig-lane-gap:4px; --sig-name:13px; --sig-caption:13px; --sig-value:24px; --sig-line-h:72px; }
+  .grid > .card:is([data-feature], :nth-child(3n+2):last-child):has(> .cardBand) > .cardBand .reading { align-items:flex-start; text-align:left; }
+  .grid > .card:is([data-feature], :nth-child(3n+2):last-child):has(> .cardBand) > .cardBand .readingValue { font-size:28px; }
+  .grid > .card:is([data-feature], :nth-child(3n+2):last-child) .cardTitle { font-size:24px; max-width:30ch; }
+  .grid > .card:is([data-feature], :nth-child(3n+2):last-child) .cardDek { max-width:68ch; }
 }
+
+/* ÖLÇÜM — 10 Kasım 2026 yeniden tasarımı (gerçek sayfa + sahte sağlayıcı,
+   başsız Chrome, hareket azaltılmış; "önce" canlı aciliszili.com, aynı gün).
+
+   Kapak (manşet kartı), 25 yazı, 1440: girişle "Yazıyı Oku" arası ~82 → 24
+   piksel; künye başlıktan ~250 piksel uzakta (kartın dibi) → 14 piksel
+   altında; kart 458 → 572 (imza şeridi eklendi) ve dibi 841'de: kapağın
+   tamamı 1440×900 ilk ekranında. 1024: boşluk ~112 → 46. 390: kadro
+   satırında şirket adı 3 satır ("GE / Vernova / Inc.") → 1 satır.
+   Kadrosuz manşet (makro yazı): kart 405, imza gömük sütunda.
+
+   Izgara, yazı sayısı 1 / 2 / 5 / 17 / 25 × 390 / 768 / 1024 / 1280 / 1440
+   × iki tema (50 ölçüm): yatay taşma 0; her ayın son satırının sağ kenarı
+   ızgaranın sağ kenarında (fark 0; canlıda 17 kartlı ayda 446 piksel boş
+   yuva); aynı satırdaki kartlarda imza şeridinin üstü ve "Oku" aynı hatta
+   (fark 0; canlıda "Oku" 8 piksel oynuyordu); kartından taşan öğe 0
+   (önce 390'da uzun künyeli kartın gövdesi 9 piksel taşıyordu).
+
+   Hareket (1440×900, `getAnimations()`): ilk ekranda kapak şeridinin üç
+   `bar-fill`i ve ay şeridinin tikleri; en geç biten 860 ms; açılışta
+   opaklığı 0'dan başlatan yeni animasyon yok. Ekranın altındaki 24 çizim
+   kapıda (`data-armed`) bekliyor, sayfa sonuna inince 0 kalıyor ve toplam
+   56 `bar-fill` oynuyor. `reducedMotion: "reduce"` altında animasyon 0. */
