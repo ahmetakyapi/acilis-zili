@@ -1684,11 +1684,8 @@
 }
 /* Logolar üzerine gelince kalkıyor; hangi logoya gelindiği balondan önce
    hareketle okunuyor. */
-@media(hover:hover) and (pointer:fine) {
-  .pulse[data-variant="panel"] .pulseLogo { transition-property:background-color, box-shadow, opacity, filter, translate; }
-  .pulse[data-variant="panel"] .pulseLogo:hover { translate:0 -2px; }
-}
-@media(prefers-reduced-motion:reduce) { .pulse[data-variant="panel"] .pulseLogo:hover { translate:none; } }
+/* KALKMA KALDIRILDI (10 Kasım, ekranlar arası denetim: "Hover'da kaldırma
+   yok"). Geri bildirim iç kenar çizgisi (yukarıda, `:hover`). */
 
 /* ---- PREMIUM KART (26 Eylül) ----
    "Daha görsel, daha okunur, logolar bir tık büyük" (sahibinin isteği,

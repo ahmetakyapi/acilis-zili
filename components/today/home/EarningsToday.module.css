@@ -6,7 +6,7 @@
    sağ kenarı aynı (ad 670, zaman 817, HBK 901, gelir 985), satır 57 piksel
    (değişmedi), yatay taşma 0. 390'da ölçü hücreleri gizli (eski EPS
    sütunu gibi), satır 57. */
-.list > li { transition: background-color 200ms var(--ease-brand); }
+.list > li { transition: background-color 180ms var(--ease-brand); }
 
 .figure { justify-items: end; gap: 1px; min-width: 4.25rem; text-align: right; }
 .figureValue { font-size: var(--text-base); font-weight: 550; line-height: 1.2; color: var(--text-body); white-space: nowrap; }
@@ -16,3 +16,17 @@
 .figureMark { font-size: var(--text-nano); font-weight: 750; color: var(--text-body); }
 .figureMark[data-dir="beat"] { color: var(--up); }
 .figureMark[data-dir="miss"] { color: var(--down); }
+
+/* TELEFONDA HBK (10 Kasım, ikinci tur) — gerekçe EarningsToday.tsx.
+   Sağ hücre kimlikle aynı kalıpta iki satır: sayı (14/1,2) + künye (11).
+   ≥640'ta hücre yok, geniş düzen aynen. Ölçüm aşağıda. */
+.phoneFigure { display: grid; justify-items: end; gap: 1px; text-align: right; }
+.phoneFigure .figureValue { font-weight: 650; color: var(--text-strong); }
+.phoneFigure[data-reported] .figureValue { font-weight: 750; }
+.phoneTiming { display: inline-flex; align-items: center; gap: 3px; }
+.phoneTiming::before { content: "·"; margin-right: 3px; }
+.wideOnly { display: none; }
+@media (min-width: 640px) {
+  .phoneFigure { display: none; }
+  .wideOnly { display: contents; }
+}

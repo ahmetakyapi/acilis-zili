@@ -103,7 +103,7 @@
   .window,
   .strip,
   .sizer {
-    animation-duration: 1.15s;
+    animation-duration: var(--figure-roll, 1.15s);
     animation-delay: calc(var(--delay, 0ms) + var(--order, 0) * 55ms);
     animation-fill-mode: backwards;
   }

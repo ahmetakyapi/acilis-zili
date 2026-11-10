@@ -2425,6 +2425,11 @@ html.theme-switching::view-transition-new(root) {
    One compact scale now spans these routes; report/article display type
    and financial readings keep their own hierarchy. */
 :root { --heading-page:clamp(34px,4.2vw,56px); --radius-panel:18px; --radius-feature:22px; }
+/* HAREKET MERDİVENİ (10 Kasım, tutarlılık denetimi). Dört ekranda çizim
+   süresi sekiz ayrı değerdi (520–1100 ms), kademe adımı dört (40–90 ms).
+   Yeni çizim bu üçünü okur: `--draw` veri çizimi, `--mark` küçük imin
+   belirişi, `--step` kademe adımı (toplamı ~400 ms'yi aşmaz). */
+:root { --draw:700ms; --mark:200ms; --step:40ms; }
 .page-heading h1 { font-size:var(--heading-page); line-height:1.12; font-weight:600; letter-spacing:-.045em; }
 .page-heading > div > p:last-child { max-width:64ch; font-size:14px; line-height:1.7; }
 @media(max-width:767px) { :root { --heading-page:34px; } }

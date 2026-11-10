@@ -63,9 +63,11 @@
    bir kulvarı var, kısa çubuk da bir ölçeğin üstünde okunuyor. */
 /* 5 → 6 piksel, köşe 3 (12 Ekim, sahibinin itirazı: "okunaklılık çok
    kötü"): telefonda ince şerit ve gri adlar sönük duruyordu. */
-.rankTrack { position:relative; height:6px; border-radius:3px; background:var(--line-soft); }
+/* Kulvar 6/3 → 5/999 (10 Kasım, ekranlar arası denetim): sitenin tek şerit
+   ölçüsü — kulvar `--line-soft` üstünde 5 piksel, tam yuvarlak uç. */
+.rankTrack { position:relative; height:5px; border-radius:999px; background:var(--line-soft); }
 .rankTrack::before { content:""; position:absolute; left:50%; top:-4px; bottom:-4px; width:1px; background:var(--line-strong); }
-.rankBar { position:absolute; top:0; bottom:0; border-radius:3px; background:var(--flat); transition:filter .2s var(--ease-brand); }
+.rankBar { position:absolute; top:0; bottom:0; border-radius:999px; background:var(--flat); transition:filter .2s var(--ease-brand); }
 @media(hover:hover) { .rankRow:hover .rankBar { filter:saturate(1.25) brightness(1.06); } }
 .rankBar[data-tone="up"] { background:var(--up); }
 .rankBar[data-tone="down"] { background:var(--down); }

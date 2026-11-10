@@ -13,7 +13,28 @@
    azaltılmış hareket. Yeni bir kural eklerken ilgili seçiciyi YERİNDE
    düzelt, sona blok ekleme. */
 
-.page { display:flex; flex-direction:column; gap:24px; }
+/* HAREKET MERDİVENİ — ANA SAYFANIN TEK SAATİ (10 Kasım, ikinci tur).
+   Ölçüm (`getAnimations()`, 1440, gerçek sayfa + sahte sağlayıcı): veri
+   çizimleri altı ayrı süredeydi (300 / 520 / 620 / 650 / 700 / 900 ms),
+   kademe adımı 40 / 45 / 70 / 90 ms, kahramanın açılışı 1.240 ms'de
+   bitiyordu. Kural (`.claude/rules/hareket.md`): çizim 450–900, im 120–200,
+   kademe 30–60 ms. Üç basamak burada, özel nitelik olarak; sayfanın
+   bütün modülleri (HomeLanes, MarketTexture, PortfolioSlot, DayFlow…)
+   `var(--draw, 700ms)` ile okur — yedek değer aynı, modül başka sayfada da
+   doğru koşar.
+     --draw       700  şerit, kulvar, dilim, sütun (her veri çizimi; ekranlar
+                       arası denetimin ortak süresi)
+     --mark       200  çizimin ucuna konan im (nokta, çentik)
+     --step        40  kademe adımı (toplamı ~400 ms'yi aşmaz)
+   KAHRAMANIN AÇILIŞI TEK KOREOGRAFİ, 900 ms: başlık maskeden yükselir
+   (0–560) → rakamlar kurulur (100–760, gruplar 50 ms arayla) → seans
+   şeridi çizilir (220–780; çentikler fırçayı izler, "şimdi" 640–880) →
+   endeks kartlarının yön şeridi 80 ms arayla (240–900). Önce → sonra:
+   başlık 60–820 → 0–560, rakamlar 120–1.025 → 100–760, şerit 200–1.100 →
+   220–780, "şimdi" 820–1.240 → 640–880, kartlar 240–1.100 → 240–900.
+   Hiçbiri opaklıkla başlamıyor (kırpma ve dönüşüm): ilk karede başlığın
+   üstü ve rakamların üst yarısı boyalı, LCP beklemiyor. */
+.page { display:flex; flex-direction:column; gap:24px; --draw:700ms; --mark:200ms; --step:40ms; }
 
 /* ---- Kahraman ----
    Eylül denetimi: ortalanmış geri sayım kahramanın tepesinden 177 piksel
@@ -36,6 +57,14 @@
    Dar ekranda kısa biçim ("24 Eyl Per") — 320'de 118 piksellik saatin
    yanına sığıyor. */
 .dateline { min-width:0; font-size:var(--text-small); font-weight:600; line-height:1.3; color:var(--text-strong); }
+/* TARİH KÜNYENİN BAŞI, DİPNOTU DEĞİL (10 Kasım, ikinci tur). 1440'ta
+   şeridin solu üç ölçekteydi: tarih 12/600, zil adı 12/600, zil saati
+   15/650 — şeridin ilk kelimesi en sessiz öğeydi ve sağdaki 30 puntoluk
+   saatin karşısında künye başsız okunuyordu. Tarih zil saatleriyle aynı
+   basamağa çıktı (15/650, −.02em): satır artık iki ölçek (15 okuma, 12
+   künye), taban çizgisi ortak (`.toplineLead` → baseline). Ölçüm: tarih
+   12 → 15 piksel, satır boyu 67 → 67 (saat kadranı belirliyor). */
+.dateLong { font-size:15px; font-weight:650; letter-spacing:-.02em; }
 .dateShort { display:none; }
 /* Tarih ve zil künyesi solda tek grup; ayraç kıl çizgi. Grup dar ekranda
    sarıyor: zil saatleri tarihin altına iniyor, saat sağda kalıyor. */
@@ -101,7 +130,7 @@
    ayrı özellik, üstteki imler için kullanılan `translate` ile birleşir.
    Opaklık 0'dan başlamıyor: maske yalnızca alt %40'ı örtüyor, yani ilk
    karede başlığın üstü zaten boyalı (LCP beklemiyor). */
-.headline { max-width:22ch; font-size:clamp(30px,10.75cqi,68px); font-weight:600; line-height:1.08; letter-spacing:-.05em; color:var(--text-strong); text-wrap:balance; animation:headline-in 760ms var(--ease-brand) 60ms both; }
+.headline { max-width:22ch; font-size:clamp(30px,10.75cqi,68px); font-weight:600; line-height:1.08; letter-spacing:-.05em; color:var(--text-strong); text-wrap:balance; animation:headline-in 560ms var(--ease-brand) both; }
 @keyframes headline-in {
   from { transform:translateY(.28em); clip-path:inset(-.3em -.1em 40% -.1em); }
   to { transform:none; clip-path:inset(-.3em -.1em -.3em -.1em); }
@@ -183,14 +212,14 @@
 /* ---- Endeks destesi ---- */
 .indexDeck { min-width:0; padding-left:24px; border-left:1px solid var(--line); }
 .indexHeading { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:5px 15px; margin-bottom:10px; font-size:var(--text-tiny); font-weight:550; color:var(--text-muted); }
-.indexHeading h2 { color:var(--text-strong); font-size:var(--text-read); font-weight:650; }
+.indexHeading h2 { color:var(--text-strong); font-size:var(--text-read); font-weight:700; }
 .indexGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .indexLink { min-width:0; display:block; border-radius:12px; }
 .indexLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 /* Kart bir bağlantı: üzerine gelince yalnızca kenar rengi değişiyor
    (sitenin tek hover dili, `.panel-hover`). İki piksellik kalkma ve renkli
    gölge kaldırıldı — kartlar yerinde duruyor, sayı oynamıyor. */
-.indexCard { min-width:0; min-height:118px; height:100%; overflow:hidden; position:relative; padding:12px 14px 10px; border:1px solid var(--line); border-radius:12px; background:var(--premium-surface); transition:border-color 240ms var(--ease-brand), background-color 240ms var(--ease-brand); }
+.indexCard { min-width:0; min-height:118px; height:100%; overflow:hidden; position:relative; padding:12px 14px 10px; border:1px solid var(--line); border-radius:12px; background:var(--premium-surface); transition:border-color 250ms var(--ease-brand), background-color 250ms var(--ease-brand), scale 120ms var(--ease-brand); }
 /* KIVILCIM ÇİZGİSİ YOKSA TABAN YÜKSEKLİK DE YOK.
    `min-height` çizginin yerini ayırmak için var. Çizgi artık kotasyon bu
    seansa ait değilse hiç çizilmiyor (gerekçesi `IndexStrip` içinde) ve o
@@ -237,9 +266,9 @@
    bandın içinde %57'de bitiyor. Dört kart eşit boyda (139 / 124). */
 .indexStage { position:relative; }
 .stageLine { position:absolute; inset:0; width:100%; height:100%; }
-.stageBand { position:absolute; inset-block:0; border-inline:1px solid var(--line-soft); background:color-mix(in srgb, var(--surface-sunken) 55%, transparent); animation:stage-band-in 520ms var(--ease-brand) 320ms backwards; }
+.stageBand { position:absolute; inset-block:0; border-inline:1px solid var(--line-soft); background:color-mix(in srgb, var(--surface-sunken) 55%, transparent); animation:stage-band-in 360ms var(--ease-brand) 320ms backwards; }
 .stageBand[data-pre] { border-inline-start:0; border-radius:4px 0 0 4px; background:var(--surface-sunken); }
-.stageNow { position:absolute; width:6px; height:6px; margin:-3px 0 0 -3px; border-radius:50%; background:var(--flat); box-shadow:0 0 0 2px var(--premium-surface); animation:stage-now-in 300ms var(--ease-brand) 820ms backwards; }
+.stageNow { position:absolute; width:6px; height:6px; margin:-3px 0 0 -3px; border-radius:50%; background:var(--flat); box-shadow:0 0 0 2px var(--premium-surface); animation:stage-now-in var(--mark,200ms) var(--ease-brand) 700ms backwards; }
 .stageNow[data-tone="up"] { background:var(--up); }
 .stageNow[data-tone="down"] { background:var(--down); }
 @keyframes stage-band-in { from { opacity:0; } }
@@ -251,7 +280,7 @@
    soldan bir kez çizilir, kartlar 80 ms arayla (`--ease-brand`); hareketi
    azaltana son kare. Renk yalnız yönden: artı yeşil, eksi kırmızı, nötr
    çizgi tonu. */
-.indexCard::before { content:""; position:absolute; top:0; inset-inline:14px; height:3px; border-radius:0 0 3px 3px; background:var(--line-strong); transform-origin:left center; animation:index-strip-in 620ms var(--ease-brand) calc(240ms + var(--card, 0) * 80ms) backwards; }
+.indexCard::before { content:""; position:absolute; top:0; inset-inline:14px; height:3px; border-radius:0 0 3px 3px; background:var(--line-strong); transform-origin:left center; animation:index-strip-in 420ms var(--ease-brand) calc(240ms + var(--card, 0) * 80ms) backwards; }
 .indexLink[data-tone="up"] .indexCard::before { background:var(--up); }
 .indexLink[data-tone="down"] .indexCard::before { background:var(--down); }
 .indexLink:nth-child(2) { --card:1; }
@@ -287,11 +316,23 @@
    arasında artık masaüstünde 14px, mobilde 12px var;
    başlık/kart hareketleri içeride kalır, panelin kendisi yerinden oynamaz. */
 .hero + .flowPanel { margin-top:-10px; }
-.flowPanel { padding:18px 24px 0; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); scroll-margin-top:150px; }
+/* YARIÇAP MERDİVENİ İKİ BASAMAK (10 Kasım, ikinci tur). Üst düzey
+   yüzeyler üç ayrı yarıçaptaydı (ölçüldü, 1440): kahraman 22, gün akışı /
+   özet / mercek 20, öteki on dört panel 18 — yan yana duran özet (20) ile
+   dünya paneli (18) aynı satırda iki ayrı köşe taşıyordu. Şimdi kahraman
+   `--radius-feature` (22, sayfanın tek imza yüzeyi), geri kalan her panel
+   `--radius-panel` (18); içteki kartlar 12 (endeks kartı, analiz kartı, zil karosu). */
+.flowPanel { padding:18px 24px 0; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); scroll-margin-top:150px; }
 .flowHeader { padding-bottom:14px; border-bottom:1px solid var(--line-soft); }
 .flowSkeleton { padding-bottom:16px; }
 .sectionHeading { display:flex; flex-direction:column; gap:5px; }
-.sectionHeading h2 { font-size:25px; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
+/* BÖLÜM BAŞLIĞI TEK BASAMAK (10 Kasım, ekranlar arası denetim). Sayfada
+   altı ayrı h2 ölçüsü vardı (14 / 16 / 19 / 25 / 32 / 40): "Sektörler ve
+   Temalar" 40/700, "Bugünün Akışı" ve "Öne Çıkan Haberler" 25/600 — üç
+   bölüm başlığı iki ölçekte. Şimdi üçü de `clamp(25px,2.8vw,36px)` / 600
+   (şirket sayfasının `.chapter` kuralı); panel başlığı 16/700
+   (`PanelHeader`), küçük kart başlığı 14/700. 1440'ta 36, 390'da 25. */
+.sectionHeading h2 { font-size:clamp(25px,2.8vw,36px); font-weight:600; letter-spacing:-.035em; line-height:1.1; color:var(--text-strong); }
 .sectionHeading p { font-size:var(--text-base); line-height:1.6; color:var(--text-body); }
 .flowPanel .sectionHeading { gap:4px; }
 .flowPanel .sectionHeading p { font-size:var(--text-small); }
@@ -299,7 +340,7 @@
 /* ---- Pano ---- */
 .dashboard { display:grid; grid-template-columns:minmax(0,1fr) 350px; gap:28px 24px; }
 .dashboard > [data-col] { gap:24px; }
-.dashboard :global(.panel) { border-radius:18px; }
+.dashboard :global(.panel) { border-radius:var(--radius-panel); }
 /* At 390px the world/movers headings started at 4397/4817px, after both
    earnings panels. Flatten only the single-column layout: streamed content
    and its skeleton share one ordered slot, while desktop column sizing and
@@ -307,13 +348,13 @@
 .dashboard [data-home-section] { min-width:0; }
 .dashboard [data-home-section]:empty { display:none; }
 .brief { min-width:0; scroll-margin-top:150px; }
-.brief > section { padding:26px; border-color:var(--primary-faint); border-radius:20px; background:var(--premium-surface); }
+.brief > section { padding:26px; border-color:var(--primary-faint); border-radius:var(--radius-panel); background:var(--premium-surface); }
 .brief h2 { font-size:clamp(25px, 2.2vw, 33px); line-height:1.16; letter-spacing:-.035em; max-width:30ch; }
 
 /* ---- Mercek ---- */
 /* Öne çıkan Mercek düz yüzeyde; ayrımı mavi kenarlık taşıyor, köşe
    yıkaması değil (gerekçe UtilityExperience.module.css başındaki not). */
-.storySpotlight { overflow:hidden; border:1px solid var(--primary-faint); border-radius:20px; background:var(--premium-surface); }
+.storySpotlight { overflow:hidden; border:1px solid var(--primary-faint); border-radius:var(--radius-panel); background:var(--premium-surface); }
 .storySpotlight h3 { color:var(--text-strong); font-size:clamp(26px, 2.3vw, 33px); font-weight:650; line-height:1.13; }
 .storySpotlight > a { padding:26px; }
 /* Mobile Mercek measured 1050px at 390px: treat the archive as a numbered
@@ -331,8 +372,8 @@
    aynı (1440'ta 913/913, 390'da 353/353); manşet 1440'ta 331 → 332,
    390'da 514 → 529 piksel. Taşma 0. */
 .storyLeadFoot { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin-top:20px; padding-top:6px; border-top:1px solid var(--line-soft); }
-.storyLeadAction { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin-left:auto; color:var(--primary-ink); font-size:var(--text-small); font-weight:650; transition:color .2s var(--ease-brand); }
-.storyLeadAction svg { flex-shrink:0; transition:translate .25s var(--ease-brand); }
+.storyLeadAction { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin-left:auto; color:var(--primary-ink); font-size:var(--text-small); font-weight:650; transition:color 180ms var(--ease-brand); }
+.storyLeadAction svg { flex-shrink:0; transition:translate 200ms var(--ease-brand); }
 @media(hover:hover) and (pointer:fine) {
   .storyLead:hover .storyLeadAction { color:var(--primary-hover); }
   .storyLead:hover .storyLeadAction svg { translate:3px 0; }
@@ -344,7 +385,7 @@
    piksellik bir işaretti. Dolgu 22'ye, logo 40'a çıktı; başlık bir kademe
    büyüdü. Üzerine gelince satırın solunda mavi bir hat açılıyor ve logo
    kalkıyor. */
-.storyRow { position:relative; display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:start; gap:14px 22px; padding:22px 26px; border-left:2px solid transparent; transition:background .2s var(--ease-brand); }
+.storyRow { position:relative; display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:start; gap:14px 22px; padding:22px 26px; border-left:2px solid transparent; transition:background 180ms var(--ease-brand); }
 .storyRow::before { content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--primary); transform:scaleY(0); transition:transform .28s var(--ease-brand); }
 .storyRow:hover::before { transform:scaleY(1); }
 .storyRow:hover { background:var(--primary-tint); border-left-color:var(--primary-faint); }
@@ -363,12 +404,17 @@
 .storyCast { display:flex; min-width:0; align-items:center; gap:12px; }
 .storyCastFund { display:grid; place-items:center; width:44px; height:44px; flex-shrink:0; border-radius:var(--radius-lg); background:var(--primary-wash); color:var(--primary-ink); }
 .storyCastLogos { display:flex; align-items:center; flex-shrink:0; }
-.storyCastTile { box-shadow:0 0 0 3px var(--premium-surface); transition:margin .32s var(--ease-brand), translate .32s var(--ease-brand); }
+.storyCastTile { box-shadow:0 0 0 3px var(--premium-surface); }
 .storyCastLogos > * + * { margin-left:-12px; }
 .storyCastMore { display:grid; place-items:center; width:44px; height:44px; margin-left:-12px; border-radius:var(--radius-lg); background:var(--primary-wash); color:var(--primary-ink); font-size:var(--text-tiny); font-weight:700; box-shadow:0 0 0 3px var(--premium-surface); }
 @media(hover:hover) and (pointer:fine) {
-  .storyLead:hover .storyCastLogos > * + * { margin-left:4px; }
-  .storyLead:hover .storyCastTile { translate:0 -2px; }
+  /* Karolar ARALANMIYOR da (ekranlar arası denetim): aralanma `margin`
+     geçişiydi — yerleşimi canlandırıyor (yalnız kompozitör kuralı) ve
+     `translate` ile yapılınca kadro yanındaki sembol dizisinin üstüne
+     biniyor. Kaç şirket olduğu yanındaki künyede yazılı. */
+  /* Karolar aralanır ama KALKMAZ (10 Kasım, ikinci tur): hover dili ton,
+     mürekkep ve ok; 2 piksellik zıplama sayfada yalnız mercek ve haber
+     karolarındaydı (`.claude/rules/hareket.md` → "Hover'da kaldırma yok"). */
 }
 /* Satırın logosu numaranın yerinde. İkinci sembol köşeye binen 22'lik
    karoydu; artık ilkinin ALTINDA, aynı boyda, 6 piksel arayla (gerekçe
@@ -376,9 +422,8 @@
    anda. Ölçüldü: karo örtüşmesi 210 → 0 px²; başlıklar logolu, iki logolu
    ve numaralı satırda aynı x'te (1440'ta 159 → 151, 390'da 101 → 97); iki
    logolu satır 1440'ta 115 → 131 piksel (iki karo 86 piksel tutuyor). */
-.storyRowLogo { display:flex; flex-direction:column; gap:6px; width:40px; margin-top:1px; transition:translate .25s var(--ease-brand); }
+.storyRowLogo { display:flex; flex-direction:column; gap:6px; width:40px; margin-top:1px; }
 .storyRowTile { width:40px !important; height:40px !important; border-radius:11px !important; }
-.storyRow:hover .storyRowLogo { translate:0 -2px; }
 .storyRowMeta { display:flex; align-items:center; gap:12px; padding-top:2px; color:var(--text-muted); font-size:var(--text-tiny); }
 .storyRowMeta svg { flex-shrink:0; color:var(--primary-ink); transition:transform .2s var(--ease-brand); }
 /* Arşivin telefondaki dip bağlantısı; masaüstünde yok (gerekçe
@@ -388,7 +433,14 @@
 
 /* ---- Son analizler ---- */
 .analyses { scroll-margin-top:150px; }
-.analyses :global(.panel) { border-top:3px solid var(--primary); }
+/* MAVİ TEPE ÇİZGİSİ KALKTI (10 Kasım, ikinci tur). Panel tepesinde tam
+   genişlikte 3 piksellik mavi bir kenar taşıyordu; 60 piksel altında öne
+   çıkan kartın 3 piksellik GÖRÜŞ şeridi (kırmızı/yeşil/pirinç) duruyordu —
+   aynı kalınlıkta iki şerit üst üste, biri anlam taşıyor (görüş), öteki
+   taşımıyor (mavi etkileşimin rengi, `.claude/rules/arayuz.md`). Sitenin
+   kendi yazdığı içeriğin işareti özet ve mercekte neyse burada da o:
+   `--primary-faint` kenar. Tepe şeridi yalnız görüşe kaldı. */
+.analyses :global(.panel) { border-color:var(--primary-faint); }
 .analysisLeadLink { display:block; margin:0 18px 16px; }
 /* Öne çıkan analiz kartı (31 Ekim): kimlik · görüş (halka + adı) ·
    manşet · üç ölçü şeridi · tek eylem. Tepede görüşün 3 piksellik şeridi
@@ -432,8 +484,7 @@
    artık üç basamak: bant başlığı (display, 26–40), bölüm başlığı (25;
    telefonda 23), panel başlığı (`PanelHeader`, 19). Haber başlığı akışın
    ölçüsüne indi; ağırlık ve harf aralığı da aynı. */
-.newsHeading { color:var(--text-strong); font-size:25px; font-weight:600; letter-spacing:-.035em; line-height:1.1; }
-@media (max-width:767px) { .newsHeading { font-size:23px; } }
+.newsHeading { color:var(--text-strong); font-size:clamp(25px,2.8vw,36px); font-weight:600; letter-spacing:-.035em; line-height:1.1; }
 .news > div:first-child { padding-bottom:20px; }
 
 @media (hover:hover) and (pointer:fine) {
@@ -442,6 +493,8 @@
      kalan cevap "tıklanabilir" demiyordu. */
   .indexLink:hover .indexCard { border-color:var(--primary-faint); background:var(--primary-tint); }
 }
+/* Basışta kart hafifçe çöker (ortak ölçü: kart 0,992, buton 0,97). */
+.indexLink:active .indexCard { scale:.992; }
 
 @media (min-width:1024px) {
   .dashboard > [data-col="main"] { grid-column:1; grid-row:2; }
@@ -639,9 +692,22 @@
   .indexSkeleton { height:106px; border-radius:12px; }
   .indexValue { font-size:22px; }
   .indexSpark { height:27px; margin-top:8px; }
+  /* TELEFONDA DA ZİL BAŞLIĞIN SAĞINA ASILI (10 Kasım, ikinci tur). Zil
+     çipin satırında 64 piksel boyla kendi satırını açıyordu: 390'da çip
+     295'te, başlık 323'te; üst şerit ile çip arasında 43 piksel hava.
+     29 Ekim'de geniş ekranda yapılanın aynısı: satırın boyu çipin boyu
+     (22), zil tepeye yaslı ve başlığın sağına sarkıyor. Zil 64 → 44–52
+     (kolonla ölçekli, dokunma hedefi ≥44); başlığa değmiyor: 390'da zil
+     298'de başlıyor, başlık 292'de bitiyor (430: 338 / 324, 375: 285 /
+     280, 360: 273 / 267). Kolon 280 pikselin altında (320'lik ekran) pay
+     kalmıyor; orada zil eskisi gibi kendi satırında. YALNIZ TÜRKÇE:
+     İngilizce başlık satırı dolduruyor. Kazanç: sayaç 29 piksel yukarı. */
+  @container hero-copy (min-width:280px) {
+    .heroTopRow:lang(tr) { align-items:flex-start; }
+    .heroTopRow:lang(tr) .heroBell { --bell:clamp(44px,16.5cqi,52px); margin-top:-4px; margin-bottom:calc(22px - var(--bell)); }
+  }
   .hero + .flowPanel { margin-top:-6px; }
   .flowPanel { padding:16px 14px 0; }
-  .sectionHeading h2 { font-size:23px; }
   .dashboard { gap:24px; }
   .dashboard > [data-col] { gap:20px; }
   .brief > section { padding:20px; }
@@ -701,9 +767,8 @@
   .indexCard::before { animation:none; }
   .stageBand, .stageNow { animation:none; }
   .indexValue[data-flash] { animation:none; }
-  .storyRow,.storyRowMeta svg,.storyCastTile,.storyRowLogo,.storyLeadAction,.storyLeadAction svg { transition:none; }
+  .storyRow,.storyRowMeta svg,.storyLeadAction,.storyLeadAction svg { transition:none; }
   .storyLead:hover .storyLeadAction svg { translate:none; }
-  .storyRow:hover .storyRowLogo,.storyLead:hover .storyCastTile { translate:none; }
   .storyRow:hover .storyRowMeta svg { transform:none; }
   .storyRow::before { transition:none; }
 }
@@ -725,3 +790,8 @@
 @media (min-width:2240px) {
   .dashboard { grid-template-columns:minmax(0,1fr) 480px; }
 }
+
+/* Kahraman koreografisi ≤900 ms (10 Kasım): endeks fiyatı ortak
+   `RollingFigure`ın 1,15 saniyesiyle sahnenin gerisinde kalıyordu (1.425 ms'de
+   oturuyordu); süre bu sahnede değişkenle kısalır. */
+.indexValue { --figure-roll:620ms; }

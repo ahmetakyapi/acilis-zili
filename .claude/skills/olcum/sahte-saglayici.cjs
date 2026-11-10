@@ -146,10 +146,104 @@ const CAL = [
   { id: "c1", symbol: "NVDA", report_date: "2026-08-26", hour: "amc", eps_estimate: "2.14", eps_actual: "2.22", revenue_estimate: "94000000000", revenue_actual: "96200000000", quarter: "2", year: "2027" },
   { id: "c2", symbol: "NVDA", report_date: "2026-05-20", hour: "amc", eps_estimate: "1.79", eps_actual: "1.87", revenue_estimate: null, revenue_actual: "81600000000", quarter: "1", year: "2027" },
 ].map((r) => ({ ...r, updated_at: new Date().toISOString() }));
+/* ---- İçerik tabloları (10 Kasım, ikinci tur): ana sayfanın sol kolonu boş
+   tabloyla kısa kalıyor, kolon dipleri ölçülemiyordu. Satırlar 10 Kasım
+   canlı görüntülerindeki içeriğe benzetildi (uzun ad, eksi HBK, saati
+   belirsiz bilanço, 0,00 gelir beklentisi). Tarihler bugüne göre. ---- */
+const NOW_ISO = new Date().toISOString();
+const uid = (group, i) => `00000000-0000-4000-8000-0000000${group}${String(i).padStart(4, "0")}`;
+const BRIEF_BODY = [
+  "Petrol haftaya sert düşüşle başladı: Brent sabah saatlerinde %4'ten fazla gerileyerek varil başına 94 dolar civarına indi. Cuma kapanışı 98,3 dolardı. Düşüşü Başkan Donald Trump'ın Pazar günü CNN'e verdiği röportaj tetikledi.",
+  "- Trump, İran'a yeni saldırı gerekip gerekmeyeceğini anlaşmaya bağladı. Ardından ekledi: **\"The answer is, highly unlikely it's going to be necessary.\"** Hürmüz Boğazı'ndaki risk ise sürüyor; İran Devrim Muhafızları Cumartesi gecesi iki tankerin mayına çarparak alev aldığını açıkladı.\n- Ucuzlayan petrol vadeli işlemleri yukarı taşıdı. Salı açıklanacak TÜFE öncesinde enerji fiyatlarındaki düşüş, Aralıkta faiz artırımı beklentisini taşıyan enflasyon baskısını hafifletiyor. Ama endeksin en büyük hissesi bu yükselişe katılmıyor.\n- Nvidia'nın yönetim kurulu Pazar günü, CEO Jensen Huang'ın bir yabancı istihbarat girişiminin hedefi olup olmadığını araştırmak için iç soruşturma başlattı. Huang çalışanlarına gönderdiği mesajda tüm sorumluluğu üstlendiğini yazdı.",
+  "Hisse açılış öncesinde %4'e yakın geriledi; yarı iletken endeksinin geri kalanı ise AMD öncülüğünde yükseliyor. Micron ve Broadcom cuma günkü kazançlarını koruyor.",
+  "Tahvil tarafında 10 yıllık faiz %4,88'de yatay. Piyasa Aralık toplantısında 25 baz puanlık artırıma %38 olasılık veriyor; bir hafta önce bu oran %52 idi.",
+  "Bugünün takviminde Ekim TÜFE verisi ve beş bilanço var. CoreWeave kapanış sonrası açıklayacak; şirketin yapay zekâ altyapı talebi hakkında söyleyecekleri haftanın tonunu belirleyebilir.",
+  "Asya'da Nikkei %0,4, KOSPI %1,1 geriledi; Avrupa'da DAX %0,3 yükselişle açıldı. Dolar endeksi 104,2'de, altın ons başına 4.120 dolar civarında.",
+].join("\n\n");
+const BRIEFS = ["daily", "weekly"].map((period, i) => ({ id: uid(1, i), brief_date: day(-1), locale: "tr", period, headline: period === "daily" ? "Petrol %4 Düştü, Nvidia Huang Soruşturmasıyla Geriledi" : "TÜFE Haftası: Enflasyon Verisi ve CoreWeave Bilançosu Bekleniyor", body_md: BRIEF_BODY, generated_by: "claude", generated_at: NOW_ISO }));
+const STORY_BODY = "SoftBank nisan-eylülde 4,8 milyar dolar zarar etti.\n\n::: sayilar Sayılarla\n4,8 Mr $ | Altı Aylık Net Zarar\n3,73 Mr $ | Türbin Siparişlerinde Silinen Tutar\n%15,9 | 30 Eylül'de Borç-varlık Oranı\n%13,9 | Hissenin 10 Kasım Yükselişi\n:::\n\nOhio'daki veri merkezleri için ayırdığı türbin ve jeneratör siparişleri en büyük kalem oldu.";
+const STORIES = [
+  ["softbank-turbin", "SoftBank Türbin Siparişinde 3,7 Milyar Dolar Zarar Yazdı, Musk'ı Yalanladı", "SoftBank nisan-eylülde 4,8 milyar dolar zarar etti; Ohio'daki veri merkezleri için ayırdığı türbin ve jeneratör siparişleri en büyük kalem oldu. Şirket Elon Musk'ın temerrüt iddiasını reddetti, ama borç-varlık oranı OpenAI ve çip hisselerindeki düşüşle yükseldi.", 0, ["SFTBY", "GEV", "NVDA", "ARM", "INTC"]],
+  ["sp500-petrol", "S&P 500 Petrol Düşünce %2,35 Yükseldi, Tahvil Faizi Yerinde Kaldı", "Brent, Trump'ın İran'a yeni saldırıyı pek olası görmediğini söylemesiyle %4,7 düştü; AMD %12,9 yükselirken Nvidia CEO soruşturması yüzünden %4,27 geriledi. 10 yıllık faiz ise %4,88'e çıktı, Fed'in aralık artırımı fiyatlaması yerinde kaldı.", -1, ["SPY", "QQQ"]],
+  ["nvidia-huang", "Nvidia CEO'su Huang İlişkiyi Kabul Etti, Yönetim Kurulu Soruşturma Açtı", "Jensen Huang, ABD istihbaratının Çin adına çalıştığından şüphelendiği Megaspeed yöneticisi Alice Huang ile ilişkisini kabul etti; Nvidia kurulu bağımsız soruşturma başlattı. Trump Huang'ı savundu, hisse açılış öncesi %4 geriledi.", -2, ["NVDA", "TSM"]],
+  ["berkshire-geri-alim", "Berkshire Rekor Hisse Geri Alımı Yaptı, Sigorta Kârı %43 Düştü", "Greg Abel yönetimindeki Berkshire Hathaway üçüncü çeyrekte kendi hissesine 9,6 milyar dolar harcadı ve ekimde de almayı sürdürdü. GEICO'daki hasar artışıyla faaliyet kârı %5,8 geriledi; piyasa sonuçları pazartesi fiyatlayacak.", -3, ["BRK.B"]],
+  ["fed-aralik", "Fed Tutanakları Aralık İçin Kapıyı Açık Bıraktı", "Üyelerin çoğu enflasyonun hedefe dönüş hızından rahatsız.", -5, []],
+  ["amd-rekor", "AMD Veri Merkezi Gelirinde Rekor Kırdı", "Şirket dördüncü çeyrek beklentisini yükseltti.", -6, ["AMD"]],
+].map(([slug, title, dek, off, symbols], i) => ({ id: uid(2, i), slug, locale: "tr", title, dek, body_md: STORY_BODY, event_date: day(off), symbols: JSON.stringify(symbols), sources: "[]", read_minutes: String(6 - (i % 3)), generated_by: "claude", published_at: NOW_ISO, updated_at: NOW_ISO }));
+const EARN_TODAY = [
+  ["BN", null, "0.75", "1850000000"], ["TDG", "bmo", "12.33", "2980000000"], ["CRWV", "amc", "-1.18", "3620000000"], ["TNGX", null, "-0.36", "0"], ["COAG", "bmo", "-0.53", "0"],
+].map(([symbol, hour, eps, rev], i) => ({ id: uid(3, i), symbol, report_date: day(0), hour, eps_estimate: eps, eps_actual: null, revenue_estimate: rev, revenue_actual: null, quarter: "3", year: "2026", updated_at: NOW_ISO }));
+const EVENTS = [
+  { off: 0, time: "08:30", slug: "cpi", tr: "Ekim TÜFE Verisi", en: "October CPI", importance: "high", forecast: "3.6", previous: "3.72", unit: "%" },
+  { off: 0, time: "08:30", slug: "core-cpi", tr: "Ekim Çekirdek TÜFE Verisi", en: "October Core CPI", importance: "high", forecast: "3.1", previous: "3.2", unit: "%" },
+  { off: 2, time: "08:30", slug: "jobless-claims", tr: "Haftalık İşsizlik Başvuruları", en: "Initial Jobless Claims", importance: "medium", forecast: "224", previous: "219", unit: "K" },
+].map((e, i) => ({ id: uid(4, i), event_date: day(e.off), event_time_et: e.time, slug: e.slug, title_tr: e.tr, title_en: e.en, importance: e.importance, actual: null, forecast: e.forecast, previous: e.previous, unit: e.unit, fred_series_id: null, source: "seed", updated_at: NOW_ISO }));
+const ANALYSES = [
+  ["ASTS", "AST SpaceMobile", 44, "sell", 187, -10.0, -0.7, "AST SpaceMobile üçüncü çeyrekte 42,3 milyon dolar gelirle yıllık %187 büyüdü ama beklentinin %7,4 altında kaldı; hisse başına zarar da beklentiden %10 büyük çıktı. Hisse gün içinde Rakuten ortaklığı haberiyle %14 yükseldiği için kapanış sonrası yalnızca %0,7 geriledi."],
+  ["RKLB", "Rocket Lab", 60, "hold", 73, -71.4, -6.7, "Rocket Lab rekor gelir açıkladı, Neutron takvimi kaydı."],
+  ["AAOI", "Applied Optoelectronics", 52, "hold", 128, 21.4, -8.0, "Gelir ikiye katlandı, marj beklentinin altında."],
+  ["SO", "Southern Company", 80, "buy", 13, 13.5, 0.2, "Veri merkezi talebi yük tahminini yükseltti."],
+  ["DUK", "Duke Energy", 72, "buy", 7, 6.4, 0.4, "Düzenlenmiş gelir tabanı büyüdü."],
+  ["ARM", "Arm Holdings", 71, "buy", 27, 10.6, -13.1, "Lisans geliri güçlü, yönlendirme temkinli."],
+  ["PLTR", "Palantir Technologies", 77, "buy", 48, 12.2, 3.1, "Ticari gelir hızlandı."],
+  ["UBER", "Uber Technologies", 66, "hold", 18, -4.2, -2.9, "Brüt rezervasyon beklentide, marj daraldı."],
+  ["PFE", "Pfizer", 58, "hold", -3, 8.8, 1.2, "Maliyet kesintileri kârı taşıdı."],
+  ["SMCI", "Super Micro Computer", 38, "sell", 9, -22.5, -11.4, "Marj baskısı sürüyor."],
+  ["SHOP", "Shopify", 74, "buy", 31, 5.1, 6.8, "Brüt mal hacmi beklentiyi aştı."],
+  ["QCOM", "Qualcomm", 69, "hold", 10, 3.9, -1.8, "Otomotiv gelirleri rekor."],
+  ["DIS", "Walt Disney", 63, "hold", 4, 7.7, 2.4, "Yayın kârlılığı arttı."],
+  ["ABNB", "Airbnb", 61, "hold", 11, -1.0, -3.5, "Rezervasyon büyümesi yavaşladı."],
+  ["MELI", "MercadoLibre", 79, "buy", 39, 2.8, 4.9, "Fintech kredi portföyü genişledi."],
+  ["LYFT", "Lyft", 55, "hold", 16, 0, 0.6, "Sürüş sayısı rekor."],
+].map(([symbol, company, score, verdict, yoy, surprise, reaction, headline], i) => ({ symbol, period: "2026-Q3", period_label: "3Ç 2026", locale: "tr", company, sector: "Technology", report_date: day(-1 - Math.floor(i / 2)), timing: "amc", score: String(score), verdict, headline, revenue: String(4.23e7 * (i + 1)), revenue_yoy_pct: String(yoy), eps: "-0.42", eps_surprise_pct: String(surprise), reaction_pct: String(reaction), updated_at: NOW_ISO, published_at: NOW_ISO }));
+const CHARTS = [{ chart_date: day(-1), locale: "tr", title: "Çip Hisseleri Uçarken Nvidia Ters Yönde Geriledi", chart_md: "::: bar Teknoloji Hisseleri, Günlük Değişim %\nCoherent (COHR) | +16,79\nMonolithic Power Systems (MPWR) | +16,60\nAdvanced Micro Devices (AMD) | +13,26\nMicron Technology (MU) | +11,90\nApplied Materials (AMAT) | +11,37\nNvidia (NVDA) | -4,27\n:::", body_md: "Yarı iletken endeksi günü %6 yükselişle kapattı; Nvidia ise yönetim soruşturması haberiyle ayrıştı.", updated_at: NOW_ISO }];
+const TECH = [["AMD", "hold"], ["SPCX", "hold"], ["TSLA", "hold"], ["AAPL", "hold"], ["META", "hold"], ["ONDS", "hold"], ["MU", "sell"], ["RKLB", "sell"], ["NVDA", "sell"], ["INTC", "sell"], ["GOOGL", "sell"], ["NBIS", "sell"], ["BMNR", "sell"], ["ASTS", "sell"], ["IREN", "sell"], ["QCOM", "sell"]].map(([symbol, stance], i) => ({ id: uid(5, i), symbol, session_date: day(-1), slot: "lateday", stance, entry_low: null, entry_high: null, stop: null, targets: "[]", supports: "[]", resistances: "[]", copy: "{}", snapshot: JSON.stringify({ price: px(symbol)[0], changePct: (hash(symbol) - 0.5) * 6 }), generated_by: "claude", published_at: NOW_ISO, updated_at: NOW_ISO }));
+const NEWS_HEADS = [
+  ["Nvidia yönetim kurulu Jensen Huang hakkında soruşturma başlattı, Wall Street yapay zeka darbelerini atlatmaya çalışıyor", "Nasdaq, yapay zeka çip hisselerine alıcıların dönmesiyle %2,7 yükseldi; Nvidia ise CEO Jensen Huang'a ilişkin endişelerle düştü.", "ChartMill", ["NVDA"]],
+  ["Gelecekteki nakit akışına göre \"Yedi Dev\" hisseleri en cazipten en az cazibeliye sıralanıyor", "", "Yahoo", []],
+  ["Nvidia yönetim kurulu, Jensen Huang'ın iddia edilen bir Çinli istihbarat varlığıyla ilişkisini soruşturuyor", "", "Yahoo", ["NVDA"]],
+  ["Stanley Black & Decker konsensüs hedef fiyatı %11,20 artırılarak 111,38 dolara yükseltildi", "", "Fintel", ["SWK"]],
+  ["Solventum (SOLV) hisseleri neden yükseliyor", "", "Yahoo", ["SOLV"]],
+  ["Bu 5 internet platformu hissesi reklam gelirleriyle çalışıyor", "", "Yahoo", []],
+  ["USA Rare Earth (USAR) 3. çeyrek 2026 bilanço görüşmesi metni", "", "Yahoo", ["USAR"]],
+  ["TSM hissesi neden gece yükseliyor?", "", "Yahoo", ["TSM"]],
+];
+const NEWS = Array.from({ length: 40 }, (_, i) => { const [h, sum, src, syms] = NEWS_HEADS[i % NEWS_HEADS.length]; const head = i < NEWS_HEADS.length ? h : `${h} (${i})`; return { id: uid(6, i), provider_id: `m${i}`, headline: head, summary: sum, headline_tr: head, summary_tr: sum, url: `https://example.com/haber/${i}`, image_url: null, source: src, category: "general", symbols: `{${syms.join(",")}}`, published_at: new Date(Date.now() - (i * 37 + 35) * 60e3).toISOString(), fetched_at: NOW_ISO }; });
+function monthly(latest, prev, n = 24) { const out = []; const r = rng("m" + latest); for (let i = n - 1; i >= 0; i--) { const v = i === 0 ? latest : i === 1 ? prev : prev - (i - 1) * (latest - prev) * 0.3 + (r() - 0.5) * 0.2; out.push({ date: new Date(Date.UTC(2026, 9 - i, 1)).toISOString().slice(0, 10), value: +v.toFixed(2) }); } return out; }
+const MACRO = [["CPIAUCSL", "cpi", "TÜFE (Yıllık)", "CPI (YoY)", 3.72, 3.35, "Eylül 2026"], ["PCEPILFE", "core-pce", "Çekirdek PCE (Yıllık)", "Core PCE (YoY)", 3.12, 3.03, "Eylül 2026"], ["UNRATE", "unemployment", "İşsizlik Oranı", "Unemployment Rate", 4.1, 4.2, "Ekim 2026"], ["FEDFUNDS", "fed-funds", "Fed Politika Faizi", "Fed Funds Rate", 3.88, 3.75, "Ekim 2026"]].map(([series_id, slug, title_tr, title_en, latest, prev, period_label]) => ({ series_id, slug, title_tr, title_en, latest_value: String(latest), prev_value: String(prev), unit: "%", period_label, jsonb_agg: JSON.stringify(monthly(latest, prev)) }));
+function contentRows(table, sql, params) {
+  const dates = params.filter((v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v))).map(String).sort();
+  const between = (rows, col) => (dates.length === 0 ? rows : rows.filter((r) => r[col] >= dates[0] && r[col] <= dates[dates.length - 1]));
+  if (table === "daily_briefs") return BRIEFS.filter((b) => params.includes(b.period));
+  if (table === "stories") { const slug = params.find((v) => STORIES.some((st) => st.slug === v)); return slug ? STORIES.filter((st) => st.slug === slug) : STORIES; }
+  if (table === "economic_events") return between(EVENTS, "event_date");
+  if (table === "earnings_analyses") return /report_date" =/.test(sql) ? [] : ANALYSES;
+  if (table === "daily_charts") return CHARTS;
+  if (table === "technical_analyses") return TECH;
+  if (table === "news") return NEWS;
+  return null;
+}
+/* macro_series sorgusu sütun listesinde alt sorgu taşıyor (son 24 gözlem);
+   yalın ayrıştırıcı onu boş döndürür, burada elle yanıtlanır. */
+function macroResult() {
+  const cols = ["series_id", "slug", "title_tr", "title_en", "latest_value", "prev_value", "unit", "period_label", "jsonb_agg"];
+  return { fields: cols.map((name) => ({ name, dataTypeID: name === "jsonb_agg" ? 3802 : 25 })), command: "SELECT", rowCount: MACRO.length, rows: MACRO.map((r) => cols.map((c) => r[c])), rowAsArray: true };
+}
+/* Dış günlük kaynaklar: Hazine getiri eğrisi (XML), Cboe VIX (CSV), FRED. */
+function weekdays(n) { const d = new Date(); const out = []; while (out.length < n) { d.setUTCDate(d.getUTCDate() - 1); if (d.getUTCDay() % 6) out.unshift(d.toISOString().slice(0, 10)); } return out; }
+function treasuryXml() {
+  const r = rng("ust");
+  return "<feed>" + weekdays(40).map((dt, i) => { const k = (i - 39) * 0.004 + (i === 39 ? 0 : (r() - 0.5) * 0.03); const cell = (tag, v) => `<d:${tag} m:type="Edm.Double">${(v + k).toFixed(2)}</d:${tag}>`; return `<entry><content><m:properties><d:NEW_DATE m:type="Edm.DateTime">${dt}T00:00:00</d:NEW_DATE>${cell("BC_2YEAR", 4.56)}${cell("BC_5YEAR", 4.67)}${cell("BC_10YEAR", 4.88)}${cell("BC_30YEAR", 5.02)}</m:properties></content></entry>`; }).join("") + "</feed>";
+}
+function vixCsv() { const r = rng("vix"); const days = weekdays(260); return "DATE,OPEN,HIGH,LOW,CLOSE\n" + days.map((dt, i) => { const v = i === days.length - 1 ? 19.92 : i === days.length - 2 ? 25.64 : 14 + r() * 12; const [y, m, d2] = dt.split("-"); return `${m}/${d2}/${y},${v},${v},${v},${v.toFixed(2)}`; }).join("\n"); }
+function fredSeries(q) { const id = q.get("series_id") || "X"; const base = { VIXCLS: 19.9, DGS2: 4.56, DGS5: 4.67, DGS10: 4.88, DGS30: 5.02, BAMLH0A0HYM2: 3.4, SP500: 6800 }[id] ?? 2 + hash(id) * 4; const r = rng(id); const days = weekdays(Math.min(Number(q.get("limit")) || 260, 400)); const obs = days.map((date) => ({ date, value: (base * (0.97 + r() * 0.06)).toFixed(2) })); return { observations: q.get("sort_order") === "desc" ? obs.reverse() : obs }; }
+function text(body, type) { return new Response(body, { status: 200, headers: { "content-type": type, date: new Date().toUTCString() } }); }
 function dbRows(table, sql, params) {
+  const content = contentRows(table, sql, params); if (content) return content;
   if (table === "symbols") return [...MEMBERS.values()].map(symbolRow);
   if (table === "symbol_metrics") { const sector = params.find((v) => typeof v === "string" && /[a-z]/.test(v)); return [...MEMBERS.values()].filter((m) => !sector || m.sector === sector).map((m) => ({ symbol: m.symbol, sector: m.sector, currency: "USD", metrics: stored(m.symbol), updated_at: new Date().toISOString() })); }
   if (table === "earnings_calendar") {
+    if (/^\d{4}-\d{2}-\d{2}$/.test(String(params[0]))) return EARN_TODAY.filter((r) => params.includes(r.report_date));
     const sym = params[0]; let rows = CAL.filter((r) => r.symbol === sym);
     const dates = params.filter((v) => /^\d{4}-\d{2}-\d{2}$/.test(String(v))).map(String).sort();
     const ge = /report_date" >=/.test(sql), le = /report_date" <=/.test(sql);
@@ -164,8 +258,11 @@ function dbRows(table, sql, params) {
 function neon(body) {
   const one = (q) => {
     const sql = q.query || ""; const params = q.params || [];
+    // MOCK_SQL_LOG=<dosya>: gelen sorguları yazar; eksik tabloyu bulmak için.
+    if (process.env.MOCK_SQL_LOG) fs.appendFileSync(process.env.MOCK_SQL_LOG, sql + "\n  " + JSON.stringify(params) + "\n");
     const m = /^\s*select\s+([\s\S]+?)\s+from\s+"([a-z_]+)"/i.exec(sql);
     const empty = { fields: [], command: /^\s*select/i.test(sql) ? "SELECT" : "INSERT", rowCount: 0, rows: [], rowAsArray: true };
+    if (/from "macro_series"/.test(sql) && /jsonb_agg/.test(sql)) return macroResult();
     if (!m || /\(/.test(m[1])) return empty;
     const cols = m[1].split(",").map((c) => (c.trim().match(/"([a-z_0-9]+)"\s*$/) || [])[1]);
     if (cols.some((c) => !c)) return empty;
@@ -182,6 +279,9 @@ globalThis.fetch = async function mockFetch(input, init) {
     if (u.hostname === "finnhub.io") return json(finnhub(u.pathname.replace("/api/v1", ""), u.searchParams));
     if (u.hostname.endsWith("alpaca.markets")) return json(alpaca(u));
     if (u.hostname.endsWith("mockdb.test")) { const raw = init && init.body ? String(init.body) : typeof input === "object" && input.text ? await input.clone().text() : "{}"; return json(neon(JSON.parse(raw))); }
+    if (u.hostname === "home.treasury.gov") return text(treasuryXml(), "application/xml");
+    if (u.hostname === "cdn-api.cboe.com") return text(vixCsv(), "text/csv");
+    if (u.hostname === "api.stlouisfed.org" && u.pathname.endsWith("/series/observations")) return json(fredSeries(u.searchParams));
     if (u.hostname === "127.0.0.1" || u.hostname === "localhost") return realFetch(input, init);
     if (!seen.has(u.hostname)) { seen.add(u.hostname); process.stderr.write(`[mock-fetch] engellendi: ${u.hostname}${u.pathname}\n`); }
     return json({}, 503);

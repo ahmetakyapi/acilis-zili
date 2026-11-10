@@ -74,10 +74,19 @@
      sığmıyor ve karonun dışına taşıyordu (360'ta 26, 390'da 11 piksel,
      ölçüldü) — sığmayan etiket saat satırını da genişletiyordu. Gün artık
      saatlerin altında tam genişlikte: üç satır, hiçbiri taşmıyor. */
-  .cell { grid-template-columns:minmax(0,1fr); }
-  .kicker { grid-column:1; }
-  .day { grid-row:3; grid-column:1; justify-self:start; }
-  .times { grid-column:1; }
+  /* GÜN ETİKETİN YANINDA, SIĞMAZSA KENDİ SATIRINDA (10 Kasım, ikinci
+     tur). Üç satırlık karo 88 piksel tutuyordu ve içindeki saatler hemen
+     altındaki seans şeridinde bir kez daha yazılı; telefonda kahramanın
+     ilk 250 pikseli künyeydi. Karo artık esnek satır: "Açılış Zili" ile
+     "Bugün" aynı satırda iki uca yaslı (390'da 130 piksellik hücrede
+     68 + 30), saatler altta; "5 Ekim Pazartesi" gibi sığmayan gün
+     kendiliğinden kendi satırına iniyor (3 Ekim'deki taşma geri
+     gelmiyor: sarma var, sabit sütun yok). Karo 88 → 66 piksel. */
+  .bells { align-items:stretch; }
+  .cell { display:flex; flex-wrap:wrap; align-items:baseline; align-content:start; justify-content:space-between; }
+  .kicker { order:1; }
+  .day { order:2; }
+  .times { order:3; flex:1 0 100%; }
   .day, .day[data-today] { padding:0; background:none; font-size:12px; font-weight:600; line-height:1.4; color:var(--text-muted); }
   .cell[data-target] .day { color:var(--primary-ink); }
   .primary { font-size:18px; }

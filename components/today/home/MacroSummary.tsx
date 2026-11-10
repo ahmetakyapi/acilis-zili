@@ -66,10 +66,13 @@ export async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionar
   return (
     <Panel className="px-4 py-4 sm:px-5">
       <div className="mb-3.5 flex items-baseline justify-between gap-3">
+        {/* Ölçü `PanelHeader` ile aynı (10 Kasım, ikinci tur): başlık 14
+            pikseldi, komşu on iki panelin başlığı 16 (ölçüldü); elden
+            yazılan başlık kalıbın puntosunu ve harf aralığını taşıyor. */}
         {/* Tam boy başlık — yan kolonun tamamı gibi (26 Eylül'e kadar plaka). Gerekçe PanelHeader'da;
             bu panel kendi başlığını elden yazıyor (ölçü ızgarası bir
             `PanelHeader` düzeni değil), o yüzden sınıf burada tekrarlanıyor. */}
-        <h2 className="display-ink display-ink-tight w-fit text-read font-bold">
+        <h2 className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">
           {t.today.macroSummary}
         </h2>
         <PanelLink href="/makro">{t.common.showAll}</PanelLink>

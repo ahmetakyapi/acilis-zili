@@ -451,7 +451,13 @@ export default async function TodayPage() {
             koşumun ortancası. Takas bilinçli: 65 milisaniye görünmez,
             bin piksellik sıçrama değil. Sağlayıcıya giden paneller akışta
             kalmaya devam ediyor; beklenen tek şey yerel veritabanı. */}
-        <div data-motion-reveal id="gundem" data-home-section="brief" className={styles.brief}><BriefCard locale={locale} t={t} /></div>
+        {/* ÖZETİN ÇİZİMLERİ DE GÖRÜNÜNCE (10 Kasım, ikinci tur). Endeks
+            bandının şeritleri (`cell-grow`, PosterLanes `bar-grow`) düz CSS
+            animasyonu; özet 1440×900'de ilk ekranın altında (tepe ~1.500)
+            ve çizim görülmeden bitiyordu — ölçüldü: yüklemeden 2,5 sn sonra
+            dört şerit `finished`, sarmal hiç görünmemişken. Sarmal artık
+            `DrawOnView`; ilk ekrandaysa hiçbir şey duraklamaz. */}
+        <DrawOnView data-motion-reveal id="gundem" data-home-section="brief" className={styles.brief}><BriefCard locale={locale} t={t} /></DrawOnView>
 
         {/* ---- Mercek ----
              SAYFANIN EN ÜST ÜÇTE BİRİNDE, çünkü sitenin başka hiçbir yerde
@@ -559,11 +565,13 @@ export default async function TodayPage() {
              ve grafik önceki seansı anlatıyor — bugünün hareketlerinin
              ardında, "Dünkü Seans" künyesiyle (`SessionAgeTag`). Kayıt yoksa
              panel basılmıyor (yedek `null`). */}
-        <div data-home-section="daily-chart">
+        {/* Çubukları (`thumb-bar`) görünce çizilir; önce düz sarmaldı ve
+            çizim ekranın altında görülmeden bitiyordu (ölçüm `DrawOnView`). */}
+        <DrawOnView data-home-section="daily-chart">
           <Suspense fallback={null}>
             <DailyChartPanel locale={locale} t={t} nowMs={nowMs} />
           </Suspense>
-        </div>
+        </DrawOnView>
 
         {/* ---- Teknik görünüm ----
              HAREKET PANELİNİN HEMEN ALTINDA. İkisi aynı sorunun iki yarısı:

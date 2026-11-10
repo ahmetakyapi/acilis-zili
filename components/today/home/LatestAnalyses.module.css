@@ -30,7 +30,7 @@
 
 /* Satırın oku: üzerine gelince hap yerinde kalır, ad mavileşir (sitenin
    satır dili: ton, kaldırma yok). */
-.row :global(.text-strong) { transition: color 200ms var(--ease-brand); }
+.row :global(.text-strong) { transition: color 180ms var(--ease-brand); }
 @media (hover: hover) and (pointer: fine) {
   .row:hover :global(.text-strong) { color: var(--primary-ink); }
 }
