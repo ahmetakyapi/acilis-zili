@@ -13,7 +13,7 @@ import styles from "./MarketExperience.module.css";
  * diliyle duramaz: renk yalnız `sameSessionMoves` kümesine giren satırda,
  * ötekiler nötr tonda (tema haritasının kuralı, aynı fonksiyon). Künye
  * hangi günün boyandığını söylüyor (`app/(app)/piyasalar/page.tsx` →
- * IndexToolbar).
+ * IndexToolbar; 10 Kasım 2026: panel `components/markets/IndexHeat.tsx`).
  *
  * TAŞINDI (8 Kasım): ölçek `IndexTreemap.tsx`teydi. O dosyanın ağaç
  * düzenli ısı haritası (18 Ekim) sayfadan kart panolarına geçişte

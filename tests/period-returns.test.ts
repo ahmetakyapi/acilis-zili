@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { PERIOD_SESSIONS, barDate, periodReturns } from "../lib/period-returns";
+import { PERIOD_SESSIONS, barDate, periodReturns, ytdSeries } from "../lib/period-returns";
 import type { Bar } from "../lib/providers/types";
 
 /**
@@ -59,6 +59,14 @@ test("YBB tabanı önceki yılın son kapanışı", () => {
 
 test("önceki yıldan bar yoksa YBB null", () => {
   assert.equal(periodReturns(barsFrom("2026-01-02", [10, 11, 12])).ytd, null);
+});
+
+test("YBB çizgisi yüzdeyle aynı tabandan başlar; taban yoksa null", () => {
+  const series = ytdSeries(barsFrom("2025-12-29", [90, 95, 100, 104, 110]))!;
+  assert.equal(series.base, 100);
+  assert.deepEqual(series.points.map((point) => point.value), [100, 104, 110]);
+  assert.equal(ytdSeries(barsFrom("2026-01-02", [10, 11, 12])), null);
+  assert.equal(ytdSeries([]), null);
 });
 
 test("boş seri", () => {

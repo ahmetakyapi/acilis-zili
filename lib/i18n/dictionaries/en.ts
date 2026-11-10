@@ -1372,7 +1372,7 @@ const en: typeof tr = {
     advancingShare: "Share of Advancers",
     breadthCoverage: "Change data is available for {known} of {total} companies.",
     heatmap: "Heat Map",
-    heatmapHint: "30 largest companies by market value; tile area shows market value, colour the daily move.",
+    heatmapHint: "30 largest companies by market value, largest first; tile colour shows the daily move.",
     heatLastClose: "Percentages describe the last close; direction colour is reserved for this session's move.",
     heatMixed: "The companies' percentages don't describe the same session yet; direction colour arrives once it settles.",
     heatSmallTitle: "Too Small for the Map",
@@ -1400,6 +1400,10 @@ const en: typeof tr = {
     constituentsMore: "{n} More Companies",
     constituentsLess: "Show Less",
     asOf: "List Composition",
+    distributionCaption: "Daily Move Distribution",
+    distributionAria: "Distribution of daily moves across {n} companies; median {median}.",
+    movementScaleFull: "Full Bar {pct}",
+    openTick: "Open",
   },
 
   news: {
@@ -1969,6 +1973,8 @@ const en: typeof tr = {
       "New 52-week highs versus lows are not used: they need a year of price history for every index member, which this screen's data can't provide.",
     pulseSources:
       "Sources: VIX from Cboe (FRED as fallback), the ICE BofA high-yield spread via FRED, SPY and TLT daily closes and S&P 500 quotes from Alpaca.",
+    pulseHowTo: "How to Read It",
+    trendColumn: "YTD Trend",
 
     weekEnding: "Week Ending {date}",
     sahmBelow: "Below Threshold",

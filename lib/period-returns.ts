@@ -79,3 +79,23 @@ export function periodReturns(bars: readonly Bar[]): PeriodReturns {
     lastDate,
   };
 }
+
+/**
+ * YBB sütununun ÇİZGİSİ (10 Kasım 2026, emtia panosu): yılbaşından bugüne
+ * günlük kapanışlar, tabanıyla birlikte. Kural `periodReturns`ın YBB'siyle
+ * AYNI — taban önceki yılın son kapanışı ve çizgi o noktadan başlar; taban
+ * bar yoksa (seri yıl içinde başlıyorsa) yüzde gibi çizgi de `null`. Aynı
+ * hücrede duran sayı ile çizgi böylece aynı iki ucu anlatır.
+ */
+export function ytdSeries(bars: readonly Bar[]): { base: number; points: { time: number; value: number }[] } | null {
+  const last = bars.at(-1);
+  if (!last) return null;
+  const yearStart = `${barDate(last).slice(0, 4)}-01-01`;
+  for (let index = bars.length - 1; index >= 0; index--) {
+    if (barDate(bars[index]) < yearStart) {
+      const points = bars.slice(index).map((bar) => ({ time: bar.time, value: bar.close }));
+      return points.length > 1 && bars[index].close > 0 ? { base: bars[index].close, points } : null;
+    }
+  }
+  return null;
+}
