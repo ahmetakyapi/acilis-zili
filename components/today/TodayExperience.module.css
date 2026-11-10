@@ -536,8 +536,9 @@
   .runMainPast { grid-column:1; grid-row:3 / 5; }
   .runSidePast { grid-column:2; grid-row:4; }
   .dashboard > .wideRow { grid-column:1 / -1; }
-  .dashboard > [data-home-section="session-bell"] { grid-row:5; }
-  .dashboard > [data-home-section="sources"] { grid-row:6; }
+  .dashboard > [data-home-section="news"] { grid-row:5; }
+  .dashboard > [data-home-section="session-bell"] { grid-row:6; }
+  .dashboard > [data-home-section="sources"] { grid-row:7; }
 }
 /* DÜZEN TURU ÖLÇÜMÜ (10 Kasım gecesi; gerçek sayfa + sahte sağlayıcı,
    giriş yapmamış ve yapmış okur — portföy altı pozisyon, favoriler on
@@ -551,7 +552,16 @@
    1440'ta giriş yapmış okurda: portföy başlığı 3.493 → 2.034, favoriler
    2.572 → 2.635. Yatay taşma 0, tablo kabında yatay kaydırma 0, çalışan
    animasyon 0 (360/390/768/1024/1280/1440/1600). Odak sırası ≥1280:
-   akış → bant → sol üst → sağ üst → sol alt → sağ alt → zil (260 sekme). */
+   akış → bant → sol üst → sağ üst → sol alt → sağ alt → zil (260 sekme).
+   İKİNCİ DÜZEN TURU (10 Kasım; sıra page.tsx → panonun başı): sol üst
+   yalnız özet, sol alt bilanço + silüet + analizler + mercek; sağ üst
+   hareketler → dünya → teknik → portföy/Nabız → favoriler; haberler
+   iki kolonun altında kendi satırında (5), zil 6, künye 7. Misafir, gerçek
+   sayfa + sahte sağlayıcı, iki tema aynı: kolon dipleri (sol − sağ) 1280
+   −17, 1440 −112, 1600 −108; sayfa boyu 1440'ta 7.535. Telefonda (390)
+   sıra bant 1.644 → özet 2.894 → hareketler 4.197 → teknik 5.234 →
+   portföy/Nabız 5.575 → bilanço 6.179 → … → haberler 10.673. Yatay taşma
+   0 (390/768/1024/1280/1440/1600). */
 @media (min-width:1024px) {
   /* KAHRAMAN KAYDIRINCA GERİ ÇEKİLİR (8 Ekim). Sayfa aşağı indikçe sayaç
      ve endeks destesi kartın içinde hafifçe küçülüp soluyor; kart kendisi
