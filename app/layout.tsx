@@ -7,6 +7,7 @@ import { SiteJsonLd } from "@/components/seo/JsonLd";
 import { ExpandInPlace } from "@/components/layout/ExpandInPlace";
 import { LocaleProvider } from "@/components/layout/LocaleProvider";
 import { getI18n, getTheme } from "@/lib/i18n";
+import { getPrivacy } from "@/lib/privacy-server";
 import { LOCALES } from "@/lib/i18n/config";
 import { ogLocale } from "@/lib/page-meta";
 import { INDEXABLE, SITE_URL } from "@/lib/site";
@@ -198,12 +199,17 @@ const STYLE_GATE = "body{visibility:hidden}";
 export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
-  const [{ locale, t }, theme] = await Promise.all([getI18n(), getTheme()]);
+  const [{ locale, t }, theme, privacy] = await Promise.all([getI18n(), getTheme(), getPrivacy()]);
 
   return (
     <html
       lang={locale}
       data-theme={theme}
+      /* TUTAR GİZLEME (10 Kasım): tema ile aynı desen — çerez sunucuda
+         okunur, öznitelik ilk boyamada yerinde olur, tutar bir kare görünüp
+         kapanmaz. Sözleşme `lib/privacy.ts`, maske globals.css → "TUTAR
+         GİZLEME". `<html>` burada olduğu için (app) kabuğunda değil. */
+      data-privacy={privacy ? "" : undefined}
       /* YUMUŞAK KAYDIRMA SİTE GENELİNDE, `:has()`SIZ. İki modül onu
          `html:has(.page)` ve `html:has(.sectionNav)` ile açıyordu; kökte
          duran `:has()` belgedeki HER DOM değişikliğinde yeniden

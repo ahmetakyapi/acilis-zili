@@ -2004,6 +2004,24 @@ html.theme-switching::view-transition-new(root) {
 .value-notch { position:absolute; top:calc(var(--notch-out,4px) * -1); bottom:calc(var(--notch-out,4px) * -1); width:2px; margin-left:-1px; border-radius:1px; background:var(--notch-tone,var(--text-strong)); }
 .value-notch[data-quiet] { background:var(--line-strong); }
 
+/* TUTAR GİZLEME (10 Kasım 2026 gecesi, sahibinin isteği: "tutarlar
+   gizlensin, yüzdelikler gözüksün"). Okurun kendi parası `data-money`
+   taşır (`components/portfolio/Money.tsx`); `<html data-privacy>` açıkken
+   değer `display:none` olur, yerine SABİT beş noktalık dizi basılır.
+   - Bulanıklık değil: bulanık rakam okunur, cam/blur da görsel dilde yasak.
+   - Sabit uzunluk: sayının basamak sayısı (büyüklüğü) sızmaz. Satır
+     yüksekliği değişmez (noktalar aynı fontta, aynı satırda); yalnız
+     genişlik kısalır ve bu yalnız tıklamayla olur (CLS'e girmez); çerezli
+     ilk boyamada öznitelik sunucudan gelir, yanıp sönme yok.
+   - Ekran okuyucu `content`in alt metnini okur: "Gizli" / "Hidden".
+   - Kökte `:has()` yok; öznitelik `<html>`de (app/layout.tsx).
+   Ölçüm (390/1440, iki tema, /portfoy + ana sayfa paneli): gizleme açıkken
+   görünür para metni 0, satır yükseklikleri değişmedi — ayrıntı
+   `components/today/home/PortfolioSlot.tsx`. */
+html[data-privacy] [data-money] > [data-money-value] { display:none; }
+html[data-privacy] [data-money]::after { content:"\2022\2022\2022\2022\2022" / "Gizli"; letter-spacing:.04em; }
+html[data-privacy][lang="en"] [data-money]::after { content:"\2022\2022\2022\2022\2022" / "Hidden"; }
+
 /* PANELLER GİRERKEN BELİRİYOR — kaydırma güdümlü, JavaScript yok.
    Neden: 3–7 bin piksellik sayfalarda tempo; alt bölümler tek seferde
    yığılmak yerine kaydırdıkça geliyor.

@@ -1074,33 +1074,14 @@
 
 /* Getiri çubuğu: listedeki en büyük mutlak yüzde tam boy (iki para birimi
    AYNI ölçekte — kurun payı uzunluk farkı olarak okunuyor). Renk yalnızca
-   işaretten. */
+   işaretten (`data-tone`, ortak `.value-bar` kuralı).
+   10 KASIM GECESİ: ortak değer çubuğuna geçti (`value-lane` 5 / `value-bar`
+   8, globals.css → "DEĞER ÇUBUĞU"; `.claude/rules/arayuz.md` → "Büyüklük
+   kalın yatay şeritle"). Dolgu kulvarla aynı 5 pikseldi ve kulvarın içinde
+   kırpılıyordu; ana sayfa paneliyle aynı dil. Burada yalnız yer. */
 .retBar {
-  display: block;
   flex: 1;
   min-width: 1.5rem;
-  /* Kulvar tek ölçü (25 Ekim): `--lane-h`, globals.css. */
-  height: var(--lane-h, 5px);
-  overflow: hidden;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--text-muted) 18%, transparent);
-}
-
-.retBar > span {
-  display: block;
-  height: 100%;
-  border-radius: inherit;
-  background: currentColor;
-  transform: scaleX(var(--r));
-  transform-origin: left center;
-}
-
-.posReturn[data-tone="up"] .retBar > span {
-  background: var(--up);
-}
-
-.posReturn[data-tone="down"] .retBar > span {
-  background: var(--down);
 }
 
 /* Künye: kartın dibinde, dört hücre (telefonda iki sütun). Maliyet ve

@@ -8,6 +8,7 @@ import { ArrowsDownUp, CaretDown, CaretUp, PencilSimple, Trash } from "@phosphor
 import { savePortfolioOrderAction } from "@/app/actions/portfolio";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
+import { Money } from "./Money";
 import { formatIsoDate, formatLira } from "@/lib/fx";
 import { cn, directionOf, formatPercent, formatPercentPlain, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./Portfolio.module.css";
@@ -117,7 +118,8 @@ function Journey({
         ).map(([label, value]) => (
           <span key={label}>
             {label}
-            <b className="numeral">{usd(value as number)}</b>
+            {/* Maliyet okurun parası (gizlenir), fiyat piyasanın (görünür). */}
+            <b className="numeral">{label === costLabel ? <Money>{usd(value as number)}</Money> : usd(value as number)}</b>
           </span>
         ))}
       </span>
@@ -361,12 +363,12 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
               <div className={styles.posValue}>
                 <span className={styles.posLabel}>{L.value}</span>
                 <span className={cn("numeral", styles.posValueUsd)}>
-                  {row.price === null ? <span className="text-muted">{L.noQuote}</span> : usd(row.valueUsd)}
+                  {row.price === null ? <span className="text-muted">{L.noQuote}</span> : <Money>{usd(row.valueUsd)}</Money>}
                 </span>
-                <span className={cn("numeral", styles.posValueTl)}>{formatLira(row.valueTl, locale)}</span>
+                <span className={cn("numeral", styles.posValueTl)}><Money>{formatLira(row.valueTl, locale)}</Money></span>
                 {row.dayChangeUsd !== null && row.dayLabel && (
                   <span className={cn("numeral", styles.posDay)} data-tone={directionOf(row.dayChangeUsd)}>
-                    {row.dayLabel} · {usd(row.dayChangeUsd, true)} · {formatPercent(row.dayChangePct, locale)}
+                    {row.dayLabel} · <Money>{usd(row.dayChangeUsd, true)}</Money> · {formatPercent(row.dayChangePct, locale)}
                   </span>
                 )}
               </div>
@@ -382,15 +384,20 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
                 ).map((cell) => (
                   <div key={cell.key} className={styles.posReturn} data-tone={directionOf(cell.tone)}>
                     <span className={styles.posLabel}>{cell.label}</span>
-                    <span className={cn("numeral", styles.posReturnValue)}>{cell.value}</span>
+                    <span className={cn("numeral", styles.posReturnValue)}><Money>{cell.value}</Money></span>
                     <span className={styles.posReturnFoot}>
                       <span className={cn("numeral", styles.posReturnPct)}>{formatPercent(cell.pct, locale)}</span>
                       {/* İki getiri AYNI ölçekte: listedeki en büyük mutlak
                           yüzde tam boy. Dolar ile lira çubuğu yan yana
                           durunca kurun payı uzunluk farkı olarak okunuyor. */}
                       {cell.pct !== null && row.returnScale > 0 && (
-                        <span className={styles.retBar} aria-hidden>
-                          <span style={{ "--r": Math.min(1, Math.abs(cell.pct) / row.returnScale) } as CSSProperties} />
+                        <span className={cn("value-lane", styles.retBar)} aria-hidden data-draw>
+                          <i
+                            className="value-bar bar-fill"
+                            data-end="end"
+                            data-tone={directionOf(cell.tone)}
+                            style={{ left: 0, width: `${Math.max(2, Math.min(1, Math.abs(cell.pct) / row.returnScale) * 100)}%` }}
+                          />
                         </span>
                       )}
                     </span>
@@ -401,7 +408,8 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
               <dl className={styles.posFacts}>
                 <div>
                   <dt>{L.quantity}</dt>
-                  <dd className="numeral">{quantityText.format(row.quantity)}</dd>
+                  {/* Adet de tutar sayılır (adet × fiyat = değer): gizlenir. */}
+                  <dd className="numeral"><Money>{quantityText.format(row.quantity)}</Money></dd>
                 </div>
                 <div>
                   <dt>{L.boughtAt}</dt>
@@ -414,7 +422,7 @@ export function PositionsTable({ rows, manual }: { rows: PositionRow[]; manual: 
                 <div>
                   <dt>{L.fxPart}</dt>
                   <dd className="numeral" data-tone={directionOf(row.fxTl)}>
-                    {row.fxTl === null ? NO_VALUE : formatLira(row.fxTl, locale, 2, true)}
+                    {row.fxTl === null ? NO_VALUE : <Money>{formatLira(row.fxTl, locale, 2, true)}</Money>}
                   </dd>
                 </div>
               </dl>

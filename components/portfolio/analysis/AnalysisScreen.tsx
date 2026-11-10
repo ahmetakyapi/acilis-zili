@@ -9,6 +9,9 @@ import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMot
 import { AnalysisNote } from "@/components/portfolio/analysis/AnalysisNote";
 import { CorrelationHeat, type HeatCell } from "@/components/portfolio/analysis/CorrelationHeat";
 import { PanelFill } from "@/components/portfolio/analysis/PanelFill";
+import { Money } from "@/components/portfolio/Money";
+import { PrivacyToggle } from "@/components/portfolio/PrivacyToggle";
+import { getPrivacy } from "@/lib/privacy-server";
 import {
   composeAnalysisFacts,
   effectivePips,
@@ -136,10 +139,19 @@ export async function AnalysisScreen({
  * yanında tek satırlık açıklama, sağda küçük buton; tepe cümlesi bandın alt
  * satırında, saç teliyle ayrılmış (DirectoryHeader `compact` + `footer`).
  */
-function AnalysisHeader({ t, footer }: { t: Dictionary; footer?: ReactNode }) {
+async function AnalysisHeader({ t, footer }: { t: Dictionary; footer?: ReactNode }) {
   const A = t.portfolioAnalysis;
+  /* Tutar gizleme anahtarı (10 Kasım): bu ekranda okurun tek tutarı
+     temettü kartı, ama anahtar /portfoy ile aynı yerde ve aynı tercihi
+     çevirir (lib/privacy.ts). Kompakt bantta ikon düğme. */
+  const privacy = await getPrivacy();
   return (
     <DirectoryHeader title={A.title} description={t.portfolioAnalysisVisuals.board.description} compact footer={footer}>
+      <PrivacyToggle
+        initial={privacy}
+        compact
+        labels={{ hide: t.lira.portfolio.hideAmounts, show: t.lira.portfolio.showAmounts }}
+      />
       <ButtonLink href="/portfoy" variant="ghost" size="sm">
         <ArrowLeft size={14} weight="bold" aria-hidden />
         {A.back}
@@ -363,9 +375,12 @@ function Metric({
   mono,
   visual,
   card,
+  money = false,
 }: {
   label: string;
   value: string;
+  /** Değer ve alt satır okurun parası mı — tutar gizlemesine girer (lib/privacy.ts). */
+  money?: boolean;
   /** Değerin yanında küçük künye ("6,7 Kat"): aynı ölçünün başka okunuşu. */
   aside?: string;
   sub?: string;
@@ -384,10 +399,10 @@ function Metric({
           Çizim değerin ALTINDA ve her kartta aynı yükseklikte (iki
           kulvarlık yer): değerler yine aynı hatta biter. */}
       <dd className="contents">
-        {sub && <span className={styles.metricSub}>{sub}</span>}
+        {sub && <span className={styles.metricSub}>{money ? <Money>{sub}</Money> : sub}</span>}
         <span className={styles.metricValueRow}>
           <span className={`numeral ${styles.metricValue} ${mono ? styles.mono : ""}`} data-tone={tone}>
-            {value}
+            {money ? <Money>{value}</Money> : value}
           </span>
           {aside && <span className={`numeral ${styles.metricAside}`}>{tieFigures(aside)}</span>}
         </span>
@@ -984,6 +999,7 @@ function DividendPanel({ risk, locale, A }: { risk: PortfolioRisk; locale: Local
               label={L.annual}
               value={formatPrice(d.annualUsd, locale, { currency: true })}
               sub={d.annualTl === null ? undefined : formatLira(d.annualTl, locale)}
+              money
             />
             <Metric label={L.yield} value={pct(d.yieldPct, locale)} sub={fill(L.payers, { n: d.payers })} />
           </dl>

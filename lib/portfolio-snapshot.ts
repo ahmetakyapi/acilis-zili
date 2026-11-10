@@ -94,6 +94,12 @@ export type PortfolioSnapshot = {
   totals: PortfolioTotals;
   names: Awaited<ReturnType<typeof getSymbolNames>>;
   quotes: { source: DataSource; fetchedAt: Date; stale: boolean } | null;
+  /* GÜNÜN DEĞİŞİMİ (10 Kasım gecesi): panel /portfoy'un Getiri başlığındaki
+     günlük değişimi ve satır başına bugünkü yüzdeyi aynı hesaptan basıyor;
+     yalnız seansı kanıtlanan kotasyon (lib/portfolio.ts → "Günlük değişim"). */
+  days: Map<string, DayMove>;
+  day: ReturnType<typeof dayTotals>;
+  dayBasis: DisplayBasis | null;
 };
 
 export async function loadPortfolioSnapshot(userId: string): Promise<PortfolioSnapshot | null> {
@@ -105,5 +111,8 @@ export async function loadPortfolioSnapshot(userId: string): Promise<PortfolioSn
     totals: data.totals,
     names: data.names,
     quotes: q?.ok ? { source: q.source, fetchedAt: q.fetchedAt, stale: q.stale === true } : null,
+    days: data.days,
+    day: data.day,
+    dayBasis: data.dayBasis,
   };
 }

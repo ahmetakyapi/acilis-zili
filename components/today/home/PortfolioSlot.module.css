@@ -1,46 +1,117 @@
-/* Ana sayfanın portföy özeti. Derinlik tonla, gölge yok; tek renk ailesi. */
+/* Ana sayfanın portföy paneli (yeniden tasarım 10 Kasım gecesi). Derinlik
+   tonla, gölge yok; tek renk ailesi (pay tonları), yön rengi yalnız K/Z'de.
+   Ölçüler kural setinden (`.claude/rules/arayuz.md` → "Ortak ölçüler"):
+   başlık 16/700, display sayı 700 / −0,03em, metin tabanı 12, kalın şerit
+   12, değer çubuğu 8 (kulvar 5). Ölçüm sonuçları TSX'teki yorumlarda. */
 
-.panel { display:flex; flex-direction:column; gap:16px; padding:16px; }
+.panel { display:flex; flex-direction:column; gap:18px; padding:16px; }
 @media (min-width: 640px) { .panel { padding:20px; } }
 
-.head { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
+.head { display:flex; align-items:center; justify-content:space-between; gap:8px; margin-block:-6px; }
+.headActions { display:flex; align-items:center; gap:4px; }
 
-.label { display:block; color:var(--text-muted); font-size:var(--text-nano); font-weight:500; }
+.label { display:block; color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
 
-/* Toplam solda ve baskın; iki K/Z sağda, aynı hatta biter. Dar ekranda
-   alt alta. */
-.figures { display:grid; gap:14px; }
-@media (min-width: 480px) { .figures { grid-template-columns:minmax(0,1.2fr) minmax(0,1fr); align-items:end; } }
+/* ---- Kahraman ---- */
+/* PARA BİRİMİ AYRI SATIRA KIRILMAZ (10 Kasım gece): rayda (1440) "39.907,54 $"
+   değerinin "$" işareti `overflow-wrap:anywhere` yüzünden alt satıra
+   düşüyordu. Değer tek satır kalır; punto görüntü alanına değil panelin
+   kendi enine göre küçülür (kap birimi `cqi`), 24'ün altına inmez. */
+.hero { display:flex; min-width:0; flex-direction:column; gap:4px; container-type:inline-size; }
+.heroValue {
+  color:var(--text-strong);
+  font-size:clamp(24px, 12.5cqi, 38px);
+  font-weight:700; line-height:1.05; letter-spacing:-.03em;
+  white-space:nowrap;
+}
+.heroSub { color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
 
-.total { display:flex; min-width:0; flex-direction:column; gap:4px; }
-.totalValue { color:var(--text-strong); font-size:clamp(28px,3vw,36px); font-weight:700; line-height:1.05; letter-spacing:-.045em; overflow-wrap:anywhere; }
-.sub { color:var(--text-muted); font-size:var(--text-tiny); }
+/* ---- Ölçü defteri: üç sütun, satırlar subgrid ----
+   Etiket esner (minmax 0), tutar ve yüzde içerik boyunda; sütun aralığı
+   12, yani iki tutar arasında en az 12 piksel (aralıksız yapışma hatası). */
+.ledger {
+  display:grid; grid-template-columns:minmax(0,1fr) max-content max-content;
+  column-gap:12px; border-top:1px solid var(--line);
+}
+.ledgerRow {
+  display:grid; grid-column:1 / -1; grid-template-columns:subgrid;
+  align-items:baseline; padding:9px 0; border-bottom:1px solid var(--line-soft);
+}
+.ledgerRow:last-child { border-bottom:0; padding-bottom:0; }
+.ledgerLabel { min-width:0; color:var(--text-body); font-size:var(--text-small); font-weight:600; }
+/* Seans künyesi etiketin ALTINDA, her genişlikte: "Bugün · Kapanış
+   Sonrası" 360'ta tutar açıkken iki satıra kırılıyor, gizliyken tek satır
+   kalıyordu — aç/kapa satırı 18 piksel oynatıyordu (ölçüldü). */
+.ledgerBasis { display:block; margin-top:1px; color:var(--text-muted); font-size:var(--text-nano); font-weight:400; }
+.ledgerAmount { text-align:right; font-size:15px; font-weight:700; white-space:nowrap; }
+.ledgerPct { min-width:56px; text-align:right; font-size:var(--text-small); font-weight:600; white-space:nowrap; }
 
-.pnl { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; }
-.pnl dd { display:flex; flex-direction:column; gap:2px; margin-top:4px; font-size:15px; font-weight:700; line-height:1.2; }
-.pnl dd small { font-size:var(--text-tiny); font-weight:600; opacity:.85; }
-
-/* Dağılım şeridi — dilimler soldan sırayla açılır. */
+/* ---- Dağılım ---- */
 .weights { display:flex; flex-direction:column; gap:8px; }
-.bar { display:flex; height:6px; overflow:hidden; border-radius:999px; gap:2px; }
-.slice {
-  flex:0 0 var(--w);
-  background:color-mix(in srgb, var(--primary) var(--tone), var(--surface-sunken));
-  transform-origin:left center;
-}
-@media (prefers-reduced-motion: no-preference) {
-  .slice { animation:slice-grow var(--draw,700ms) var(--ease-brand) both; animation-delay:calc(var(--i) * var(--step,40ms)); }
-}
-@keyframes slice-grow { from { transform:scaleX(0); } to { transform:scaleX(1); } }
-
+.stack { display:flex; gap:2px; height:12px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.slice { display:block; min-width:3px; flex-basis:0; animation-delay:calc(var(--i) * var(--step, 40ms)); }
 .legend { display:flex; flex-wrap:wrap; gap:6px 14px; }
 .legend li { display:inline-flex; align-items:center; gap:6px; color:var(--text-body); font-size:var(--text-tiny); font-weight:600; }
 .legend b { color:var(--text-muted); font-weight:600; }
-.swatch { width:8px; height:8px; border-radius:2px; background:color-mix(in srgb, var(--primary) var(--tone), var(--surface-sunken)); }
+.legendName { color:var(--text-strong); }
+.swatch { width:8px; height:8px; flex:none; border-radius:2px; }
+.legendNote { color:var(--text-muted); font-size:var(--text-tiny); line-height:1.45; }
 
-.rows > li + li { border-top:1px solid var(--line); }
-.row { display:flex; align-items:center; gap:12px; padding:10px 0; transition:opacity 180ms var(--ease-brand); }
-.row:hover { opacity:.8; }
+/* ---- Pozisyonlar: tek ızgara, satırlar subgrid ----
+   Sütunlar: logo 32 · kimlik (esner) · değer · [bugün] · toplam. Sayılar
+   içerik boyunda (`max-content`), sabit genişlik yok: dar rayda kimlik
+   kısalır (ad tek satırda kırpılır), sayılar kırpılmaz. */
+.positions {
+  display:grid; grid-template-columns:32px minmax(0,1fr) max-content max-content;
+  column-gap:10px;
+}
+.positions[data-day] { grid-template-columns:32px minmax(0,1fr) max-content max-content max-content; }
+.colHead {
+  display:grid; grid-column:1 / -1; grid-template-columns:subgrid;
+  padding-bottom:6px; border-bottom:1px solid var(--line);
+  color:var(--text-muted); font-size:var(--text-nano); font-weight:600; text-align:right;
+}
+.colIdentity { grid-column:1 / 3; text-align:left; }
+.rows { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; }
+.rowItem { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; }
+.rowItem[hidden] { display:none; }
+.rowItem + .rowItem { border-top:1px solid var(--line-soft); }
+.row {
+  display:grid; grid-column:1 / -1; grid-template-columns:subgrid;
+  grid-template-rows:auto auto; row-gap:6px; align-items:center;
+  padding:10px 0; transition:background-color 180ms var(--ease-brand);
+  border-radius:8px;
+}
+.row:hover .symbol { color:var(--primary); }
+.logo { grid-row:1 / 3; align-self:start; }
+.identity { display:flex; min-width:0; flex-direction:column; }
+.symbol { color:var(--text-strong); font-size:15px; font-weight:700; line-height:1.2; transition:color 180ms var(--ease-brand); }
+.name { overflow:hidden; color:var(--text-muted); font-size:13px; line-height:1.3; white-space:nowrap; text-overflow:ellipsis; }
+.value { align-self:start; padding-top:1px; color:var(--text-strong); font-size:13px; font-weight:600; text-align:right; white-space:nowrap; }
+.pct { align-self:start; padding-top:1px; font-size:13px; font-weight:600; text-align:right; white-space:nowrap; }
+/* Pay çubuğu kimlik sütunundan bugün sütununun sonuna; payın yazısı son
+   sütunda, sessiz tonda. */
+.share { grid-column:2 / -2; align-self:center; }
+.shareText { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; text-align:right; line-height:1; }
 
-.note { border-top:1px solid var(--line-soft); padding-top:10px; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.5; }
-.stamp { margin-top:-4px; }
+/* ---- Künye ---- */
+.notes { display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--line); padding-top:12px; }
+.note { display:flex; gap:8px; color:var(--text-body); font-size:var(--text-small); line-height:1.5; }
+.noteIcon { flex:none; margin-top:3px; color:var(--text-muted); }
+.note b { font-weight:700; white-space:nowrap; }
+
+.foot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 12px; border-top:1px solid var(--line-soft); padding-top:10px; margin-top:-6px; }
+.footLink {
+  display:inline-flex; min-height:44px; align-items:center; gap:4px; margin-block:-12px;
+  color:var(--primary); font-size:var(--text-small); font-weight:600;
+}
+.footLink:hover { color:var(--primary-hover); }
+.footLink svg { transition:translate 200ms var(--ease-brand); }
+.footLink:hover svg { translate:3px 0; }
+
+/* ---- Davet kartı (giriş yapmış, pozisyonu yok) ---- */
+.invite { display:flex; flex-direction:column; align-items:flex-start; gap:8px; }
+.inviteLane { display:block; width:100%; height:12px; margin-bottom:6px; border-radius:999px; border:1px dashed var(--line-strong); }
+.inviteTitle { color:var(--text-strong); font-size:15px; font-weight:700; }
+.inviteBody { color:var(--text-body); font-size:var(--text-small); line-height:1.55; }
+.inviteAction { margin-top:6px; }

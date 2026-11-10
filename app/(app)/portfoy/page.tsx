@@ -21,8 +21,12 @@ export default async function PortfolioPage(props: PageProps<"/portfoy">) {
   const [session, search] = await Promise.all([auth(), props.searchParams]);
   const raw = typeof search.ekle === "string" ? search.ekle.trim().toUpperCase() : "";
   const preset = isValidSymbol(raw) ? raw : null;
+  /* Sembolsüz `?ekle=` (10 Kasım): ana sayfa panelinin davet kartı ekleme
+     penceresini BOŞ açar. Biçimi geçmeyen sembol de buraya düşer — pencere
+     açılır, okuyucu sembolü kendisi arar. */
+  const openAdd = !preset && typeof search.ekle === "string";
   if (!session?.user?.id) {
     redirect(`/giris?devam=${encodeURIComponent(preset ? `/portfoy?ekle=${preset}` : "/portfoy")}`);
   }
-  return <PortfolioScreen userId={session.user.id} preset={preset} />;
+  return <PortfolioScreen userId={session.user.id} preset={preset} openAdd={openAdd} />;
 }
