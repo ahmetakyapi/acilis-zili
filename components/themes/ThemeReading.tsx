@@ -1,7 +1,6 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import { median, type MoveSet } from "@/lib/theme-stats";
-import { barScale } from "@/lib/theme-view";
 import type { ThemeRow } from "@/lib/themes-data";
 import { cn, directionOf, directionText, formatPercent, formatPrice, NO_VALUE } from "@/lib/utils";
 import styles from "./ThemeDetail.module.css";
@@ -22,6 +21,14 @@ import { ThemeStrip } from "./ThemeStrip";
  * medyan düğme, ölçüt fonu içi boş im. Fon varsa adı, yüzdesi ve aradaki
  * fark tek cümleyle. Logolar haritada ve tabloda zaten var; küme kalktı.
  *
+ * AKŞAM (aynı gün, ikinci tur): şerit artık İKİ KALIN ÇUBUK. Temanın
+ * medyanı 14, ölçüt fonu 8 piksel, aynı eksende alt alta; fark uzunluk
+ * farkı olarak okunuyor (çentik ve içi boş im kalktı — gerekçe ve tarihçe
+ * `ThemeStrip`). Ölçüt satırının anahtarı da çubuğun kendisi (eğik kare
+ * değil). Üyelerin logoları kapağa DÖNDÜ ama küme olarak değil: sol
+ * sütunda tek sıra, sabit 44 piksel (app/(app)/tema/[slug]/page.tsx →
+ * `HeroLogos`); sabahki 184 piksellik boş kutu sorunu yok.
+ *
  * ÖLÇÜT KIYASI ancak ikisi AYNI SEANSI anlatıyorsa (kural eski
  * `BenchmarkAside`ten, aynen): açılış öncesinde ETF bu sabah işlem görmüş,
  * üyeler görmemiş olabilir (ya da tersi). O hâlde fonun yüzdesi yine
@@ -36,6 +43,8 @@ const EVEN_POINTS = 0.005;
 
 export type ReadingLabels = {
   median: string;
+  /** Kıyas çubuğunun satır başı: "Tema". */
+  theme: string;
   coverage: string;
   medianMissing: string;
   spreadLabel: string;
@@ -50,6 +59,7 @@ export type ReadingLabels = {
 export function ThemeReading({
   data,
   hasBenchmark,
+  benchSymbol,
   locale,
   labels,
 }: {
@@ -60,6 +70,9 @@ export function ThemeReading({
   } | null;
   /** Yedekte ölçüt satırının yeri tutulsun diye (durağan bilgi). */
   hasBenchmark: boolean;
+  /** Ölçütün sembolü (durağan): yedekte de satır başı yazılsın, akış inince
+      etiket sütunu genişlemesin. */
+  benchSymbol?: string | null;
   locale: string;
   labels: ReadingLabels;
 }) {
@@ -71,17 +84,9 @@ export function ThemeReading({
   const comparable =
     mid !== null && benchmark !== null && benchmark.changePct !== null && themeSession === benchSession;
   const diff = comparable ? mid - benchmark.changePct! : null;
-  const scale = moves && moves.values.length > 0
-    ? barScale(mid === null ? [] : [mid])
-    : null;
-  const points = data && moves
-    ? data.rows.flatMap((row, i) => (moves.included[i] ? [{ symbol: row.symbol, change: row.changePct! }] : []))
-    : [];
   const up = moves ? moves.values.filter((value) => value > 0).length : 0;
   const down = moves ? moves.values.filter((value) => value < 0).length : 0;
   const total = moves?.values.length ?? 0;
-  const clippedLow = false;
-  const clippedHigh = false;
 
   return (
     <div className={styles.reading} aria-busy={data === null || undefined}>
@@ -106,10 +111,11 @@ export function ThemeReading({
       </p>
       <div className={styles.readStrip} data-draw>
         <ThemeStrip
-          points={points}
           median={mid}
           bench={comparable ? benchmark.changePct! : undefined}
-          scale={scale}
+          benchLane={hasBenchmark}
+          names={hasBenchmark ? { theme: labels.theme, bench: benchmark?.symbol ?? benchSymbol ?? null } : undefined}
+          locale={locale}
           label={
             moves === null
               ? labels.spreadMissing
@@ -119,16 +125,10 @@ export function ThemeReading({
                   .replace("{down}", String(down))
           }
         />
-        <div className={cn("numeral", styles.readAxis)} aria-hidden>
-          <span>{scale === null ? " " : `${clippedLow ? "≤ " : ""}${formatPercent(-scale, locale, 0)}`}</span>
-          <span>{scale === null ? " " : "0"}</span>
-          <span>{scale === null ? " " : `${clippedHigh ? "≥ " : ""}${formatPercent(scale, locale, 0)}`}</span>
-        </div>
       </div>
       {hasBenchmark && (
         <div className={styles.readBench}>
           <span className={styles.readBenchId}>
-            <i className={styles.readBenchKey} aria-hidden />
             {benchmark ? (
               /* Fonun kendi sayfası: tablodaki ölçüt satırı kalktı (10
                  Kasım), bağlantısı burada. */

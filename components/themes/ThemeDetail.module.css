@@ -15,6 +15,17 @@
      3.756, 390: 6.462 → 5.355.
    - Açılış: son animasyon 970 ms'de bitiyor, opaklık 0'dan başlayan 0;
      hareketi azaltanda çalışan animasyon 0.
+
+   AKŞAM (aynı gün, ikinci tur; önce = sabahki hâl, aynı sahte veri):
+   - Yarı İletkenler 1440: kapak 289 → 305 (sol sütunda 666 × 44 logo sırası,
+     on iki logo; sağda iki kalın çubuk: tema 93 × 14, SMH 503 × 8); harita
+     1.278 × 492 → 1.278 × 594; tablo satırı 46 → 60; sayfa 3.906 → 4.192.
+   - 1024: logo sırası 482 × 44 (dokuz logo), harita 934 × 492. 390: logo
+     sırası 316 × 36 (yedi logo), sayfa 5.355 → 5.508.
+   - Kilo İlaçları (5 üye) 1440: 3.418 → 3.651. Katılım (20) 1440: 3.756 →
+     4.087.
+   - Açılış yine 970 ms'de bitiyor; opaklık 0'dan başlayan 0; hareketi
+     azaltanda 0.
    ========================================================================== */
 
 /* ---- Kapağın okuması ---- */
@@ -25,11 +36,6 @@
 /* Display sayı 700 / −0,03em (ortak ölçü). Sayfanın en büyük puntosu:
    1440'ta 68, 390'da 44 piksel. */
 .readFig { margin:6px 0 12px; font-size:clamp(44px,5.4vw,68px); line-height:1.05; font-weight:700; letter-spacing:-.03em; white-space:nowrap; }
-.readStrip { --strip-h:36px; --tick-h:18px; }
-.readAxis { display:flex; justify-content:space-between; margin-top:2px; color:var(--text-muted); font-size:12px; line-height:1.3; }
-.readAxis > span { flex:1; white-space:nowrap; }
-.readAxis > span:nth-child(2) { text-align:center; }
-.readAxis > span:last-child { text-align:right; }
 .readBench { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:6px 14px; margin-top:14px; padding-top:13px; border-top:1px solid var(--line-soft); }
 .readBenchId { display:flex; align-items:center; gap:9px; min-width:0; color:var(--text-body); font-size:13px; }
 .readBenchLink { display:flex; align-items:baseline; gap:8px; min-width:0; min-height:24px; color:inherit; }
@@ -37,10 +43,22 @@
 .readBenchLink > span { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .readBenchLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
 @media(hover:hover) { .readBenchLink:hover b { color:var(--primary-ink); } }
-.readBenchKey { flex:none; display:block; width:8px; height:8px; margin-inline:2px; border:1.5px solid var(--text-strong); border-radius:2px; rotate:45deg; }
+/* Ölçüt satırının anahtarı (sabah eğik içi boş kare) 10 Kasım akşamı
+   kalktı: çubukların satır başında "Tema" ve fonun sembolü yazıyor
+   (ThemeStrip → `names`). */
 .readBenchPct { font-size:16px; font-weight:700; letter-spacing:-.01em; }
 .readNote { grid-column:1 / -1; margin:0; color:var(--text-body); font-size:13px; line-height:1.5; }
 .reading > .readNote { margin-top:12px; }
+
+/* ---- Kapağın logo sırası (sol sütun) ----
+   Tek sıra, SABİT boy: sığmayan logo alt satıra sarar ve kırpılır (yarım
+   logo görünmez); üye sayısı hemen üstündeki künyede yazıyor. */
+.heroLogos { display:flex; flex-wrap:wrap; gap:8px; height:44px; margin-top:16px; overflow:hidden; }
+.heroLogoGhost { width:44px; height:44px; border-radius:12px; }
+@media(max-width:639px) {
+  .heroLogos { gap:6px; height:36px; margin-top:14px; }
+  .heroLogo.heroLogo, .heroLogoGhost { width:36px; height:36px; }
+}
 
 /* ---- Ölçü ızgarası ---- */
 .metrics { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); border-top:1px solid var(--line); }
@@ -51,9 +69,10 @@
    katmansız olduğu için Tailwind'in `text-up`ını ezerdi). */
 .metricValue { font-size:clamp(30px,3vw,40px); line-height:1.1; font-weight:700; letter-spacing:-.03em; white-space:nowrap; }
 .metricSlash { padding-inline:.16em; color:var(--text-muted); font-weight:400; }
-/* Oran kulvarı 5/999, `--line-soft` (ortak şerit ölçüsü). Üye satırıyla
+/* Oran şeridi 8 piksel (10 Kasım akşamı; sabah 5: sahibi kalın şerit
+   istedi), kulvar `--line-soft`. Üye satırıyla
    aynı kutu boyunda (26) ortalı: dört hücrenin dibi aynı hatta. */
-.split { display:flex; gap:2px; height:var(--lane-h,5px); margin-block:10.5px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.split { display:flex; gap:2px; height:8px; margin-block:9px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
 .split > i { display:block; flex-basis:0; min-width:3px; height:100%; }
 .split > i[data-tone="up"] { background:var(--up); }
 .split > i[data-tone="down"] { background:var(--down); }

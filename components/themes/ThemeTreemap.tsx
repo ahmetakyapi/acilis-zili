@@ -56,9 +56,13 @@ import styles from "./Themes.module.css";
  * eşiği o kaba göre: en darda sembolü okunan karo her genişlikte okunur.
  * Ölçüldü (28 Eylül): geniş yerleşim 640'ta ≈ 550 × 290 (1200'ün altında
  * oran 1,9), telefon yerleşimi 360'ta ≈ 294 × 368.
+ * 10 Kasım akşamı: tek başına (`solo`) oran 2,6 → 2,15. Harita 1440'ta
+ * 1.278 × 492'den 1.278 × 594'e uzadı ("harita daha büyük, etiketleri
+ * okunur"): aynı genişlikte her karo beşte bir daha uzun, daha çok karo
+ * logo ve ad kademesine çıkıyor (sayım Themes.module.css → `.map`).
  */
 const LAYOUTS = [
-  { key: "wide", aspect: 2.1, soloAspect: 2.6, box: { w: 550, h: 290 }, max: { w: 1300, h: 620 }, min: { w: 36, h: 30 } },
+  { key: "wide", aspect: 2.1, soloAspect: 2.15, box: { w: 550, h: 290 }, max: { w: 1300, h: 620 }, min: { w: 36, h: 30 } },
   { key: "narrow", aspect: 0.8, soloAspect: 0.8, box: { w: 294, h: 368 }, max: { w: 640, h: 800 }, min: { w: 48, h: 40 } },
 ] as const;
 

@@ -1,60 +1,76 @@
 /* ==========================================================================
    Temalar panosu ve dizin kapağının özeti — `/tema` (10 Kasım 2026)
 
-   Karar kaydı components/themes/ThemeBoard.tsx başında. Dil, Piyasalar ve
-   Şirketler tablolarıyla aynı aile: batık 36 piksellik başlık, tek katlı
-   satır, 5 piksellik kulvar (`--line-soft`), satır cevabı ton + sol kenarda
-   3 piksel mavi, hareket yalnız okta. Derinlik tonla; gölge, cam yok.
+   Karar kaydı components/themes/ThemeBoard.tsx başında. Satır cevabı ton +
+   sol kenarda 3 piksel mavi, hareket yalnız okta. Derinlik tonla; gölge
+   yalnız ipucunda (`--shadow-floating`), cam yok.
 
-   ÖLÇÜM (gerçek sayfa + sahte sağlayıcı, on tema, iki tema rengi; önce =
-   canlı 78ad602 aynı genişlikte, 10 Kasım açılış öncesi):
-   - 1440: sayfa 2.869 → 1.872 piksel; kapak 376 → 277; pano y=452'de
-     başlıyor ve 1440×900 ilk ekranda on satırın 6'sı tam görünüyor (önce:
-     ilk ekranda iki kartın üst yarısı). Satır 68 piksel; sütunlar: sıra 26 ·
-     tema 376 · logolar 160 · şerit 391 · medyan 89 · oran 100 · ok 15.
-     Sıfır çizgisi on satırda aynı x'te (899), medyan sayıları aynı sağ
-     kenarda (1203).
-   - 1280: tema 317 · şerit 330. 1024 (logolar gizli): tema 267 · şerit 347;
-     sayfa 3.003 → 1.894. 768: tema 155 · şerit 202; sayfa 2.104.
-   - 390: sayfa 5.787 → 3.532; satır 142 piksel (ad + sayı / şerit /
-     logolar + oran); yatay taşma 0; satırın tamamı bağlantı (≥ 44).
-   - Yatay taşma 0, 12 pikselin altında yazı 0, kırpılan metin 0
-     (390/768/1024/1280/1440 × iki tema).
-   Medyan sayısı 54 → 22 punto: on dev rakam yerine sayılar tek sütunda,
-   ondalıkları alt alta; büyüklüğü artık şeritteki KONUM taşıyor.
+   ÖLÇÜM 1 — sabahki pano (gerçek sayfa + sahte sağlayıcı, on tema, iki tema
+   rengi; önce = canlı 78ad602): 1440'ta sayfa 2.869 → 1.872 piksel; kapak
+   376 → 277; satır 68 piksel; sütunlar sıra 26 · tema 376 · logolar 160 ·
+   şerit 391 · medyan 89 · oran 100 · ok 15. 390'da sayfa 5.787 → 3.532,
+   satır 142. Medyan sayısı 54 → 22 punto.
+
+   ÖLÇÜM 2 — görsel sıralama (aynı gün, ikinci tur; önce = sabahki pano,
+   aynı sahte veri, gerçek sayfa + sahte sağlayıcı, iki tema rengi):
+   - 1440: satır 68 → 110 piksel; ad 16 → 22 punto; logo 22 → 32 (beş → altı
+     logo); çubuk 8 → 14 piksel, en uzun çubuk 160 → 313 piksel (sahne 391 →
+     655, sıfır on satırda aynı x'te: 665); medyan sayısı ayrı sütundan
+     çubuğun ucuna; 52 piksellik oran çizgisi → 655 × 18 piksellik üye ısı
+     şeridi (21 üyede karo 29 piksel). Sayfa 1.872 → 2.295; 1440×900 ilk
+     ekranda tam satır 6 → 3 (bilinçli: satır kimlik kazandı).
+   - 1280: sahne 535, sıfır x=610, karo en az 23,6. Sayfa 2.292.
+   - 1024 ve 768 (katlı satır, 156 piksel): çubuk ve ısı şeridi tam
+     genişlikte (934 / 678), logo 28; sayfa 1.894 → 2.759 (1024).
+   - 390: satır 142 → 186; ad 20, kesilen ad 0; çubuk en uzun 201, ısı
+     şeridi 320 × 18 (21 üyede karo 13,3); sayfa 3.512 → 3.963; satırın
+     tamamı bağlantı.
+   - Altı ve on dört satırla (DOM'da denendi) yatay taşma 0; pano satır
+     sayısı × satır boyu (660 / 1.540).
+   - Yatay taşma 0, 12 pikselin altında yazı 0, kırpılan metin 0, sayısı
+     komşusuna binen çubuk 0 (390/768/1024/1280/1440 × iki tema).
+   - Hareket (1440): 10 `bar-fill` + 137 `cellIn` + kapakta 2 `bar-fill`;
+     son animasyon 900 ms'de bitiyor, opaklık 0'dan başlayan 0; hareketi
+     azaltanda çalışan animasyon 0. Ekranın altındaki 6 satır `data-armed`
+     bekliyor, kaydırınca oynuyor.
    ========================================================================== */
 
 .panel.panel { overflow:clip; }
 
 .board {
-  --pad:20px;
-  display:grid; column-gap:20px; padding-inline:var(--pad); border-top:1px solid var(--line);
-  grid-template-columns:[pos] 26px [id] minmax(0,1.25fr) [logos] max-content [strip] minmax(200px,1.3fr) [fig] max-content [split] max-content [arrow] 16px;
+  --pad:24px; --row-pad:20px; --line-a:28px; --line-b:32px; --line-gap:10px;
+  --tip-w:96px; --tip-gap:10px; --rl:0px; --rr:0px;
+  display:grid; column-gap:28px; padding-inline:var(--pad); border-top:1px solid var(--line);
+  grid-template-columns:[pos] 26px [id] max-content [stage] minmax(0,1fr) [ends] max-content [arrow] 16px;
 }
+/* Sayı çubuğun ucunda: yalnız çubuk olan yanda yer ayrılır. */
+.board[data-neg] { --rl:calc(var(--tip-w) + var(--tip-gap)); }
+.board[data-pos] { --rr:calc(var(--tip-w) + var(--tip-gap)); }
 .head, .rows, .item, .row { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; }
 .rows { margin:0; padding:0; list-style:none; }
 
-/* ---- Başlık: ölçeğin etiketi BİR KEZ ---- */
+/* ---- Başlık ---- */
 .head { position:relative; align-items:center; height:36px; color:var(--text-body); font-size:12px; font-weight:600; }
 .head::before { content:""; position:absolute; inset:0 calc(var(--pad) * -1); background:var(--surface-sunken); box-shadow:inset 0 -1px var(--line); }
 .head > * { position:relative; }
 .headTheme { grid-column:id; }
-.axis { grid-column:strip; display:flex; justify-content:space-between; color:var(--text-muted); font-weight:400; }
-.axis > span { flex:1; white-space:nowrap; }
-.axis > span:nth-child(2) { text-align:center; }
-.axis > span:last-child { text-align:right; }
-.headFig { grid-column:fig; text-align:right; }
-.headSplit { grid-column:split; text-align:center; }
+.headStage { grid-column:stage; }
+.headTrack { position:relative; display:block; height:16px; margin-inline:var(--rl) var(--rr); }
+.headZero { position:absolute; left:var(--zero); top:0; translate:-50% 0; color:var(--text-muted); font-weight:400; line-height:16px; }
+.headEnds { grid-column:ends; }
 
 /* ---- Satır ---- */
-.row { position:relative; align-items:center; height:68px; color:inherit; isolation:isolate; }
+.row { position:relative; align-items:start; padding-block:var(--row-pad); color:inherit; isolation:isolate; }
 /* Ton, üst hairline ve sol kenardaki 3 piksellik im tek katmanda: satır
    panelin dolgusunun DIŞINA, kenardan kenara uzar. */
 .row::before {
-  content:""; position:absolute; inset:0 calc(var(--pad) * -1); z-index:-1;
+  content:""; position:absolute; inset:0 calc(var(--pad) * -1); z-index:-2;
   box-shadow:inset 0 1px var(--line-soft); transition:background-color .18s var(--ease-brand);
 }
 .item:first-child .row::before { box-shadow:none; }
+/* Uç temalar: yönün renginde çok hafif yıkama (renk duvarı değil). */
+.row[data-edge="lead"]::before { background:color-mix(in srgb, var(--up) 6%, transparent); }
+.row[data-edge="lag"]::before { background:color-mix(in srgb, var(--down) 5%, transparent); }
 .row:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; border-radius:6px; }
 @media(hover:hover) {
   .row:hover::before { background:var(--primary-tint); box-shadow:inset 0 1px var(--line-soft), inset 3px 0 var(--primary); }
@@ -64,71 +80,138 @@
 }
 .row:active::before { background:var(--primary-tint); }
 
-.pos { grid-column:pos; color:var(--text-muted); font-family:var(--font-mono); font-size:12px; }
-.id { grid-column:id; display:flex; flex-direction:column; gap:3px; min-width:0; }
-.name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:16px; line-height:1.25; font-weight:700; letter-spacing:-.015em; transition:color .18s var(--ease-brand); }
-.sub { display:flex; align-items:center; gap:8px; min-width:0; height:22px; }
-/* Etiket çipi 22/12/600, dolgu 8 (ortak ölçü). */
-.flag { flex:none; display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:999px; background:var(--surface-sunken); color:var(--text-strong); font-size:12px; font-weight:600; white-space:nowrap; }
-.dek { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-muted); font-size:13px; line-height:1.4; }
+.pos { grid-column:pos; color:var(--text-muted); font-family:var(--font-mono); font-size:12px; line-height:var(--line-a); }
+.id { grid-column:id; display:flex; flex-direction:column; gap:var(--line-gap); min-width:0; }
+/* Ad 22/700: sabah 16 puntoydu ("şirketlerin adı ve logolar az daha
+   büyüyebilir" — sahibi, 10 Kasım). */
+.name { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:22px; line-height:var(--line-a); font-weight:700; letter-spacing:-.02em; transition:color .18s var(--ease-brand); }
+.logos { display:flex; align-items:center; gap:6px; height:var(--line-b); }
+.logoGhost { width:32px; height:32px; border-radius:8px; }
+.more { display:inline-flex; align-items:center; justify-content:center; min-width:32px; height:32px; padding:0 7px; border-radius:8px; background:var(--surface-sunken); color:var(--text-body); font-size:13px; font-weight:600; }
+.fig { display:none; }
 
-.logos { grid-column:logos; display:flex; align-items:center; gap:4px; }
-.logoGhost { width:22px; height:22px; border-radius:6px; }
-.more { display:inline-flex; align-items:center; justify-content:center; min-width:22px; height:22px; margin-left:2px; padding:0 5px; border-radius:6px; background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; }
+/* ---- Sahne: medyan çubuğu + üye ısı şeridi ---- */
+.stage { grid-column:stage; display:grid; grid-template-rows:var(--line-a) var(--line-b); row-gap:var(--line-gap); min-width:0; }
+.track { position:relative; display:block; margin-inline:var(--rl) var(--rr); }
+/* Sıfır çizgisi satırın boyunca: on satırda tek, kesintisiz eksen. Isı
+   karoları opak, çizgi arkalarından geçer. */
+.board[data-axis] .track::before {
+  content:""; position:absolute; z-index:-1; left:var(--zero); width:1px; margin-left:-.5px; background:var(--line-strong);
+  top:calc(var(--row-pad) * -1); bottom:calc((var(--line-gap) + var(--line-b) + var(--row-pad)) * -1);
+}
+/* Kalın yatay çubuk: 14 piksel (ortak ölçü 8; sahibi burada bilerek daha
+   uzun ve kalın istedi). Sıfıra dayanan uç düz, dış uç yuvarlak. Kulvar
+   yok: sayı çubuğun ucunda duruyor, altından kulvar geçerdi. */
+.bar { position:absolute; top:calc(50% - 7px); height:14px; min-width:4px; border-radius:0 999px 999px 0; background:var(--flat); animation-delay:calc(min(var(--i, 0), 5) * var(--step)); }
+.bar[data-tone="up"] { background:var(--up); }
+.bar[data-tone="down"] { background:var(--down); border-radius:999px 0 0 999px; transform-origin:right center; }
+.tip { position:absolute; top:0; font-size:22px; line-height:var(--line-a); font-weight:700; letter-spacing:-.03em; white-space:nowrap; }
+/* Yedek ve ölçek dışı tema: yalnız kulvar. */
+.lane { position:absolute; left:0; right:0; top:calc(50% - 2.5px); height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
 
-/* ---- Şerit: ortak eksen (çizim ThemeStrip.module.css) ----
-   Sıfır çizgisi şeridi satırın boyunca aşar (68 − 32 = 36, iki yana 18):
-   on satırda tek, kesintisiz bir eksen. */
-.strip { grid-column:strip; --strip-h:32px; --axis-over:18px; }
-
-.fig { grid-column:fig; min-width:6.4ch; font-size:22px; line-height:1; font-weight:700; letter-spacing:-.03em; text-align:right; white-space:nowrap; }
-.split { grid-column:split; display:grid; grid-template-columns:2ch 52px 2ch; align-items:center; gap:8px; font-size:13px; }
-.split > b { font-weight:700; }
-.split > b:first-child { text-align:right; }
-.ratio { display:flex; gap:2px; height:var(--lane-h,5px); overflow:hidden; border-radius:999px; background:var(--line-soft); }
-.ratio > i { display:block; flex-basis:0; min-width:3px; height:100%; }
-.ratio > i[data-tone="up"] { background:var(--up); }
-.ratio > i[data-tone="down"] { background:var(--down); }
-.ratio > i[data-tone="flat"] { background:transparent; }
-.arrow { grid-column:arrow; color:var(--primary); transition:transform .2s var(--ease-brand); }
-
-/* ---- Künye ---- */
-.legend { display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin:0; padding:11px 20px 12px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; line-height:1.5; }
-.legend > span { display:inline-flex; align-items:center; gap:7px; }
-.legendNote { flex:1 1 260px; }
-.keyBar { display:block; width:22px; height:8px; border-radius:0 999px 999px 0; background:var(--up); }
-.keyBench { display:block; width:2px; height:14px; border-radius:1px; background:var(--text-strong); }
-
-@media(prefers-reduced-motion:reduce) { .row::before, .name, .arrow { transition:none; } .row:hover .arrow { transform:none; } }
-
-/* ---- 768–1199: logolar çıkar ----
-   Uç temada çipin yanında açıklamaya 1–2 harf kalıyordu ("M…", 768 ve 390,
-   ölçüldü): çip varken açıklama basılmaz. */
-@media(max-width:1199px) {
-  .sub[data-flag] .dek { display:none; }
-  .board { grid-template-columns:[pos] 26px [id] minmax(0,1fr) [strip] minmax(180px,1.3fr) [fig] max-content [split] max-content [arrow] 16px; column-gap:18px; }
-  .logos { display:none; }
+.heat { display:flex; align-self:center; gap:2px; height:18px; min-width:0; }
+.heatLane { flex:1; border-radius:4px; background:var(--line-soft); }
+/* Renk: ısı haritasının kademeleri (eşikler `heatOf`: 0 · 0,5 · 1,5 · 3
+   puan; en koyu kademe globals `--heat-deep-*`). ARA KADEMELER HARİTADAN
+   KOYU (%28 / 46 / 66; haritada `--heat-mix-*` = %14 / 30 / 50, koyu temada
+   %12 / 26 / 40): 18 piksellik karoda haritanın tonu zeminden ayrışmıyordu
+   (koyu temada şerit tek renk bant gibi, ilk tur görüntüsü). Haritada alan
+   büyük ve üstünde yazı var; burada karo yalnız renk. */
+.cell { position:relative; flex:1 1 0; min-width:2px; border-radius:3px; background:var(--line); font-style:normal; animation:cellIn var(--mark) var(--ease-brand) both; animation-delay:calc(var(--k, 0) * var(--step)); }
+.cell[data-tone="up"] { --tone:var(--up); --deep:var(--heat-deep-up); }
+.cell[data-tone="down"] { --tone:var(--down); --deep:var(--heat-deep-down); }
+.cell[data-level="1"] { background:color-mix(in oklab, var(--tone) 28%, var(--premium-surface)); }
+.cell[data-level="2"] { background:color-mix(in oklab, var(--tone) 46%, var(--premium-surface)); }
+.cell[data-level="3"] { background:color-mix(in oklab, var(--tone) 66%, var(--premium-surface)); }
+.cell[data-level="4"] { background:var(--deep); }
+.cell[data-tone="none"] { background:transparent; box-shadow:inset 0 0 0 1px var(--line); }
+/* Karolar soldan sağa tonlanır; opaklık 0'dan başlamaz. */
+@keyframes cellIn { from { opacity:.25; } }
+@media(hover:hover) {
+  .cell[data-tip]:hover { z-index:3; outline:2px solid var(--text-strong); outline-offset:1px; }
+  .cell[data-tip]:hover::after {
+    content:attr(data-tip); position:absolute; left:50%; bottom:calc(100% + 9px); translate:-50% 0; padding:5px 9px; border-radius:8px;
+    background:var(--text-strong); color:var(--premium-surface); box-shadow:var(--shadow-floating);
+    font-size:12px; font-weight:600; line-height:1.3; white-space:nowrap; pointer-events:none;
+  }
 }
 
-/* ---- Telefon (<768): satır üç kat ----
-   Üstte sıra, ad ve medyan; ortada tam genişlikte şerit; altta logolar ve
-   oran. Başlıkta yalnız ölçek etiketi kalır (şeritle aynı genişlikte). */
-@media(max-width:767px) {
-  .board { --pad:16px; display:block; }
-  .head { display:block; height:auto; padding-block:8px; }
-  .headTheme, .headFig, .headSplit { display:none; }
+/* ---- Uçlar: yön sayısı + o yönün en uç üyesi ---- */
+.headEnds, .ends { min-width:0; }
+.ends { grid-column:ends; display:grid; grid-template-rows:var(--line-a) var(--line-b); row-gap:var(--line-gap); }
+.end { display:grid; grid-template-columns:38px auto; align-items:center; column-gap:12px; font-size:14px; line-height:1.2; }
+.endCount { display:inline-flex; align-items:center; gap:4px; }
+.endCount b { font-size:15px; font-weight:700; }
+.end[data-tone="up"] .endCount { color:var(--up); }
+.end[data-tone="down"] .endCount { color:var(--down); }
+.endMember { display:grid; grid-template-columns:22px 5.6ch 7.4ch; align-items:center; column-gap:8px; }
+.endSymbol { color:var(--text-strong); font-weight:700; }
+.endPct { font-weight:700; text-align:right; }
+.arrow { grid-column:arrow; margin-top:6px; color:var(--primary); transition:transform .2s var(--ease-brand); }
+
+/* ---- Künye ---- */
+.legend { display:flex; flex-wrap:wrap; align-items:center; gap:6px 18px; margin:0; padding:11px 24px 12px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; line-height:1.5; }
+.legend > span { display:inline-flex; align-items:center; gap:7px; }
+.legendNote { flex:1 1 300px; }
+.keyBar { display:block; width:26px; height:10px; border-radius:0 999px 999px 0; background:var(--up); }
+.keyHeat { display:flex; gap:2px; width:52px; height:10px; }
+.keyHeat > i { flex:1; border-radius:2px; }
+.keyHeat > i[data-l="4"] { background:var(--heat-deep-up); }
+.keyHeat > i[data-l="2"] { background:color-mix(in oklab, var(--up) 46%, var(--premium-surface)); }
+.keyHeat > i[data-l="1"] { background:color-mix(in oklab, var(--up) 28%, var(--premium-surface)); }
+.keyHeat > i[data-l="-1"] { background:color-mix(in oklab, var(--down) 28%, var(--premium-surface)); }
+.keyHeat > i[data-l="-2"] { background:color-mix(in oklab, var(--down) 46%, var(--premium-surface)); }
+.keyHeat > i[data-l="-4"] { background:var(--heat-deep-down); }
+
+@media(prefers-reduced-motion:reduce) { .row::before, .name, .arrow { transition:none; } .row:hover .arrow { transform:none; } .cell { animation:none; } }
+
+/* ---- < 1200: satır katlanır ----
+   Dört sütunda sahneye 1024'te ~310 piksel kalıyordu (uç sayıları için
+   ayrılan yerle çubuğa 100). Burada ad ve medyan üstte, çubuk ve ısı
+   şeridi tam genişlikte, logolar ve uç üyeler altta. Sayı çubuğun ucunda
+   değil adın hizasında (çubuk bütün genişliği kullanır). */
+@media(max-width:1199px) {
+  .board, .board[data-neg], .board[data-pos] { --pad:20px; --row-pad:18px; --line-b:28px; --rl:0px; --rr:0px; display:block; }
+  .head { display:none; }
   .rows, .item { display:block; }
   .row {
-    grid-template-columns:22px minmax(0,1fr) auto 15px; grid-template-areas:"pos id fig arrow" "strip strip strip strip" "logos logos split split";
-    align-items:center; gap:10px; height:auto; padding-block:14px 13px;
+    grid-template-columns:24px minmax(0,1fr) auto 16px; column-gap:10px; row-gap:12px; align-items:center;
+    grid-template-areas:"pos name fig arrow" "stage stage stage stage" "foot foot foot foot";
   }
-  .pos { grid-area:pos; align-self:start; padding-top:3px; }
-  .id { grid-area:id; }
-  .fig { grid-area:fig; align-self:start; font-size:20px; line-height:20px; min-width:0; }
-  .arrow { grid-area:arrow; align-self:start; margin-top:3px; }
-  .strip { grid-area:strip; --strip-h:28px; --axis-over:2px; }
-  .logos { grid-area:logos; display:flex; }
-  .split { grid-area:split; justify-self:end; }
+  .id { display:contents; }
+  .pos { grid-area:pos; }
+  .name { grid-area:name; }
+  .fig { grid-area:fig; display:block; font-size:22px; line-height:var(--line-a); font-weight:700; letter-spacing:-.03em; white-space:nowrap; }
+  .arrow { grid-area:arrow; margin-top:0; }
+  .tip { display:none; }
+  .stage { grid-area:stage; grid-template-rows:14px 18px; row-gap:8px; }
+  .bar { top:0; }
+  .board[data-axis] .track::before { top:-4px; bottom:-30px; }
+  /* Logolar ve uçlar AYNI hücrede, biri solda biri sağda: uçları ayrı
+     sütuna koymak `auto` sütunu 380 piksele açıp medyanı satırın ortasına
+     itiyordu (1024, ilk tur görüntüsü). */
+  .logos { grid-area:foot; justify-self:start; }
+  .logo.logo, .logoGhost { width:28px; height:28px; }
+  .more { min-width:28px; height:28px; }
+  .ends { grid-area:foot; justify-self:end; grid-template-rows:none; grid-auto-flow:column; column-gap:22px; row-gap:0; }
+  .end { grid-template-columns:auto auto; column-gap:8px; }
+  .legend { padding-inline:20px; }
+}
+/* ---- < 768: logolar ve uçlar ayrı katlarda; telefonda ok çıkar ----
+   390'da ok ve aralığıyla "Kilo İlaçları (GLP-1)" 20 puntoda kesiliyordu
+   (ilk tur görüntüsü); satırın tamamı bağlantı, ok orada yer tutmuyor. */
+@media(max-width:767px) {
+  .row { grid-template-areas:"pos name fig arrow" "stage stage stage stage" "logos logos logos logos" "ends ends ends ends"; }
+  .logos { grid-area:logos; }
+  .ends { grid-area:ends; justify-self:stretch; justify-content:space-between; column-gap:10px; }
+}
+@media(max-width:639px) {
+  .board, .board[data-neg], .board[data-pos] { --pad:16px; }
+  .row { grid-template-columns:22px minmax(0,1fr) auto; grid-template-areas:"pos name fig" "stage stage stage" "logos logos logos" "ends ends ends"; }
+  .arrow { display:none; }
+  .name, .fig { font-size:20px; }
+  .endLogo.endLogo { display:none; }
+  .endMember { grid-template-columns:auto 7.4ch; column-gap:6px; }
   .legend { padding-inline:16px; }
 }
 
@@ -144,40 +227,45 @@
 .counts { display:inline-flex; align-items:baseline; gap:5px; color:var(--text-muted); font-size:12px; }
 .counts b { font-size:20px; font-weight:700; line-height:1; letter-spacing:-.03em; }
 .countSep { display:inline-block; width:1px; height:10px; margin:0 6px; background:var(--line-strong); }
-.bar { display:flex; gap:2px; height:var(--lane-h,5px); overflow:hidden; border-radius:999px; background:var(--line-soft); }
-.bar > i { display:block; flex-basis:0; min-width:3px; height:100%; }
-.bar > i[data-tone="up"] { background:var(--up); }
-.bar > i[data-tone="down"] { background:var(--down); }
-.bar > i[data-tone="neutral-up"] { background:var(--flat); }
-.bar > i[data-tone="neutral-down"] { background:var(--line-strong); }
-.bar > i[data-tone="flat"] { background:transparent; }
+/* Oran çubuğu 8 piksel (10 Kasım akşamı; sabah 5): yükselen/düşen oranı
+   kalın, iki renkli tek şerit. */
+.bar8 { display:flex; gap:2px; height:8px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.bar8 > i { display:block; flex-basis:0; min-width:3px; height:100%; }
+.bar8 > i[data-tone="up"] { background:var(--up); }
+.bar8 > i[data-tone="down"] { background:var(--down); }
+.bar8 > i[data-tone="neutral-up"] { background:var(--flat); }
+.bar8 > i[data-tone="neutral-down"] { background:var(--line-strong); }
+.bar8 > i[data-tone="flat"] { background:transparent; }
 
-.ends { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
-.ends > :first-child { border-top-left-radius:14px; }
-.ends > :last-child { border-top-right-radius:14px; }
-.end { display:flex; flex-direction:column; gap:6px; min-width:0; padding:13px 16px 14px; color:inherit; transition:background-color .18s var(--ease-brand); }
-.end + .end { border-left:1px solid var(--line-soft); }
-a.end:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
-@media(hover:hover) { a.end:hover { background:var(--primary-tint); } a.end:hover .endName { color:var(--primary-ink); } a.end:hover .endArrow { transform:translate(2px,-2px); } }
+.ends2 { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); }
+.ends2 > :first-child { border-top-left-radius:14px; }
+.ends2 > :last-child { border-top-right-radius:14px; }
+.hEnd { display:flex; flex-direction:column; gap:6px; min-width:0; padding:13px 16px 14px; color:inherit; transition:background-color .18s var(--ease-brand); }
+.hEnd + .hEnd { border-left:1px solid var(--line-soft); }
+a.hEnd:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+@media(hover:hover) { a.hEnd:hover { background:var(--primary-tint); } a.hEnd:hover .endName { color:var(--primary-ink); } a.hEnd:hover .endArrow { transform:translate(2px,-2px); } }
 .endLabel { display:flex; align-items:center; justify-content:space-between; gap:8px; min-width:0; }
 .endLabel .label { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
 .endArrow { flex:none; color:var(--primary); transition:transform .2s var(--ease-brand); }
 /* Display sayı 700 / −0,03em (ortak ölçü). Kapağın en büyük puntosu günün
    iki ucunda: sayfanın söylediği ilk şey "kim önde, kim geride". */
 .endFig { font-size:clamp(28px,2.6vw,36px); line-height:1.1; font-weight:700; letter-spacing:-.03em; }
-.endBody { display:flex; align-items:center; gap:10px; min-width:0; min-height:22px; }
-.endLogos { display:flex; flex:none; gap:3px; }
-.endName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:14px; font-weight:700; transition:color .18s var(--ease-brand); }
+.endBody { display:flex; align-items:center; gap:10px; min-width:0; min-height:26px; }
+.endLogos { display:flex; flex:none; gap:4px; }
+.endName { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; color:var(--text-strong); font-size:15px; font-weight:700; transition:color .18s var(--ease-brand); }
 
-/* Aradaki fark: iki ucun medyanı aynı eksende iki nokta, aralarında çizgi. */
+/* ARADAKİ FARK KALIN ÇUBUK (10 Kasım akşamı). Sabah iki nokta ve aralarında
+   ince çizgiydi; sahibinin aynı günkü itirazı ("nokta nokta ne anlatıyor
+   anlamıyorum; yatayda uzun kalın çizgi seviyorum") buraya da uygulandı:
+   en zayıftan en güçlüye 8 piksellik dolu çubuk, sıfırın solu düşüş,
+   sağı yükseliş renginde. */
 .gap { display:grid; grid-template-columns:max-content minmax(0,1fr) max-content; align-items:center; gap:14px; padding:11px 16px 12px; border-top:1px solid var(--line-soft); }
 .gapValue { color:var(--text-strong); font-size:13px; font-weight:700; white-space:nowrap; }
-.gapTrack { position:relative; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
+.gapTrack { position:relative; height:8px; border-radius:999px; background:var(--line-soft); }
 .gapZero { position:absolute; top:-4px; bottom:-4px; width:1px; margin-left:-.5px; background:var(--line-strong); }
-.gapSpan { position:absolute; top:0; bottom:0; border-radius:999px; background:var(--text-muted); transform-origin:left center; }
-.gapDot { position:absolute; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%; background:var(--flat); box-shadow:0 0 0 2px var(--surface-sunken); }
-.gapDot[data-tone="up"] { background:var(--up); }
-.gapDot[data-tone="down"] { background:var(--down); }
+.gapBar { position:absolute; top:0; bottom:0; }
+.gapBar[data-tone="up"] { border-radius:0 999px 999px 0; background:var(--up); }
+.gapBar[data-tone="down"] { border-radius:999px 0 0 999px; background:var(--down); transform-origin:right center; }
 
 /* 1280'de sağ sütun 480 piksel: dört logoyla "Kilo İlaçları (GLP-1)" 106
    piksele sıkışıp kesiliyordu (128 istiyor, ölçüldü); üç logo kalır. */
@@ -189,13 +277,14 @@ a.end:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; 
    eski kapakta da kayıtlıydı). Kutu tam genişlikte: künye tam, sayı solda,
    logolar ve ad sayının yanında. */
 @container (max-width:400px) {
-  .ends { grid-template-columns:minmax(0,1fr); }
-  .ends > :first-child { border-top-right-radius:14px; }
-  .ends > :last-child { border-top-right-radius:0; }
-  .end { display:grid; grid-template-columns:max-content minmax(0,1fr); grid-template-areas:"label label" "fig body"; align-items:center; gap:6px 14px; padding:12px 14px 13px; }
-  .end + .end { border-left:0; border-top:1px solid var(--line-soft); }
+  .ends2 { grid-template-columns:minmax(0,1fr); }
+  .ends2 > :first-child { border-top-right-radius:14px; }
+  .ends2 > :last-child { border-top-right-radius:0; }
+  .hEnd { display:grid; grid-template-columns:max-content minmax(0,1fr); grid-template-areas:"label label" "fig body"; align-items:center; gap:6px 14px; padding:12px 14px 13px; }
+  .hEnd + .hEnd { border-left:0; border-top:1px solid var(--line-soft); }
   .endLabel { grid-area:label; }
   .endFig { grid-area:fig; font-size:26px; }
+  .endName { font-size:14px; }
   .endBody { grid-area:body; justify-content:flex-end; }
   .endLogos > :nth-child(n+3) { display:none; }
 }
@@ -207,7 +296,7 @@ a.end:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; 
   .breadth { padding:12px 14px 13px; }
   .gap { padding-inline:14px; }
 }
-@media(prefers-reduced-motion:reduce) { .end, .endName, .endArrow { transition:none; } a.end:hover .endArrow { transform:none; } }
+@media(prefers-reduced-motion:reduce) { .hEnd, .endName, .endArrow { transition:none; } a.hEnd:hover .endArrow { transform:none; } }
 /* 390'da kutu 326 piksel: iki logoyla "Kilo İlaçları (GLP-1)" 122 piksele
    sıkışıyordu (128 istiyor, ikinci tur ölçümü); tek logo kalır. */
 @container (max-width:340px) { .endLogos > :nth-child(n+2) { display:none; } }

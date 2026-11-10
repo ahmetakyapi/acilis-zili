@@ -67,6 +67,10 @@ import { cn, formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils"
  *      puntosu), üyelerin dağılım şeridi, ölçüt fonuyla kıyas
  *      (`ThemeReading`). Logo kümesi kalktı: sabit 184 piksellik kutuydu,
  *      beş üyeli temada içi boş duruyordu ve günü söylemiyordu.
+ *      Akşam (ikinci tur): logolar sol sütuna TEK SIRA olarak döndü (44
+ *      piksel, sabit boy — `HeroLogos`), kıyas iki kalın çubuk oldu
+ *      (`ThemeStrip`); harita uzadı (oran 2,6 → 2,15), tabloda kimlik
+ *      büyüdü (satır 60, logo 36 — ThemeTable.module.css).
  *   2. Ölçü ızgarası "Temanın Günü": yükselen/düşen, en güçlü, en zayıf ve
  *      en büyük üye. Kapaktaki medyanın açılımı, hemen altında.
  *   3. Ana görsel: kare haritası, panelin tam genişliğinde (ölçüt sütunu
@@ -151,6 +155,7 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
   const katilim = theme.symbols === "katilim";
   const readingLabels: ReadingLabels = {
     median: t.themes.median,
+    theme: t.themes.boardTheme,
     coverage: t.themes.coverage,
     medianMissing: t.themes.medianMissing,
     spreadLabel: t.themes.spreadLabel,
@@ -185,7 +190,7 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
         visual={
           <Suspense
             fallback={
-              <ThemeReading data={null} hasBenchmark={theme.benchmark !== null} locale={locale} labels={readingLabels} />
+              <ThemeReading data={null} hasBenchmark={theme.benchmark !== null} benchSymbol={theme.benchmark?.symbol} locale={locale} labels={readingLabels} />
             }
           >
             <LiveReading slug={theme.slug} locale={locale} t={t} labels={readingLabels} />
@@ -206,6 +211,17 @@ export default async function ThemePage(props: PageProps<"/tema/[slug]">) {
             </span>
           )}
         </p>
+        {/* ÜYELERİN LOGOLARI KAPAKTA (10 Kasım akşamı; "temanın kimliği
+            güçlü"): elle seçilmiş temada durağan (content/themes.ts), akış
+            beklemez. Katılım'ın üyeleri sayfa açılınca seçiliyor: yedeği
+            aynı boyda iskelet, kapak oynamaz. */}
+        {katilim ? (
+          <Suspense fallback={<HeroLogos members={null} />}>
+            <LiveHeroLogos slug={theme.slug} />
+          </Suspense>
+        ) : (
+          <HeroLogos members={(theme.symbols as readonly string[]).map((symbol) => ({ symbol, logoUrl: logoSrc(symbol, null) }))} />
+        )}
       </DirectoryHeader>
 
       <Suspense fallback={<LiveSkeleton theme={theme} t={t} />}>
@@ -273,6 +289,27 @@ async function LiveReading({
       }}
     />
   );
+}
+
+/** Kapaktaki logo sırasında basılan en çok logo: 1440'ta sol sütun 660
+    piksel, 44 + 8 ile on iki logo sığıyor; fazlası zaten kırpılırdı. */
+const HERO_LOGOS = 12;
+
+function HeroLogos({ members }: { members: readonly { symbol: string; logoUrl: string | null }[] | null }) {
+  return (
+    <div className={detail.heroLogos} aria-hidden>
+      {members === null
+        ? Array.from({ length: 6 }, (_, i) => <Skeleton key={i} className={detail.heroLogoGhost} />)
+        : members.slice(0, HERO_LOGOS).map((member) => (
+            <LogoTile key={member.symbol} symbol={member.symbol} logoUrl={member.logoUrl} size="lg" className={detail.heroLogo} card />
+          ))}
+    </div>
+  );
+}
+
+async function LiveHeroLogos({ slug }: { slug: string }) {
+  const { rows } = await loadTheme(slug);
+  return <HeroLogos members={rows} />;
 }
 
 async function LiveStamp({ slug, locale, t }: { slug: string; locale: Locale; t: Dictionary }) {
@@ -591,9 +628,12 @@ function LiveSkeleton({ theme, t }: { theme: ThemeEntry; t: Dictionary }) {
       </Panel>
       <Panel aria-busy>
         <PanelHeader title={t.themes.tableTitle} />
+        {/* Satır boyu tabloyla aynı (640+ 60, telefon 56 — ThemeTable.module.css). */}
         <div className="border-t border-line-soft">
           {Array.from({ length: rowCount }, (_, i) => (
-            <SkeletonRow key={i} />
+            <div key={i} className="flex h-14 flex-col justify-center sm:h-[60px]">
+              <SkeletonRow />
+            </div>
           ))}
         </div>
       </Panel>

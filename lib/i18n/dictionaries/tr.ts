@@ -2694,7 +2694,9 @@ const tr = {
     boardMedian: "Medyan",
     boardKeyMember: "Üye",
     boardKeyBench: "Ölçüt Fonu",
-    boardNote: "Şerit sıfırdan temanın medyanına uzanır; bütün şeritler aynı ölçekte.",
+    boardNote: "Çubuk sıfırdan temanın medyanına uzanır, bütün çubuklar aynı ölçekte. Her karo bir üye: rengi günlük değişimi, üstüne gelince sembolü ve yüzdesi.",
+    /* GÖRSEL SIRALAMA (10 Kasım akşamı): üye ısı şeridinin künyesi. */
+    boardKeyHeat: "Üyeler, Zayıftan Güçlüye",
     gapLabel: "Aradaki Fark",
     gapPoints: "{points} Puan",
     largest: "En Büyük Üye",
