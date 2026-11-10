@@ -455,13 +455,8 @@ const tr = {
     portfolioAria: "{symbol}, portföydeki pay: yüzde {pct}",
     /* Panelin yeniden tasarımı (10 Kasım gecesi) — gerekçe components/today/home/PortfolioSlot.tsx. */
     portfolioToday: "Bugün",
-    portfolioColPosition: "Pozisyon",
-    portfolioColValue: "Değer",
-    portfolioColDay: "Bugün",
     portfolioColTotal: "Toplam",
     portfolioOtherHint: "Diğer: {symbols}",
-    portfolioMover: "Bugün portföyü en çok {symbol} oynattı",
-    portfolioConcentration: "{symbol} tek başına portföyün {pct} kadarı; {count} pozisyon, eşit ağırlıklı {effective} pozisyon kadar dağınık.",
     portfolioRiskLink: "Risk Okuması",
     portfolioEmptyTitle: "Portföyünü Buraya Taşı",
     portfolioEmptyBody: "Pozisyonlarını ekle; toplam değer, dolar ve lira kâr/zararı ve bugünkü değişim her sabah burada.",

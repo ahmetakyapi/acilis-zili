@@ -25,80 +25,80 @@
   white-space:nowrap;
 }
 .heroSub { color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
+/* Bugünün değişimi değerin hemen altında: hap + tutar + seans künyesi.
+   Sarar (dar rayda künye alt satıra iner), kaymaz. */
+.heroDay { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; margin-top:4px; }
+.heroDay b { font-size:var(--text-small); font-weight:700; white-space:nowrap; }
+.heroBasis { color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
 
-/* ---- Ölçü defteri: üç sütun, satırlar subgrid ----
-   Etiket esner (minmax 0), tutar ve yüzde içerik boyunda; sütun aralığı
-   12, yani iki tutar arasında en az 12 piksel (aralıksız yapışma hatası). */
-.ledger {
-  display:grid; grid-template-columns:minmax(0,1fr) max-content max-content;
-  column-gap:12px; border-top:1px solid var(--line);
+/* ---- K/Z karoları ----
+   İki eşit karo, tonla derinlik (`surface-sunken`), gölge yok. Karonun
+   tepesinde 3 piksellik yön şeridi (arayüz kuralı: durum kartın tepesinde
+   şerit). Tutar 17/700, yüzde altında. */
+.tiles { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:8px; container-type:inline-size; }
+.tile {
+  position:relative; display:flex; min-width:0; flex-direction:column; gap:2px;
+  overflow:hidden; padding:13px 12px 11px; border-radius:12px; background:var(--surface-sunken);
 }
-.ledgerRow {
-  display:grid; grid-column:1 / -1; grid-template-columns:subgrid;
-  align-items:baseline; padding:9px 0; border-bottom:1px solid var(--line-soft);
-}
-.ledgerRow:last-child { border-bottom:0; padding-bottom:0; }
-.ledgerLabel { min-width:0; color:var(--text-body); font-size:var(--text-small); font-weight:600; }
-/* Seans künyesi etiketin ALTINDA, her genişlikte: "Bugün · Kapanış
-   Sonrası" 360'ta tutar açıkken iki satıra kırılıyor, gizliyken tek satır
-   kalıyordu — aç/kapa satırı 18 piksel oynatıyordu (ölçüldü). */
-.ledgerBasis { display:block; margin-top:1px; color:var(--text-muted); font-size:var(--text-nano); font-weight:400; }
-.ledgerAmount { text-align:right; font-size:15px; font-weight:700; white-space:nowrap; }
-.ledgerPct { min-width:56px; text-align:right; font-size:var(--text-small); font-weight:600; white-space:nowrap; }
+.tile::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--line-strong); }
+.tile[data-tone="up"]::before { background:var(--up); }
+.tile[data-tone="down"]::before { background:var(--down); }
+.tileLabel { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+/* Punto karoların toplam enine bağlı: 350'lik rayda 17, 292'de ~15,8
+   ("−1.260.870 ₺" karoya sığıyor; sabit 17'de 292'de kırpılıyordu). */
+.tileAmount { margin-top:2px; font-size:clamp(14px, 5.4cqi, 17px); font-weight:700; letter-spacing:-.03em; line-height:1.2; white-space:nowrap; }
+.tilePct { font-size:var(--text-tiny); font-weight:600; white-space:nowrap; }
 
 /* ---- Dağılım ---- */
 .weights { display:flex; flex-direction:column; gap:8px; }
 .stack { display:flex; gap:2px; height:12px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
 .slice { display:block; min-width:3px; flex-basis:0; animation-delay:calc(var(--i) * var(--step, 40ms)); }
-.legend { display:flex; flex-wrap:wrap; gap:6px 14px; }
-.legend li { display:inline-flex; align-items:center; gap:6px; color:var(--text-body); font-size:var(--text-tiny); font-weight:600; }
-.legend b { color:var(--text-muted); font-weight:600; }
-.legendName { color:var(--text-strong); }
-.swatch { width:8px; height:8px; flex:none; border-radius:2px; }
-.legendNote { color:var(--text-muted); font-size:var(--text-tiny); line-height:1.45; }
+.swatch { display:inline-block; width:8px; height:8px; flex:none; border-radius:2px; }
+.legendNote { display:flex; align-items:center; gap:6px; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.45; }
+.legendNote b { margin-left:auto; color:var(--text-body); font-weight:600; }
 
-/* ---- Pozisyonlar: tek ızgara, satırlar subgrid ----
-   Sütunlar: logo 32 · kimlik (esner) · değer · [bugün] · toplam. Sayılar
-   içerik boyunda (`max-content`), sabit genişlik yok: dar rayda kimlik
-   kısalır (ad tek satırda kırpılır), sayılar kırpılmaz. */
-.positions {
-  display:grid; grid-template-columns:32px minmax(0,1fr) max-content max-content;
-  column-gap:10px;
-}
-.positions[data-day] { grid-template-columns:32px minmax(0,1fr) max-content max-content max-content; }
-.colHead {
-  display:grid; grid-column:1 / -1; grid-template-columns:subgrid;
-  padding-bottom:6px; border-bottom:1px solid var(--line);
-  color:var(--text-muted); font-size:var(--text-nano); font-weight:600; text-align:right;
-}
-.colIdentity { grid-column:1 / 3; text-align:left; }
-.rows { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; }
-.rowItem { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; }
+/* ---- Pozisyonlar: karo satırlar ----
+   Her satır kendi tonlu yüzeyi (`surface-sunken`), aralarında 6 piksel;
+   hairline yok. Izgara: logo 36 · kimlik (esner) · sayılar · ok 14; ikinci
+   hatta kimlik sütunundan itibaren pay çubuğu, payın yüzdesi ve toplam K/Z.
+   Sayılar içerik boyunda; dar rayda kimlik kısalır (ad tek satırda
+   kırpılır), sayılar kırpılmaz. */
+.rows { display:flex; flex-direction:column; gap:6px; }
 .rowItem[hidden] { display:none; }
-.rowItem + .rowItem { border-top:1px solid var(--line-soft); }
 .row {
-  display:grid; grid-column:1 / -1; grid-template-columns:subgrid;
-  grid-template-rows:auto auto; row-gap:6px; align-items:center;
-  padding:10px 0; transition:background-color 180ms var(--ease-brand);
-  border-radius:8px;
+  display:grid; grid-template-columns:36px minmax(0,1fr) max-content 14px;
+  grid-template-areas:"logo id fig caret" "logo share total caret";
+  column-gap:10px; row-gap:9px; align-items:center;
+  padding:11px 10px 11px 11px; border-radius:12px; background:var(--surface-sunken);
+  transition:background-color 180ms var(--ease-brand);
 }
+.row:hover { background:var(--primary-tint); }
 .row:hover .symbol { color:var(--primary); }
-.logo { grid-row:1 / 3; align-self:start; }
-.identity { display:flex; min-width:0; flex-direction:column; }
+.row:active { scale:.992; }
+.row:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+.logo { grid-area:logo; align-self:start; }
+.identity { grid-area:id; display:flex; min-width:0; flex-direction:column; gap:1px; }
 .symbol { color:var(--text-strong); font-size:15px; font-weight:700; line-height:1.2; transition:color 180ms var(--ease-brand); }
-.name { overflow:hidden; color:var(--text-muted); font-size:13px; line-height:1.3; white-space:nowrap; text-overflow:ellipsis; }
-.value { align-self:start; padding-top:1px; color:var(--text-strong); font-size:13px; font-weight:600; text-align:right; white-space:nowrap; }
-.pct { align-self:start; padding-top:1px; font-size:13px; font-weight:600; text-align:right; white-space:nowrap; }
-/* Pay çubuğu kimlik sütunundan bugün sütununun sonuna; payın yazısı son
-   sütunda, sessiz tonda. */
-.share { grid-column:2 / -2; align-self:center; }
-.shareText { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; text-align:right; line-height:1; }
+.name { overflow:hidden; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.3; white-space:nowrap; text-overflow:ellipsis; }
+.figures { grid-area:fig; display:flex; flex-direction:column; align-items:flex-end; gap:3px; }
+.value { color:var(--text-strong); font-size:15px; font-weight:700; letter-spacing:-.02em; line-height:1.2; white-space:nowrap; }
+/* Ok satırın tamamı bir bağlantı olduğunu söylüyor (telefonda hover yok);
+   hover'da 3 piksel ileri (iç bağlantı oku, `.claude/rules/hareket.md`). */
+.caret {
+  grid-area:caret; justify-self:end; color:var(--text-muted);
+  transition:translate 200ms var(--ease-brand), color 180ms var(--ease-brand);
+}
+.row:hover .caret { color:var(--primary); translate:3px 0; }
+.shareLine { grid-area:share; display:flex; min-width:0; align-items:center; gap:8px; }
+.share { flex:1 1 auto; min-width:24px; }
+.shareText { flex:none; min-width:30px; color:var(--text-body); font-size:var(--text-nano); font-weight:700; }
+.total { grid-area:total; justify-self:end; display:inline-flex; align-items:baseline; gap:4px; font-size:var(--text-tiny); white-space:nowrap; }
+.totalLabel { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.total b { font-weight:700; }
 
 /* ---- Künye ---- */
 .notes { display:flex; flex-direction:column; gap:8px; border-top:1px solid var(--line); padding-top:12px; }
-.note { display:flex; gap:8px; color:var(--text-body); font-size:var(--text-small); line-height:1.5; }
-.noteIcon { flex:none; margin-top:3px; color:var(--text-muted); }
-.note b { font-weight:700; white-space:nowrap; }
+.note { color:var(--text-body); font-size:var(--text-small); line-height:1.5; }
 
 .foot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 12px; border-top:1px solid var(--line-soft); padding-top:10px; margin-top:-6px; }
 .footLink {
