@@ -9,8 +9,11 @@
 
 .ask { display: flex; min-width: 0; flex-direction: column; gap: 10px; scroll-margin-top: 140px; }
 .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; }
-.title { display: inline-flex; align-items: center; gap: 7px; margin: 0; font-size: var(--text-base); font-weight: 750; letter-spacing: -.01em; color: var(--text-strong); }
-.quota { font-size: var(--text-small); font-weight: 650; color: var(--text-muted); white-space: nowrap; }
+/* 10 Kasım: 13/750 → 14/700. Panel başlığı (`PanelHeader`) 16/700; panelin
+   içindeki küçük kart başlığı tek ikinci basamak: 14/700 (ekranlar arası
+   tutarlılık denetimi). Satır yüksekliği aynı (28). */
+.title { display: inline-flex; align-items: center; gap: 7px; margin: 0; font-size: var(--text-read); font-weight: 700; letter-spacing: -.01em; color: var(--text-strong); }
+.quota { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
 .intro { margin: -6px 0 0; font-size: var(--text-small); line-height: 1.5; color: var(--text-body); text-wrap: pretty; }
 
 .form { display: flex; gap: 8px; align-items: stretch; }
@@ -18,7 +21,7 @@
   flex: 1; min-width: 0; height: 44px;
   padding: 0 14px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--page-bg);
   font: inherit; font-size: var(--text-read); color: var(--text-strong);
-  transition: border-color .2s var(--ease-brand);
+  transition: border-color .18s var(--ease-brand);
 }
 .input::placeholder { color: var(--text-muted); }
 .input:focus { outline: none; border-color: var(--line-focus); }
@@ -35,7 +38,7 @@
   display: inline-flex; align-items: center;
   min-height: 32px; padding: 4px 12px; border-radius: 999px; background: var(--surface-sunken);
   font-size: var(--text-small); line-height: 1.3; color: var(--text-body); text-align: left; cursor: pointer; white-space: nowrap;
-  transition: background-color .2s var(--ease-brand), color .2s var(--ease-brand);
+  transition: background-color .18s var(--ease-brand), color .18s var(--ease-brand);
 }
 @media (max-width: 639px) {
   .chips { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
@@ -48,22 +51,22 @@
 .chip:disabled { cursor: default; opacity: .6; }
 
 .signIn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
-.memberQuota { font-size: var(--text-small); font-weight: 650; color: var(--text-muted); }
+.memberQuota { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
 
-.error { margin: 0; font-size: var(--text-small); font-weight: 650; color: var(--down); }
+.error { margin: 0; font-size: var(--text-small); font-weight: 600; color: var(--down); }
 
 .exchange {
   display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 14px; border-radius: var(--radius-lg); background: var(--surface-sunken);
   animation: as-rise .45s var(--ease-brand) both;
 }
 .askedLabel { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
-.asked { margin: -4px 0 4px; font-size: var(--text-read); font-weight: 650; color: var(--text-strong); overflow-wrap: anywhere; }
+.asked { margin: -4px 0 4px; font-size: var(--text-read); font-weight: 600; color: var(--text-strong); overflow-wrap: anywhere; }
 .answerHead { display: flex; align-items: center; gap: 8px; }
-.badge { padding: 2px 9px; border-radius: 999px; font-size: var(--text-small); font-weight: 700; background: var(--brass-wash); color: var(--brass-ink); }
+.badge { padding: 2px 8px; border-radius: 999px; font-size: var(--text-small); line-height: 18px; font-weight: 600; background: var(--brass-wash); color: var(--brass-ink); }
 .unanswerable { color: var(--text-body); }
 .sources { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 0; }
 .sourcesLabel { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
-.source { padding: 2px 9px; border-radius: 999px; font-size: var(--text-small); font-weight: 650; background: var(--surface); color: var(--text-body); }
+.source { padding: 2px 8px; border-radius: 999px; font-size: var(--text-small); line-height: 18px; font-weight: 600; background: var(--surface); color: var(--text-body); }
 .news ul { display: grid; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; }
 .stamp { margin: 2px 0 0; font-size: var(--text-small); color: var(--text-muted); }
 

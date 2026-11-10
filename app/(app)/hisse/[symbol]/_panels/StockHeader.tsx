@@ -16,7 +16,7 @@ import { getUserAlerts } from "@/lib/price-alerts";
 import { pushConfigured } from "@/lib/push";
 import { settleAlerts } from "@/lib/alert-settle";
 import { HeaderReadout } from "@/components/stock/ChartReadingContext";
-import { ChangePill, DataStamp, Skeleton } from "@/components/ui/primitives";
+import { ChangePill, DataStamp, Skeleton, TimingChip } from "@/components/ui/primitives";
 import { db } from "@/lib/db";
 import { watchlistItems, watchlists } from "@/lib/schema";
 import { getStatus, getSymbolNames } from "@/lib/data";
@@ -184,18 +184,25 @@ export async function StockHeader({
      okuyucu seans dışı bir baskıyı normal seans fiyatı sanıyordu.
      Yanındaki önceki kapanış da yüzdenin neye göre hesaplandığını
      görünür kılıyor — aradaki fark elle doğrulanabiliyor. */
+  /* 10 Kasım: önceki kapanış HER seansta yazılıyor (yüzdenin dayanağı seans
+     içinde de o; satır seansa göre açılıp kapanınca blok ve iskeleti iki
+     ayrı boydaydı). Seans hapı yalnız seans dışında ve sitenin ortak zaman
+     çipi (`TimingChip`: gün doğumu / ay ikonu). Önce mavi dolgulu, noktalı,
+     bu sayfaya özel bir haptı; takvim ve bilanço ekranlarındaki "Açılış
+     Öncesi" çipiyle aynı şeyi başka biçimde söylüyordu. */
+  const offSession = status.session === "pre-market" || status.session === "after-hours";
   const sessionNote =
-    quoteResult.ok &&
-    (status.session === "pre-market" || status.session === "after-hours") ? (
-      <p className="mt-2 flex flex-wrap items-center justify-start gap-x-2 gap-y-1 text-tiny">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-primary-wash px-2.5 py-[3px] font-semibold text-primary-ink">
-          <span aria-hidden className="size-1.5 rounded-full bg-current" />
-          {status.session === "pre-market" ? t.market.preMarket : t.market.afterHours}
-        </span>
+    quoteResult.ok && (offSession || quoteResult.data.prevClose !== null) ? (
+      <p className={styles.sessionLine}>
+        {offSession && (
+          <TimingChip tone={status.session === "pre-market" ? "pre" : "post"} size="sm">
+            {status.session === "pre-market" ? t.market.preMarket : t.market.afterHours}
+          </TimingChip>
+        )}
         {quoteResult.data.prevClose !== null && (
-          <span className="numeral text-muted">
+          <span className={styles.prevClose}>
             {t.market.prevClose}{" "}
-            {formatPrice(quoteResult.data.prevClose, locale, { currency: true })}
+            <b className="numeral">{formatPrice(quoteResult.data.prevClose, locale, { currency: true })}</b>
           </span>
         )}
       </p>
@@ -384,7 +391,7 @@ export async function StockHeader({
             change={quoteResult.data.change}
             changePct={quoteResult.data.changePct}
             locale={locale}
-            classes={{ line: styles.priceLine, price: cn("tote", styles.livePrice), change: styles.priceChange }}
+            classes={{ line: styles.priceLine, price: cn("tote", styles.livePrice), change: styles.priceChange, aside: styles.priceAside }}
             session={sessionNote}
             stampLabels={t.data}
             stamp={
@@ -405,7 +412,6 @@ export async function StockHeader({
               locale={locale}
               t={t}
               className={styles.headerBand}
-              quoteLabel={false}
             />
           )}
         </div>
@@ -438,13 +444,17 @@ export async function StockHeader({
  * içerik değiştikçe onunla birlikte kayıyor.
  */
 export function HeaderSkeleton({
-  sessionRow = false,
   chip = false,
   band = false,
+  fund = false,
 }: {
-  sessionRow?: boolean;
   chip?: boolean;
-  /** 52 hafta kartının yeri (≥1100) — fonda değil, şirkette basılıyor. */
+  /** Fonun künye satırı ("S&P 500 · S&P 500 endeksi · ABD"): kimliğin
+      üçüncü satırı, 17 piksel (10 Kasım; yedek iki satırdı ve fon
+      sayfasında başlık akışla 17 piksel uzuyordu — ölçüldü, SPY 1440:
+      yedek 161,8 / gerçek 178,8). */
+  fund?: boolean;
+  /** 52 hafta çiziminin yeri (≥1100) — fonda değil, şirkette basılıyor. */
   band?: boolean;
 }) {
   return (
@@ -457,6 +467,7 @@ export function HeaderSkeleton({
               şeridiyle). Sınıflar stock.module.css "KOMPAKT KAPAK" notunda. */}
           <Skeleton className={styles.identityNameSkeleton} />
           <Skeleton className={cn("w-40 max-w-full", styles.sectorSkeleton)} />
+          {fund && <Skeleton className="mt-0.5 h-[15px] w-48 max-w-full" />}
         </div>
         <div className={styles.identityTools}>
           <Skeleton className={styles.identityMetaSkeleton} />
@@ -469,12 +480,16 @@ export function HeaderSkeleton({
           122'ye karşı 108, 768'de ise 127'ye karşı 96 piksel: akış gelince
           grafik 31 piksel yukarı kayıyordu (CLS 0,019). Fiyatın yeri artık
           aynı sınıfla (`livePrice`, 1em), hap satırı yalnızca seans
-          dışındaysa — sunucu seansı zaten biliyor. */}
+          dışındaysa — sunucu seansı zaten biliyor.
+          10 Kasım: seans satırı artık her seansta var (önceki kapanış), yedek
+          seansa bakmıyor. ≥640'ta satır fiyatın yanındaki yığının içinde
+          (boy fiyatınki); telefonda kendi satırında, `sessionSkeleton` yalnız
+          orada yer tutuyor. */}
       <div className={cn(styles.priceBlock, band && styles.priceBlockWithBand)}>
         <div className={cn(styles.priceLine, styles.priceLineSkeleton)}>
           <span className={cn("skeleton block w-52", styles.livePrice, styles.priceSkeleton)} />
+          <Skeleton className={styles.sessionSkeleton} />
         </div>
-        {sessionRow && <Skeleton className="mt-2 h-[26px] w-56" />}
         <Skeleton className={cn("mt-2 w-48", styles.stampSkeleton)} />
         {band && <Skeleton className={cn(styles.headerBand, styles.bandSkeleton)} />}
       </div>

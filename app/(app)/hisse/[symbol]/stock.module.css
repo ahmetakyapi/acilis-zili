@@ -7,7 +7,7 @@
 .breadcrumb { display:flex; align-items:center; gap:12px; min-height:28px; }
 .breadcrumb:has(.researchLinks) { flex-wrap:wrap; }
 .researchLinks { display:flex; min-width:0; align-items:center; gap:8px; margin-left:auto; }
-.researchLinks a[data-research] { display:flex; min-height:44px; align-items:center; gap:10px; padding:0 12px; border:1px solid var(--primary-faint); border-radius:10px; background:var(--primary-tint); color:var(--primary-ink); font-size:12px; transition:background .2s var(--ease-brand); }
+.researchLinks a[data-research] { display:flex; min-height:44px; align-items:center; gap:10px; padding:0 12px; border:1px solid var(--primary-faint); border-radius:10px; background:var(--primary-tint); color:var(--primary-ink); font-size:12px; transition:background .18s var(--ease-brand); }
 .researchLinks a[data-research]:hover { background:var(--primary-wash); }
 .researchLinks a[data-research]:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 .researchLinks strong { color:var(--text-strong); font-weight:600; }
@@ -26,7 +26,7 @@
  .identityChip svg { flex-shrink:0; }
 }
 @media(prefers-reduced-motion:reduce) { .researchLinks a[data-research] { transition:none; } }
-.backLink { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; font-weight:600; transition:color 180ms var(--ease-brand); }
+.backLink { display:inline-flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; font-weight:600; transition:color .18s var(--ease-brand); }
 .backLink:hover { color:var(--primary); }
 /* AYRAÇ ÇİZGİ RENGİNDE DEĞİL. `--line-strong` bir KENARLIK tonu; eğik çizgi
    onunla 1,41 kontrastta kalıyordu (ölçüldü) — ekranda neredeyse yok, bir
@@ -131,7 +131,7 @@
 .earningsPanel > div:first-child { padding-top:24px; padding-bottom:22px; }
 .earningsPanel thead { background:var(--surface-sunken); }
 .earningsPanel tbody td { padding-top:18px; padding-bottom:18px; }
-.earningsPanel tbody tr { transition:background 180ms var(--ease-brand); }
+.earningsPanel tbody tr { transition:background .18s var(--ease-brand); }
 .earningsPanel tbody tr:hover { background:var(--primary-tint); }
 .peersPanel { --fold-inset:20px; border-radius:22px; background:var(--premium-surface,var(--surface-solid)); }
 /* BENZERLER SIRALI BİR LİSTE (24 Eylül) — gerekçe PeersCard'da. Satır 52
@@ -139,7 +139,7 @@
    Hover yalnızca satır tonu; kalkma, gölge, ok kayması yok. Sayfanın
    şirketi bağlantı değil, `--primary-tint` zeminli vurgulu satır. */
 .peerList { display:grid; grid-template-columns:minmax(0,1fr); padding:4px 20px 12px; }
-.peerRow { display:grid; min-height:52px; grid-template-columns:28px minmax(0,1fr) minmax(76px,.8fr) 104px; align-items:center; gap:12px; margin-inline:-8px; padding:6px 8px; border-radius:10px; transition:background 180ms var(--ease-brand); }
+.peerRow { display:grid; min-height:52px; grid-template-columns:28px minmax(0,1fr) minmax(76px,.8fr) 104px; align-items:center; gap:12px; margin-inline:-8px; padding:6px 8px; border-radius:10px; transition:background .18s var(--ease-brand); }
 .peerList > li + li .peerRow { box-shadow:0 -1px 0 var(--line-soft); }
 a.peerRow:hover { background:var(--surface-sunken); }
 a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
@@ -156,7 +156,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    dolgu + 86 piksellik alt sınır + 84 piksellik görselle 1280'de 130
    piksel tutuyordu ve dört satırlık iki sütun 580'di. Dolgu 14, görsel 64,
    alt sınır 64: başlık yine üç satıra kadar sığıyor (15 × 1,45 × 3 ≈ 65). */
-.newsLink { display:block; height:100%; padding:14px 20px; transition:background 220ms var(--ease-brand); }
+.newsLink { display:block; height:100%; padding:14px 20px; transition:background .18s var(--ease-brand); }
 .newsLink:hover { background:var(--primary-tint); }
 .newsInner { display:flex; align-items:flex-start; gap:18px; }
 .newsInner > span:first-child { display:flex; flex-direction:column; justify-content:space-between; min-height:64px; }
@@ -275,8 +275,8 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .profileColumn { display:flex; min-width:0; flex-direction:column; gap:20px; }
 .companyOverview .profilePanel { flex:initial; }
 .companyOverview .profilePanel > div:first-child { padding-top:17px; padding-bottom:8px; }
-.companyOverview .profileBody { flex:initial; padding:0 18px 14px; }
-.companyOverview .profileVisual { margin:0 -18px 12px; padding:12px 18px; }
+.companyOverview .profileBody { flex:initial; padding:0 var(--inset) 14px; }
+.companyOverview .profileVisual { margin:0 calc(var(--inset) * -1) 12px; padding:12px var(--inset); }
 .companyOverview .profileMetric { gap:4px; }
 .companyOverview .profileCapValue { font-size:clamp(28px,2.2vw,32px); }
 .companyOverview .about { padding-bottom:12px; font-size:12px; line-height:1.7; }
@@ -392,7 +392,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 @media(min-width:768px) { .fundamentalsCol > :last-child { min-height:240px; } }
 .cardIcon { color:var(--primary); opacity:.8; }
 .metricsPanel { background:var(--premium-surface,var(--surface-solid)); }
-.metricsBody { flex:initial; padding:0 18px 16px; }
+.metricsBody { flex:initial; padding:0 var(--inset) 16px; }
 .metricsList { flex:initial; }
 /* Hücre içeriği ORTADA. Satırlar artan yeri paylaşıyor (MetricsCard künyesi)
    ve 52 hafta bloğu bu karttan çıkınca (24 Eylül) her hücre ~75 piksel
@@ -410,7 +410,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .fundamentalsGrid .metricsList dd { font-size:22px; letter-spacing:-.035em; }
 .metricsSkeleton { height:340px; margin:0 18px 16px; }
 .averagesPanel { background:var(--premium-surface,var(--surface-solid)); }
-.averagesBody { padding:0 18px 14px; }
+.averagesBody { padding:0 var(--inset) 14px; }
 /* FİYAT CETVELİ (24 Eylül) — gerekçe MovingAverages'ta. Simetrik sapma
    izleri ve onların −/0/+ ölçek satırı kalktı; cetvel kartın üstünde,
    kesin değerler altındaki listede. */
@@ -425,7 +425,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 /* Yeşil yıkama KOŞULSUZDU: "Sat" ağırlıklı bir hissede de kart yeşil
    açılıyordu. Renk yalnızca yön söyler; burada söyleyecek bir yön yok. */
 .fundamentalsGrid .analystPanel { grid-column:auto; background:var(--premium-surface,var(--surface-solid)); }
-.fundamentalsGrid .analystPanel > .analystBody { display:block; padding:0 18px 14px; }
+.fundamentalsGrid .analystPanel > .analystBody { display:block; padding:0 var(--inset) 14px; }
 .analystOverview { display:grid; grid-template-columns:112px minmax(0,1fr); gap:18px; align-items:center; }
 .fundamentalsGrid .consensus { width:112px; margin:0; grid-row:auto; }
 .fundamentalsGrid .consensusValue strong { font-size:28px; }
@@ -443,7 +443,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .analystTargetLine { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; }
 .analystTargetLabel { margin-right:auto; font-size:12px; font-weight:600; color:var(--text-strong); }
 .analystTargetLine strong { font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
-.analystTargetUpside { display:inline-flex; align-items:baseline; gap:4px; font-size:13px; font-weight:650; }
+.analystTargetUpside { display:inline-flex; align-items:baseline; gap:4px; font-size:13px; font-weight:600; }
 .analystTargetUpside small { font-size:12px; font-weight:600; color:var(--text-muted); }
 .analystTargetMeta { margin-top:4px; font-size:12px; line-height:1.45; color:var(--text-muted); }
 .analystTargetMeta a { color:var(--primary-ink); }
@@ -452,7 +452,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .analystExplanation summary { display:flex; justify-content:space-between; align-items:center; gap:10px; min-height:32px; list-style:none; cursor:pointer; font-size:12px; color:var(--text-muted); }
 .analystExplanation summary::-webkit-details-marker { display:none; }
 .analystExplanation summary > .analystSummaryLabel { margin-right:auto; }
-.analystExplanation summary > .analystToggle { color:var(--primary); font-size:17px; transition:transform .2s var(--ease-brand); }
+.analystExplanation summary > .analystToggle { color:var(--primary); font-size:17px; transition:transform .18s var(--ease-brand); }
 .analystExplanation[open] summary > .analystToggle { transform:rotate(45deg); }
 .fundamentalsGrid .analystPanel .cardNote { margin:0 0 12px; padding:0; border:0; }
 /* Künye açıklama satırının içinde, "+"nın solunda: ayrı bir dip satırı ve
@@ -462,7 +462,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    iner (PanelHeader öğe arasından kırıyor), kendi içinde bölünmez. */
 .headerStamp { margin:0; white-space:nowrap; }
 .compliancePanel { background:var(--premium-surface,var(--surface-solid)); }
-.complianceBody { padding:0 18px 12px; }
+.complianceBody { padding:0 var(--inset) 12px; }
 .complianceRatios { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:16px; margin-top:6px; }
 .complianceRatio { min-width:0; }
 .complianceRatio + .complianceRatio { border-left:1px solid var(--line-soft); padding-left:16px; }
@@ -472,9 +472,10 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    37, çubuk değerin 38, ölçek değerin 51 piksel altında — iki ölçüm aynı. */
 .complianceRatio > dt { min-height:30px; font-size:12px; line-height:1.4; }
 .complianceValue { margin-top:7px; font-size:22px; line-height:1.2; letter-spacing:-.035em; }
-.complianceTrack { position:relative; height:7px; margin-top:12px; border-radius:2px; background:repeating-linear-gradient(90deg,var(--line-soft) 0 1px,transparent 1px 10%),var(--surface-sunken); }
-.complianceTrack::after { content:""; position:absolute; right:0; top:-3px; height:13px; width:1px; background:var(--text-muted); }
-.complianceTrack > div { border-radius:2px; }
+/* 10 Kasım: 7 → 5 piksel (sayfanın tek şerit kalınlığı), uçlar yuvarlak. */
+.complianceTrack { position:relative; height:5px; margin-top:13px; border-radius:999px; background:var(--line-soft); }
+.complianceTrack::after { content:""; position:absolute; right:0; top:-4px; height:13px; width:1px; background:var(--text-muted); }
+.complianceTrack > div { border-radius:999px; }
 .complianceScale { display:flex; justify-content:space-between; gap:5px; margin-top:6px; color:var(--text-muted); font-size:12px; }
 .complianceScale b { font-weight:500; }
 .complianceBody > details { margin-top:12px; padding-top:4px; }
@@ -718,7 +719,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    yaptığını yazalım"). Favori, alarm ve portföy 640 piksel üstünde simge +
    yazı hapı; telefonda yazı gizlenir, düğme yine 36'lık daire (yan yana
    üç hap 390'da sembolle birlikte sığmıyor). Paylaş sağda simge kalır. */
-.identityMeta :is(button,a)[data-labeled] { transition:background-color .25s var(--ease-brand), color .25s var(--ease-brand), translate .25s var(--ease-brand); }
+.identityMeta :is(button,a)[data-labeled] { transition:background-color .18s var(--ease-brand), color .18s var(--ease-brand), translate .18s var(--ease-brand); }
 .identityMeta [data-action-text] { display:none; }
 @media(min-width:640px) {
   .identityMeta { gap:8px; }
@@ -728,10 +729,11 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
     padding:0 14px 0 11px;
     border-radius:999px;
     font-size:13px;
-    font-weight:650;
+    font-weight:600;
     white-space:nowrap;
   }
-  .identityMeta :is(button,a)[data-labeled]:hover { background:var(--primary-wash); color:var(--primary-ink); translate:0 -1px; }
+  /* 10 Kasım: `translate:0 -1px` kalktı (hover'da kaldırma yok); ton yeter. */
+  .identityMeta :is(button,a)[data-labeled]:hover { background:var(--primary-wash); color:var(--primary-ink); }
   .identityMeta :is(button,a)[data-labeled][aria-pressed="true"] { background:var(--primary-wash); }
   .identityMeta [data-action-text] { display:inline; color:var(--text-strong); }
   .identityMeta [aria-pressed="true"] [data-action-text] { color:var(--primary-ink); }
@@ -838,13 +840,13 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    ok hover'da geri yönde kayıyor (gideceği yönü gösteriyor). Sembol çipin
    dilinde, ayraç kalıyor. */
 .breadcrumb { gap:10px; }
-.backLink { min-height:36px; padding:0 14px 0 10px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface,var(--surface-solid)); color:var(--text-body); transition:color .2s var(--ease-brand), border-color .2s var(--ease-brand); }
-.backLink > svg { transition:translate .25s var(--ease-brand); }
+.backLink { min-height:36px; padding:0 14px 0 10px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface,var(--surface-solid)); color:var(--text-body); transition:color .18s var(--ease-brand), border-color .18s var(--ease-brand); }
+.backLink > svg { transition:translate .18s var(--ease-brand); }
 .backLink:hover { border-color:var(--primary-faint); color:var(--primary-ink); }
 .backLink:hover > svg { translate:-3px 0; }
 .breadcrumb > .numeral { padding:3px 8px; border-radius:7px; background:var(--surface-sunken); letter-spacing:0; }
 .researchLinks a[data-research] { min-height:40px; border-radius:999px; padding:0 6px 0 16px; font-size:12px; }
-.researchLinks a[data-research] > svg { box-sizing:content-box; padding:6px; border-radius:50%; background:var(--primary); color:var(--on-primary); transition:translate .25s var(--ease-brand); }
+.researchLinks a[data-research] > svg { box-sizing:content-box; padding:6px; border-radius:50%; background:var(--primary); color:var(--on-primary); transition:translate .18s var(--ease-brand); }
 .researchLinks a[data-research]:hover > svg { translate:2px -2px; }
 @media(prefers-reduced-motion:reduce) { .backLink > svg, .researchLinks a[data-research] > svg { transition:none; } }
 
@@ -857,7 +859,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
   .companyOverview .identity { gap:20px; }
   .companyOverview .companyLogo { width:72px; height:72px; border-radius:18px; }
 }
-.companyOverview .companyName { font-size:clamp(32px,3.15vw,46px); line-height:1.04; letter-spacing:-.05em; font-weight:750; }
+.companyOverview .companyName { font-size:clamp(32px,3.15vw,46px); line-height:1.04; letter-spacing:-.05em; font-weight:700; }
 .identityNameSkeleton { height:calc(clamp(32px,3.15vw,46px) * 1.04); }
 
 /* FİYAT. Önceki hâl 48 puntoluk fiyat ile yanında 14 ve 12 puntoluk
@@ -869,14 +871,14 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .companyOverview .priceLine { align-items:flex-end; gap:10px 18px; }
 .companyOverview .priceChange { flex-direction:column; align-items:flex-start; gap:2px; padding-bottom:.1em; font-size:clamp(44px,4.5vw,64px); }
 .companyOverview .priceChange > * { font-size:13px; line-height:1.2; }
-.companyOverview .priceChange > span:first-child { padding:5px 11px; font-size:15px; font-weight:650; }
+.companyOverview .priceChange > span:first-child { padding:5px 11px; font-size:15px; font-weight:600; }
 .companyOverview .priceBlock { padding-top:20px; }
 
 /* PROFİL — ÖLÇÜ BANDI. Piyasa değeri kartın tek büyük sayısı, 32'den 40'a;
    sıra onun yanında aynı taban çizgisinde. Oran çubuğu ilk ekranda sıfırdan
    uzuyor (yalnızca geniş ekranda: kart orada ilk ekranda, telefonda
    katlamanın altında ve çubuk okuyucu gelmeden biterdi). */
-.companyOverview .profileVisual { margin-bottom:12px; padding:13px 18px 12px; }
+.companyOverview .profileVisual { margin-bottom:12px; padding:13px var(--inset) 12px; }
 .companyOverview .profileMetric, .companyOverview .profileRank { gap:3px; }
 .companyOverview .profileCapValue { font-size:clamp(32px,2.8vw,40px); font-weight:700; letter-spacing:-.05em; line-height:1.02; }
 .profileRankValue { font-size:clamp(26px,2.2vw,32px); font-weight:700; letter-spacing:-.045em; }
@@ -894,20 +896,20 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    bildiriminin kuralı (yukarıdaki OKUNUR PROFİL) ızgarada da geçerli. */
 .factLabel { display:flex; align-items:center; gap:6px; color:var(--text-body); font-size:12.5px; font-weight:600; line-height:1.3; }
 .factLabel > svg { flex:none; color:var(--primary-ink); }
-.fact > dd { color:var(--text-strong); font-size:14px; font-weight:650; line-height:1.35; letter-spacing:-.01em; overflow-wrap:anywhere; }
+.fact > dd { color:var(--text-strong); font-size:14px; font-weight:600; line-height:1.35; letter-spacing:-.01em; overflow-wrap:anywhere; }
 .fact > dd a { min-height:0; }
 .companyOverview .about { padding-bottom:10px; border-bottom:0; }
 
 /* PROFİL — 52 HAFTA. Başlıkta konum rozeti, rayın altında iki uç. */
 .profileBand { padding:11px 0 0; border-top:1px solid var(--line-soft); }
 .bandHead { display:flex; align-items:center; justify-content:space-between; gap:12px; }
-.bandPosition { padding:3px 9px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:650; white-space:nowrap; }
+.bandPosition { padding:3px 9px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:600; white-space:nowrap; }
 .bandRail { margin-top:6px; }
 .bandEnds { display:flex; justify-content:space-between; gap:12px; margin-top:4px; }
 .bandEnds > div { display:flex; align-items:baseline; gap:6px; }
 .bandEnds > div:last-child { flex-direction:row-reverse; }
 .bandEnds dt { color:var(--text-body); font-size:12px; font-weight:600; }
-.bandEnds dd { color:var(--text-strong); font-size:13.5px; font-weight:650; }
+.bandEnds dd { color:var(--text-strong); font-size:13.5px; font-weight:600; }
 
 /* İLK EKRAN GİRİŞİ — yalnızca dönüşüm, saydamlık yok (LCP adayı olabilen
    metinler ilk karede boyanmış sayılsın; gerekçe globals.css `copy-slide`).
@@ -960,7 +962,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    kendi yoğunluğu. Yedek (`chartSkeleton`) aynı değişkeni okuyor. */
 @media(min-width:1100px) {
   .companyOverview[data-solo] .chartPanel { --price-chart-height:clamp(180px,calc(100svh - 580px),220px); }
-  .companyOverview[data-solo] .profileVisual { margin-bottom:16px; padding:20px 18px 18px; }
+  .companyOverview[data-solo] .profileVisual { margin-bottom:16px; padding:20px var(--inset) 18px; }
   .companyOverview[data-solo] .fact { padding-block:15px; }
   .companyOverview[data-solo] .about { padding-bottom:14px; }
   .companyOverview[data-solo] .profileBand { padding-top:16px; }
@@ -1006,7 +1008,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    ölçek ikisinin altında tam genişlikte. Yüzey yine tonla ayrılıyor
    (`--surface-sunken`), gölge ve degrade yok. */
 .capHero { display:flex; flex-direction:column; gap:14px; margin:0 -20px 16px; padding:16px 20px 14px; border-block:1px solid var(--line-soft); background:var(--surface-sunken); }
-.companyOverview .capHero { margin-inline:-18px; padding-inline:18px; }
+.companyOverview .capHero { margin-inline:calc(var(--inset) * -1); padding-inline:var(--inset); }
 .capFigures { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; margin:0; }
 .capFigures[data-has-rank] { grid-template-columns:minmax(0,1.15fr) minmax(0,1fr); }
 .capFigures > div { display:flex; min-width:0; flex-direction:column; gap:3px; }
@@ -1029,7 +1031,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .factTile:last-child:nth-child(odd) { grid-column:1 / -1; }
 .factIcon { grid-area:icon; display:grid; width:32px; height:32px; place-items:center; border-radius:10px; background:var(--primary-wash); color:var(--primary-ink); }
 .factTile > dt { grid-area:label; min-width:0; color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.3; }
-.factTile > dd { grid-area:value; min-width:0; color:var(--text-strong); font-size:14px; font-weight:650; line-height:1.3; letter-spacing:-.01em; overflow-wrap:anywhere; }
+.factTile > dd { grid-area:value; min-width:0; color:var(--text-strong); font-size:14px; font-weight:600; line-height:1.3; letter-spacing:-.01em; overflow-wrap:anywhere; }
 .factTile > dd a { min-height:0; }
 
 /* Paragraf ve 52 hafta bandı karoların ritmine uyuyor: paragrafın altındaki
@@ -1081,8 +1083,8 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
      bir form gibi okunuyordu; ızgara bir künye levhası. Ayraç `gap:1px`
      ile kabın çizgi rengi; hücre dolgusu `--panel-fixed` (opak — `--surface-solid` koyu temada saydam ve çizgi rengi hücrenin içinden okunurdu). */
 .capHero { gap:16px; padding-block:18px 16px; }
-.capBig { font-size:clamp(34px,3vw,44px); font-weight:800; letter-spacing:-.055em; }
-.capFigures dt { color:var(--text-muted); font-size:12px; font-weight:650; letter-spacing:.01em; }
+.capBig { font-size:clamp(34px,3vw,44px); font-weight:700; letter-spacing:-.055em; }
+.capFigures dt { color:var(--text-muted); font-size:12px; font-weight:600; letter-spacing:.01em; }
 .capFigures > div { gap:4px; }
 
 .capScale { gap:8px; }
@@ -1100,7 +1102,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .factTiles { gap:1px; margin:0; overflow:hidden; border:1px solid var(--line-soft); border-radius:14px; background:var(--line-soft); }
 .factTile { grid-template-columns:auto minmax(0,1fr); grid-template-areas:"icon label" "value value"; align-content:start; column-gap:7px; row-gap:5px; padding:13px 14px 14px; border:0; border-radius:0; background:var(--panel-fixed); }
 .factIcon { width:auto; height:auto; background:none; border-radius:0; }
-.factTile > dt { color:var(--text-muted); font-size:12px; font-weight:650; letter-spacing:.01em; }
+.factTile > dt { color:var(--text-muted); font-size:12px; font-weight:600; letter-spacing:.01em; }
 .factTile > dd { font-size:15px; font-weight:700; letter-spacing:-.015em; }
 
 /* 52 HAFTA: rayın üstünde güncel fiyat etiketi var (PriceRail yerleştiriyor),
@@ -1122,7 +1124,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 }
 /* Merdivende fareyle gezinmek bir okuma: üzerine gelinen sütun koyulaşıyor,
    `title` adını ve değerini söylüyor. Şirketin kendi sütunu hep dolu. */
-.capLadderRun > i { transition:background-color 180ms var(--ease-brand); }
+.capLadderRun > i { transition:background-color .18s var(--ease-brand); }
 @media(hover:hover) {
   .capLadderRun > i:not([data-self]):hover { background:color-mix(in oklab, var(--primary) 48%, transparent); }
 }
@@ -1135,8 +1137,8 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .capScale { container-type:inline-size; }
 .capLadderNames { display:none; gap:10px; margin-top:-2px; }
 .capLadderNames > .capLadderRun { gap:3px; }
-.capLadderNames b { flex:1 1 0; min-width:0; overflow:visible; color:var(--text-muted); font-size:9.5px; font-weight:650; letter-spacing:-.01em; text-align:center; white-space:nowrap; }
-.capLadderNames b[data-self] { color:var(--primary-ink); font-weight:800; }
+.capLadderNames b { flex:1 1 0; min-width:0; overflow:visible; color:var(--text-muted); font-size:12px; font-weight:600; letter-spacing:-.01em; text-align:center; white-space:nowrap; }
+.capLadderNames b[data-self] { color:var(--primary-ink); font-weight:700; }
 @container (min-width:380px) {
   .capLadderNames { display:flex; }
 }
@@ -1150,12 +1152,12 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 
 /* ---- PROFİL: İKİNCİ TUR (1 Ekim) — gerekçeler ProfileCard'da ---- */
 /* Endeks toplamındaki pay: değerin ikinci künyesi, vurgusu ton. */
-.capShare { color:var(--primary-ink); font-weight:650; }
+.capShare { color:var(--primary-ink); font-weight:600; }
 
 /* YAKIN PLAN: komşu kesimi kendi ölçeğinde; zemini bir kademe koyu ton,
    üst kenarında büyütme oranı. Ölçek kırılması böylece gözle de ayrı. */
 .capLadder .capLadderRun[data-lens] { position:relative; padding:14px 4px 0; border-radius:8px 8px 0 0; background:var(--surface-sunken); }
-.capLadder .capLadderRun[data-lens]::after { content:attr(data-lens); position:absolute; top:2px; right:6px; color:var(--text-muted); font-size:9.5px; font-weight:700; letter-spacing:.02em; line-height:1; white-space:nowrap; }
+.capLadder .capLadderRun[data-lens]::after { content:attr(data-lens); position:absolute; top:2px; right:6px; color:var(--text-muted); font-size:12px; font-weight:700; letter-spacing:.02em; line-height:1; white-space:nowrap; }
 .capLadderNames .capLadderRun[data-lens-names] { padding-inline:4px; }
 .capLadder { height:60px; }
 
@@ -1281,7 +1283,7 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .companyOverview .identityCopy { grid-area:copy; }
 .identityTools { grid-area:tools; display:flex; min-width:0; align-items:center; gap:10px; }
 .companyOverview .companyLogo { width:52px; height:52px; border-radius:14px; }
-.companyOverview .companyName { font-size:clamp(22px,1.95vw,28px); line-height:1.1; letter-spacing:-.04em; font-weight:750; }
+.companyOverview .companyName { font-size:clamp(22px,1.95vw,28px); line-height:1.1; letter-spacing:-.04em; font-weight:700; }
 .identitySub { display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; margin-top:5px; }
 .identitySub .symbol { display:inline-flex; align-items:center; min-height:22px; padding:1px 7px; border-radius:6px; background:var(--primary-wash); color:var(--primary-ink); font-size:12px; font-weight:700; letter-spacing:0; }
 .companyOverview .identitySub .sector { display:inline-flex; margin:0; }
@@ -1349,7 +1351,8 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    akış gelince grafik 60 piksel aşağı kayıyordu (1280, CLS 0,07). */
 .bandSkeleton { display:none; }
 @media(min-width:1100px) {
-  .companyOverview .bandSkeleton { display:block; height:111px; padding:0; border:0; }
+  /* 10 Kasım: kart kutudan çıkıp eksene dönünce 111 → 68 (ölçüldü: 68,3; 1100/1280/1440, TR ve EN). */
+  .companyOverview .bandSkeleton { display:block; height:68px; padding:0; border:0; }
 }
 @media(max-width:767px) { .companyOverview .identityNameSkeleton { height:calc(24px * 1.1); } }
 @media(max-width:479px) {
@@ -1374,4 +1377,210 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
   .companyOverview .about { padding-bottom:8px; font-size:12.5px; line-height:1.6; }
   .companyOverview .profileBody { padding-bottom:12px; }
   .companyOverview .factTile { padding:7px 12px 8px; row-gap:2px; }
+}
+
+/* ==========================================================================
+   FİYAT BLOĞU, TEK OKUMA (10 Kasım görsel turu, ikinci geçiş). Yukarıdaki
+   kurallar karar kaydı; bu blok onları eziyor.
+
+   Önce (NVDA, 1440, seans dışı): fiyat, yüzde hapı, mutlak fark, seans
+   hapı + önceki kapanış, damga = beş küçük satır (51 + 24 + 18 ve
+   aralıklar, 111 piksel); sağında kenarlıklı, gömülü 52 hafta kartı (111).
+   Seans + damgayı tek satıra almak sığmıyordu (≈545 istiyor, 462 var).
+   Şimdi dört kademe, İKİ satır:
+     1. fiyat (kahraman, punto aynı);
+     2. yüzde hapı + mutlak fark TEK satırda, fiyatın yanında üstte;
+     3. seans hapı + önceki kapanış, aynı yığının alt satırı (yığın fiyatın
+        boyunda, fiyatla dipte hizalı);
+     4. damga, altta tek başına ve en sessiz.
+   52 hafta kutudan çıktı: dikey kıl çizginin sağında dip–tepe ekseni
+   (gerekçe _panels/Week52Band.tsx).
+   Ölçüm (NVDA, seans dışı, başlığın tamamı; önce canlı → sonra):
+   1440: 196 → 161,8 · 1280: 192,7 → 180,5 · 390: 222,4 → 214;
+   52 hafta çizimi 111,3 → 68,3. Yatay taşma 0, CLS 0 (320–1440, TR/EN).
+   ========================================================================== */
+.companyOverview .priceLine { align-items:flex-end; gap:6px 16px; }
+.priceAside { display:flex; min-width:0; flex-direction:column; align-items:flex-start; gap:4px; padding-bottom:2px; }
+.companyOverview .priceChange { flex-direction:row; align-items:center; gap:8px; padding:0; font-size:14px; }
+.companyOverview .priceChange > * { font-size:14px; line-height:1.2; }
+.companyOverview .priceChange > span:first-child { padding:3px 9px; font-size:14px; font-weight:600; }
+.companyOverview .priceChange > span:last-child { font-weight:600; }
+.sessionLine { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; min-height:22px; margin:0; color:var(--text-muted); font-size:12px; line-height:1.3; }
+.prevClose { white-space:nowrap; }
+.prevClose > b { color:var(--text-body); font-weight:600; }
+.sessionSkeleton { display:none; }
+/* YIĞIN YALNIZ SIĞDIĞI VE FİYATIN BOYUNU TUTTUĞU YERDE (≥1400: fiyat 46
+   punto = 51 piksel, yığın 51). Yığın (≈270) fiyatın yanında ~450 piksel
+   istiyor (dört haneli fiyatta ~520).
+   · Telefonda ve iki kolonlu düzenin dar yarısında (1100–1399: sol kolon
+     634–790, bandın yanında 339–393 kalıyor) yığın AÇILIR: fiyat + değişim
+     bir satır, seans kendi satırı.
+   · Tablette (768–1099, tek kolon, başlık 678–1000 piksel) fiyat 36 punto
+     (40 piksel) ve 51'lik yığın onu aşıyordu (hap fiyatın tepesinden yukarı
+     taşıyor, görüldü 768); orada yığın YATAY: değişim ve seans fiyatla
+     aynı satırda.
+   Kırılım genişlikle sabit ki iskelet aynı satırları ayırabilsin (sarma
+   içeriğe bağlı olsaydı yedek tutmazdı). */
+@media(min-width:768px) and (max-width:1099px) {
+  .priceAside { flex-direction:row; align-items:center; gap:14px; padding-bottom:7px; }
+  .companyOverview .priceLine, .companyOverview .priceLineSkeleton { min-height:46px; }
+}
+@media(max-width:767px), (min-width:1100px) and (max-width:1399px) {
+  .priceAside { display:contents; }
+  .companyOverview .priceChange { padding-bottom:5px; }
+  .companyOverview .priceChange > span:first-child { padding:3px 9px; font-size:14px; }
+  .sessionLine { flex-basis:100%; }
+  .sessionSkeleton { display:block; flex-basis:100%; height:22px; }
+}
+/* İSKELET = GERÇEK (JS kapalı yedek / gerçek, NVDA, 10 Kasım; fiyat bloğu):
+   320: 124,4 / 124,4 · 360: 128,8 / 128,8 · 390: 108,8 / 108,8 ·
+   640: 106,6 / 106,6 · 768: 85 / 85 · 1100: 106,6 / 106,6 ·
+   1280: 112 / 112 · 1440: 90 / 90.
+   Yığının satırı 51 (hap 23 + 4 + seans 22 + 2); fiyatın 1,1em'i 1440'ta
+   50,6 — ikisi de aynı tabana otursun diye satır en az 51. Damga 370'ten
+   itibaren tek satır (TR künye 360'ta ikiye kırılıyor; önceki kural her
+   telefonda iki satır ayırıyordu, 375–639'da yedek 20 piksel uzundu). */
+@media(min-width:1400px) {
+  .companyOverview .priceLine, .companyOverview .priceLineSkeleton { min-height:51px; }
+}
+@media(min-width:370px) and (max-width:639px) { .companyOverview .stampSkeleton { height:18px; } }
+
+/* 52 HAFTA — DİP–TEPE EKSENİ. Şerit dili Skor Kartı'yla aynı
+   (depth.module.css `.strip`): kulvar `--rail-track`, dolgu `--bar-soft`,
+   im en koyu mürekkep ve zemin renginde halka. Mavi yok: konum bir ölçü. */
+.band52 { min-width:0; }
+.bandHead { align-items:baseline; }
+.bandPosition { padding:0; border:0; border-radius:0; background:none; color:var(--text-strong); font-size:12px; font-weight:600; }
+.bandBody { margin-top:7px; }
+.bandBody[data-drawn] { display:grid; grid-template-columns:auto minmax(48px,1fr) auto; align-items:center; column-gap:12px; row-gap:3px; }
+.bandBody[data-drawn] .bandEnds, .bandBody[data-drawn] .bandEnds > div { display:contents; }
+.bandBody[data-drawn] .bandEnds dd { grid-row:1; margin:0; white-space:nowrap; }
+.bandBody[data-drawn] [data-end="low"] > dd { grid-column:1; }
+.bandBody[data-drawn] [data-end="high"] > dd { grid-column:3; text-align:right; }
+.bandBody[data-drawn] [data-end="low"] > .bandDistance { grid-row:2; grid-column:1 / span 2; }
+.bandBody[data-drawn] [data-end="high"] > .bandDistance { grid-row:2; grid-column:2 / span 2; text-align:right; }
+.bandEnds .bandDistance { font-weight:500; }
+.bandAxis { position:relative; grid-row:1; grid-column:2; height:16px; }
+.bandLane, .bandFill { position:absolute; inset-inline:0; top:50%; height:5px; translate:0 -50%; border-radius:999px; }
+.bandLane { background:var(--line-soft); }
+.bandFill { background:var(--bar-soft); clip-path:inset(0 calc((1 - var(--band-p)) * 100%) 0 0 round 999px); }
+.bandTravel { position:absolute; inset:0; transform:translateX(calc(var(--band-p) * 100%)); }
+.bandPin { position:absolute; left:0; top:50%; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border:2.5px solid var(--premium-surface,var(--surface-solid)); border-radius:999px; background:var(--text-strong); box-sizing:border-box; }
+@keyframes band-travel { from { transform:translateX(0); } }
+@keyframes band-fill { from { clip-path:inset(0 100% 0 0 round 999px); } }
+/* Profildeki bant ekranın altında: `PlayOnView` görünce bir kez oynatır. */
+.band52[data-armed] .bandTravel { animation:band-travel 700ms var(--ease-brand) both; }
+.band52[data-armed] .bandFill { animation:band-fill 700ms var(--ease-brand) both; }
+.band52[data-armed]:not([data-play]) :is(.bandTravel,.bandFill) { animation-play-state:paused; }
+@media(prefers-reduced-motion:reduce) { .band52[data-armed] :is(.bandTravel,.bandFill) { animation:none; } }
+
+/* Uzaklık satırları iki ucu da eksenin sütununa uzatıyor; eksen daralınca
+   (içerik < 250: TR 105 + 125, EN 115 + 118 piksel + aralık) iki künye üst
+   üste binerdi (ölçüldü, 1280 EN). Dar bantta alt alta iniyorlar. */
+.band52 { container-type:inline-size; }
+.bandHead > * { white-space:nowrap; }
+@container (max-width:249px) {
+  .bandBody[data-drawn] [data-end="high"] > .bandDistance { grid-row:3; }
+}
+
+/* Başlıkta: kutu yok, solunda dikey kıl çizgi; alt kenarı damgayla aynı hat.
+   ≥1400 sol sütun içeriği kadar (yığın ~450), eksen kalanı alır (en çok
+   440). 1100–1399'da sol sütun üç satır (en geniş satır damga, ~315):
+   sütunlar 330'dan başlayan 1fr ile 240'tan başlayan 0,8fr —
+   1100'de 339 / 271, 1280'de 393 / 314 (ölçüldü). */
+@media(min-width:1100px) {
+  .companyOverview .priceBlockWithBand { grid-template-columns:minmax(330px,1fr) minmax(240px,.8fr); column-gap:24px; align-items:end; }
+  .companyOverview .headerBand { grid-row:1 / span 2; align-self:end; justify-self:end; width:100%; max-width:440px; padding:1px 0 1px 20px; border:0; border-left:1px solid var(--line-soft); border-radius:0; background:none; }
+}
+@media(min-width:1400px) {
+  .companyOverview .priceBlockWithBand { grid-template-columns:minmax(0,max-content) minmax(240px,1fr); }
+}
+
+/* ==========================================================================
+   KAPAĞIN AÇILIŞI — TEK MERDİVEN (10 Kasım). `.claude/rules/hareket.md`:
+   veri çizimi 450–900 ms, kademe adımı 30–60 ms, hareket veriyi ÇİZEN
+   öğede; metin kayarak girmez.
+
+   Önce (ölçüldü, `getAnimations()`, 1440): logo 620 · ad 560 · mavi çizgi
+   700 · yüzde hapı 620 @380 · mutlak fark 620 @460 (1080'de biter) · sıra
+   şeridi 1100 @300 (1400) · piyasa değeri merdiveni 900 @240 + 45i (son
+   çubuk ~1680) · künye karoları 560 + 60i. Altı ayrı süre, en geç bitiş
+   1,7 sn; hap, fark ve karolar birer METİN kaymasıydı.
+   Şimdi adım 60 ms, iki süre (iniş 480, çizim 600), son bitiş 900:
+     0    logo iner (listeden geldiyse uçuş, `MorphTarget`)
+     60   ad logonun yanından açılır
+     120  fiyatın üstündeki mavi çizgi uzar; fiyat yuvarlanır (RollingFigure)
+     120  piyasa değeri merdiveni (çubuk başına 30 ms, 450 ms; 12. çubuk 900)
+     240  52 hafta imi dipten yerine kayar, dolgu onunla uzar (600 → 840)
+     300  sıra şeridi dolar (600 → 900)
+   Grafik çizgisi kendi yüklenişinde çizilir (`revealPlot`, PriceChart).
+   Yüzde hapı, mutlak fark ve künye karolarının kayması KALKTI: üçü de
+   metin, çizim değil (12 Ekim kuralı). Hepsi yalnız `transform`/`clip-path`,
+   `backwards`: sunucunun bastığı son kare hiç gizlenmez, LCP beklemez.
+   ========================================================================== */
+@media(prefers-reduced-motion:no-preference) {
+  .identity .companyLogo { animation-duration:480ms; }
+  .identity .companyName { animation-duration:480ms; animation-delay:60ms; }
+  .companyOverview .priceBlock::before { animation-duration:600ms; animation-delay:120ms; }
+  .companyOverview .priceChange > span:first-child,
+  .companyOverview .priceChange > span:last-child { animation:none; }
+  .companyOverview .headerBand .bandTravel { animation:band-travel 600ms var(--ease-brand) 240ms backwards; }
+  .companyOverview .headerBand .bandFill { animation:band-fill 600ms var(--ease-brand) 240ms backwards; }
+}
+@media(prefers-reduced-motion:no-preference) and (min-width:1100px) {
+  .companyOverview .fact, .companyOverview .factTile { animation:none; }
+  .companyOverview .profileRankTrack > i, .companyOverview .capTrack > i { animation-duration:600ms; animation-delay:300ms; }
+  .companyOverview .capLadderRun > i { animation-duration:450ms; animation-delay:calc(120ms + var(--i, 0) * 30ms); }
+}
+
+/* ==========================================================================
+   TEK YARIÇAP (10 Kasım tutarlılık geçişi). Ölçüldü (1440): sayfadaki
+   panellerde DÖRT ayrı yarıçap vardı — grafik 24; profil, Bu Hisseye Sor,
+   Yaklaşan Bilanço, Geçmiş Bilançolar, benzerler, haberler 22; değerleme
+   panelleri 20; Şirket Analizi, bilanço önizlemesi, temettü ve rehber
+   kartları 18. Yan yana duran iki panelin köşesi farklıydı (grafik 24 /
+   profil 22; Skor Kartı 20 / altındaki Şirket Analizi 18). Şimdi sayfadaki
+   her panel 20; iç karolar ve gömülü kutular kendi küçük yarıçapında
+   (12–16) kalıyor. Kural sayfa kökünden: panelin kendi sınıfı hangi
+   dosyada olursa olsun (temettü, rehber kartı) aynı köşe.
+   ========================================================================== */
+.page :global(.panel) { border-radius:var(--radius-panel); }
+.page .chartPanel, .page .profilePanel { border-radius:var(--radius-feature); }
+
+/* ==========================================================================
+   EKRANLAR ARASI TUTARLILIK (10 Kasım, ana oturumun denetimi; ölçümler
+   canlıdan). Yukarıdaki kurallar karar kaydı; bu blok onları eziyor.
+   · PANELLER ARASI BOŞLUK 22 / 20 / 16 → `--page-section-gap` (24; 390'da
+     18): sayfa akışı, kapak ızgarası, sağ kolon, değerleme ızgarası ve
+     bölüm içi.
+   · PANEL BAŞLIĞI: değerleme panellerinde 12/9, Geçmiş Bilançolar'da 24/22
+     iç boşluk → `PanelHeader` varsayılanı (16/16, başlık satırı 57 piksel).
+     Profil kartının başlığı (14/6) BİLEREK kaldı: 25 Ekim "PROFİL SIKI"
+     ölçümü kapağın ilk ekrana oturmasına bağlı.
+   · İÇERİK GİRİNTİSİ 18 → `--inset`: başlıkla AYNI hat (≥640'ta 20,
+     telefonda 16; önce başlık 21'de, gövde 18'de, 3 piksel kayıktı).
+   Aynı geçişte dosyalara dağılan düzeltmeler (her biri yerinde):
+   font ağırlığı 550/650/750/800/850 → 600/700; 12 pikselin altı punto
+   (9,5 / 10,5 / 11,5) → 12; mikro geçiş süreleri (150–300 ms, 9 ayrı
+   değer) → 180 ms; kulvar tonu `--rail-track` → `--line-soft`; şerit
+   kalınlığı 3 / 6 / 7 / 8 → 5; etiket çipleri → 22 / 12 / 600, dolgu 8.
+   ========================================================================== */
+.page { --inset:16px; gap:var(--page-section-gap); }
+@media(min-width:640px) { .page { --inset:20px; } }
+.heroGrid, .fundamentalsGrid, .fundamentalsCol, .profileColumn, .chapter { gap:var(--page-section-gap); }
+.fundamentalsCol > section > div:first-child, .earningsPanel > div:first-child { padding-block:16px; }
+
+/* PROFİL, 12 PUNTO TABANIYLA (10 Kasım). Merdiven adları 9,5 pikseldi
+   (okunmuyordu; taban 12). 12 pikselde on iki ad yan yana sığmıyor
+   (hücre ~33, "AVGO" ~32 piksel; görüldü: "NVDAAVGO"): adlar BİR ATLAYARAK
+   yazılıyor, sayfanın şirketi her zaman yazılı ve iki komşusu ona yer
+   açıyor. Çizim `aria-hidden`; sıra ve komşular altındaki satırda metin. */
+.capLadderNames b:not([data-self]):nth-child(even) { visibility:hidden; }
+.capLadderNames b[data-self] + b, .capLadderNames b:has(+ b[data-self]) { visibility:hidden; }
+/* Girinti 18 → 20 olunca iki satır birer kelime taşıyordu ("S&P 500'deki
+   499 Şirket İçinde", "Amerika Birleşik Devletleri"; kart 34 piksel
+   uzuyordu): iki ölçü sütunu eşit, karo iç boşluğu 12 → 10. */
+@media(min-width:1100px) {
+  .companyOverview .capFigures[data-has-rank] { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
+  .companyOverview .factTile { padding-inline:10px; }
 }

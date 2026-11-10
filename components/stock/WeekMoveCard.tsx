@@ -1,5 +1,6 @@
 "use client";
 
+import { PlayOnView } from "@/components/motion/PlayOnView";
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
 import { ArrowUpRight, ChartBar, Sparkle } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/primitives";
@@ -162,7 +163,7 @@ export function WeekMoveCard({
       </div>
       <p className={styles.window}>{labels.window.replace("{range}", rangeLabel(week.from, week.to, locale))}</p>
 
-      <div className={styles.figure}>
+      <PlayOnView className={styles.figure}>
         <div className={styles.lead}>
           <p className={styles.caption}>{labels.compare}</p>
           <p className={cn("numeral", styles.big)} data-tone={stockTone}>
@@ -240,7 +241,7 @@ export function WeekMoveCard({
             {market && <li data-series="market">S&amp;P 500</li>}
           </ul>
         </figure>
-      </div>
+      </PlayOnView>
 
       {noteEnabled && (
         <div className={styles.note} data-state={state.status} aria-live="polite">

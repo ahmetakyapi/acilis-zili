@@ -19,7 +19,7 @@
   font-size: 12px;
   font-weight: 600;
   white-space: nowrap;
-  transition: background-color 200ms var(--ease-brand), border-color 200ms var(--ease-brand), color 200ms var(--ease-brand);
+  transition: background-color .18s var(--ease-brand), border-color .18s var(--ease-brand), color .18s var(--ease-brand);
 }
 .chip:hover { border-color: var(--primary-faint); background: var(--primary-tint); color: var(--primary-ink); }
 .chip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 3px; }
@@ -32,7 +32,7 @@
    "· Aç" düşer; ok ve erişilebilir ad ("… raporunu aç") eylemi taşıyor. */
 @media (max-width: 479px) { .go, .goDot { display: none; } }
 .dot { color: var(--text-muted); }
-.verdict { color: var(--text-strong); font-weight: 750; letter-spacing: .01em; }
+.verdict { color: var(--text-strong); font-weight: 700; letter-spacing: .01em; }
 .chip[data-verdict="buy"] .verdict { color: var(--up); }
 .chip[data-verdict="sell"] .verdict { color: var(--down); }
 /* TUT pirinç (site geneli görüş üçlüsü, `verdictTextClass`); metin tonu `-ink`. */

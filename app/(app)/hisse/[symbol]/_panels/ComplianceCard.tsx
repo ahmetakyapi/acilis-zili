@@ -1,4 +1,5 @@
 import styles from "../stock.module.css";
+import depth from "./depth.module.css";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
 import { getStatus, getSymbolNames } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
@@ -198,24 +199,15 @@ export async function ComplianceCard({
 
             `<details>` KALIYOR, istemci durumu değil: katlama JS gelmeden de
             çalışıyor — emsali components/today/BriefBody.tsx. */}
-        <details className="group/uyum mt-3 border-t border-line-soft pt-2.5">
-          {/* `tap-44`: özet satırı 35 piksel yüksekliğindeydi (390'da ölçüldü);
-              `min-h-9` (36) fare için yeterli, parmak için değil. */}
-          <summary className="tap-44 inline-flex min-h-9 w-fit cursor-pointer list-none items-center gap-1.5 text-nano font-semibold text-muted transition-colors hover:text-body [&::-webkit-details-marker]:hidden">
-            <span
-              aria-hidden
-              className="transition-transform group-open/uyum:rotate-90"
-            >
-              ›
-            </span>
-            {t.stock.complianceNotFatwa}
-          </summary>
-          <p className="mt-1 text-nano leading-relaxed text-muted">
-            {t.stock.complianceDisclaimer}
-          </p>
-          <p className="mt-1.5 text-nano leading-relaxed text-muted">
-            {t.stock.complianceMissing}
-          </p>
+        {/* 10 Kasım: katlama sayfanın ORTAK katlama dilinde (`depth.how`:
+            mavi etiket + sonda ok; "Nasıl Okunur" ile aynı). Önce kendi
+            biçimi vardı (soluk metin, başta dönen "›"): aynı sayfada üçüncü
+            bir katlama görünümü. Dokunma alanı `.how`ın kuralından
+            (dokunmatikte 44). */}
+        <details className={depth.how}>
+          <summary>{t.stock.complianceNotFatwa}</summary>
+          <p>{t.stock.complianceDisclaimer}</p>
+          <p>{t.stock.complianceMissing}</p>
         </details>
       </div>
     </Panel>

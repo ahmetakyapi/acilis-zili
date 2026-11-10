@@ -142,7 +142,7 @@ export async function WatchlistSummary({ locale, t }: { locale: Locale; t: Dicti
           kalmıştı ve aynı panel veriye göre iki farklı başlık tipografisi
           basıyordu. */}
       <div className="mb-1 flex items-baseline justify-between gap-3">
-        <h2 className="display-ink display-ink-tight w-fit text-read font-bold min-w-0 truncate">{t.today.watchlistSummary}</h2>
+        <h2 className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em] min-w-0 truncate">{t.today.watchlistSummary}</h2>
         <PanelLink href="/favoriler">{t.common.showAll}</PanelLink>
       </div>
       <AlertHits alerts={alerts} t={t} />

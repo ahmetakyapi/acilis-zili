@@ -1,3 +1,4 @@
+import { MoonStars, SunHorizon } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import {
@@ -276,11 +277,41 @@ export function EarningsTodayView({
                 kayboluyordu. Rozet bir sınıflama taşıdığında kalıyor;
                 saat yoksa aynı sütunda, aynı hizada soluk bir künye.
                 Sütun genişliği değişmiyor, hat korunuyor. */}
+            {/* TELEFONDA TEK ÖLÇÜ: HBK (10 Kasım, ikinci tur). Ölçü hücreleri
+                640'ın altında gizliydi; telefondaki okuyucu satırda yalnız
+                saat rozetini görüyordu. Satır uzamadan sığan düzen: sağ
+                hücre, soldaki kimlikle AYNI kalıpta iki satır — üstte sayı
+                (HBK), altta künye ("HBK" + saat penceresi, ikonuyla).
+                Rozetin 32 piksellik hapı yerine 31 piksellik iki satır;
+                satır 57 pikselde kalıyor (ölçüm modülün başında). Saat
+                penceresi hap olmaktan çıkıp künyeye iniyor: aynı bilgi,
+                aynı ikon, daha az mürekkep — sayı öne geçiyor. HBK yoksa
+                ya da analiz rozeti varsa (görüş, sayıdan değerli) hücre
+                eskisi gibi; ≥640'ta hiçbir şey değişmiyor. */}
+            {phoneFigure(row, badge) && (
+              <span className={styles.phoneFigure} data-reported={row.epsActual !== null || undefined}>
+                <span className={cn("numeral", styles.figureValue)}>
+                  {formatPrice((row.epsActual ?? row.epsEstimate)!, locale, { currency: row.currency ?? true })}
+                </span>
+                <span className={styles.figureNote}>
+                  {t.earnings.epsEstimateShort}
+                  {row.epsActual !== null ? (
+                    <SurpriseMark surprise={epsSurprise(row.epsActual, row.epsEstimate)} locale={locale} />
+                  ) : row.hour && hourLabel[row.hour] ? (
+                    <span className={styles.phoneTiming}>
+                      {row.hour === "bmo" ? <SunHorizon aria-hidden size={12} weight="bold" /> : row.hour === "amc" ? <MoonStars aria-hidden size={12} weight="bold" /> : null}
+                      {hourLabel[row.hour]}
+                    </span>
+                  ) : null}
+                </span>
+              </span>
+            )}
+            <span className={phoneFigure(row, badge) ? styles.wideOnly : "contents"}>
             {badge ? (
               <AnalysisBadge badge={badge} t={t} size="sm" className="justify-self-stretch" />
             ) : row.hour && hourLabel[row.hour] ? (
               <TimingChip
-                className="h-8 justify-center justify-self-stretch sm:h-7"
+                className="h-6 justify-center justify-self-stretch px-2.5"
                 tone={row.hour === "bmo" ? "pre" : row.hour === "amc" ? "post" : "neutral"}
               >
                 {hourLabel[row.hour]}
@@ -290,6 +321,7 @@ export function EarningsTodayView({
                 {t.earnings.timeUnknown}
               </span>
             )}
+            </span>
             <Figure
               label={t.earnings.epsEstimateShort}
               estimate={row.epsEstimate}
@@ -313,6 +345,22 @@ export function EarningsTodayView({
       })}
       </ul>
     </Panel>
+  );
+}
+
+/** Telefonda sağ hücre HBK'yı gösterir mi: sayı var ve analiz rozeti yok. */
+function phoneFigure(row: EarningsTodayRow, badge: AnalysisBadgeData | undefined) {
+  return !badge && (row.epsActual ?? row.epsEstimate) !== null;
+}
+
+/** Karne imi: ▲ aştı, ▼ kaçırdı, = hizada; yanında sapma yüzdesi. */
+function SurpriseMark({ surprise, locale }: { surprise: Surprise | null; locale: Locale }) {
+  if (!surprise) return null;
+  return (
+    <b className={cn("numeral", styles.figureMark)} data-dir={surprise.direction}>
+      {surprise.direction === "beat" ? "▲" : surprise.direction === "miss" ? "▼" : "="}
+      {surprise.ratio !== null && ` ${formatPercentPlain(Math.abs(surprise.ratio) * 100, locale, 0)}`}
+    </b>
   );
 }
 
@@ -343,12 +391,7 @@ function Figure({
       <span className={styles.figureNote}>
         {label}
         {!reported && <span className="sr-only"> · {t.calendar.forecast}</span>}
-        {surprise && (
-          <b className={cn("numeral", styles.figureMark)} data-dir={surprise.direction}>
-            {surprise.direction === "beat" ? "▲" : surprise.direction === "miss" ? "▼" : "="}
-            {surprise.ratio !== null && ` ${formatPercentPlain(Math.abs(surprise.ratio) * 100, locale, 0)}`}
-          </b>
-        )}
+        <SurpriseMark surprise={surprise} locale={locale} />
       </span>
     </span>
   );

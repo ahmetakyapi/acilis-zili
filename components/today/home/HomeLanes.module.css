@@ -128,7 +128,7 @@
   flex-shrink: 0;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px; /* 10,5 → 12: metin tabanı (9 Ekim kararı, globals.css) */
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -172,8 +172,10 @@
   width: max(1.5px, var(--len));
   border-radius: 999px;
   background: var(--lane-c);
-  animation: lane-grow 0.7s var(--ease-brand) both;
-  animation-delay: calc(0.12s + var(--i, 0) * 0.045s);
+  /* Süre ve kademe ana sayfanın merdiveninden (TodayExperience.module.css
+     → "HAREKET MERDİVENİ"); önce 45 ms adım, uç noktası 300 ms. */
+  animation: lane-grow var(--draw, 700ms) var(--ease-brand) both;
+  animation-delay: calc(80ms + var(--i, 0) * var(--step, 40ms));
 }
 .track[data-dir="up"] .fill { left: 50%; transform-origin: left center; }
 .track[data-dir="down"] .fill { right: 50%; transform-origin: right center; }
@@ -187,8 +189,8 @@
   border-radius: 999px;
   background: var(--lane-c);
   translate: -50% -50%;
-  animation: lane-dot 0.3s var(--ease-brand) both;
-  animation-delay: calc(0.62s + var(--i, 0) * 0.045s);
+  animation: lane-dot var(--mark, 200ms) var(--ease-brand) both;
+  animation-delay: calc(520ms + var(--i, 0) * var(--step, 40ms));
 }
 /* Nokta kulvarın İÇİNDE kalır: en büyük değerde merkezi kulvarın ucuna
    otursaydı 4,5 piksel hapların sağ hattını aşıyordu (ölçüldü). */

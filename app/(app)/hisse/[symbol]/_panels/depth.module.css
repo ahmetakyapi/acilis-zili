@@ -5,7 +5,7 @@
    Yüzey dili komşularla aynı (premium yüzey, 20 piksel köşe, hairline). */
 
 .panel { min-width:0; border-radius:20px; background:var(--premium-surface,var(--surface-solid)); }
-.body { display:flex; min-width:0; flex-direction:column; padding:0 18px 16px; }
+.body { display:flex; min-width:0; flex-direction:column; padding:0 var(--inset) 16px; }
 .note { margin-top:12px; padding-top:10px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:12px; line-height:1.65; }
 .note + .note { margin-top:6px; padding-top:0; border-top:0; }
 .stamp { margin-top:10px; }
@@ -13,11 +13,15 @@
 /* İKİ PANEL YAN YANA, BOYLARI BAĞIMSIZ. `align-items:start`: kısa panel
    erken biter; ızgaranın varsayılanı (stretch) kısa panelin altına boş bir
    kuyruk açardı ve CLAUDE.md "Boşluk esnetilmez" kuralı tam bunu yasaklıyor. */
-.grid { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:16px; }
+.grid { display:grid; grid-template-columns:minmax(0,1fr); align-items:start; gap:var(--page-section-gap,16px); }
 /* ÜST IZGARAYLA ARASI DA 16 (28 Eylül). İki ızgara kardeş ve aralarında
    hiç boşluk yoktu: üstün son satırı 1629'da bitiyor, bu 1629'da
    başlıyordu (NVDA, 1440, ölçüldü) — iki kart birbirine yapışıktı. */
-.grid { margin-top:16px; }
+.grid { margin-top:var(--page-section-gap,16px); }
+/* 10 Kasım: ızgaranın ALTINDAKİ panel (Şirket Analizi) de yapışıktı — skor
+   kartı 911'de bitiyor, panel 913'te başlıyordu (NVDA, 1440, ölçüldü). Aynı
+   boşluk; hepsi `--page-section-gap` (24, 390'da 18). */
+.grid + :global(.panel) { margin-top:var(--page-section-gap,16px); }
 @media (min-width:1100px) {
   /* ÜSTTEKİ ÖLÇÜ IZGARASIYLA AYNI SÜTUNLAR VE AYNI SATIR DİLİ (28 Eylül).
      Üstteki dört kart 1,08 : 1 sütunda ve satırdaki iki kart aynı boyda
@@ -43,7 +47,7 @@
 }
 .reading { display:flex; min-width:0; flex-direction:column; gap:4px; }
 .reading dt { color:var(--text-muted); font-size:12px; font-weight:500; }
-.readingValue { color:var(--text-strong); font-size:clamp(22px,2vw,28px); font-weight:600; line-height:1.15; letter-spacing:-.035em; }
+.readingValue { color:var(--text-strong); font-size:clamp(22px,2vw,28px); font-weight:700; line-height:1.15; letter-spacing:-.03em; }
 /* Okuma çubuğu sayının altında, soldan dolar: iki okuma aynı eksende. */
 .readingTrack { position:relative; width:100%; max-width:200px; height:var(--lane-h,5px); margin-top:6px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
 .readingTrack > i { position:absolute; inset-block:0; left:0; border-radius:999px; background:var(--bar-soft); }
@@ -98,7 +102,7 @@
    ismin tavanında kırılır, en çok iki satır; tamamı `title`da. Sütun dar
    ekranda yapışkan, genişlemesi kayan sütunları örterdi. */
 .roleCell { display:-webkit-box; max-width:13rem; margin-top:2px; overflow:hidden; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; color:var(--text-muted); font-size:var(--text-tiny); font-weight:500; line-height:1.35; white-space:normal; }
-.tag { display:inline-block; margin-left:6px; padding:1px 6px; border-radius:999px; background:var(--surface-elevated); color:var(--text-muted); font-size:12px; font-weight:600; vertical-align:1px; }
+.tag { display:inline-block; margin-left:6px; padding:2px 8px; line-height:18px; border-radius:999px; background:var(--surface-elevated); color:var(--text-muted); font-size:12px; font-weight:600; vertical-align:1px; }
 .dot { display:inline-block; width:8px; height:8px; margin-right:8px; border-radius:999px; vertical-align:0; }
 
 /* MSPR çubukları — sıfır çizgisi ortada, yukarı alım, aşağı satım. Renk
@@ -121,7 +125,7 @@
    da sağına aynı boşluk. */
 .sentimentHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
 .sentimentLatest { color:var(--text-muted); font-size:12px; font-weight:500; }
-.sentimentLatest > span { font-weight:650; }
+.sentimentLatest > span { font-weight:600; }
 .sentimentPlot { display:grid; grid-template-columns:minmax(0,1fr) auto; column-gap:8px; }
 .sentimentScale { display:grid; grid-template-rows:1fr 1fr; align-items:center; margin-top:10px; color:var(--text-muted); font-size:12px; font-weight:600; line-height:1; }
 .sentimentPlot + .barAxis { margin-right:calc(8px + 4ch); }
@@ -171,7 +175,7 @@
    "ince": kulvar üstünde 5 piksellik şerit. Dolu kısım yüzdelik; medyan
    kulvarı aşan tek ince çizgi; işaret konunun kendisi. */
 .strip { grid-area:strip; position:relative; display:block; height:18px; margin-inline:6px; container-type:inline-size; }
-.stripRail { position:absolute; inset-inline:0; top:50%; height:var(--lane-h,5px); translate:0 -50%; border-radius:999px; background:var(--rail-track,var(--line-soft)); }
+.stripRail { position:absolute; inset-inline:0; top:50%; height:var(--lane-h,5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
 /* Renk kararı (25 Ekim son düzeltme): yüzdelik bir büyüklük, etkileşim
    değil; şerit sitenin tek büyüklük tonu `--bar-soft` (önce doygun
    `--primary` %55, sonra `--primary-soft` %60 idi), nokta en koyu mürekkep. */
@@ -213,7 +217,7 @@
 .techRow dt { color:var(--text-strong); font-size:12px; font-weight:600; line-height:1.4; }
 .techRow dd { color:var(--text-body); font-size:13px; text-align:right; }
 .techSub { display:block; color:var(--text-muted); font-size:var(--text-nano); font-weight:500; }
-.rsiRail { position:relative; grid-column:1 / -1; height:6px; margin-top:4px; border-radius:3px; background:var(--rail-track,var(--line-soft)); }
+.rsiRail { position:relative; grid-column:1 / -1; height:6px; margin-top:4px; border-radius:3px; background:var(--line-soft); }
 .rsiRail > span { position:absolute; top:-2px; bottom:-2px; width:1px; background:var(--line-strong); }
 .rsiRail > i { position:absolute; top:-3px; width:12px; height:12px; margin-left:-6px; border:2px solid var(--surface-solid); border-radius:999px; background:var(--text-strong); }
 .pivots { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; margin-top:4px; padding-top:10px; border-top:1px solid var(--line-soft); }
@@ -237,14 +241,18 @@
 .summaryFact { display:flex; min-width:0; flex-direction:column; gap:4px; padding:4px 0 2px; }
 .summaryFact dt { display:flex; align-items:center; gap:8px; color:var(--text-muted); font-size:12px; font-weight:600; }
 .summaryIcon { display:grid; width:26px; height:26px; place-items:center; border-radius:8px; background:var(--primary-wash); color:var(--primary-ink); }
-.summaryFact dd { min-width:0; color:var(--text-strong); font-size:16px; font-weight:650; line-height:1.3; letter-spacing:-.02em; text-wrap:balance; }
+.summaryFact dd { min-width:0; color:var(--text-strong); font-size:16px; font-weight:600; line-height:1.3; letter-spacing:-.02em; text-wrap:balance; }
 .summaryFact dd.summaryMeta { color:var(--text-muted); font-size:12px; font-weight:500; letter-spacing:0; }
 /* Logolar aralıklı, üst üste binmiyor: bindirilen karolar birbirinin
    yarısını örtüyor ve kesik logo gibi okunuyordu (görüldü, 1440). */
 .summaryPeers { display:flex; flex-wrap:wrap; gap:6px; margin-top:2px; }
-.summaryPeers > a { border-radius:10px; transition:transform .25s var(--ease-brand); }
-@media(hover:hover) and (pointer:fine) { .summaryPeers > a:hover { transform:translateY(-2px); } }
-.summaryLink { color:inherit; text-decoration:underline; text-decoration-color:var(--primary-faint); text-decoration-thickness:1.5px; text-underline-offset:4px; transition:color .2s var(--ease-brand), text-decoration-color .2s var(--ease-brand); }
+/* 10 Kasım: hover logoyu 2 piksel KALDIRIYORDU (`translateY(-2px)`); kural
+   "hover'da kaldırma yok" (.claude/rules/hareket.md). Geri bildirim kenarla
+   (karonun çevresinde ince halka), basışta hafif çökme. */
+.summaryPeers > a { border-radius:10px; box-shadow:0 0 0 2px transparent; transition:box-shadow .18s var(--ease-brand), scale .18s var(--ease-brand); }
+@media(hover:hover) and (pointer:fine) { .summaryPeers > a:hover { box-shadow:0 0 0 2px var(--primary-faint); } }
+.summaryPeers > a:active { scale:.97; }
+.summaryLink { color:inherit; text-decoration:underline; text-decoration-color:var(--primary-faint); text-decoration-thickness:1.5px; text-underline-offset:4px; transition:color .18s var(--ease-brand), text-decoration-color .18s var(--ease-brand); }
 .summaryLink:hover { color:var(--primary-ink); }
 /* TELEFONDA SATIR, SÜTUN DEĞİL (30 Eylül). Izgara 390'da tek sütuna
    iniyordu ama hücreler arasında hiçbir ayraç yoktu: ikon + etiket, altında
@@ -333,7 +341,8 @@
 .balance { padding:10px 0 14px; border-top:1px solid var(--line-soft); }
 .balanceHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; color:var(--text-muted); font-size:12px; font-weight:500; }
 .balanceHead > span:first-child { color:var(--text-strong); font-weight:600; }
-.balanceBar { display:flex; gap:2px; height:8px; margin-top:8px; border-radius:999px; background:var(--rail-track,var(--line-soft)); overflow:hidden; }
+/* 10 Kasım: 8 → 5 piksel (sayfanın tek şerit kalınlığı). */
+.balanceBar { display:flex; gap:2px; height:5px; margin-top:9px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
 .balanceBar > i { flex-basis:0; min-width:2px; }
 .balanceBar > i[data-sign="up"] { background:var(--up); }
 .balanceBar > i[data-sign="down"] { background:var(--down); }
@@ -343,7 +352,7 @@
    kenarlıksız; dar ekranda sütun yapışkan ve dar, rozet orada basılmıyor. */
 .person { display:flex; align-items:center; gap:10px; }
 .personText { display:flex; min-width:0; flex-direction:column; }
-.initials { display:none; flex:none; width:28px; height:28px; place-items:center; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:12px; font-weight:650; letter-spacing:.02em; }
+.initials { display:none; flex:none; width:28px; height:28px; place-items:center; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:12px; font-weight:600; letter-spacing:.02em; }
 @media (min-width:640px) {
   .initials { display:grid; }
 }
@@ -366,16 +375,16 @@
    yön renginin wash'ı üzerinde, yön renginde. Nötr metin `--text-body`
    (10 Ekim): `--text-muted` koyu temada `--surface-elevated` üzerinde
    4,09:1 ölçüldü, küçük puntoda eşiğin altında. Sönüklüğü ton taşıyor. */
-.chip { display:inline-flex; align-items:center; min-height:22px; padding:0 9px; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:12px; font-weight:550; line-height:1; }
-.chip[data-side="up"] { background:var(--up-wash); color:var(--up); font-weight:650; }
-.chip[data-side="down"] { background:var(--down-wash); color:var(--down); font-weight:650; }
+.chip { display:inline-flex; align-items:center; min-height:22px; padding:0 9px; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:12px; font-weight:600; line-height:1; }
+.chip[data-side="up"] { background:var(--up-wash); color:var(--up); font-weight:600; }
+.chip[data-side="down"] { background:var(--down-wash); color:var(--down); font-weight:600; }
 
 /* Tutar çubuğu: sayının altında, sağa yaslı ve sağdan dolar — sütunun
    sayıları da sağa yaslı, iki okuma aynı kenardan başlıyor. Akışta
    durunca tutarı satırın geri kalanından 8 piksel yukarı itiyordu
    (1440, görüldü); hücrenin dibine mutlak konumlu, sayı hatta kalıyor. */
 .insiderTable td:last-child { position:relative; }
-.valueBar { position:absolute; right:0; bottom:9px; display:flex; justify-content:flex-end; width:72px; height:3px; border-radius:999px; background:var(--rail-track,var(--line-soft)); overflow:hidden; }
+.valueBar { position:absolute; right:0; bottom:9px; display:flex; justify-content:flex-end; width:72px; height:5px; border-radius:999px; background:var(--line-soft); overflow:hidden; }
 .valueBar > i { display:block; min-width:2px; height:100%; border-radius:999px; }
 .valueBar[data-side="up"] > i { background:var(--up); }
 .valueBar[data-side="down"] > i { background:var(--down); }
@@ -383,9 +392,9 @@
 /* "Nasıl Okunur": yöntem notları kapalı gelen bir açılır satırda. Özet
    satırı 32 piksel dokunma yüksekliğinde, ok CSS ile. */
 .how { margin-top:10px; border-top:1px solid var(--line-soft); }
-.how > summary { display:flex; min-height:32px; align-items:center; gap:6px; padding-top:6px; color:var(--primary-ink); font-size:12px; font-weight:650; list-style:none; cursor:pointer; }
+.how > summary { display:flex; min-height:32px; align-items:center; gap:6px; padding-top:6px; color:var(--primary-ink); font-size:12px; font-weight:600; list-style:none; cursor:pointer; }
 .how > summary::-webkit-details-marker { display:none; }
-.how > summary::after { width:6px; height:6px; margin-top:-3px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); transition:transform .2s var(--ease-brand); content:""; }
+.how > summary::after { width:6px; height:6px; margin-top:-3px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:rotate(45deg); transition:transform .18s var(--ease-brand); content:""; }
 .how[open] > summary::after { margin-top:3px; transform:rotate(-135deg); }
 .how > summary:hover { color:var(--primary-hover); }
 .how > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
@@ -404,7 +413,7 @@
 .emReadings { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px 16px; padding-bottom:12px; }
 .emReadings > .reading + .reading { padding-left:16px; border-left:1px solid var(--line-soft); }
 .emValueLine { display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; }
-.emBadge { display:inline-flex; padding:1px 7px; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:12px; font-weight:600; line-height:1.5; }
+.emBadge { display:inline-flex; padding:2px 8px; border-radius:999px; background:var(--surface-elevated); color:var(--text-body); font-size:12px; font-weight:600; line-height:18px; }
 .emTable { min-width:0; }
 .emTable td { padding-block:8px; vertical-align:middle; }
 .emTable tbody tr:first-child td { border-top:0; }
@@ -427,7 +436,7 @@
   .clampInput:checked ~ .clampBox { height:auto; min-height:0; overflow:visible; mask-image:none; }
   .clampInput { display:block; }
   .clampButton { position:absolute; left:28px; right:0; bottom:0; z-index:1; display:flex; justify-content:center; }
-  .clampButton > span { display:inline-flex; align-items:center; min-height:36px; padding:0 16px; border:1px solid var(--line); border-radius:999px; background:var(--panel-fixed); color:var(--primary-ink); font-size:12.5px; font-weight:650; cursor:pointer; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand); }
+  .clampButton > span { display:inline-flex; align-items:center; min-height:36px; padding:0 16px; border:1px solid var(--line); border-radius:999px; background:var(--panel-fixed); color:var(--primary-ink); font-size:12.5px; font-weight:600; cursor:pointer; transition:border-color .18s var(--ease-brand), background-color .18s var(--ease-brand); }
   .clampButton:hover > span { border-color:var(--primary-faint); background:var(--primary-tint); }
   .clampInput:focus-visible ~ .clampButton > span { outline:2px solid var(--line-focus); outline-offset:2px; }
   .clampInput:checked ~ .clampButton { position:static; margin-top:10px; }
@@ -484,7 +493,10 @@
   .insiderTable tbody td:first-child { position:static; flex:1 1 0; min-width:50%; order:1; box-shadow:none; }
   /* İsim ve görev AYNI HATTA: görev ismin ardında soluk tonda, sığmazsa
      üç noktayla kesiliyor (tam hâli `title`da). Üç hatlık satır ikiye iniyor. */
-  .insiderTable .personText { flex-direction:row; align-items:baseline; gap:6px; }
+  /* 10 Kasım: `flex:1` eklendi. Kutu içeriğine büzülüyordu ve adın `max-width:62%`si
+     o büzülmüş kutudan hesaplanıyordu: 247 piksellik hücrede ad 62 piksele kırpılıyordu
+     ("Timothy…", "Tenc…"; ölçüldü 390). Şimdi kutu hücreyi dolduruyor, ad 153 piksele kadar. */
+  .insiderTable .personText { flex:1 1 0; min-width:0; flex-direction:row; align-items:baseline; gap:6px; }
   .insiderTable .nameCell { flex:none; max-width:62%; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
   .insiderTable .roleCell { flex:1 1 0; min-width:0; max-width:none; margin-top:0; font-size:12px; }
   .insiderTable .initials { display:none; }
@@ -571,7 +583,7 @@
    altında tanımlı ve `data-play` gelene dek ilk karede duraklatılmış
    (`PlayOnView`). Sayılar bileşenin başlığındaki sekiz satırda. */
 .emFig { display:flex; flex-direction:column; gap:12px; margin:0 0 16px; }
-.emFigHead h3 { font-size:var(--text-small); font-weight:650; color:var(--text-strong); }
+.emFigHead h3 { font-size:var(--text-small); font-weight:600; color:var(--text-strong); }
 .emFigHead p { margin-top:2px; font-size:12px; line-height:1.55; color:var(--text-muted); }
 /* Nokta 9 → 11 piksel, satır 14 → 16 (10 Kasım 2026): 1320 piksellik panelde 9
    piksellik nokta kayboluyordu; değer etiketi çizimin üstünde (`.emFigLabels`). */
@@ -583,17 +595,19 @@
 .emFigDot[data-dir="down"] { background:var(--down); }
 /* Bandın içinde kalan nokta kısık: göz önce dışarı çıkanları sayar. */
 .emFigDot:not([data-out]) { opacity:.55; }
-.emFigLabels { position:relative; height:16px; margin-bottom:-6px; font-size:11.5px; font-weight:650; line-height:16px; }
+.emFigLabels { position:relative; height:16px; margin-bottom:-6px; font-size:12px; font-weight:600; line-height:16px; }
 .emFigLabels > span { position:absolute; top:0; translate:-50% 0; white-space:nowrap; color:var(--up); }
 .emFigLabels > span[data-dir="down"] { color:var(--down); }
 .emFigScale { text-align:center; font-size:12px; font-weight:600; color:var(--text-strong); }
 .emFigReadout { padding-top:10px; border-top:1px solid var(--line-soft); font-size:13px; line-height:1.5; color:var(--text-body); }
 
 .emFigStage[data-armed] .emFigBand { animation:em-band 600ms var(--ease-brand) both; }
-.emFigStage[data-armed] .emFigScale { animation:em-fade 240ms var(--ease-brand) 450ms both; }
-.emFigStage[data-armed] .emFigDot { animation:em-drop 360ms var(--ease-brand) calc(750ms + var(--i,0) * 70ms) both; }
-.emFigStage[data-armed] .emFigReadout { animation:em-fade 300ms var(--ease-brand) calc(1110ms + var(--n,0) * 70ms) both; }
-.emFigStage[data-armed] .emFigLabels { animation:em-fade 300ms var(--ease-brand) calc(900ms + var(--n,0) * 70ms) both; }
+/* 10 Kasım, tek merdiven: toplam 1,5 sn → ≤ 0,9 (bant 600; ölçek 200 @300;
+   noktalar 300 @400 + 45i; etiket 200 @500; okuma 200 @600). */
+.emFigStage[data-armed] .emFigScale { animation:em-fade 200ms var(--ease-brand) 300ms both; }
+.emFigStage[data-armed] .emFigDot { animation:em-drop 300ms var(--ease-brand) calc(400ms + var(--i,0) * 45ms) both; }
+.emFigStage[data-armed] .emFigReadout { animation:em-fade 200ms var(--ease-brand) calc(600ms + var(--n,0) * 45ms) both; }
+.emFigStage[data-armed] .emFigLabels { animation:em-fade 200ms var(--ease-brand) calc(500ms + var(--n,0) * 45ms) both; }
 .emFigStage[data-armed]:not([data-play]) :is(.emFigBand,.emFigScale,.emFigDot,.emFigReadout,.emFigLabels) { animation-play-state:paused; }
 @keyframes em-band { from { scale:0 1; } }
 @keyframes em-drop { from { opacity:0; translate:0 -10px; } }

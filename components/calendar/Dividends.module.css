@@ -53,6 +53,11 @@
 @media(min-width:900px) {
   .panelWide .panelBody { display:grid; grid-template-columns:minmax(0,1.5fr) minmax(0,1fr); border-top:1px solid var(--line-soft); }
   .panelWide .panelBody > .years { border-top:0; }
+  /* 10 Kasım: yıl kutuları (≈95) yandaki son ödemeler listesinden (≈140)
+     kısa; kutuların ALTINDA ~40 piksel boş bant kalıyordu. Şerit kutunun
+     dibine iniyor: dört yılın şeridi listenin son satırıyla aynı tabanda. */
+  .panelWide .years dd { flex:1; }
+  .panelWide .years .yearBar { margin-top:auto; }
   .panelWide .panelBody > .recent { border-top:0; border-left:1px solid var(--line-soft); }
   .panelWide .panelBody > :only-child { grid-column:1 / -1; }
   .panelWide .yieldLine { padding-top:12px; border-top:1px solid var(--line-soft); }

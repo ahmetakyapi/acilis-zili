@@ -36,7 +36,7 @@
 }
 .link::before {
   content: ""; position: absolute; inset: 0 -16px; z-index: -1; background: transparent;
-  transition: background-color .2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand);
 }
 @media (min-width: 640px) { .link::before { inset-inline: -20px; } }
 @media (hover: hover) { .link:hover::before { background: var(--primary-tint); } }

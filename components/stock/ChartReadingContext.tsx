@@ -93,7 +93,9 @@ export function HeaderReadout({
   session?: ReactNode;
   /** Canlı damga — sunucuda çizilmiş. */
   stamp: ReactNode;
-  classes: { line: string; price: string; change: string };
+  /** `aside`: değişim ile seans satırını fiyatın YANINDA tutan yığın
+      (10 Kasım, gerekçe stock.module.css → "FİYAT BLOĞU, TEK OKUMA"). */
+  classes: { line: string; price: string; change: string; aside?: string };
 }) {
   const live = useContext(Context)?.live ?? null;
   const serverPrice = formatPrice(price, locale, { currency: true });
@@ -133,23 +135,28 @@ export function HeaderReadout({
             puntoluk fiyatın yanında kayboluyordu. Yüzde artık öndeki
             okuma (rozet büyüdü), mutlak fark onun altında ikinci satır:
             fiyat → yüzde → fark, üç kademe. Renk yalnızca yönden. */}
-        <div className={classes.change}>
-          <ChangePill changePct={changePct} locale={locale} />
-          <span
-            className={cn(
-              "numeral",
-              tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-muted",
-            )}
-          >
-            {live ? (
-              <TickingFigure value={formatChange(change, locale)} initial={serverChange} decimal={locale === "tr" ? "," : "."} />
-            ) : (
-              formatChange(change, locale)
-            )}
-          </span>
+        {/* YIĞIN (10 Kasım): yüzde ile mutlak fark TEK satır, seans ve
+            önceki kapanış onun altında; ikisi birlikte fiyatın yanında.
+            Önce beş küçük satırdı (fiyat, yüzde, fark, seans, damga). */}
+        <div className={classes.aside}>
+          <div className={classes.change}>
+            <ChangePill changePct={changePct} locale={locale} />
+            <span
+              className={cn(
+                "numeral",
+                tone === "up" ? "text-up" : tone === "down" ? "text-down" : "text-muted",
+              )}
+            >
+              {live ? (
+                <TickingFigure value={formatChange(change, locale)} initial={serverChange} decimal={locale === "tr" ? "," : "."} />
+              ) : (
+                formatChange(change, locale)
+              )}
+            </span>
+          </div>
+          {session}
         </div>
       </div>
-      {session}
       <div className={styles.stampSlot}>
         {live && stampLabels ? (
           <DataStamp labels={stampLabels} source={live.source} at={live.fetchedAt} locale={locale} className="m-0 justify-start" />

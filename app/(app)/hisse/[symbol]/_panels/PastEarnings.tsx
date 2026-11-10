@@ -114,8 +114,11 @@ export async function PastEarnings({
   /* TİRE SESSİZ (aynı tur). Eksik değer hücresi gövde metninin tonunda bir
      tire basıyordu ve dolu hücreyle aynı ağırlıkta okunuyordu; artık kıl
      çizgi tonunda — "veri yok" bir değer değil, bir yokluk. Ekran okuyucu
-     adı aynı. */
-  const quiet = "text-line-strong";
+     adı aynı.
+     10 Kasım: kıl çizgi tonu (%17 saydam) tireyi neredeyse görünmez
+     kılıyordu, boş hücre "yüklenmedi" gibi okunuyordu; sitenin boş değer
+     imi `text-muted`, hücrenin puntosunda. */
+  const quiet = "text-muted";
 
   return (
     <div>

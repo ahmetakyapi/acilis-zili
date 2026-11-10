@@ -90,6 +90,27 @@ export function FillColumn() {
         }
         bosluk -= boy;
       }
+
+      /* EN YAKIN DİP (10 Kasım, ikinci tur). Döngü yalnız SIĞAN satırı
+         açıyor; kalan fark o yüzden bir satır boyuna kadar çıkabiliyordu.
+         Gerçek boyda ölçüldü (gerçek sayfa + sahte sağlayıcı, 1440): ana
+         kolon 5.600, yan kolon 5.657 — fark 57 piksel, sıradaki analiz
+         satırı 62; satır "sığmadığı" için kapalı kaldı. Oysa onu açınca
+         fark 5 piksele iniyor (öteki yöne). Kural: sıradaki satır farkı
+         KÜÇÜLTÜYORSA (taşması kalan boşluktan azsa) açılır. En kötü hata
+         bir satır boyundan yarım satır boyuna iner; 1440'ta 57 → 6,
+         1024'te 31 → 19, 1600'de 10, 1280'de 17 → 17 (satır 62, taşma 45 > 17:
+         kapalı). */
+      if (bosluk > 0) {
+        const siradaki = yedek.find(
+          (satir) => satir.hidden && satir.closest("[data-col]")?.getAttribute("data-col") === kisa,
+        );
+        if (siradaki) {
+          siradaki.hidden = false;
+          const boy = siradaki.getBoundingClientRect().height;
+          if (boy <= 0 || boy - bosluk >= bosluk) siradaki.hidden = true;
+        }
+      }
     };
 
     const planla = () => {

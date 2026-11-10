@@ -163,7 +163,7 @@ export async function UpcomingEarnings({
                 key={i}
                 data-motion-draw="line"
                 className={cn(
-                  "h-1.5 flex-1 rounded-full",
+                  "h-[5px] flex-1 rounded-full",
                   durum === "asti" ? "bg-up" : "bg-line-strong",
                 )}
               />

@@ -15,7 +15,7 @@
    (Countdown.module.css → "AÇILIŞTA KURULUR") günün ekseni de onunla
    birlikte geliyor. Kırpma, genişlik değil: yerleşim hiç değişmiyor.
    `.now` kendi `transform`unu taşıdığı için giriş ayrı `scale` özelliğiyle. */
-.track { position:absolute; inset:4px 0 auto; height:8px; overflow:hidden; border-radius:4px; background:var(--surface-sunken); animation:rail-draw 900ms var(--ease-brand) 200ms backwards; }
+.track { position:absolute; inset:4px 0 auto; height:8px; overflow:hidden; border-radius:4px; background:var(--surface-sunken); animation:rail-draw 560ms var(--ease-brand) 220ms backwards; }
 @keyframes rail-draw { from { clip-path:inset(0 100% 0 0 round 4px); } to { clip-path:inset(0 0 0 0 round 4px); } }
 @keyframes rail-now-in { from { scale:0; } }
 .band { position:absolute; inset-block:0; overflow:hidden; }
@@ -35,7 +35,7 @@
    çevresinde yamuk bir elips çiziyordu (1440 ve 768, iki temada ölçüldü).
    Artık 8 piksellik yuvarlak bir nokta, halka onun üzerinde `inset:-4px`
    — kutusu kare, merkezi çubuğun ucu. */
-.now { position:absolute; top:4px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); animation:rail-now-in 420ms var(--ease-spring) 820ms backwards; }
+.now { position:absolute; top:4px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); animation:rail-now-in 240ms var(--ease-spring) 640ms backwards; }
 /* NABIZ VERİYLE ATAR, SÜREKLİ DEĞİL (14 Ekim). Halka seans boyunca 3 sn'de
    bir sonsuz dönüyordu — döngü yalnız yükleme göstergesinin hakkı
    (lib/ink/scenes.ts başı, WCAG 2.2.2) ve hemen yanında saniyede bir
@@ -67,7 +67,7 @@
 .end { font-size:var(--text-tiny); font-weight:500; color:var(--text-muted); }
 /* Basışta ölçekle çöker (evin tek lehçesi, BUTTON_BASE) — `transform`
    konumu taşıdığı için çökme ayrı `scale` özelliğinde. */
-.marker { position:absolute; top:1px; z-index:1; display:flex; align-items:center; justify-content:center; gap:2px; min-width:28px; height:24px; padding:0 6px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--premium-surface); color:var(--text-strong); font-size:var(--text-small); font-weight:650; cursor:pointer; transform:translateX(-50%); scale:1; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), scale 120ms var(--ease-brand); }
+.marker { position:absolute; top:1px; z-index:1; display:flex; align-items:center; justify-content:center; gap:2px; min-width:28px; height:24px; padding:0 6px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--premium-surface); color:var(--text-strong); font-size:var(--text-small); font-weight:650; cursor:pointer; transform:translateX(-50%); scale:1; transition:border-color 180ms var(--ease-brand), background-color 180ms var(--ease-brand), scale 120ms var(--ease-brand); }
 .marker:active { scale:.95; }
 .marker::before { content:""; position:absolute; inset:-8px -4px; }
 .marker { gap:5px; }
@@ -87,7 +87,11 @@
    beliriyor: çizgi oraya varınca. Yerleşim hiç oynamıyor; veriyle sonradan
    düşen olay rozeti de aynı yumuşaklıkla girer. JS yokken animasyon yine
    koşar ve son karede biter. */
-.mark { animation:rail-mark-in 300ms var(--ease-brand) calc(200ms + var(--x, 0) * 700ms) backwards; }
+/* SÜRELER KOREOGRAFİDEN (10 Kasım, ikinci tur): oluk 900 @200 → 560 @220,
+   işaretler 300 @200–900 → 200 @240–640 (kademe toplamı 700 → 400), "şimdi" 420 @820 → 240 @640;
+   şerit 1.240 yerine 880 ms'de bitiyor (TodayExperience.module.css →
+   "HAREKET MERDİVENİ"). Bekleme çizgisi aynı pencerede (300–900). */
+.mark { animation:rail-mark-in var(--mark,200ms) var(--ease-brand) calc(240ms + var(--x, 0) * 400ms) backwards; }
 @keyframes rail-mark-in { from { opacity:0; } }
 
 /* BANT ADLARI ŞERİDİN ENİNE BAĞLI, EKRANINKİNE DEĞİL (25 Ekim, son
@@ -106,11 +110,11 @@
    düz mavisiyle yarışmasın; uç noktası şeridin "şimdi"siyle aynı nokta. */
 .wait { margin-top:8px; padding-top:8px; border-top:1px solid var(--line-soft); }
 .waitAxis { position:relative; height:9px; }
-.waitTrack { position:absolute; inset:3px 0 auto; height:3px; overflow:hidden; border-radius:2px; background:var(--surface-sunken); animation:rail-draw 900ms var(--ease-brand) 360ms backwards; }
-.waitFill { position:absolute; inset:0; background:color-mix(in srgb, var(--primary) 55%, transparent); transform-origin:left center; transition:transform 600ms var(--ease-brand); animation:wait-fill 1100ms var(--ease-brand) 520ms backwards; }
+.waitTrack { position:absolute; inset:3px 0 auto; height:3px; overflow:hidden; border-radius:2px; background:var(--surface-sunken); animation:rail-draw 560ms var(--ease-brand) 300ms backwards; }
+.waitFill { position:absolute; inset:0; background:color-mix(in srgb, var(--primary) 55%, transparent); transform-origin:left center; transition:transform 600ms var(--ease-brand); animation:wait-fill 560ms var(--ease-brand) 340ms backwards; }
 .waitFill[data-still] { transition:none; }
 @keyframes wait-fill { from { transform:scaleX(0); } }
-.waitNow { position:absolute; top:.5px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); transition:left 600ms var(--ease-brand); animation:wait-now-in 320ms var(--ease-brand) 1500ms backwards; }
+.waitNow { position:absolute; top:.5px; width:8px; height:8px; border-radius:50%; transform:translateX(-4px); background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); transition:left 600ms var(--ease-brand); animation:wait-now-in var(--mark,200ms) var(--ease-brand) 700ms backwards; }
 .waitNow[data-still] { transition:none; }
 @keyframes wait-now-in { from { opacity:0; scale:.4; } }
 .waitLane { display:flex; justify-content:space-between; align-items:baseline; gap:8px; margin-top:5px; color:var(--text-muted); font-size:var(--text-tiny); font-weight:500; line-height:1.3; white-space:nowrap; }

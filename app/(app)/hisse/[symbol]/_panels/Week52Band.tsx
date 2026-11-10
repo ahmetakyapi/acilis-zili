@@ -1,5 +1,6 @@
+import type { CSSProperties } from "react";
 import styles from "../stock.module.css";
-import { PriceRail } from "@/components/ui/PriceRail";
+import { PlayOnView } from "@/components/motion/PlayOnView";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { cn, formatPercentPlain, formatPrice } from "@/lib/utils";
 import type { week52Band } from "./shared";
@@ -20,6 +21,26 @@ type Band = NonNullable<ReturnType<typeof week52Band>>;
  *
  * Gerekçeler değişmedi (ProfileCard'daki 24 Eylül / 28 Eylül / 1 Ekim
  * notları): uçlar metin, ray yalnızca çizim; ADR'de ray ve uzaklık yok.
+ *
+ * ÇİZİM YENİDEN (10 Kasım): DİP–TEPE EKSENİ. Önce ortak `PriceRail` (14
+ * piksellik gömülü bant + mavi halkalı nokta) ve altında iki satırlık uç
+ * listesi vardı; başlıkta bunlar kenarlıklı, gömülü bir kartın içindeydi
+ * (panelin içinde kart, 111 piksel). Şimdi uç değerleri eksenin İKİ
+ * UCUNDA aynı satırda duruyor ("164,27 $ ──●──── 243,37 $"): göz sayıyı
+ * çizginin bittiği yerde buluyor, ayrı etiket satırı gerekmiyor. Eksen
+ * sayfanın şerit dilinde: kulvar (`--line-soft`) üstünde 5 piksel, dipten
+ * fiyata kadar sitenin büyüklük tonuyla (`--bar-soft`) dolu, im en koyu
+ * mürekkep: Skor Kartı şeritleriyle AYNI dil (çentik yok, 11 Ekim kararı).
+ * Mavi yok, konum bir ölçü. Altında uçlara uzaklık. Başlıkta
+ * kutu kalktı, yerine tek dikey kıl çizgi (ölçüler stock.module.css →
+ * "FİYAT BLOĞU, TEK OKUMA").
+ * Profildeki "Son Fiyat" etiketi de kalktı: konum başlıkta yazılı, fiyat
+ * sayfanın başında; etiket rayın üstünde 20 piksellik ayrı bir satırdı.
+ *
+ * HAREKET: im dipten yerine kayar, dolgu onunla birlikte uzar (tek okuma:
+ * "dipten buraya geldi"). Yalnız `transform`; sunucu son kareyi basar.
+ * Başlıkta ilk ekran koreografisinin bir adımı (CSS, yüklemede), profilde
+ * ekranın altında olduğu için `PlayOnView` ile görünce bir kez.
  */
 export function Week52Band({
   band,
@@ -27,26 +48,22 @@ export function Week52Band({
   locale,
   t,
   className,
-  quoteLabel = true,
 }: {
   band: Band;
   price: number | null;
   locale: Locale;
   t: Dictionary;
   className?: string;
-  /** Rayın üstündeki "Son Fiyat" etiketi. Başlıktaki bantta YOK (25 Ekim):
-      aynı fiyat hemen solunda büyük puntoyla yazılı, etiket kartı 20 piksel
-      uzatıp aynı sayıyı ikinci kez basıyordu. Profildeki bantta duruyor. */
-  quoteLabel?: boolean;
 }) {
-  /* Dipten ve zirveden uzaklık — yalnız ray çizildiğinde (dolar cinsinden
+  /* Dipten ve zirveden uzaklık — yalnız eksen çizildiğinde (dolar cinsinden
      fiyat banda aitse); ADR'de fiyat ile uçlar farklı para biriminde. */
   const distance =
     band.onRail && price !== null && band.low > 0 && band.high > 0
       ? { fromLow: ((price - band.low) / band.low) * 100, fromHigh: ((band.high - price) / band.high) * 100 }
       : null;
+  const drawn = band.onRail && price !== null && band.position !== null;
   return (
-    <div className={className}>
+    <PlayOnView className={cn(styles.band52, className)}>
       <div className={styles.bandHead}>
         <span className={styles.profileBandLabel}>{t.stock.week52Range}</span>
         {band.position !== null && (
@@ -55,43 +72,40 @@ export function Week52Band({
           </span>
         )}
       </div>
-      {band.onRail && price !== null && (
-        <PriceRail
-          marks={[
-            { kind: "band", from: band.low, to: band.high, tone: "range" },
-            {
-              kind: "point",
-              at: price,
-              variant: "live",
-              ...(quoteLabel
-                ? { label: t.stock.currentQuote, value: formatPrice(price, locale, { currency: band.para }), side: "above" as const }
-                : {}),
-            },
-          ]}
-          pad={0}
-          className={styles.bandRail}
-        />
-      )}
-      <dl className={styles.bandEnds}>
-        <div>
-          <dt>{t.chart.periodLow}</dt>
-          <dd className="numeral">{formatPrice(band.low, locale, { currency: band.para })}</dd>
-          {distance && (
-            <dd className={cn("numeral", styles.bandDistance)}>
-              {t.stock.bandFromLow.replace("{value}", formatPercentPlain(distance.fromLow, locale, 0))}
-            </dd>
-          )}
-        </div>
-        <div>
-          <dt>{t.chart.periodHigh}</dt>
-          <dd className="numeral">{formatPrice(band.high, locale, { currency: band.para })}</dd>
-          {distance && (
-            <dd className={cn("numeral", styles.bandDistance)}>
-              {t.stock.bandFromHigh.replace("{value}", formatPercentPlain(distance.fromHigh, locale, 0))}
-            </dd>
-          )}
-        </div>
-      </dl>
-    </div>
+      {/* Uçlar bir tanım listesi: ad (`dt`) eksen çizilince yalnız ekran
+          okuyucuya — "Dibin %9 Üstünde" ucun hangisi olduğunu zaten
+          söylüyor; ADR'de uzaklık yok, ad görünür kalıyor. */}
+      <div className={styles.bandBody} data-drawn={drawn ? "" : undefined}>
+        {drawn && (
+          <div aria-hidden className={styles.bandAxis} style={{ "--band-p": (band.position ?? 0) / 100 } as CSSProperties}>
+            <i className={styles.bandLane} />
+            <i className={styles.bandFill} />
+            <i className={styles.bandTravel}>
+              <i className={styles.bandPin} />
+            </i>
+          </div>
+        )}
+        <dl className={styles.bandEnds}>
+          <div data-end="low">
+            <dt className={distance ? "sr-only" : undefined}>{t.chart.periodLow}</dt>
+            <dd className="numeral">{formatPrice(band.low, locale, { currency: band.para })}</dd>
+            {distance && (
+              <dd className={cn("numeral", styles.bandDistance)}>
+                {t.stock.bandFromLow.replace("{value}", formatPercentPlain(distance.fromLow, locale, 0))}
+              </dd>
+            )}
+          </div>
+          <div data-end="high">
+            <dt className={distance ? "sr-only" : undefined}>{t.chart.periodHigh}</dt>
+            <dd className="numeral">{formatPrice(band.high, locale, { currency: band.para })}</dd>
+            {distance && (
+              <dd className={cn("numeral", styles.bandDistance)}>
+                {t.stock.bandFromHigh.replace("{value}", formatPercentPlain(distance.fromHigh, locale, 0))}
+              </dd>
+            )}
+          </div>
+        </dl>
+      </div>
+    </PlayOnView>
   );
 }

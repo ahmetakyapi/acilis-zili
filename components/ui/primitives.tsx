@@ -308,9 +308,11 @@ export function ChangePill({
   return (
     <span
       className={cn(
-        "numeral inline-flex items-center gap-1 rounded-full font-semibold",
+        /* TEK ÖLÇÜ (10 Kasım, tutarlılık denetimi): değişim hapı ekranlarda
+           600/700 ağırlık ve 6/8 dolguyla dört ayrı biçimdeydi. */
+        "numeral inline-flex items-center gap-1 rounded-full font-bold",
         directionWash(direction),
-        size === "sm" ? "px-1.5 py-0.5 text-tiny" : "px-2 py-0.5 text-xs",
+        size === "sm" ? "px-2 py-0.5 text-tiny" : "px-2 py-0.5 text-xs",
         className,
       )}
     >
@@ -367,7 +369,7 @@ export function TimingChip({
     <span
       className={cn(
         "inline-flex shrink-0 items-center gap-1.5 whitespace-nowrap rounded-full bg-surface-sunken font-semibold text-body ring-1 ring-line ring-inset",
-        size === "sm" ? "px-2 py-[3px] text-nano" : "px-2.5 py-[3px] text-tiny",
+        size === "sm" ? "px-2.5 py-[3px] text-nano" : "px-2.5 py-[3px] text-tiny",
         wide && "min-w-[7rem] justify-center",
         className,
       )}

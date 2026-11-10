@@ -14,7 +14,7 @@
 .badge[data-explained="market"] { background: var(--primary-tint); color: var(--primary-ink); }
 
 .strip { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 10px; margin-top: -10px; }
-.stripLabel { font-size: var(--text-base); font-weight: 650; color: var(--text-strong); }
+.stripLabel { font-size: var(--text-base); font-weight: 600; color: var(--text-strong); }
 .stripMuted { font-size: var(--text-base); color: var(--text-muted); }
 
 .body { display: flex; flex-direction: column; gap: 14px; }
@@ -24,13 +24,13 @@
 .point { display: flex; gap: 10px; align-items: flex-start; }
 .pointIndex {
   display: grid; place-items: center; flex: none; width: 22px; height: 22px; margin-top: 1px; border-radius: 7px;
-  background: var(--surface-sunken); color: var(--brass-ink); font-family: var(--font-mono); font-size: 12px; font-weight: 800;
+  background: var(--surface-sunken); color: var(--brass-ink); font-family: var(--font-mono); font-size: 12px; font-weight: 700;
 }
-.pointTitle { margin: 0; font-size: var(--text-read); font-weight: 750; color: var(--text-strong); }
+.pointTitle { margin: 0; font-size: var(--text-read); font-weight: 700; color: var(--text-strong); }
 .pointDetail { margin: 2px 0 0; font-size: var(--text-read); line-height: 1.55; color: var(--text-body); }
 .source {
-  display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; font-size: var(--text-small); font-weight: 650;
-  color: var(--text-muted); transition: color .2s var(--ease-brand);
+  display: inline-flex; align-items: center; gap: 3px; margin-top: 4px; font-size: var(--text-small); font-weight: 600;
+  color: var(--text-muted); transition: color .18s var(--ease-brand);
 }
 .source:hover { color: var(--primary); }
 .disclosure { margin: 2px 0 0; padding-top: 12px; border-top: 1px solid var(--line-soft); font-size: var(--text-small); line-height: 1.5; color: var(--text-muted); }
@@ -86,18 +86,18 @@
 /* ---- Hareket figürü (17 Ekim, ikinci sürüm; gerekçe StockInsightCard.tsx
    → MoveFigure). Yüzey ton, çizgiler ince: hisse 2,5, S&P 1,5 kesik,
    sıfır çizgisi --line-strong kesik. Alan düz ton (%10), degrade yok. */
-.move { display: grid; gap: 4px; padding: 14px 16px 10px; border-radius: var(--radius-lg); background: var(--surface-sunken); animation: si-rise .5s var(--ease-brand) both; }
+.move { display: grid; gap: 4px; padding: 14px 16px 10px; border-radius: var(--radius-lg); background: var(--surface-sunken); animation: si-rise .2s var(--ease-brand) both; }
 @media (min-width: 640px) { .move { padding: 14px 20px 10px; } }
 .moveHead { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 8px 16px; }
 .moveHead .caption { margin-bottom: 2px; }
-.heroValue { margin: 0; font-size: clamp(26px, 5vw, 32px); line-height: 1.05; font-weight: 850; letter-spacing: -.035em; color: var(--text-strong); animation: si-rise .6s var(--ease-brand) both; animation-delay: 80ms; }
+.heroValue { margin: 0; font-size: clamp(26px, 5vw, 32px); line-height: 1.05; font-weight: 700; letter-spacing: -.035em; color: var(--text-strong); animation: si-rise .2s var(--ease-brand) both; animation-delay: 60ms; }
 .heroValue[data-tone="up"] { color: var(--up); }
 .heroValue[data-tone="down"] { color: var(--down); }
-.heroSub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 4px 0 0; font-size: var(--text-base); color: var(--text-muted); animation: si-rise .6s var(--ease-brand) both; animation-delay: 160ms; }
-.heroSub b { font-weight: 800; color: var(--text-strong); }
+.heroSub { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; margin: 4px 0 0; font-size: var(--text-base); color: var(--text-muted); animation: si-rise .2s var(--ease-brand) both; animation-delay: 120ms; }
+.heroSub b { font-weight: 700; color: var(--text-strong); }
 .heroSub b[data-tone="up"] { color: var(--up); }
 .heroSub b[data-tone="down"] { color: var(--down); }
-.gap { padding: 3px 9px; border-radius: 999px; font-size: var(--text-small); font-weight: 750; background: var(--surface); color: var(--text-body); }
+.gap { padding: 3px 9px; border-radius: 999px; font-size: var(--text-small); font-weight: 700; background: var(--surface); color: var(--text-body); }
 .gap[data-tone="up"] { background: var(--up-wash); color: var(--up); }
 .gap[data-tone="down"] { background: var(--down-wash); color: var(--down); }
 .legend { display: flex; gap: 14px; margin: 0; padding: 0; list-style: none; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
@@ -121,7 +121,7 @@
 /* Çizim soldan sağa açılan maskeyle (clip-path): SVG genişliğe esnediği ve
    çizgi `non-scaling-stroke` taşıdığı için pathLength + dasharray çizgiyi
    kesik kesik bırakıyordu (17 Ekim, önizlemede görüldü). */
-.pathSvg { animation: si-reveal 1.3s var(--ease-brand) both; animation-delay: .15s; }
+.pathSvg { animation: si-reveal .7s var(--ease-brand) both; animation-delay: .06s; }
 .stockLine { stroke: var(--text-strong); stroke-width: 2.5; }
 .stockLine[data-tone="up"] { stroke: var(--up); }
 .stockLine[data-tone="down"] { stroke: var(--down); }
@@ -132,16 +132,16 @@
 .dot[data-last] { width: 13px; height: 13px; margin: -6.5px 0 0 -6.5px; background: var(--text-strong); box-shadow: 0 0 0 4px var(--surface-sunken); }
 .dot[data-last][data-tone="up"] { background: var(--up); }
 .dot[data-last][data-tone="down"] { background: var(--down); }
-.dot { animation: si-pop .45s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 240ms + 200ms); }
-.marketDot { width: 8px; height: 8px; margin: -4px 0 0 -4px; border-color: var(--text-muted); animation: si-fade .6s var(--ease-brand) both; animation-delay: 1s; }
+.dot { animation: si-pop .3s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 100ms + 60ms); }
+.marketDot { width: 8px; height: 8px; margin: -4px 0 0 -4px; border-color: var(--text-muted); animation: si-fade .2s var(--ease-brand) both; animation-delay: .6s; }
 
 /* Gün şeridi: her seans kendi noktasının altında, aynı x. */
 .days { position: relative; height: 78px; margin-top: 2px; border-top: 1px solid var(--line-soft); }
 .day { position: absolute; top: 0; display: grid; justify-items: center; gap: 2px; width: 64px; margin-left: -32px; padding-top: 6px; }
-.dayValue { font-size: 11.5px; font-weight: 700; white-space: nowrap; color: var(--text-muted); }
+.dayValue { font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--text-muted); }
 .dayValue[data-tone="up"] { color: var(--up); }
 .dayValue[data-tone="down"] { color: var(--down); }
-.dayValue[data-biggest] { padding: 1px 6px; border-radius: 999px; font-weight: 850; background: var(--surface); }
+.dayValue[data-biggest] { padding: 1px 6px; border-radius: 999px; font-weight: 700; background: var(--surface); }
 .dayLane { position: relative; width: 5px; height: 22px; border-radius: 3px; background: var(--line-soft); }
 .dayLane::after { content: ""; position: absolute; left: -4px; right: -4px; top: 50%; height: 1px; background: var(--line-strong); }
 .dayBar { position: absolute; left: 0; right: 0; border-radius: 3px; background: var(--text-muted); }
@@ -149,16 +149,16 @@
 .dayBar[data-side="down"] { top: 50%; transform-origin: top; }
 .dayBar[data-tone="up"] { background: var(--up); }
 .dayBar[data-tone="down"] { background: var(--down); }
-.dayLabel { font-size: 11.5px; font-weight: 650; color: var(--text-body); }
-.volume { font-size: 10.5px; font-weight: 750; color: var(--brass-ink); white-space: nowrap; }
-@media (max-width: 420px) { .day { width: 52px; margin-left: -26px; } .dayValue { font-size: 10.5px; } }
+.dayLabel { font-size: 12px; font-weight: 600; color: var(--text-body); }
+.volume { font-size: 12px; font-weight: 700; color: var(--brass-ink); white-space: nowrap; }
+@media (max-width: 420px) { .day { width: 52px; margin-left: -26px; } .dayValue { font-size: 12px; } }
 
 .figure[data-kind="earnings"] { grid-template-columns: none; }
 /* Önizleme (18 Ekim): beklenti kutuları + son dört çeyreğin sürpriz şeridi.
    Şerit gün şeridinin diliyle (5 piksel, sıfır çizgisi --line-strong). */
 .previewTiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; }
-.previewTile { display: grid; gap: 4px; padding: 10px 12px; border-radius: var(--radius-md, 10px); background: var(--surface); animation: si-rise .5s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 90ms + 80ms); }
-.previewValue { font-size: 20px; line-height: 1.1; font-weight: 800; letter-spacing: -.02em; color: var(--text-strong); white-space: nowrap; }
+.previewTile { display: grid; gap: 4px; padding: 10px 12px; border-radius: var(--radius-md, 10px); background: var(--surface); animation: si-rise .2s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 60ms + 60ms); }
+.previewValue { font-size: 20px; line-height: 1.1; font-weight: 700; letter-spacing: -.02em; color: var(--text-strong); white-space: nowrap; }
 .previewValue[data-tone="up"] { color: var(--up); }
 .previewValue[data-tone="down"] { color: var(--down); }
 .quarterRow { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; }
@@ -169,7 +169,7 @@
 @media (min-width: 900px) { .figure[data-kind="earnings"] { grid-template-columns: repeat(auto-fit, minmax(0, 1fr)); } }
 .metric { margin: 0; display: grid; gap: 8px; }
 .metricHead { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px; }
-.metricLabel { font-size: var(--text-read); font-weight: 750; color: var(--text-strong); }
+.metricLabel { font-size: var(--text-read); font-weight: 700; color: var(--text-strong); }
 .verdict { padding: 3px 9px; border-radius: 999px; font-size: var(--text-small); font-weight: 700; background: var(--surface); color: var(--text-muted); }
 .verdict[data-verdict="beat"] { background: var(--up-wash); color: var(--up); }
 .verdict[data-verdict="miss"] { background: var(--down-wash); color: var(--down); }
@@ -180,7 +180,7 @@
 .metricBar[data-kind="beat"] { background: var(--up); }
 .metricBar[data-kind="miss"] { background: var(--down); }
 .metricBar[data-kind="inline"] { background: var(--text-body); }
-.metricValue { font-size: var(--text-base); font-weight: 750; text-align: right; white-space: nowrap; color: var(--text-strong); }
+.metricValue { font-size: var(--text-base); font-weight: 700; text-align: right; white-space: nowrap; color: var(--text-strong); }
 
 /* ---- Giriş hareketi ----
    Not gelince çubuklar marka eğrisiyle büyür, metin ve maddeler sırayla
@@ -188,18 +188,23 @@
    Hareketi azaltana hiçbiri. */
 @keyframes si-grow-y { from { scale: 1 0; } }
 @keyframes si-grow-x { from { scale: 0 1; } }
-@keyframes si-rise { from { opacity: 0; translate: 0 8px; } }
+/* 10 Kasım, tek merdiven (stock.module.css → "KAPAĞIN AÇILIŞI"): metin
+   kaymıyor, 200 ms'de beliriyor (not sonradan gelir: durum geçişi); çizim
+   1,3 sn → 0,7; çubuklar 0,6–0,8 → 0,45–0,6; kademe 90–240 → 30–60 ms
+   (yol üstündeki noktalar çizgiyle eşzamanlı, 100 ms arayla). Önceki
+   toplam ~1,6 sn, şimdi ≤ 0,9. */
+@keyframes si-rise { from { opacity: 0; } }
 @keyframes si-reveal { from { clip-path: inset(-10% 100% -10% 0); } to { clip-path: inset(-10% 0 -10% 0); } }
 @keyframes si-fade { from { opacity: 0; } }
 @keyframes si-pop { from { opacity: 0; scale: .2; } }
 @keyframes si-glint { 0%, 100% { opacity: .45; scale: .9; } 50% { opacity: 1; scale: 1.08; } }
-.dayBar { animation: si-grow-y .6s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 230ms + 300ms); }
-.metricBar { animation: si-grow-x .8s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 140ms + var(--j, 0) * 90ms + 100ms); }
-.summary, .point, .disclosure { animation: si-rise .55s var(--ease-brand) both; }
-.summary { animation-delay: 120ms; }
-.point { animation-delay: calc(var(--i, 1) * 90ms + 160ms); }
-.disclosure { animation-delay: 520ms; }
-.figure { animation: si-rise .5s var(--ease-brand) both; }
+.dayBar { animation: si-grow-y .45s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 60ms + 120ms); }
+.metricBar { animation: si-grow-x .6s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 60ms + var(--j, 0) * 30ms + 60ms); }
+.summary, .point, .disclosure { animation: si-rise .2s var(--ease-brand) both; }
+.summary { animation-delay: 60ms; }
+.point { animation-delay: calc(var(--i, 1) * 45ms + 90ms); }
+.disclosure { animation-delay: 240ms; }
+.figure { animation: si-rise .2s var(--ease-brand) both; }
 .loadingText { display: inline-flex; align-items: center; gap: 6px; }
 .loadingIcon { color: var(--brass); animation: si-glint 1.4s var(--ease-brand) infinite; }
 @media (prefers-reduced-motion: reduce) {

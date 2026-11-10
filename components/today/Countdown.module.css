@@ -22,7 +22,15 @@
    68'e büyüyünce rakam 96'da onun hemen altında, kolonun %83'ünde kalıyor
    ve hiyerarşi düzleşiyordu; rakam ana okuma olmaya devam etmeli. Oranlar
    (20/16cqi) değişmedi: tavanın altındaki genişliklerde sonuç aynı. */
-.countdown { display:flex; flex-wrap:nowrap; align-items:baseline; gap:0 .2em; font-size:clamp(48px,20cqi,120px); font-weight:600; line-height:.86; letter-spacing:-.055em; color:var(--text-strong); }
+/* TAVAN 120 → 136 (10 Kasım, ikinci tur). 1440'ta kolon 722 piksel ve
+   20cqi 144 istiyor; 120'lik tavanda rakam satırı kolonun 565 pikselini
+   (%78) kullanıyor, sağında — başlığın sağına asılı zilin altında — 157
+   piksellik ölü bir köşe kalıyordu; hemen altındaki seans şeridi ise
+   kolonun tamamını (722) kullanıyor. 136'da satır 640 piksel (%89), köşe
+   82 piksel; kahramanın boyu değişmiyor (476: sağdaki deste belirliyor,
+   sol kolonun payı 68 → 51 piksel). 1280'de 20cqi 130 (tavanın altında,
+   kolonla birlikte), 1024 ve altı aynı. Ölçüm dosyanın sonunda. */
+.countdown { display:flex; flex-wrap:nowrap; align-items:baseline; gap:0 .2em; font-size:clamp(48px,20cqi,136px); font-weight:600; line-height:.86; letter-spacing:-.055em; color:var(--text-strong); }
 .countdown[data-days="true"] { font-size:clamp(38px,16cqi,110px); }
 /* GÜNLÜ SAYAÇ DAR KOLONDA TAŞIYORDU (25 Ekim, son inceleme). Dört grup ve
    TR birimleri ("gün", "sa", "dk", "sn") 16cqi'de kolonun ~%103'ü: 390'da
@@ -51,7 +59,7 @@
    akışta — pencerenin genişliği hep tek rakam (tabular), satır zıplamaz.
    Giriş yaylı (hafifçe aşıp oturuyor), çıkış düz: gelen rakam "varıyor",
    giden yalnızca yol veriyor. Gerekçe Countdown.tsx → RollingDigit. */
-.digit { position:relative; display:inline-block; transition:color 300ms var(--ease-brand); }
+.digit { position:relative; display:inline-block; transition:color 180ms var(--ease-brand); }
 /* TAM YOL, AYNI EĞRİ (25 Ekim). Rakamlar kutularının %62'si kadar
    yürüyordu ve giden 300 ms düz, gelen 420 ms yaylı eğriyle: pencere
    (.86em kutu + .04em dolgu + .08em kırpma payı = 1,1em) yolun iki ucunu
@@ -83,11 +91,15 @@
    karede rakamın üst yarısı zaten boyalı, yani LCP beklemiyor (başlığın
    `headline-in` kararıyla aynı gerekçe). Dolgu `backwards`: bitince
    geride transform kalmıyor (globals.css "Sayfa geçişi"). */
-.digitBoot { display:inline-block; animation:digit-boot 680ms var(--ease-spring-soft) calc(var(--boot-group, 120ms) + var(--boot-place, 0ms)) backwards; }
-.group:nth-child(2) { --boot-group:210ms; }
-.group:nth-child(3) { --boot-group:300ms; }
-.group:nth-child(4) { --boot-group:390ms; }
-.digit + .digit { --boot-place:45ms; }
+/* KOREOGRAFİYE BAĞLANDI (10 Kasım, ikinci tur): 680 → 480 ms, gruplar
+   90 → 50, basamaklar 45 → 30 ms arayla; son rakam 1.025 → 760 ms'de
+   oturuyor (kahramanın 900 ms'lik açılışı, TodayExperience.module.css →
+   "HAREKET MERDİVENİ"). Kademe adımı kuralın içinde (30–60 ms). */
+.digitBoot { display:inline-block; animation:digit-boot 480ms var(--ease-spring-soft) calc(var(--boot-group, 100ms) + var(--boot-place, 0ms)) backwards; }
+.group:nth-child(2) { --boot-group:150ms; }
+.group:nth-child(3) { --boot-group:200ms; }
+.group:nth-child(4) { --boot-group:250ms; }
+.digit + .digit { --boot-place:30ms; }
 @keyframes digit-boot { from { transform:translateY(55%); } to { transform:none; } }
 @keyframes digit-in { from { transform:translateY(120%); } to { transform:translateY(0); } }
 @keyframes digit-out { from { transform:translateY(0); } to { transform:translateY(-120%); } }

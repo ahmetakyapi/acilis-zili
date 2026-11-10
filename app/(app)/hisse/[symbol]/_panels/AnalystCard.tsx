@@ -121,7 +121,7 @@ export async function AnalystCard({
       <div className={styles.analystOverview}>
       <div className={styles.consensus}>
         <svg viewBox="0 0 120 120" className={styles.consensusRing} aria-hidden>
-          <circle cx="60" cy="60" r="47" fill="none" stroke="var(--surface-elevated)" strokeWidth="8" />
+          <circle cx="60" cy="60" r="47" fill="none" stroke="var(--surface-elevated)" strokeWidth="6" />
           {/* DİLİMLER KENDİNİ ÇİZİYOR (14 Ekim). Halka sayfanın kendini
               çizmeyen tek veri grafiğiydi (12 Ekim kararı: "hareket veriyi
               çizen öğelerde"). Geometri `pathLength={1}`e normalize edildi
@@ -156,7 +156,7 @@ export async function AnalystCard({
                     r="47"
                     fill="none"
                     stroke={segment.color}
-                    strokeWidth="8"
+                    strokeWidth="6"
                     strokeDasharray={`${len} ${2 - len}`}
                   />
                 </g>

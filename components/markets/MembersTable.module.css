@@ -24,8 +24,8 @@
 /* `overflow:clip` (hidden değil): köşeyi yuvarlıyor ama kaydırma kabı
    kurmuyor, yapışkan başlık belgeye tutunabiliyor. Çift sınıf `Panel`in
    `overflow-hidden` yardımcısını geçmek için. */
-.panel.panel { overflow:clip; border-radius:16px; background:var(--premium-surface); scroll-margin-top:100px; }
-.panel h2 { font-size:20px; letter-spacing:-.035em; }
+.panel.panel { overflow:clip; border-radius:var(--radius-panel); background:var(--premium-surface); scroll-margin-top:100px; }
+.panel h2 { font-size:16px; letter-spacing:-.015em; }
 
 .table { width:100%; min-width:704px; border-collapse:separate; border-spacing:0; font-size:var(--text-base); }
 .table th, .table td { padding:0 12px; vertical-align:middle; white-space:nowrap; }
@@ -66,14 +66,14 @@
 .changeCell { width:auto; }
 .change { display:grid; grid-template-columns:minmax(40px,1fr) 7.2ch; align-items:center; gap:8px; }
 .changeNum { font-size:14px; font-weight:700; text-align:right; letter-spacing:-.01em; }
-.lane { position:relative; display:block; height:var(--lane-h,5px); border-radius:3px; background:var(--line-soft); }
-.fill { position:absolute; top:0; bottom:0; left:0; min-width:2px; border-radius:3px; background:var(--flat); }
+.lane { position:relative; display:block; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
+.fill { position:absolute; top:0; bottom:0; left:0; min-width:2px; border-radius:999px; background:var(--flat); }
 .fill[data-tone="up"] { background:var(--up); }
 .fill[data-tone="down"] { background:var(--down); }
 /* Sıfır ortada: artı sağa, eksi sola. Sıfır çizgisi rayı 3'er piksel aşar. */
 .table[data-signed] .lane::after { content:""; position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; margin-left:-.5px; background:var(--line-strong); }
-.table[data-signed] .fill { left:50%; border-radius:0 3px 3px 0; }
-.table[data-signed] .fill[data-tone="down"] { left:auto; right:50%; border-radius:3px 0 0 3px; }
+.table[data-signed] .fill { left:50%; border-radius:0 999px 999px 0; }
+.table[data-signed] .fill[data-tone="down"] { left:auto; right:50%; border-radius:999px 0 0 999px; }
 
 .price { width:1%; color:var(--text-strong); font-size:14px; font-weight:700; text-align:right; }
 
@@ -99,7 +99,7 @@
 .capDot { position:absolute; top:50%; width:9px; height:9px; margin:-4.5px 0 0 -4.5px; border-radius:50%; background:var(--primary); opacity:.62; }
 .capHead .sortWrap { display:grid; grid-template-columns:minmax(8ch,auto) 112px; justify-content:end; gap:22px; }
 .capHead .sortLink { justify-self:end; }
-.capAxis { position:relative; display:block; width:112px; height:14px; color:var(--text-muted); font-size:11px; font-weight:550; line-height:14px; }
+.capAxis { position:relative; display:block; width:112px; height:14px; color:var(--text-muted); font-size:12px; font-weight:550; line-height:14px; }
 .capAxis > span { position:absolute; top:0; translate:-50% 0; }
 .contribution { width:1%; color:var(--text-soft, var(--text-body)); text-align:right; }
 .table tr > :last-child { padding-right:16px; }

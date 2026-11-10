@@ -44,14 +44,16 @@
 }
 .title {
   margin: 0;
-  font-size: var(--text-title);
-  font-weight: 750;
-  letter-spacing: -0.02em;
+  /* Panel başlığı ölçüsü (`PanelHeader`): 19/750 → 16/700 (10 Kasım,
+     ekranlar arası denetim — sayfada tek başına duran ara basamaktı). */
+  font-size: var(--text-lead);
+  font-weight: 700;
+  letter-spacing: -0.015em;
   line-height: 1.2;
 }
 .titleLink {
   color: var(--text-strong);
-  transition: color 0.2s var(--ease-brand);
+  transition: color 180ms var(--ease-brand);
 }
 .titleLink:hover { color: var(--primary); }
 .titleLink:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 4px; }

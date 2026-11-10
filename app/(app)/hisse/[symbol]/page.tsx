@@ -226,10 +226,8 @@ export default async function StockPage(
      boş döner. Yerine fonun künyesi ve izlediği piyasa anlatılır. */
   const fund = fundMetaOf(symbol);
   if (fund) {
-    const [fundAllowed, fundStatus] = await Promise.all([allowed, getStatus()]);
+    const fundAllowed = await allowed;
     if (!fundAllowed) return throttled;
-    const fundOffSession =
-      fundStatus.session === "pre-market" || fundStatus.session === "after-hours";
     return (
       <MotionExperience className={styles.page}>
         <ScrollProgress />
@@ -259,7 +257,7 @@ export default async function StockPage(
                 öbür yanda değil, tam üstünde — dayanak düştüğü için kopya her
                 genişlikte kalktı. Aralığa bağlı YÜZDE grafikte kaldı; o başka
                 bir sayı (seçili aralığın getirisi) ve gerekçesi orada yazılı. */}
-            <Suspense fallback={<HeaderSkeleton sessionRow={fundOffSession} band />}>
+            <Suspense fallback={<HeaderSkeleton band fund />}>
               <StockHeader symbol={symbol} locale={locale} t={t} />
             </Suspense>
             <Suspense fallback={<Skeleton className={styles.chartSkeleton} />}>
@@ -330,7 +328,6 @@ export default async function StockPage(
   const expectedMoveDue =
     nextReport !== null && daysBetweenEt(status.etDate, nextReport.date) <= EXPECTED_MOVE_HORIZON_DAYS;
   const companyName = names[symbol]?.name ?? symbol;
-  const offSession = status.session === "pre-market" || status.session === "after-hours";
   const latestAnalysis = analysisRows[0];
   const researchLink = latestAnalysis ? (
     <Link
@@ -429,7 +426,7 @@ export default async function StockPage(
             öbür yanda değil, tam üstünde — dayanak düştüğü için kopya her
             genişlikte kalktı. Aralığa bağlı YÜZDE grafikte kaldı; o başka
             bir sayı (seçili aralığın getirisi) ve gerekçesi orada yazılı. */}
-          <Suspense fallback={<HeaderSkeleton sessionRow={offSession} chip band />}>
+          <Suspense fallback={<HeaderSkeleton chip band />}>
             <StockHeader
               symbol={symbol}
               locale={locale}

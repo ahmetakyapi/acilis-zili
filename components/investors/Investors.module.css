@@ -194,7 +194,7 @@ a.topCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:2p
 .moveFigures small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
 .moveMore { margin:4px 8px 0; font-size:12px; font-weight:600; color:var(--text-muted); }
 @media(hover:hover) and (pointer:fine) {
-  a.moveRow:hover, a.tickerRow:hover { background:var(--primary-tint); transform:translateX(2px); }
+  a.moveRow:hover, a.tickerRow:hover { background:var(--primary-tint); }
 }
 
 /* ---- Tablolar ------------------------------------------------------------ */
@@ -381,7 +381,7 @@ a.company:hover b { color:var(--primary-ink); }
 .holderList { display:flex; flex-direction:column; gap:2px; padding:8px 10px 10px; border-top:1px solid var(--line); }
 .holderRow {
   display:grid; grid-template-columns:auto minmax(0,1fr) auto auto; align-items:center; gap:12px;
-  padding:9px 8px; border-radius:12px; transition:background .2s var(--ease-brand), transform .25s var(--ease-brand);
+  padding:9px 8px; border-radius:12px; transition:background .2s var(--ease-brand);
 }
 .holderId { display:flex; min-width:0; flex-direction:column; }
 .holderId b { font-size:14px; font-weight:700; color:var(--text-strong); }
@@ -391,7 +391,7 @@ a.company:hover b { color:var(--primary-ink); }
 .holderValue { display:flex; min-width:72px; flex-direction:column; align-items:flex-end; }
 .holderValue b { font-size:14px; font-weight:700; color:var(--text-strong); white-space:nowrap; }
 .holderValue small { font-size:12px; color:var(--text-muted); white-space:nowrap; }
-@media(hover:hover) and (pointer:fine) { .holderRow:hover { background:var(--primary-tint); transform:translateX(2px); } }
+@media(hover:hover) and (pointer:fine) { .holderRow:hover { background:var(--primary-tint); } }
 @media(max-width:559px) {
   .holderRow { grid-template-columns:auto minmax(0,1fr) auto; }
   .holderValue { display:none; }

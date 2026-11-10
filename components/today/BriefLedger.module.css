@@ -22,7 +22,12 @@
   display: grid;
   gap: 12px;
   padding: 16px;
-  animation: ledger-rise 0.5s var(--ease-brand) both;
+  /* BANT KAYARAK GİRMİYOR (10 Kasım, ikinci tur). Bant opaklık 0'dan 8
+     piksel yükselerek, hisse çipleri 40 ms arayla aynı desenle geliyordu:
+     veri çizmeyen bir kutunun soluklaşıp kayması (`.claude/rules/
+     hareket.md` → İlke) ve özet ekranın altındayken kimse görmeden
+     oynuyordu. Hareket veriyi çizen hücrede kaldı (`cell-grow`, aşağıda);
+     bant ve çipler ilk karede yerinde. */
 }
 @media (min-width: 640px) {
   .band { padding: 18px 24px 14px; gap: 14px; }
@@ -110,7 +115,7 @@
   border: 1px solid var(--line);
   border-radius: var(--radius-lg);
   background: var(--surface);
-  transition: background-color 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand), border-color 180ms var(--ease-brand);
 }
 .cardHead {
   display: flex;
@@ -200,7 +205,7 @@
   padding-inline: 6px;
   margin-inline: -6px;
   border-radius: var(--radius-sm);
-  transition: background-color 0.2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand);
 }
 .rowName {
   overflow: hidden;
@@ -315,8 +320,8 @@
   height: max(1.5px, var(--len));
   translate: -50% 0;
   border-radius: 3px;
-  animation: cell-grow 0.6s var(--ease-brand) both;
-  animation-delay: calc(0.15s + var(--i, 0) * 0.05s + var(--d, 0) * 0.04s);
+  animation: cell-grow var(--draw, 700ms) var(--ease-brand) both;
+  animation-delay: calc(80ms + var(--i, 0) * var(--step, 40ms) + var(--d, 0) * var(--step, 40ms));
 }
 .cellUp { bottom: 50%; background: var(--up); transform-origin: center bottom; }
 .cellDown { top: 50%; background: var(--down); transform-origin: center top; }
@@ -470,9 +475,7 @@
   border-radius: 999px;
   background: var(--surface);
   color: var(--text-strong);
-  transition: background-color 0.2s var(--ease-brand), border-color 0.2s var(--ease-brand);
-  animation: ledger-rise 0.45s var(--ease-brand) both;
-  animation-delay: calc(0.2s + var(--i, 0) * 0.04s);
+  transition: background-color 180ms var(--ease-brand), border-color 180ms var(--ease-brand);
 }
 .stock::before {
   content: "";
@@ -559,7 +562,7 @@
   text-decoration-thickness: 1.5px;
   text-underline-offset: 4px;
   cursor: help;
-  transition: background-color 0.2s var(--ease-brand), text-decoration-color 0.2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand), text-decoration-color 180ms var(--ease-brand);
 }
 .ref[data-ledger-active] {
   background: var(--primary-wash);
@@ -660,7 +663,7 @@
   padding: 6px 8px;
   margin: 0 -8px;
   border-radius: var(--radius-sm);
-  transition: background-color 0.2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand);
 }
 .miniName {
   display: flex;
@@ -681,7 +684,7 @@
   flex-shrink: 0;
   color: var(--text-muted);
   font-family: var(--font-mono);
-  font-size: 10.5px;
+  font-size: 12px;
   font-weight: 600;
   letter-spacing: 0.02em;
 }
@@ -744,7 +747,7 @@
   padding: 4px 8px;
   margin: 0 -8px;
   border-radius: var(--radius-sm);
-  transition: background-color 0.2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand);
 }
 .fig[data-ledger-active] { background: var(--primary-tint); }
 .figLabel {
@@ -822,10 +825,7 @@
 
 /* ------------------------------------------------------------- Hareket -- */
 
-@keyframes ledger-rise {
-  from { opacity: 0; transform: translateY(8px); }
-  to { opacity: 1; transform: none; }
-}
+
 @keyframes cell-grow {
   from { transform: scaleY(0); }
   to { transform: scaleY(1); }

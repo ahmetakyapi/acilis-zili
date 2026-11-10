@@ -353,7 +353,12 @@ export function MembersTable({
               >
                 {axis && (
                   <span className={cn("numeral", styles.capAxis)} aria-hidden>
-                    {axis.ticks.map((tick) => (
+                    {/* DÖRTTEN FAZLA BASAMAKTA ETİKET BİR ATLAR (10 Kasım): künye
+                        tabanı 12 piksele çekilince beş etiket 132 piksellik
+                        eksende yine birbirine değdi ("10 Mr100 Mr", ölçüldü).
+                        Çentikler satırlarda TAM kalır; başlıkta en büyük
+                        basamaktan geriye birer atlayarak yazılır. */}
+                    {axis.ticks.map((tick, index) => axis.ticks.length > 4 && (axis.ticks.length - 1 - index) % 2 === 1 ? null : (
                       <span key={tick} style={{ left: `${(axis.at(tick) * 100).toFixed(2)}%` }}>
                         {/* "10,0 Mr" → "10 Mr": basamak etiketi tam onluk,
                             ondalık sıfır yalnız yer kaplıyordu (etiketler

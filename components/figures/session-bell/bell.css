@@ -154,7 +154,7 @@
 .sb-seg-time { margin-top: 2px; font-size: 17px; font-weight: 800; color: var(--text-strong); letter-spacing: -.015em; white-space: nowrap; }
 .sb-seg-sub { font-size: 11.5px; color: var(--text-muted); white-space: nowrap; }
 .sb-seg-bar {
-  position: absolute; left: 12px; right: 12px; bottom: 11px; height: 6px; border-radius: 3px;
+  position: absolute; left: 12px; right: 12px; bottom: 11px; height: 5px; border-radius: 999px; /* 6/3 → 5/999: ortak şerit ölçüsü (10 Kasım) */
   background: color-mix(in srgb, var(--brass) 45%, transparent); transition: background-color 240ms var(--ease-brand);
 }
 .sb-seg[data-chip="regular"] .sb-seg-bar { background: color-mix(in srgb, var(--primary) 55%, transparent); }
