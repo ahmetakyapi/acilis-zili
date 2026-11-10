@@ -3,6 +3,7 @@ import { HorizonWeekNav } from "./HorizonWeekNav";
 import { analysisHref } from "@/lib/analysis";
 import type { AnalysisBadge } from "@/lib/data";
 import { earningsHref } from "@/lib/earnings-company";
+import type { KarneMark } from "@/lib/earnings-horizon";
 import { capCell, horizonLead, horizonWhen, laneSlots, peakCell, peakDay, tileScale, tileTierOf } from "@/lib/earnings-horizon";
 import { loadHorizonKarne } from "@/lib/earnings-horizon-data";
 import { currentWeekStart, dayLabel, epsSurprise, laneOf, WEEK_MAX_NAMES, weekRangeLabel, type ScheduleRow, type WeekLane } from "@/lib/earnings-week";
@@ -61,7 +62,11 @@ export function EarningsHorizon({
   extraQuery = "",
   locale,
   t,
+  karne: karneOverride,
 }: {
+  /** Karne sözü dışarıdan (ölçüm önizlemesi sahte veriyle basar — `olcum`
+      skill'i: yükleyici ile çizim ayrı). Verilmezse sağlayıcıdan. */
+  karne?: Promise<Record<string, KarneMark[]>>;
   week: EarningsWeek;
   /** Hafta bağlantılarına eklenen öteki parametreler ("aralik=ay"). */
   extraQuery?: string;
@@ -224,7 +229,7 @@ export function EarningsHorizon({
     null;
   /* Karne yalnız ÇİZİLEN karolar için: "+N"e düşenler okuma satırına
      gelemiyor ve sağlayıcı kotası (Finnhub) boşa harcanmasın. */
-  const karne = loadHorizonKarne(days.flatMap((day) => [...day.lanes.bmo, ...day.lanes.amc, ...day.lanes.other].map((tile) => tile.symbol)));
+  const karne = karneOverride ?? loadHorizonKarne(days.flatMap((day) => [...day.lanes.bmo, ...day.lanes.amc, ...day.lanes.other].map((tile) => tile.symbol)));
 
   return (
     <Panel className={styles.panel} data-motion-reveal>
@@ -234,6 +239,7 @@ export function EarningsHorizon({
           önceki haftadan taşınmasın; yeni hafta kısa bir girişle oturur. */}
       <HorizonGrid
         key={week.monday}
+        monday={week.monday}
         days={days}
         lanes={lanes}
         karne={karne}
@@ -257,6 +263,7 @@ export function EarningsHorizon({
           analysis: h.analysis,
           marketClosed: h.marketClosed,
           emptyLane: h.emptyLane,
+          emptyDay: h.emptyDay,
           today: t.calendar.today,
           hint: h.readoutHint,
           pickDay: h.pickDay,

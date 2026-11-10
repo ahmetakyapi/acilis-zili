@@ -61,6 +61,8 @@ export const calendarVisualsTr = {
     countCompanies: "{count} Şirket",
     marketClosed: "Piyasa Kapalı",
     emptyLane: "Yok",
+    /** Kayda değer şirketi olmayan günün tek satırlık boş durumu. */
+    emptyDay: "Kayda Değer Bilanço Yok",
     marketCap: "Piyasa Değeri",
     companyPage: "Bilanço Sayfası",
     analysis: "Analizi Oku",
@@ -73,6 +75,25 @@ export const calendarVisualsTr = {
     /** Hücreye sığmayanların çipi ve ekran okuyucu etiketi. */
     more: "+{count}",
     moreLabel: "{day} listesinde {count} şirket daha",
+  },
+  /* Seans şeridi (10 Kasım, görsel kalite turu): bilanço kartında günün üç
+     penceresi ve iki zil — `components/earnings/SessionLane.tsx`. */
+  sessionLane: {
+    regular: "Seans İçi",
+    open: "Açılış",
+    close: "Kapanış",
+    aria: "Bilanço penceresi: {window}. Açılış {open}, kapanış {close} ({zone}).",
+  },
+  /* Şirket bilanço sayfası (`/bilancolar/[symbol]`), aynı tur: künye
+     şeridinin ölçüleri, beklentinin son çeyreğe göre farkı, analiz
+     satırındaki ilk tepki. */
+  companyPage: {
+    marketCap: "Piyasa Değeri",
+    sector: "Sektör",
+    latestRead: "Son Okunan Çeyrek",
+    vsLastQuarter: "Son Çeyreğe Göre",
+    reaction: "İlk Tepki",
+    lockLabel: "Oylama Kapanışı",
   },
   dividends: {
     highlights: "Öne Çıkanlar",
@@ -132,6 +153,7 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     countCompanies: "{count} Companies",
     marketClosed: "Market Closed",
     emptyLane: "None",
+    emptyDay: "No Notable Reports",
     marketCap: "Market Cap",
     companyPage: "Earnings Page",
     analysis: "Read the Analysis",
@@ -142,6 +164,20 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     noKarne: "Not enough quarters for a track record",
     more: "+{count}",
     moreLabel: "{count} more companies in the {day} list",
+  },
+  sessionLane: {
+    regular: "During Market",
+    open: "Open",
+    close: "Close",
+    aria: "Earnings window: {window}. Opens {open}, closes {close} ({zone}).",
+  },
+  companyPage: {
+    marketCap: "Market Cap",
+    sector: "Sector",
+    latestRead: "Latest Read",
+    vsLastQuarter: "vs Last Quarter",
+    reaction: "First Reaction",
+    lockLabel: "Voting Closes",
   },
   dividends: {
     highlights: "Highlights",

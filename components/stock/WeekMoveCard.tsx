@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
-import { ArrowUpRight, Sparkle } from "@phosphor-icons/react";
+import { ArrowUpRight, ChartBar, Sparkle } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
@@ -207,14 +207,30 @@ export function WeekMoveCard({
               <li
                 key={session.date}
                 style={{ left: `${xAt(i + 1, n)}%` } as CSSProperties}
-                title={(session.volumeRatio ?? 0) >= LOUD_VOLUME ? labels.highVolume : undefined}
+                title={
+                  (session.volumeRatio ?? 0) >= LOUD_VOLUME
+                    ? `${labels.volumeTimes.replace("{x}", nf(locale, 1).format(session.volumeRatio!))} · ${labels.highVolume}`
+                    : undefined
+                }
               >
                 <span className={styles.dayName}>{weekday(session.date, locale)}</span>
                 <span className={cn("numeral", styles.dayValue)} data-tone={tone(session.changePct)} data-loudest={i === loudest || undefined}>
                   {formatPercent(session.changePct, locale, 1)}
                 </span>
+                {/* HACİM KISA YAZILIR (10 Kasım 2026). "Hacim 3,0×" 10,5 puntoda
+                    56–58 piksel; günler ise kap genişliğine göre 44–60 piksel
+                    arayla diziliyor. Üç gürültülü seans yan yana gelince
+                    etiketler birbirine yapışıp ("Hacim 3,0×Hacim 1,8×Hacim
+                    4,6×") son etiket kutudan taşıyordu (canlı NVDA, 1440,
+                    ekran görüntüsü). Görünen metin artık simge + "3,0×" (34–35 piksel,
+                    390 ve 1440'ta çakışma ve taşma 0); tam cümle ekran
+                    okuyucuda ve üzerine gelince. */}
                 {(session.volumeRatio ?? 0) >= LOUD_VOLUME && (
-                  <span className={styles.volume}>{labels.volumeTimes.replace("{x}", nf(locale, 1).format(session.volumeRatio!))}</span>
+                  <span className={styles.volume}>
+                    <ChartBar size={10} weight="fill" aria-hidden />
+                    <span aria-hidden>{`${nf(locale, 1).format(session.volumeRatio!)}×`}</span>
+                    <span className="sr-only">{labels.volumeTimes.replace("{x}", nf(locale, 1).format(session.volumeRatio!))}</span>
+                  </span>
                 )}
               </li>
             ))}

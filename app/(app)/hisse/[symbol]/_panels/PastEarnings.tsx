@@ -103,6 +103,19 @@ export async function PastEarnings({
   const hasRevenue =
     shown.filter((row) => row.revenueActual !== null || row.revenueEstimate !== null).length >= 2 ||
     shown.some((row) => row.revenueActual !== null && row.revenueEstimate !== null);
+  /* BEKLENTİ SÜTUNU EN AZ İKİ DEĞERLE (10 Kasım 2026). Yukarıdaki kural iki
+     gelir sütununu BİRLİKTE açıyor; NVDA'da gelir beklentisi dört çeyreğin
+     yalnız birinde vardı ve "Gelir · Beklenti" sütunu üç tire, bir sayı
+     basıyordu (canlı, 1440). Sütun artık kendi sayısına bakıyor: iki
+     değerden azsa açılmıyor, eldeki tek beklenti gerçekleşenin ALTINDA
+     küçük bir satır olarak duruyor ("Beklenti 94,0 Mr $") — karşılaştırma
+     kaybolmuyor, tablo bir sütun daralıyor. */
+  const revenueEstimateColumn = hasRevenue && shown.filter((row) => row.revenueEstimate !== null).length >= 2;
+  /* TİRE SESSİZ (aynı tur). Eksik değer hücresi gövde metninin tonunda bir
+     tire basıyordu ve dolu hücreyle aynı ağırlıkta okunuyordu; artık kıl
+     çizgi tonunda — "veri yok" bir değer değil, bir yokluk. Ekran okuyucu
+     adı aynı. */
+  const quiet = "text-line-strong";
 
   return (
     <div>
@@ -164,9 +177,11 @@ export async function PastEarnings({
                     tutturup geliri ıskalayan şirketi de satar. Beklenen ve
                     gerçekleşen ayrı kolonlarda durur ki karşılaştırılabilsin.
                     Dar ekranda ikisi de gizlenir — tablo kaydırmadan sığar. */}
-                <th className="hidden px-2 py-2.5 text-center font-medium sm:px-3 lg:table-cell">
-                  {t.earnings.revenueShort} · {t.calendar.forecast}
-                </th>
+                {revenueEstimateColumn && (
+                  <th className="hidden px-2 py-2.5 text-center font-medium sm:px-3 lg:table-cell">
+                    {t.earnings.revenueShort} · {t.calendar.forecast}
+                  </th>
+                )}
                 <th className="hidden px-4 py-2.5 text-center font-medium sm:table-cell sm:px-5">
                   {t.earnings.revenueShort} · {t.calendar.actual}
                 </th>
@@ -200,7 +215,7 @@ export async function PastEarnings({
                   {row.reportDate ? (
                     formatEtDateMedium(row.reportDate, locale)
                   ) : (
-                    <EmptyValue label={t.common.noData} />
+                    <EmptyValue label={t.common.noData} className={quiet} />
                   )}
                 </td>
                 <td className="px-2 py-2.5 text-center sm:px-3">
@@ -220,24 +235,26 @@ export async function PastEarnings({
                     ? formatPrice(row.epsEstimate, locale, {
                         currency: paraOpt,
                       })
-                    : <EmptyValue label={t.common.noData} />}
+                    : <EmptyValue label={t.common.noData} className={quiet} />}
                 </td>
                 <td className="numeral px-2 py-2.5 text-center font-semibold text-strong sm:px-3">
                   {row.epsActual !== null
                     ? formatPrice(row.epsActual, locale, { currency: paraOpt })
-                    : <EmptyValue label={t.common.noData} />}
+                    : <EmptyValue label={t.common.noData} className={cn(quiet, "font-normal")} />}
                 </td>
                 {hasRevenue && (
                   <>
-                    <td className="numeral hidden px-2 py-2.5 text-center text-muted sm:px-3 lg:table-cell">
-                      {row.revenueEstimate !== null
-                        ? formatMoneyCompact(
-                            row.revenueEstimate,
-                            locale,
-                            paraKoduOf(paraOpt),
-                          )
-                        : <EmptyValue label={t.common.noData} />}
-                    </td>
+                    {revenueEstimateColumn && (
+                      <td className="numeral hidden px-2 py-2.5 text-center text-muted sm:px-3 lg:table-cell">
+                        {row.revenueEstimate !== null
+                          ? formatMoneyCompact(
+                              row.revenueEstimate,
+                              locale,
+                              paraKoduOf(paraOpt),
+                            )
+                          : <EmptyValue label={t.common.noData} className={quiet} />}
+                      </td>
+                    )}
                     <td className="numeral hidden px-4 py-2.5 text-center text-body sm:table-cell sm:px-5">
                       {row.revenueActual !== null ? (
                         <span className="font-semibold text-strong">
@@ -248,7 +265,12 @@ export async function PastEarnings({
                           )}
                         </span>
                       ) : (
-                        <EmptyValue label={t.common.noData} />
+                        <EmptyValue label={t.common.noData} className={quiet} />
+                      )}
+                      {!revenueEstimateColumn && row.revenueEstimate !== null && (
+                        <span className="mt-0.5 hidden text-tiny text-muted lg:block">
+                          {t.calendar.forecast} {formatMoneyCompact(row.revenueEstimate, locale, paraKoduOf(paraOpt))}
+                        </span>
                       )}
                     </td>
                   </>

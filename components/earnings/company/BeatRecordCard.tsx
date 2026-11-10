@@ -1,4 +1,6 @@
 import { ArrowDownRight, ArrowRight, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import type { CSSProperties } from "react";
+import { PlayOnView } from "@/components/motion/PlayOnView";
 import type { VoteOutcome } from "@/lib/earnings-vote";
 import { cn } from "@/lib/utils";
 import css from "./CompanyEarnings.module.css";
@@ -47,11 +49,14 @@ export function BeatRecordCard({
           <span>/{cells.length}</span>
         </p>
       </div>
+      {/* Tepe şeritleri görününce soldan sırayla çizilir (10 Kasım);
+          taban durum bitmiş karne — `PlayOnView`. */}
+      <PlayOnView className={css.karnePlay}>
       <ol className={css.karneQuarters}>
-        {cells.map((cell) => {
+        {cells.map((cell, index) => {
           const Icon = ICON[cell.outcome];
           return (
-            <li key={cell.key} className={css.karneQuarter} data-mark={cell.outcome}>
+            <li key={cell.key} className={css.karneQuarter} data-mark={cell.outcome} style={{ "--i": index } as CSSProperties}>
               <span className={css.qPeriod}>{cell.period}</span>
               <span className={css.qOutcome}>
                 <Icon aria-hidden weight="bold" size={13} />
@@ -65,6 +70,7 @@ export function BeatRecordCard({
           );
         })}
       </ol>
+      </PlayOnView>
       <p className={css.karneNote}>{note}</p>
     </section>
   );

@@ -15,6 +15,7 @@ import {
   plural,
 } from "@/lib/utils";
 import styles from "@/components/calendar/Dividends.module.css";
+import { rateDigits } from "./rate-digits";
 
 /**
  * Hisse sayfasının temettü paneli — sunucu bileşeni.
@@ -34,9 +35,7 @@ import styles from "@/components/calendar/Dividends.module.css";
  */
 
 const RECENT_ROWS = 4;
-/** Tutar bu değerin altındaysa dört hane: 0,0325 $ iki haneyle 0,03 olurdu. */
-const SMALL_RATE = 0.1;
-const SMALL_RATE_DIGITS = 4;
+/* Küçük tutarın hane sayısı: components/stock/rate-digits.ts (10 Kasım 2026). */
 
 export async function DividendPanel({
   symbol,
@@ -52,7 +51,7 @@ export async function DividendPanel({
   const x = t.marketExtras;
   const result = await getSymbolDividends(symbol);
   const money = (value: number) =>
-    formatPrice(value, locale, { currency: true, digits: value < SMALL_RATE ? SMALL_RATE_DIGITS : 2 });
+    formatPrice(value, locale, { currency: true, digits: rateDigits(value) });
 
   if (!result.ok) {
     return (

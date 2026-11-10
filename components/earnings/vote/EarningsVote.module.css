@@ -28,23 +28,45 @@
    Nötr zemin, ince kenar; yön yalnız dairede. Seçili: `--primary` kenar,
    `--primary-wash` zemin, halka dolu + onay. Hedef 64 px (≥ 44). */
 .panel .choices { max-width:580px; }
+/* OY PUSULASI (10 Kasım, görsel kalite turu). Panel dar sütundayken
+   (şirket bilanço sayfasında karnenin yanı, ~500 piksel) iki kart yan yana
+   alt satırı ikiye kırıyordu; kartlar alt alta, tam genişlik. Ölçü kabın
+   kendisinden: aynı bileşen geniş tek sütunda yine yan yana (580 tavan). */
+.panel { container-type:inline-size; }
+@container (max-width:560px) { .panel .choices { grid-template-columns:minmax(0,1fr); max-width:none; } }
 .option {
   display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px;
-  min-height:64px; padding:10px 14px 10px 12px; border-radius:var(--radius-lg);
+  min-height:68px; padding:12px 16px 12px 14px; border-radius:var(--radius-lg);
   border:1px solid var(--line); background:var(--surface-sunken); text-align:left; color:var(--text-strong);
-  transition:background-color .2s var(--ease-brand), border-color .2s var(--ease-brand);
+  transition:background-color .2s var(--ease-brand), border-color .2s var(--ease-brand), scale .16s var(--ease-brand);
 }
+/* Basışta hafif çökme (sitenin basma geri bildirimi; kaldırma yok). */
+.option:active { scale:.985; }
 .option:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 @media(hover:hover) and (pointer:fine) { .option:hover { border-color:var(--primary-faint); background:var(--surface); } }
 .option[aria-pressed="true"] { border-color:var(--primary); background:var(--primary-wash); }
 .option[aria-disabled="true"] { cursor:progress; }
-.optionIcon { display:grid; place-items:center; width:36px; height:36px; border-radius:999px; }
+.optionIcon { display:grid; place-items:center; width:40px; height:40px; border-radius:999px; transition:background-color .2s var(--ease-brand); }
+/* Üstüne gelince yön dairesi koyulaşır, seçim halkası mavileşir: kartın
+   "basılabilir" olduğunu kenardan önce bunlar söyler. */
+@media(hover:hover) and (pointer:fine) {
+  .option[data-choice="beat"]:hover .optionIcon { background:color-mix(in srgb, var(--up) 24%, transparent); }
+  .option[data-choice="miss"]:hover .optionIcon { background:color-mix(in srgb, var(--down) 24%, transparent); }
+  .option:hover .optionCheck { border-color:var(--primary); }
+}
 .option[data-choice="beat"] .optionIcon { background:color-mix(in srgb, var(--up) 14%, transparent); color:var(--up); }
 .option[data-choice="miss"] .optionIcon { background:color-mix(in srgb, var(--down) 14%, transparent); color:var(--down); }
 .optionText { display:flex; flex-direction:column; gap:2px; min-width:0; }
-.optionLabel { font-size:15px; font-weight:700; line-height:1.2; color:var(--text-strong); }
+.optionLabel { font-size:16px; font-weight:700; line-height:1.2; letter-spacing:-.01em; color:var(--text-strong); }
 .optionHint { font-size:12px; line-height:1.35; color:var(--text-muted); }
-.optionCheck { display:grid; place-items:center; width:20px; height:20px; border-radius:999px; border:1.5px solid var(--line-strong); color:transparent; }
+.optionCheck { display:grid; place-items:center; width:22px; height:22px; border-radius:999px; border:1.5px solid var(--line-strong); color:transparent; transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand); }
+/* ONAY İŞARETİ YAYLANIR — yaylı eğrinin izinli olduğu yer: tek küçük öğenin
+   geri bildirimi (`.claude/rules/arayuz.md` → Eğri). Kart ve halka
+   `--ease-brand`de kalır. */
+@media(prefers-reduced-motion:no-preference) {
+  .option[aria-pressed="true"] .optionCheck > svg { animation:vote-check .34s var(--ease-spring) both; }
+}
+@keyframes vote-check { from { opacity:0; scale:.3; } }
 /* Telefonda alt alta: yan yana iki kart 165 pikselde alt satırı üç satıra
    kırıyor ve halkanın üstüne biniyordu (390, ölçüldü). */
 @media(max-width:639px) { .panel .choices { grid-template-columns:minmax(0,1fr); } }

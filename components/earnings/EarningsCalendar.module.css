@@ -34,3 +34,91 @@
    satır. Hero kartında `flex-basis:100%` onu geniş ekranda kimlik ve ölçü
    sütununun altına indiriyor; mini kartta alt ızgaranın beşinci satırı. */
 .voteRow { flex-basis:100%; min-width:0; border-top:1px solid var(--line); padding-top:10px; }
+
+/* ==========================================================================
+   GÖRSEL KALİTE TURU (10 Kasım 2026). Gerekçeler `EarningsCalendar.tsx`te,
+   değişen işaretlemenin yanında; burada düzen ve ölçüm.
+   ========================================================================== */
+
+/* GÜN SAYACI: sayı koyu, birim soluk — "265 Şirket" tek gri künyeydi ve
+   gün başlığının sağında okunmuyordu. */
+.dayCount b { font-weight:700; color:var(--text-strong); }
+/* ROZET VE SAYAÇ BAŞLIĞIN TABAN ÇİZGİSİNDE. Gün başlığı degrade display
+   başlık: 0,12em yukarı açılıp `translate` ile geri kalkıyor ve yanındaki
+   künyeler 3 piksel aşağıda kalıyordu (ölçüldü, 1440: başlık kutusu
+   1139–1181, `translate: 0 -3px`; rozet 1157–1179). Kural
+   `.claude/rules/arayuz.md` → "Display başlığın yanındaki metin 0,12em
+   kalkar". Punto 25 (telefonda 21). */
+.dateHeader h2 ~ span { translate:0 calc(25px * -.12); }
+@media(max-width:639px) { .dateHeader h2 ~ span { translate:0 calc(21px * -.12); } }
+
+/* GÖRÜŞ ŞERİDİ — analizi yayımlanmış bilançonun kartında, tepede 3 piksel
+   (sitenin kart dili; `RecentAnalysesStrip.module.css` → `.chip::before`
+   ile aynı ölçü). Rozetsiz kartta şerit yok: şerit durum söyler, süs değil. */
+.heroCard[data-verdict]::before,.miniCard[data-verdict]::before { content:""; position:absolute; top:-1px; inset-inline:18px; height:3px; border-radius:0 0 3px 3px; background:var(--verdict-hold); }
+.heroCard[data-verdict="buy"]::before,.miniCard[data-verdict="buy"]::before { background:var(--verdict-buy); }
+.heroCard[data-verdict="sell"]::before,.miniCard[data-verdict="sell"]::before { background:var(--verdict-sell); }
+
+/* BAŞ KART: KİMLİK · SEANS ŞERİDİ · ÖLÇÜLER. Telefonda alt alta; 640'tan
+   itibaren kimlik ile ölçüler yan yana, şerit altta tam genişlik; 1180'den
+   itibaren üçü tek satırda ve şerit ortadaki boşluğu DOLDURUR (kimlik ve
+   ölçüler içerikleri kadar, şerit `1fr`). Eşik 1180 (ufkun eşiği): 1024'te
+   üç bölge sığmıyordu — şerit 120 piksele iniyor, "Takvime Ekle" kimlik
+   sütunundan 10 piksel taşıyordu (ölçüldü).
+   Ölçüm (TR, açık/koyu, önizleme): kart 1440'ta 1320×150 → 1320×121, ölü
+   boşluk ~700 → 0 (kimlik sağı 500, şerit 565–963, ölçüler 1028'den);
+   1280'de şerit 545–823; 1024 ve 768'de iki satır (kart 141 / 218);
+   390'da 354×255. İki baş kartlı günde şeritler aynı x'te (565–963 ×2).
+   Üç sayının taban çizgisi aynı hatta (satır kutusu dipleri arasındaki 3
+   piksel, 26 ve 17 puntonun iniş farkı). Yatay taşma ve kutudan taşan 0. */
+.heroCard { display:grid; grid-template-columns:minmax(0,1fr); gap:16px; }
+.heroLane { min-width:0; }
+.heroFigures { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); grid-template-rows:auto auto; gap:3px 16px; margin:0; min-width:0; padding-top:14px; border-top:1px solid var(--line-soft); }
+.heroFigures > div { display:grid; grid-template-rows:subgrid; grid-row:span 2; min-width:0; }
+.heroFigures dt { font-size:12px; font-weight:600; line-height:1.3; color:var(--text-muted); }
+.heroFigures dd { align-self:last baseline; margin:0; font-size:17px; font-weight:700; letter-spacing:-.02em; line-height:1.1; color:var(--text-strong); white-space:nowrap; }
+.heroFigures [data-lead] dd { font-size:22px; font-weight:800; letter-spacing:-.03em; }
+.heroCard > .voteRow { grid-column:1 / -1; }
+@media(min-width:640px) {
+  .heroCard { grid-template-columns:minmax(0,1fr) max-content; gap:18px 28px; align-items:center; }
+  .heroLane { grid-column:1 / -1; grid-row:2; }
+  .heroFigures { grid-template-columns:repeat(3,max-content); column-gap:26px; padding-top:0; border-top:0; }
+  .heroFigures dt { white-space:nowrap; }
+  .heroFigures [data-lead] dd { font-size:26px; }
+}
+/* ≥1024: günün baş kartları AYNI SÜTUNLARI paylaşır (alt ızgara). Sütunlar
+   kart başına içerikten hesaplanınca iki kartın şeridi farklı yerde başlayıp
+   bitiyordu (16 Kasım örneği: WMT şeridi 565–972, HD 565–963). Liste üç
+   sütunu en geniş içeriğe göre bir kez kurar, kartlar ona oturur. */
+.heroList:empty { display:none; }
+@media(min-width:1180px) {
+  .heroList { display:grid; grid-template-columns:minmax(0,max-content) minmax(15rem,1fr) max-content; }
+  .heroCard { grid-column:1 / -1; grid-template-columns:subgrid; column-gap:0; }
+  .heroLane { grid-column:auto; grid-row:auto; margin-inline:20px; padding-inline:20px; border-inline:1px solid var(--line-soft); }
+  .heroFigures { column-gap:26px; }
+}
+@media(min-width:1400px) {
+  .heroLane { margin-inline:32px; padding-inline:32px; }
+  .heroFigures { column-gap:30px; }
+}
+
+/* MİNİ KART: kimlik satırı (logo + sembol/ad) ve zaman satırı (çip +
+   takvim düğmesi). Çipin iki yazımı — gerekçe `EarningsCalendar.tsx` →
+   "KISALTMA YALNIZ DAR KARTTA". Eşik 166 piksel: tam çip 128 (TR "Kapanış
+   Sonrası", en uzunu) + düğme 32 + 6 pay. Tam yazım dar kartta görünmez
+   ama ekran okuyucuda kalır (kırpma, `display:none` değil). */
+.miniIdentity { flex-wrap:nowrap; gap:10px; min-width:0; }
+.miniWhen { container-type:inline-size; display:flex; align-items:center; gap:6px; min-width:0; min-height:24px; }
+.chipFull { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+@container (min-width:166px) {
+  .chipFull { position:static; width:auto; height:auto; overflow:visible; clip-path:none; }
+  .chipShort { display:none; }
+}
+/* En dar kartta (1024'te altı sütun: kart 154, iç 118) kısa çip + düğme de
+   sığmıyor, düğme karttan 8–11 piksel taşıyordu (ölçüldü). Çipin ikonu
+   düşer (−18 piksel): pencereyi sözcük zaten söylüyor. */
+@container (max-width:139px) { .miniWhen > span:first-child > svg { display:none; } }
+/* Piyasa değeri künyesi ikincil satırın DEVAMI: aynı punto, aynı satır
+   aralığı (8 piksellik ayrı boşlukla üçüncü bir blok gibi duruyordu). */
+.capNote { margin-top:2px; font-size:12px; line-height:1.6; }
+.miniCard dl[data-empty] dd { font-weight:500; }

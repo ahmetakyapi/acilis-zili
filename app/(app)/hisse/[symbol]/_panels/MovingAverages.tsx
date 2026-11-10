@@ -7,6 +7,7 @@ import { getChartBars, getQuote } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
 import { cn, directionOf, directionText, formatPercent, formatPrice, NO_VALUE, hareketliOrtalama } from "@/lib/utils";
 import { week52Band } from "./shared";
+import { AveragesChart } from "./AveragesChart";
 
 /**
  * Hareketli ortalamalar — 50, 100 ve 200 günlük.
@@ -111,6 +112,11 @@ export async function MovingAverages({
        nefes alacak kadar. Ölçüldü: kart 245 → 190 piksel. */
     <div className={styles.averagesBody}>
       <PriceRail marks={marks} className={styles.averagesRail} />
+      {/* BİR YILLIK YOL (10 Kasım 2026): cetvel bugünü, çizim oraya nasıl
+          gelindiğini gösteriyor ve kolonun artan yerini alıyor (gerekçe ve
+          ölçüm AveragesChart.tsx). Fon dalında kart tek başına; orada da
+          aynı çizim, doğal tabanında. */}
+      <AveragesChart bars={barsResult.data} price={price} locale={locale} t={t} />
       {/* Çizim `aria-hidden`; her sayısı bu listede metin olarak da var. */}
       <dl className={styles.averageRows}>
         <div className={styles.averageRow}>

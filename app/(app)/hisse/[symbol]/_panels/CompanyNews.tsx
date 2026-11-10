@@ -136,11 +136,17 @@ export async function CompanyNews({
      farklı görünüyordu. Jenerik görseller (kaynak logosu) elenir — aynı
      logonun sekiz satırda tekrar etmesi listeyi taranabilir yapmıyor,
      bozuyor. */
-  // Görseli olmayan haber şirketin logosunu alır — bu listede hepsi aynı
-  // şirketin haberi, o yüzden tek sembol yetiyor (`meta` yukarıda).
-  // Sayım yukarıda, tablo okumasıyla aynı turda başladı.
+  /* GÖRSELİ OLMAYAN HABER LOGO ALMAZ (10 Kasım 2026). Görseli olmayan (ya da
+     görseli jenerik sayılan) haber şirketin logosunu küçük resim olarak
+     alıyordu; bu listede her haber aynı şirketin, yani canlı NVDA'da sekiz
+     satırın sekizinde de aynı yeşil karo vardı. Yukarıdaki kural kaynak
+     logosu için yazılmış ("aynı logonun sekiz satırda tekrar etmesi listeyi
+     taranabilir yapmıyor, bozuyor") ve şirket logosu için de aynen geçerli:
+     kimlik sayfanın başında zaten var, satırda bilgi taşımıyor. Görselsiz
+     satır artık tipografik: başlık satırın tamamını kullanıyor, künyede
+     kaynak koyu, saat sönük. Gerçek haber görseli olan satır eskisi gibi.
+     Sayım yukarıda, tablo okumasıyla aynı turda başladı. */
   const genericImages = await genericImagesP;
-  const logoUrl = meta[symbol]?.logoUrl ?? null;
 
   return (
     <ul className={styles.newsGrid}>
@@ -148,14 +154,8 @@ export async function CompanyNews({
         const newsId = idByProvider.get(item.providerId);
         const image =
           item.imageUrl && !genericImages.has(item.imageUrl) ? item.imageUrl : null;
-        /* Bu liste şirketin kendi beslemesinden geliyor ama besleme ara ara
-           genel piyasa yazıları da döndürüyor; logo yalnızca başlıkta şirket
-           geçiyorsa konur. */
-        const mentionLogo = headlineMentions(item.headline, symbol, companyName)
-          ? logoUrl
-          : null;
         const inner = (
-          <span className={styles.newsInner}>
+          <span className={styles.newsInner} data-plain={image ? undefined : ""}>
             <span className="min-w-0 flex-1">
               {/* ÇEVİRİSİ OLMAYAN BAŞLIK DİLİNİ SÖYLER. Türkçe arayüzde
                   çeviri yoksa sağlayıcının İngilizce başlığına düşülüyor ama
@@ -175,17 +175,15 @@ export async function CompanyNews({
                   item.headline}
               </span>
               <span className="mt-1 flex items-center gap-1.5 text-tiny text-muted">
-                {item.source && <span>{item.source}</span>}
-                <span aria-hidden>·</span>
+                {item.source && <span className="font-semibold text-body">{item.source}</span>}
+                {item.source && <span aria-hidden>·</span>}
                 <span>{titleCaseLabel(timeAgo(item.publishedAt, locale), locale)}</span>
               </span>
             </span>
             {/* GÖRSEL DE LOGO DA YOKSA KUTU DA YOK. Boş gri bir kare
                 başlığın yanında 84 piksel tutuyordu ve bir şey yüklenmeyi
                 bekliyormuş gibi duruyordu; başlık artık o yeri kullanıyor. */}
-            {(image || mentionLogo) && (
-              <NewsImage src={image} logoUrl={mentionLogo} sizeClass={styles.newsImage} />
-            )}
+            {image && <NewsImage src={image} logoUrl={null} sizeClass={styles.newsImage} />}
           </span>
         );
         // Kaynak adresi sağlayıcıdan; şeması süzülmezse href'e konmaz.

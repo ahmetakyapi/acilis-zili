@@ -32,6 +32,15 @@ export const stockVisualsTr = {
   weightNote:
     "Şerit hissenin yatırımcının portföyündeki payı; ölçek listedeki en büyük pay ({max}). Pay, son 13F bildirimindeki uzun pozisyonların toplam değerine oranla.",
 
+  /* ---- Hareketli Ortalamalar: bir yıllık yol (10 Kasım 2026) ---- */
+  maPrice: "Fiyat",
+
+  /* ---- Bölüm başlıklarının veri satırı (10 Kasım 2026) ---- */
+  dekValuation: "Al Yönünde {share} · {n} Analist",
+  dekEarnings: "Sonraki Rapor {date}",
+  dekHolders: "{n} Ünlü Yatırımcının Portföyünde",
+  dekStories: "{n} Mercek Yazısı",
+
   /** Pozisyonun hisse adedi: "228 Mn Adet". */
   sharesUnit: "{n} Adet",
   /* ---- Aynı Sektörden Şirketler: piyasa değeri ---- */
@@ -66,6 +75,13 @@ export const stockVisualsEn: typeof stockVisualsTr = {
 
   weightNote:
     "The bar is the stock's share of the investor's portfolio; the scale is the largest share in the list ({max}). Share is relative to the total value of long positions in the latest 13F filing.",
+
+  maPrice: "Price",
+
+  dekValuation: "Buy Side {share} · {n} Analysts",
+  dekEarnings: "Next Report {date}",
+  dekHolders: "Held by {n} Famous Investors",
+  dekStories: "{n} Lens Stories",
 
   sharesUnit: "{n} Shares",
   capLogNote:

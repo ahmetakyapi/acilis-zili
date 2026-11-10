@@ -49,6 +49,30 @@
 @media (max-width: 899px) { .loading { min-height: 620px; } .loading[data-kind="earnings"] { min-height: 520px; } }
 @media (max-width: 639px) { .loading { min-height: 720px; } .loading[data-kind="earnings"] { min-height: 600px; } }
 .filmLines { display: flex; flex-direction: column; gap: 9px; margin-top: 10px; }
+/* BEKLEME SİLÜETİ (10 Kasım 2026; gerekçe StockInsightCard.tsx). Notun
+   bölümleri aynı sırada ve aynı kırılımlarda: figür kutusu (≥900 iki kolon),
+   özet, maddeler (≥900 üç kolon). Ölçüm (önizleme, bekleme hâli; kutunun
+   dibinde kalan boş zemin): 1440'ta ~285 → 20, 390'da ~685 → 102 piksel.
+   Ayrılan toplam yükseklik aynı (`.loading` min-height). Parıltı sitenin
+   ortak iskeleti (`.skeleton`); hareketi azaltana durağan. */
+.ghost { display: grid; gap: 16px; margin-top: 6px; }
+.ghostFigure { display: grid; gap: 14px 28px; padding: 14px 16px 16px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
+.ghostTiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(110px, 1fr)); gap: 8px; align-content: start; }
+.ghostTile { height: 62px; border-radius: 10px; }
+.ghostLanes { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: 8px; height: 76px; }
+.ghostLane { position: relative; display: flex; align-items: flex-end; justify-content: center; }
+.ghostLane::after { content: ""; position: absolute; inset-inline: calc(50% - 8px); bottom: 0; height: 1px; background: var(--line-strong); }
+.ghostLane > i { display: block; width: 5px; border-radius: 3px; }
+.ghostText { display: grid; gap: 9px; }
+.ghostPoints { display: grid; gap: 14px; }
+.ghostPoint { display: grid; grid-template-columns: 22px minmax(0, 1fr); gap: 10px; }
+.ghostPoint > div { display: grid; gap: 8px; }
+.ghostIndex { width: 22px; height: 22px; border-radius: 7px; }
+.ghostFoot { padding-top: 12px; border-top: 1px solid var(--line-soft); }
+@media (min-width: 900px) {
+  .ghostFigure { grid-template-columns: minmax(0, 1fr) minmax(0, 1.1fr); align-items: center; }
+  .ghostPoints { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 16px; }
+}
 .loadingText { margin: 0 0 2px; font-size: var(--text-small); color: var(--text-muted); }
 .line { height: 12px; border-radius: 6px; }
 

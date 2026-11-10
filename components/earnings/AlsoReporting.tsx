@@ -39,14 +39,73 @@ export function AlsoReporting({
   label,
   groups,
   total,
+  inline = false,
 }: {
   label: string;
   groups: ReportingGroup[];
   total: number;
+  /**
+   * SEYREK GÜN (10 Kasım, görsel kalite turu): günün görünür katmanında
+   * hiç kart yoksa bu liste günün TAMAMI; kapalı bir katlama bölümü boş
+   * gösteriyordu. `inline` iken düğme ve panel yok, çipler pencere adıyla
+   * tek satırda açık basılır. Çağıran sembol sayısını sınırlıyor
+   * (`SPARSE_INLINE_MAX`), yani yukarıdaki HTML yükü gerekçesi bozulmuyor.
+   */
+  inline?: boolean;
 }) {
   const [open, setOpen] = useState(false);
 
   if (total === 0) return null;
+
+  const body = (
+    <div className={cn("flex", inline ? "flex-wrap items-center gap-x-5 gap-y-2.5" : "flex-col gap-3.5")}>
+      {groups
+        .filter((group) => group.symbols.length > 0)
+        .map((group) => (
+          <div key={group.label} className={cn("flex gap-2", inline ? "flex-wrap items-center" : "flex-col")}>
+            <p className="flex items-center gap-1.5 text-tiny font-semibold text-muted">
+              <span
+                aria-hidden
+                className={cn(
+                  "size-1.5 rounded-full",
+                  group.tone === "pre"
+                    ? "bg-up"
+                    : group.tone === "post"
+                      ? "bg-primary"
+                      : "bg-flat",
+                )}
+              />
+              {group.label}
+              <span className="numeral">({group.symbols.length})</span>
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {group.symbols.map((item) => (
+                <Link
+                  key={item.symbol}
+                  /* Takvimin bütün girişleri şirketin bilanço sayfasına
+                     (24 Ekim, gerekçe EarningsCalendar hero kartı). */
+                  href={earningsHref(item.symbol)}
+                  prefetch={false}
+                  className={cn(
+                    // min-h-8: sembol çipleri 26px'lik dokunma hedefi
+                    // bırakıyordu; sık dizilmiş bir ızgarada parmakla
+                    // komşusuna basmak kolaydı.
+                    "tap-44 inline-flex min-h-8 items-center rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold transition-colors hover:border-line-strong hover:bg-primary-tint hover:text-primary",
+                    item.watched
+                      ? "border-primary-faint bg-primary-wash text-primary-ink"
+                      : "text-body",
+                  )}
+                >
+                  {item.symbol}
+                </Link>
+              ))}
+            </div>
+          </div>
+        ))}
+    </div>
+  );
+
+  if (inline) return <div className="py-1">{body}</div>;
 
   return (
     <div className="mt-2.5">
@@ -70,51 +129,7 @@ export function AlsoReporting({
           içerik evin hazır giriş sınıfıyla geliyor (reduce korumalı). */}
       {open && (
         <Panel className="step-in mt-1 px-4 py-3.5 sm:px-5">
-          <div className="flex flex-col gap-3.5">
-            {groups
-              .filter((group) => group.symbols.length > 0)
-              .map((group) => (
-                <div key={group.label} className="flex flex-col gap-2">
-                  <p className="flex items-center gap-1.5 text-tiny font-semibold text-muted">
-                    <span
-                      aria-hidden
-                      className={cn(
-                        "size-1.5 rounded-full",
-                        group.tone === "pre"
-                          ? "bg-up"
-                          : group.tone === "post"
-                            ? "bg-primary"
-                            : "bg-flat",
-                      )}
-                    />
-                    {group.label}
-                    <span className="numeral">({group.symbols.length})</span>
-                  </p>
-                  <div className="flex flex-wrap gap-1.5">
-                    {group.symbols.map((item) => (
-                      <Link
-                        key={item.symbol}
-                        /* Takvimin bütün girişleri şirketin bilanço sayfasına
-                           (24 Ekim, gerekçe EarningsCalendar hero kartı). */
-                        href={earningsHref(item.symbol)}
-                        prefetch={false}
-                        className={cn(
-                          // min-h-8: sembol çipleri 26px'lik dokunma hedefi
-                          // bırakıyordu; sık dizilmiş bir ızgarada parmakla
-                          // komşusuna basmak kolaydı.
-                          "tap-44 inline-flex min-h-8 items-center rounded-lg border border-line bg-surface px-2 py-1 text-xs font-semibold transition-colors hover:border-line-strong hover:bg-primary-tint hover:text-primary",
-                          item.watched
-                            ? "border-primary-faint bg-primary-wash text-primary-ink"
-                            : "text-body",
-                        )}
-                      >
-                        {item.symbol}
-                      </Link>
-                    ))}
-                  </div>
-                </div>
-              ))}
-          </div>
+          {body}
         </Panel>
       )}
     </div>

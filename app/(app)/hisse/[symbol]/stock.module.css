@@ -162,6 +162,12 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 .newsInner > span:first-child { display:flex; flex-direction:column; justify-content:space-between; min-height:64px; }
 .newsInner > span:first-child > span:first-child { font-size:15px; line-height:1.45; letter-spacing:-.025em; font-weight:600; -webkit-line-clamp:3; }
 .newsImage { height:64px; width:64px; flex-shrink:0; border-radius:12px; }
+/* GÖRSELSİZ SATIR (10 Kasım 2026, gerekçe CompanyNews.tsx): 64 piksellik alt
+   sınır görselin boyu içindi; görsel yokken başlık ile künye arasında boş
+   bir bant bırakıyordu. Satır içeriği kadar; ızgara aynı satırdaki komşuyla
+   boyu yine eşitliyor. Ölçüm (önizleme verisi, sekiz haber, biri görselli):
+   tekrar eden logo karosu 8 → 0; yatay taşma 390 ve 1440'ta 0. */
+.newsInner[data-plain] > span:first-child { min-height:0; gap:8px; }
 @media (min-width:768px) {
   .fundamentalsGrid { grid-template-columns:minmax(0,1.12fr) minmax(0,1fr); }
   .analystPanel { grid-column:1 / -1; }
@@ -280,6 +286,26 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    açılıyor (SectionNav), ayrımı o yapıyor. */
 .chapterNav { border-color:var(--line); }
 .chapterNav + .chapter { padding-top:10px; }
+/* GEZGİN BİR RAY, DÖRT EŞİT HÜCRE DEĞİL (10 Kasım 2026). Akıştaki çubuk
+   1320 piksellik tam genişlikte dört eşit hücreydi (hücre başına 325; etiket
+   60–80 piksel): soluk 12 puntoluk dört kelime, aralarında 250'şer piksel
+   boşluk — bir tablo başlığı gibi okunuyordu, gezinme gibi değil. Artık
+   içeriği kadar bir ray (1440'ta 1320 → 422 piksel): zemin çukur
+   (`--surface-sunken` + `--shadow-well`), seçili bölüm rayın içinde yükselen
+   hap (`--shadow-raised`; gölge merdiveninin "rayın içindeki hap" basamağı),
+   etiket 13 punto. Seçim imi yerinde kalıyor (SectionNav'ın `layoutId`
+   geçişi); yalnız yüzeyi değişti. Yapışınca bileşenin kendi bandı devralıyor
+   (`[data-stuck]` zemini ve gölgeyi sıfırlıyor) ve kimlik solunda açılıyor.
+   Telefonda ray tam genişlikte kalır: dört sekme 390'da yatay kayıyor ve
+   kenar solması genişliğe bağlı. Dokunma yüksekliği 42 (değişmedi). */
+.chapterNav { padding:4px; border-color:var(--line-soft); border-radius:14px; background:var(--surface-sunken); box-shadow:var(--shadow-well); }
+.chapterNav a { color:var(--text-muted); font-size:13px; font-weight:600; letter-spacing:-.005em; }
+.chapterNav a[aria-current="location"] { color:var(--text-strong); }
+.chapterNav a > span[aria-hidden="true"] { border-color:var(--line); background:var(--premium-surface,var(--surface-solid)); box-shadow:var(--shadow-raised); }
+@media(min-width:768px) {
+ .chapterNav:not([data-stuck]) { width:fit-content; max-width:100%; }
+ .chapterNav a { flex:0 0 auto; min-height:38px; padding:.5rem 1.15rem; }
+}
 /* BAŞLIK İKİ SÜTUN 768'DEN İTİBAREN (24 Eylül). Tablette kimlik ve fiyat
    alt alta diziliyor ve ~95 piksel tutuyordu; iki sütun 768'de de sığıyor
    (ölçüldü) ve o yer çizime gidiyor. PROFİL KOLONU TABLETTE İKİ SÜTUN:
@@ -349,8 +375,21 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    üstüne gelince kenarlık rengini ve gölgesini değiştiriyordu ama hiçbiri
    bir yere gitmiyor: tıklanabilir gibi görünen, tıklanınca hiçbir şey
    olmayan bir yüzey. Hover dili tek: `.panel-hover`, yalnızca bağlantıda. */
-.fundamentalsGrid > section { min-width:0; border-radius:20px; }
-.fundamentalsGrid > section > div:first-child { padding-block:12px 9px; }
+.fundamentalsCol > section { min-width:0; border-radius:20px; }
+.fundamentalsCol > section > div:first-child { padding-block:12px 9px; }
+/* İKİ KOLON (10 Kasım 2026) — gerekçe ve ölçüm page.tsx'te ızgaranın
+   başında. Kolonun aralığı sabit; boy farkını kolonun İLK kartı alıyor
+   (ölçü ızgarasının satırları, ortalamaların çizimi), ikinci kart kendi
+   boyunda. */
+.fundamentalsCol { display:flex; min-width:0; flex-direction:column; gap:16px; }
+.fundamentalsCol > :is(.metricsPanel, .averagesPanel) { flex:1 0 auto; }
+/* İKİNCİ KARTLARIN ORTAK TABANI. Hedef fiyatı olmayan hissede (çoğunluk)
+   Analist Görüşleri 239, Katılım Taraması 235 piksel ölçüldü (768–1440):
+   dört piksellik fark iki kolonda ikinci kartların tepesini dört piksel
+   kaydırıyor ve hizalanmamış gibi okunuyordu. Ortak taban ikisini aynı
+   boya getiriyor (tepeler aynı hatta); kartlardan biri gerçekten uzunsa
+   (hedef fiyat satırı ~80 piksel) kolonlar belirgin biçimde ayrışır. */
+@media(min-width:768px) { .fundamentalsCol > :last-child { min-height:240px; } }
 .cardIcon { color:var(--primary); opacity:.8; }
 .metricsPanel { background:var(--premium-surface,var(--surface-solid)); }
 .metricsBody { flex:initial; padding:0 18px 16px; }
@@ -359,7 +398,13 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    ve 52 hafta bloğu bu karttan çıkınca (24 Eylül) her hücre ~75 piksel
    uzadı: değer tepede, altında boş bir şerit kalıyordu. Ortalanınca
    aralık ölçünün iki yanına eşit dağılıyor. */
-.metricsList > div { padding:9px 10px 9px 0; gap:4px; justify-content:center; }
+/* DEĞERLER AYNI HATTA (10 Kasım 2026): ortalama geri alındı. Sektör kulvarı
+   (25 Ekim) yalnız üç ölçüde var; ortalanan hücrede kulvarlı ölçünün sayısı
+   yukarı, kulvarsızınki aşağı düşüyordu — NVDA 1440'ta aynı satırda F/K
+   hücre tepesinden 31, İleri F/K ve PD/DD 53 piksel (390'da 31/53 ve
+   31/39). Hücre artık tepeden diziliyor: etiket, sayı, varsa kulvar; her
+   satırda sayı 31 pikselde. Artan yer hücrenin dibinde, kulvarın hizasında. */
+.metricsList > div { padding:9px 10px 9px 0; gap:4px; justify-content:flex-start; }
 .metricsList > div:nth-child(even) { padding-left:14px; }
 .metricsList dt { font-size:12px; line-height:1.4; }
 .fundamentalsGrid .metricsList dd { font-size:22px; letter-spacing:-.035em; }
@@ -456,7 +501,9 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
  .metricsList:is([data-count="9"], [data-count="6"]) > div:not(:nth-child(3n+1)) { border-left:1px solid var(--line-soft); }
  .metricsList:is([data-count="9"], [data-count="6"]) > div:nth-child(3n+1) { padding-left:0; }
  .metricsList:not([data-count="9"], [data-count="6"]) > div:last-child:nth-child(4n+1) { grid-column:1 / -1; }
- .metricsSkeleton { height:207px; }
+ /* 207 → 330 (10 Kasım 2026): gövde 1280–1440'ta 389 (sektör kulvarlı) ile
+    ~300 (kulvarsız) arası ölçüldü; 207 her iki hâlde de kısa kalıyordu. */
+ .metricsSkeleton { height:330px; }
  .analystOverview { grid-template-columns:122px minmax(0,1fr); gap:24px; }
  .fundamentalsGrid .consensus { width:122px; }
 }
@@ -481,12 +528,17 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 
 /* Ortalamalar gövdesi cetvelle birlikte yeniden ölçüldü (24 Eylül): 1440'ta
    268, 1024 ve 390'da 286, 320'de 304 piksel (14'ü alt pay). */
-.averagesSkeleton { height:272px; margin:0 18px 14px; }
+/* BİR YILLIK ÇİZİMLE YENİDEN ÖLÇÜLDÜ (10 Kasım 2026; AveragesChart): gövde
+   320 ve 390'da 444, 768'de 493, 1024'te 477, 1280 ve 1440'ta 393 piksel
+   (14'ü alt pay; ≥768'de çizim kolonun kalanını aldığı için taban alındı).
+   Eski ölçüler 272 / 254 / 290 idi; yedek o boyda kalsaydı çizim gelince
+   kart 125–160 piksel uzardı. */
+.averagesSkeleton { height:430px; margin:0 18px 14px; }
 .analystSkeleton { height:260px; width:100%; border-radius:20px; }
-@media(min-width:1400px) { .averagesSkeleton { height:254px; } }
+@media(min-width:768px) { .averagesSkeleton { height:420px; } }
+@media(min-width:1280px) { .averagesSkeleton { height:379px; } }
 @media(max-width:359px) {
  .metricsSkeleton { height:320px; }
- .averagesSkeleton { height:290px; }
  .analystSkeleton { height:253px; }
 }
 
@@ -521,7 +573,8 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 @media(min-width:1100px) {
  .companyOverview .profileColumn > :last-child { flex:1 0 auto; }
 }
-.fundamentalsGrid > section { display:flex; flex-direction:column; }
+.fundamentalsCol > section { display:flex; flex-direction:column; }
+.fundamentalsGrid .averagesBody { display:flex; flex:1; flex-direction:column; }
 .fundamentalsGrid .metricsBody { flex:1; display:flex; flex-direction:column; }
 .fundamentalsGrid .metricsList { flex:1; }
 .fundamentalsGrid .complianceBody { flex:1; display:flex; flex-direction:column; }

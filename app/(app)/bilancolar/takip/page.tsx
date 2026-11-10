@@ -288,6 +288,7 @@ export default async function WatchedEarningsPage(
                 locale={locale}
                 t={t}
                 vote={voteBoard.available ? { board: voteBoard, holidays, now: new Date() } : undefined}
+                holidays={holidays}
               />
             )}
           </section>

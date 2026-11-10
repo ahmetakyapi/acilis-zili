@@ -7,9 +7,26 @@
    satır — kimlik bilgisi, panel değil. 31 Ekim'den beri başlık kartının
    son satırı (`PageHeader strip=`); kartın dışında, sayfa zemininde
    "dışta kalmış" görünüyordu. Sembol mono künye (CLAUDE.md "Tek font"). */
-.identity { display:flex; align-items:center; gap:14px; min-width:0; }
+.identity { display:flex; flex-wrap:wrap; align-items:center; gap:14px 0; min-width:0; }
+.identityWho { display:flex; align-items:center; gap:14px; min-width:0; padding-right:24px; }
 .identitySymbol { font-family:var(--font-mono); font-size:15px; font-weight:700; letter-spacing:.02em; color:var(--text-strong); }
 .stockLink { margin-left:auto; flex-shrink:0; gap:6px; }
+/* KÜNYE ÖLÇÜLERİ (10 Kasım, görsel kalite turu). Şerit logo + sembol + ad
+   ve 1100 piksel ötede tek bir düğmeydi (1440'ta ölçüldü: adın sağı x=253,
+   düğmenin solu x=1234); ad zaten başlıkta yazdığı için satır hiçbir şey
+   söylemiyor, düğme kopuk duruyordu. Araya şirketin sayfaya ZATEN gelen
+   üç künyesi girdi (sonra: ölçüler x=277'den, şerit 44 piksel; 900'ün
+   altında ölçüler kimliğin altında) (piyasa değeri ve sektör `getSymbolNames`ten, son okunan
+   çeyrek analiz listesinden): saç teliyle ayrılmış etiket–değer çiftleri.
+   Kutu değil, düz satır — karar duruyor. Telefonda ölçüler kimliğin
+   altında iki sütun; düğme kimlik satırının sağında kalır. */
+.identityFacts { display:flex; flex-wrap:wrap; align-items:stretch; gap:10px 0; margin:0; min-width:0; }
+.identityFacts > div { display:flex; flex-direction:column; justify-content:center; gap:3px; min-width:0; padding-inline:24px; border-left:1px solid var(--line-soft); }
+.identityFacts dt { font-size:11.5px; font-weight:500; line-height:1.2; color:var(--text-muted); white-space:nowrap; }
+.identityFacts dd { display:flex; align-items:center; gap:8px; margin:0; font-size:13.5px; font-weight:700; line-height:1.25; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
+.identityRead { display:inline-flex; align-items:center; gap:8px; border-radius:6px; transition:color .2s var(--ease-brand); }
+.identityRead:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
+@media(hover:hover) and (pointer:fine) { .identityRead:hover { color:var(--primary-ink); } }
 
 .body { display:flex; flex-direction:column; gap:16px; padding:0 20px 20px; min-width:0; }
 
@@ -17,8 +34,14 @@
    Solda takvim yaprağı, sağda geri sayım + çeyrek çizgisi; altta tam
    genişlik beklenti ızgarası. Eski düzen (düz tarih + üç gri kutu) gerekçesi
    NextReport.tsx başında. */
-.next { display:grid; grid-template-columns:auto minmax(0,1fr); grid-template-areas:"leaf count" "expect expect"; gap:20px 28px; align-items:center; }
-.leafCol { grid-area:leaf; display:flex; flex-direction:column; align-items:center; gap:8px; }
+/* TEK KOMPOZİSYON (10 Kasım; gerekçe ve önceki ölçüm NextReport.tsx
+   başında). `.when` sol sütun: üstte yaprak + geri sayım (`.whenTop`),
+   altında çeyrek çizgisi, açıklama ve takvim düğmesi — hepsi aynı sol
+   kenarda. `.expect` sağ sütun. Dar ekranda alt alta. */
+.next { display:grid; grid-template-columns:minmax(0,1fr); gap:20px; align-items:stretch; }
+.when { display:flex; flex-direction:column; gap:20px; min-width:0; }
+.whenTop { display:flex; align-items:center; gap:24px; min-width:0; }
+.leafCol { display:flex; flex-shrink:0; flex-direction:column; align-items:center; gap:8px; }
 /* YAPRAK — Yaklaşan Bilançolar'ın `.dateTile`ının büyük hâli
    (AnalysisExperience.module.css): ay şeridi, gün, hafta günü. Kesin tarih
    dolu mavi şerit; tahmini tarih kesik kenar ve soluk şerit. */
@@ -31,16 +54,17 @@
 .leafNote { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--text-muted); }
 .leafNote::before { content:""; width:10px; height:0; border-top:1.5px dashed var(--line-strong); }
 
-.countdown { grid-area:count; display:flex; flex-direction:column; gap:18px; min-width:0; }
-.countHead { display:flex; flex-direction:column; gap:4px; }
+.countHead { display:flex; flex-direction:column; gap:4px; min-width:0; }
 .countLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
-.countValue { font-size:44px; font-weight:800; letter-spacing:-.04em; line-height:1.05; color:var(--text-strong); }
-.windowRow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:6px; }
+/* KALAN GÜN KAHRAMAN: 44 → 64 piksel (telefonda 32 → 40). Panelin sorusu
+   "ne zaman"; cevabın en kısa hâli bu sayı. */
+.countValue { font-size:64px; font-weight:800; letter-spacing:-.045em; line-height:1; color:var(--text-strong); }
+.windowRow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:8px; }
 
 /* ÇEYREK ÇİZGİSİ — kulvar `--line-soft`, geçen yol 5 piksel `--primary`
    (yaprağın yakınlık şeridiyle aynı renk), bugün dolu nokta, bilanço günü
    halka; tahminiyse halka kesik. Uçlardaki iki tarih altında yazılı. */
-.cycle { display:flex; flex-direction:column; gap:8px; max-width:560px; }
+.cycle { display:flex; flex-direction:column; gap:8px; }
 .cycleLane { position:relative; display:block; height:16px; }
 .cycleLane::before { content:""; position:absolute; left:0; right:0; top:5.5px; height:5px; border-radius:999px; background:var(--line-soft); }
 .cycleFill { position:absolute; left:0; top:5.5px; height:5px; border-radius:999px; background:var(--primary); }
@@ -49,6 +73,24 @@
 .cycleNow { left:calc(var(--at) * 100%); width:14px; height:14px; background:var(--primary); outline:3px solid var(--surface); }
 .cycleEnd { left:auto; right:0; translate:0 -50%; width:16px; height:16px; border:2.5px solid var(--primary); background:var(--surface); }
 .cycleEnd[data-estimated] { border-style:dashed; border-color:var(--text-muted); }
+/* ÇİZİM (10 Kasım): çeyrek çizgisi ve kıyas çubukları yüklemede bir kez
+   soldan dolar, "bugün" noktası çizginin ucuna konar. Panel geniş ekranda
+   ilk ekranda olduğu için `MotionExperience` bu öğelere dokunmuyor (ilk
+   ekran kıpırdamaz kuralı, panel/satır içindi); veri çizimi ise yüklemede
+   oynar — `RollingFigure` ve ufkun yoğunluk şeridiyle aynı an. Sayılar ve
+   tarihler ilk karede yazılı, bilgi gecikmiyor. Yalnız `transform` /
+   `opacity`; hareketi azaltana son kare. */
+@media(prefers-reduced-motion:no-preference) {
+  .cycleFill { animation:ce-draw .8s var(--ease-brand) both; }
+  .cycleNow { animation:ce-dot .3s var(--ease-brand) .62s both; }
+  .expectFill { animation:ce-draw .7s var(--ease-brand) .15s both; }
+  .expectRow:not([data-strong]) .expectFill { animation-name:ce-draw-soft; animation-delay:.27s; }
+  .dayTicks > i { animation:ce-tick .36s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 28ms); }
+}
+@keyframes ce-draw { from { transform:scaleX(0); } }
+@keyframes ce-draw-soft { from { transform:scaleX(0); opacity:.5; } }
+@keyframes ce-dot { from { opacity:0; scale:.4; } }
+@keyframes ce-tick { from { opacity:0; transform:scaleY(.3); } }
 /* Gün şeridi (son rapor bilinmediğinde): bir çentik bir gün; bugün dolu,
    bilanço günü halka (tahminiyse kesik). */
 .dayTicks { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); align-items:center; gap:5px; height:16px; }
@@ -64,9 +106,24 @@
 /* BEKLENTİ IZGARASI — iki ölçü aynı hatta biter (CLAUDE.md "Ölçü
    ızgarası"); ton farkıyla ayrılmış hücre, kenarlık yok. Altında
    beklenti ve son çeyrek iki çubuk: ScaleBar (CompareScale dili). */
-.expect { grid-area:expect; display:grid; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr)); gap:10px; }
+.expect { display:grid; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr)); gap:10px; margin:0; }
 .expectCell { display:grid; grid-template-rows:subgrid; grid-row:span 3; row-gap:6px; padding:14px 16px 16px; border-radius:var(--radius-md); background:var(--surface-sunken); }
-.expectCell dt { font-size:12px; font-weight:600; color:var(--text-muted); }
+.expectCell dt { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; font-size:12px; font-weight:600; color:var(--text-muted); }
+/* Beklentinin son çeyreğe göre farkı: yön renkte VE glifte (▲ ▼). */
+.expectChange { display:inline-flex; align-items:baseline; gap:6px; font-weight:500; white-space:nowrap; }
+.expectChange b { font-weight:700; color:var(--text-body); }
+.expectChange[data-dir="up"] b { color:var(--up); }
+.expectChange[data-dir="down"] b { color:var(--down); }
+/* Kıyas kulvarı: `--line-soft` üstünde 5 piksel, soldan; iki satır aynı
+   ölçekte. EPS işaretinden renk alır, gelir büyüklüktür (`--bar-soft`).
+   Son çeyrek soluk: özne beklenti. İşaretli kulvarda (zarardan kâra)
+   sıfır ortada, `--line-strong` çentik. */
+.expectLane { position:relative; display:block; height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
+.expectFill { position:absolute; inset-block:0; left:0; border-radius:999px; background:var(--bar-soft); }
+.expectFill[data-tone="up"] { background:var(--up); }
+.expectFill[data-tone="down"] { background:var(--down); }
+.expectRow:not([data-strong]) .expectFill { opacity:.5; }
+.expectLane[data-signed]::after { content:""; position:absolute; left:50%; top:-3px; bottom:-3px; width:1px; background:var(--line-strong); }
 .expectValue { font-size:26px; font-weight:800; letter-spacing:-.03em; line-height:1.1; color:var(--text-strong); }
 .expectBars { display:flex; flex-direction:column; gap:6px; padding-top:6px; }
 .expectRow { display:grid; grid-template-columns:6.5rem minmax(0,1fr) max-content; align-items:center; gap:10px; font-size:12px; color:var(--text-muted); }
@@ -75,7 +132,7 @@
 .expectRowValue { min-width:4.5rem; text-align:right; font-weight:600; color:var(--text-body); }
 .expectRow[data-strong] .expectRowValue { color:var(--text-strong); }
 
-.lead { max-width:68ch; font-size:var(--text-read); line-height:1.65; color:var(--text-body); }
+.lead { max-width:68ch; font-size:var(--text-read); line-height:1.65; color:var(--text-body); text-wrap:pretty; }
 
 /* Künyeler panelin içinde, hairline ile ayrılmış düz paragraf. */
 .notes { border-top:1px solid var(--line-soft); padding-top:12px; }
@@ -89,7 +146,14 @@
 /* Oy + karne. Karne çeyrek çeyrek hücreye açıldı (31 Ekim), dar sütun
    (15rem) dört hücreyi taşımıyor: iki eşit sütun. Aralık `gap-5` karşılığı
    20 px (CLAUDE.md "İki kolona justify-between konmaz"). Dar ekranda alt alta. */
-.voteGrid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); gap:20px; align-items:start; }
+/* 5 : 7 (10 Kasım, görsel kalite turu). İki eşit sütunda sol yarıda iki oy
+   kartı yan yana 64 piksel tutuyor, altında ~85 piksel boşluk kalıyordu
+   (canlı ekran, 1440: sol sütunun son satırının dibi y≈1146, karnenin dibi
+   y≈1230). Sonra (önizleme): sol 1162, karne 1166 (1280'de 1159 / 1163,
+   1024'te 1302 / 1305); sütunlar 524 / 734. Sol sütun daraldı ve oy kartları ALT ALTA bir oy pusulası oldu
+   (kap sorgusu, `EarningsVote.module.css` → `.panel`); karne geniş sütunda
+   dört hücreyi rahat taşıyor. İki sütunun dibi aynı hatta. */
+.voteGrid { display:grid; grid-template-columns:minmax(0,5fr) minmax(0,7fr); gap:20px; align-items:start; }
 .voteMain { display:flex; flex-direction:column; gap:16px; min-width:0; }
 
 /* Beklenti karnesi — ton farkıyla ayrılmış hücre (ölçü ızgarasının
@@ -104,6 +168,12 @@
 .karneQuarters { display:grid; grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr)); gap:6px; }
 .karneQuarter { position:relative; display:flex; flex-direction:column; gap:3px; min-width:0; padding:12px 10px 10px; overflow:hidden; border-radius:var(--radius-sm); background:var(--surface-solid); }
 .karneQuarter::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--line-strong); }
+/* Şeritler görününce soldan sırayla çizilir (`PlayOnView`: taban durum
+   bitmiş karne; yalnız ekranın altındayken kurulur). */
+@media(prefers-reduced-motion:no-preference) {
+  .karnePlay[data-armed] .karneQuarter::before { transform:scaleX(0); transform-origin:left center; }
+  .karnePlay[data-armed][data-play] .karneQuarter::before { transform:none; transition:transform .6s var(--ease-brand); transition-delay:calc(var(--i, 0) * 70ms); }
+}
 .karneQuarter[data-mark="beat"]::before { background:var(--up); }
 .karneQuarter[data-mark="miss"]::before { background:var(--down); }
 .qPeriod { font-size:11.5px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
@@ -137,15 +207,25 @@
 .storyHint { font-size:var(--text-small); color:var(--text-body); }
 .storyArrow { flex-shrink:0; color:var(--primary-ink); }
 
+/* 900'ün altında ölçüler kimliğin ALTINA iner (768'de üç ölçü + düğme tek
+   satıra sığmıyor, düğme tek başına ikinci satıra düşüyordu). */
+@media(max-width:899px) {
+  .identityWho { flex:1; padding-right:12px; }
+  .identityFacts { order:3; flex-basis:100%; padding-top:12px; border-top:1px solid var(--line-soft); }
+  .identityFacts > div:first-child { padding-left:0; border-left:0; }
+}
 @media(max-width:639px) {
   .body { padding:0 16px 16px; }
-  .next { grid-template-columns:auto minmax(0,1fr); gap:16px 16px; align-items:start; }
+  .next { gap:16px; }
+  .when { gap:16px; }
+  .whenTop { gap:16px; }
+  .identityFacts { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px; }
+  .identityFacts > div { padding-inline:0; border-left:0; }
   .leaf { width:92px; }
   .leafBand { font-size:11px; padding:5px 4px; }
   .leafDay { font-size:40px; padding:8px 0 3px; }
   .leafWeekday { font-size:11.5px; padding-bottom:9px; }
-  .countValue { font-size:32px; }
-  .countdown { gap:14px; }
+  .countValue { font-size:40px; }
   .expectRow { grid-template-columns:5.5rem minmax(0,1fr) max-content; }
   .karneQuarters { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .storyEntry { padding:14px 16px; }
@@ -155,9 +235,12 @@
 /* GENİŞ EKRANDA ÜÇ SÜTUN: yaprak · geri sayım · beklentiler. İki satırlık
    düzende 1440'ta geri sayımın sağı boş kalıyordu (çizgi 560 pikselde
    bitiyor, panel 1280); beklentiler o boşluğa üst üste girdi. */
+/* 10 Kasım: iki sütun (ne zaman · ne bekleniyor); hücreler sağ sütunu
+   doldurur, kıyas çubukları hücrenin dibinde. Ölçüm NextReport.tsx'te. */
 @media(min-width:1100px) {
-  .next { grid-template-columns:auto minmax(0,1fr) minmax(0,30rem); grid-template-areas:"leaf count expect"; gap:20px 32px; }
-  .expect { grid-template-columns:minmax(0,1fr); }
-  .cycle { max-width:none; }
+  .next:not([data-plain]) { grid-template-columns:minmax(0,1fr) minmax(0,30rem); gap:20px 40px; }
+  .next:not([data-plain]) .expect { grid-template-columns:minmax(0,1fr); grid-auto-rows:1fr; }
+  .next:not([data-plain]) .expectCell { display:flex; flex-direction:column; grid-row:auto; }
+  .expectBars { margin-top:auto; padding-top:12px; }
 }
 @media(prefers-reduced-motion:reduce) { .storyEntry { transition:none; } }

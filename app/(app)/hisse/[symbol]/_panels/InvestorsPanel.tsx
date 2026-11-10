@@ -46,6 +46,8 @@ export function InvestorsPanel({ data, locale, t }: { data: StockInvestors; loca
      şerit yok — pay sıfır, "çıktı" yazıyor. Renk nötr: büyük pay iyi ya da
      kötü değil (CompareScale → ScaleBar `neutral`). */
   const peak = Math.max(0, ...holders.filter((h) => !h.exited).map((h) => h.weight));
+  /** Geniş ekrandaki iki sütunun satır sayısı. */
+  const holderRows = Math.max(1, Math.ceil(holders.length / 2));
   return (
     <Panel>
       <PanelHeader title={ti.panelTitle} action={<PanelLink href="/yatirimcilar">{ti.panelAll}</PanelLink>} />
@@ -59,7 +61,7 @@ export function InvestorsPanel({ data, locale, t }: { data: StockInvestors; loca
         >
         <ul
           className={cn(styles.holderList, depth.holderGrid)}
-          style={{ "--rows": Math.ceil(holders.length / 2) } as CSSProperties}
+          style={{ "--rows": holderRows } as CSSProperties}
           data-motion-stagger
         >
           {holders.map((holder, index) => {
@@ -67,7 +69,14 @@ export function InvestorsPanel({ data, locale, t }: { data: StockInvestors; loca
             if (!investor) return null;
             const closed = investor.status === "closed";
             return (
-              <li key={holder.slug} className="min-w-0" data-fold={index >= HOLDER_FOLD ? "" : undefined}>
+              <li
+                key={holder.slug}
+                className="min-w-0"
+                data-fold={index >= HOLDER_FOLD ? "" : undefined}
+                /* Geniş ekranda satırın ızgaradaki yeri (sütun sütun okuma
+                   korunuyor); gerekçe depth.module.css → "ORTAK SÜTUNLAR". */
+                style={{ "--r": (index % holderRows) + 1, "--c": Math.floor(index / holderRows) } as CSSProperties}
+              >
                 <Link href={`/yatirimcilar/${holder.slug}`} prefetch={false} className={styles.holderRow}>
                   <Portrait investor={investor} size="sm" />
                   <span className={styles.holderId}>

@@ -196,7 +196,12 @@ export async function MetricsCard({
           ],
         ] as [string, string, PeerCell][])
       : []),
-    [t.market.volume, quote?.volume ? formatVolume(quote.volume, locale) : NO_VALUE],
+    /* HACİM YOKSA HÜCRE DE YOK (10 Kasım 2026). Açılış öncesinde kotasyon
+       hacim taşımıyor ve kartın son hücresi "Hacim –" basıyordu: dokuz
+       ölçülük ızgarada tek başına bir tire. Elde olmayan ölçü için yer
+       ayrılmıyor; seans açılınca hücre geri geliyor (ızgara sütun sayısını
+       `data-count`tan kuruyor, sekiz ölçü dört sütunda iki tam satır). */
+    ...(quote?.volume ? ([[t.market.volume, formatVolume(quote.volume, locale)]] as [string, string][]) : []),
   ];
 
   /* 52 HAFTA BANDI BU KARTTA DEĞİL (24 Eylül). "İki satırdan bir bloğa"

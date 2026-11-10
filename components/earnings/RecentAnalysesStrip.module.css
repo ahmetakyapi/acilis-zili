@@ -30,7 +30,15 @@
   gap: 10px;
   padding: 14px 16px 16px;
   border-radius: var(--radius-xl, 1rem);
-  border: 1px solid color-mix(in oklab, var(--primary-soft) 45%, transparent);
+  /* KENAR NÖTR (10 Kasım, görsel kalite turu). Şerit `--primary-soft`
+     karışımı mavi bir kenarla çevriliydi ("belirginlik kenarlıktan",
+     `RecentAnalysesStrip.tsx`). İki şey değişti: içindeki çipler 31 Ekim'de
+     tepe şeritli mini karta dönüştü ve asıl vurguyu artık onlar taşıyor;
+     mavi ise sitede etkileşim rengi — tıklanmayan bir dış kap mavi çerçeve
+     taşıyınca seçili/odaklı bir alan gibi okunuyordu. Kap panellerle aynı
+     kenarı alıyor (üstten ışıklı `--edge-*`), ayrımı zemin tonu taşıyor. */
+  border: 1px solid var(--line);
+  border-color: var(--edge-top, var(--line)) var(--edge-side, var(--line)) var(--edge-bottom, var(--line));
   background: var(--premium-surface);
 }
 @media (min-width: 640px) { .strip { padding: 14px 24px 16px; } }

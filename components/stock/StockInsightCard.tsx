@@ -434,10 +434,54 @@ export function StockInsightCard({
             <Sparkle className={styles.loadingIcon} size={15} weight="fill" aria-hidden />
             {labels.loading}
           </p>
-          <Skeleton className={cn(styles.line, "w-[92%]")} />
-          <Skeleton className={cn(styles.line, "w-[78%]")} />
-          <Skeleton className={cn(styles.line, "w-[85%]")} />
-          <Skeleton className={cn(styles.line, "w-[60%]")} />
+          {/* BEKLEME NOTUN SİLÜETİNDE (10 Kasım 2026). Dört çizgi (75 piksel)
+              basılıyor, altında notun ölçülmüş boyu kadar yer BOŞ
+              bekliyordu: önizlemede 1440'ta 360 piksellik kutunun ~285'i
+              düz zemin (canlı NVDA; telefonda 760'ın ~685'i). Yer ayırmak
+              doğru (not gelince sayfa zıplamasın), ama boş durması kırık
+              görünüyordu. Aynı yer artık gelecek notun kendi biçimiyle
+              dolu: figür kutusu (beklenti karoları, çeyrek kulvarları),
+              özet satırları, numaralı maddeler. Ayrılan yükseklik
+              DEĞİŞMEDİ (`.loading` min-height), yani not gelince kayma yok;
+              silüet o yüksekliğin içinde. Ölçüm StockInsightCard.module.css
+              → `.ghost`. Süs değil yer tutucu: ekran okuyucudan gizli. */}
+          <div className={styles.ghost} data-kind={kind} aria-hidden>
+            <div className={styles.ghostFigure}>
+              <div className={styles.ghostTiles}>
+                <Skeleton className={styles.ghostTile} />
+                <Skeleton className={styles.ghostTile} />
+                {kind === "preview" && <Skeleton className={styles.ghostTile} />}
+              </div>
+              <div className={styles.ghostLanes}>
+                {[62, 38, 80, 54].map((h, i) => (
+                  <span key={i} className={styles.ghostLane}>
+                    <i className="skeleton" style={{ height: `${h}%` }} />
+                  </span>
+                ))}
+              </div>
+            </div>
+            <div className={styles.ghostText}>
+              <Skeleton className={cn(styles.line, "w-[96%]")} />
+              <Skeleton className={cn(styles.line, "w-[88%]")} />
+              <Skeleton className={cn(styles.line, "w-[64%]")} />
+            </div>
+            <div className={styles.ghostPoints}>
+              {[0, 1, 2].map((i) => (
+                <div key={i} className={styles.ghostPoint}>
+                  <Skeleton className={styles.ghostIndex} />
+                  <div>
+                    <Skeleton className={cn(styles.line, "w-[58%]")} />
+                    <Skeleton className={cn(styles.line, "w-[92%]")} />
+                    <Skeleton className={cn(styles.line, "w-[74%]")} />
+                    <Skeleton className={cn(styles.line, "w-[40%]")} />
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className={styles.ghostFoot}>
+              <Skeleton className={cn(styles.line, "w-[46%]")} />
+            </div>
+          </div>
           </>
           )}
         </div>

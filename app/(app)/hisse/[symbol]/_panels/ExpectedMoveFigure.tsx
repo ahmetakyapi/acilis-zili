@@ -1,6 +1,6 @@
 import { PlayOnView } from "@/components/motion/PlayOnView";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { formatPercentPlain } from "@/lib/utils";
+import { formatPercent, formatPercentPlain } from "@/lib/utils";
 import styles from "./depth.module.css";
 
 /** Ölçeğin iki ucundaki pay: en uzak nokta kenara yapışmasın. */
@@ -9,6 +9,13 @@ const SCALE_PAD = 1.15;
 const MIN_GAP_PCT = 3.5;
 /** Nokta satırı en çok bu kadar; fazlası son satırda üst üste biner. */
 const MAX_ROWS = 3;
+/** Değer etiketi yalnız bu kadar noktaya kadar; fazlasında satır kalabalıklaşır. */
+const MAX_LABELED = 4;
+/** İki etiket arasındaki en küçük aralık (genişliğin yüzdesi): 390'da 330
+    piksellik çizimde "+%12,4" 42 piksel ≈ %12. Daha yakınsa sonraki basılmaz. */
+const MIN_LABEL_GAP_PCT = 12;
+/** Etiket kenara yapışmasın: merkezi bu aralıkta tutulur. */
+const LABEL_EDGE_PCT = 7;
 
 /**
  * BANT VE GEÇMİŞ RAPORLAR — açıklayıcı figür (12 Ekim; motion-film
@@ -60,6 +67,21 @@ export function ExpectedMoveFigure({
     rowOf.set(move.date, row);
   }
   const rows = Math.max(1, lastInRow.length);
+  /* NOKTANIN DEĞERİ ÜSTÜNDE (10 Kasım 2026). Noktalar 9 piksel ve etiketsizdi:
+     "hangi rapor ne kadar oynadı" ancak alttaki tabloyla eşleştirilerek
+     okunuyordu. Az noktalı figürde (en çok dört) her noktanın yüzdesi
+     çizimin ÜSTÜNDE, bandın dışında yazılı (bandın içinde yazı yasağı
+     duruyor). Çakışan etiket basılmaz — sayı tabloda zaten var; üst üste
+     binmiş iki etiket hiç etiket olmamasından kötü (PriceRail'in kuralı). */
+  const labels: { date: string; at: number; pct: number }[] = [];
+  if (moves.length <= MAX_LABELED) {
+    for (const move of [...moves].sort((a, b) => a.pct - b.pct)) {
+      const at = Math.min(100 - LABEL_EDGE_PCT, Math.max(LABEL_EDGE_PCT, x(move.pct)));
+      const previous = labels[labels.length - 1];
+      if (previous && at - previous.at < MIN_LABEL_GAP_PCT) continue;
+      labels.push({ date: move.date, at, pct: move.pct });
+    }
+  }
   const bandText = formatPercentPlain(band, locale, 1);
   const n = String(moves.length);
   const readout = outside === 0
@@ -73,6 +95,15 @@ export function ExpectedMoveFigure({
         <p>{d.emFigHint}</p>
       </figcaption>
       <PlayOnView className={styles.emFigStage}>
+        {labels.length > 0 && (
+          <p className={`numeral ${styles.emFigLabels}`} aria-hidden>
+            {labels.map((label) => (
+              <span key={label.date} data-dir={label.pct < 0 ? "down" : "up"} style={{ left: `${label.at}%` }}>
+                {formatPercent(label.pct, locale, 1)}
+              </span>
+            ))}
+          </p>
+        )}
         <div
           className={styles.emFigPlot}
           style={{ "--rows": rows } as React.CSSProperties}

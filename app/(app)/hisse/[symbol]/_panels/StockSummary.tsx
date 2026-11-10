@@ -169,6 +169,10 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
               href={`/hisse/${peer.symbol}`}
               prefetch={false}
               aria-label={peerMeta[peer.symbol]?.name ?? peer.symbol}
+              /* Dokunma hedefi (10 Kasım 2026): logo 26×26 pikseldi (390, ölçüldü).
+                 `tap-44` yalnız DİKEY genişletir; beş logo tek satırda yan
+                 yana, üstünde ve altında başka bağlantı yok. */
+              className="tap-44"
               /* Şirket kartı; kaydı Benzer Şirketler paneli bırakıyor
                  (PeersCard — ilk sekizin paketi, bu beşi kapsıyor). */
               data-cc={peer.symbol}

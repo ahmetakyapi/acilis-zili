@@ -9,6 +9,7 @@ import { useEffect, useId, useMemo, useRef, useState } from "react";
 import { motion } from "motion/react";
 import {
   AreaSeries,
+  LineType,
   BaselineSeries,
   CandlestickSeries,
   createChart,
@@ -165,6 +166,9 @@ const TIP_EDGE = 8;
 /** Etiketin yaklaşık genişliği: bu kadar yer kalmayınca noktanın soluna geçer. */
 const TIP_WIDTH = 150;
 const TIP_HEIGHT = 58;
+
+/** Bu sayının altındaki 1G serisi eğri birleştirilir (gerekçe seri kurulumunda). */
+const SPARSE_DAY_BARS = 36;
 
 /** Etiketin yeri: noktanın sağında, sağa sığmazsa solunda; dikeyde noktaya
  *  ortalı ve kabın içine kıstırılmış. */
@@ -733,6 +737,14 @@ export function PriceChart({
         bottomFillColor1: lineToRgba(down, 0),
         bottomFillColor2: lineToRgba(down, 0.14),
         lineWidth: 2,
+        /* AZ NOKTALI GÜN YUMUŞAK ÇİZİLİR (10 Kasım 2026). Açılış öncesinde
+           1G serisi 8–10 beş dakikalık bardan oluşuyor; düz parçalarla
+           birleştirilince çizgi köşeli, "kırık cetvel" gibi duruyordu
+           (canlı NVDA, 12:40 TR, dokuz on nokta). Seyrek seride eğri birleştirme:
+           çizgi yine her barın kapanışından GEÇİYOR, yalnız aradaki yol
+           yuvarlanıyor. Seans dolunca (bar sayısı eşiği aşınca) düz
+           birleştirmeye döner — sık seride eğri fark edilmez, maliyeti olur. */
+        lineType: bars.length <= SPARSE_DAY_BARS ? LineType.Curved : LineType.Simple,
         priceLineVisible: false,
         lastValueVisible: false,
         lastPriceAnimation: pulse,

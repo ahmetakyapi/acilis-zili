@@ -1,5 +1,4 @@
 import { DataStamp, Panel, PanelHeader } from "@/components/ui/primitives";
-import { ScaleBar } from "@/components/markets/CompareScale";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { getHolidays, getStatus } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -20,9 +19,12 @@ import {
 import { earningsWindow } from "./earnings-time";
 import { ExpectedMoveFigure } from "./ExpectedMoveFigure";
 import styles from "./depth.module.css";
+import craft from "./craft.module.css";
 
 /** Figür için en az bu kadar ölçülmüş rapor; tek nokta bir dağılım değil. */
 const MIN_FIG_MOVES = 2;
+/** Geçmiş satırlarının kulvarında uç payı: figürün `SCALE_PAD`i ile aynı. */
+const LANE_PAD = 1.15;
 
 /**
  * Beklenen hareket — sonraki rapor yakınsa (sayfa karar veriyor:
@@ -59,7 +61,9 @@ export async function ExpectedMovePanel({
   const figMoves = measured
     .flatMap((row) => (row.movePct === null ? [] : [{ date: row.date, pct: row.movePct }]))
     .sort((a, b) => a.date.localeCompare(b.date));
-  const anyDown = measured.some((row) => row.movePct! < 0);
+  /* Geçmiş satırlarının kulvarı: figürün ekseni (sıfır ortada, uçta pay). */
+  const laneMax = Math.max(implied?.pct ?? 0, ...measured.map((row) => Math.abs(row.movePct!))) * LANE_PAD;
+  const laneX = (value: number) => 50 + (value / laneMax) * 50;
   const scaleMax = Math.max(implied?.pct ?? 0, data.average?.avg ?? 0, ...measured.map((row) => Math.abs(row.movePct!)));
   const timingLabel = (hour: string | null) =>
     hour === "bmo" ? t.earnings.beforeOpen : hour === "amc" ? t.earnings.afterClose : d.emTimingUnknown;
@@ -136,10 +140,11 @@ export async function ExpectedMovePanel({
           <>
             <p className="border-t border-line-soft pt-3 text-tiny font-semibold text-strong">{d.emHistory}</p>
             <ScrollEdges className="scroll-x" tabIndex={0} role="region" aria-label={d.emHistory}>
-              <table className={cn(styles.table, styles.historyTable, styles.emTable)}>
+              <table className={cn(styles.table, styles.historyTable, styles.emTable, craft.emWide)}>
                 <thead className="sr-only">
                   <tr>
                     <th scope="col">{`${d.emColReport} · ${d.emColTiming}`}</th>
+                    <td />
                     <th scope="col">{d.emColMove}</th>
                   </tr>
                 </thead>
@@ -152,17 +157,42 @@ export async function ExpectedMovePanel({
                         <span className="numeral block font-semibold text-strong">{formatEtDateMedium(row.date, locale)}</span>
                         <span className="block text-tiny text-muted">{timingLabel(row.timing)}</span>
                       </td>
+                      {/* KULVAR SATIRIN TAMAMINDA (10 Kasım 2026). Tablo 640
+                          pikselde bitiyor, 1440'ta panelin sağ 650 pikseli
+                          boş kalıyordu; hareket de 80 piksellik bir çubuktu.
+                          Kulvar artık tarih ile yüzde arasındaki bütün yeri
+                          alıyor ve figürle AYNI eksende: sıfır ortada, gri
+                          şerit opsiyonların fiyatladığı bant, renkli çubuk o
+                          raporun hareketi. Bandı aşan rapor şeridin dışına
+                          taşan çubukla okunuyor. Çizim `aria-hidden`; sayı
+                          yanındaki hücrede. */}
+                      <td className={craft.emLaneCell} aria-hidden>
+                        {row.movePct !== null && laneMax > 0 && (
+                          <span className={craft.emLane}>
+                            {implied && (
+                              <i
+                                className={craft.emLaneBand}
+                                style={{ left: `${laneX(-implied.pct)}%`, right: `${100 - laneX(implied.pct)}%` }}
+                              />
+                            )}
+                            <i className={craft.emLaneZero} />
+                            <i
+                              className={craft.emLaneBar}
+                              data-dir={row.movePct < 0 ? "down" : "up"}
+                              data-motion-draw="line"
+                              style={{
+                                left: `${Math.min(50, laneX(row.movePct))}%`,
+                                width: `${Math.abs(laneX(row.movePct) - 50)}%`,
+                                transformOrigin: row.movePct < 0 ? "right center" : "left center",
+                              }}
+                            />
+                          </span>
+                        )}
+                      </td>
                       <td>
                         {row.movePct !== null ? (
-                          <span className="inline-flex flex-col items-end gap-1">
-                            <span className={cn("numeral font-semibold", directionText(directionOf(row.movePct)))}>
-                              {formatPercent(row.movePct, locale, 1)}
-                            </span>
-                            {scaleMax > 0 && (
-                              <span aria-hidden className="block w-20">
-                                <ScaleBar ratio={row.movePct / scaleMax} signed={anyDown} tone="signal" />
-                              </span>
-                            )}
+                          <span className={cn("numeral font-semibold", directionText(directionOf(row.movePct)))}>
+                            {formatPercent(row.movePct, locale, 1)}
                           </span>
                         ) : (
                           <span className="text-muted">
@@ -204,13 +234,14 @@ export async function ExpectedMovePanel({
 
 /**
  * Okumanın altındaki çizgi — sayı sola yaslı olduğu için çubuk da soldan
- * doluyor (`ScaleBar` sağa yaslı sütunlar için, tablo satırında kalıyor).
+ * doluyor (geçmiş satırlarının kulvarı işaretli ve kendi ekseninde).
  * İki okumanın tavanı aynı: ikisinin ve geçmiş satırların en büyüğü.
  */
 function ReadingBar({ ratio }: { ratio: number }) {
   return (
     <dd aria-hidden className={styles.readingTrack}>
-      <i style={{ width: `${Math.max(0, Math.min(1, ratio)) * 100}%` }} />
+      {/* Şerit görünüme girince soldan dolar (ortak sözleşme, `line`). */}
+      <i data-motion-draw="line" style={{ width: `${Math.max(0, Math.min(1, ratio)) * 100}%` }} />
     </dd>
   );
 }

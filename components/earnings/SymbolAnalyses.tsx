@@ -1,7 +1,10 @@
 import type { ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
+import { MetricStrip } from "@/components/earnings/MetricStrip";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
+import { robustScale } from "@/lib/analysis-visuals";
 import {
   analysisHref,
   verdictLabel,
@@ -10,7 +13,8 @@ import {
 } from "@/lib/analysis";
 import type { AnalysisIndexRow } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { cn, formatEtDateLong } from "@/lib/utils";
+import { cn, formatEtDateLong, formatPercentPlain } from "@/lib/utils";
+import styles from "./SymbolAnalyses.module.css";
 
 /**
  * Bir şirketin yayımlanmış bilanço analizleri — hisse sayfasında.
@@ -49,6 +53,18 @@ export function SymbolAnalyses({
   footer?: ReactNode;
 }) {
   if (rows.length === 0) return null;
+  /* Tepki şeritleri panelin ortak ölçeğinde — analiz listelerinin dili
+     (`RecentAnalysesStrip`, `LatestAnalyses`). */
+  const L = t.analysisVisuals.list;
+  /* ÜÇ ÖLÇÜ, ÜÇ ŞERİT: gelirin yıllık büyümesi, HBK sürprizi, ilk tepki —
+     analiz listesinin kart görünümündeki üçlüyle aynı ad ve aynı sıra
+     (`AnalysisCardGrid`). Her ölçü kendi ortak ölçeğinde; dar kapta yalnız
+     tepki kalır (kap sorgusu, CSS). */
+  const metrics = [
+    { key: "revenue", label: L.revenue, pick: (row: AnalysisIndexRow) => row.revenueYoyPct, extra: true },
+    { key: "eps", label: L.eps, pick: (row: AnalysisIndexRow) => row.epsSurprisePct, extra: true },
+    { key: "reaction", label: L.reaction, pick: (row: AnalysisIndexRow) => row.reactionPct, extra: false },
+  ].map((metric) => ({ ...metric, scale: robustScale(rows.map(metric.pick)) }));
 
   return (
     <Panel>
@@ -60,7 +76,7 @@ export function SymbolAnalyses({
           </PanelLink>
         }
       />
-      <ul>
+      <ul className={styles.list}>
         {rows.map((row) => {
           const verdict = verdictOf(row.verdict);
           return (
@@ -68,7 +84,20 @@ export function SymbolAnalyses({
               <Link
                 href={analysisHref(row.symbol, row.period)}
                 prefetch={false}
-                className="flex items-start gap-3.5 border-t border-line px-4 py-4 transition-colors hover:bg-primary-tint sm:gap-4 sm:px-5"
+                /* SATIR DÖRT BÖLGE (10 Kasım, görsel kalite turu): halka ·
+                   dönem + manşet · ilk tepki · ok. Satır iki bölgeydi ve
+                   manşet panelin tamamına yayılıyordu: 1440'ta ~1218 piksel,
+                   ~205 karakterlik satır — okunmuyor, iki satıra kırpılmış
+                   bir duvar gibi duruyordu; tarih ise dönem adından ~1050
+                   piksel uzakta, sağ uçtaydı. Manşet 84 karakterde bitiyor,
+                   tarih dönemin yanına indi, açılan yere sorgunun ZATEN
+                   getirdiği ilk tepki (`reactionPct`) sıfır merkezli şeritte
+                   girdi: çeyreğin puanının yanında piyasanın o gün ne dediği.
+                   Geniş kapta yanına aynı sorgunun iki ölçüsü daha gelir
+                   (gelirin yıllık büyümesi, HBK sürprizi).
+                   Ok satırın bağlantı olduğunu söyler. Düzen ve ölçüm
+                   `SymbolAnalyses.module.css`. */
+                className={styles.row}
               >
                 {/* PUAN HALKASI, DÜZ HAP DEĞİL. Satırın tamamı tek bir metin
                     şerididir: 12 puntoluk bir hap, üç kelime ve kırpılmış bir
@@ -84,7 +113,7 @@ export function SymbolAnalyses({
                     yana değil alt alta durunca tek bir işaret oluyorlar ve
                     başlık satırı yalnızca döneme kalıyor. Renk yine tek
                     başına konuşmuyor: kelime halkanın altında yazılı. */}
-                <span className="flex shrink-0 flex-col items-center gap-1">
+                <span className={styles.score}>
                   <ScoreRing score={row.score} verdict={verdict} size={44} />
                   <span
                     className={cn(
@@ -99,23 +128,41 @@ export function SymbolAnalyses({
                     {verdictLabel(verdict, t)}
                   </span>
                 </span>
-                <span className="flex min-w-0 flex-1 flex-col gap-1">
-                  <span className="flex flex-wrap items-baseline gap-x-2.5 gap-y-1">
-                    <span className="text-read font-bold text-strong">
-                      {row.periodLabel}
-                    </span>
-                    <span className="numeral ml-auto shrink-0 text-tiny text-muted">
+                <span className={styles.main}>
+                  <span className={styles.head}>
+                    <span className={styles.period}>{row.periodLabel}</span>
+                    <span className={cn("numeral", styles.date)}>
                       {formatEtDateLong(row.reportDate, locale)}
                     </span>
+                    {row.reactionPct !== null && (
+                      <b className={cn("numeral", styles.reactionInline, row.reactionPct >= 0 ? "text-up" : "text-down")}>
+                        {row.reactionPct >= 0 ? "▲" : "▼"} {formatPercentPlain(row.reactionPct, locale, 1)}
+                      </b>
+                    )}
                   </span>
                   {/* Manşet iki satıra kadar açılıyor. Tek satıra kırpılmıştı
                       ve cümlenin yarısı "…" ile bitiyordu: dizin olsun diye
                       okunmaz hâle gelmişti. İki satır, hem cümleyi
                       tamamlıyor hem de satıra gövde kazandırıyor. */}
-                  <span className="line-clamp-2 text-small leading-[17px] text-body">
-                    {row.headline}
-                  </span>
+                  <span className={styles.headline}>{row.headline}</span>
                 </span>
+                {metrics.map((metric) => {
+                  const value = metric.pick(row);
+                  return value !== null && value !== undefined ? (
+                    <span key={metric.key} className={styles.reaction} data-extra={metric.extra || undefined}>
+                      <span className={styles.reactionHead}>
+                        <span>{metric.label}</span>
+                        <b className={cn("numeral", value >= 0 ? "text-up" : "text-down")}>
+                          {value >= 0 ? "▲" : "▼"} {formatPercentPlain(value, locale, 1)}
+                        </b>
+                      </span>
+                      <MetricStrip value={value} scale={metric.scale} />
+                    </span>
+                  ) : (
+                    <span key={metric.key} aria-hidden className={styles.reaction} data-extra={metric.extra || undefined} />
+                  );
+                })}
+                <ArrowRight aria-hidden size={16} weight="bold" className={styles.arrow} />
               </Link>
             </li>
           );

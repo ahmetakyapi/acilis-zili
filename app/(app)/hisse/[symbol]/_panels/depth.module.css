@@ -539,6 +539,31 @@
   ul.holderGrid { display:grid; grid-auto-flow:column; grid-template-columns:repeat(2,minmax(0,1fr)); grid-template-rows:repeat(var(--rows,4),auto); column-gap:24px; }
   ul.tradeGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:40px; }
 }
+/* ORTAK SÜTUNLAR (10 Kasım 2026). Her satır kendi dört sütunluk ızgarasını
+   kuruyordu (`auto 1fr auto auto`), yani hap + pay + adet üçlüsünün yeri
+   satırın kendi içeriğine göre değişiyordu: canlı NVDA'da "Tamamen Sattı"
+   satırının tutarı öteki satırların tutar sütunundan kayık duruyor, Kongre
+   satırlarında işlem hapı adın ve tarihin uzunluğuna göre başka bir yerde
+   başlıyordu (1440, ekran görüntüsü). Satırlar artık listenin ızgarasını miras alıyor (`subgrid`):
+   hareket ve tutar sütunları (Kongre'de hap ve tutar) her satırda aynı
+   hatta. Hap sütunu `max-content` — sabit genişlik değil (sıkışan hap kuralı).
+   Sütun sütun okuma korunuyor: satırın yeri `--r` / `--c` ile
+   (InvestorsPanel.tsx). Yalnız geniş ekranda; dar ekranda satırlar eski
+   düzeninde. */
+@media (min-width:1100px) {
+  ul.holderGrid { grid-auto-flow:row; grid-template-columns:repeat(2, auto minmax(0,1fr) max-content max-content); column-gap:12px; }
+  /* `!important`: katlanan satırlar bu genişlikte `display:revert` alıyor
+     (FoldToggle.module.css, dört sınıflık seçici) ve liste öğesine dönüp
+     ortak sütunlardan düşüyordu. Bu genişlikte katlama zaten kapalı. */
+  ul.holderGrid > li { display:grid !important; grid-template-columns:subgrid; grid-row:var(--r); grid-column:calc(var(--c) * 4 + 1) / span 4; }
+  ul.holderGrid > li > a { grid-column:1 / -1; grid-template-columns:subgrid; }
+  ul.holderGrid > li:nth-child(n) { padding-inline-start:calc(var(--c) * 12px); }
+  ul.tradeGrid { grid-template-columns:repeat(2, auto max-content max-content minmax(0,1fr)); column-gap:10px; }
+  ul.tradeGrid > li { display:grid; grid-template-columns:subgrid; grid-column:span 4; }
+  ul.tradeGrid > li > a { grid-column:1 / -1; grid-template-columns:subgrid; }
+  ul.tradeGrid > li:nth-child(even) { padding-inline-start:30px; }
+  ul.tradeGrid > li > a > :nth-child(3) { justify-self:start; }
+}
 
 /* BANT VE GEÇMİŞ RAPORLAR (12 Ekim) — `ExpectedMoveFigure`. İnce grafik
    dili: kulvar `--line-soft`, sıfır `--line-strong`, bant nötr ton, renk
@@ -548,7 +573,9 @@
 .emFig { display:flex; flex-direction:column; gap:12px; margin:0 0 16px; }
 .emFigHead h3 { font-size:var(--text-small); font-weight:650; color:var(--text-strong); }
 .emFigHead p { margin-top:2px; font-size:12px; line-height:1.55; color:var(--text-muted); }
-.emFigPlot { --dot:9px; --row-h:14px; position:relative; height:calc(var(--rows,1) * var(--row-h) + 20px); }
+/* Nokta 9 → 11 piksel, satır 14 → 16 (10 Kasım 2026): 1320 piksellik panelde 9
+   piksellik nokta kayboluyordu; değer etiketi çizimin üstünde (`.emFigLabels`). */
+.emFigPlot { --dot:11px; --row-h:16px; position:relative; height:calc(var(--rows,1) * var(--row-h) + 20px); }
 .emFigPlot::before { content:""; position:absolute; left:0; right:0; top:50%; height:1px; background:var(--line-soft); }
 .emFigBand { position:absolute; inset-block:0; border-radius:6px; background:color-mix(in srgb, var(--text-strong) 7%, transparent); box-shadow:inset 1px 0 var(--line-strong), inset -1px 0 var(--line-strong); }
 .emFigZero { position:absolute; inset-block:4px; left:50%; width:1px; background:var(--line-strong); }
@@ -556,6 +583,9 @@
 .emFigDot[data-dir="down"] { background:var(--down); }
 /* Bandın içinde kalan nokta kısık: göz önce dışarı çıkanları sayar. */
 .emFigDot:not([data-out]) { opacity:.55; }
+.emFigLabels { position:relative; height:16px; margin-bottom:-6px; font-size:11.5px; font-weight:650; line-height:16px; }
+.emFigLabels > span { position:absolute; top:0; translate:-50% 0; white-space:nowrap; color:var(--up); }
+.emFigLabels > span[data-dir="down"] { color:var(--down); }
 .emFigScale { text-align:center; font-size:12px; font-weight:600; color:var(--text-strong); }
 .emFigReadout { padding-top:10px; border-top:1px solid var(--line-soft); font-size:13px; line-height:1.5; color:var(--text-body); }
 
@@ -563,10 +593,11 @@
 .emFigStage[data-armed] .emFigScale { animation:em-fade 240ms var(--ease-brand) 450ms both; }
 .emFigStage[data-armed] .emFigDot { animation:em-drop 360ms var(--ease-brand) calc(750ms + var(--i,0) * 70ms) both; }
 .emFigStage[data-armed] .emFigReadout { animation:em-fade 300ms var(--ease-brand) calc(1110ms + var(--n,0) * 70ms) both; }
-.emFigStage[data-armed]:not([data-play]) :is(.emFigBand,.emFigScale,.emFigDot,.emFigReadout) { animation-play-state:paused; }
+.emFigStage[data-armed] .emFigLabels { animation:em-fade 300ms var(--ease-brand) calc(900ms + var(--n,0) * 70ms) both; }
+.emFigStage[data-armed]:not([data-play]) :is(.emFigBand,.emFigScale,.emFigDot,.emFigReadout,.emFigLabels) { animation-play-state:paused; }
 @keyframes em-band { from { scale:0 1; } }
 @keyframes em-drop { from { opacity:0; translate:0 -10px; } }
 @keyframes em-fade { from { opacity:0; } }
 @media (prefers-reduced-motion:reduce) {
-  .emFigStage[data-armed] :is(.emFigBand,.emFigScale,.emFigDot,.emFigReadout) { animation:none; }
+  .emFigStage[data-armed] :is(.emFigBand,.emFigScale,.emFigDot,.emFigReadout,.emFigLabels) { animation:none; }
 }

@@ -59,6 +59,7 @@ import { StockSummary, metaExtras, summaryFacts } from "./_panels/StockSummary";
 import { StockJsonLd } from "./_panels/StockJsonLd";
 import { EarningsInsight } from "./_panels/StockInsights";
 import { AskMoveSlot } from "./_panels/AskMovePanel";
+import { DekPlaceholder, ValuationDek, contextDek, earningsDek } from "./_panels/ChapterDeks";
 import { AskStockChip, ClaudeEntryChip } from "@/components/stock/ClaudeEntryChip";
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import depth from "./_panels/depth.module.css";
@@ -571,9 +572,31 @@ export default async function StockPage(
           Eskiden bunlar tek sütuna dizildiği için sağ kolon uzayıp sol taraf
           boş kalıyordu; artık sayfanın tam genişliğini kullanıyorlar. */}
       <section id="stock-fundamentals" className={cn(styles.chapter, styles.fundamentalsChapter)}>
-        <ChapterHeading title={t.stock.chapterValuation} />
+        {/* BAŞLIĞIN ALTINDA VERİ SATIRI (10 Kasım 2026) — üç bölümde de;
+            gerekçe ve kaynaklar _panels/ChapterDeks.tsx. Bu satır akışla
+            geliyor, yedeği aynı yükseklikte. */}
+        <ChapterHeading
+          title={t.stock.chapterValuation}
+          dek={
+            <Suspense fallback={<DekPlaceholder />}>
+              <ValuationDek symbol={symbol} locale={locale} t={t} />
+            </Suspense>
+          }
+        />
         <ScrollStage>
         <div className={styles.fundamentalsGrid}>
+        {/* İKİ KOLON, HER BİRİNDE BİR ESNEYEN ÇİZİM (10 Kasım 2026). Dört kart
+            iki ızgara SATIRINI paylaşıyordu: satırın boyunu uzun kart kuruyor,
+            kısa kartın dibinde boş zemin kalıyordu (NVDA 1440, ölçüldü:
+            Hareketli Ortalamalar 83, canlıda Katılım Taraması ~130 piksel).
+            Artık iki bağımsız kolon: solda Temel Göstergeler + Analist
+            Görüşleri, sağda Hareketli Ortalamalar + Katılım Taraması. Aralık
+            sabit 16; kolonlar arasındaki boy farkını ARALIK değil içerik
+            alıyor: sağda ortalamaların bir yıllık çizimi (`AveragesChart`,
+            `flex:1`), solda ölçü ızgarasının satırları. Ölçüm sonrası her
+            kartta dip boşluğu 13–17 piksel (kartın kendi alt payı).
+            Tek sütunda sıra: ölçüler, analist, ortalamalar, katılım. */}
+        <div className={styles.fundamentalsCol}>
         {/* `flex flex-col` — içerideki liste kutuyu doldurabilsin diye;
             gerekçe MetricsCard'ın kendi künyesinde. */}
         <Panel className={styles.metricsPanel}>
@@ -602,6 +625,15 @@ export default async function StockPage(
           </Suspense>
         </Panel>
 
+        {/* PANEL VE BAŞLIK KARTIN İÇİNDE. Başlığın sağındaki rozet
+            sağlayıcıdan gelen veriden hesaplanıyor, yani başlık akışın
+            dışında kalamıyor. Yedek de artık başlık şeridini çiziyor —
+            beş satır, kartın gerçekte bastığı kova sayısı. */}
+        <Suspense fallback={<Skeleton className={styles.analystSkeleton} />}>
+          <AnalystCard symbol={symbol} locale={locale} t={t} />
+        </Suspense>
+        </div>
+        <div className={styles.fundamentalsCol}>
         {/* ORTA SÜTUN İKİ PARÇA. Üstte hareketli ortalamalar, altında
             katılım taraması. İkisi de kısa kartlar ve tek başlarına
             bırakıldıklarında yanlarındaki uzun kartların yanında bir sütunu
@@ -615,7 +647,8 @@ export default async function StockPage(
             kendi ölçüsü olmaktan çıkıp komşu kolonun boyuna bağlanıyor.
             Aralık `gap-5` sabit kalıyor; artan yer alttaki kartın İÇİNE
             gidiyor ve iki sütun aynı hizada bitiyor. */}
-        {/* Four independent cards now share two rows. No card absorbs the height of a neighboring column. */}
+        {/* (Eski not, 10 Kasım 2026'da güncellendi: dört kart iki satırı
+            paylaşıyordu; artık iki kolon — gerekçe ızgaranın başındaki notta.) */}
           <Panel className={styles.averagesPanel}>
             {/* KAPSAMDAKİ ON İKİ HİSSEDE ORTALAMALAR PANELİ TEKNİK ANALİZE AÇILIYOR.
                 Bağlantı yalnızca tek yöndeydi: teknik sayfa şirkete gidiyor,
@@ -645,13 +678,6 @@ export default async function StockPage(
             </Suspense>
           </Panel>
 
-        {/* PANEL VE BAŞLIK KARTIN İÇİNDE. Başlığın sağındaki rozet
-            sağlayıcıdan gelen veriden hesaplanıyor, yani başlık akışın
-            dışında kalamıyor. Yedek de artık başlık şeridini çiziyor —
-            beş satır, kartın gerçekte bastığı kova sayısı. */}
-        <Suspense fallback={<Skeleton className={styles.analystSkeleton} />}>
-          <AnalystCard symbol={symbol} locale={locale} t={t} />
-        </Suspense>
           <Suspense
             fallback={
               <Skeleton className="h-[220px] w-full rounded-(--radius-xl)" />
@@ -659,6 +685,7 @@ export default async function StockPage(
           >
             <ComplianceCard symbol={symbol} locale={locale} t={t} />
           </Suspense>
+        </div>
 
       </div>
 
@@ -702,7 +729,7 @@ export default async function StockPage(
       </section>
 
       <section id="stock-earnings" className={styles.chapter}>
-        <ChapterHeading title={t.stock.chapterEarnings} />
+        <ChapterHeading title={t.stock.chapterEarnings} dek={earningsDek(nextReport, locale, t)} />
         {/* Son bilançonun Claude notu — yalnız son 10 günde açıklanan
             bilançoda; yoksa hiçbir şey basılmıyor (yedek de yok). */}
         <Suspense fallback={null}>
@@ -755,7 +782,10 @@ export default async function StockPage(
       </section>
 
       <section id="stock-context" className={styles.chapter}>
-        <ChapterHeading title={t.stock.chapterContext} />
+        <ChapterHeading
+          title={t.stock.chapterContext}
+          dek={contextDek(famousInvestors?.holders.filter((h) => !h.exited).length ?? 0, storyRows.length, t)}
+        />
       {/* İÇERİDEN İŞLEMLER GÜNDEM'İN BAŞINDA, ÜNLÜ YATIRIMCILAR HEMEN
           ALTINDA, İKİSİ DE MERCEK'İN ÜSTÜNDE (28 Eylül, sahibinin isteği).
           Sıra: "şirketi kim alıp satıyor" (yönetim, sonra ünlü yatırımcılar
