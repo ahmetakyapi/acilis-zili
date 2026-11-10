@@ -166,7 +166,12 @@
    için gizli bir yedek listenin başında durabiliyor (bugün COST) ve `* + *`
    ilk görünen satıra başıboş bir üst çizgi çiziyordu. */
 .rows > :not([hidden]) ~ :not([hidden]) { border-top: 1px solid var(--line-soft); }
-.upcomingEmpty { padding: 0 20px 16px; font-size: 12px; color: var(--text-muted); }
+/* BOŞ DURUM BİR SATIR, BOŞLUKTA YÜZEN YAZI DEĞİL (10 Kasım): 340 piksellik
+   panelde tek gri cümle duruyordu. Satır listenin kendi kalıbında: kesik
+   çizgili boş takvim yaprağı ("o gün yok" — tekrar yaprağının dili) ve
+   yanında cümle. */
+.upcomingEmpty { display: flex; align-items: center; gap: 12px; min-height: 52px; padding: 6px 20px 16px; font-size: 13px; line-height: 1.45; color: var(--text-body); }
+.upcomingEmpty::before { content: ""; flex: none; width: 36px; height: 40px; border: 1px dashed var(--line-strong); border-radius: var(--radius-sm); }
 
 /* Satır: tarih karosu · logo · ad · HBK · takvim; ikinci satırda zaman.
    HBK ADIN HİZASINDA, zaman satırı ad ile HBK'nın altına birlikte yayılıyor.
@@ -180,10 +185,14 @@
 .upcomingRow {
   position: relative;
   display: grid;
+  /* BEKLENTİ İKİNCİ SATIRDA (10 Kasım): ad ile aynı satırdayken "HBK 1,35 $"
+     ada 306 piksellik panelde ~60 piksel bırakıyor, adlar "Cisco Sys…",
+     "Applied …" diye kırpılıyordu. Ad artık satırın tamamını alır; beklenti
+     zaman satırının sağ ucunda, takvim düğmesinin yanında. */
   grid-template-columns: 36px 22px minmax(0, 1fr) auto 32px;
   grid-template-areas:
-    "date logo name eps cal"
-    "date logo when when cal";
+    "date logo name name cal"
+    "date logo when eps cal";
   align-content: center;
   align-items: center;
   gap: 2px 10px;
@@ -270,8 +279,8 @@
   .upcomingRow {
     grid-template-columns: 36px minmax(0, 1fr) auto 32px;
     grid-template-areas:
-      "date name eps cal"
-      "date when when cal";
+      "date name name cal"
+      "date when eps cal";
   }
   .upcomingLogo { display: none; }
 }
@@ -293,6 +302,13 @@
 }
 
 .archive { display: flex; grid-column: 1 / -1; flex-direction: column; min-width: 0; gap: 16px; padding-top: 12px; scroll-margin-top: 100px; }
+/* BAŞLIK DENETİMLERLE AYNI SATIRDA (10 Kasım). Önce (1440): başlık + çipler
+   y=722, sağa yaslı sıralama/görünüm y=781 (solunda ~850 piksel boş), ölçek
+   notu y=822, kartlar y=850 — başlıktan karta 128 piksel, üç satır. Sonra:
+   başlık + sıralama/görünüm tek satır, altında çipler solda ölçek notu
+   sağda: başlıktan karta 93 piksel, iki satır (1440 ve 1024 aynı). Başlık
+   kendi eninde, denetimler sağa itilir; telefonda başlık kendi satırında. */
+.archive [data-table-toolbar] > h2 { flex: none; margin-right: auto; }
 .archive > div:first-child { padding-block: 8px; }
 .archive h2 { font-size: 21px; line-height: 1.25; letter-spacing: -.035em; }
 .archive :global(.panel) { border-radius: var(--radius-panel); }

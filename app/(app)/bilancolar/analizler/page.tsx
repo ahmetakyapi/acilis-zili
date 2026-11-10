@@ -328,6 +328,50 @@ export default async function AnalysesPage(
     return query ? `/bilancolar/analizler?${query}` : "/bilancolar/analizler";
   };
 
+  const archiveHeading = (
+    <h2 className="display-ink display-ink-tight w-fit text-base font-bold">
+      {t.analysis.listTitle}
+    </h2>
+  );
+  /* Dar ekranda çipler kırılmak yerine kayar. */
+  const archiveFilters = (
+    <ScrollEdges className="no-scrollbar -mx-4 flex max-w-full gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
+      <FilterChip href={filterHref(null)} active={!filter}>
+        {t.analysis.filterAll}
+      </FilterChip>
+      {/* Sektör çiplerinin kuralı bu ikisinde de: boş sonuç veren
+          çip basılmıyor. "Bu Hafta" son analiz 10 Eylül'deyken
+          ikinci sıradaki çipti ve her tıklamada boş ekrana,
+          kapakta 0/0/0'a götürüyordu. Doğrudan adres (yer imi)
+          boş durumu yine gösteriyor. */}
+      {weekAll.length > 0 && (
+        <FilterChip
+          href={filterHref("hafta")}
+          active={filter === "hafta"}
+        >
+          {t.analysis.filterThisWeek}
+        </FilterChip>
+      )}
+      {session?.user && chipSymbols.some((symbol) => watchSet.has(symbol)) && (
+        <FilterChip
+          href={filterHref("takip")}
+          active={filter === "takip"}
+        >
+          {t.analysis.filterWatchlist}
+        </FilterChip>
+      )}
+      {[...groups.values()].map((group) => (
+        <FilterChip
+          key={group.key}
+          href={filterHref(group.key)}
+          active={filter === group.key}
+        >
+          {sectorGroupLabel(group, locale)}
+        </FilterChip>
+      ))}
+    </ScrollEdges>
+  );
+
   return (
     <MotionExperience className={styles.page}>
       <ScrollProgress />
@@ -472,47 +516,15 @@ export default async function AnalysesPage(
               satıra itiyordu. Üçü de aynı listeyi daraltıyor, bir arada
               durmaları gerekiyordu. */}
           <section id="analysis-archive" className={analysisStyles.archive}>
+            {/* BAŞLIK VE ÇİPLER TABLONUN DENETİM ŞERİDİNE İNİYOR (10 Kasım;
+                gerekçe AnalysisTable → `heading`). Liste boşsa tablo
+                basılmaz; o durumda eski düzenle burada dururlar. */}
+            {rows.length === 0 && (
             <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-2">
-              <h2 className="display-ink display-ink-tight w-fit text-base font-bold">
-                {t.analysis.listTitle}
-              </h2>
-              {/* Dar ekranda çipler kırılmak yerine kayar. */}
-              <ScrollEdges className="no-scrollbar -mx-4 flex max-w-full gap-1.5 overflow-x-auto px-4 sm:mx-0 sm:flex-wrap sm:px-0">
-                <FilterChip href={filterHref(null)} active={!filter}>
-                  {t.analysis.filterAll}
-                </FilterChip>
-                {/* Sektör çiplerinin kuralı bu ikisinde de: boş sonuç veren
-                    çip basılmıyor. "Bu Hafta" son analiz 10 Eylül'deyken
-                    ikinci sıradaki çipti ve her tıklamada boş ekrana,
-                    kapakta 0/0/0'a götürüyordu. Doğrudan adres (yer imi)
-                    boş durumu yine gösteriyor. */}
-                {weekAll.length > 0 && (
-                  <FilterChip
-                    href={filterHref("hafta")}
-                    active={filter === "hafta"}
-                  >
-                    {t.analysis.filterThisWeek}
-                  </FilterChip>
-                )}
-                {session?.user && chipSymbols.some((symbol) => watchSet.has(symbol)) && (
-                  <FilterChip
-                    href={filterHref("takip")}
-                    active={filter === "takip"}
-                  >
-                    {t.analysis.filterWatchlist}
-                  </FilterChip>
-                )}
-                {[...groups.values()].map((group) => (
-                  <FilterChip
-                    key={group.key}
-                    href={filterHref(group.key)}
-                    active={filter === group.key}
-                  >
-                    {sectorGroupLabel(group, locale)}
-                  </FilterChip>
-                ))}
-              </ScrollEdges>
+              {archiveHeading}
+              {archiveFilters}
             </div>
+            )}
 
             <QueryTransition label={t.common.loading}>
             {rows.length === 0 ? (
@@ -535,6 +547,8 @@ export default async function AnalysesPage(
                 rows={tableRows}
                 labels={analysisTableLabels(t)}
                 highlightFirst
+                heading={archiveHeading}
+                filters={archiveFilters}
                 toolbar={
                   <Segment>
                     <SegmentItem

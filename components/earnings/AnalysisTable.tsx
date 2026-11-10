@@ -123,6 +123,8 @@ export function AnalysisTable({
   labels,
   highlightFirst = false,
   toolbar,
+  heading,
+  filters,
 }: {
   rows: AnalysisRowView[];
   labels: AnalysisTableLabels;
@@ -130,6 +132,17 @@ export function AnalysisTable({
   highlightFirst?: boolean;
   /** Arama kutusunun yanına giren sunucu tarafı denetimler (sıralama). */
   toolbar?: React.ReactNode;
+  /**
+   * Bölüm başlığı ve süzgeç çipleri (10 Kasım, sahibinin itirazı: "Son
+   * Bilanço Analizleri yazısının altındaki boşluk göze çarpıyor"). Başlık
+   * sayfada, sıralama ve görünüm denetimleri burada durunca üç ayrı satır
+   * oluşuyordu: başlık + çipler, sağa yaslı denetimler (solu ~850 piksel
+   * boş, 1440'ta), ölçek notu. Verilirse başlık denetimlerle AYNI satıra,
+   * çipler ölçek notuyla aynı satıra oturur: üç satır ikiye iner, boş yarı
+   * kalmaz (ölçüm AnalysisExperience.module.css → `.archive`).
+   */
+  heading?: React.ReactNode;
+  filters?: React.ReactNode;
 }) {
   const [ownQuery, setQuery] = useState("");
   /* GÖRÜNÜM: KART VARSAYILAN (25 Ekim). Dokuz sütunluk tablo telefonda
@@ -185,9 +198,19 @@ export function AnalysisTable({
     setSharedCount?.(visible.length);
   }, [setSharedCount, visible.length]);
 
+  const scaleNote = (
+    <p className="text-tiny text-muted">
+      {labels.scale
+        .replace("{n}", String(scale))
+        .replace("{revenue}", String(revenueScale))
+        .replace("{eps}", String(epsScale))}
+    </p>
+  );
+
   return (
     <div className="flex flex-col gap-3">
-      <div className="flex flex-wrap items-center gap-2.5" data-table-toolbar>
+      <div className="flex flex-wrap items-center gap-x-2.5 gap-y-3" data-table-toolbar>
+        {heading}
         {!shared && <>
         {/* ARAMA KUTUSU TELEFONDA TAM GENİŞLİK. `flex-1` her genişlikte
             duruyordu ve sıralama segmenti (305 piksel, `shrink-0`) aynı
@@ -247,7 +270,7 @@ export function AnalysisTable({
             ve 284'lük kaba sığmıyordu; son düğme ekran kenarında 3 piksel
             kesiliyordu. 360 altında düğme dolgusu 16'dan 12'ye: 281 piksel,
             tek satır, 44 piksel yükseklik korunuyor (ölçüldü). */}
-        {toolbar && <div className="ml-auto min-w-0 max-w-full max-[359px]:[&_a]:px-3">{toolbar}</div>}
+        {toolbar && <div className="min-w-0 max-w-full sm:ml-auto max-[359px]:[&_a]:px-3">{toolbar}</div>}
         <div role="group" aria-label={labels.viewLabel} className={cn(cardStyles.toggle, !toolbar && "ml-auto")}>
           <button type="button" aria-pressed={view === "cards"} onClick={() => setView("cards")}>
             <SquaresFour size={15} weight="duotone" aria-hidden />
@@ -260,6 +283,13 @@ export function AnalysisTable({
         </div>
       </div>
 
+      {filters && (
+        <div className="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
+          {filters}
+          {view === "cards" && visible.length > 0 && scaleNote}
+        </div>
+      )}
+
       {view === "cards" ? (
         visible.length === 0 ? (
           <p className="panel px-4 py-10 text-center text-sm text-body sm:px-5">
@@ -267,12 +297,7 @@ export function AnalysisTable({
           </p>
         ) : (
           <>
-          <p className="text-tiny text-muted">
-            {labels.scale
-              .replace("{n}", String(scale))
-              .replace("{revenue}", String(revenueScale))
-              .replace("{eps}", String(epsScale))}
-          </p>
+          {!filters && scaleNote}
           <AnalysisCardGrid
             rows={searching ? visible : visible.slice(0, limit)}
             labels={{
