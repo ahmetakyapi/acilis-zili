@@ -127,6 +127,14 @@ kontrastlar sahibinin makinesindeki `~/dev-starter/knowledge/themes/acilis-zili.
   grafik çizgisi 2 piksel; halka 6 piksel; etiket çipi 22/12/600 dolgu 8;
   zaman çipi `TimingChip`, değişim hapı `ChangePill`, karne
   `components/earnings/KarneStrip.tsx`; boş değer "–" + `text-muted`.
+- **Büyüklük KALIN YATAY ŞERİTLE okunur, nokta/çentik bulutuyla değil**
+  (sahibinin sözü, 10 Kasım: "böyle nokta nokta ne anlatıyor anlamıyorum;
+  yatayda uzun kalın çizgi seviyorum"). Bir satırın tek bir değeri varsa
+  (medyan, değişim, pay) sıfırdan o değere uzanan dolu çubuk çizilir (8
+  piksel, yönü renginde; kulvar 5). Dağılım çentikleri, onluk eksende nokta,
+  düğmeli im gibi okurun çözmesi gereken çizimler kullanılmaz; ayrıntı
+  tabloya ya da haritaya gider. Piyasa değeri gibi büyüklükler doğrudan
+  YAZILIR (aynı gün, Endeks Bileşenleri). Örnek `components/themes/ThemeStrip.tsx`.
 - **Görselin etrafında çerçeve yok** — görsel kutunun kendisi
   (`overflow-hidden` + yarıçap). Kenarlık yalnız yer tutucularda.
 - **Tema** next-themes değil: `data-theme` + `az-theme` çerezi.

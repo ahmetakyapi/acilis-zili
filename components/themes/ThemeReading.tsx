@@ -72,7 +72,7 @@ export function ThemeReading({
     mid !== null && benchmark !== null && benchmark.changePct !== null && themeSession === benchSession;
   const diff = comparable ? mid - benchmark.changePct! : null;
   const scale = moves && moves.values.length > 0
-    ? barScale([...(mid === null ? [] : [mid]), ...(comparable ? [benchmark.changePct!] : [])])
+    ? barScale(mid === null ? [] : [mid])
     : null;
   const points = data && moves
     ? data.rows.flatMap((row, i) => (moves.included[i] ? [{ symbol: row.symbol, change: row.changePct! }] : []))

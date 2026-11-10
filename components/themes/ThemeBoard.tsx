@@ -74,14 +74,13 @@ export function ThemeBoard({
         return (b.median ?? 0) - (a.median ?? 0);
       })
     : board.cards;
-  const anyBenchValue = (card: ThemeCard) => benches[card.theme.slug];
-  /* Ölçek medyanlardan (gerekçe lib/theme-view.ts → `barScale`). */
+  /* Ölçek YALNIZ medyanlardan (gerekçe lib/theme-view.ts → `barScale`).
+     Ölçüt fonu ölçeğe katılmaz: tek bir fonun −%1,6'sı ölçeği ±%2'ye açıp
+     bütün çubukları kulvarın beşte ikisine indiriyordu (ölçüldü); ölçeği
+     aşan çentik uçta durur. */
   const scale = board.scale === null
     ? null
-    : barScale(board.cards.filter(inScale).flatMap((card) => {
-        const bench = anyBenchValue(card);
-        return bench === undefined ? [card.median!] : [card.median!, bench];
-      }));
+    : barScale(board.cards.filter(inScale).map((card) => card.median!));
   const pre = board.phase === "pre-market";
   const closed = board.phase === "lastClose";
   const clippedLow = false;
