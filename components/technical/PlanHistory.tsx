@@ -79,7 +79,13 @@ export function PlanHistory({
                   ? { low: entry.entryLow, high: entry.entryHigh }
                   : null;
               const zoneLeft = zone ? pct(Math.min(zone.low, zone.high)) : 0;
-              const zoneWidth = zone ? Math.max(MIN_ZONE_PCT, pct(Math.max(zone.low, zone.high)) - zoneLeft) : 0;
+              /* Tavan `100 - zoneLeft` (10 Kasım 2026): ölçeğin tepesindeki
+                 dar bölgede `MIN_ZONE_PCT` bandı kulvarın dışına itiyordu ve
+                 kap 4–8 piksel yatay kayıyordu (390: 320/325, 640: 558/566,
+                 1024: 926/930; ölçüldü, canlı NVDA). */
+              const zoneWidth = zone
+                ? Math.min(100 - zoneLeft, Math.max(MIN_ZONE_PCT, pct(Math.max(zone.low, zone.high)) - zoneLeft))
+                : 0;
               return (
                 <tr key={`${entry.sessionDate}-${entry.slot}`}>
                   <td data-cell="date">{formatEtDateCompact(entry.sessionDate, locale)}</td>

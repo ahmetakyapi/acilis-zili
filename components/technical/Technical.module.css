@@ -1209,7 +1209,11 @@
      Her kayıt artık iki satır: üstte tarih, yayın ve görüş; altta seviyeler
      kendi adlarıyla (`data-label`). Başlık satırı gizleniyor çünkü adlar
      hücrenin yanına indi. */
-  .tableWrap { overflow-x:visible; }
+  /* 10 Kasım 2026: `overflow-x:visible` tek başına `overflow-y:hidden`ın
+     yanında `auto`ya dönüyor (CSS kuralı) ve kap yine kaydırma kabıydı:
+     390'da 320/325, 360'ta 290/294 (ölçüldü, canlı). İki eksen birlikte
+     görünür; satır yığınında taşan bir şey yok. */
+  .tableWrap { overflow:visible; }
   .table, .table tbody, .table tr, .table td { display:block; }
   .table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
   .table tr { display:grid; grid-template-columns:auto auto 1fr; align-items:center; gap:2px 10px; padding:12px 0; border-bottom:1px solid var(--line-soft); }
@@ -1966,6 +1970,23 @@
   .historyTable td[data-cell="track"] { grid-column:1 / -1; width:auto; min-width:0; margin-top:2px; }
   .historyTable td[data-cell="planless"] { grid-column:1 / -1; }
   .historyCount { margin-left:6px; }
+  /* Aralık tek parça (10 Kasım 2026): 360'ta "196,20 –" / "199,34 $" iki
+     satıra kırılıyordu (ölçüldü). 380'in altında stop kendi satırına iner. */
+  .historyTable td[data-cell="entry"] { white-space:nowrap; }
+}
+@media (max-width: 379px) {
+  .historyTable td[data-cell="stop"] { grid-column:1 / -1; justify-self:start; }
+}
+/* 768–1023 SIĞAN SÜTUNLARLA (10 Kasım 2026, sahibinin sözü: "tablolar sağa
+   sola kaymasın"). Satır yığını 767'de bitiyor ve altı sütunlu tablo 768'de
+   670 piksellik kaba 843 piksel basıyordu (ölçüldü, canlı NVDA). Bu bantta
+   "Yayın" sütunu düşüyor (aynı günün dilimi; tarih zaten satırı söylüyor)
+   ve planın seyri 180 yerine 140 piksel tabanla kalan yeri alıyor. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .historyTable :is(th, td)[data-cell="edition"],
+  .historyTable thead th:nth-child(2) { display:none; }
+  .historyTable th[data-cell="track"], .historyTable td[data-cell="track"] { min-width:140px; }
+  .historyTable th, .historyTable td { padding-inline:10px; }
 }
 
 /* ---- Fiyat haritası: satır payı (29 Eylül, ölçüldü) ----

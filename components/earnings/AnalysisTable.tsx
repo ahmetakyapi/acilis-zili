@@ -19,6 +19,7 @@ import { LogoTile } from "@/components/ui/primitives";
 import { cn, plural } from "@/lib/utils";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { useAnalysisSearch } from "./AnalysisSearch";
+import styles from "./AnalysisTable.module.css";
 
 /**
  * Son Analizler tablosu — arama kutusuyla birlikte.
@@ -42,6 +43,12 @@ import { useAnalysisSearch } from "./AnalysisSearch";
  * rollerle duyuruluyor, hücre genişlikleri sabit — sayı sütunları satırdan
  * satıra aynı hizada kalsın diye. Dar ekranda tablo YATAY kayar; dokuz
  * sütunu üst üste yığmak satırı bir kartın kötü taklidine çeviriyordu.
+ *
+ * DEĞİŞTİ (10 Kasım 2026, sahibinin sözü: "tablolar sağa sola kaymasın"):
+ * tablo hiçbir kırılımda kaymıyor. Telefonda dokuz sütun yığılmıyor,
+ * ELENİYOR: iki hatlı satır (sembol · puan · görüş / tepki · gelir · HBK),
+ * 768–1023 sığan sütunlar, ≥ 1024 eski tablo. Gerekçe ve ölçüm
+ * `AnalysisTable.module.css`.
  */
 
 type AnalysisTableLabels = {
@@ -351,49 +358,49 @@ export function AnalysisTable({
           role="region"
           aria-label={labels.tableRegion}
         >
-          <div className="min-w-[860px] sm:min-w-[1180px]" role="table">
+          <div role="table">
             {/* Başlık tonu ve odak vurgusu BİLEŞENİN KENDİSİNDE (14 Ekim):
                 `.archive` kapsamındaydı ve aynı tablo /bilancolar/takip'te
                 başlıksız-ton, odak-vurgusuz basılıyordu — iki sekmede iki
                 farklı tablo gibi. */}
             <div
               role="row"
-              className="flex items-center gap-4 border-b border-line bg-surface-sunken px-4 py-3.5 text-tiny font-bold text-muted sm:px-5"
+              className={cn("flex items-center gap-4 border-b border-line bg-surface-sunken px-4 py-3.5 text-tiny font-bold text-muted sm:px-5", styles.head)}
             >
-              <span role="columnheader" className={COLS.symbol}>
+              <span role="columnheader" className={cn(COLS.symbol, styles.cSymbol)}>
                 {labels.colSymbol}
               </span>
-              <span role="columnheader" className={COLS.company}>
+              <span role="columnheader" className={cn(COLS.company, styles.cCompany)}>
                 {labels.colCompany}
               </span>
               <span
                 role="columnheader"
-                className={cn(COLS.reported, "whitespace-nowrap")}
+                className={cn(COLS.reported, styles.cReported, "whitespace-nowrap")}
               >
                 {labels.colReported}
               </span>
               <span
                 role="columnheader"
-                className={cn(COLS.revenue, "whitespace-nowrap")}
+                className={cn(COLS.revenue, styles.cRevenue, "whitespace-nowrap")}
               >
                 {labels.colRevenue}
               </span>
-              <span role="columnheader" className={cn(COLS.eps, "whitespace-nowrap")}>
+              <span role="columnheader" className={cn(COLS.eps, styles.cEps, "whitespace-nowrap")}>
                 {labels.colEps}
               </span>
               <span
                 role="columnheader"
-                className={cn(COLS.reaction, "whitespace-nowrap")}
+                className={cn(COLS.reaction, styles.cReaction, "whitespace-nowrap")}
               >
                 {labels.colReaction}
               </span>
-              <span role="columnheader" className={COLS.score}>
+              <span role="columnheader" className={cn(COLS.score, styles.cScore)}>
                 {labels.colScore}
               </span>
-              <span role="columnheader" className={COLS.verdict}>
+              <span role="columnheader" className={cn(COLS.verdict, styles.cVerdict)}>
                 {labels.colVerdict}
               </span>
-              <span role="columnheader" className={COLS.card}>
+              <span role="columnheader" className={cn(COLS.card, styles.cCard)}>
                 {labels.colCard}
               </span>
             </div>
@@ -429,6 +436,7 @@ export function AnalysisTable({
                   role="row"
                   className={cn(
                     "relative flex items-center gap-4 border-b border-line-soft px-4 py-3.5 transition-colors last:border-b-0 hover:bg-surface-elevated focus-within:bg-primary-tint focus-within:[box-shadow:inset_3px_0_var(--primary)] sm:px-5",
+                    styles.row,
                     highlightFirst && !searching && index === 0 && "bg-primary-tint",
                     filtered && "filter-settle",
                   )}
@@ -438,7 +446,7 @@ export function AnalysisTable({
                       bakışta tanınır kılıyor. */}
                   <span
                     role="cell"
-                    className={cn(COLS.symbol, "flex items-center gap-2.5")}
+                    className={cn(COLS.symbol, styles.cSymbol, "flex items-center gap-2.5")}
                   >
                     <Link
                       href={row.href}
@@ -464,15 +472,17 @@ export function AnalysisTable({
                       {/* Dönem etiketi normalde şirket adının yanında;
                           o sütun telefonda kapalı olduğu için buraya
                           iniyor. Hangi çeyreğin okunduğu, satırın taşıdığı
-                          en temel bilgilerden biri. */}
-                      <span className="truncate text-nano text-muted sm:hidden">
+                          en temel bilgilerden biri. 10 Kasım 2026: şirket
+                          sütunu artık 1024'ün altında kapalı (gerekçe
+                          `AnalysisTable.module.css`), etiket de oraya dek. */}
+                      <span className="truncate text-nano text-muted lg:hidden">
                         {row.periodLabel}
                       </span>
                     </span>
                   </span>
                   <span
                     role="cell"
-                    className={cn(COLS.company, "truncate text-base text-body")}
+                    className={cn(COLS.company, styles.cCompany, "truncate text-base text-body")}
                   >
                     <b className="font-bold text-strong">{row.company}</b>
                     {" · "}
@@ -482,6 +492,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.reported,
+                      styles.cReported,
                       "whitespace-nowrap text-small text-muted",
                     )}
                   >
@@ -489,8 +500,10 @@ export function AnalysisTable({
                   </span>
                   <span
                     role="cell"
+                    data-label={labels.revenueLabel}
                     className={cn(
                       COLS.revenue,
+                      styles.cRevenue,
                       "numeral whitespace-nowrap text-base font-bold",
                       toneClass(row.revenueTone),
                     )}
@@ -499,8 +512,10 @@ export function AnalysisTable({
                   </span>
                   <span
                     role="cell"
+                    data-label={labels.epsLabel}
                     className={cn(
                       COLS.eps,
+                      styles.cEps,
                       "numeral whitespace-nowrap text-base font-bold",
                       toneClass(row.epsTone),
                     )}
@@ -509,15 +524,17 @@ export function AnalysisTable({
                   </span>
                   <span
                     role="cell"
+                    data-label={labels.reactionLabel}
                     className={cn(
                       COLS.reaction,
+                      styles.cReaction,
                       "numeral whitespace-nowrap text-base font-bold",
                       toneClass(row.reactionTone),
                     )}
                   >
                     {row.reaction}
                   </span>
-                  <span role="cell" className={cn(COLS.score, "flex justify-center")}>
+                  <span role="cell" className={cn(COLS.score, styles.cScore, "flex justify-center")}>
                     <span
                       className={cn(
                         /* Görüş renkli (25 Ekim son düzeltme) — gerekçe `verdictTextClass`.
@@ -535,6 +552,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.verdict,
+                      styles.cVerdict,
                       "text-base font-bold",
                       verdictTextClass(row.verdict),
                     )}
@@ -545,6 +563,7 @@ export function AnalysisTable({
                     role="cell"
                     className={cn(
                       COLS.card,
+                      styles.cCard,
                       "text-small font-semibold text-primary",
                     )}
                   >

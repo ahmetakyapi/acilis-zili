@@ -179,6 +179,12 @@ function TradeTable({
      yani sol kenar solmuyor (`fixedStart`). Kap odaklanabilir bir bölge:
      Safari kaydırıcıyı kendiliğinden sekme sırasına almıyor ve sembolsüz
      satırlarda odaklanacak bağlantı yok (`AnalysisTable` ile aynı karar).
+     10 Kasım 2026 (sahibinin sözü: "tablolar sağa sola kaymasın"): tablo
+     artık HİÇBİR kırılımda kaymıyor — 390'da 953 piksellik tablo 352
+     piksellik kapta kayıyordu (ölçüldü). < 640 kart satırı (şirket · tutar
+     üstte; tür · tarih · sahip altta; ayrıntı üçüncü satırda), 640–1023
+     sahip ve bildirim sütunları düşüyor, ≥ 1024 tam tablo. Kurallar
+     `Investors.module.css` → "KONGRE İŞLEMLERİ KAYMAZ". Eski notun sonu:
      Hairline kabın DIŞINDA (`.tableRule`): maske kenarlığı da soldururdu. */
   return (
     <div className={styles.tableRule}>
@@ -192,13 +198,13 @@ function TradeTable({
         <table className={cn(styles.table, styles.tradeTable)}>
           <thead>
             <tr>
-              <th scope="col">{t.colDate}</th>
+              <th scope="col" className={styles.tDate}>{t.colDate}</th>
               <th scope="col">{t.colAsset}</th>
-              <th scope="col">{t.colType}</th>
-              <th scope="col" className={styles.num}>{t.colAmount}</th>
-              <th scope="col">{t.colOwner}</th>
-              <th scope="col">{t.colDetail}</th>
-              <th scope="col">{t.colNotified}</th>
+              <th scope="col" className={styles.tType}>{t.colType}</th>
+              <th scope="col" className={cn(styles.num, styles.tAmount)}>{t.colAmount}</th>
+              <th scope="col" className={styles.tOwner}>{t.colOwner}</th>
+              <th scope="col" className={styles.detailCell}>{t.colDetail}</th>
+              <th scope="col" className={styles.tNotified}>{t.colNotified}</th>
             </tr>
           </thead>
           <tbody>
@@ -220,7 +226,7 @@ function TradeTable({
               );
               return (
                 <tr key={`${trade.docId}-${trade.rowNo}`}>
-                  <td className="numeral whitespace-nowrap">{formatEtDateMedium(trade.txDate, locale)}</td>
+                  <td className={cn("numeral whitespace-nowrap", styles.tDate)}>{formatEtDateMedium(trade.txDate, locale)}</td>
                   <th scope="row" className={styles.companyCell}>
                     {trade.ticker && meta ? (
                       <Link href={`/hisse/${trade.ticker}`} prefetch={false} className={styles.company} data-cc={trade.ticker}>
@@ -230,17 +236,17 @@ function TradeTable({
                       <span className={styles.company}>{company}</span>
                     )}
                   </th>
-                  <td>
+                  <td className={styles.tType}>
                     <span className={styles.moveChip} data-tone={txTone(trade.txType)}>
                       {txLabel(trade.txType, t)}
                     </span>
                     {trade.assetType === "OP" && <small className={styles.cellNote}>{t.optionShort}</small>}
                   </td>
-                  <td className={cn("numeral whitespace-nowrap", styles.num)}>
+                  <td className={cn("numeral whitespace-nowrap", styles.num, styles.tAmount)}>
                     {amountRange(trade.amountLow, trade.amountHigh, locale, t)}
                   </td>
-                  <td className="whitespace-nowrap">{ownerLabel(trade.owner, t)}</td>
-                  <td className={styles.detailCell}>
+                  <td className={cn("whitespace-nowrap", styles.tOwner)}>{ownerLabel(trade.owner, t)}</td>
+                  <td className={styles.detailCell} data-empty={detail ? undefined : ""}>
                     {detail ? (
                       detail.original ? (
                         <span lang="en" title={t.detailOriginal}>
@@ -251,7 +257,7 @@ function TradeTable({
                       )
                     ) : null}
                   </td>
-                  <td className="numeral whitespace-nowrap text-muted">
+                  <td className={cn("numeral whitespace-nowrap text-muted", styles.tNotified)}>
                     {trade.notifiedDate ? formatEtDateMedium(trade.notifiedDate, locale) : null}
                   </td>
                 </tr>

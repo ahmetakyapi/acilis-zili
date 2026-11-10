@@ -236,7 +236,17 @@ a.topCard:focus-visible { outline:2px solid var(--line-focus); outline-offset:2p
    piksel solardı. Çizgi bir üst kutuda, maske yalnızca kayan kapta. */
 .tableRule { border-top:1px solid var(--line); }
 .tableRule > .tableScroll { border-top:0; }
-.table { width:100%; min-width:640px; border-collapse:collapse; font-size:14px; }
+/* TABAN GENİŞLİK YALNIZ ≥ 1024 (10 Kasım 2026, sahibinin sözü: "listeleri
+   kaydırmadan kullanalım… tablolar sağa sola kaymasın"; yukarıdaki iki
+   yorum o tarihe kadarki karar). 640'lık taban 640'ta 590 piksellik kaba
+   (640/590), 768'de 718'lik kaba (719/718) sığmıyordu — ölçüldü, Buffett.
+   Altında tablo kabın genişliğinde; sığmayan sütun düşüyor (aşağıda). */
+.table { width:100%; min-width:0; border-collapse:collapse; font-size:14px; }
+@media(min-width:1024px) { .table { min-width:640px; } }
+@media(min-width:640px) and (max-width:1023px) {
+  .positions .colShares { display:none; }
+  .table th, .table td { padding-inline:10px; }
+}
 .table th, .table td { padding:11px 12px; border-top:1px solid var(--line-soft); text-align:left; vertical-align:middle; }
 .table thead th { border-top:0; background:var(--surface-sunken); font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
 .table tbody tr { transition:background .2s var(--ease-brand); }
@@ -267,8 +277,47 @@ a.company:hover b { color:var(--primary-ink); }
 }
 .tableMoreToggle::after { content:"+"; margin-left:8px; font-weight:700; }
 .tableMoreToggle[aria-expanded="true"]::after { content:"\2212"; }
-.tradeTable { min-width:900px; }
+@media(min-width:1024px) { .tradeTable { min-width:900px; } }
 .detailCell { min-width:240px; max-width:360px; font-size:13px; line-height:1.5; color:var(--text-body); }
+
+/* KONGRE İŞLEMLERİ KAYMAZ (10 Kasım 2026, sahibinin sözü: "tablolar sağa
+   sola kaymasın"; gerekçe `CongressDetail` → `TradeTable`). 390'da 953
+   piksellik tablo 352'lik kapta kayıyordu ve tutar ekran dışındaydı.
+   640–1023: sahip, ayrıntı ve bildirim düşüyor (tarih · varlık · tür ·
+   tutar sığıyor). < 640: kart satırı — şirket solda, tutar sağda; altta
+   tür çipi · işlem tarihi · sahip; ayrıntı varsa üçüncü satırda, en çok iki
+   satır (tamamı ≥ 1024 tabloda). Bildirim tarihi telefonda yok: işlem
+   tarihi asıl bilgi. Hücreler hâlâ `td`/`th`; başlık satırı ekran okuyucuya. */
+@media(min-width:640px) and (max-width:1023px) {
+  .tradeTable :is(.tOwner, .tNotified, .detailCell) { display:none; }
+}
+/* 1024–1279: 900 piksellik taban 974'lük kaba sığıyor ama ayrıntı metni
+   tabloyu 1059'a açıyordu (ölçüldü, 1024). Bildirim tarihi düşüyor,
+   ayrıntının tabanı 240 → 200. */
+@media(min-width:1024px) and (max-width:1279px) {
+  .tradeTable .tNotified { display:none; }
+  .tradeTable .detailCell { min-width:200px; }
+}
+@media(max-width:639px) {
+  .tradeTable, .tradeTable tbody { display:block; width:100%; }
+  .tradeTable thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .tradeTable tbody tr { display:flex; flex-wrap:wrap; align-items:center; padding:10px 16px; border-top:1px solid var(--line-soft); }
+  .tradeTable tbody tr:first-child { border-top:0; }
+  .tradeTable tbody :is(td, th) { padding:0; border:0; }
+  .tradeTable .companyCell { position:static; flex:1 1 0; min-width:50%; order:1; background:none; }
+  .tradeTable .company { max-width:none; }
+  .tradeTable .tAmount { order:2; padding-left:12px; font-weight:600; color:var(--text-strong); }
+  .tradeTable tbody tr::after { content:""; order:3; flex-basis:100%; height:0; }
+  .tradeTable .tType { order:4; display:flex; align-items:center; gap:6px; margin:6px 8px 0 36px; }
+  .tradeTable .tType .cellNote { margin-top:0; }
+  .tradeTable .tDate { order:5; margin-top:6px; font-size:12px; color:var(--text-muted); }
+  .tradeTable .tOwner { order:6; margin-top:6px; font-size:12px; color:var(--text-muted); }
+  .tradeTable .tOwner::before { content:"·"; margin-inline:6px; }
+  .tradeTable .detailCell { order:7; flex-basis:100%; min-width:0; max-width:none; margin:4px 0 0 36px; overflow:hidden; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; line-clamp:2; font-size:12px; color:var(--text-muted); }
+  .tradeTable .detailCell[data-empty] { display:none; }
+  .tradeTable .tNotified { display:none; }
+  .table.tradeTable tbody tr:hover .companyCell { background:none; }
+}
 @media(max-width:767px) { .company { max-width:200px; } }
 
 /* TELEFONDA POZİSYON TABLOSU KAYMIYOR, KATLANIYOR (29 Eylül, sahibinin

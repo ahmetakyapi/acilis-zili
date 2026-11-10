@@ -1,0 +1,55 @@
+/* ---- Analiz listesi: kaydırmasız (10 Kasım 2026) ----
+   Sahibinin sözü: "listeleri kaydırmadan kullanalım, kompakt olsun, yeterli
+   bilgi gözüksün; yatayda bakmak isterse detaylara bakar veya büyük ekranda
+   eski sistem gibi olsun; tablolar sağa sola kaymasın." Önce: 390'da kap
+   352, içerik 860 piksel (%41'i görünür); 1024'te 1180 piksellik taban
+   kaba sığmıyordu. Üç düzen:
+
+   · < 768 iki hatlı satır: üstte logo + sembol + dönem, sağda puan hapı ve
+     görüş; altta tepki · gelir · HBK kendi adlarıyla, sığmayan alt satıra
+     kırılır. Rapor günü ve "Karne →" düşer (dönem sembolün altında, satırın
+     tamamı karneye bağlantı). 640–767'de de bu düzen: o bantta yalnız
+     sığan sütunlar sembol + üç ölçü + puan + görüşe iniyor ve 590 piksellik
+     kaba yine 660 piksel istiyordu (hesap: 104+112+124+86+78+56 + aralık).
+   · 768–1023: şirket adı, rapor günü ve karne sütunu düşer, tablo sığar.
+   · ≥ 1024 eski tablo; taban genişlik kalktı, şirket sütunu esner ve
+     taşarsa üç noktayla kesilir (tam adı bağlantının etiketinde).
+   Ton ve yerleşim yalnız burada; hücre genişlikleri TSX'teki `COLS`ta. */
+
+@media (max-width: 767px) {
+  .head { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .row { flex-wrap:wrap; column-gap:10px; row-gap:6px; padding-block:12px; }
+  .cSymbol { order:1; flex:1 1 0; min-width:0; width:auto; }
+  .cScore { order:2; width:auto; }
+  .cVerdict { order:3; width:auto; min-width:28px; text-align:right; font-size:14px; }
+  .row::after { content:""; order:4; flex-basis:100%; height:0; }
+  .cCompany, .cReported, .cCard { display:none; }
+  /* Tepki üst hatta, puanın solunda (fiyatın cevabı, satırın kahramanı);
+     adı yok — yer yetmiyor, sütun adı ekran okuyucuya başlıkta duruyor.
+     Gelir ve HBK alt hatta adlarıyla, sembol metninin hizasından (logo 26
+     + aralık 10). Üç ölçü alt hattayken her biri kendi satırına kırılıyor
+     ve satır 120 piksel tutuyordu (390, görüldü); şimdi ~92. Ayraç noktası
+     yok: kırılan satırın başında "·" kalıyordu; ayrımı aralık ve sönük ad
+     taşıyor. */
+  .row { padding-left:52px; }
+  .cSymbol { margin-left:-36px; }
+  .cReaction { order:2; width:auto; font-size:14px; }
+  .cRevenue, .cEps { order:5; width:auto; margin-right:14px; text-align:left; font-size:13px; line-height:1.35; }
+  .cRevenue::before, .cEps::before { content:attr(data-label) " "; color:var(--text-muted); font-weight:600; font-size:12px; }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .row, .head { gap:12px; }
+  .cCompany, .cReported, .cCard { display:none; }
+  .cRevenue, .cEps { flex:1 1 0; min-width:0; width:auto; }
+}
+
+@media (min-width: 1024px) {
+  .cCompany { min-width:0; }
+}
+/* 1024–1279: sabit sütunlar 974'lük kabın 962 pikselini alıyor ve şirket
+   sütunu 12 piksele eziliyordu ("A.", ölçüldü 1024). Bu bantta rapor günü
+   ve "Analiz →" sütunu düşüyor; şirket adı ~280 piksel. */
+@media (min-width: 1024px) and (max-width: 1279px) {
+  .cReported, .cCard { display:none; }
+}

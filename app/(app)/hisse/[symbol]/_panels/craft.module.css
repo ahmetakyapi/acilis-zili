@@ -40,6 +40,14 @@
 table.emWide { max-width:none; }
 table.emWide td.emLaneCell { width:100%; padding-inline:14px; }
 .emLane { position:relative; display:block; min-width:120px; height:15px; }
+/* TELEFONDA KAYMAZ (10 Kasım 2026, sahibinin sözü: "tablolar sağa sola
+   kaymasın"). 360 pikselde kulvarın 120 piksellik tabanı + 14'er piksel
+   dolgu tabloyu 290 piksellik kaba 318 piksel basıyordu (ölçüldü). 400'ün
+   altında taban 72, dolgu 10: tarih ve yüzde tam, kulvar kalan yeri alıyor. */
+@media (max-width:399px) {
+  table.emWide td.emLaneCell { padding-inline:10px; }
+  .emLane { min-width:72px; }
+}
 /* 10 Kasım (gece): kulvar ve çubuk ortak sınıflarda (`value-lane`,
    `value-bar`; globals.css → "DEĞER ÇUBUĞU"); buradaki kopyalar silindi. */
 .emLane > .emLaneTrack { position:absolute; inset-inline:0; top:5px; }

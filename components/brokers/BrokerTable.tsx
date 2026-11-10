@@ -28,6 +28,10 @@ import styles from "./Brokers.module.css";
  * de sığmıyor (taban genişlik aşağıda) ve kayan bir tabloda hangi satırın
  * hangi kuruma ait olduğu kaybolmamalı (CLAUDE.md, "Kaydırma saklanmaz").
  * Sağ kenar `ScrollEdges` ile solar: devamı var.
+ * 10 Kasım 2026: tablo yalnız ≥ 1024'te; altında kurum başına kart
+ * (`Brokers.module.css` → "TARİFE AYRINTILARI 1024'ÜN ALTINDA KURUM KARTI").
+ * 1024–1500 arasında tablo hâlâ kendi kabında kayıyor (1492 taban, sahibinin
+ * "büyük ekranda eski sistem gibi olsun" sözü); karar ana oturumda.
  *
  * Yapışkan hücrenin zemini `--premium-surface`: bu sayfanın panelleri o
  * tonda (UtilityExperience `.page`) ve `--panel-fixed` koyu temada ondan
@@ -108,6 +112,38 @@ export function BrokerTable({
       bodyClassName={styles.foldBodyFlush}
     >
       <p className="max-w-3xl px-4 pb-3 text-sm leading-relaxed text-body sm:px-5">{L.tableLead}</p>
+      {/* 1024'ÜN ALTINDA KURUM KARTI (10 Kasım 2026, sahibinin sözü:
+          "tablolar sağa sola kaymasın"). Gerekçe ve ölçüm
+          `Brokers.module.css` → "TARİFE AYRINTILARI". Satır çapası
+          (`#tarife-{id}`) tabloda kalıyor; kartlar çapasız, çift kimlik yok. */}
+      <div className={styles.tariffList}>
+        {brokers.map((broker) => (
+          <article key={broker.id} className={styles.tariffCard} aria-label={broker.name}>
+            <header>
+              <h4>{broker.name}</h4>
+              {broker.channel && <span>{pick(broker.channel)}</span>}
+              {!broker.domestic && <span>{L.foreign}</span>}
+            </header>
+            <dl className={styles.tariffRows}>
+              {BROKER_COLUMNS.map((column) => (
+                <div key={column}>
+                  <dt>{L.columns[column]}</dt>
+                  <dd>
+                    {cell(broker, broker.cells[column])}
+                    {column === "license" && broker.counterparty && (
+                      <span className="mt-1.5 block text-tiny leading-snug text-muted">
+                        {L.counterparty.replace("{name}", pick(broker.counterparty.value))}
+                        {refs(broker, broker.counterparty.src)}
+                      </span>
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          </article>
+        ))}
+      </div>
+      <div className={styles.tariffTable}>
       <ScrollEdges
         className="scroll-x-hint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
         tabIndex={0}
@@ -155,6 +191,7 @@ export function BrokerTable({
           </tbody>
         </table>
       </ScrollEdges>
+      </div>
     </BrokerFold>
   );
 }

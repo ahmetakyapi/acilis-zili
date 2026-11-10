@@ -499,6 +499,28 @@
   min-height: 44px;
   padding: 2px 0 10px;
 }
+/* YAN YANA TELEFONDA KAYMAZ (10 Kasım 2026, sahibinin sözü: "tablolar
+   sağa sola kaymasın"). Sütun tabanı 9,5rem idi: üç kurum 390'da 480
+   piksel istiyor, 352 piksellik kap kayıyordu. 640'ın altında sütunlar
+   kabı paylaşıyor (üç kurumda ~105 piksel); kaldır butonu (44) adın
+   yanından logo satırına çıkıyor, ad altta tam genişlikte kırılıyor,
+   ücret 24 yerine 18 punto. */
+@media (max-width: 639px) {
+  .cmpGrid { grid-template-columns: repeat(var(--n), minmax(0, 1fr)); column-gap: 8px; }
+  .cmpHead { padding: 10px; }
+  .cmpName { flex-wrap: wrap; row-gap: 4px; }
+  .cmpName h4 { order: 3; flex-basis: 100%; font-size: 14px; overflow-wrap: break-word; }
+  .cmpFee b { font-size: 18px; }
+  .cmpCell { grid-template-columns: minmax(0, 1fr); gap: 2px; justify-items: start; }
+  /* ~105 piksellik sütunda lisans hapı dört satırlık bir yumruya, simgeli
+     "Belirtilmemiş" sütun dışına taşan bir satıra dönüşüyordu (360,
+     görüldü). Hap köşeli etiket olur; değer simgesiz ve 13 punto — anlamı
+     yazı taşıyor, "Belirtilmemiş" sönük tonunu koruyor. */
+  .cmpHead .badge { min-height: 0; padding: 3px 8px; border-radius: 8px; line-height: 1.3; }
+  .cmpCell .rowValue { font-size: 13px; }
+  .cmpCell .rowValue svg { display: none; }
+  .cmpCell .valueText { overflow-wrap: anywhere; }
+}
 
 /* ------------------------------------------------------------ katlama */
 

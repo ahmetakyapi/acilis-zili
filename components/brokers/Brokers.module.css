@@ -124,3 +124,30 @@
 .masthead.masthead.masthead :global(.page-heading-copy) h1 { font-size:clamp(28px, 2.4vw, 36px); }
 .masthead.masthead.masthead :global(.page-heading-copy) > p { margin-top:4px; max-width:none; }
 @media (max-width:767px) { .masthead.masthead.masthead[data-embedded="false"] { padding:14px 18px; } }
+
+/* TARİFE AYRINTILARI 1024'ÜN ALTINDA KURUM KARTI (10 Kasım 2026, sahibinin
+   sözü: "listeleri kaydırmadan kullanalım… tablolar sağa sola kaymasın").
+   Sekiz ücret sütunlu tablo 1492 piksel tabanla 390'da 352, 768'de 718
+   piksellik kapta kayıyordu (ölçüldü) ve satırın kurumu yapışkan sütunda
+   kalsa da hangi ücretin hangi başlığa ait olduğu kaydıkça kayboluyordu.
+   1024'ün altında kurum başına bir kart: ad ve kanal üstte, sekiz kalem
+   tanım listesi (ad solda, değer + not + kaynak numarası sağda). 640–1023
+   iki sütun kart; sekiz sütun o bantta da sığmıyor, sütun düşürmek ise
+   tablonun işini (her kalemi kaynağıyla doğrulamak) bozardı. İki DOM, CSS
+   kırılımıyla: JS kapalıyken de doğru olan görünür; gizli kopya
+   `display:none` (ekran okuyucu yalnız görüneni okur). */
+.tariffTable { display:none; }
+.tariffList { display:grid; gap:12px; padding:0 16px 4px; }
+@media (min-width:640px) { .tariffList { grid-template-columns:repeat(2, minmax(0,1fr)); padding-inline:20px; } }
+/* Kart 1500'e kadar (10 Kasım gece): tablo 1492 piksel taban istiyor ve
+   1024–1499'da kendi kabında kayıyordu (974/1492, 1318/1492). Sahibinin
+   kuralı "tablolar sağa sola kaymasın"; sığdığı tek genişlikte tablo. */
+@media (min-width:1024px) { .tariffList { grid-template-columns:repeat(3, minmax(0,1fr)); } }
+@media (min-width:1500px) { .tariffTable { display:block; } .tariffList { display:none; } }
+.tariffCard { min-width:0; padding:12px 14px 6px; border-radius:var(--radius-panel); background:var(--surface-sunken); }
+.tariffCard > header { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; padding-bottom:8px; }
+.tariffCard > header h4 { font-size:14px; font-weight:700; color:var(--text-strong); }
+.tariffCard > header span { font-size:12px; color:var(--text-muted); }
+.tariffRows > div { display:grid; grid-template-columns:minmax(0,38%) minmax(0,1fr); gap:10px; padding:8px 0; border-top:1px solid var(--line-soft); }
+.tariffRows dt { font-size:12px; font-weight:600; line-height:1.4; color:var(--text-muted); }
+.tariffRows dd { min-width:0; overflow-wrap:anywhere; }

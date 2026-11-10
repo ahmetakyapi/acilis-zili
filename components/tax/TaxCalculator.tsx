@@ -2407,14 +2407,20 @@ function LotTable({
       role="region"
       aria-label={labels.lotsTitle}
     >
-      <table className="w-full min-w-[560px] text-small">
+      {/* KAYDIRMASIZ (10 Kasım 2026, sahibinin sözü: "tablolar sağa sola
+          kaymasın"). 560 piksellik taban 390'da 300 küsur piksellik kapta
+          kayıyordu ve kazanç sütunu — tablonun cevabı — ekran dışındaydı.
+          < 640 adet düşer; < 768 maliyet ve satış hasılatı kendi
+          sütunlarını bırakıp kazancın ALTINA küçük satır olarak iner
+          ("hasılat − maliyet"). ≥ 768 eski altı sütun. */}
+      <table className="w-full text-small">
         <thead>
           <tr className="border-b border-line-soft text-left text-nano text-muted">
             <th scope="col" className="py-2 pr-3 font-semibold">{labels.symbol}</th>
             <th scope="col" className="px-2 py-2 font-semibold">{labels.sellDate}</th>
-            <th scope="col" className="px-2 py-2 text-right font-semibold">{labels.quantity}</th>
-            <th scope="col" className="px-2 py-2 text-right font-semibold">{labels.taxCostTl}</th>
-            <th scope="col" className="px-2 py-2 text-right font-semibold">{labels.proceedsTl}</th>
+            <th scope="col" className="hidden px-2 py-2 text-right font-semibold sm:table-cell">{labels.quantity}</th>
+            <th scope="col" className="hidden px-2 py-2 text-right font-semibold md:table-cell">{labels.taxCostTl}</th>
+            <th scope="col" className="hidden px-2 py-2 text-right font-semibold md:table-cell">{labels.proceedsTl}</th>
             <th scope="col" className="py-2 pl-2 text-right font-semibold">{labels.gainTl}</th>
           </tr>
         </thead>
@@ -2429,11 +2435,15 @@ function LotTable({
                 {formatIsoDate(r.sellDate, locale)}
                 <span className="block text-nano text-muted">{formatIsoDate(r.buyDate, locale)}</span>
               </td>
-              <td className="numeral px-2 py-2 text-right">{quantityText(r.quantity)}</td>
-              <td className="numeral px-2 py-2 text-right">{formatLira(r.taxCostTl, locale)}</td>
-              <td className="numeral px-2 py-2 text-right">{formatLira(r.proceedsTl, locale)}</td>
+              <td className="numeral hidden px-2 py-2 text-right sm:table-cell">{quantityText(r.quantity)}</td>
+              <td className="numeral hidden px-2 py-2 text-right md:table-cell">{formatLira(r.taxCostTl, locale)}</td>
+              <td className="numeral hidden px-2 py-2 text-right md:table-cell">{formatLira(r.proceedsTl, locale)}</td>
               <td className={cn("numeral py-2 pl-2 text-right font-semibold", directionText(directionOf(r.gainTl)))}>
                 {formatLira(r.gainTl, locale, 2, true)}
+                <span className="block text-nano font-normal text-muted md:hidden">
+                  <span className="sm:hidden">{quantityText(r.quantity)} · </span>
+                  {formatLira(r.proceedsTl, locale)} − {formatLira(r.taxCostTl, locale)}
+                </span>
               </td>
             </tr>
           ))}

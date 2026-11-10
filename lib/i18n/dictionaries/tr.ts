@@ -1805,6 +1805,11 @@ const tr = {
     constituents: "Endeks Bileşenleri",
     constituentsMore: "{n} Şirket Daha",
     constituentsLess: "Daha Az Göster",
+    /* Telefonda sıralama şeridi (10 Kasım gece; BoardSortMenu.tsx): başlık
+       satırı listede yok, sıralama tek butonda. */
+    phoneSort: "Sırala",
+    phoneSortDesc: "Büyükten küçüğe",
+    phoneSortAsc: "Küçükten büyüğe",
     asOf: "Liste Kompozisyonu",
     /* 10 Kasım, görsel tur: dağılım çizimi, hareket ölçeği, açılış imi. */
     distributionCaption: "Günlük Değişim Dağılımı",

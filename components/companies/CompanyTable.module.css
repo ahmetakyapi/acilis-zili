@@ -37,7 +37,7 @@
    app/(app)/sirketler/page.tsx → "PANO SATIRI"; ölçüm dosya sonunda.
    -------------------------------------------------------------------------- */
 
-/* ---- Sektör: 768+ ---- */
+/* ---- Sektör: 1024+ (10 Kasım gece, son tur; önce 768+ — orada kap kayıyordu) ---- */
 .sectorHead, .sector { display:none; }
 .volume { color:var(--text-muted); font-size:13px; }
 
@@ -46,25 +46,38 @@
 .compare { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin-left:auto; color:var(--primary-ink); font-size:var(--text-base); font-weight:600; }
 .compareBar { display:flex; padding:4px 16px; border-top:1px solid var(--line); }
 
-/* ---- Telefon (<640): ilk ekranda Şirket (sabit, ortak parça) + Değişim +
-   Fiyat; Haftalık, Piyasa Değeri ve Hacim kaydırınca. Sayı sütunları
-   içeriği kadar. ---- */
+/* ---- Telefon (<640): TARİHÇE. Önce ilk ekranda Şirket (sabit, ortak
+   parça) + Değişim + Fiyat; Haftalık, Piyasa Değeri ve Hacim kaydırınca;
+   piyasa değeri sütunu iki kez basılıyordu (`.capPhone` önde, `.capWide`
+   yerinde). 10 Kasım gece, son tur: telefonda tablo kompakt liste
+   (BoardTable.module.css → "TELEFON: KOMPAKT LİSTE"); hücrenin yeri
+   ızgaradan, kopya ve kaydırma kalktı. Hacim üstteyse iri yazılır. ---- */
 @media(max-width:639px) {
-  .changeCell, .changeHead, .priceCell, .priceHead, .capPhone { width:1%; }
-  /* Piyasa değeri telefonda Fiyat'ın ÖNÜNDE (gerekçe page.tsx, başlıkta):
-     asıl yerindeki kopya gizli. Başlık iki satır; bağlantı 44 piksellik
-     hedefini korur. */
-  .table .capWide { display:none; }
-  .table thead .capPhone { white-space:normal; line-height:14px; }
-  .table thead .capPhone a { max-width:6.4ch; text-align:right; }
+  .table [data-slot="a"].volume { color:var(--text-strong); font-size:16px; font-weight:700; }
+  .table [data-slot="b"].volume { color:var(--text-body); font-size:14px; font-weight:600; }
 }
 @media(min-width:640px) {
   .compareBar { display:none; }
-  .table .capPhone { display:none; }
 }
-@media(min-width:768px) {
+/* ---- 640–1023: KAYMAYAN ORTA TABLO (10 Kasım gece, son tur). Önce kap
+   kayıyordu (768'de içerik 1015 > kap 718). Sektör ve Hacim 1024+;
+   640–767'de Haftalık da düşer. Sayı sütunları içeriği kadar. ---- */
+@media(min-width:640px) and (max-width:1023px) {
+  .table :is(.volume, .volumeHead) { display:none; }
+  .table :is(.changeCell, .changeHead, .priceCell, .priceHead, .weekCell, .weekHead, .capCell, .capHead) { width:1%; }
+  .panel .table { --cell-pad:8px; --name-max:130px; --day-lane:48px; --week-lane:32px; }
+}
+@media(min-width:640px) and (max-width:767px) {
+  .table :is(.weekCell, .weekHead) { display:none; }
+}
+@media(min-width:768px) and (max-width:1023px) {
+  .panel .table { --cell-pad:10px; --name-max:120px; --day-lane:56px; --week-lane:32px; }
+}
+@media(min-width:820px) and (max-width:1023px) {
+  .panel .table { --name-max:160px; }
+}
+@media(min-width:1024px) {
   .sectorHead, .sector { display:table-cell; }
-  .panel .table { --tag-max:150px; }
 }
 /* ---- 1024+: tablo kaba sığar (panel `data-fit="lg"`: kap kaymaz, başlık
    belgeye yapışır — eski karar korunuyor). Sayı sütunları içeriği kadar,
@@ -133,4 +146,21 @@
    - 1024: `--tag-max` 120 → 108; dört haneli fiyatlı sıralamada içerik 977
      → 974 = kap (3 piksellik kayma kalktı).
    - Yatay taşma 0, hücresinden taşan öğe 0 (390/768/1024/1280/1440).
+   -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM 4 — KOMPAKT LİSTE (10 Kasım 2026 gece, son tur; sahibinin sözü:
+   "tablolar sağa sola kaymasın, kompakt olsun")
+   Yöntem: gerçek sayfa + sahte sağlayıcı (`olcum` skill'i), seans içi ve
+   kapalı piyasa, barsız mod, TR ve EN, iki tema; 360 / 390 / 640 / 768 /
+   844 (yatay telefon) / 1024 / 1280 / 1440. "Kap" = tablonun her atası için
+   `scrollWidth − clientWidth`; önce = aynı gün c548782, aynı sahte veri.
+   - Kap: 360 232 → 0 · 390 202 → 0 · 640 275 → 0 · 768 297 → 0 · 844 221
+     → 0 (1024+ zaten 0).
+   - Telefon: satır 56 → 60; varsayılan sırada sağ üstte piyasa değeri
+     16/700, altında günlük yüzde 14/600 ve 48 piksellik çubuk. Dokunma
+     12/18 → 18/18 (hepsi bağlantı). Kesilen ad 35 → 5 (390).
+   - 640: # · Şirket 218 · Değişim 155 · Fiyat 70 · Piyasa Değeri 111;
+     768: + Haftalık 118. Sektör ve Hacim 1024+ (önce sektör 768+).
+   - JS'siz: kap 0, satır 60, satırın sağına basış /hisse bağlantısında.
    -------------------------------------------------------------------------- */

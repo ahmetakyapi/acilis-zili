@@ -123,7 +123,9 @@ export async function PastEarnings({
   return (
     <div>
       <EpsTrack rows={shown} locale={locale} currency={paraOpt} t={t} />
-      {/* Tablo dar ekranda kendi kabında kayar — sayfa yana kaymaz.
+      {/* 10 Kasım 2026: tablo artık hiçbir kırılımda kaymıyor (aşağıdaki
+          yorum); kap yalnız uç savunması olarak duruyor. Eski not:
+          Tablo dar ekranda kendi kabında kayar — sayfa yana kaymaz.
           KAP KLAVYEYLE ODAKLANABİLİR: 560px'lik tablo 352px'lik kapta kayıyor
           ve `tabindex` olmadan sağdaki sütunlara fare olmadan ulaşılamıyordu
           (WCAG 2.1.1). */}
@@ -140,7 +142,16 @@ export async function PastEarnings({
             açıkladığı. Gelir sütunları zaten dar ekranda gizleniyordu ve
             üstündeki yorum "tablo kaydırmadan sığar" diyordu; taban genişlik
             o iddiayı boşa çıkarıyordu. */}
-        <table className="w-full min-w-0 text-sm sm:min-w-[560px]">
+        {/* TELEFONDA ÜÇ SÜTUN, HİÇBİR KIRILIMDA KAYDIRMA YOK (10 Kasım
+            2026, sahibinin sözü: "listeleri kaydırmadan kullanalım, kompakt
+            olsun, yeterli bilgi gözüksün; tablolar sağa sola kaymasın").
+            `sm:min-w-[560px]` kalktı (640'ta kap 590, tablo zaten sığıyor)
+            ve 360 pikselde dört sütun 322 piksellik kaba 331 piksel
+            basıyordu (ölçüldü). Telefonda (< 640) EPS beklentisi kendi
+            sütununu bırakıp gerçekleşenin ALTINA küçük satır olarak iniyor,
+            gerçekleşen gelir dönemin altına; satır üç bakışta okunuyor:
+            çeyrek · sapma · gerçekleşen. 640+ tablo eskisi gibi. */}
+        <table className="w-full min-w-0 text-sm">
         <thead>
           <tr className="border-b border-line-soft text-left text-nano text-muted">
             <th className="px-4 py-2.5 font-medium sm:px-5">
@@ -168,7 +179,7 @@ export async function PastEarnings({
             <th className="px-2 py-2.5 text-center font-medium sm:px-3">
               {t.earnings.surprise}
             </th>
-            <th className="px-2 py-2.5 text-center font-medium sm:px-3">
+            <th className="hidden px-2 py-2.5 text-center font-medium sm:table-cell sm:px-3">
               EPS · {t.calendar.forecast}
             </th>
             <th className="px-2 py-2.5 text-center font-medium sm:px-3">
@@ -213,6 +224,12 @@ export async function PastEarnings({
                       {formatEtDateMedium(row.reportDate, locale)}
                     </span>
                   )}
+                  {/* Telefonda gelir sütunu yok; gerçekleşen gelir burada. */}
+                  {hasRevenue && row.revenueActual !== null && (
+                    <span className="numeral block whitespace-nowrap text-tiny text-muted sm:hidden">
+                      {t.earnings.revenueShort} {formatMoneyCompact(row.revenueActual, locale, paraKoduOf(paraOpt))}
+                    </span>
+                  )}
                 </td>
                 <td className="numeral hidden px-3 py-2.5 text-sm text-body md:table-cell">
                   {row.reportDate ? (
@@ -233,7 +250,7 @@ export async function PastEarnings({
                     <EmptyValue label={t.common.noData} className="text-xs text-muted" />
                   )}
                 </td>
-                <td className="numeral px-2 py-2.5 text-center text-muted sm:px-3">
+                <td className="numeral hidden px-2 py-2.5 text-center text-muted sm:table-cell sm:px-3">
                   {row.epsEstimate !== null
                     ? formatPrice(row.epsEstimate, locale, {
                         currency: paraOpt,
@@ -244,6 +261,11 @@ export async function PastEarnings({
                   {row.epsActual !== null
                     ? formatPrice(row.epsActual, locale, { currency: paraOpt })
                     : <EmptyValue label={t.common.noData} className={cn(quiet, "font-normal")} />}
+                  {row.epsEstimate !== null && (
+                    <span className="block whitespace-nowrap text-tiny font-normal text-muted sm:hidden">
+                      {t.calendar.forecast} {formatPrice(row.epsEstimate, locale, { currency: paraOpt })}
+                    </span>
+                  )}
                 </td>
                 {hasRevenue && (
                   <>

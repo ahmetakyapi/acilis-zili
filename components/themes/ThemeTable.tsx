@@ -2,7 +2,7 @@
 
 import { useMemo, useState, type KeyboardEvent, type MouseEvent } from "react";
 import { CaretDown, CaretUp, CaretUpDown } from "@phosphor-icons/react/dist/ssr";
-import { CompanyCell, MoveFigure, board, rowStep } from "@/components/markets/BoardTable";
+import { BoardSortMenu, CompanyCell, MoveFigure, board, phoneSlots, rowStep } from "@/components/markets/BoardTable";
 import { RowFlip, RowTap } from "@/components/markets/RowFlip";
 import { FoldToggle } from "@/components/ui/FoldToggle";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
@@ -60,6 +60,11 @@ import styles from "./ThemeTable.module.css";
  *     şirketlerin hisse fiyatı karşılaştırılabilir bir ölçü değil.
  *   - Kaydırma saklanmaz: 390'da Şirket sütunu yapışkan, Değişim ve Fiyat
  *     kaydırmadan okunuyor, piyasa değeri sağdaki solma kuşağında başlıyor.
+ *     TARİHÇE (10 Kasım gece, son tur; sahibinin sözü: "tablolar sağa sola
+ *     kaymasın"): kaydırma kalktı. Telefonda kompakt liste (kimlik +
+ *     sıralanan ölçü + günlük yüzde, sıralama şeritteki menüden),
+ *     640–767'de sıra numarası düşer; hiçbir genişlikte kap kaymıyor
+ *     (ölçüm ThemeTable.module.css → "ÖLÇÜM 4").
  *
  * GÜNLÜK DEĞİŞİMİN SEANSI (Veri dürüstlüğü 4). Şerit yalnızca medyana giren
  * (aynı günü anlatan) satırlara basılıyor. Yüzdesi son kapanışa ait satırda
@@ -127,6 +132,12 @@ export function ThemeTable({
     scaleNote: string;
     overNote: string;
     sortBy: string;
+    /** Telefondaki sıralama şeridi: "Sırala", yön adları (BoardSortMenu). */
+    phoneSort: string;
+    /** Şeridin sağındaki künyede günlük değişimin kısa adı ("Değişim"). */
+    dayShort: string;
+    sortAsc: string;
+    sortDesc: string;
     showAll: string;
     showLess: string;
   };
@@ -202,11 +213,30 @@ export function ThemeTable({
 
   const hidden = rows.length > FOLD_OVER ? rows.length - FOLD_ROWS : 0;
   const leadSort = sort.key === "day";
+  /* TELEFONDA KOMPAKT LİSTE (10 Kasım gece, son tur; sahibinin sözü:
+     "tablolar sağa sola kaymasın, kompakt olsun"). Satırın sağında iki
+     sayı: üstte sıralanan ölçü (varsayılan piyasa değeri), altında günlük
+     yüzde; ada ya da değişime göre diziliyse yüzde + fiyat (`phoneSlots`,
+     components/markets/BoardTable.tsx). Sıralama başlık satırı yerine
+     şeritteki menüden, aynı `toggle` ile. */
+  const lead: SortKey = sort.key === "company" ? "day" : sort.key;
+  const second: SortKey = lead === "day" ? "price" : "day";
+  const slot = phoneSlots(lead, second);
+  const slotLabel: Record<SortKey, string> = { company: labels.company, day: labels.day, price: labels.price, cap: labels.cap };
 
   return (
     <div id={SCOPE} className={styles.wrap}>
       <RowFlip scope={SCOPE} token={token} order={`${sort.key}:${sort.dir}`} />
       <RowTap scope={SCOPE} />
+      <BoardSortMenu
+        items={(["cap", "day", "price", "company"] as SortKey[]).map((key) => ({ key, label: slotLabel[key], active: sort.key === key }))}
+        dir={sort.dir}
+        label={labels.phoneSort}
+        caption={[lead, second].map((key) => (key === "day" ? labels.dayShort : slotLabel[key])).join(" · ")}
+        ascLabel={labels.sortAsc}
+        descLabel={labels.sortDesc}
+        onSelect={(key) => toggle(key as SortKey)}
+      />
       <FoldToggle
         id="tema-uyeleri-kat"
         narrow={false}
@@ -248,7 +278,7 @@ export function ThemeTable({
                 >
                   <td className={cn("numeral", board.rank)}>{index + 1}</td>
                   <CompanyCell symbol={row.symbol} name={row.name ?? NO_VALUE} logoUrl={row.logoUrl} />
-                  <td className={styles.changeCell} data-sorted={sort.key === "day" || undefined}>
+                  <td className={styles.changeCell} data-sorted={sort.key === "day" || undefined} data-slot={slot("day")}>
                     <MoveFigure
                       value={row.changePct}
                       span={span}
@@ -256,10 +286,10 @@ export function ThemeTable({
                       locale={locale}
                     />
                   </td>
-                  <td className={cn("numeral", board.price, styles.priceCell, row.price === null && board.none)} data-sorted={sort.key === "price" || undefined}>
+                  <td className={cn("numeral", board.price, styles.priceCell, row.price === null && board.none)} data-sorted={sort.key === "price" || undefined} data-slot={slot("price")}>
                     {row.price !== null ? formatPrice(row.price, locale) : NO_VALUE}
                   </td>
-                  <td className={cn("numeral", board.strong, styles.capCell, !row.marketCap && board.none)} data-sorted={sort.key === "cap" || undefined}>
+                  <td className={cn("numeral", board.strong, styles.capCell, !row.marketCap && board.none)} data-sorted={sort.key === "cap" || undefined} data-slot={slot("cap")}>
                     {row.marketCap ? formatMoneyCompact(row.marketCap, locale) : NO_VALUE}
                   </td>
                 </tr>

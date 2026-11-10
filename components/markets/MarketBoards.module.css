@@ -280,3 +280,47 @@
 .howToBody { display:flex; flex-direction:column; gap:6px; max-width:104ch; padding:0 16px 16px; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.6; }
 @media(min-width:640px) { .pulseMissing, .howTo > summary, .howToBody { padding-inline:20px; } }
 @media(prefers-reduced-motion:reduce) { .howToCaret, .howTo > summary { transition:none; } }
+
+/* ==========================================================================
+   10 Kasım 2026 (gece, son tur) — TABLOLAR KAYMAZ (sahibinin sözü: "tablolar
+   sağa sola kaymasın, daha iyi dursun"; `.claude/rules/arayuz.md` → Ekran
+   Düzeni). Karar EtfBoards.tsx → `phoneCols`, `PHONE_COMMODITY_COLUMNS`.
+   Önce (390): sektör matrisi içerik 461 > kap 352, emtia 548 > 352; 1280'de
+   yarım genişlikteki emtia panosu 548 > 524. Telefonda basılı ama gizli
+   sütunlar (`data-phone-hide`), tabanlık `min-width` kalktı; yan yana
+   panolarda (1200–1439) YBB çizgisi daralır. Ölçüm dosyanın sonunda.
+   ========================================================================== */
+@media(max-width:639px) {
+  .table [data-phone-hide] { display:none; }
+  .table, .tableCompact, .heatTable { min-width:0; }
+  /* Etiket 132 → 104 (emtia) / 100 → 92 (sektör): 360'ta dört sütun 347 >
+     324 idi; uzun ad iki satıra iner ("Ham Petrol / ETF"). */
+  .heatTable .labelCell { min-width:0; width:1%; }
+  .tableCompact .labelCell { min-width:108px; }
+  .tableCompact thead th { white-space:normal; }
+  .labelName { max-width:108px; }
+  /* EN'de "Communication", "Discretionary" 92 pikseli aşıyordu (360, ölçüldü):
+     uzun sözcük heceyle, olmazsa kenarda kırılır. */
+  .heatTable .labelName { max-width:92px; overflow-wrap:anywhere; hyphens:auto; }
+}
+/* 360–389: karo dolgusu 5 → 4, karolar arası 3 → 2, son karonun sağı 16 →
+   12, son kapanış iminin aralığı 5 → 3 (sektör matrisi 360'ta seans içi
+   325 > 324, kapalı piyasada son kapanış imiyle 331 > 324 idi). */
+@media(max-width:389px) {
+  .heat { padding:0 4px; }
+  .heatTable td.heatCell { padding-left:2px; }
+  .heatTable tr > td.heatCell:last-child { padding-right:12px; }
+  .heat .basisMark { margin-right:3px; }
+}
+@media(min-width:1200px) and (max-width:1439px) {
+  .tableCompact { min-width:0; }
+  .trend { min-width:56px; }
+  .tableCompact .trendCell, .tableCompact .trendHead { width:16%; }
+}
+
+/* ÖLÇÜM — tablolar kaymaz (10 Kasım 2026 gece, son tur; gerçek sayfa + sahte
+   sağlayıcı, seans içi ve kapalı, TR/EN, iki tema). Kap (`scrollWidth −
+   clientWidth`): sektör matrisi 360 139 → ≤1 · 390 109 → 0; emtia 360 226 →
+   0 · 390 196 → 0 · 1280 (yan yana) 24 → 0. Telefonda sektör: Sektör · 1G
+   · 1A · YBB (karo 61–83 piksel); emtia: Fon · Fiyat · 1G · 1A (etiket 108;
+   iki satıra inen tek ad "Ham Petrol ETF", satırı 55 → 71). Hücresinden taşan öğe 0. */

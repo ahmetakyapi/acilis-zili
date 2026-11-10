@@ -70,6 +70,16 @@
 .trendTable th, .trendTable td, .trendTable tbody th { padding-block:6px; }
 .trendTable thead th { padding-block:2px 6px; }
 .insiderTable { min-width:560px; }
+/* 640–1023 SIĞAN SÜTUNLARLA, KAYDIRMASIZ (10 Kasım 2026, sahibinin sözü:
+   "tablolar sağa sola kaymasın"). 560 piksellik taban 640'ta 550 piksellik
+   kaba sığmıyordu (ölçüldü: 560/550). Bu bantta taban kalkıyor ve fiyat
+   sütunu düşüyor — tutar ve pay adedi zaten fiyatı taşıyor; tam tablo
+   1024'ten itibaren. Telefon kart satırı aşağıda (639 bloğu). */
+@media (min-width:640px) and (max-width:1023px) {
+  .insiderTable { min-width:0; }
+  .insiderTable tr > :nth-child(5) { display:none; }
+  .insiderTable .nameCell, .insiderTable .roleCell { max-width:11rem; }
+}
 .trendTable { min-width:420px; }
 .trendShort { display:none; }
 /* ANALİST DEĞİŞİMİ TELEFONDA KAYMAZ (30 Eylül, sahibinin isteği: "kaydırma

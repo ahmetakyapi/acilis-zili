@@ -159,16 +159,19 @@ function ReturnCell({
   locale,
   lastClose = false,
   lastCloseLabel,
+  phoneHidden = false,
 }: {
   value: number | null;
   peak: number;
   locale: Locale;
   lastClose?: boolean;
   lastCloseLabel?: string;
+  /** Telefonda (<640) basılı ama gizli sütun — gerekçe `PHONE_COLUMNS`. */
+  phoneHidden?: boolean;
 }) {
   const tone = directionOf(value);
   return (
-    <td className={styles.valueCell}>
+    <td className={styles.valueCell} data-phone-hide={phoneHidden || undefined}>
       <span className={cn("numeral font-bold", lastClose ? "text-body" : directionText(tone))}>
         {lastClose && lastCloseLabel && <BasisMark label={lastCloseLabel} />}
         {formatPercent(value, locale)}
@@ -206,16 +209,19 @@ function HeatCell({
   locale,
   lastClose = false,
   lastCloseLabel,
+  phoneHidden = false,
 }: {
   value: number | null;
   peak: number;
   locale: Locale;
   lastClose?: boolean;
   lastCloseLabel?: string;
+  /** Telefonda (<640) basılı ama gizli sütun — gerekçe `SectorBoardView`. */
+  phoneHidden?: boolean;
 }) {
   const tone = lastClose ? "flat" : directionOf(value);
   return (
-    <td className={styles.heatCell}>
+    <td className={styles.heatCell} data-phone-hide={phoneHidden || undefined}>
       <span className={styles.heat} data-tone={value === null ? undefined : tone} data-basis={lastClose ? "lastClose" : undefined} style={{ "--heat": lastClose ? 0 : heatShare(value, peak) } as CSSProperties}>
         {value !== null && <i className={styles.heatFill} data-motion-draw="line" aria-hidden />}
         {lastClose && lastCloseLabel && <BasisMark label={lastCloseLabel} />}
@@ -345,12 +351,20 @@ export function SectorPerformanceView({
   const v = t.macroVisual;
   const nextDir = (key: SectorSort): SortDir => (sort === key && dir === "desc" ? "asc" : "desc");
 
+  /* TELEFONDA ÜÇ DÖNEM (10 Kasım gece, son tur; sahibinin sözü: "tablolar
+     sağa sola kaymasın"). Beş dönem 360–390 piksele sığmıyor, matris yana
+     kayıyordu (390'da içerik 461 > kap 352). Telefonda 1G, 1A ve YBB;
+     okur 1H ya da 3A'ya göre sıraladıysa (adres paylaşılmış olabilir) 1A'nın
+     yerinde o sütun durur — neye göre dizildiğini görür. Öteki iki sütun
+     basılı ama `display:none`; 640+ beşi de yerinde. */
+  const phoneCols: readonly ColumnKey[] = sort === "h1" || sort === "a3" ? ["g1", sort, "ybb"] : ["g1", "a1", "ybb"];
   const head = (key: SectorSort, label: string, long: string | null, className?: string) => (
     <th
       key={key}
       scope="col"
       aria-sort={sort === key ? (dir === "desc" ? "descending" : "ascending") : "none"}
       className={className}
+      data-phone-hide={key !== "ad" && !(phoneCols as readonly string[]).includes(key) ? "" : undefined}
     >
       {/* scroll={false}: sıralama bir gezinme değil (bkz. SortHead yorumu). */}
       <Link
@@ -416,7 +430,10 @@ export function SectorPerformanceView({
           </div>
           {/* Sabit etiket sütunu + kaydırma (CLAUDE.md "Kaydırma saklanmaz"):
               beş yüzde sütunu 390 pikselde sığmıyor. Tablo `table-fixed` ile
-              kaba zorlanmıyor, tabana genişlik veriliyor ve kap kayıyor. */}
+              kaba zorlanmıyor, tabana genişlik veriliyor ve kap kayıyor.
+              TARİHÇE (10 Kasım gece, son tur): kaydırma kalktı — telefonda
+              üç dönem (`phoneCols`, yukarıda), kap hiçbir genişlikte
+              kaymıyor; `ScrollEdges` güvenlik ağı olarak duruyor. */}
           <ScrollEdges
             fixedStart
             className="scroll-x-hint focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-(--line-focus)"
@@ -449,6 +466,7 @@ export function SectorPerformanceView({
                         locale={locale}
                         lastClose={key === "g1" && row.lastClose}
                         lastCloseLabel={t.market.lastClose}
+                        phoneHidden={!phoneCols.includes(key)}
                       />
                     ))}
                   </tr>
@@ -474,6 +492,11 @@ export function SectorPerformanceView({
    ========================================================================== */
 
 const COMMODITY_COLUMNS: readonly ColumnKey[] = ["g1", "a1", "ybb"];
+/* TELEFONDA FON · FİYAT · 1G · 1A (10 Kasım gece, son tur; sahibinin sözü:
+   "tablolar sağa sola kaymasın"). Altı sütun 390'a sığmıyor, kap kayıyordu
+   (içerik 548 > kap 352). YBB ve onun çizgisi telefonda düşer (basılı,
+   `display:none`); 640+ hepsi yerinde. */
+const PHONE_COMMODITY_COLUMNS: readonly ColumnKey[] = ["g1", "a1"];
 
 export async function CommodityBoard({ locale, t }: { locale: Locale; t: Dictionary }) {
   const status = await getStatus();
@@ -549,6 +572,7 @@ export function CommodityBoardView({
               locale={locale}
               lastClose={key === "g1" && row.lastClose}
               lastCloseLabel={t.market.lastClose}
+              phoneHidden={!PHONE_COMMODITY_COLUMNS.includes(key)}
             />
           ))}
           {/* YBB BİR DE ÇİZGİ (10 Kasım). Emtia panosu sektörlerin yanında
@@ -560,7 +584,7 @@ export function CommodityBoardView({
               Satır bu çizgiyle 49 → 62 piksel; iki panonun boyu ölçümle
               eşitlendi (MarketBoards.module.css → `.trendCell`). Ton YBB'nin
               işaretinden; taban yoksa çizgi de yok. */}
-          <td className={styles.trendCell}>
+          <td className={styles.trendCell} data-phone-hide>
             {row.trend ? (
               <Sparkline
                 points={row.trend.points}
@@ -601,12 +625,12 @@ export function CommodityBoardView({
                   <th scope="col" className={styles.labelHead}>{x.fundColumn}</th>
                   <th scope="col" className={styles.valueHead}>{x.priceColumn}</th>
                   {COMMODITY_COLUMNS.map((key) => (
-                    <th key={key} scope="col" className={styles.valueHead}>
+                    <th key={key} scope="col" className={styles.valueHead} data-phone-hide={!PHONE_COMMODITY_COLUMNS.includes(key) || undefined}>
                       {labels[key].short}
                       <span className="sr-only"> {labels[key].long}</span>
                     </th>
                   ))}
-                  <th scope="col" className={styles.trendHead}>{x.trendColumn}</th>
+                  <th scope="col" className={styles.trendHead} data-phone-hide>{x.trendColumn}</th>
                 </tr>
               </thead>
               {group(x.commodityGroup, commodities.rows)}
