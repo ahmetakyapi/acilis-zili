@@ -58,8 +58,8 @@
 .check { position:absolute; right:-3px; bottom:-3px; display:grid; place-items:center; border-radius:50%; background:var(--premium-surface); color:var(--ch); }
 
 .names { display:flex; flex-direction:column; gap:2px; min-width:0; }
-.chapterNo { display:flex; align-items:center; gap:6px; min-height:16px; font-size:12px; font-weight:650; line-height:16px; color:var(--text-muted); }
-.now { padding:0 6px; border-radius:999px; background:var(--ch-wash); font-size:11px; font-weight:700; color:var(--text-strong); }
+.chapterNo { display:flex; align-items:center; gap:6px; min-height:16px; font-size:12px; font-weight:600; line-height:16px; color:var(--text-muted); }
+.now { padding:0 6px; border-radius:999px; background:var(--ch-wash); font-size:12px; font-weight:700; color:var(--text-strong); }
 .chapterName { font-size:17px; font-weight:700; line-height:1.2; letter-spacing:-.02em; color:var(--text-strong); text-wrap:balance; }
 
 /* Künye ve şerit kartın DİBİNE yaslı: iki satıra kırılan bölüm adı ("Makro
@@ -76,11 +76,11 @@
 /* Yazı başına bir dilim: okunan bölüm tonunda, kalan tonun soluğu. */
 .stripRow { display:flex; align-items:center; gap:8px; min-width:0; }
 .strip { display:grid; flex:1; grid-template-columns:repeat(var(--n, 1), minmax(0, 1fr)); gap:2px; min-width:0; }
-.strip > i { height:var(--lane); border-radius:999px; background:var(--ch-line); transition:background-color .3s var(--ease-brand); }
+.strip > i { height:var(--lane); border-radius:999px; background:var(--ch-line); transition:background-color 180ms var(--ease-brand); }
 .strip > i[data-read] { background:var(--ch); }
 .count { min-width:34px; text-align:right; font-size:12px; font-weight:700; color:var(--text-strong); }
 
-.note { font-size:11px; line-height:1.5; color:var(--text-muted); }
+.note { font-size:12px; line-height:1.5; color:var(--text-muted); }
 
 /* ---- Okundu işareti (kart köşesi) ---- */
 .readMark { display:inline-grid; place-items:center; color:var(--ch, var(--primary-soft)); }
@@ -89,12 +89,18 @@
    Yalnız hareketi azaltmayan okuyucuda; azaltanda son kare (hiç
    hazırlanmıyor). Kulvar `scaleX` ile çiziliyor, genişlik değil. */
 @media (prefers-reduced-motion:no-preference) {
-  .lane { transform-origin:left center; animation:roadLane .7s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 140ms + 160ms); }
-  .node { animation:roadNode .45s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 140ms); }
-  .finish { animation:roadNode .4s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 140ms + 760ms); }
+  /* 10 Kasım 2026: süreler ortak merdivenden (`--draw`, `--mark`, `--step`).
+     Önce: kulvar 700 ms, kademe 140 ms, son düğüm 760 + 400 = 1.160 ms'de
+     bitiyordu (açılış tavanı ~900) ve düğüm opaklık 0'dan başlıyordu.
+     Sonra: kademe 40 ms (dört durakta toplam 120), son kulvar 80 + 120 +
+     700 = 900 ms'de biter; düğüm yalnız ölçekle belirir, hiç görünmez
+     olmaz. */
+  .lane { transform-origin:left center; animation:roadLane var(--draw) var(--ease-brand) both; animation-delay:calc(var(--i, 0) * var(--step) + 80ms); }
+  .node { animation:roadNode var(--mark) var(--ease-brand) both; animation-delay:calc(var(--i, 0) * var(--step)); }
+  .finish { animation:roadNode var(--mark) var(--ease-brand) both; animation-delay:calc(var(--i, 0) * var(--step) + var(--draw)); }
 }
 @keyframes roadLane { from { transform:scaleX(0); } to { transform:scaleX(1); } }
-@keyframes roadNode { from { opacity:0; scale:.6; } to { opacity:1; scale:1; } }
+@keyframes roadNode { from { scale:.6; } to { scale:1; } }
 @media (prefers-reduced-motion:reduce) { .stop, .laneFill, .ringFill, .strip > i { transition:none; } }
 
 /* ---- 1024–1439: durak kartı bir kademe sıkı ----
@@ -135,7 +141,7 @@
   .chapterName { grid-column:1 / -1; }
   .icon { width:38px; height:38px; }
   .icon > svg:not(.ring) { width:18px; height:18px; }
-  .chapterNo { font-size:11px; }
+  .chapterNo { font-size:12px; }
   .chapterName { font-size:14px; line-height:1.25; }
   /* Seviye aralığı telefonda bölüm başlığının bandından okunuyor; burada
      kartı bir satır uzatıyordu. */
@@ -144,8 +150,8 @@
      kırıyordu (yalnız istemcide geldiği için kayma da yapıyordu). Sıradaki
      bölüm kartın tonlu kenarından okunuyor. */
   .now { display:none; }
-  .meta { font-size:11px; }
-  .count { min-width:30px; font-size:11px; }
+  .meta { font-size:12px; }
+  .count { min-width:30px; font-size:12px; }
 }
 
 /* ---- kapağın birincil eylemi ----
@@ -162,11 +168,12 @@
   background:linear-gradient(120deg, color-mix(in srgb, var(--mark-stop-2) 60%, var(--mark-stop-3)) 0%, var(--mark-stop-3) 100%);
   box-shadow:inset 0 0 0 1px var(--mark-edge);
   color:var(--mark-ink); font-size:15px; font-weight:700; letter-spacing:-.01em; white-space:nowrap; text-decoration:none;
-  transition-property:filter,translate; transition-duration:.2s; transition-timing-function:var(--ease-brand);
+  transition-property:filter,scale; transition-duration:180ms; transition-timing-function:var(--ease-brand);
 }
-.cta > svg { flex-shrink:0; transition:transform .2s var(--ease-brand); }
+.cta > svg { flex-shrink:0; transition:transform 200ms var(--ease-brand); }
 .cta:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
-.cta:active { translate:0 1px; }
+/* Basış ortak ölçüde: buton 0,97 (1 piksellik kayma yerine). */
+.cta:active { scale:.97; }
 @media (hover:hover) and (pointer:fine) { .cta:hover { filter:brightness(1.08); } .cta:hover > svg { transform:translateX(3px); } }
 .actionMeta { display:flex; align-items:baseline; justify-content:space-between; gap:12px; min-width:0; padding-inline:4px; font-size:12px; font-weight:600; line-height:16px; color:var(--text-muted); }
 /* Sayaç tek satır: istemcide "18/49 Yazı Okundu"ya dönünce iki satıra

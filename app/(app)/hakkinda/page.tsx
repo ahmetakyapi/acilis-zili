@@ -179,7 +179,7 @@ export default async function AboutPage() {
   const [whoLede, ...whoRest] = a.whoBody;
 
   return (
-    <MotionExperience className={cn("mx-auto flex w-full max-w-[1040px] flex-col gap-5", styles.about)}>
+    <MotionExperience className={cn("mx-auto flex w-full max-w-[1040px] flex-col", styles.about)}>
       <ScrollProgress />
       <BreadcrumbJsonLd locale={locale} items={[{ name: a.title, path: "/hakkinda" }]} />
 
@@ -246,23 +246,29 @@ export default async function AboutPage() {
       {/* ---- Kim yapıyor ---- */}
       <Panel id="kim">
         <PanelHeader title={a.whoTitle} />
-        <div className={BODY}>
+        {/* İKİ KOLON (10 Kasım 2026). Giriş cümlesi, paragraf ve bağlantı alt
+            alta sol yarıda duruyordu: 1440'ta 1.040'lık panelin sağ 460
+            pikseli boştu (canlıda ölçüldü). Giriş solda, gerekçe ve bağlantı
+            sağda; 768 altında yine tek kolon. */}
+        <div className={cn(BODY, styles.split)}>
           <p className={styles.lede}>{whoLede}</p>
-          {whoRest.map((paragraph) => (
-            <p key={paragraph} className={PROSE}>
-              {paragraph}
-            </p>
-          ))}
-          <div className="flex flex-wrap gap-2.5">
-            <a
-              href={OWNER_URL}
-              target="_blank"
-              rel="noopener noreferrer"
-              className={buttonClass({ variant: "ghost", size: "md" })}
-            >
-              {a.whoLink}
-              <ArrowSquareOut aria-hidden size={15} />
-            </a>
+          <div className="flex min-w-0 flex-col gap-4">
+            {whoRest.map((paragraph) => (
+              <p key={paragraph} className={PROSE}>
+                {paragraph}
+              </p>
+            ))}
+            <div className="flex flex-wrap gap-2.5">
+              <a
+                href={OWNER_URL}
+                target="_blank"
+                rel="noopener noreferrer"
+                className={buttonClass({ variant: "ghost", size: "md" })}
+              >
+                {a.whoLink}
+                <ArrowSquareOut aria-hidden size={15} />
+              </a>
+            </div>
           </div>
         </div>
       </Panel>
@@ -398,15 +404,21 @@ export default async function AboutPage() {
           </section>
         </FlowReveal>
 
-        <div className={cn(BODY, "border-t border-line-soft pt-5")}>
-          <h3 className="text-read font-bold text-strong">{a.stampTitle}</h3>
-          {a.stampBody.map((paragraph) => (
-            <p key={paragraph} className={PROSE}>
-              {paragraph}
-            </p>
-          ))}
-          <h3 className="mt-2 text-read font-bold text-strong">{a.timeTitle}</h3>
-          <p className={PROSE}>{a.timeBody}</p>
+        {/* İki not YAN YANA (10 Kasım 2026): alt alta sol yarıda duruyorlardı
+            ve panelin sağ 460 pikseli 330 piksel boyunca boştu (1440). */}
+        <div className={cn(BODY, styles.split, "border-t border-line-soft pt-5")}>
+          <div className="flex min-w-0 flex-col gap-4">
+            <h3 className="text-read font-bold text-strong">{a.stampTitle}</h3>
+            {a.stampBody.map((paragraph) => (
+              <p key={paragraph} className={PROSE}>
+                {paragraph}
+              </p>
+            ))}
+          </div>
+          <div className="flex min-w-0 flex-col gap-4">
+            <h3 className="text-read font-bold text-strong">{a.timeTitle}</h3>
+            <p className={PROSE}>{a.timeBody}</p>
+          </div>
         </div>
       </Panel>
 
@@ -472,7 +484,10 @@ export default async function AboutPage() {
             {embeds.map((embed) => (
               <div key={embed.id} className="flex min-w-0 flex-col gap-3">
                 <h3 className="text-read font-bold text-strong">{embed.name}</h3>
-                <div className={styles.preview}>
+                {/* Sahne kolonu doldurur (10 Kasım 2026): kısa parçanın altında
+                    1440'ta 284 piksel boş kalıyor, iki kod satırı ayrı hatta
+                    duruyordu. Parça sahnenin ortasında, kodlar aynı hatta. */}
+                <div className={cn(styles.preview, "flex-1")}>
                   <iframe
                     src={embed.preview}
                     title={a.embedPreviewLabel.replace("{name}", embed.name)}

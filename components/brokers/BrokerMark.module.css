@@ -23,7 +23,7 @@
   background: var(--primary-wash);
   color: var(--primary-ink);
   font-size: calc(var(--mark, 40px) * 0.34);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
   line-height: 1;
 }

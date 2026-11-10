@@ -241,7 +241,7 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
             <span aria-hidden />
           )}
           <p className={styles.position}>
-            <span aria-hidden className={styles.positionRail}>
+            <span aria-hidden className={styles.positionRail} data-draw>
               {Array.from({ length: total }, (_, step) => (
                 <span key={step} data-on={step + 1 === index ? "" : undefined} data-past={step + 1 < index ? "" : undefined} />
               ))}

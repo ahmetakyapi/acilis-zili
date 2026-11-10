@@ -1,0 +1,41 @@
+/* Menü ekranının kendi ince ayarı (10 Kasım 2026). Karo dili ortak dosyada
+   (`components/motion/UtilityExperience.module.css` → "Menü"); burada yalnız
+   bu ekrana özgü iki şey var: yarım kalan son satır ve ortak ölçüler.
+   Sınıflar ortak sınıfın YANINA yazılır; çift sınıf özgüllük için (modül
+   sırası belirsiz).
+
+   SON SATIR YARIM KALMAZ. Gruplar 4, 4, 8, 4, 5 ve 5 girişli. Canlıda
+   ölçüldü (1440, dört sütun): "Öğren ve Oku" ve "Hesap ve Site"de beşinci
+   karo tek başına ikinci satırda, sağında 999 piksel boş. 768'de (üç sütun)
+   dört girişli üç grupta da aynı yetim. Izgara ortak katlı izlere bölünüyor
+   ve artan karolar satırı paylaşıyor:
+   - 1024+: 20 iz, karo 5 iz (dört sütun); sondan beşinci karo satır
+     başındaysa son BEŞ karo 4'er iz alır (beşli tek satır, karo 254).
+   - 640-1023: 12 iz, karo 4 iz (üç sütun); bir artan varsa son dört karo
+     6'şar iz (2 + 2), iki artan varsa son iki karo 6'şar iz.
+   - 639 ve altı ortak kuralda (tek artan karo satırı kaplar). */
+@media (min-width:640px) and (max-width:1023px) {
+  .tiles.tiles { grid-template-columns:repeat(12, minmax(0, 1fr)); }
+  .tiles > li { grid-column:span 4; }
+  .tiles > li:nth-child(3n+1):nth-last-child(4),
+  .tiles > li:nth-child(3n+1):nth-last-child(4) ~ li,
+  .tiles > li:nth-child(3n+1):nth-last-child(2),
+  .tiles > li:nth-child(3n+1):nth-last-child(2) ~ li { grid-column:span 6; }
+}
+@media (min-width:1024px) {
+  .tiles.tiles { grid-template-columns:repeat(20, minmax(0, 1fr)); }
+  .tiles > li { grid-column:span 5; }
+  .tiles > li:nth-child(4n+1):nth-last-child(5),
+  .tiles > li:nth-child(4n+1):nth-last-child(5) ~ li { grid-column:span 4; }
+}
+
+/* ORTAK ÖLÇÜLER (`.claude/rules/arayuz.md`): küçük kart başlığı 14/700
+   (14,5/650 idi), künye 12 (11 idi), basış kart 0,992 (0,98 idi), ton
+   geçişi 180 ms ve ok 200 ms (220 idi), ok (2,-2). */
+.tile.tile { transition-duration:180ms; }
+.tile.tile:active { scale:.992; }
+.tile.tile b { font-size:14px; font-weight:700; }
+.tile.tile b > span[class*="menuLive"] { font-size:12px; }
+.tile.tile > span[aria-hidden] { transition-duration:180ms; }
+.tile.tile > svg { transition-duration:180ms, 200ms; }
+@media (prefers-reduced-motion:reduce) { .tile.tile:active { scale:none; } }

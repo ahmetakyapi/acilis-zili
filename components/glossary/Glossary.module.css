@@ -10,7 +10,7 @@
 .browser { display:flex; min-width:0; flex-direction:column; gap:22px; }
 
 /* ---- Kapak ---------------------------------------------------------------- */
-.hero { position:relative; isolation:isolate; display:grid; min-width:0; gap:26px; padding:32px 34px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); }
+.hero { position:relative; isolation:isolate; display:grid; min-width:0; gap:26px; padding:32px 34px; border:1px solid var(--line); border-radius:var(--radius-feature); background:var(--premium-surface); }
 .heroCopy { min-width:0; align-self:center; }
 .heroCopy h1 { margin:10px 0 12px; font-size:var(--heading-page); line-height:1.04; letter-spacing:-.055em; font-weight:600; }
 .heroCopy > p:not(:first-child) { max-width:46ch; font-size:15px; line-height:1.7; color:var(--text-body); text-wrap:pretty; }
@@ -25,23 +25,23 @@
    (`--surface-sunken`), gölge yok. Levhada yalnızca kavram çizimi:
    arkasına konan kategori simgesi filigranı (terazi) paranın üstünde
    ikinci bir şekil gibi okunuyordu, kaldırıldı. */
-.spotlight { position:relative; z-index:1; display:grid; min-width:0; grid-template-columns:minmax(0,1fr); gap:0; overflow:hidden; border:1px solid var(--line-soft); border-radius:20px; background:var(--surface-sunken); }
+.spotlight { position:relative; z-index:1; display:grid; min-width:0; grid-template-columns:minmax(0,1fr); gap:0; overflow:hidden; border:1px solid var(--line-soft); border-radius:var(--radius-panel); background:var(--surface-sunken); }
 @media(min-width:640px) { .spotlight { grid-template-columns:minmax(0,.8fr) minmax(0,1fr); } }
 .spotlightPlate { position:relative; isolation:isolate; display:grid; min-height:150px; place-items:center; padding:22px; border-bottom:1px solid var(--line-soft); background:var(--primary-tint); }
 @media(min-width:640px) { .spotlightPlate { border-bottom:0; border-right:1px solid var(--line-soft); } }
 .plateWatermark { position:absolute; right:-22px; bottom:-30px; z-index:-1; color:var(--primary-wash); pointer-events:none; }
 .spotlightCopy { display:flex; min-width:0; flex-direction:column; gap:8px; padding:22px 24px 20px; }
-.spotlightKicker { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; font-size:14px; line-height:1.4; font-weight:650; color:var(--primary-ink); }
-.spotlightKicker time { font-weight:500; color:var(--text-muted); }
+.spotlightKicker { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; font-size:14px; line-height:1.4; font-weight:600; color:var(--primary-ink); }
+.spotlightKicker time { font-weight:400; color:var(--text-muted); }
 .spotlightKicker time::before { content:""; display:inline-block; width:12px; height:1px; margin-right:8px; vertical-align:middle; background:var(--line-strong); }
-.spotlightTerm { margin-top:4px; font-size:clamp(22px,2.2vw,28px); line-height:1.15; letter-spacing:-.035em; font-weight:650; color:var(--text-strong); text-wrap:balance; }
+.spotlightTerm { margin-top:4px; font-size:clamp(22px,2.2vw,28px); line-height:1.15; letter-spacing:-.035em; font-weight:600; color:var(--text-strong); text-wrap:balance; }
 .spotlightLede { font-size:14px; line-height:1.65; color:var(--text-body); text-wrap:pretty; }
 .spotlightMeta { display:flex; flex-wrap:wrap; align-items:center; gap:8px 14px; margin-top:auto; padding-top:10px; font-size:12px; color:var(--text-muted); }
-.spotlightLink { display:inline-flex; min-height:40px; align-items:center; gap:8px; padding:0 16px; border-radius:999px; background:var(--primary); color:var(--on-primary); font-size:13px; font-weight:650; transition:background-color .25s var(--ease-brand),scale .15s var(--ease-brand); }
-.spotlightLink > svg { transition:translate .3s var(--ease-brand); }
+.spotlightLink { display:inline-flex; min-height:40px; align-items:center; gap:8px; padding:0 16px; border-radius:999px; background:var(--primary); color:var(--on-primary); font-size:13px; font-weight:600; transition:background-color 180ms var(--ease-brand),scale 200ms var(--ease-brand); }
+.spotlightLink > svg { transition:translate 200ms var(--ease-brand); }
 .spotlightLink:hover { background:var(--primary-hover); }
 .spotlightLink:hover > svg { translate:3px 0; }
-.spotlightLink:active { scale:.98; }
+.spotlightLink:active { scale:.97; }
 .spotlightLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 
 /* Kategori kutucukları. 768 ve üstünde 3×3 ızgara (Tümü + sekiz kategori:
@@ -49,29 +49,28 @@
 .categories { min-width:0; overflow-x:auto; scrollbar-width:none; padding-block:2px; }
 .categories::-webkit-scrollbar { display:none; }
 .categoryGrid { display:flex; gap:8px; width:max-content; }
-.categoryTile { position:relative; display:flex; width:148px; flex-direction:column; align-items:flex-start; gap:6px; padding:12px 13px 13px; border:1px solid var(--line); border-radius:14px; background:var(--surface-sunken); color:var(--primary-ink); text-align:left; cursor:pointer; transition:background-color .25s var(--ease-brand),border-color .25s var(--ease-brand),scale .15s var(--ease-brand); }
-.categoryTile > svg { flex-shrink:0; transition:rotate .45s var(--ease-brand),scale .45s var(--ease-brand); }
+.categoryTile { position:relative; display:flex; width:148px; flex-direction:column; align-items:flex-start; gap:6px; padding:12px 13px 13px; border:1px solid var(--line); border-radius:14px; background:var(--surface-sunken); color:var(--primary-ink); text-align:left; cursor:pointer; transition:background-color 180ms var(--ease-brand),border-color .25s var(--ease-brand),scale 200ms var(--ease-brand); }
+.categoryTile > svg { flex-shrink:0; }
 .categoryName { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; min-height:2.6em; font-size:13px; line-height:1.3; font-weight:600; color:var(--text-strong); }
-.categoryCount { font-size:12px; font-weight:500; color:var(--text-muted); }
+.categoryCount { font-size:12px; font-weight:400; color:var(--text-muted); }
 /* Çubuk bir BÜYÜKLÜK (kategorinin terim sayısı): mavi ailenin yumuşak
    tonu, kulvarın tek ölçüsü 5 piksel (25 Ekim, site geneli renk kararı —
    güncel hâli: büyüklük yumuşak mavi, doygun mavi yalnız seçimde). */
-.categoryBar { display:block; width:100%; height:var(--lane-h, 5px); margin-top:2px; overflow:hidden; border-radius:2px; background:var(--rail-track); }
+.categoryBar { display:block; width:100%; height:var(--lane-h, 5px); margin-top:2px; overflow:hidden; border-radius:999px; background:var(--rail-track); }
 /* "Tümü" kutucuğunun çubuğu bir PAY: sekiz kategori, terim sayısıyla
    orantılı ve aralarında ince boşluk. Tek bir dolu çubuk ötekilerle
    karşılaştırılamazdı (en kalabalık kategoriye göre ölçeklenmiş). */
 .categoryBar[data-share] { display:flex; gap:2px; background:transparent; }
 .categoryBar[data-share] > span { flex:none; }
-.categoryBar > span { display:block; height:100%; border-radius:inherit; background:var(--bar-soft); transform-origin:left center; animation:bar-grow .9s var(--ease-brand) both; animation-delay:calc(var(--tile, 0) * 55ms + 120ms); }
+.categoryBar > span { display:block; height:100%; border-radius:inherit; background:var(--bar-soft); transform-origin:left center; animation:bar-grow var(--draw) var(--ease-brand) both; animation-delay:calc(var(--tile, 0) * var(--step)); }
 @keyframes bar-grow { from { transform:scaleX(0); } }
 .categoryTile[aria-pressed="true"] { border-color:var(--primary-faint); background:var(--primary-wash); }
 .categoryTile[aria-pressed="true"] .categoryCount { color:var(--primary-ink); }
 .categoryTile[aria-pressed="true"] .categoryBar > span { background:var(--primary); }
-.categoryTile:active { scale:.98; }
+.categoryTile:active { scale:.992; }
 .categoryTile:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 @media(hover:hover) and (pointer:fine) {
  .categoryTile:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
- .categoryTile:hover > svg { rotate:-8deg; scale:1.08; }
 }
 /* 1280'de dokuz kutucuk tek satıra sığıyor (ölçüldü: kap 1200, kutucuk
    125); altında şerit kayıyor. */
@@ -89,7 +88,7 @@
 @media(min-width:768px) {
  .toolbar { position:sticky; top:var(--app-bar-h); z-index:5; grid-template-columns:minmax(0,17rem) minmax(0,1fr) auto; align-items:center; gap:14px 18px; padding-block:10px; border-bottom:1px solid var(--line-soft); background:var(--page-bg); box-shadow:0 0 0 100vmax var(--page-bg); clip-path:inset(0 -100vmax); }
 }
-.searchField { display:flex; min-width:0; align-items:center; gap:10px; padding:0 8px 0 15px; border:1px solid var(--line-strong); border-radius:999px; background:var(--premium-surface); box-shadow:var(--shadow-well); transition:border-color .2s var(--ease-brand),box-shadow .2s var(--ease-brand); }
+.searchField { display:flex; min-width:0; align-items:center; gap:10px; padding:0 8px 0 15px; border:1px solid var(--line-strong); border-radius:999px; background:var(--premium-surface); box-shadow:var(--shadow-well); transition:border-color 250ms var(--ease-brand),box-shadow 180ms var(--ease-brand); }
 .searchField:hover { border-color:var(--primary-faint); }
 .searchField:focus-within { border-color:var(--line-focus); box-shadow:var(--shadow-well), var(--shadow-focus); }
 .searchField > svg { flex-shrink:0; color:var(--primary-ink); }
@@ -99,17 +98,17 @@
 /* Telefonda 16 piksel: iOS daha küçük puntolu alana odaklanınca sayfayı
    yakınlaştırıyor. */
 @media(max-width:767px) { .searchField input { font-size:16px; } }
-.clearQuery { display:grid; flex-shrink:0; place-items:center; width:30px; height:30px; border-radius:999px; color:var(--text-muted); transition:background-color .2s var(--ease-brand),color .2s var(--ease-brand); }
+.clearQuery { display:grid; flex-shrink:0; place-items:center; width:30px; height:30px; border-radius:999px; color:var(--text-muted); transition:background-color 180ms var(--ease-brand),color 180ms var(--ease-brand); }
 .clearQuery:hover { background:var(--primary-tint); color:var(--text-strong); }
 .clearQuery:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 
 .letters { min-width:0; overflow-x:auto; scrollbar-width:none; }
 .letters::-webkit-scrollbar { display:none; }
 .letterRow { display:flex; gap:1px; width:max-content; }
-.letter { display:grid; place-items:center; min-width:26px; height:34px; padding-inline:4px; border-radius:9px; font-size:13px; font-weight:600; color:var(--text-body); transition:background-color .2s var(--ease-brand),color .2s var(--ease-brand),scale .15s var(--ease-brand); }
+.letter { display:grid; place-items:center; min-width:26px; height:34px; padding-inline:4px; border-radius:9px; font-size:13px; font-weight:600; color:var(--text-body); transition:background-color 180ms var(--ease-brand),color 180ms var(--ease-brand),scale 200ms var(--ease-brand); }
 .letter:not(:disabled) { cursor:pointer; }
 .letter:not(:disabled):hover { background:var(--primary-tint); color:var(--primary-ink); }
-.letter:not(:disabled):active { scale:.94; }
+.letter:not(:disabled):active { scale:.97; }
 .letter[aria-pressed="true"] { background:var(--primary); color:var(--on-primary); }
 .letter:disabled { color:var(--text-muted); opacity:.38; }
 /* Harfin terim sayısı: altında kulvar üstünde bir çubuk (GlossaryBrowser,
@@ -123,7 +122,7 @@
 .letter:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
 @media(max-width:767px) { .letter { min-width:36px; height:40px; } }
 
-.resultCount { display:flex; align-items:center; gap:12px; font-size:12px; font-weight:500; color:var(--text-muted); white-space:nowrap; }
+.resultCount { display:flex; align-items:center; gap:12px; font-size:12px; font-weight:400; color:var(--text-muted); white-space:nowrap; }
 .clearAll { min-height:32px; font-weight:600; color:var(--primary-ink); }
 .clearAll:hover { color:var(--primary-hover); }
 
@@ -158,11 +157,13 @@
    çıkarıyordu, ok başlık satırına alındı. */
 .section { position:relative; min-width:0; }
 .sectionHead { display:flex; flex-wrap:wrap; align-items:center; gap:8px 12px; padding-top:16px; border-top:1px solid var(--line-strong); }
-.sectionHead h2 { min-width:0; font-size:22px; line-height:1.2; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
+/* 10 Kasım 2026: bölüm başlığı ortak basamakta (22/650, telefonda 17 →
+   clamp(25px,2.8vw,36px)/600). İkon karosu başlıkla büyümüyor. */
+.sectionHead h2 { min-width:0; font-size:clamp(25px,2.8vw,36px); line-height:1.2; font-weight:600; letter-spacing:-.035em; color:var(--text-strong); }
 .sectionIcon { display:grid; flex-shrink:0; place-items:center; width:36px; height:36px; border-radius:11px; background:var(--primary-tint); color:var(--primary-ink); }
 .sectionCount { flex-shrink:0; font-size:12px; color:var(--text-muted); }
-.sectionOpen { display:inline-flex; flex-shrink:0; min-height:34px; align-items:center; gap:6px; padding:0 12px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:650; color:var(--primary-ink); cursor:pointer; transition:background-color .2s var(--ease-brand),border-color .2s var(--ease-brand),scale .15s var(--ease-brand); }
-.sectionOpen > svg { transition:translate .3s var(--ease-brand); }
+.sectionOpen { display:inline-flex; flex-shrink:0; min-height:34px; align-items:center; gap:6px; padding:0 12px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:600; color:var(--primary-ink); cursor:pointer; transition:background-color 180ms var(--ease-brand),border-color 250ms var(--ease-brand),scale 200ms var(--ease-brand); }
+.sectionOpen > svg { transition:translate 200ms var(--ease-brand); }
 .sectionOpen:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
 .sectionOpen:hover > svg { translate:2px 0; }
 .sectionOpen:active { scale:.97; }
@@ -253,40 +254,44 @@
  .cards > .cardItem:nth-child(4n+1):last-child .cardArrow { position:absolute; top:14px; right:14px; }
 }
 .cardItem { display:flex; min-width:0; }
-.card { position:relative; isolation:isolate; display:flex; flex:1; min-width:0; flex-direction:column; gap:11px; padding:14px 14px 16px; overflow:hidden; border:1px solid var(--line); border-radius:18px; background:var(--premium-surface); transition:translate .45s var(--ease-brand),border-color .3s var(--ease-brand),background-color .3s var(--ease-brand); }
+.card { position:relative; isolation:isolate; display:flex; flex:1; min-width:0; flex-direction:column; gap:11px; padding:14px 14px 16px; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); transition:border-color 250ms var(--ease-brand),background-color 180ms var(--ease-brand); }
 /* Üst kenarda ince bir ışık çizgisi: üzerine gelince soldan sağa doluyor.
    Parıltı değil, 2 piksellik bir mürekkep çizgisi (markanın mavisi). */
-.card::before { content:""; position:absolute; inset:0 0 auto; z-index:1; height:2px; background:var(--primary); transform:scaleX(0); transform-origin:left center; transition:transform .55s var(--ease-brand); pointer-events:none; }
+.card::before { content:""; position:absolute; inset:0 0 auto; z-index:1; height:2px; background:var(--primary); transform:scaleX(0); transform-origin:left center; transition:transform var(--mark) var(--ease-brand); pointer-events:none; }
 .cardHead { display:grid; min-width:0; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:12px; }
-.cardMark { flex-shrink:0; transition:background-color .3s var(--ease-brand),scale .45s var(--ease-brand),rotate .45s var(--ease-brand); }
+.cardMark { flex-shrink:0; transition:background-color 180ms var(--ease-brand); }
 .cardMark[data-size="md"] { width:50px; height:50px; border-radius:14px; background:var(--primary-wash); }
 .cardMark[data-size="md"] svg { width:88%; }
 /* Ad ve kısaltma: kısaltma sarılırsa adın altına iner. */
-.cardName { display:flex; min-width:0; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:16px; line-height:1.28; font-weight:650; letter-spacing:-.02em; color:var(--text-strong); overflow-wrap:anywhere; transition:color .25s var(--ease-brand); }
+.cardName { display:flex; min-width:0; flex-wrap:wrap; align-items:center; gap:4px 8px; font-size:16px; line-height:1.28; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); overflow-wrap:anywhere; transition:color 180ms var(--ease-brand); }
 .cardName > span:first-child { text-wrap:balance; }
 .cardAbbr { flex-shrink:0; padding:1px 7px; border-radius:6px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); font-size:12px; line-height:1.55; font-weight:700; letter-spacing:.02em; color:var(--primary-ink); }
 /* Tavan DÖRT satır; kırpılan kart tam cümlesini `title`da taşıyor
    (GlossaryBrowser, ölçerek). Üç satırda 1440'ta 43, 1280'de 64 kart
    "…" ile bitiyordu (ölçüldü); kartın tamamı zaten pencereyi açıyor ama
    yarım cümle bir tanıtım değil. Tanım addan bir ton açık. */
-.cardShort { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; font-size:13.5px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
+.cardShort { display:-webkit-box; -webkit-line-clamp:4; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
 /* Ok — kartın düğme olduğunu dokunmatikte de söyleyen işaret, adın hizasında. */
-.cardArrow { display:grid; flex-shrink:0; align-self:start; place-items:center; width:28px; height:28px; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); transition:background-color .3s var(--ease-brand),color .3s var(--ease-brand),rotate .45s var(--ease-brand); }
-.card:active { scale:.985; }
+.cardArrow { display:grid; flex-shrink:0; align-self:start; place-items:center; width:28px; height:28px; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); transition:background-color 180ms var(--ease-brand),color 180ms var(--ease-brand); }
+.card:active { scale:.992; }
 .card:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 @media(hover:hover) and (pointer:fine) {
- .card:hover { translate:0 -3px; border-color:var(--primary-faint); background:var(--primary-tint); }
+/* 10 Kasım 2026: hover'da kaldırma, karonun büyüyüp dönmesi ve okun 45°
+   dönüşü kalktı (`.claude/rules/hareket.md`: geri bildirim ton ve kenarla;
+   150 kartlık ızgarada imleç geçerken her kart 3 piksel zıplıyordu).
+   Kalan: kenar + ton, üstte dolan 2 piksellik çizgi, okun dolgusu. */
+ .card:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
  .card:hover::before { transform:scaleX(1); }
  .card:hover .cardName { color:var(--primary-ink); }
- .card:hover .cardMark { background:var(--premium-surface); scale:1.06; rotate:-4deg; }
- .card:hover .cardArrow { background:var(--primary); color:var(--on-primary); rotate:45deg; }
+ .card:hover .cardMark { background:var(--premium-surface); }
+ .card:hover .cardArrow { background:var(--primary); color:var(--on-primary); }
 }
 
 /* ---- Kavram işareti (TermMark) ---------------------------------------------
    Karo tonla ayrışıyor: kart zemininden bir basamak koyu, kenar yok.
    Çizim markanın mavisinin dört yoğunluğunda; hepsi token. */
 .mark { display:grid; flex-shrink:0; place-items:center; border-radius:14px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); }
-.mark svg { display:block; width:78%; height:auto; overflow:visible; transition:scale .45s var(--ease-brand); }
+.mark svg { display:block; width:78%; height:auto; overflow:visible; }
 .mark[data-size="xs"] svg,.mark[data-size="sm"] svg { width:86%; }
 .mark[data-size="xs"] { width:34px; height:34px; border-radius:10px; }
 .mark[data-size="sm"] { width:42px; height:42px; border-radius:12px; }
@@ -306,20 +311,15 @@
 .mkPip { fill:var(--primary-faint); }
 .mkArea { fill:var(--primary-wash); }
 .mkHalo { fill:var(--premium-surface); stroke:var(--primary); stroke-width:2; }
-@media(hover:hover) and (pointer:fine) {
- .networkNode:hover .mark svg,.neighbor:hover .mark svg { scale:1.08; }
-}
 
 @media(max-width:767px) {
  .browser { gap:18px; }
- .hero { gap:18px; padding:22px 20px 18px; border-radius:20px; }
+ .hero { gap:18px; padding:22px 20px 18px; }
  .metrics { gap:12px 22px; margin-top:16px; }
  .metrics dd { font-size:22px; }
  .resultList { gap:26px; }
- .sectionHead h2 { font-size:17px; }
- .card { gap:10px; padding:14px 14px 12px; border-radius:16px; }
+ .card { gap:10px; padding:14px 14px 12px; }
  .cardMark[data-size="md"] { width:46px; height:46px; border-radius:13px; }
- .cardName { font-size:15.5px; }
  .spotlightCopy { padding:18px 18px 16px; }
  .spotlightPlate { min-height:0; padding:14px; }
  .spotlightPlate .mark { width:min(100%,150px); }
@@ -339,7 +339,7 @@
 /* ==========================================================================
    Terim sayfası
    ========================================================================== */
-.termHero { position:relative; isolation:isolate; display:grid; min-width:0; grid-template-columns:minmax(0,1fr); gap:18px 36px; padding:32px 34px 30px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); }
+.termHero { position:relative; isolation:isolate; display:grid; min-width:0; grid-template-columns:minmax(0,1fr); gap:18px 36px; padding:32px 34px 30px; border:1px solid var(--line); border-radius:var(--radius-feature); background:var(--premium-surface); }
 .termHeading { min-width:0; align-self:end; }
 /* Kategori başlığın altında; ölçü ve renk kapağın açıklama satırından (9 Ekim 2026). */
 .termHeading > .termCategory { display:flex; align-items:center; gap:8px; font-weight:600; }
@@ -348,7 +348,7 @@
    altında TANIMIN ARKASINDA alçak bir şerit: telefonda başlıkla tanımın
    arasına girince okuyucunun sorduğu cümle ("bu ne demek") ilk ekranın
    dibine itiliyordu (390'da ölçüldü: lede 470. pikselde başlıyordu). */
-.termPlate { position:relative; z-index:1; isolation:isolate; order:3; display:grid; min-width:0; min-height:132px; place-items:center; overflow:hidden; padding:18px; border-radius:20px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); }
+.termPlate { position:relative; z-index:1; isolation:isolate; order:3; display:grid; min-width:0; min-height:132px; place-items:center; overflow:hidden; padding:18px; border-radius:var(--radius-panel); background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); }
 .termPlate .mark { width:min(100%,170px); }
 @media(min-width:1024px) {
  .termHero { grid-template-columns:minmax(0,1fr) minmax(0,300px); }
@@ -360,13 +360,13 @@
 .termHeading h1 { width:fit-content; max-width:100%; margin-top:0; font-size:clamp(32px,4.2vw,52px); line-height:1.08; letter-spacing:-.05em; font-weight:600; text-wrap:balance; }
 /* Levha kapakla birlikte gelir: yalnızca ölçek, saydamlık yok (LCP adayı
    olmayan bir süs; yine de ilk karede görünür kalsın). */
-.termPlate .mark { animation:plate-in .8s var(--ease-brand) both; }
+.termPlate .mark { animation:plate-in var(--draw) var(--ease-brand) both; }
 @keyframes plate-in { from { scale:.9; } }
 /* Tanım: ilk cümle display puntosunda, gerisi gövde. */
 /* Tanım tek sütunda; 1024 altında levhanın altında, üstünde başlığın
    altında. Kenar çizgisi başlıktan ayırıyor. */
 .termDefinition { min-width:0; padding-top:22px; border-top:1px solid var(--line); }
-.lede { max-width:36em; font-size:clamp(20px,2.2vw,26px); line-height:1.42; letter-spacing:-.022em; font-weight:500; color:var(--text-strong); text-wrap:pretty; }
+.lede { max-width:36em; font-size:clamp(20px,2.2vw,26px); line-height:1.42; letter-spacing:-.022em; font-weight:400; color:var(--text-strong); text-wrap:pretty; }
 .restBody { max-width:68ch; margin-top:14px; }
 
 .exampleBody { display:flex; min-width:0; flex-direction:column; gap:18px; padding:2px 20px 22px; }
@@ -378,10 +378,10 @@
 /* Kavram çizimi — sayısız; bant ve eksen tonla, çizgi markanın mavisiyle. */
 .concept { display:block; width:100%; max-width:480px; height:auto; overflow:visible; }
 .conceptBand rect { fill:var(--surface-sunken); }
-.conceptBand text { fill:var(--text-muted); font-size:10px; font-weight:600; }
+.conceptBand text { fill:var(--text-muted); font-size:12px; font-weight:600; }
 .conceptBand[data-on] rect { fill:var(--primary-wash); }
 .conceptBand[data-on] text { fill:var(--text-strong); }
-.conceptTick { fill:var(--text-muted); font-size:10px; font-weight:500; }
+.conceptTick { fill:var(--text-muted); font-size:12px; font-weight:400; }
 .conceptAxis { fill:none; stroke:var(--line-strong); stroke-width:1.2; }
 .conceptAxisLabel { fill:var(--text-body); font-size:12px; font-weight:600; }
 .conceptLine { fill:none; stroke:var(--primary-soft); stroke-width:2.5; stroke-linecap:round; stroke-dasharray:1; }
@@ -394,13 +394,13 @@
    Düğümün kendi yığın bağlamında en altta; merkez kartı (z 2) kolların
    uçlarını örtüyor. */
 .networkArm { position:absolute; left:50%; top:50%; z-index:-1; width:hypot(calc(var(--dx) * 1cqw), calc(var(--dy) * 1cqh)); height:1.5px; transform-origin:left center; rotate:atan2(calc(var(--dy) * -1cqh), calc(var(--dx) * -1cqw)); pointer-events:none; }
-.networkArm > span { display:block; height:100%; border-radius:1px; background:linear-gradient(90deg,var(--primary-faint),var(--primary-soft)); transition:background-color .3s var(--ease-brand),scale .3s var(--ease-brand); }
-.networkNodes > li:hover .networkArm > span,.networkNodes > li:focus-within .networkArm > span { background:var(--primary); scale:1 2; }
-.networkCenter { position:absolute; left:50%; top:50%; z-index:2; display:flex; max-width:210px; flex-direction:column; align-items:center; gap:9px; padding:14px 18px; border:1px solid var(--primary-faint); border-radius:18px; background:var(--premium-surface); translate:-50% -50%; text-align:center; }
-.networkCenter > span:nth-child(2) { font-size:15px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); text-wrap:balance; }
+.networkArm > span { display:block; height:100%; border-radius:1px; background:linear-gradient(90deg,var(--primary-faint),var(--primary-soft)); transition:background-color 180ms var(--ease-brand),scale 200ms var(--ease-brand); }
+.networkNodes > li:hover .networkArm > span,.networkNodes > li:focus-within .networkArm > span { background:var(--primary); }
+.networkCenter { position:absolute; left:50%; top:50%; z-index:2; display:flex; max-width:210px; flex-direction:column; align-items:center; gap:9px; padding:14px 18px; border:1px solid var(--primary-faint); border-radius:var(--radius-panel); background:var(--premium-surface); translate:-50% -50%; text-align:center; }
+.networkCenter > span:nth-child(2) { font-size:15px; line-height:1.3; font-weight:600; letter-spacing:-.015em; color:var(--text-strong); text-wrap:balance; }
 .networkNodes { position:absolute; inset:0; }
 .networkNodes > li { position:absolute; z-index:1; left:var(--x); top:var(--y); width:max-content; max-width:min(36%,230px); translate:-50% -50%; }
-.networkNode { display:flex; align-items:center; gap:10px; padding:6px 13px 6px 6px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:background-color .25s var(--ease-brand),border-color .25s var(--ease-brand),scale .15s var(--ease-brand); }
+.networkNode { display:flex; align-items:center; gap:10px; padding:6px 13px 6px 6px; border:1px solid var(--line); border-radius:14px; background:var(--premium-surface); transition:background-color 180ms var(--ease-brand),border-color .25s var(--ease-brand),scale 200ms var(--ease-brand); }
 .networkTerm { display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; font-size:13px; line-height:1.3; font-weight:600; color:var(--text-strong); }
 .networkCategory { display:block; margin-top:1px; font-size:12px; line-height:1.4; color:var(--text-muted); }
 .networkNode:active { scale:.98; }
@@ -424,11 +424,11 @@
 @media(min-width:900px) { .neighbors { grid-template-columns:minmax(0,1fr) minmax(0,15rem) minmax(0,1fr); grid-template-areas:"prev pos next"; align-items:center; } }
 .neighbors > :first-child { grid-area:prev; }
 .neighbors > :last-child { grid-area:next; }
-.neighbor { display:flex; min-width:0; align-items:center; gap:14px; padding:14px 18px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); transition:background-color .25s var(--ease-brand),border-color .25s var(--ease-brand); }
+.neighbor { display:flex; min-width:0; align-items:center; gap:14px; padding:14px 18px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); transition:background-color 180ms var(--ease-brand),border-color .25s var(--ease-brand); }
 .neighbor[data-side="next"] { justify-content:flex-end; text-align:right; }
-.neighborArrow { flex-shrink:0; color:var(--primary-ink); transition:translate .3s var(--ease-brand); }
-.neighborLabel { display:block; font-size:12px; font-weight:500; color:var(--text-muted); }
-.neighborTerm { display:block; margin-top:2px; font-size:16px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); overflow-wrap:anywhere; }
+.neighborArrow { flex-shrink:0; color:var(--primary-ink); transition:translate 200ms var(--ease-brand); }
+.neighborLabel { display:block; font-size:12px; font-weight:400; color:var(--text-muted); }
+.neighborTerm { display:block; margin-top:2px; font-size:16px; line-height:1.3; font-weight:600; letter-spacing:-.015em; color:var(--text-strong); overflow-wrap:anywhere; }
 .neighbor:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
 @media(hover:hover) and (pointer:fine) {
  .neighbor:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
@@ -439,14 +439,14 @@
    bulunulan dolu ve uzun, kalanlar çizgi tonunda. */
 .position { grid-area:pos; display:flex; min-width:0; flex-direction:column; align-items:center; gap:8px; }
 .positionRail { display:flex; width:100%; max-width:15rem; height:22px; align-items:center; justify-content:center; gap:3px; }
-.positionRail > span { flex:1 1 0; max-width:6px; height:10px; border-radius:2px; background:var(--line); transform-origin:center; animation:tick-in .5s var(--ease-brand) both; }
+.positionRail > span { flex:1 1 0; max-width:6px; height:10px; border-radius:999px; background:var(--line); transform-origin:center; animation:tick-in var(--mark) var(--ease-brand) both; }
 .positionRail > span[data-past] { background:var(--primary-faint); }
 .positionRail > span[data-on] { height:22px; background:var(--primary); }
 @keyframes tick-in { from { scale:1 .2; } }
 .positionLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
 
 @media(max-width:767px) {
- .termHero { gap:14px 16px; padding:22px 20px 20px; border-radius:20px; }
+ .termHero { gap:14px 16px; padding:22px 20px 20px; }
  .termDefinition { padding-top:16px; }
  .exampleBody { padding:2px 16px 18px; }
  .networkWrap { padding:0 16px 18px; }
@@ -471,19 +471,19 @@
 .peek { display:grid; gap:16px; padding-bottom:20px; }
 .peekHead { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:14px; }
 .peekTitle { display:grid; min-width:0; gap:6px; }
-.peekTitle h2 { font-size:clamp(26px,6vw,32px); font-weight:750; line-height:1.08; letter-spacing:-.03em; overflow-wrap:anywhere; }
-.peekEyebrow { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:650; color:var(--primary-ink); }
+.peekTitle h2 { font-size:clamp(26px,6vw,32px); font-weight:700; line-height:1.08; letter-spacing:-.03em; overflow-wrap:anywhere; }
+.peekEyebrow { display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:600; color:var(--primary-ink); }
 .peekMark { display:grid; width:84px; height:84px; place-items:center; padding:10px; border-radius:18px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--line-soft); }
 .peekMark .mark { width:100%; }
-.peekLede { font-size:18px; font-weight:500; line-height:1.5; letter-spacing:-.012em; color:var(--text-strong); text-wrap:pretty; }
+.peekLede { font-size:18px; font-weight:400; line-height:1.5; letter-spacing:-.012em; color:var(--text-strong); text-wrap:pretty; }
 .peekRest { font-size:15px; }
 .peekLabel { margin-bottom:6px; font-size:12px; font-weight:700; letter-spacing:.01em; color:var(--primary-ink); }
 .peekRelated ul { display:flex; flex-wrap:wrap; gap:8px; }
-.peekChip { display:inline-flex; min-height:40px; align-items:center; gap:8px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface); font-size:13.5px; font-weight:600; color:var(--text-strong); transition:border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), scale .15s var(--ease-brand); }
+.peekChip { display:inline-flex; min-height:40px; align-items:center; gap:8px; padding:0 14px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface); font-size:13.5px; font-weight:600; color:var(--text-strong); transition:border-color 250ms var(--ease-brand), background-color 180ms var(--ease-brand), scale 200ms var(--ease-brand); }
 .peekChip:active { scale:.97; }
 .peekChip:focus-visible, .peekFull:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
-.peekFull { display:inline-flex; width:fit-content; min-height:44px; align-items:center; gap:8px; padding:0 16px; border-radius:12px; background:var(--primary-wash); font-size:14px; font-weight:650; color:var(--primary-ink); transition:background-color .2s var(--ease-brand); }
-.peekFull > svg { transition:translate .3s var(--ease-brand); }
+.peekFull { display:inline-flex; width:fit-content; min-height:44px; align-items:center; gap:8px; padding:0 16px; border-radius:12px; background:var(--primary-wash); font-size:14px; font-weight:600; color:var(--primary-ink); transition:background-color 180ms var(--ease-brand); }
+.peekFull > svg { transition:translate 200ms var(--ease-brand); }
 .peekFallback { display:grid; gap:14px; padding-bottom:20px; font-size:14px; line-height:1.5; color:var(--text-body); }
 @media(hover:hover) and (pointer:fine) {
   .peekChip:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
@@ -515,7 +515,7 @@
  .browser > .hero { display:contents; }
  .browser > .hero > [aria-hidden="true"]:first-child { display:none; }
  .browser > * { order:5; }
- .browser .hero > .heroCopy { order:0; padding:20px 18px 18px; border:1px solid var(--line); border-radius:20px; background:var(--premium-surface); }
+ .browser .hero > .heroCopy { order:0; padding:20px 18px 18px; border:1px solid var(--line); border-radius:var(--radius-feature); background:var(--premium-surface); }
  .browser > .toolbar { order:1; }
  .browser .hero > .spotlight { order:2; }
  .browser > :global(.chip-strip) { order:3; }
@@ -532,20 +532,20 @@
    rengi; doygun `--primary` görselde yok.
    ========================================================================== */
 /* Kartta başlıkla tanım arasındaki şerit: zeminden bir basamak koyu, kenarsız. */
-.cardFormula { display:flex; min-width:0; align-items:center; padding:9px 12px; border-radius:12px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--primary-wash); transition:background-color .3s var(--ease-brand); }
+.cardFormula { display:flex; min-width:0; align-items:center; padding:9px 12px; border-radius:12px; background:var(--primary-tint); box-shadow:inset 0 0 0 1px var(--primary-wash); transition:background-color 180ms var(--ease-brand); }
 @media(hover:hover) and (pointer:fine) { .card:hover .cardFormula { background:var(--premium-surface); } }
 .formula { display:inline-flex; min-width:0; max-width:100%; align-items:center; gap:10px; color:var(--text-strong); }
 .formula[data-size="card"] { font-size:12.5px; line-height:1.3; font-weight:600; }
-.formulaLhs { display:inline-flex; flex-shrink:0; align-items:center; gap:8px; font-weight:750; letter-spacing:.01em; }
-.formulaEq { font-weight:500; color:var(--text-muted); }
+.formulaLhs { display:inline-flex; flex-shrink:0; align-items:center; gap:8px; font-weight:700; letter-spacing:.01em; }
+.formulaEq { font-weight:400; color:var(--text-muted); }
 .fraction { display:inline-grid; min-width:0; justify-items:center; gap:3px; text-align:center; }
 .fractionTerm { min-width:0; overflow-wrap:anywhere; text-wrap:balance; }
 .fractionBar { display:block; width:100%; height:1.5px; border-radius:1px; background:var(--text-strong); }
 .formulaInline { display:inline-flex; min-width:0; flex-wrap:wrap; align-items:center; gap:4px 8px; }
 .formulaOp { display:inline-grid; flex-shrink:0; place-items:center; width:20px; height:20px; border-radius:999px; background:var(--premium-surface); box-shadow:inset 0 0 0 1px var(--line); font-weight:700; color:var(--text-body); }
-.formulaPercent { flex-shrink:0; padding:1px 6px; border-radius:6px; box-shadow:inset 0 0 0 1px var(--line); font-size:11px; font-weight:650; white-space:nowrap; color:var(--text-muted); }
+.formulaPercent { flex-shrink:0; padding:1px 6px; border-radius:6px; box-shadow:inset 0 0 0 1px var(--line); font-size:12px; font-weight:600; white-space:nowrap; color:var(--text-muted); }
 /* Levha: kısaltma üstte iri, eşitlik altında. Kap genişliğine göre punto. */
-.formula[data-size="plate"] { flex-direction:column; gap:12px; font-size:clamp(15px,1.5vw,18px); line-height:1.3; font-weight:650; text-align:center; letter-spacing:-.01em; }
+.formula[data-size="plate"] { flex-direction:column; gap:12px; font-size:clamp(15px,1.5vw,18px); line-height:1.3; font-weight:600; text-align:center; letter-spacing:-.01em; }
 .formula[data-size="plate"] .formulaLhs { font-size:1.9em; letter-spacing:-.03em; }
 .formula[data-size="plate"] .fraction { gap:7px; }
 .formula[data-size="plate"] .fractionBar { height:2px; }
@@ -570,7 +570,7 @@
 .dialLegend [data-tone="on"] { color:var(--text-strong); }
 
 /* Ağda formülün tek satırı. */
-.networkFormula { display:block; margin-top:2px; overflow:hidden; font-size:11.5px; line-height:1.4; font-weight:500; white-space:nowrap; text-overflow:ellipsis; color:var(--text-muted); }
+.networkFormula { display:block; margin-top:2px; overflow:hidden; font-size:12px; line-height:1.4; font-weight:400; white-space:nowrap; text-overflow:ellipsis; color:var(--text-muted); }
 .networkCenter > .networkFormula { max-width:100%; white-space:normal; font-size:12px; text-wrap:balance; }
 @media(max-width:639px) { .networkCenter > .networkFormula { display:none; } }
 @media(prefers-reduced-motion:reduce) { .cardFormula { transition:none; } }

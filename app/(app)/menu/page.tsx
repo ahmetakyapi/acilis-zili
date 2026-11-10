@@ -19,6 +19,7 @@ import { AvatarTile } from "@/components/brand/AvatarIcon";
 import { getUserAvatar } from "@/lib/avatar-data";
 import { SignOutForm } from "@/components/auth/SignOutForm";
 import { PageHeader, Panel, ButtonLink } from "@/components/ui/primitives";
+import own from "./menu.module.css";
 import { getI18n, type Dictionary } from "@/lib/i18n";
 import { MORE_GROUPS, NAV_ITEMS, gatedVisible, menuGroupOf, type MoreGroup } from "@/components/layout/nav-items";
 import { hasRiskMenu } from "@/lib/risk/store";
@@ -203,7 +204,7 @@ export default async function MenuPage() {
             <h2 id={`menu-group-${groupIndex}`} className={polish.menuGroupTitle}>
               {group.title}
             </h2>
-            <ul className={polish.menuTiles} data-motion-stagger>
+            <ul className={`${polish.menuTiles} ${own.tiles}`} data-motion-stagger>
               {group.entries.map((entry) => {
                 const Icon = entry.icon;
                 return (
@@ -212,7 +213,7 @@ export default async function MenuPage() {
                       href={withLocale(entry.href, locale)}
                       prefetch={false}
                       data-featured={FEATURED.has(entry.href) || undefined}
-                      className={polish.menuTile}
+                      className={`${polish.menuTile} ${own.tile}`}
                     >
                       <span className={polish.menuIcon} aria-hidden>
                         <Icon weight="duotone" size={20} />

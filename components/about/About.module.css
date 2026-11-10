@@ -8,27 +8,32 @@
    hepsi token.
    ========================================================================== */
 
-.about { min-width:0; }
+.about { min-width:0; gap:var(--page-section-gap); }
+/* İki kolonlu gövde (10 Kasım 2026; gerekçe ve ölçüm page.tsx'te). */
+@media(min-width:768px) { .split { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; gap:16px 40px; } }
 
 /* ---- Kapak ---------------------------------------------------------------- */
-.hero { position:relative; isolation:isolate; display:grid; min-width:0; gap:26px; padding:32px 34px; border:1px solid var(--line); border-radius:24px; background:var(--premium-surface); }
+.hero { position:relative; isolation:isolate; display:grid; min-width:0; gap:26px; padding:32px 34px; border:1px solid var(--line); border-radius:var(--radius-feature); background:var(--premium-surface); }
 .heroCopy { min-width:0; align-self:center; }
 .heroCopy h1 { width:fit-content; max-width:100%; margin:10px 0 12px; font-size:clamp(34px,4vw,50px); line-height:1.06; letter-spacing:-.05em; font-weight:600; text-wrap:balance; }
 .heroCopy > p:not(:first-child) { max-width:40ch; font-size:15px; line-height:1.7; color:var(--text-body); text-wrap:pretty; }
 @media(min-width:900px) { .hero { grid-template-columns:minmax(0,1.05fr) minmax(0,1fr); align-items:center; gap:36px; } }
 
 /* Seans saati — kapağın görseli. Tonla ayrışan yüzey, gölge yok. */
-.clock { min-width:0; padding:18px 20px 16px; border-radius:18px; background:var(--surface-sunken); }
+.clock { min-width:0; padding:18px 20px 16px; border-radius:var(--radius-panel); background:var(--surface-sunken); }
 .clockHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; font-size:12px; color:var(--text-muted); }
-.clockHead > span:first-child { font-size:13px; font-weight:650; color:var(--text-strong); }
+.clockHead > span:first-child { font-size:13px; font-weight:600; color:var(--text-strong); }
 .clockTimes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; margin-top:12px; }
 .clockTimes > div { display:flex; min-width:0; flex-direction:column; }
 .clockTimes > div + div { padding-left:16px; border-left:1px solid var(--line); }
-.clockTimes dt { font-size:12px; font-weight:500; color:var(--text-muted); }
-.clockTimes dd:not(.clockSecondary) { margin-top:2px; font-size:clamp(34px,4vw,46px); line-height:1.05; letter-spacing:-.055em; font-weight:600; color:var(--text-strong); }
+.clockTimes dt { font-size:12px; font-weight:400; color:var(--text-muted); }
+.clockTimes dd:not(.clockSecondary) { margin-top:2px; font-size:clamp(34px,4vw,46px); line-height:1.05; letter-spacing:-.03em; font-weight:700; color:var(--text-strong); }
 .clockSecondary { margin-top:2px; font-size:12px; color:var(--text-muted); }
-.track { position:relative; height:12px; margin-top:18px; overflow:hidden; border-radius:6px; background:var(--rail-track); }
-.track > span { position:absolute; top:0; bottom:0; border-radius:6px; background:var(--primary-faint); transform-origin:left center; animation:window-grow .9s var(--ease-brand) both; animation-delay:calc(var(--i, 0) * 120ms + 150ms); }
+/* 10 Kasım 2026: şerit ortak ölçüde (12 piksel/6 → 5 piksel/999, kulvar
+   `--line-soft`); çizim `--draw` + `--step` (önce 900 ms + 120 ms kademe:
+   üçüncü pencere 1.290 ms'de bitiyordu, şimdi 780). */
+.track { position:relative; height:5px; margin-top:22px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.track > span { position:absolute; top:0; bottom:0; border-radius:999px; background:var(--primary-faint); transform-origin:left center; animation:window-grow var(--draw) var(--ease-brand) both; animation-delay:calc(var(--i, 0) * var(--step)); }
 .track > span[data-kind="regular"] { background:var(--primary); }
 @keyframes window-grow { from { transform:scaleX(0); } }
 .ticks { position:relative; height:16px; margin-top:6px; font-size:12px; color:var(--text-muted); }
@@ -37,16 +42,16 @@
 .ticks > span:last-child { translate:-100% 0; }
 .legend { display:flex; flex-wrap:wrap; gap:6px 14px; margin-top:8px; font-size:12px; color:var(--text-muted); }
 .legend li { display:inline-flex; align-items:center; gap:6px; }
-.legend li::before { content:""; width:10px; height:6px; border-radius:2px; background:var(--primary-faint); }
+.legend li::before { content:""; width:10px; height:5px; border-radius:999px; background:var(--primary-faint); }
 .legend li[data-kind="regular"]::before { background:var(--primary); }
 
-.lede { max-width:40em; font-size:clamp(18px,1.8vw,21px); line-height:1.5; letter-spacing:-.015em; font-weight:500; color:var(--text-strong); text-wrap:pretty; }
+.lede { max-width:40em; font-size:clamp(18px,1.8vw,21px); line-height:1.5; letter-spacing:-.015em; font-weight:400; color:var(--text-strong); text-wrap:pretty; }
 
 /* ---- İlkeler: dört söz, ızgarada, hairline ile ------------------------------ */
 .principles { display:grid; grid-template-columns:minmax(0,1fr); border-top:1px solid var(--line-soft); border-bottom:1px solid var(--line-soft); }
 .principles > li { min-width:0; padding:24px 20px; }
 .principles > li + li { border-top:1px solid var(--line-soft); }
-.principles > li > svg { color:var(--primary-ink); transition:rotate .5s var(--ease-brand),scale .5s var(--ease-brand); }
+.principles > li > svg { color:var(--primary-ink); }
 .principles h3 { margin-top:12px; font-size:clamp(28px,3.4vw,40px); line-height:1.04; letter-spacing:-.05em; font-weight:600; color:var(--text-strong); }
 .principles p { max-width:36ch; margin-top:9px; font-size:14px; line-height:1.65; color:var(--text-body); }
 @media(min-width:640px) {
@@ -56,20 +61,22 @@
  .principles > li:nth-child(odd) { border-right:1px solid var(--line-soft); }
  .principles > li:nth-child(n+3) { border-top:1px solid var(--line-soft); }
 }
-@media(hover:hover) and (pointer:fine) { .principles > li:hover > svg { rotate:-8deg; scale:1.1; } }
 
 /* ---- Veri akışı ------------------------------------------------------------ */
 .dataFlow { display:flex; min-width:0; flex-direction:column; align-items:stretch; padding:0 16px 22px; }
 @media(min-width:640px) { .dataFlow { padding-inline:20px; } }
+/* Üçüncü durak (ekrandaki damga) kısa: içeriği okların hizasında ortalanır
+   (10 Kasım 2026; üstte yaslıyken altında 1440'ta ~230 piksel boş ton vardı). */
+@media(min-width:900px) { .dataFlow > .stage:last-child { justify-content:center; } }
 @media(min-width:900px) { .dataFlow { display:grid; grid-template-columns:minmax(0,1.05fr) 34px minmax(0,1fr) 34px minmax(0,.95fr); align-items:stretch; } }
 .stage { display:flex; min-width:0; flex-direction:column; gap:12px; padding:16px 18px 18px; border-radius:16px; background:var(--surface-sunken); }
-.stageTitle { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:650; color:var(--text-strong); }
+.stageTitle { display:flex; align-items:center; gap:8px; font-size:14px; font-weight:600; color:var(--text-strong); }
 .stageTitle > svg { flex-shrink:0; color:var(--primary-ink); }
-.stageIntro { font-size:12.5px; line-height:1.6; color:var(--text-muted); }
+.stageIntro { font-size:13px; line-height:1.6; color:var(--text-muted); }
 .sources > li { display:flex; flex-direction:column; gap:1px; padding-block:8px; }
 .sources > li + li { border-top:1px solid var(--line-soft); }
 .sources > li:first-child { padding-top:0; }
-.sources strong { font-size:13px; font-weight:650; color:var(--text-strong); }
+.sources strong { font-size:13px; font-weight:600; color:var(--text-strong); }
 .sources span { font-size:12px; line-height:1.55; color:var(--text-body); }
 .gates { display:flex; flex-direction:column; }
 .gates > li { display:flex; flex-direction:column; }
@@ -77,7 +84,7 @@
 .fallback::before { content:""; position:absolute; left:50%; top:2px; width:1.5px; height:14px; background:var(--primary-faint); }
 .gate { display:flex; align-items:flex-start; gap:11px; padding:11px 13px; border:1px solid var(--line); border-radius:12px; background:var(--premium-surface); }
 .gate > svg { flex-shrink:0; margin-top:1px; color:var(--primary-ink); }
-.gate strong { display:block; font-size:13.5px; font-weight:650; color:var(--text-strong); }
+.gate strong { display:block; font-size:13px; font-weight:600; color:var(--text-strong); }
 .gate span > span { display:block; margin-top:2px; font-size:12px; line-height:1.55; color:var(--text-body); }
 .stamp { display:flex; flex-wrap:wrap; gap:6px; }
 .stamp > span { padding:5px 10px; border:1px solid var(--line); border-radius:999px; background:var(--premium-surface); font-size:12px; font-weight:600; color:var(--text-strong); }
@@ -98,7 +105,7 @@
 .contentFlow { display:grid; grid-template-columns:minmax(0,1fr); }
 .contentFlow > li { position:relative; display:grid; grid-template-columns:44px minmax(0,1fr); column-gap:14px; padding-bottom:22px; }
 .contentFlow > li:last-child { padding-bottom:0; }
-.contentFlow h3 { align-self:center; font-size:16px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); }
+.contentFlow h3 { align-self:center; font-size:16px; line-height:1.3; font-weight:600; letter-spacing:-.015em; color:var(--text-strong); }
 .contentFlow p { grid-column:2; margin-top:4px; font-size:13px; line-height:1.6; color:var(--text-body); }
 .stepIcon { display:grid; grid-row:span 2; place-items:center; width:44px; height:44px; border-radius:13px; background:var(--primary-tint); color:var(--primary-ink); }
 .stepConnector { position:absolute; left:21px; top:52px; bottom:6px; width:2px; background:var(--primary-faint); transform-origin:center top; }
@@ -112,17 +119,22 @@
 
 /* Adım adım giriş — FlowReveal yalnızca ilk ekranın altındaki akışı
    hazırlar (`data-armed`) ve görünümde oynatır (`data-play`). */
-:is(.dataFlow,.contentFlowWrap)[data-armed]:not([data-play]) [data-step] { opacity:0; translate:0 14px; }
 :is(.dataFlow,.contentFlowWrap)[data-armed]:not([data-play]) [data-connector] { scale:1 0; }
 @media(min-width:900px) { :is(.dataFlow,.contentFlowWrap)[data-armed]:not([data-play]) [data-connector] { scale:0 1; } }
-:is(.dataFlow,.contentFlowWrap)[data-play] [data-step] { transition:opacity .55s var(--ease-brand),translate .7s var(--ease-brand); transition-delay:calc(var(--step, 0) * 300ms); }
-:is(.dataFlow,.contentFlowWrap)[data-play] [data-connector] { transition:scale .5s var(--ease-brand); transition-delay:calc(var(--step, 0) * 300ms); }
+/* 10 Kasım 2026: adımların kendisi (kutu ve metin) artık gizlenip 14 piksel
+   kayarak gelmiyor; yalnız BAĞLANTI çizgisi çiziliyor (çizim veriyi çizen
+   öğede, metin kaymaz — `.claude/rules/hareket.md`). Önce: adım başına
+   300 ms kademe, dördüncü adım 900 + 700 = 1.600 ms'de bitiyordu. Sonra:
+   çizgi `--draw` (700), kademe 80 ms, son çizgi 240 + 700 = 940 ms.
+   Buradaki `--step` adımın SIRASI (satır içi stil), ortak 40 ms'lik
+   `--step` değil; o yüzden kademe sayıyla yazılı. */
+:is(.dataFlow,.contentFlowWrap)[data-play] [data-connector] { transition:scale var(--draw) var(--ease-brand); transition-delay:calc(var(--step, 0) * 80ms); }
 
 /* ---- Yayın ritmi ----------------------------------------------------------- */
 .rhythm { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px 16px; }
 .rhythm > div { min-width:0; padding-top:8px; border-top:1px solid var(--line-soft); }
 .rhythm dt { font-size:12px; font-weight:600; color:var(--primary-ink); }
-.rhythm dd { margin-top:2px; font-size:15px; line-height:1.3; font-weight:650; letter-spacing:-.015em; color:var(--text-strong); }
+.rhythm dd { margin-top:2px; font-size:15px; line-height:1.3; font-weight:600; letter-spacing:-.015em; color:var(--text-strong); }
 @media(min-width:768px) {
  .rhythm { grid-template-columns:repeat(5,minmax(0,1fr)); gap:0; }
  .rhythm > div { padding:2px 14px 4px; border-top:0; border-left:1px solid var(--line-soft); }
@@ -130,7 +142,7 @@
 }
 
 /* ---- Sitene ekle: canlı önizlemenin sahnesi --------------------------------- */
-.preview { display:flex; min-width:0; justify-content:center; padding:14px; border-radius:16px; background:var(--surface-sunken); }
+.preview { display:flex; min-width:0; align-items:center; justify-content:center; padding:14px; border-radius:16px; background:var(--surface-sunken); }
 
 /* ---- Tanıtım Filmi --------------------------------------------------------------
    9:16 film beside its words. The video is the box itself (overflow + radius, no frame
@@ -142,21 +154,21 @@
   border-radius:18px; overflow:hidden; background:var(--surface-sunken); object-fit:cover; }
 .filmCopy { display:flex; min-width:0; flex-direction:column; gap:14px; }
 .filmCopy > p { max-width:68ch; font-size:1rem; line-height:1.65; color:var(--text-body); text-wrap:pretty; }
-.filmCopy > p:first-child { color:var(--text-strong); font-weight:500; }
+.filmCopy > p:first-child { color:var(--text-strong); font-weight:400; }
 .filmNote { font-size:var(--text-read) !important; }
 .filmCredits { margin-top:4px; padding-top:14px; border-top:1px solid var(--line-soft); }
 .filmCredits h3 { font-size:var(--text-read); font-weight:700; color:var(--text-strong); }
 .filmCredits ul { display:flex; flex-direction:column; gap:6px; margin-top:8px; font-size:13px; line-height:1.5; color:var(--text-muted); }
 .filmCredits a { color:inherit; text-decoration:underline; text-decoration-color:var(--line-soft); text-underline-offset:3px; }
 .filmCredits a:hover { color:var(--primary); text-decoration-color:currentColor; }
-.filmRole { font-weight:650; color:var(--text-body); }
+.filmRole { font-weight:600; color:var(--text-body); }
 @media(min-width:640px) {
- .film { grid-template-columns:240px minmax(0,1fr); align-items:start; gap:28px; padding:0 20px 24px; }
+ .film { grid-template-columns:240px minmax(0,1fr); align-items:center; gap:28px; padding:0 20px 24px; }
  .filmVideo { justify-self:start; }
 }
 
 @media(max-width:767px) {
- .hero { gap:18px; padding:22px 20px 20px; border-radius:20px; }
+ .hero { gap:18px; padding:22px 20px 20px; }
  .clock { padding:14px 16px; }
 }
 @media(prefers-reduced-motion:reduce) {

@@ -18,9 +18,9 @@
 .titleRow { display:inline-flex; align-items:center; gap:10px; min-width:0; }
 .icon { display:grid; place-items:center; flex-shrink:0; width:32px; height:32px; border-radius:10px; background:color-mix(in srgb, var(--ch, var(--primary-soft)) 16%, transparent); color:var(--ch, var(--primary-soft)); }
 .title { font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
-.position { font-size:12px; font-weight:650; color:var(--text-muted); }
+.position { font-size:12px; font-weight:600; color:var(--text-muted); }
 .chapter { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; font-size:13px; color:var(--text-body); }
-.readNote { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:650; color:var(--text-strong); }
+.readNote { display:inline-flex; align-items:center; gap:4px; font-size:12px; font-weight:600; color:var(--text-strong); }
 .readNote > svg { color:var(--ch, var(--primary-soft)); }
 
 .segments { display:grid; grid-template-columns:repeat(var(--n, 1), minmax(0, 1fr)); gap:4px; margin:2px 0 0; padding:0; list-style:none; }
@@ -36,7 +36,7 @@ a.segment:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
   a.segment[data-state="read"]:hover::before { background:var(--ch, var(--primary-soft)); }
 }
 
-.legend { display:flex; flex-wrap:wrap; gap:4px 16px; margin-top:-6px; font-size:11px; font-weight:600; color:var(--text-muted); }
+.legend { display:flex; flex-wrap:wrap; gap:4px 16px; margin-top:-6px; font-size:12px; font-weight:600; color:var(--text-muted); }
 .legend > span { display:inline-flex; align-items:center; gap:6px; }
 .legend i { display:inline-block; width:14px; height:var(--lane-h, 5px); border-radius:999px; background:var(--ch-line); }
 .legend i[data-state="read"] { background:var(--ch-read); }

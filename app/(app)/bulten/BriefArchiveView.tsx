@@ -347,7 +347,7 @@ async function ArchiveBoard({
                       "line-clamp-2 block text-base leading-snug",
                       active
                         ? "font-semibold text-strong"
-                        : "font-medium text-body",
+                        : "font-normal text-body",
                     )}
                   >
                     {row.headline}

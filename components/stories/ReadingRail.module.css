@@ -28,14 +28,14 @@
 }
 
 .label {
-  font-size:var(--text-nano); line-height:1.2; font-weight:650;
+  font-size:var(--text-nano); line-height:1.2; font-weight:600;
   color:var(--text-muted);
 }
 .list { display:flex; flex-direction:column; gap:2px; }
 .list a {
   display:grid; grid-template-columns:22px minmax(0,1fr); align-items:center; gap:10px;
   min-height:26px; border-radius:6px; color:var(--text-soft);
-  transition:color .2s var(--ease-brand);
+  transition:color 180ms var(--ease-brand);
 }
 .number {
   font-family:var(--font-mono); font-size:12px; line-height:1; font-weight:600;
@@ -55,7 +55,7 @@
 .list li[data-state="current"] a { color:var(--primary-ink); }
 .list li[data-state="current"] .track { background:var(--primary-wash); }
 /* Okunan bölümün numarası bir adım öne çıkar — tek küçük öğe, yay yok. */
-.list li[data-state="current"] .number { font-weight:750; }
+.list li[data-state="current"] .number { font-weight:700; }
 
 @media (hover:hover) and (pointer:fine) {
   .list a:hover { color:var(--primary-ink); }
@@ -66,7 +66,7 @@
 /* Okunan bölümün adı: 13 piksel, en çok dört satır, 104 pikselde
    (8 piksellik künye puntosu ölçüldü, kenarda okunmuyordu). */
 .current {
-  min-height:1lh; font-size:13px; line-height:1.35; font-weight:650; letter-spacing:-.01em;
+  min-height:1lh; font-size:13px; line-height:1.35; font-weight:600; letter-spacing:-.01em;
   color:var(--text-strong); text-wrap:balance;
   display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:4; overflow:hidden;
   overflow-wrap:anywhere;

@@ -2410,12 +2410,12 @@ function LotTable({
       <table className="w-full min-w-[560px] text-small">
         <thead>
           <tr className="border-b border-line-soft text-left text-nano text-muted">
-            <th scope="col" className="py-2 pr-3 font-medium">{labels.symbol}</th>
-            <th scope="col" className="px-2 py-2 font-medium">{labels.sellDate}</th>
-            <th scope="col" className="px-2 py-2 text-right font-medium">{labels.quantity}</th>
-            <th scope="col" className="px-2 py-2 text-right font-medium">{labels.taxCostTl}</th>
-            <th scope="col" className="px-2 py-2 text-right font-medium">{labels.proceedsTl}</th>
-            <th scope="col" className="py-2 pl-2 text-right font-medium">{labels.gainTl}</th>
+            <th scope="col" className="py-2 pr-3 font-semibold">{labels.symbol}</th>
+            <th scope="col" className="px-2 py-2 font-semibold">{labels.sellDate}</th>
+            <th scope="col" className="px-2 py-2 text-right font-semibold">{labels.quantity}</th>
+            <th scope="col" className="px-2 py-2 text-right font-semibold">{labels.taxCostTl}</th>
+            <th scope="col" className="px-2 py-2 text-right font-semibold">{labels.proceedsTl}</th>
+            <th scope="col" className="py-2 pl-2 text-right font-semibold">{labels.gainTl}</th>
           </tr>
         </thead>
         <tbody className="divide-y divide-line-soft">

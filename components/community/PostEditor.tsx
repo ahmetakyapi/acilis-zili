@@ -228,7 +228,7 @@ export function PostEditor({
               <span
                 aria-current={active ? "step" : undefined}
                 className={cn(
-                  "inline-flex min-h-8 w-full min-w-0 items-center justify-center gap-1.5 rounded-full border px-2 py-1 text-center text-tiny font-semibold leading-tight transition-colors duration-300 ease-brand sm:w-auto sm:gap-2 sm:px-2.5 sm:text-small",
+                  "inline-flex min-h-8 w-full min-w-0 items-center justify-center gap-1.5 rounded-full border px-2 py-1 text-center text-tiny font-semibold leading-tight transition-colors duration-[180ms] ease-brand sm:w-auto sm:gap-2 sm:px-2.5 sm:text-small",
                   active
                     ? "border-line-strong bg-surface text-strong"
                     : done
@@ -278,7 +278,7 @@ export function PostEditor({
                   aria-pressed={selected}
                   onClick={() => applyTemplate(key)}
                   className={cn(
-                    "group flex min-h-11 items-center gap-2.5 rounded-(--radius-md) border p-2.5 text-left transition-colors duration-300 ease-brand sm:items-start sm:gap-3 sm:p-3",
+                    "group flex min-h-11 items-center gap-2.5 rounded-(--radius-md) border p-2.5 text-left transition-colors duration-[180ms] ease-brand sm:items-start sm:gap-3 sm:p-3",
                     key === "blank" && "max-sm:col-span-2",
                     selected
                       ? "border-primary bg-primary-tint"
@@ -313,7 +313,7 @@ export function PostEditor({
             aria-pressed={view === key}
             onClick={() => setView(key)}
             className={cn(
-              "min-h-11 flex-1 rounded-full text-sm font-semibold transition-colors duration-300 ease-brand",
+              "min-h-11 flex-1 rounded-full text-sm font-semibold transition-colors duration-[180ms] ease-brand",
               view === key ? "bg-surface text-strong" : "text-muted hover:text-strong",
             )}
           >

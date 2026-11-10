@@ -18,7 +18,7 @@
    HAREKET. Her giriş bir kez ve `--ease-brand` ile; hareketi azaltana son
    kare (dosya sonu). Sayfanın üstündeki çizimler (pay şeridi, sütunlar,
    haftalık yığın) CSS animasyonu: ilk ekrandaysa ilk boyamadan, altındaysa
-   görününce (`SeenStage` → `data-armed` / `data-play`, ikinci ad kalıbı).
+   görününce (`data-draw` + kabuktaki `DrawGate`; 10 Kasım'a dek `SeenStage`).
    Ekran karolarının çizgisi ve günlük akışın çizgisi `MotionExperience`in
    `data-motion-draw` kalıbıyla, günler `data-motion-reveal` ile. */
 
@@ -42,7 +42,7 @@
 /* DOM sırası dt → dd (geçerli `dl`); görsel sıra sayı önce. */
 .stats > div { display: flex; flex-direction: row-reverse; align-items: baseline; gap: 5px; }
 .stats dt { font-size: var(--text-small); color: var(--text-muted); }
-.stats dd { margin: 0; font-size: var(--text-lead); font-weight: 800; color: var(--text-strong); }
+.stats dd { margin: 0; font-size: var(--text-lead); font-weight: 700; color: var(--text-strong); }
 @media (max-width: 39.99rem) {
   .masthead.masthead.masthead[data-embedded="false"] { padding: 14px 16px 12px; row-gap: 6px; }
   .headAside { width: 100%; justify-content: space-between; gap: 12px; }
@@ -77,14 +77,14 @@
   .lede { grid-template-columns: minmax(0, 1.35fr) minmax(0, 1fr); gap: 28px; align-items: start; }
 }
 .ledeText { display: grid; gap: 8px; align-content: start; min-width: 0; }
-.digestTitle { font-size: clamp(24px, 2.4vw, 34px); line-height: 1.12; font-weight: 800; letter-spacing: -.025em; }
+.digestTitle { font-size: clamp(24px, 2.4vw, 34px); line-height: 1.12; font-weight: 700; letter-spacing: -.025em; }
 .digestMeta {
   display: flex; flex-wrap: wrap; align-items: center; gap: 4px 12px;
   font-size: var(--text-small); line-height: 18px; color: var(--text-muted);
 }
 .latestBadge {
   display: inline-flex; align-items: center; height: 20px; padding: 0 7px; border-radius: var(--radius-xs);
-  background: var(--primary-wash); color: var(--primary-ink); font-size: 11px; font-weight: 700;
+  background: var(--primary-wash); color: var(--primary-ink); font-size: 12px; font-weight: 700;
 }
 .digestSummary {
   max-width: 68ch; margin-top: 4px;
@@ -102,32 +102,32 @@
 .kindStats > div[data-zero] { opacity: .5; }
 .kindStats dt {
   display: flex; align-items: center; gap: 6px; min-width: 0;
-  font-size: var(--text-small); line-height: 16px; font-weight: 650; color: var(--text-body);
+  font-size: var(--text-small); line-height: 16px; font-weight: 600; color: var(--text-body);
 }
-.kindStats dd { margin: 0; font-size: 34px; line-height: 1; font-weight: 800; letter-spacing: -.03em; color: var(--text-strong); }
+.kindStats dd { margin: 0; font-size: 34px; line-height: 1; font-weight: 700; letter-spacing: -.03em; color: var(--text-strong); }
 .kindStatIcon {
   flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 999px;
   background: var(--kw); color: var(--ki);
 }
 
-/* Tür payı şeridi: kulvar dili (6 piksel, yuvarlak uç), dilimler arası 3
+/* Tür payı şeridi: kulvar dili (5 piksel, yuvarlak uç; 10 Kasım: 6 → 5, ortak ölçü), dilimler arası 3
    piksel; eni madde sayısı. Girişte soldan bir kez açılır. */
-.share { display: flex; gap: 3px; height: 6px; }
+.share { display: flex; gap: 3px; height: 5px; }
 .shareSeg { flex-basis: 0; min-width: 6px; border-radius: 999px; background: var(--kc); transform-origin: 0 50%; }
 
 .digestScreens { display: grid; gap: 8px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
-.digestScreensLabel { font-size: var(--text-small); font-weight: 650; color: var(--text-muted); }
+.digestScreensLabel { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
 .screenChips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
 .screenChip {
   display: inline-flex; align-items: center; gap: 6px; min-height: 30px; padding: 0 10px; border-radius: 999px;
   background: var(--surface); color: var(--text-body); font-size: var(--text-small); font-weight: 600;
-  transition: color .2s var(--ease-brand), background-color .2s var(--ease-brand);
+  transition: color 180ms var(--ease-brand), background-color 180ms var(--ease-brand);
 }
 .screenChip:hover { color: var(--text-strong); background: var(--primary-tint); }
 .screenChip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
 /* Telefonda dokunma hedefi 44 (sayfadaki öteki çiplerle aynı). */
 @media (max-width: 39.99rem) { .screenChip { min-height: 44px; } }
-.screenChipCount { color: var(--text-muted); font-weight: 650; }
+.screenChipCount { color: var(--text-muted); font-weight: 600; }
 
 /* Madde ızgarası: eşit kartlar; kartın tepesinde türün 3 piksellik şeridi
    (bilanço ve teknik kartlarının dili), zemin nötr, kenar saç teli. */
@@ -149,16 +149,16 @@
   position: relative; flex: 1; display: grid; grid-template-columns: minmax(0, 1fr); align-content: start; gap: 6px;
   min-width: 0; padding: 14px 16px 15px; overflow: hidden;
   border: 1px solid var(--line-soft); border-radius: var(--radius-xl, 1rem); background: var(--surface);
-  transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand), translate .2s var(--ease-brand);
+  transition: border-color 250ms var(--ease-brand), background-color 180ms var(--ease-brand), translate .2s var(--ease-brand);
 }
 .cardStrip { position: absolute; inset: 0 0 auto; height: 3px; background: var(--kc); }
 a.card:hover { border-color: var(--line); background: var(--surface-elevated); }
-a.card:active { translate: 0 1px; }
+a.card:active { scale: .992; }
 a.card:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
 .cardTop { display: flex; align-items: center; gap: 8px; min-width: 0; padding-right: 22px; margin-bottom: 2px; }
 .cardKind {
   flex: none; display: inline-flex; align-items: center; gap: 5px; height: 22px; padding: 0 8px; border-radius: 999px;
-  background: var(--kw); color: var(--ki); font-size: 11.5px; font-weight: 700;
+  background: var(--kw); color: var(--ki); font-size: 12px; font-weight: 700;
 }
 .cardScreen {
   display: inline-flex; align-items: center; gap: 6px; min-width: 0;
@@ -169,9 +169,9 @@ a.card:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px
   flex: none; display: grid; place-items: center; width: 22px; height: 22px; border-radius: 7px;
   background: var(--surface-sunken); color: var(--text-body);
 }
-.cardArrow { position: absolute; top: 17px; right: 16px; color: var(--text-muted); transition: translate .2s var(--ease-brand), color .2s var(--ease-brand); }
-a.card:hover .cardArrow { translate: 2px 0; color: var(--primary-ink); }
-.cardTitle { font-size: var(--text-lead); line-height: 1.25; font-weight: 750; letter-spacing: -.01em; color: var(--text-strong); }
+.cardArrow { position: absolute; top: 17px; right: 16px; color: var(--text-muted); transition: translate .2s var(--ease-brand), color 180ms var(--ease-brand); }
+a.card:hover .cardArrow { translate: 3px 0; color: var(--primary-ink); }
+.cardTitle { font-size: var(--text-lead); line-height: 1.25; font-weight: 700; letter-spacing: -.01em; color: var(--text-strong); }
 /* Özet iki satıra kadar: tek satırda kesilen özet ("…") kartın neyi
    değiştirdiğini yarıda bırakıyordu. */
 .cardShort {
@@ -233,9 +233,9 @@ a.weekLink:focus-visible { outline: 2px solid var(--line-focus); }
   min-height: 16px; margin-bottom: 4px; text-align: center; white-space: nowrap;
   font-size: var(--text-tiny); line-height: 16px; font-weight: 700; color: var(--text-body);
 }
-.weekValue strong { font-weight: 800; color: var(--text-strong); }
+.weekValue strong { font-weight: 700; color: var(--text-strong); }
 .weekOf { font-weight: 600; color: var(--text-muted); }
-.week[data-latest] .weekValue { font-weight: 800; color: var(--text-strong); }
+.week[data-latest] .weekValue { font-weight: 700; color: var(--text-strong); }
 /* SÜTUN İNCE (6 Kasım, ilk taramada). Yığın haftanın bütün hücresini
    kaplıyordu: 1440'ta 72 piksellik dolu, doygun bloklar — CLAUDE.md'nin
    "dolu ağır bloklar tablo programı gibi duruyor" dediği hâl. Sütun en çok
@@ -259,7 +259,7 @@ a.weekLink:hover .weekValue { color: var(--text-strong); }
   text-align: center; white-space: nowrap; padding-top: 4px;
   font-size: var(--text-tiny); line-height: 14px; color: var(--text-muted);
 }
-.week[data-latest] .weekDay { justify-self: end; font-weight: 750; color: var(--text-strong); }
+.week[data-latest] .weekDay { justify-self: end; font-weight: 700; color: var(--text-strong); }
 .weekNowDay { display: none; }
 .weekMonth {
   justify-self: start; white-space: nowrap; padding-left: 5px; border-left: 1px solid var(--line);
@@ -269,7 +269,7 @@ a.weekLink:hover .weekValue { color: var(--text-strong); }
 @media (max-width: 39.99rem) {
   .flowStage { padding: 2px 16px 12px; }
   .flowPlot { --plot-h: 120px; --top: 20px; --scale-w: 26px; }
-  .weekValue { font-size: 11px; letter-spacing: -.02em; }
+  .weekValue { font-size: 12px; letter-spacing: -.02em; }
   .flowLegend { padding-inline: 16px; }
   .gridUnit, .weekOf { display: none; }
   .weekNow { display: none; }
@@ -290,7 +290,7 @@ a.weekLink:hover .weekValue { color: var(--text-strong); }
   flex: 1; display: flex; flex-direction: column; gap: 7px; min-width: 0;
   padding: 12px 12px 10px; border-radius: var(--radius-lg);
   background: var(--surface); border: 1px solid transparent;
-  transition: border-color .2s var(--ease-brand), background-color .2s var(--ease-brand);
+  transition: border-color 250ms var(--ease-brand), background-color 180ms var(--ease-brand);
 }
 a.tile:hover { border-color: var(--line); background: var(--surface-elevated); }
 a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
@@ -302,14 +302,14 @@ a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px
 .tileIcon {
   display: grid; place-items: center; width: 32px; height: 32px; border-radius: var(--radius-md);
   background: var(--surface-sunken); color: var(--text-body);
-  transition: background-color .2s var(--ease-brand), color .2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand), color 180ms var(--ease-brand);
 }
 .tile[aria-current] .tileIcon { background: var(--primary-wash); color: var(--primary-ink); }
-.tileCount { margin-left: auto; font-size: 22px; line-height: 1; font-weight: 800; letter-spacing: -.02em; color: var(--text-strong); }
+.tileCount { margin-left: auto; font-size: 22px; line-height: 1; font-weight: 700; letter-spacing: -.02em; color: var(--text-strong); }
 .tileName { font-size: var(--text-base); line-height: 17px; font-weight: 700; color: var(--text-strong); }
 .tileTrack { display: block; height: 5px; margin-top: auto; border-radius: 999px; background: var(--line-soft); overflow: hidden; }
 .tileFill { display: flex; gap: 1px; width: calc(var(--w, 0) * 100%); height: 100%; border-radius: inherit; overflow: hidden; }
-.tileLast { min-width: 0; font-size: 11px; line-height: 14px; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tileLast { min-width: 0; font-size: 12px; line-height: 14px; font-weight: 600; color: var(--text-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 @media (max-width: 39.99rem) {
   .screenGrid { padding-inline: 16px; gap: 6px; }
   .tile { padding: 10px 10px 9px; gap: 6px; }
@@ -325,8 +325,8 @@ a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px
 .toolbar .swatch { margin-right: 6px; }
 .screenActive {
   flex: none; display: inline-flex; align-items: center; gap: 6px; min-height: 44px; padding: 5px 12px; border-radius: 999px;
-  background: var(--primary-wash); color: var(--primary-ink); font-size: var(--text-tiny); font-weight: 650; white-space: nowrap;
-  transition: background-color .2s var(--ease-brand);
+  background: var(--primary-wash); color: var(--primary-ink); font-size: var(--text-tiny); font-weight: 600; white-space: nowrap;
+  transition: background-color 180ms var(--ease-brand);
 }
 @media (min-width: 40rem) { .screenActive { min-height: 32px; } }
 .screenActive:hover { background: var(--primary-faint); }
@@ -341,11 +341,11 @@ a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px
 .month { scroll-margin-top: calc(var(--app-bar-h, 64px) + 20px); }
 .monthFold > summary { list-style: none; }
 .monthFold > summary::-webkit-details-marker { display: none; }
-.monthSummary { display: flex; align-items: center; padding-right: 20px; cursor: pointer; transition: background-color .2s var(--ease-brand); }
+.monthSummary { display: flex; align-items: center; padding-right: 20px; cursor: pointer; transition: background-color 180ms var(--ease-brand); }
 .monthSummary:hover { background: var(--primary-tint); }
 .monthSummary:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; }
 .monthHeader { flex: 1; min-width: 0; }
-.monthIcon { flex: none; color: var(--text-muted); transition: rotate .28s var(--ease-brand); }
+.monthIcon { flex: none; color: var(--text-muted); transition: rotate 200ms var(--ease-brand); }
 .monthFold[open] .monthIcon { rotate: 180deg; }
 .days { margin: 0; padding: 0 0 8px; list-style: none; border-top: 1px solid var(--line-soft); }
 
@@ -355,9 +355,9 @@ a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px
   padding: 14px 20px 12px; scroll-margin-top: calc(var(--app-bar-h, 64px) + 20px);
 }
 .dayWhen { display: grid; justify-items: end; align-content: start; gap: 2px; padding-right: 2px; }
-.dayNum { font-size: 26px; line-height: 26px; font-weight: 800; letter-spacing: -.03em; color: var(--text-strong); white-space: nowrap; }
+.dayNum { font-size: 26px; line-height: 26px; font-weight: 700; letter-spacing: -.03em; color: var(--text-strong); white-space: nowrap; }
 .dayNum[data-range] { font-size: 22px; }
-.dayWeek { display: grid; justify-items: end; font-size: 11px; line-height: 14px; color: var(--text-muted); text-align: right; }
+.dayWeek { display: grid; justify-items: end; font-size: 12px; line-height: 14px; color: var(--text-muted); text-align: right; }
 .dayMonth { font-weight: 700; color: var(--text-body); text-transform: none; }
 /* Çizgi: tarih sütunu ile gün arasındaki oluğun ortasında; ilk günde
    düğümden başlar, son günde düğümde biter. */
@@ -378,16 +378,16 @@ a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px
 .dayWhen { grid-column: 1; }
 .dayBody { grid-column: 3; min-width: 0; }
 .dayHead { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 24px; }
-.dayTitle { min-width: 0; font-size: var(--text-lead); line-height: 22px; font-weight: 750; letter-spacing: -.012em; color: var(--text-strong); }
+.dayTitle { min-width: 0; font-size: var(--text-lead); line-height: 22px; font-weight: 700; letter-spacing: -.012em; color: var(--text-strong); }
 .dayKinds { display: inline-flex; gap: 10px; }
-.dayKind { display: inline-flex; align-items: center; gap: 3px; font-size: var(--text-tiny); line-height: 16px; font-weight: 750; color: var(--ki); }
+.dayKind { display: inline-flex; align-items: center; gap: 3px; font-size: var(--text-tiny); line-height: 16px; font-weight: 700; color: var(--ki); }
 .daySummary { max-width: 92ch; margin-top: 3px; font-size: var(--text-base); line-height: 20px; color: var(--text-muted); }
 .tItems { display: grid; grid-template-columns: minmax(0, 1fr); gap: 2px 16px; margin: 10px 0 0 -8px; padding: 0; list-style: none; }
 @media (min-width: 64rem) { .tItems { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
 .tItem {
   display: grid; grid-template-columns: 24px minmax(0, 1fr); gap: 10px; align-items: start;
   padding: 8px 10px 6px 8px; border-radius: var(--radius-lg);
-  transition: background-color .2s var(--ease-brand);
+  transition: background-color 180ms var(--ease-brand);
 }
 .tItem:hover { background: var(--surface); }
 .tKind {
@@ -399,15 +399,15 @@ a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px
 .tTitle { font-weight: 700; color: var(--text-strong); }
 .tBody { margin-top: 2px; font-size: var(--text-base); line-height: 19px; color: var(--text-body); }
 .tMeta { display: flex; flex-wrap: wrap; align-items: center; gap: 2px 14px; margin-top: 4px; }
-.tScreen { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; font-size: 11px; line-height: 14px; font-weight: 650; color: var(--text-muted); }
+.tScreen { display: inline-flex; align-items: center; gap: 4px; min-height: 24px; font-size: 12px; line-height: 14px; font-weight: 600; color: var(--text-muted); }
 .tTry {
   display: inline-flex; align-items: center; gap: 4px; min-height: 24px;
-  font-size: var(--text-small); font-weight: 650; color: var(--primary-ink);
-  transition: color .2s var(--ease-brand);
+  font-size: var(--text-small); font-weight: 600; color: var(--primary-ink);
+  transition: color 180ms var(--ease-brand);
 }
 .tTry:hover { color: var(--primary-hover); }
-.tTry svg { transition: translate .2s var(--ease-brand); }
-@media (hover: hover) { .tTry:hover svg { translate: 2px 0; } }
+.tTry svg { transition: translate 200ms var(--ease-brand); }
+@media (hover: hover) { .tTry:hover svg { translate: 3px 0; } }
 @media (max-width: 39.99rem) {
   .monthSummary { padding-right: 16px; }
   /* TELEFON: tarih sütunu kalkar, gün tarihi gövdenin üstünde tek satır
@@ -431,7 +431,7 @@ a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px
   flex: none; display: inline-flex; align-items: center;
   height: 18px; padding: 0 6px; border-radius: var(--radius-xs);
   background: var(--primary-wash); color: var(--primary-ink);
-  font-size: 11px; line-height: 1; font-weight: 700; white-space: nowrap;
+  font-size: 12px; line-height: 1; font-weight: 700; white-space: nowrap;
 }
 .badgeDot {
   position: absolute; width: 6px; height: 6px; border-radius: 999px;
@@ -442,29 +442,24 @@ a.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px
 
 /* ==== HAREKET ============================================================
    Bir kez, `--ease-brand`. Yalnız hareketi azaltmayan okurda tanımlı:
-   azaltan okur son kareyi görür (CSS hiç animasyon basmaz). */
-@keyframes cl-rise { from { opacity: 0; translate: 0 8px; } }
-@keyframes cl-rise-b { from { opacity: 0; translate: 0 8px; } }
+   azaltan okur son kareyi görür (CSS hiç animasyon basmaz).
+
+   10 Kasım 2026: sayfanın kendi sahnesi (`SeenStage`, ikinci ad kalıbı)
+   kalktı; çizim kapları `data-draw` taşıyor ve kabuktaki ortak kapı
+   (`components/motion/DrawGate.tsx`) aynı işi yapıyor: ilk ekrandaki çizim
+   yüklemede oynar, altındaki son karede bekleyip görününce baştan oynar.
+   Süreler ortak merdivenden. Önce → sonra: pay şeridi 700 ms + 120 ms
+   kademe → `--draw` + `--step`; haftalık yığın 800 ms + 38 ms × 14 hafta
+   (son sütun 1.432 ms'de bitiyordu) → `--draw` + 28 ms (son sütun
+   1.064 ms). Madde kartlarının "soluklaş ve 8 piksel kay" girişi ve sütun
+   başı sayısının soluklaşması kalktı (metin kaymaz, açılış opaklık 0'dan
+   başlamaz — `.claude/rules/hareket.md`). */
 @keyframes cl-grow { from { scale: 1 0; } }
-@keyframes cl-grow-b { from { scale: 1 0; } }
 @keyframes cl-draw { from { scale: 0 1; } }
-@keyframes cl-draw-b { from { scale: 0 1; } }
-@keyframes cl-fade { from { opacity: 0; } }
-@keyframes cl-fade-b { from { opacity: 0; } }
 
 @media (prefers-reduced-motion: no-preference) {
-  .shareSeg { animation: cl-draw .7s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 120ms + 80ms); }
-  .cards > li { animation: cl-rise .5s var(--ease-brand) both; animation-delay: min(calc(var(--n, 0) * 50ms + 120ms), 700ms); }
-  .stack { animation: cl-grow .8s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 38ms + 100ms); }
-  .weekValue { animation: cl-fade .4s var(--ease-brand) both; animation-delay: calc(var(--i, 0) * 38ms + 520ms); }
-
-  /* Ekranın altındaki sahne: ikinci ad animasyonu baştan başlatır, görünene
-     dek ilk karede bekler (`SeenStage`). */
-  [data-armed] .shareSeg { animation-name: cl-draw-b; }
-  [data-armed] .cards > li { animation-name: cl-rise-b; }
-  [data-armed] .weekValue { animation-name: cl-fade-b; }
-  [data-armed] .stack { animation-name: cl-grow-b; }
-  [data-armed]:not([data-play]) :is(.shareSeg, .cards > li, .stack, .weekValue) { animation-play-state: paused; }
+  .shareSeg { animation: cl-draw var(--draw) var(--ease-brand) both; animation-delay: calc(var(--i, 0) * var(--step)); }
+  .stack { animation: cl-grow var(--draw) var(--ease-brand) both; animation-delay: calc(var(--i, 0) * var(--step) * .7); }
 }
 
 @media (prefers-reduced-motion: reduce) {
