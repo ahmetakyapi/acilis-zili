@@ -1,4 +1,5 @@
 import { cache, Suspense } from "react";
+import { auth } from "@/auth";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/today/TodayExperience.module.css";
 import { Countdown } from "@/components/today/Countdown";
@@ -86,6 +87,11 @@ const getPageTimestamp = cache(() => Date.now());
 export default async function TodayPage() {
   const { locale, t } = await getI18n();
   const status = await getStatus();
+  /* Favoriler panelinin YERİ oturuma bağlı (10 Kasım gecesi): giriş yapmış
+     okuyucuda bugünün parçasında, misafirde davet satırı olarak en dipte.
+     Oturum JWT çerezinden okunuyor (auth.ts → strategy "jwt"), veritabanı
+     beklenmiyor; panelin kendi `auth()` çağrısıyla aynı sonuç. */
+  const signedIn = Boolean((await auth())?.user?.id);
 
   const sessionLabel: Record<string, string> = {
     regular: t.market.open,
@@ -186,7 +192,11 @@ export default async function TodayPage() {
        Şimdi analizler yan kolona geçti (orası bir gösterge tablosu ve analiz
        de bir ölçüm okuması), haberler ise iki kolonun ALTINA, tam genişliğe
        indi. İki kolon böylece boyca eşitlendi ve haber bandı sayfanın kendi
-       kapanışı oldu. */
+       kapanışı oldu.
+
+       10 KASIM GECESİ: DOM TELEFON SIRASINDA, masaüstünde kolonlar ikişer
+       parça ve haberler bugünün parçasında — gerekçe aşağıda, panonun
+       başında. */
     <MotionExperience className={styles.page}>
       <ScrollProgress />
       {/* MASTHEAD IZGARANIN DIŞINDA, TAM GENİŞLİKTE. Kahraman blok sol
@@ -368,17 +378,27 @@ export default async function TodayPage() {
         </Suspense>
       </section>
 
-      {/* SEANS ZİLİ (12 Ekim): zilin ne zaman ve neden çaldığını anlatan
-          açıklayıcı figür (anatomy). Kahramandaki mürekkep zili yerinde; bu
-          bölüm İKİ KOLONLU IZGARANIN DIŞINDA, tam genişlikte: ızgaranın
-          kolonları ölçülü bir dengede ve araya giren panel ötekinde kendi boyu
-          kadar boşluk açardı. Saatler aynı `status`tan. */}
-      <Panel data-home-section="session-bell">
-        <PanelHeader title={t.sessionBell.title} />
-        <SessionBellFigure status={status} nowMs={nowMs} locale={locale} t={t} />
-      </Panel>
+    {/* PANO TELEFON SIRASIYLA BASILIYOR (10 Kasım gecesi, sahibinin isteği:
+        "mobilde dünün hareketi gibi şeyler çok üst tarafta… dizilimi daha
+        mantıklı şekle alalım"). Telefon sırası artık CSS `order`ı değil
+        DOM'un kendisi: okur "şimdi ne oluyor → bugün ne olacak → neden →
+        dün ne oldu → arka plan" diye iniyor; Tab ve ekran okuyucu da aynı
+        sırayı okuyor (WCAG 2.4.3 — önceki düzende kolonlar `display:
+        contents` + `order` ile karılıyordu ve 390'da odak sırası altı kez
+        geri sıçrıyordu, ölçüldü).
 
-    <div className={styles.dashboard}>
+        MASAÜSTÜ AYNI DOM'U İKİ KOLONA KOYUYOR: kolonlar ikişer PARÇA
+        (`data-col` + `data-run`). Sol kolon: bugün (bilanço, haberler) →
+        dün (özet, silüet, analizler, mercek); sağ kolon: bugünün ölçüleri
+        (hareketler, dünya, nabız, teknik) → arka plan (grafik, tahvil,
+        makro, takvim). Parçalar kaydırmalı satırlara yerleşiyor — sağın
+        üst parçası 2–3, solun alt parçası 3–4. satırı kaplıyor ve ara satır
+        `1fr`: iki kolonun dikey akışı birbirine bağlanmıyor, panel araları
+        her zaman `gap` (gerekçe ve ölçüm TodayExperience.module.css →
+        "KAYDIRMALI İKİ KOLON"). Tek DOM'un tek bedeli masaüstünde Tab'ın
+        bantlar hâlinde ilerlemesi: sol üst → sağ üst → sol alt → sağ alt;
+        her parça kendi içinde yukarıdan aşağı. */}
+    <div className={styles.dashboard} data-signed-in={signedIn ? "" : undefined}>
       {/* Seans sınırında sayfa kendini tazeler. Hiçbir şey çizmez, ızgarada yer
           kaplamaz. Geri sayım sıfıra inince orada kilitleniyor ve yeni güne
           ancak elle yenilemeyle geçiliyordu; gerekçenin tamamı bileşende.
@@ -396,12 +416,19 @@ export default async function TodayPage() {
            138, 1280'de 14, 1440'ta 31 piksel fark) ve bu bant hangi kolona
            girse ötekinde kendi boyu kadar boşluk açardı. Tam genişlikte
            kolonlara hiç dokunmuyor.
-           Seçim gerekçesi ve veri kaynağı `MarketTexture.tsx` başında. */}
+           TELEFONDA DA AKIŞIN HEMEN ARDINDA (10 Kasım gecesi). Bant
+           masaüstünde iki kolonun üstünde durduğu için DOM'da da onların
+           önünde; telefon sırası DOM sırası olunca orada okunuyor. Konusu
+           "şimdi ne oluyor": kahramandaki endekslerin bir basamak incesi
+           (sektör ve tema dağılımı, canlı). Kolonun içine almak denendi
+           (946 piksel): sektör satırı 1280 kuralıyla ad + şerit + değer
+           üç sütunu iki parçada ~100 piksellik şeride eziliyordu. Seçim
+           gerekçesi ve veri kaynağı `MarketTexture.tsx` başında. */}
       <Panel
         data-home-section="texture"
         id="sektor-ve-tema"
         aria-labelledby="sektor-ve-tema-baslik"
-        className={cn(textureStyles.band, styles.texture, "min-w-0 lg:col-span-2 lg:row-start-1")}
+        className={cn(textureStyles.band, styles.texture, "min-w-0")}
       >
         <div className={textureStyles.bandHead}>
           <h2 id="sektor-ve-tema-baslik">{t.today.textureTitle}</h2>
@@ -415,7 +442,7 @@ export default async function TodayPage() {
         </Suspense>
       </Panel>
 
-      {/* ================= Ana kolon =================
+      {/* ================= Sol kolon, üst parça: BUGÜN =================
           `justify-between` KALKTI ve bu bir hata düzeltmesi. İki kolon da
           onu taşıyordu; ızgara satırı iki kolonu aynı yüksekliğe geriyor ve
           KISA olan kolon, aradaki farkı panel aralarına dağıtıyordu. Yani
@@ -426,18 +453,149 @@ export default async function TodayPage() {
           okuyucunun gördüğü şey "sayfanın başında sebepsiz bir boşluk"
           oluyordu. Aralık artık her zaman `gap-5`; kısa kolon erken bitiyor
           ve iki sütunlu bir düzende olması gereken de bu. */}
-      <div
-        data-col="main"
-        className="flex min-w-0 flex-col gap-5 lg:col-start-1 lg:row-start-2"
-      >
+      <div data-col="main" data-run="today" className={cn(styles.run, styles.runMainToday)}>
+        {/* ---- Bugün bilanço açıklayanlar ----
+             AKIŞIN VE BANDIN HEMEN ARDINDA (10 Kasım gecesi). Ana kolonun
+             dördüncü paneliydi; özetin, merceğin ve nabzın altında, telefonda
+             8.634. pikselde (390, ölçüldü). Bugünün en somut takvimi bu. */}
+        <div id="bugun-bilanco" data-home-section="earnings">
+          <Suspense fallback={<EarningsTodaySkeleton t={t} />}>
+            <EarningsToday locale={locale} t={t} />
+          </Suspense>
+        </div>
 
-        {/* Ön seans / akşam seansı hareketleri BURADAN KALKTI. Panel
-             yalnızca o iki pencerede basılıyordu ve seans açıkken ana
-             sayfada tek bir hissenin bugün ne yaptığını gösteren hiçbir şey
-             kalmıyordu. Şimdi yan kolonda, her seansta ve seansa göre
-             başlık değiştirerek duruyor (`DayMovers`) — gerekçesi orada. */}
+        {/* ---- Öne çıkan haberler ----
+             TAM GENİŞLİK BANT, KUTU DEĞİL. Haberler bir süre sol kolonda,
+             analizlerin altında, altı satırlık düz bir listeydi: sayfanın en
+             son gördüğün ve en az tasarlanmış bloğuydu, üstelik sağında 470
+             piksel boş oluk duruyordu. İki şey birden değişti: blok iki
+             kolonun ALTINA indi ve genişliğin tamamını aldı; başlığı da bir
+             panel başlığı değil BÖLÜM başlığı oldu — kutu yok, altında
+             hairline var.
+             10 KASIM GECESİ: BUGÜNÜN KOLONUNA ÇIKTI. Bant sayfanın EN DİBİNDEYDİ
+             (390'da 11.686. piksel, 1440'ta 6.321) ve günün haberine dünün
+             özeti, silüeti ve arka plan ölçülerinden sonra varılıyordu.
+             Şimdi bilançonun ardında, sol kolonun ilk parçasında: 946 piksel
+             tabletteki tam genişlikle aynı ölçek (768–1023), ızgara orada
+             kanıtlı. Bölüm başlığı ve hairline kaldı; telefonda üç haber
+             (TopNews.module.css). */}
+        <section data-home-section="news" data-rise-scope id="haber-akisi" className={cn(styles.news, "min-w-0")}>
+          <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
+            <h2 className={styles.newsHeading}>
+              {t.today.topNews}
+            </h2>
+            <div className="flex shrink-0 items-center gap-3">
+              {/* KÜNYE DAR EKRANDA YOK. Türkçesi ("SON 40 HABERDEN SEÇİLDİ")
+                  büyük harfle 154 piksel tutuyor; başlık ve bağlantıyla
+                  birlikte 382 piksel ediyor ve 420 pikselin altındaki her
+                  telefonda üçü de ikişer satıra kırılıyordu — sayfanın
+                  kapanış bölümü üç satırlık düzensiz bir bloğa dönüşüyordu.
+                  Seçkinin nasıl yapıldığı bir künye, manşet değil. */}
+              <span className="plate hidden whitespace-nowrap text-nano sm:inline">
+                {/* Havuz büyüklüğü SABİTTEN geliyor: metinde "40" yazılıydı ve
+                    `TOP_NEWS_POOL` değişirse künye sessizce yalan söylerdi. */}
+                {/* Künyedeki sayı yedeklerin havuzu: seçki son 40 haberden,
+                    manşetin yanını dolduran yedekler son 80'den geliyor
+                    (TopNews). Ekrandaki her haber için doğru olan büyük sayı. */}
+                {t.today.topNewsNote.replace("{n}", String(TOP_NEWS_FILL_POOL))}
+              </span>
+              <PanelLink href="/haberler" className="whitespace-nowrap">
+                {t.common.showAll}
+              </PanelLink>
+            </div>
+          </div>
+          <Suspense fallback={<NewsGridSkeleton />}>
+            <TopNews locale={locale} t={t} />
+          </Suspense>
+        </section>
+      </div>
 
-        {/* ---- Günün özeti — ana kolonda, günü okumaya buradan başlanıyor ---- */}
+      {/* ================= Sağ kolon, üst parça: BUGÜNÜN ÖLÇÜLERİ =================
+          Hareketler → (favoriler) → dünya → nabız → teknik. Ölçekten inceye
+          ve ölçüden görüşe. */}
+      <div data-col="side" data-run="today" className={cn(styles.run, styles.runSideToday)}>
+        {/* ENDEKS ŞERİDİ BURADAN MASTHEAD'E TAŞINDI. Dört endeks piyasanın
+            MANŞET sayıları; yan kolonda bir gösterge tablosu satırıydılar,
+            oysa "bugün borsa ne yaptı" sorusunun ilk cevabı onlar. Taşınma
+            aynı zamanda iki kolonun dengesini geri kurdu: kahraman ızgaranın
+            dışına çıkınca sol kolon 552 piksel kısa kalmıştı ve doldurma
+            mekanizmasında kapatacak yalnızca bir gizli satır vardı. */}
+        {/* ---- Günün hareketleri ----
+             Ön seans / akşam seansı hareketleri ana kolondan buraya geldi:
+             panel yalnızca o iki pencerede basılıyordu; şimdi her seansta,
+             seansa göre başlık değiştirerek duruyor (`DayMovers`).
+             SAĞ KOLONUN BAŞINDA (10 Kasım gecesi). Dünyanın altındaydı;
+             "tek tek hangi isimler taşıdı" bugünün ilk ölçüsü, dünya
+             piyasaları onun bağlamı. Telefonda haberlerin hemen ardında. */}
+        <DrawOnView data-home-section="movers">
+          <Suspense fallback={<PanelSkeleton rows={6} footer />}>
+            <DayMovers locale={locale} t={t} />
+          </Suspense>
+        </DrawOnView>
+
+        {/* ---- Favoriler (giriş yapmış okuyucu) ----
+             Liste gerçekten onun listesi: bugünün hareketlerinin hemen
+             ardında. Giriş yapmamış okuyucuya aynı panel bir davet satırı
+             ve o sağ kolonun en dibinde (aşağıda). Yer sayfada seçiliyor
+             (`signedIn`); eskiden `:has(a[href$="/giris"])` + `order` ile
+             telefonda kaydırılıyordu. */}
+        {signedIn ? (
+          <div data-home-section="watchlist">
+            <Suspense fallback={<PanelSkeleton rows={3} />}>
+              <WatchlistSummary locale={locale} t={t} />
+            </Suspense>
+          </div>
+        ) : null}
+
+        {/* Dünya piyasaları: "bugün borsalar ne yapmış" sorusunun ABD'den
+            sonraki halkası. */}
+        <DrawOnView id="dunya-piyasalari" data-home-section="world">
+          <Suspense fallback={<PanelSkeleton rows={5} footer />}>
+            <WorldStrip locale={locale} t={t} />
+          </Suspense>
+        </DrawOnView>
+
+        {/* ÇİZİMLER GÖRÜNÜNCE OYNAR (10 Kasım): veri çizimi taşıyan panellerin
+            sarmalı `DrawOnView` — ek kutu değil, aynı `data-home-section`
+            sarmalının kendisi (boş kalınca `:empty` ile ızgaradan düşmeye
+            devam eder). Gerekçe ve eşik bileşende. */}
+        {/* ---- Portföy ya da Piyasa Nabzı ----
+             Portföyü olmayan okuyucuda aynı yuvaya kompakt Nabız giriyor;
+             yuva boş kalsaydı kolon dengesi yalnızca portföy tutanlar için
+             kurulurdu (ölçüm ve gerekçe `PortfolioSlot`). Yükleme yedeği iki
+             hâlin ortak iskeleti: başlık ve üç satır.
+             10 KASIM GECESİ: SAĞ KOLONA, DÜNYANIN ARDINA. Mercek'in altında
+             ana kolondaydı; nabız günün dokusu (oynaklık, momentum,
+             genişlik), dünün okuması değil. Telefonda dünya ile teknik
+             arasında. */}
+        <DrawOnView id="portfoy-ozeti" data-home-section="portfolio">
+          <Suspense fallback={<PanelSkeleton rows={3} />}>
+            <PortfolioSlot locale={locale} t={t} />
+          </Suspense>
+        </DrawOnView>
+
+        {/* ---- Teknik görünüm ----
+             SİTENİN YAZDIĞI İÇERİĞİN ANA SAYFADA KENDİ YERİ VAR; teknik
+             analizin yoktu ve ona yalnızca alt bilgiden ulaşılıyordu. Panel
+             yan kolonda çünkü içeriği okunacak bir metin değil bir ölçü: on iki
+             hissenin görüş dağılımı ve kimin hangi görüşte olduğu. Ana kolonda
+             denendi ve ölçüldü: 292 piksel ana kolonu yan kolondan 1440'ta 345,
+             1024'te 543 piksel uzun bırakıyordu (11 Eylül akşamının verisi).
+             Hareketlerle aynı sorunun iki yarısı ("bugün hangi isim taşıdı" /
+             "o isimlerde plan ne"): ölçünün ardında, bugünün parçasının
+             sonunda. Pano boşsa panel hiç basılmıyor, yer tutucu yok. */}
+        <DrawOnView data-home-section="technical">
+          <Suspense fallback={null}>
+            <TechnicalPanel locale={locale} t={t} />
+          </Suspense>
+        </DrawOnView>
+      </div>
+
+      {/* ================= Sol kolon, alt parça: DÜN =================
+          Günün özeti (dünün kapanışı), son seansın silüeti, bilanço
+          analizleri, mercek. Okunacak metin sol kolonda. */}
+      <div data-col="main" data-run="past" className={cn(styles.run, styles.runMainPast)}>
+        {/* ---- Günün özeti ---- */}
         {/* SUSPENSE YOK — bilerek, ve gerekçesi ölçülü.
             Günün özeti ekranın en üstündeki en uzun blok: mobilde 1245,
             geniş ekranda 672 piksel. Boyu her gün metinle birlikte
@@ -450,7 +608,12 @@ export default async function TodayPage() {
             bekliyor ve TTFB 113 ms'den 178 ms'ye çıkıyor — ölçüldü, altı
             koşumun ortancası. Takas bilinçli: 65 milisaniye görünmez,
             bin piksellik sıçrama değil. Sağlayıcıya giden paneller akışta
-            kalmaya devam ediyor; beklenen tek şey yerel veritabanı. */}
+            kalmaya devam ediyor; beklenen tek şey yerel veritabanı.
+            10 KASIM GECESİ: ÖZET "DÜN"ÜN BAŞINDA. Bülten bir önceki seansın
+            özeti; telefonda akışın hemen ardında (2.352. piksel) duruyor ve
+            okur dünü bugünden önce okuyordu (sahibinin şikâyeti). Artık
+            bugünün paneller bittikten sonra. Sıçrama gerekçesi geçerli:
+            yer tutucu yine yok, kart kabukla geliyor. */}
         {/* ÖZETİN ÇİZİMLERİ DE GÖRÜNÜNCE (10 Kasım, ikinci tur). Endeks
             bandının şeritleri (`cell-grow`, PosterLanes `bar-grow`) düz CSS
             animasyonu; özet 1440×900'de ilk ekranın altında (tepe ~1.500)
@@ -459,112 +622,63 @@ export default async function TodayPage() {
             `DrawOnView`; ilk ekrandaysa hiçbir şey duraklamaz. */}
         <DrawOnView data-motion-reveal id="gundem" data-home-section="brief" className={styles.brief}><BriefCard locale={locale} t={t} /></DrawOnView>
 
-        {/* ---- Mercek ----
-             SAYFANIN EN ÜST ÜÇTE BİRİNDE, çünkü sitenin başka hiçbir yerde
-             bulunmayan içeriği bu. Uzun süre en altta, "son yazılanlar"
-             ızgarasının sağ yarısında dört satırlık bir liste olarak
-             duruyordu: ana sayfayı açan okuyucu ölçüleri, takvimi,
-             bilançoları ve haberleri geçtikten SONRA görüyordu onu — yani
-             çoğu hiç görmüyordu. Takvim ve bilanço listeleri her sitede var,
-             bu yazılar yalnızca burada.
-
-             Günün özetinin hemen ardında duruyor: ikisi de okunacak metin,
-             biri bugünü biri olayı anlatıyor. Ölçüm kartları aşağıda kalıyor,
-             araya okuma daveti girmiyor.
-
-             Yüzey de ayrışıyor — çevresindeki paneller nötr zeminde, bu blok
-             accent kenarlık ve çok soluk degrade taşıyor. Ana sayfada
-             degrade kullanan tek yüzey bu. */}
-        <div id="mercek-seckisi" data-home-section="stories">
-          <Suspense fallback={<SpotlightSkeleton />}>
-            <StoriesSpotlight locale={locale} t={t} />
-          </Suspense>
-        </div>
-
-        {/* ÇİZİMLER GÖRÜNÜNCE OYNAR (10 Kasım): veri çizimi taşıyan panellerin
-            sarmalı `DrawOnView` — ek kutu değil, aynı `data-home-section`
-            sarmalının kendisi (boş kalınca `:empty` ile ızgaradan düşmeye
-            devam eder). Gerekçe ve eşik bileşende. */}
-        {/* ---- Portföy ya da Piyasa Nabzı ----
-             Mercek'in altında, çünkü ikisi de "sana ne anlatıyor" bloğu:
-             biri olayın mekanizmasını, öteki senin pozisyonlarını. Portföyü
-             olmayan okuyucuda aynı yuvaya kompakt Nabız giriyor; yuva boş
-             kalsaydı kolon dengesi yalnızca portföy tutanlar için kurulurdu
-             (ölçüm ve gerekçe `PortfolioSlot`). Yükleme yedeği iki hâlin
-             ortak iskeleti: başlık ve üç satır. */}
-        <DrawOnView id="portfoy-ozeti" data-home-section="portfolio">
-          <Suspense fallback={<PanelSkeleton rows={3} />}>
-            <PortfolioSlot locale={locale} t={t} />
+        {/* ---- Son Seansın Silueti (25 Ekim; 28 Ekim'de iki kolonun altına,
+             10 Kasım gecesi dünün parçasına) ----
+             Kahramanın hemen altındaydı; sahibi seans açıkken baktı ve dünün
+             siluetini bugünün işlemi sandı: "ana sayfa önce bugünü
+             anlatmalı" (iPhone ekranı, 28 Ekim 22:29 TR). Sonra iki kolonun
+             ALTINDA tam genişlik bir satırdı; telefonda ise Günün
+             Hareketleri'nin ardında, teknik görünümün üstünde (yine bugünün
+             arasında). Şimdi özetin hemen ardında: ikisi aynı seansı anlatıyor
+             ("Dünkü Seans" künyesi, SessionAgeTag.tsx). Sol kolonun 946
+             pikseli şeridin istediği genişlik (sahne düzenleri kap eniyle,
+             `SkyScene.module.css`; tablette 720–975 aynı ölçek). Gerekçe ve
+             veri `SkylineStrip.tsx`; yer tutucu ölçüsünü ayırıyor. */}
+        <DrawOnView data-home-section="skyline" className="min-w-0">
+          <Suspense fallback={<SkylineStripSkeleton />}>
+            <SkylineStrip status={status} locale={locale} t={t} nowMs={nowMs} />
           </Suspense>
         </DrawOnView>
-
-        {/* ---- Bugün bilanço açıklayanlar ---- */}
-        <div id="bugun-bilanco" data-home-section="earnings">
-          <Suspense fallback={<EarningsTodaySkeleton t={t} />}>
-            <EarningsToday locale={locale} t={t} />
-          </Suspense>
-        </div>
 
         {/* ---- Son analizler ----
              KOLON DENGESİ ÖLÇÜLEREK KURULDU. Bu panel bir tur yan kolonda
              durdu ve orada yanlış yerdeydi: yan kolon neredeyse SABİT
-             yükseklikte (ölçüldü: 2265 piksel, sekiz panel, hepsi kısa
-             listeler), ana kolon ise veriye göre 1500 ile 2100 arasında
-             değişiyor — bültenin uzunluğu, mercek girişinin uzunluğu ve o
-             gün kaç şirketin bilanço açıkladığı. Yani sağ kolon neredeyse
-             HER ZAMAN daha uzundu ve altında 532 piksellik boş bir dikdörtgen
-             kalıyordu (1440px'te ölçüldü).
-
-             Panel buraya geçince iki kolon birbirinin etrafında salınıyor:
-             ana kolon 1800-2400, yan kolon 1965. Boşluk 532'den 70 piksele
-             iniyor ve yoğun bir bilanço gününde diğer tarafa geçse bile küçük
-             kalıyor. İçerik olarak da yeri burası: üstündeki bilanço listesi
-             "bugün kim açıklıyor", bu panel "açıklayanlar ne yaptı". */}
+             yükseklikte, ana kolon ise veriye göre değişiyor. Panel ana
+             kolona geçince iki kolon birbirinin etrafında salınıyor ve
+             doldurma (yedek satırlar) kalan farkı kapatıyor. İçerik olarak
+             "açıklayanlar ne yaptı": dünün parçasında, silüetin ardında. */}
         <DrawOnView id="bilanco-analizleri" data-home-section="analyses" className={styles.analyses}>
           <Suspense fallback={<PanelSkeleton rows={5} />}>
             <LatestAnalyses locale={locale} t={t} />
           </Suspense>
         </DrawOnView>
 
+        {/* ---- Mercek ----
+             Sitenin başka hiçbir yerde bulunmayan içeriği. Uzun süre en
+             altta, dört satırlık bir listeydi; 28 Eylül'de sayfanın üst
+             üçte birine, günün özetinin ardına çıktı.
+             10 KASIM GECESİ: DÜNÜN PARÇASININ SONUNDA. Yazılar geçmiş
+             olayları anlatıyor ("Son Mercek Yazıları") ve telefonda bugünün
+             bilançosundan, haberinden ve hareketinden önce okunuyordu.
+             Yüzeyi yine ayrışıyor: accent kenarlık ve çok soluk degrade —
+             ana sayfada degrade kullanan tek yüzey. */}
+        <div id="mercek-seckisi" data-home-section="stories">
+          <Suspense fallback={<SpotlightSkeleton />}>
+            <StoriesSpotlight locale={locale} t={t} />
+          </Suspense>
+        </div>
       </div>
 
-      {/* ================= Yan kolon =================
-          Yalnızca ölçüler: endeksler → dünya → tahviller → makro → senin
-          listen. Okunacak metin sol kolonda. */}
-      <div
-        data-col="side"
-        className="flex min-w-0 flex-col gap-5 lg:col-start-2 lg:row-start-2"
-      >
-        {/* ENDEKS ŞERİDİ BURADAN MASTHEAD'E TAŞINDI. Dört endeks piyasanın
-            MANŞET sayıları; yan kolonda bir gösterge tablosu satırıydılar,
-            oysa "bugün borsa ne yaptı" sorusunun ilk cevabı onlar. Taşınma
-            aynı zamanda iki kolonun dengesini geri kurdu: kahraman ızgaranın
-            dışına çıkınca sol kolon 552 piksel kısa kalmıştı ve doldurma
-            mekanizmasında kapatacak yalnızca bir gizli satır vardı. */}
-        {/* Dünya piyasaları en üstte: "bugün borsalar ne yapmış" sorusunun
-            ABD'den sonraki halkası. */}
-        <DrawOnView id="dunya-piyasalari" data-home-section="world">
-          <Suspense fallback={<PanelSkeleton rows={5} footer />}>
-            <WorldStrip locale={locale} t={t} />
-          </Suspense>
-        </DrawOnView>
-
-        {/* ---- Günün hareketleri ----
-             SIRA ÖLÇEKTEN İNCEYE. Üstteki iki panel endeksleri ve dünyayı
-             gösteriyor, yani "borsa bugün ne yaptı"; bu panel aynı soruyu
-             bir basamak inceden soruyor: tek tek hangi isimler taşıdı. */}
-        <DrawOnView data-home-section="movers">
-          <Suspense fallback={<PanelSkeleton rows={6} footer />}>
-            <DayMovers locale={locale} t={t} />
-          </Suspense>
-        </DrawOnView>
-
+      {/* ================= Sağ kolon, alt parça: ARKA PLAN =================
+          Günün grafiği (önceki seans), faiz, makro, takvim, hafta, oyun ve
+          giriş daveti. */}
+      <div data-col="side" data-run="past" className={cn(styles.run, styles.runSidePast)}>
         {/* ---- Günün Grafiği (24 Ekim) ----
-             Teknik panelin ÜSTÜNDE (28 Ekim, sahibinin isteği; önce
-             altındaydı): ikisi de sitenin yazdığı, ölçü dilinde bir içerik
-             ve grafik önceki seansı anlatıyor — bugünün hareketlerinin
-             ardında, "Dünkü Seans" künyesiyle (`SessionAgeTag`). Kayıt yoksa
-             panel basılmıyor (yedek `null`). */}
+             Grafik önceki seansı anlatıyor, "Dünkü Seans" künyesiyle
+             (`SessionAgeTag`); bir dönem teknik panelin üstündeydi (28 Ekim,
+             sahibinin isteği). 10 Kasım gecesi dünün tarafına geçti: sağ
+             kolonun alt parçasının başında, telefonda mercekten sonra. Kayıt
+             yoksa panel basılmıyor (yedek `null`). */}
         {/* Çubukları (`thumb-bar`) görünce çizilir; önce düz sarmaldı ve
             çizim ekranın altında görülmeden bitiyordu (ölçüm `DrawOnView`). */}
         <DrawOnView data-home-section="daily-chart">
@@ -572,42 +686,6 @@ export default async function TodayPage() {
             <DailyChartPanel locale={locale} t={t} nowMs={nowMs} />
           </Suspense>
         </DrawOnView>
-
-        {/* ---- Teknik görünüm ----
-             HAREKET PANELİNİN HEMEN ALTINDA. İkisi aynı sorunun iki yarısı:
-             hareket paneli "bugün hangi isim taşıdı" diyor, teknik panel
-             "o isimlerde plan ne" diyor. Arada faiz ve makro dururken
-             okuyucu ikisini bağlamıyordu — biri ölçü, öteki görüş ve
-             ölçüden hemen sonra gelmeli.
-
-             SİTENİN YAZDIĞI İÇERİĞİN ANA SAYFADA KENDİ YERİ VAR; teknik
-             analizin yoktu ve ona yalnızca alt bilgiden ulaşılıyordu. Panel
-             yan kolonda çünkü içeriği okunacak bir metin değil bir ölçü: on iki
-             hissenin görüş dağılımı ve kimin hangi görüşte olduğu. Ana kolonda
-             denendi ve ölçüldü: 292 piksel ana kolonu yan kolondan 1440'ta 345,
-             1024'te 543 piksel uzun bırakıyordu (panelsiz fark ~33 piksel).
-             Burada dengeyi iyileştiriyor. Aynı veriyle, aynı sayfada paneli
-             gizleyerek ölçüldü: ana kolon panelsiz 1024'te 443, 1280'de 328
-             piksel uzun kalıyor; panelle fark 158 ve 43 piksele iniyor
-             (1440/1600'de ~40). Kolon boyları o günün verisiyle oynuyor, bu
-             sayılar 11 Eylül akşamının verisi.
-             Pano boşsa panel hiç basılmıyor, yer tutucu yok. */}
-        <DrawOnView data-home-section="technical">
-          <Suspense fallback={null}>
-            <TechnicalPanel locale={locale} t={t} />
-          </Suspense>
-        </DrawOnView>
-
-        {/* ---- Hisseyi Bil (24 Ekim; 25 Ekim'de buraya indi) ----
-             Bir dönem seans zilinin altında, ızgaranın DIŞINDA tam genişlik
-             bir şeritti: sayfanın üst kısmında pano başlamadan 102 piksel
-             (telefonda 142–156) bir oyun daveti duruyordu. Sahibinin isteği:
-             "daha aşağılara, daha az yer kaplayan kompakt bir yere". Yan
-             kolonda, sitenin kendi ürettiği içerikle (teknik görünüm, günün
-             grafiği) yan yana; kart kapsayıcısına göre iki satıra iniyor.
-             Telefonda bilanço analizlerinin ardında (sıra
-             TodayExperience.module.css). Ölçümler `PuzzleTeaser.tsx`. */}
-        <PuzzleTeaser day={puzzleDay} number={puzzleNumber(puzzleDay)} labels={t.stockPuzzle} />
 
         <DrawOnView data-home-section="yields">
           <Suspense fallback={<PanelSkeleton rows={3} footer />}>
@@ -634,12 +712,12 @@ export default async function TodayPage() {
              ANA KOLONDAN BURAYA TAŞINDI. İkisi de kısa, tarifeli listeler:
              saat, olayın adı ve bir rakam. Ana kolonda tam genişlikte
              durduklarında satırın sağ yarısı boş kalıyor ve iki panel,
-             yanlarındaki uzun metinlerle (günün özeti, mercek manşeti) aynı
-             ağırlıkta görünüyordu. Yan kolon zaten ölçülerin sütunu — takvim
-             de bir ölçü, sadece geleceğin ölçüsü.
-
-             Sıra bilinçli: bugünün olayları, sonra hafta, sonra senin
-             listen. Ölçekten kişisel olana doğru. */}
+             yanlarındaki uzun metinlerle aynı ağırlıkta görünüyordu.
+             ARKA PLANDA KALDI (10 Kasım gecesi). Bugünün olayları zaten
+             sayfanın ikinci bloğunda, "Bugünün Akışı"nda saatleriyle
+             duruyor; bu liste onun tarifeli özeti ve haftaya bakışın
+             komşusu. Akışın altına almak aynı olayları iki kez arka arkaya
+             okutuyordu. */}
         {/* BOŞ GÜNDE PANEL YOK (9 Ekim). Bugün takvimde veri yokken panel
             başlığıyla birlikte "planlanmış ekonomik veri yok" diyen bir
             kutu olarak duruyordu — çoğu gün böyle ve hemen altındaki
@@ -665,78 +743,50 @@ export default async function TodayPage() {
           </Suspense>
         </Panel>
 
-        <div data-home-section="watchlist">
-          <Suspense fallback={<PanelSkeleton rows={3} />}>
-            <WatchlistSummary locale={locale} t={t} />
-          </Suspense>
-        </div>
+        {/* ---- Hisseyi Bil (24 Ekim; 25 Ekim'de buraya indi) ----
+             Bir dönem seans zilinin altında, ızgaranın DIŞINDA tam genişlik
+             bir şeritti: sayfanın üst kısmında pano başlamadan 102 piksel
+             (telefonda 142–156) bir oyun daveti duruyordu. Sahibinin isteği:
+             "daha aşağılara, daha az yer kaplayan kompakt bir yere". Kart
+             kapsayıcısına göre iki satıra iniyor; arka planın sonunda.
+             Ölçümler `PuzzleTeaser.tsx`. */}
+        <PuzzleTeaser day={puzzleDay} number={puzzleNumber(puzzleDay)} labels={t.stockPuzzle} />
+
+        {/* GİRİŞ YAPMAMIŞ OKUYUCUNUN FAVORİLERİ EN DİPTE (24 Eylül). Panel
+            onun için bir davet satırı; günün bilançolarından ve
+            analizlerden önce durması, sayfanın asıl içeriğine varmadan bir
+            girişle karşılaşmak demekti. */}
+        {signedIn ? null : (
+          <div data-home-section="watchlist">
+            <Suspense fallback={<PanelSkeleton rows={3} />}>
+              <WatchlistSummary locale={locale} t={t} />
+            </Suspense>
+          </div>
+        )}
       </div>
 
+      {/* SEANS ZİLİ (12 Ekim): zilin ne zaman ve neden çaldığını anlatan
+          açıklayıcı figür (anatomy). Kahramandaki mürekkep zili yerinde; bu
+          bölüm İKİ KOLONLU IZGARANIN DIŞINDA, tam genişlikte: ızgaranın
+          kolonları ölçülü bir dengede ve araya giren panel ötekinde kendi boyu
+          kadar boşluk açardı. Saatler aynı `status`tan.
+          10 KASIM GECESİ: SAYFANIN SONUNA. Akışın hemen ardındaydı ve
+          telefonda bugünün bütün içeriğini 576 piksel aşağı itiyordu; her
+          gün aynı şeyi anlatan bir açıklayıcı, günün verisi değil. Tam
+          genişlik satırı korunuyor, yalnız iki kolonun altında. */}
+      <Panel data-home-section="session-bell" className={styles.wideRow}>
+        <PanelHeader title={t.sessionBell.title} />
+        <SessionBellFigure status={status} nowMs={nowMs} locale={locale} t={t} />
+      </Panel>
 
-      {/* ---- Son Seansın Silueti (25 Ekim; 28 Ekim'de buraya indi) ----
-           Kahramanın hemen altındaydı; sahibi seans açıkken baktı ve dünün
-           siluetini bugünün işlemi sandı: "ana sayfa önce bugünü
-           anlatmalı" (iPhone ekranı, 28 Ekim 22:29 TR). Telefonda Günün
-           Hareketleri'nin ardında, Günün Grafiği ve teknik görünümün
-           üstünde (sıra TodayExperience.module.css); masaüstünde iki
-           kolonun ALTINDA tam genişlik bir satır — şerit genişlik istiyor
-           (sahne düzenleri kap eniyle, `SkyScene.module.css`) ve yan
-           kolona girse iki kolonun dengesini kendi boyu kadar bozardı.
-           Gerekçe ve veri `SkylineStrip.tsx`; yer tutucu ölçüsünü ayırıyor. */}
-      <DrawOnView data-home-section="skyline" className="min-w-0 lg:col-span-2 lg:row-start-3">
-        <Suspense fallback={<SkylineStripSkeleton />}>
-          <SkylineStrip status={status} locale={locale} t={t} nowMs={nowMs} />
-        </Suspense>
-      </DrawOnView>
-
-      {/* ---- Öne çıkan haberler ----
-           TAM GENİŞLİK BANT, KUTU DEĞİL. Haberler bir süre sol kolonda,
-           analizlerin altında, altı satırlık düz bir listeydi: sayfanın en
-           son gördüğün ve en az tasarlanmış bloğuydu, üstelik sağında 470
-           piksel boş oluk duruyordu.
-
-           İki şey birden değişti. Blok iki kolonun ALTINA indi ve genişliğin
-           tamamını aldı; başlığı da bir panel başlığı değil BÖLÜM başlığı
-           oldu — kutu yok, altında hairline var. Sayfa böylece "kutu, kutu,
-           kutu" ritminden çıkıp bir bölümle kapanıyor. */}
-      <section data-home-section="news" data-rise-scope id="haber-akisi" className={cn(styles.news, "min-w-0 lg:col-span-2 lg:row-start-4")}>
-        <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
-          <h2 className={styles.newsHeading}>
-            {t.today.topNews}
-          </h2>
-          <div className="flex shrink-0 items-center gap-3">
-            {/* KÜNYE DAR EKRANDA YOK. Türkçesi ("SON 40 HABERDEN SEÇİLDİ")
-                büyük harfle 154 piksel tutuyor; başlık ve bağlantıyla
-                birlikte 382 piksel ediyor ve 420 pikselin altındaki her
-                telefonda üçü de ikişer satıra kırılıyordu — sayfanın
-                kapanış bölümü üç satırlık düzensiz bir bloğa dönüşüyordu.
-                Seçkinin nasıl yapıldığı bir künye, manşet değil. */}
-            <span className="plate hidden whitespace-nowrap text-nano sm:inline">
-              {/* Havuz büyüklüğü SABİTTEN geliyor: metinde "40" yazılıydı ve
-                  `TOP_NEWS_POOL` değişirse künye sessizce yalan söylerdi. */}
-              {/* Künyedeki sayı yedeklerin havuzu: seçki son 40 haberden,
-                  manşetin yanını dolduran yedekler son 80'den geliyor
-                  (TopNews). Ekrandaki her haber için doğru olan büyük sayı. */}
-              {t.today.topNewsNote.replace("{n}", String(TOP_NEWS_FILL_POOL))}
-            </span>
-            <PanelLink href="/haberler" className="whitespace-nowrap">
-              {t.common.showAll}
-            </PanelLink>
-          </div>
-        </div>
-        <Suspense fallback={<NewsGridSkeleton />}>
-          <TopNews locale={locale} t={t} />
-        </Suspense>
-      </section>
-
-      {/* Kolon dengeleyici — hiçbir şey çizmez. İki kolonun dibini ölçüp
-          kısa kalanın yedek satırlarını açıyor. Sayfa seviyesinde TEK KEZ
-          duruyor: bir dönem favoriler listesinin içindeydi ve o yüzden
-          yalnızca sağ kolonu doldurabiliyordu. */}
+      {/* Kolon dengeleyici — hiçbir şey çizmez. Kolonların dibini ve
+          parçalarının arasını ölçüp yedek satırları açıyor. Sayfa
+          seviyesinde TEK KEZ duruyor: bir dönem favoriler listesinin
+          içindeydi ve o yüzden yalnızca sağ kolonu doldurabiliyordu. */}
       <FillColumn />
 
       {/* ---- Kaynak künyesi ---- */}
-      <footer data-home-section="sources" className="flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted lg:col-span-2 lg:row-start-5">
+      <footer data-home-section="sources" className={cn(styles.wideRow, "flex flex-wrap justify-between gap-x-6 gap-y-1 pt-2 text-tiny text-muted")}>
         <span>{t.today.sourceLine}</span>
         <span>{t.today.sourceNote}</span>
       </footer>

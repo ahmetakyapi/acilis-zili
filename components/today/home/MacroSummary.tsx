@@ -77,7 +77,12 @@ export async function MacroSummary({ locale, t }: { locale: Locale; t: Dictionar
         </h2>
         <PanelLink href="/makro">{t.common.showAll}</PanelLink>
       </div>
-      <div className="grid grid-cols-2 gap-4">
+      {/* TELEFONDA İKİ SERİ (10 Kasım gecesi): TÜFE ve politika faizi —
+          enflasyon ve Fed'in cevabı, makronun manşet çifti. Panel telefonda
+          arka planın içinde (page.tsx) ve dört seri 365 piksel tutuyordu
+          (390, ölçüldü); Çekirdek PCE ile işsizlik "Tümünü Gör"de
+          (/makro). `display:none`: odak ve ekran okuyucu sırasına girmiyor. */}
+      <div className="grid grid-cols-2 gap-4 max-md:[&>div:nth-child(2)]:hidden max-md:[&>div:nth-child(3)]:hidden">
         {shown.map((row) => {
           const latest = row.latestValue;
           const prev = row.prevValue;

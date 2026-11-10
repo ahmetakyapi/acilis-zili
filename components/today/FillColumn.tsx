@@ -44,17 +44,56 @@ import { useEffect } from "react";
  * açılan satırlar zaten BOŞ olan alana iner.
  *
  * Yalnızca iki kolonlu düzende (1024px üstü) çalışır; dar ekranda kolon
- * kavramı yok ve listeler tabanda kalır.
+ * kavramı yok ve listeler tabanda kalır (parçalar `display:contents`,
+ * telefon sırası DOM sırası — 10 Kasım gecesi).
  */
 export function FillColumn() {
   useEffect(() => {
     const genis = window.matchMedia("(min-width: 1024px)");
     let kare = 0;
 
+    /* KOLON PARÇALI (10 Kasım gecesi). Ana sayfanın DOM'u telefon
+       sırasında ve masaüstünde her kolon İKİ parça (`[data-col]` iki kez;
+       yerleşim TodayExperience.module.css → "KAYDIRMALI İKİ KOLON"). Kolonun
+       dibi, o kolonun parçalarından EN AŞAĞIDA biten son çocuğun dibi. Bir
+       ölçü daha eklendi: aynı kolonun iki parçası arasındaki fazladan
+       boşluk. Izgara farkı normalde kısa kolonun dibinde bırakıyor; yalnız
+       sol-bugün sağ-bugünden uzun kalırsa sağın alt parçası geç başlıyor ve
+       fark parçaların ARASINDA açılıyor (CSS'teki not). Hedef iki ölçünün
+       TOPLAMI: |dip farkı| + parça arası boşluk. */
+    const kolonlar = () => [...document.querySelectorAll<HTMLElement>("[data-col]")];
+    const sonDip = (parca: Element) => {
+      let son = parca.lastElementChild;
+      while (son && son.getBoundingClientRect().height === 0) son = son.previousElementSibling;
+      return son ? son.getBoundingClientRect().bottom : null;
+    };
+    const maliyet = () => {
+      const dipler = new Map<string, number>();
+      const sonParca = new Map<string, HTMLElement>();
+      let ara = 0;
+      for (const parca of kolonlar()) {
+        const ad = parca.dataset.col ?? "";
+        const dip = sonDip(parca);
+        if (dip === null) continue;
+        const onceki = sonParca.get(ad);
+        const oncekiDip = onceki ? sonDip(onceki) : null;
+        if (oncekiDip !== null && parca.parentElement) {
+          /* Parça arası: bu parçanın tepesi ile öncekinin son çocuğunun
+             dibi arasındaki mesafenin ızgara satır aralığından fazlası. */
+          const aralik = parseFloat(getComputedStyle(parca.parentElement).rowGap) || 0;
+          ara += Math.max(0, parca.getBoundingClientRect().top - oncekiDip - aralik);
+        }
+        sonParca.set(ad, parca);
+        dipler.set(ad, Math.max(dipler.get(ad) ?? 0, dip));
+      }
+      const ana = dipler.get("main");
+      const yan = dipler.get("side");
+      if (ana === undefined || yan === undefined) return null;
+      return Math.abs(ana - yan) + ara;
+    };
+
     const uygula = () => {
-      const ana = document.querySelector('[data-col="main"]');
-      const yan = document.querySelector('[data-col="side"]');
-      if (!ana || !yan) return;
+      if (kolonlar().length === 0) return;
 
       const yedek = [...document.querySelectorAll<HTMLElement>("[data-fill]")];
       if (yedek.length === 0) return;
@@ -66,74 +105,42 @@ export function FillColumn() {
       for (const satir of yedek) satir.hidden = true;
       if (!genis.matches) return;
 
-      const dip = (kolon: Element) => {
-        const son = kolon.lastElementChild;
-        return son ? son.getBoundingClientRect().bottom : 0;
-      };
-      const anaDip = dip(ana);
-      const yanDip = dip(yan);
-      if (anaDip === 0 || yanDip === 0) return;
-
-      const kisa = anaDip < yanDip ? "main" : "side";
-      let bosluk = Math.abs(anaDip - yanDip);
-
-      for (const satir of yedek) {
-        if (bosluk <= 0) break;
-        if (satir.closest("[data-col]")?.getAttribute("data-col") !== kisa) {
-          continue;
-        }
-        satir.hidden = false;
-        const boy = satir.getBoundingClientRect().height;
-        if (boy <= 0 || boy > bosluk) {
-          satir.hidden = true;
-          continue;
-        }
-        bosluk -= boy;
-      }
-
-      /* EN YAKIN DİP (10 Kasım, ikinci tur). Döngü yalnız SIĞAN satırı
-         açıyor; kalan fark o yüzden bir satır boyuna kadar çıkabiliyordu.
-         Gerçek boyda ölçüldü (gerçek sayfa + sahte sağlayıcı, 1440): ana
-         kolon 5.600, yan kolon 5.657 — fark 57 piksel, sıradaki analiz
-         satırı 62; satır "sığmadığı" için kapalı kaldı. Oysa onu açınca
-         fark 5 piksele iniyor (öteki yöne). Kural: sıradaki satır farkı
-         KÜÇÜLTÜYORSA (taşması kalan boşluktan azsa) açılır. En kötü hata
-         bir satır boyundan yarım satır boyuna iner; 1440'ta 57 → 6,
-         1024'te 31 → 19, 1600'de 10, 1280'de 17 → 17 (satır 62, taşma 45 > 17:
-         kapalı). */
-      /* İKİ YÖNE YAKINSAMA (10 Kasım, üçüncü tur). "En yakın dip" adımı
-         yalnız belgedeki İLK gizli satırı ve yalnız BİR kez deniyordu. İki
-         eksik ölçüldü (gerçek sayfa + sahte sağlayıcı, 1440; Günün Grafiği
-         paneli dip butonuyla 60 piksel uzadıktan sonra): ana kolon kısaydı,
-         sıradaki analiz satırı (63) açılınca fark 27 piksel ÖTEKİ yöne
-         döndü ve orada kaldı — oysa yan kolonda Günün Grafiği'nin 42
-         piksellik yedek satırı farkı 15'e indiriyordu, sorulmadı. Artık
-         her turda kolonlar yeniden ölçülür, kısa kolondaki HER listenin ilk
-         gizli satırı aday olur ve farkı en çok küçülten açılır; fark
-         küçülmüyorsa durur. Liste içinde sıra atlanmaz (aday hep listenin
-         ilk gizlisi); her tur farkı kesin küçülttüğü için salınmaz, tavan
-         yine de dört tur. Son ölçüm (kolon dipleri farkı, iki tema aynı):
-         1600: 31 (63 piksellik satırın taşması 32 ≥ 31: kapalı) · 1440:
-         27 → 14 · 1280: 5 · 1024: 14. En kötü hâl yarım satır boyu. */
-      for (let tur = 0; tur < 4; tur++) {
-        const a = dip(ana);
-        const y = dip(yan);
-        const kalan = Math.abs(a - y);
-        if (kalan <= 0) break;
-        const kisaKolon = a < y ? "main" : "side";
+      /* EN YAKIN DİP (10 Kasım, ikinci tur). Döngü bir dönem yalnız SIĞAN
+         satırı açıyordu ve kalan fark bir satır boyuna kadar çıkabiliyordu
+         (gerçek sayfa + sahte sağlayıcı, 1440: ana kolon 5.600, yan 5.657 —
+         fark 57, sıradaki analiz satırı 62; açılınca fark 5). Kural:
+         sıradaki satır farkı KÜÇÜLTÜYORSA açılır.
+         İKİ YÖNE YAKINSAMA (10 Kasım, üçüncü tur). "En yakın dip" yalnız
+         belgedeki ilk gizli satırı ve yalnız bir kez deniyordu; bir satır
+         farkı öteki yöne çevirince orada kalıyordu (1440: 27 piksel, oysa
+         yan kolondaki 42 piksellik grafik satırı farkı 15'e indiriyordu).
+         Her turda kolonlar yeniden ölçülür, HER listenin ilk gizli satırı
+         aday olur ve farkı en çok küçülten açılır; fark küçülmüyorsa durur.
+         Liste içinde sıra atlanmaz (aday hep listenin ilk gizlisi); her tur
+         farkı kesin küçülttüğü için salınmaz. O turun ölçümü (kolon dipleri
+         farkı, iki tema aynı): 1600: 31 · 1440: 27 → 14 · 1280: 5 · 1024: 14.
+         10 KASIM GECESİ: "kısa kolon" sorusu kalktı. Kolonlar parçalı ve
+         hedef dip farkı + parça arası boşluk (yukarıda); satır hangi
+         kolonda olursa olsun aday ve toplamı en çok küçülten açılır: sol
+         kolon kısaysa analizlerin ve merceğin, sağ kolon kısaysa
+         hareketlerin, grafiğin, takvimin ve favorilerin satırları. Tur
+         tavanı yedek satır sayısı. */
+      for (let tur = 0; tur < yedek.length; tur++) {
+        const simdi = maliyet();
+        if (simdi === null || simdi <= 0) break;
         const gorulen = new Set<Element | null>();
         let enIyi: HTMLElement | null = null;
-        let enIyiTasma = kalan;
+        let enIyiDeger = simdi;
         for (const satir of yedek) {
-          if (!satir.hidden || satir.closest("[data-col]")?.getAttribute("data-col") !== kisaKolon) continue;
+          if (!satir.hidden || !satir.closest("[data-col]")) continue;
           if (gorulen.has(satir.parentElement)) continue;
           gorulen.add(satir.parentElement);
           satir.hidden = false;
-          const boy = satir.getBoundingClientRect().height;
+          const deger = satir.getBoundingClientRect().height > 0 ? maliyet() : null;
           satir.hidden = true;
-          if (boy > 0 && boy - kalan < enIyiTasma) {
+          if (deger !== null && deger < enIyiDeger - 0.5) {
             enIyi = satir;
-            enIyiTasma = boy - kalan;
+            enIyiDeger = deger;
           }
         }
         if (!enIyi) break;
@@ -159,24 +166,21 @@ export function FillColumn() {
        Panellerin kendi kutuları ise gerçekten değişiyor. Akışla YENİ panel
        eklendiğinde de listeyi tazelemek gerekiyor; onu `MutationObserver`
        söylüyor. */
-    const kolonlar = [
-      document.querySelector('[data-col="main"]'),
-      document.querySelector('[data-col="side"]'),
-    ].filter((k): k is Element => k !== null);
+    const parcalar = kolonlar();
 
     const boyGozlemcisi = new ResizeObserver(planla);
     const bagla = () => {
       boyGozlemcisi.disconnect();
-      for (const kolon of kolonlar) {
-        for (const panel of kolon.children) boyGozlemcisi.observe(panel);
+      for (const parca of parcalar) {
+        for (const panel of parca.children) boyGozlemcisi.observe(panel);
       }
       planla();
     };
     bagla();
 
     const agacGozlemcisi = new MutationObserver(bagla);
-    for (const kolon of kolonlar) {
-      agacGozlemcisi.observe(kolon, { childList: true });
+    for (const parca of parcalar) {
+      agacGozlemcisi.observe(parca, { childList: true });
     }
     genis.addEventListener("change", planla);
 
