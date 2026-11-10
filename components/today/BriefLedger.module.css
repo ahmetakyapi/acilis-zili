@@ -636,7 +636,7 @@
   margin: -4px 0 0;
   color: var(--text-strong);
   font-size: var(--text-read);
-  font-weight: 550;
+  font-weight:600;
   line-height: 1.45;
   text-wrap: pretty;
 }
@@ -675,7 +675,7 @@
   overflow: hidden;
   color: var(--text-body);
   font-size: var(--text-small);
-  font-weight: 650;
+  font-weight:600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
@@ -690,7 +690,7 @@
 }
 .miniValue {
   font-size: clamp(1.25rem, 1.6vw, 1.5rem);
-  font-weight: 750;
+  font-weight:700;
   line-height: 1;
   letter-spacing: -0.02em;
   white-space: nowrap;
@@ -716,7 +716,7 @@
   margin: 0;
   color: var(--text-muted);
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight:600;
   line-height: 16px;
 }
 .figGrid {
@@ -754,7 +754,7 @@
   overflow: hidden;
   color: var(--text-body);
   font-size: var(--text-small);
-  font-weight: 650;
+  font-weight:600;
   line-height: 16px;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -762,7 +762,7 @@
 .figValue {
   color: var(--text-strong);
   font-size: var(--text-lead);
-  font-weight: 750;
+  font-weight:700;
   line-height: 1.1;
   white-space: nowrap;
 }
@@ -789,7 +789,7 @@
   font-size: var(--text-tiny);
   line-height: 16px;
 }
-.figVerdict { font-weight: 650; }
+.figVerdict { font-weight:600; }
 
 /* SAPMA ÇİZGİSİ, KÜÇÜK HÂLİ — takvimdeki çizginin kuralı
    (`components/calendar/DeviationLine.tsx`): orta = beklenti (sıfır,

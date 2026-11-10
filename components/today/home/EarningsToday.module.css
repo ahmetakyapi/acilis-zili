@@ -9,11 +9,11 @@
 .list > li { transition: background-color 180ms var(--ease-brand); }
 
 .figure { justify-items: end; gap: 1px; min-width: 4.25rem; text-align: right; }
-.figureValue { font-size: var(--text-base); font-weight: 550; line-height: 1.2; color: var(--text-body); white-space: nowrap; }
-.figure[data-reported] .figureValue { font-weight: 750; color: var(--text-strong); }
+.figureValue { font-size: var(--text-base); font-weight:600; line-height: 1.2; color: var(--text-body); white-space: nowrap; }
+.figure[data-reported] .figureValue { font-weight:700; color: var(--text-strong); }
 .figureNote { display: inline-flex; align-items: baseline; gap: 6px; font-size: var(--text-tiny); line-height: 1.25; color: var(--text-muted); white-space: nowrap; }
 /* Karne imi: biçim + renk (yalnız renk değil — WeekBoard `tileResult`). */
-.figureMark { font-size: var(--text-nano); font-weight: 750; color: var(--text-body); }
+.figureMark { font-size: var(--text-nano); font-weight:700; color: var(--text-body); }
 .figureMark[data-dir="beat"] { color: var(--up); }
 .figureMark[data-dir="miss"] { color: var(--down); }
 
@@ -21,8 +21,8 @@
    Sağ hücre kimlikle aynı kalıpta iki satır: sayı (14/1,2) + künye (11).
    ≥640'ta hücre yok, geniş düzen aynen. Ölçüm aşağıda. */
 .phoneFigure { display: grid; justify-items: end; gap: 1px; text-align: right; }
-.phoneFigure .figureValue { font-weight: 650; color: var(--text-strong); }
-.phoneFigure[data-reported] .figureValue { font-weight: 750; }
+.phoneFigure .figureValue { font-weight:600; color: var(--text-strong); }
+.phoneFigure[data-reported] .figureValue { font-weight:700; }
 .phoneTiming { display: inline-flex; align-items: center; gap: 3px; }
 .phoneTiming::before { content: "·"; margin-right: 3px; }
 .wideOnly { display: none; }

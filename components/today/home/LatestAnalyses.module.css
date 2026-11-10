@@ -17,7 +17,18 @@
   display: flex; align-items: baseline; justify-content: space-between; gap: 8px;
   color: var(--text-muted); font-size: var(--text-nano); font-weight: 600; white-space: nowrap;
 }
-.metricHead b { font-size: var(--text-tiny); font-weight: 800; }
+.metricHead b { font-size: var(--text-tiny); font-weight: 700; }
+/* ETİKET YALNIZ İLK SATIRDA (10 Kasım, ana sayfa denetimi). Sütunlar her
+   satırda aynı hatta (sabit 128 piksel hücre), yani ilk satırın (öne çıkan
+   karttan sonraki `li`) etiketi
+   sütun başlığı işi görüyor; "Gelir (Yıllık) / HBK Sürprizi / İlk Tepki"
+   1440'ta on beş satırda 45 kez tekrarlanıyor ve panel tablo programı gibi
+   okunuyordu (ölçüldü). Sonraki satırlarda etiket görsel olarak gizli,
+   ekran okuyucu yine duyuyor; değer hücrenin sağında kalıyor. */
+.list > li:nth-child(n+3) .metricLabel {
+  position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap;
+}
+.list > li:nth-child(n+3) .metricHead { justify-content: flex-end; }
 
 /* Tek ölçü (İlk Tepki): eski davranış, `sm` yerine panelin eni. */
 @container (min-width: 520px) {

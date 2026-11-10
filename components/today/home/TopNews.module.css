@@ -40,14 +40,14 @@
 }
 @keyframes lead-drift { from { translate:0 -5%; } to { translate:0 5%; } }
 .leadMeta { order:-1; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:6px; color:var(--text-muted); font-size:var(--text-small); }
-.leadSource { color:var(--text-body); font-weight:650; }
+.leadSource { color:var(--text-body); font-weight:600; }
 .chip {
   display:inline-flex; align-items:center; gap:6px; height:26px; padding:0 9px 0 2px; border-radius:999px;
   background:var(--surface-sunken); color:var(--text-strong); font-size:12px; font-weight:700; letter-spacing:.01em;
 }
 .leadHeadline {
   display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden;
-  color:var(--text-strong); font-size:clamp(21px,2.05vw,29px); font-weight:650; line-height:1.2; letter-spacing:-.032em;
+  color:var(--text-strong); font-size:clamp(21px,2.05vw,29px); font-weight:600; line-height:1.2; letter-spacing:-.032em;
   text-wrap:pretty; transition:color 180ms var(--ease-brand);
 }
 @media (hover:hover) and (pointer:fine) { .lead:hover .leadHeadline { color:var(--primary-ink); } }

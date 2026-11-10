@@ -562,14 +562,24 @@ export default async function TodayPage() {
              ana kolondaydı; nabız günün dokusu (oynaklık, momentum,
              genişlik), dünün okuması değil. Telefonda dünya ile teknik
              arasında.
-             İKİNCİ DÜZEN TURU (10 Kasım): iki okurda da TEK yer — teknik
-             görünümün ardı. Giriş yapmış okurun portföyü bir tur rayın
-             başındaydı; sahibi "çok üstte" dedi. */}
-        <DrawOnView id="portfoy-ozeti" data-home-section="portfolio">
-          <Suspense fallback={<PanelSkeleton rows={3} />}>
-            <PortfolioSlot locale={locale} t={t} />
-          </Suspense>
-        </DrawOnView>
+             İKİNCİ DÜZEN TURU (10 Kasım): teknik görünümün ardı. Giriş
+             yapmış okurun portföyü bir tur rayın başındaydı; sahibi "çok
+             üstte" dedi.
+             PORTFÖY SOL KOLONDA (10 Kasım, sahibinin ekran görüntüsü: "böyle
+             bir boşluk var, istersen portföyü sol tarafa alalım"). Giriş
+             yapmış okurda portföy kartı (≈850 piksel, günlük taramayla daha
+             uzun) ve favoriler sağ raya biniyor, sol kolon ~800 piksel erken
+             bitiyordu (canlı, 1440+). Kart artık sol kolonun alt parçasının
+             başında (aşağıda) ve orada iki sütunlu açılıyor; telefonda DOM
+             sırası aynı: teknik görünümün hemen ardında. Burada yalnız
+             misafirin Nabız'ı kalıyor; misafirin dengesi ölçülüydü. */}
+        {signedIn ? null : (
+          <DrawOnView id="portfoy-ozeti" data-home-section="portfolio">
+            <Suspense fallback={<PanelSkeleton rows={3} />}>
+              <PortfolioSlot locale={locale} t={t} />
+            </Suspense>
+          </DrawOnView>
+        )}
 
         {/* ---- Favoriler (giriş yapmış okuyucu) ----
              Liste gerçekten onun listesi. Bir dönem bugünün hareketlerinin
@@ -596,6 +606,16 @@ export default async function TodayPage() {
           bugünün ölçülerinin altında, bilanço analizleriyle aynı parçada
           (biri "kim açıklıyor", öteki "açıklayanlar ne yaptı"). */}
       <div data-col="main" data-run="past" className={cn(styles.run, styles.runMainPast)}>
+        {/* Giriş yapmış okurun portföyü ve günlük taraması (gerekçe sağ rayda,
+            Nabız yuvasının üstünde). Geniş kolonda iki sütun: özet solda,
+            pozisyonlar sağda (PortfolioSlot.module.css → "GENİŞ KAP"). */}
+        {signedIn ? (
+          <DrawOnView id="portfoy-ozeti" data-home-section="portfolio">
+            <Suspense fallback={<PanelSkeleton rows={3} />}>
+              <PortfolioSlot locale={locale} t={t} />
+            </Suspense>
+          </DrawOnView>
+        ) : null}
         {/* ---- Bugün bilanço açıklayanlar ----
              10 Kasım gecesi akışın ve bandın hemen ardına çıkmıştı (önce
              telefonda 8.634. pikseldeydi); sahibi o kadar üstte istemedi —
@@ -624,19 +644,6 @@ export default async function TodayPage() {
           </Suspense>
         </DrawOnView>
 
-        {/* ---- Son analizler ----
-             KOLON DENGESİ ÖLÇÜLEREK KURULDU. Bu panel bir tur yan kolonda
-             durdu ve orada yanlış yerdeydi: yan kolon neredeyse SABİT
-             yükseklikte, ana kolon ise veriye göre değişiyor. Panel ana
-             kolona geçince iki kolon birbirinin etrafında salınıyor ve
-             doldurma (yedek satırlar) kalan farkı kapatıyor. İçerik olarak
-             "açıklayanlar ne yaptı": dünün parçasında, silüetin ardında. */}
-        <DrawOnView id="bilanco-analizleri" data-home-section="analyses" className={styles.analyses}>
-          <Suspense fallback={<PanelSkeleton rows={5} />}>
-            <LatestAnalyses locale={locale} t={t} />
-          </Suspense>
-        </DrawOnView>
-
         {/* ---- Mercek ----
              Sitenin başka hiçbir yerde bulunmayan içeriği. Uzun süre en
              altta, dört satırlık bir listeydi; 28 Eylül'de sayfanın üst
@@ -651,6 +658,24 @@ export default async function TodayPage() {
             <StoriesSpotlight locale={locale} t={t} />
           </Suspense>
         </div>
+
+        {/* ---- Son analizler ----
+             KOLON DENGESİ ÖLÇÜLEREK KURULDU. Bu panel bir tur yan kolonda
+             durdu ve orada yanlış yerdeydi: yan kolon neredeyse SABİT
+             yükseklikte, ana kolon ise veriye göre değişiyor. Panel ana
+             kolona geçince iki kolon birbirinin etrafında salınıyor ve
+             doldurma (yedek satırlar) kalan farkı kapatıyor. İçerik olarak
+             "açıklayanlar ne yaptı": dünün parçasında, silüetin ardında.
+             MERCEĞİN ALTINDA, SOL KOLONUN DİBİNDE (10 Kasım, sahibinin isteği:
+             "son bilanço analizleri merceğin altında olmalı, ekranın en altı
+             uygun"). Geçmiş seansların analizleri; kolonun son paneli olduğu
+             için kolon dengesini de o kapatıyor (`FillColumn` yedek
+             satırları). Telefonda merceğin ardında. */}
+        <DrawOnView id="bilanco-analizleri" data-home-section="analyses" className={styles.analyses}>
+          <Suspense fallback={<PanelSkeleton rows={5} />}>
+            <LatestAnalyses locale={locale} t={t} />
+          </Suspense>
+        </DrawOnView>
       </div>
 
       {/* ================= Sağ kolon, alt parça: ARKA PLAN =================

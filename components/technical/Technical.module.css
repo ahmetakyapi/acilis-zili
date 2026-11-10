@@ -2023,6 +2023,18 @@
    (360'ta 36 / 40): ortak ızgara, kenardan kenara dolgu ve alt alta hiza
    aynı; SAT 10 yine iki satır, TUT 6 tam bir satır. Görünmez taşma 4 → 3
    piksel (adım artık kendisi 44; komşular üst üste binmesin). */
+/* RAYDA DA ALTI SÜTUN (10 Kasım, ana sayfa denetimi). ≥768'de logolar
+   serbest sarmadaydı (36 piksel karo + 8 aralık): 350 piksellik rayda
+   satıra beş sığıyor, TUT ve SAT kümelerinin altıncısı tek başına alt
+   satıra düşüyordu — 1440/1280'de [5, 1, 5, 1, 4], canlıda [6, 1, 6, 3]
+   (ölçüldü). Izgara altı sütun, hücre en çok 44: karo hücreye göre
+   küçülüyor (rayda ~36), satırlar eşit doluyor; tablet tam genişlikte
+   karo 36'da kalıyor (sütun tavanı 44, dolgu 4). */
+@media (min-width:768px) {
+  .pulse[data-variant="panel"] .pulseLogos { display:grid; grid-template-columns:repeat(6,minmax(0,44px)); gap:6px; }
+  .pulse[data-variant="panel"] .pulseLogo { width:100%; aspect-ratio:1; }
+  .pulse[data-variant="panel"] .pulseLogo > :first-child { width:100%; height:100%; }
+}
 @media (max-width:767px) {
   .pulse[data-variant="panel"] .pulseLogos { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:4px; }
   .pulse[data-variant="panel"] .pulseLogo { width:100%; aspect-ratio:1; padding:3px; }

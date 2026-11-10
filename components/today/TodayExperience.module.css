@@ -64,7 +64,7 @@
    basamağa çıktı (15/650, −.02em): satır artık iki ölçek (15 okuma, 12
    künye), taban çizgisi ortak (`.toplineLead` → baseline). Ölçüm: tarih
    12 → 15 piksel, satır boyu 67 → 67 (saat kadranı belirliyor). */
-.dateLong { font-size:15px; font-weight:650; letter-spacing:-.02em; }
+.dateLong { font-size:15px; font-weight:600; letter-spacing:-.02em; }
 .dateShort { display:none; }
 /* Tarih ve zil künyesi solda tek grup; ayraç kıl çizgi. Grup dar ekranda
    sarıyor: zil saatleri tarihin altına iniyor, saat sağda kalıyor. */
@@ -211,7 +211,7 @@
 
 /* ---- Endeks destesi ---- */
 .indexDeck { min-width:0; padding-left:24px; border-left:1px solid var(--line); }
-.indexHeading { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:5px 15px; margin-bottom:10px; font-size:var(--text-tiny); font-weight:550; color:var(--text-muted); }
+.indexHeading { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:5px 15px; margin-bottom:10px; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
 .indexHeading h2 { color:var(--text-strong); font-size:var(--text-read); font-weight:700; }
 .indexGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .indexLink { min-width:0; display:block; border-radius:12px; }
@@ -234,7 +234,7 @@
 .indexIdentity { display:flex; align-items:baseline; justify-content:space-between; flex-wrap:wrap; gap:3px 8px; }
 .indexSkeleton { width:100%; height:118px; border-radius:14px; }
 .indexQuote { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 9px; margin-top:8px; }
-.indexValue { margin-top:8px; font-size:26px; font-weight:650; line-height:1.15; letter-spacing:-.045em; color:var(--text-strong); }
+.indexValue { margin-top:8px; font-size:26px; font-weight:600; line-height:1.15; letter-spacing:-.045em; color:var(--text-strong); }
 .indexQuote .indexValue { margin:0; }
 /* DEĞİŞEN SAYI BİR KEZ YANAR (canlı tazeleme, `IndexLive`). Zemin yön
    renginin soluk tonundan şeffafa 600 ms'de, marka eğrisiyle; azaltılmış
@@ -357,7 +357,7 @@
 /* Öne çıkan Mercek düz yüzeyde; ayrımı mavi kenarlık taşıyor, köşe
    yıkaması değil (gerekçe UtilityExperience.module.css başındaki not). */
 .storySpotlight { overflow:hidden; border:1px solid var(--primary-faint); border-radius:var(--radius-panel); background:var(--premium-surface); }
-.storySpotlight h3 { color:var(--text-strong); font-size:clamp(26px, 2.3vw, 33px); font-weight:650; line-height:1.13; }
+.storySpotlight h3 { color:var(--text-strong); font-size:clamp(26px, 2.3vw, 33px); font-weight:600; line-height:1.13; }
 .storySpotlight > a { padding:26px; }
 /* Mobile Mercek measured 1050px at 390px: treat the archive as a numbered
    reading list and let the lead keep its full headline and actual figure. */
@@ -374,7 +374,7 @@
    aynı (1440'ta 913/913, 390'da 353/353); manşet 1440'ta 331 → 332,
    390'da 514 → 529 piksel. Taşma 0. */
 .storyLeadFoot { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin-top:20px; padding-top:6px; border-top:1px solid var(--line-soft); }
-.storyLeadAction { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin-left:auto; color:var(--primary-ink); font-size:var(--text-small); font-weight:650; transition:color 180ms var(--ease-brand); }
+.storyLeadAction { display:inline-flex; align-items:center; gap:6px; min-height:44px; margin-left:auto; color:var(--primary-ink); font-size:var(--text-small); font-weight:600; transition:color 180ms var(--ease-brand); }
 .storyLeadAction svg { flex-shrink:0; transition:translate 200ms var(--ease-brand); }
 @media(hover:hover) and (pointer:fine) {
   .storyLead:hover .storyLeadAction { color:var(--primary-hover); }
@@ -453,25 +453,25 @@
 .analysisLeadLink[data-verdict="sell"] .analysisLead::before { background:var(--verdict-sell); }
 .analysisVerdict { display:flex; flex-direction:column; line-height:1.15; }
 .analysisVerdict > span { font-size:var(--text-nano); font-weight:600; color:var(--text-muted); }
-.analysisVerdict > b { font-size:var(--text-read); font-weight:750; letter-spacing:-.02em; color:var(--verdict-hold); }
+.analysisVerdict > b { font-size:var(--text-read); font-weight:700; letter-spacing:-.02em; color:var(--verdict-hold); }
 .analysisVerdict > b[data-verdict="buy"] { color:var(--up); }
 .analysisVerdict > b[data-verdict="sell"] { color:var(--down); }
 .analysisFigures { grid-area:figures; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:0; }
 .analysisFigures > div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:6px 8px; padding:10px 12px; border-radius:10px; background:var(--surface-solid); }
 .analysisFigures dt { font-size:var(--text-nano); font-weight:600; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.analysisFigures dd { margin:0; font-size:var(--text-small); font-weight:750; white-space:nowrap; }
+.analysisFigures dd { margin:0; font-size:var(--text-small); font-weight:700; white-space:nowrap; }
 .analysisFigures > div > span { grid-column:1 / -1; }
 @media (max-width:519px) { .analysisFigures { grid-template-columns:minmax(0,1fr); } }
 .analysisIdentity { grid-area:identity; display:flex; min-width:0; align-items:center; gap:10px; }
 .analysisIdentity > div { min-width:0; }
-.analysisIdentity h3 { color:var(--text-strong); font-size:var(--text-read); line-height:1.3; font-weight:650; overflow-wrap:anywhere; }
+.analysisIdentity h3 { color:var(--text-strong); font-size:var(--text-read); line-height:1.3; font-weight:600; overflow-wrap:anywhere; }
 .analysisIdentity small { display:block; margin-top:4px; font-size:var(--text-tiny); line-height:1.5; color:var(--text-muted); }
 /* Gerçek SNOW özeti 1440px'te 9, 360px'te 23 satırdı (kart 649px).
    Kart bir okuma önizlemesi: 3/4 satır, tam metin analiz bağlantısında.
    Mobilde halka metnin yanında yer kaplamaz; önizleme tüm satırı kullanır. */
 .analysisExcerpt { grid-area:excerpt; display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; overflow-wrap:anywhere; min-width:0; max-width:64ch; font-size:15px; letter-spacing:-.015em; line-height:1.55; color:var(--text-body); font-weight:500; }
 .analysisFooter { grid-area:footer; display:flex; align-items:center; justify-content:space-between; gap:12px; padding-top:12px; border-top:1px solid var(--line); }
-.analysisCta { display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:0 14px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:var(--text-small); font-weight:650; transition:background-color var(--default-transition-duration) var(--ease-brand), color var(--default-transition-duration) var(--ease-brand); }
+.analysisCta { display:inline-flex; align-items:center; gap:6px; min-height:34px; padding:0 14px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-size:var(--text-small); font-weight:600; transition:background-color var(--default-transition-duration) var(--ease-brand), color var(--default-transition-duration) var(--ease-brand); }
 .analysisLeadLink:hover .analysisCta { background:var(--primary); color:var(--on-primary); }
 .analysisCta svg { transition:translate var(--default-transition-duration) var(--ease-brand); }
 .analysisLeadLink:hover .analysisCta svg { translate:2px -2px; }
@@ -749,7 +749,10 @@
      "Bugünün Takvimi" sayfadan kalktı (gerekçe page.tsx, haftaya bakışın
      üstü); hafta artık hep eşsiz ve tam genişlikte. Eski kural: takvim
      boşken (`:empty +`) hafta tam genişlik. */
-  .dashboard:not([data-signed-in]) :is([data-home-section="portfolio"],[data-home-section="watchlist"]) { grid-column:1 / -1; }
+  /* Portföy ve favoriler her okurda tam genişlik (10 Kasım, portföy sol
+     kolona geçti): giriş yapmış okurda portföy artık bilançonun komşusu,
+     favoriler teknik görünümün ardında tek başına — eşleri yok. */
+  .dashboard :is([data-home-section="portfolio"],[data-home-section="watchlist"]) { grid-column:1 / -1; }
   .dashboard [data-home-section="week"] { grid-column:1 / -1; }
 }
 
@@ -811,7 +814,7 @@
   .storyRowCopy p { -webkit-line-clamp:2; font-size:var(--text-base); line-height:1.55; }
   .storyRowMeta { grid-column:2; flex-wrap:wrap; gap:9px; padding-top:0; }
   .storyArchive > li:nth-child(n+3) { display:none; }
-  .storyAllLink { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border-top:1px solid var(--line-soft); background:var(--surface-solid); color:var(--primary-ink); font-size:var(--text-small); font-weight:650; }
+  .storyAllLink { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border-top:1px solid var(--line-soft); background:var(--surface-solid); color:var(--primary-ink); font-size:var(--text-small); font-weight:600; }
   .storyAllLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
   .storyRowMeta svg { margin-left:auto; }
   .analysisLead { grid-template-areas:"identity identity" "score score" "excerpt excerpt" "figures figures" "footer footer"; padding:16px; gap:12px 14px; }

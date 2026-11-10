@@ -50,8 +50,8 @@
   width: 44px; height: 46px; border-radius: var(--radius-md);
   background: var(--surface-sunken); color: var(--text-body);
 }
-.tileWeekday { font-size: var(--text-tiny); font-weight: 650; line-height: 1.1; color: var(--text-muted); white-space: nowrap; }
-.tileNumber { font-size: var(--text-title); font-weight: 750; line-height: 1; color: var(--text-strong); }
+.tileWeekday { font-size: var(--text-tiny); font-weight:600; line-height: 1.1; color: var(--text-muted); white-space: nowrap; }
+.tileNumber { font-size: var(--text-title); font-weight:700; line-height: 1; color: var(--text-strong); }
 /* Yakın gün (Bugün / Yarın): karo dolu tonda, künye güçlü mürekkeple. */
 .tile[data-near] { background: var(--premium-surface); outline: 1px solid var(--line); outline-offset: -1px; }
 .tile[data-near] .tileWeekday { color: var(--text-strong); }
@@ -82,7 +82,7 @@
 /* ---- Saat ---- */
 .time {
   display: inline-flex; align-items: baseline; gap: 3px;
-  font-size: var(--text-read); font-weight: 650; line-height: 20px; color: var(--text-strong);
+  font-size: var(--text-read); font-weight:600; line-height: 20px; color: var(--text-strong);
   white-space: nowrap;
 }
 .zone { font-size: var(--text-tiny); font-weight: 600; color: var(--text-muted); }
@@ -90,7 +90,7 @@
 
 /* ---- Olay ---- */
 .title { min-width: 0; font-size: var(--text-base); line-height: 20px; color: var(--text-body); text-wrap: pretty; }
-.row[data-high] .title { font-weight: 650; color: var(--text-strong); }
+.row[data-high] .title { font-weight:600; color: var(--text-strong); }
 
 /* ---- Önem çubuğu: üç basamak, yüksek üçü / orta ikisi dolu ---- */
 .impact { display: inline-flex; align-items: flex-end; gap: 2px; height: 20px; padding-bottom: 5px; }
@@ -126,8 +126,8 @@
 }
 .todayTime { display: grid; gap: 2px; font-size: var(--text-read); font-weight: 600; line-height: 1.15; color: var(--text-body); white-space: nowrap; }
 .todayTime small { font-size: var(--text-tiny); font-weight: 500; color: var(--text-muted); }
-.todayRow[data-high] .todayTime > span { font-weight: 750; color: var(--text-strong); }
-.todayValue { display: grid; gap: 2px; justify-items: end; font-size: var(--text-read); font-weight: 550; line-height: 1.15; color: var(--text-body); white-space: nowrap; }
+.todayRow[data-high] .todayTime > span { font-weight:700; color: var(--text-strong); }
+.todayValue { display: grid; gap: 2px; justify-items: end; font-size: var(--text-read); font-weight:600; line-height: 1.15; color: var(--text-body); white-space: nowrap; }
 .todayValue small { font-size: var(--text-tiny); font-weight: 500; color: var(--text-muted); }
-.todayValue[data-actual] > span { font-weight: 750; color: var(--text-strong); }
+.todayValue[data-actual] > span { font-weight:700; color: var(--text-strong); }
 .todayRow .impact { align-self: center; height: 11px; padding-bottom: 0; }

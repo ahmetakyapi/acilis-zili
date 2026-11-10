@@ -222,7 +222,7 @@ export function LatestAnalysesView({
                       {figure.value !== null && (
                         <>
                           <span className={rowStyles.metricHead}>
-                            {figure.label}
+                            <span className={rowStyles.metricLabel}>{figure.label}</span>
                             <b className={cn("numeral", figure.value >= 0 ? "text-up" : "text-down")}>
                               {figure.value >= 0 ? "▲" : "▼"} {formatPercentPlain(figure.value, locale, figure.digits)}
                             </b>

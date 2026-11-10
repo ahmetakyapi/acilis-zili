@@ -67,7 +67,7 @@
 .end { font-size:var(--text-tiny); font-weight:500; color:var(--text-muted); }
 /* Basışta ölçekle çöker (evin tek lehçesi, BUTTON_BASE) — `transform`
    konumu taşıdığı için çökme ayrı `scale` özelliğinde. */
-.marker { position:absolute; top:1px; z-index:1; display:flex; align-items:center; justify-content:center; gap:2px; min-width:28px; height:24px; padding:0 6px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--premium-surface); color:var(--text-strong); font-size:var(--text-small); font-weight:650; cursor:pointer; transform:translateX(-50%); scale:1; transition:border-color 180ms var(--ease-brand), background-color 180ms var(--ease-brand), scale 120ms var(--ease-brand); }
+.marker { position:absolute; top:1px; z-index:1; display:flex; align-items:center; justify-content:center; gap:2px; min-width:28px; height:24px; padding:0 6px; border:1px solid var(--line); border-radius:var(--radius-sm); background:var(--premium-surface); color:var(--text-strong); font-size:var(--text-small); font-weight:600; cursor:pointer; transform:translateX(-50%); scale:1; transition:border-color 180ms var(--ease-brand), background-color 180ms var(--ease-brand), scale 120ms var(--ease-brand); }
 .marker:active { scale:.95; }
 .marker::before { content:""; position:absolute; inset:-8px -4px; }
 .marker { gap:5px; }

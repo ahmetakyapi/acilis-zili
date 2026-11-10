@@ -17,7 +17,7 @@
 /* Birim sayıdan KOPMAZ: "54,2 Mr $" tek parça (CLAUDE.md "ölçü ızgarası").
    Sürpriz sayının yanında; dar sütunda sayının altına iner, sayı bölünmez. */
 .value { display:flex; flex-wrap:wrap; align-items:baseline; gap:0 8px; }
-.value b { color:var(--text-strong); font-size:17px; line-height:1.25; font-weight:650; letter-spacing:-.03em; white-space:nowrap; }
+.value b { color:var(--text-strong); font-size:17px; line-height:1.25; font-weight:600; letter-spacing:-.03em; white-space:nowrap; }
 /* Açıklanmamış ölçü bir TAHMİN: aynı puntoda ama bir ton soluk, açıklanan
    sayıyla aynı ağırlıkta okunmasın. */
 .figure:not([data-released]) .value b { color:var(--text-body); font-weight:600; }

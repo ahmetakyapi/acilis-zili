@@ -34,7 +34,7 @@
 /* Saat ve öteki dilim aynı taban çizgisinde; dar hücrede öteki saat
    birincilin altına sarıyor (320'de hücre 116 piksel, ölçüldü). */
 .times { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; }
-.primary { font-size:15px; font-weight:650; line-height:1.2; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
+.primary { font-size:15px; font-weight:600; line-height:1.2; letter-spacing:-.02em; color:var(--text-strong); white-space:nowrap; }
 .primary small { margin-left:4px; font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
 .alt { font-size:12px; font-weight:500; color:var(--text-muted); white-space:nowrap; }
 .day { font-size:12px; line-height:1.4; color:var(--text-body); white-space:nowrap; }
