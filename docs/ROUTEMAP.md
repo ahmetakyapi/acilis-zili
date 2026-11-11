@@ -27,7 +27,7 @@ GitHub Actions → "Migrate DB" iş akışı, `check` modu (salt okunur).
 |---|---|
 | Sayfa rotası | 87 `page.tsx` (13'ü `/admin`; açık sayfalar `/en` önekiyle ikinci bir adreste daha) |
 | API ucu | 55 `route.ts` `app/api` altında (+8 `app/` içinde: paylaşım görselleri ve RSS) |
-| Veritabanı tablosu | 57 · 44 migration (0000–0043 üretimde uygulandı, 0043: 8 Kasım) |
+| Veritabanı tablosu | 59 · 45 migration (0000–0044 üretimde uygulandı, 0044: 11 Kasım) |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · TCMB EVDS (isteğe bağlı) · SEC EDGAR (13F, Form 4) · OpenFIGI · House Clerk · Federal Reserve · Kalshi · Cboe · ABD Hazinesi · ARK / Global X ETF dosyaları · GİB (`lib/providers/`) |
 | Ortam değişkeni | 38 (`.env.example`) |
 | Zamanlanmış iş | 9 uç `app/api/cron/*`: günlük senkron, alarmlar, bilanço hatırlatması, haberler + çeviri, pazar özeti postası, Telegram, olasılıklar, risk, Günün Grafiği yedeği. Saatleri tek yerde: `deploy/cron-install.sh` |
@@ -47,6 +47,7 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
 
+- [x] **Migration 0044 üretimde uygulandı (11 Kasım):** `push_preferences` (push tür tercihi) + `push_sends` (cuma portföy özeti tekrar defteri); yalnız ekleyen, Migrate DB `check` → `apply`.
 - [x] **Migration 0043 üretimde uygulandı (8 Kasım):** `price_alert_state` +
       `percent_alert_state`. Kayıtta 1 Kasım 08:01 UTC tarihli, depoda
       olmayan bir satır (özet `fd25bd4de0ea`) durdurma yapıyordu;
