@@ -242,6 +242,13 @@ export const stockPuzzleTr = {
     announceRight: "Doğru. {name}, {value}. Skor {score}.",
     announceWrong: "Yanlış. {name}, {value}. Oyun bitti, skor {score}.",
   },
+  /* 11 Kasım görsel turu: kısa giriş ipucu (telefonda uzun hâli
+     kesiliyordu), boş yuvanın künyesi, aday havuzunun daralması ve
+     karoda sığmayan ipucu adlarının kısası (tam adı `clue`da). */
+  placeholderShort: "NVDA, Nvidia…",
+  slotNext: "Sıradaki",
+  candidatesPool: "{n} / {total} Aday",
+  clueShort: { letters: "Harf Kalıbı" } as Partial<Record<"letters", string>>,
 };
 
 export const stockPuzzleEn: typeof stockPuzzleTr = {
@@ -471,6 +478,10 @@ export const stockPuzzleEn: typeof stockPuzzleTr = {
     announceRight: "Correct. {name}, {value}. Score {score}.",
     announceWrong: "Wrong. {name}, {value}. Game over, score {score}.",
   },
+  placeholderShort: "NVDA, Nvidia…",
+  slotNext: "Next",
+  candidatesPool: "{n} / {total} Candidates",
+  clueShort: { letters: "Ticker Shape" },
 };
 
 export type StockPuzzleLabels = typeof stockPuzzleTr;

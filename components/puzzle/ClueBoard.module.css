@@ -20,6 +20,14 @@
    değil, karonun türünü söyleyen işaret). */
 .badge { display:grid; place-items:center; flex:none; width:1rem; height:1rem; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); }
 .label { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-tiny); font-weight:600; line-height:1.25; }
+/* Beş sütunlu ızgaranın dar ucunda (kap 520–639; 1024 masaüstünde sol
+   kolon) karo ~100 piksel ve "Piyasa Değeri", "Gelir Büyümesi", "Net Kâr
+   Marjı" kesiliyordu (11 Kasım, 1024 ölçüldü): orada ad iki satıra
+   iner; geniş kapta tek satır (tek ekran bütçesi 1280 ve üstünde). */
+@container (min-width: 520px) and (max-width: 639.98px) {
+  .head { align-items:flex-start; }
+  .label { white-space:normal; overflow-wrap:break-word; }
+}
 .value { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:2; overflow:hidden; font-size:var(--text-read); font-weight:700; line-height:1.2; color:var(--text-strong); overflow-wrap:break-word; }
 /* Baş harf: klavye tuşu. Derinlik tonla: alt kenar bir ton koyu. */
 .keycap { display:inline-grid; place-items:center; align-self:flex-start; min-width:1.75rem; height:1.75rem; padding:0 .375rem; border-radius:var(--radius-sm); background:var(--premium-surface); border:1px solid var(--line); border-bottom-width:3px; border-bottom-color:var(--line-strong); font-size:var(--text-lead); font-weight:700; line-height:1; color:var(--text-strong); }
@@ -64,6 +72,20 @@
 .next { background:repeating-linear-gradient(135deg, var(--primary-faint) 0 1px, transparent 1px 7px), var(--primary-tint); }
 .next .badge { background:var(--primary-tint); color:var(--primary-ink); outline:1px solid var(--primary-faint); }
 .next .lockLine { background:var(--primary-tint); color:var(--primary-ink); }
+
+/* HİYERARŞİ (11 Kasım görsel turu). Tahtanın en yüksek sesli öğesi kapalı
+   karolardı: sıradaki basamağın mavi taralı sırtı açık ipuçlarından (asıl
+   bilgi) daha çok bağırıyordu, öteki sırtların `--line` taraması da açık
+   karoların değerleriyle yarışıyordu (1440 canlı, başlangıç). Şimdi:
+   - kapalı sırt bir ton geri: tarama `--line-soft`, metin soluk;
+   - sıradaki basamak taramasız, düz `--primary-tint` zemin ve tepesinde
+     3 piksellik mavi şerit (sitenin kart dili; "sıradaki bu" bir durum);
+   - açık karo değişmedi: en güçlü ton ve en büyük punto değerde. */
+.locked { background:repeating-linear-gradient(135deg, var(--line-soft) 0 1px, transparent 1px 7px), var(--surface-sunken); }
+.locked .label { color:var(--text-muted); }
+.next { overflow:hidden; background:var(--primary-tint); }
+.next::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--primary); }
+.next .label { color:var(--text-body); }
 
 /* ---- Giriş: açılan karo kart gibi Y ekseninde döner ----
    Tek küçük öğe: `--ease-spring-soft` (hedefi az aşıp oturur). İkili

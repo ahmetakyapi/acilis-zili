@@ -36,14 +36,36 @@
 .tileEmpty { font-weight:400; }
 .arrow { flex:none; }
 
-/* Kalan hak: karoların hizasında dört soluk "?" kartı, 20 piksel. */
-.slot { display:grid; grid-template-columns:minmax(0,1fr); gap:.25rem .375rem; padding:0 .125rem; }
-.slot > span:first-child { display:none; }
+/* Kalan hak: tahmin satırının kalıbı (11 Kasım; gerekçe GuessList.tsx).
+   Satırla aynı boy (karo 36 + satır dolgusu 2 × 2 = 40): sol sütunda sıra
+   numarası, karoların yerinde tek kesik çizgili kulvar. Sıradaki yuva
+   mavi tonda (etkileşim: buraya yazacaksın). */
+.slot { display:grid; grid-template-columns:minmax(0,1fr); align-items:center; gap:.25rem .375rem; padding:.125rem; }
+.slotKey { display:none; align-items:center; gap:.4375rem; min-width:0; padding-left:.125rem; }
 @container (min-width: 380px) {
   .slot { grid-template-columns:minmax(4.5rem,1.05fr) minmax(0,3fr); }
-  .slot > span:first-child { display:block; }
+  .slotKey { display:flex; }
 }
-.slotCard { display:grid; place-items:center; height:1.25rem; border-radius:var(--radius-sm); outline:1px dashed var(--line); outline-offset:-1px; font-size:var(--text-tiny); font-weight:700; line-height:1; color:var(--text-muted); opacity:.55; }
+.slotNumber { display:grid; place-items:center; flex:none; width:1.5rem; height:1.5rem; border-radius:var(--radius-sm); background:var(--surface-sunken); font-size:var(--text-tiny); font-weight:700; color:var(--text-muted); }
+.slotNext { min-width:0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:var(--text-tiny); font-weight:600; color:var(--primary-ink); }
+.slotLane { display:block; height:2.25rem; border-radius:var(--radius-sm); outline:1px dashed var(--line); outline-offset:-1px; }
+.slot[data-sira] .slotNumber { background:var(--primary-tint); color:var(--primary-ink); outline:1px solid var(--primary-faint); outline-offset:-1px; }
+.slot[data-sira] .slotLane { background:var(--primary-tint); outline-color:var(--primary-faint); }
+/* Bitmiş oyunda kullanılmayan haklar geri çekilir: artık bir hamle
+   yeri değil, "bu kadar erken bildin"in boşluğu (telefonda "3 Hak Kaldı"
+   satırı da basılmaz; kazandıktan sonra yanlış bir davet gibiydi). */
+.list[data-bitti] .slot { opacity:.45; }
+
+/* Kısa ekranda (yükseklik < 880) yuva eski ince boyunda (20 piksel):
+   1280×800'de tam boy yuvalar başlangıçta tahtanın dibini 732 → 798'e
+   indirip alt fiyat şeridinin (763) altına itiyordu. 1440×900 ve üstünde
+   sağ kolonun altında yer var (sol kolon 822'de bitiyor), yuva satır
+   boyunda. */
+@media (max-height: 879.98px) {
+  .slot { padding-block:0; }
+  .slotLane { height:1.25rem; }
+  .slotNumber { width:1.25rem; height:1.25rem; }
+}
 
 /* ---- Lejant: tek satır ---- */
 .legend { display:flex; flex-wrap:wrap; gap:.25rem .875rem; margin:.625rem 0 0; padding:0; list-style:none; font-size:var(--text-tiny); font-weight:600; color:var(--text-body); }

@@ -2,7 +2,11 @@
    gölge, cam yok. Yeşil yalnız "bildin" (skor, ızgaranın tutan kareleri).
    SAYILARDA `tabular-nums` YOK (virgülü rakam genişliğine çekiyor). */
 
-.cover { min-width:0; }
+.cover { position:relative; min-width:0; }
+/* Durum şeridi (11 Kasım; gerekçe StockPuzzle.module.css → "DURUM
+   ŞERİDİ"): bildin yeşil, olmadı kırmızı. */
+.cover::before { content:""; position:absolute; inset:0 0 auto; z-index:1; height:3px; background:var(--down); pointer-events:none; }
+.cover[data-durum="won"]::before { background:var(--up); }
 .body { display:flex; flex-direction:column; gap:.75rem; padding:0 1rem 1rem; }
 @media (min-width: 640px) { .body { padding:0 1.25rem 1rem; } }
 

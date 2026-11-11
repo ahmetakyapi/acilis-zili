@@ -5,10 +5,11 @@ import { GuideHint } from "@/components/article/GuideHint";
 import { MotionExperience } from "@/components/motion/PremiumMotion";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { EmptyState, PageHeader, Panel } from "@/components/ui/primitives";
-import { getI18n } from "@/lib/i18n";
+import { getI18n, type Dictionary } from "@/lib/i18n";
+import type { Locale } from "@/lib/i18n/config";
 import { absoluteUrl } from "@/lib/site";
 import { ARCHIVE_COOKIE, PROGRESS_COOKIE, PUZZLE_ZONE, firstSentence, neighborHrefs, parseProgressCookie, puzzleDayKey, puzzleNumber } from "@/lib/stock-puzzle";
-import { evaluatePuzzle } from "@/lib/stock-puzzle-data";
+import { evaluatePuzzle, type PuzzleResult } from "@/lib/stock-puzzle-data";
 import { GameNav } from "./GameNav";
 import { PuzzleLeaderboard } from "./PuzzleLeaderboard";
 import { StockPuzzle } from "./StockPuzzle";
@@ -45,12 +46,33 @@ import styles from "./PuzzleScreen.module.css";
  */
 export async function PuzzleScreen({ day, archive }: { day: string; archive: boolean }) {
   const { locale, t } = await getI18n();
-  const L = t.stockPuzzle;
-  const number = puzzleNumber(day);
   const jar = await cookies();
   const saved = parseProgressCookie(jar.get(archive ? ARCHIVE_COOKIE : PROGRESS_COOKIE)?.value, day);
   const restored = saved.length > 0 ? await evaluatePuzzle(day, saved, locale) : null;
   const result = restored?.ok ? restored : await evaluatePuzzle(day, [], locale);
+  return <PuzzleScreenView day={day} archive={archive} result={result} locale={locale} t={t} />;
+}
+
+/**
+ * Ekranın çizimi, yükleyiciden ayrı (11 Kasım): sahte veriyle ölçülebilsin
+ * diye (`.claude/skills/olcum` → "Veri yükleyici ile çizimi ayrı tut").
+ * Durumsuz; sunucuda çizilir.
+ */
+export function PuzzleScreenView({
+  day,
+  archive,
+  result,
+  locale,
+  t,
+}: {
+  day: string;
+  archive: boolean;
+  result: PuzzleResult;
+  locale: Locale;
+  t: Dictionary;
+}) {
+  const L = t.stockPuzzle;
+  const number = puzzleNumber(day);
   const dateLabel = new Intl.DateTimeFormat(locale === "en" ? "en-US" : "tr-TR", {
     day: "numeric",
     month: "long",

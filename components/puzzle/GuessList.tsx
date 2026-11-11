@@ -46,22 +46,36 @@ import styles from "./GuessList.module.css";
  *   - Boş yuvalar soluk "?" kartları: kalan hak sayılır, karoların
  *     hizasında (20 piksel; tam boy kart başlangıçta tahtayı ilk ekranın
  *     dışına itiyordu).
+ *
+ * BOŞ YUVA = TAHMİN SATIRININ KALIBI (11 Kasım görsel turu). Başlangıçta
+ * 6 × 4 = 24 kesik "?" kartı ve boş şirket sütunu (1440'ta 130 piksel)
+ * kırık bir tablo gibi okunuyordu; sağ kolonun dibi de sol kolonun ~160
+ * piksel üstünde bitiyordu (canlı, 1440). Şimdi yuva tahmin satırıyla
+ * AYNI boyda (36 piksel): şirket sütununda sıra numarası, karoların
+ * yerinde tek kesik çizgili kulvar; sıradaki yuva mavi tonda ve
+ * "Sıradaki" künyeli (okurun gözü bir sonraki hamleye gider). Tahmin
+ * yuvayı doldurunca altındaki satırlar yerinden oynamıyor (yuva ile satır
+ * aynı boy). Tek ekran bütçesi değişmedi: altı satırın en kötü hâli
+ * (kaybetme) zaten altı tam satırdı; ölçüm StockPuzzle.module.css'te.
  */
 export function GuessList({
   guesses,
   freshSymbol,
+  finished = false,
   labels,
   locale,
 }: {
   guesses: GuessRow[];
   /** Bu oturumda az önce gönderilen tahmin — karoları çevrilir. */
   freshSymbol: string | null;
+  /** Oyun bitti: boş yuvalarda "Sıradaki" yok. */
+  finished?: boolean;
   labels: StockPuzzleLabels;
   locale: Locale;
 }) {
   const empty = Math.max(0, MAX_GUESSES - guesses.length);
   return (
-    <div className={styles.list} data-bos={guesses.length === 0 ? "" : undefined}>
+    <div className={styles.list} data-bos={guesses.length === 0 ? "" : undefined} data-bitti={finished ? "" : undefined}>
       <div aria-hidden className={styles.head}>
         <span />
         <span className={styles.tiles}>
@@ -119,13 +133,12 @@ export function GuessList({
           ),
         )}
         {Array.from({ length: empty }, (_, i) => (
-          <li key={`slot-${i}`} aria-hidden className={styles.slot} data-tahta="tahmin">
-            <span />
-            <span className={styles.tiles}>
-              {TILE_KINDS.map((kind) => (
-                <span key={kind} className={styles.slotCard}>?</span>
-              ))}
+          <li key={`slot-${i}`} aria-hidden className={styles.slot} data-sira={i === 0 && !finished ? "" : undefined} data-tahta="tahmin">
+            <span className={styles.slotKey}>
+              <span className={cn(styles.slotNumber, "numeral")}>{guesses.length + i + 1}</span>
+              {i === 0 && !finished && <span className={styles.slotNext}>{labels.slotNext}</span>}
             </span>
+            <span className={styles.slotLane} />
           </li>
         ))}
       </ol>
@@ -133,7 +146,7 @@ export function GuessList({
           390'da 150 piksel boş yer tutuyordu ve giriş ile ilk tahmin ilk
           ekrana sığmıyordu. Masaüstünde yuvalar yerinde (tek ekran
           bütçesi en kötü durumu altı satırla ölçüyor). */}
-      {empty > 0 && (
+      {empty > 0 && !finished && (
         <p className={styles.left}>
           <span aria-hidden className={styles.leftSlots}>
             {Array.from({ length: empty }, (_, i) => <span key={i} />)}

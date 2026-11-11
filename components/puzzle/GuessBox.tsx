@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useRef, useState, type ReactNode } from "react";
+import { useEffect, useMemo, useRef, useState, useSyncExternalStore, type CSSProperties, type ReactNode } from "react";
 import { Button, LogoTile } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import { foldForSearch } from "@/lib/search-fold";
@@ -11,6 +11,18 @@ import styles from "./GuessBox.module.css";
 /* 8 → 12 (29 Ekim, sahibinin isteği: "orada çıkan şirketlerin sayısı
    artsın"). Liste 22rem'de kayıyor; 12 satır 44 pikselle ~530 piksel. */
 const MAX_OPTIONS = 12;
+
+/* Dar ekran: kutu iki butonun yanında ~165 piksel kalıyor ve uzun ipucu
+   "örn. NVDA ya da Nv" diye kesiliyordu (390, 11 Kasım). Sunucu uzun
+   hâli basar; istemci dar ekranda kısasına geçer (placeholder metni,
+   yerleşimi oynatmaz). */
+const NARROW = "(max-width: 479.98px)";
+const subscribeNarrow = (listener: () => void) => {
+  const query = window.matchMedia(NARROW);
+  query.addEventListener("change", listener);
+  return () => query.removeEventListener("change", listener);
+};
+const narrowSnapshot = () => window.matchMedia(NARROW).matches;
 
 /**
  * Tahmin kutusu — ⌘K paletinin arama kuralı (Türkçe katlama
@@ -138,6 +150,7 @@ export function GuessBox({
     silentFocus.current = false;
   }, [disabled]);
 
+  const narrow = useSyncExternalStore(subscribeNarrow, narrowSnapshot, () => false);
   const browsing = !foldForSearch(query, locale) && !picked;
   const remaining = candidates.filter((option) => !guessed.has(option.symbol)).length;
   const listOpen = open && matches.length > 0;
@@ -165,7 +178,7 @@ export function GuessBox({
           autoComplete="off"
           autoCapitalize="characters"
           spellCheck={false}
-          placeholder={labels.placeholder}
+          placeholder={narrow ? labels.placeholderShort : labels.placeholder}
           value={query}
           disabled={disabled && !pending}
           className={styles.input}
@@ -249,6 +262,16 @@ export function GuessBox({
           }}
         >
           <span className="numeral">{fill(labels.candidatesLeft, { n: remaining })}</span>
+          {/* HAVUZ DARALIYOR (11 Kasım görsel turu): kalan adayın havuza
+              oranı kalın yatay şerit (ortak `value-lane`/`value-bar`;
+              sahibinin çizim kuralı). Künyeyle bağlantının arası boştu
+              (1440'ta ~330 piksel); şimdi orada oyunun ilerleyişi
+              çiziliyor: her doğru okunan ipucu şeridi kısaltır. Ton
+              büyüklük (`--bar-soft`), yön değil. Çizim `data-draw` kapısıyla
+              bir kez, değişince yeniden (`key`). */}
+          <span aria-hidden className={cn("value-lane", styles.pool)} data-draw>
+            <i key={remaining} className="value-bar bar-fill" data-end="end" style={{ left: 0, width: `${Math.max(2, (remaining / options.length) * 100)}%` } as CSSProperties} />
+          </span>
           <span className={styles.remainingLink}>{labels.candidatesShow}</span>
         </button>
       )}

@@ -436,7 +436,7 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
 
       <div className={styles.side}>
         {/* ---- Tahminler: giriş (bitince sonuç), altı yuva, lejant ---- */}
-        <Panel className={styles.guesses} data-gizli={tab === "guesses" ? undefined : ""} aria-busy={restoring || pending}>
+        <Panel className={styles.guesses} data-gizli={tab === "guesses" ? undefined : ""} aria-busy={restoring || pending} data-durum={finished ? state.status : undefined}>
           <PanelHeader
             className="py-2.5"
             title={labels.guessesTitle}
@@ -482,7 +482,7 @@ export function StockPuzzle({ initial, options, labels, locale, shareUrl, archiv
               </div>
             )}
             {failureText && <p role="alert" className={styles.error}>{failureText}</p>}
-            <GuessList guesses={state.guesses} freshSymbol={freshSymbol} labels={labels} locale={locale} />
+            <GuessList guesses={state.guesses} freshSymbol={freshSymbol} finished={finished} labels={labels} locale={locale} />
           </div>
         </Panel>
 
