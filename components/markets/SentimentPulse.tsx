@@ -21,6 +21,7 @@ import {
   NO_VALUE,
 } from "@/lib/utils";
 import styles from "./MarketBoards.module.css";
+import compact from "./SentimentCompact.module.css";
 
 /**
  * Piyasa Nabzı — bileşik duyarlılık kadranı.
@@ -288,10 +289,13 @@ export function SentimentPulseView({
 
   if (variant === "compact") {
     return (
-      <Panel className={styles.pulsePanel}>
+      /* Panel bir KAP (11 Kasım): tablette tam genişlikte kadran solda,
+         göstergeler iki sütunlu ızgara; rayda eski kalıp (gerekçe
+         SentimentCompact.module.css). */
+      <Panel className={cn(styles.pulsePanel, compact.scope)}>
         <PanelHeader title={x.pulseTitle} action={<PanelLink href="/piyasalar#piyasa-nabzi">{x.pulseDetails}</PanelLink>} />
-        <p className={styles.pulseLead}>{x.pulseLead}</p>
-        <div className={styles.pulseCompact}>
+        <p className={cn(styles.pulseLead, compact.lead)}>{x.pulseLead}</p>
+        <div className={cn(styles.pulseCompact, compact.body)}>
           <div className={styles.gaugeWrap}>
             <Gauge score={overall} label={gaugeLabel} size="compact" />
             <p className={styles.gaugeReading}>
@@ -300,10 +304,10 @@ export function SentimentPulseView({
             </p>
             {note && <p className={styles.gaugeNote}>{note}</p>}
           </div>
-          <ul className={styles.pulseChips} data-motion-stagger>
+          <ul className={cn(styles.pulseChips, compact.chips)} data-motion-stagger>
             {snapshot.readings.map((reading) => (
               <li key={reading.key}>
-                <span className={styles.pulseChipName}>
+                <span className={cn(styles.pulseChipName, compact.name)}>
                   {componentName(reading.key, t)}
                   <small>{componentHint(reading.key, t)}</small>
                 </span>
@@ -312,8 +316,8 @@ export function SentimentPulseView({
                     uzunluk olarak veriyor: 0 solda (korku), 100 sağda
                     (iştah), orta çizgi 50. Renk yalnızca yarının hangi
                     tarafında olduğu — tam sürümdeki rayın aynısı. */}
-                <span className={styles.pulseChipScore}>
-                  <ScoreTrack score={reading.score} className={styles.chipTrack} />
+                <span className={cn(styles.pulseChipScore, compact.score)}>
+                  <ScoreTrack score={reading.score} className={cn(styles.chipTrack, compact.track)} />
                   <b className="numeral" data-side={reading.score >= SCORE_MAX / 2 ? "up" : "down"}>
                     {Math.round(reading.score)}
                   </b>

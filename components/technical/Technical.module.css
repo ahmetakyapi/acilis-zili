@@ -2046,6 +2046,47 @@
 @media (max-width:379px) {
   .pulse[data-variant="panel"] .pulseLogos { grid-template-columns:repeat(5,minmax(0,1fr)); }
 }
+/* GENİŞ KAPTA İKİ KOLON (11 Kasım, tablet denetimi). 768–1279'da panel
+   tam genişlikte (gerekçe TodayExperience.module.css → "PANO: TABLET
+   DÜZENİ 1279'A KADAR") ve iç ızgara rayın düzenini geriyordu: 1024'te
+   halka solda, lejant 812 piksel ("TUT ··· 6 %38" arasında 701 piksel),
+   logo kümeleri 867 piksellik kutunun 294'ünü kullanıyordu; 768'de 445
+   piksel ve 611'in 294'ü (gerçek sayfa + sahte sağlayıcı, iki tema aynı).
+   Şimdi solda okuma (halka + lejant), sağda kümeler, aralarında kıl çizgi:
+     · kap ≥ 600 (768'de 678): halka lejantın ÜSTÜNDE, sol kolon 180;
+     · kap ≥ 860 (1024'te 934): halka ile lejant yan yana, lejant 220.
+   Logo ızgarası yine ALTI sütun (yukarıdaki "RAYDA DA ALTI SÜTUN" kararı),
+   hücre tavanı 44 → 52: geniş kolonda kümeler kenara sıkışmıyor, karo
+   44 piksellik logo taşıyor. Kap `TechnicalPanel`in gövdesi
+   (`.pulseScope`); rayda (≥1280, kap 308) bu bloklar hiç çalışmıyor —
+   önce/sonra ölçümü aşağıda. 768'in altında halka ve lejant gizli
+   (telefon kuralı), kap sorgusu o yüzden ≥768 medyasının içinde.
+   Ölçüm (gerçek sayfa + sahte sağlayıcı, reduced-motion, iki tema aynı):
+     lejantta etiket → sayı   1024: 701 → 109 · 768: 445 → 69 piksel
+     logo kutusu kullanımı    1024: 294/867 → 352/460 · 768: 294/611 → 352/374
+     karo 44 → 52; panel boyu 1024: 435 → 327 · 768: 435 → 366
+   Yatay taşma 0, taşan/kırpılan öğe 0 (768/820/940/960/1024/1279);
+   ≥1280 ve 390'da panelin 106 / 74 kutusu birebir aynı. */
+.pulseScope { container:tech-pulse / inline-size; }
+@media (min-width:768px) {
+  @container tech-pulse (min-width:600px) {
+    .pulse[data-variant="panel"] { grid-template-columns:180px minmax(0,1fr); grid-template-rows:auto auto; column-gap:28px; row-gap:14px; }
+    .pulse[data-variant="panel"] > .pulseDial { grid-column:1; grid-row:1; justify-self:center; align-self:end; }
+    .pulse[data-variant="panel"] > .pulseLegend { grid-column:1; grid-row:2; align-self:start; }
+    .pulse[data-variant="panel"] > .pulseRows { grid-column:2; grid-row:1 / span 2; align-self:stretch; align-content:center; padding-left:28px; border-left:1px solid var(--line-soft); }
+    .pulse[data-variant="panel"] > .pulseChanges { grid-column:1 / -1; }
+    .pulse[data-variant="panel"] .pulseRow:first-child { padding-top:0; border-top:0; }
+    .pulse[data-variant="panel"] .pulseLogos { grid-template-columns:repeat(6,minmax(0,52px)); gap:8px; }
+    /* Etiket ilk logo satırının ortasında: karo 52, etiket kutusu da 52. */
+    .pulse[data-variant="panel"] .pulseStance { min-height:52px; }
+  }
+  @container tech-pulse (min-width:860px) {
+    .pulse[data-variant="panel"] { grid-template-columns:104px 220px minmax(0,1fr); grid-template-rows:auto; column-gap:22px; }
+    .pulse[data-variant="panel"] > .pulseDial { grid-row:1; align-self:center; }
+    .pulse[data-variant="panel"] > .pulseLegend { grid-column:2; grid-row:1; align-self:center; }
+    .pulse[data-variant="panel"] > .pulseRows { grid-column:3; grid-row:1; margin-left:10px; }
+  }
+}
 /* 360'ın altında etiket ("AL 7") logoların ÜSTÜNDE: yan yana dururken
    sekiz sütuna 193 piksel kalıyor ve karo 20 piksele iniyordu (320,
    ölçüldü). Izgara satırın tam genişliğini alınca karo ~28. */

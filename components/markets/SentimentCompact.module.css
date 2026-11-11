@@ -1,0 +1,44 @@
+/* PİYASA NABZI, KOMPAKT SÜRÜM: GENİŞ KAP (11 Kasım, tablet denetimi).
+   Kompakt Nabız misafirin portföy yuvasında duruyor (PortfolioSlot) ve
+   768–1279'da yuva tam genişlikte (gerekçe TodayExperience.module.css →
+   "PANO: TABLET DÜZENİ 1279'A KADAR"). Rayın kalıbı geriliyordu: açıklama
+   62ch'de (455 piksel) kırılıp sağ yarıyı boş bırakıyor, gösterge
+   satırlarında ad ile şerit arası 1024'te 307–342, 768'de 51–86 piksel
+   kalıyordu; 120 piksellik şerit 734 piksellik satırın sağ ucunda
+   (gerçek sayfa + sahte sağlayıcı, iki tema aynı).
+   Geniş kapta (≥ 640; 768'de panel 720, 1024'te 976):
+     · açıklama satırın tamamını alıyor (62ch tavanı kalkıyor);
+     · kadran solda 180, göstergeler sağda İKİ SÜTUNLU ızgara (4 gösterge
+       2 + 2, 5 gösterge 3 + 2 — üç sütunda dört gösterge 3 + 1 sarkıyordu);
+     · her gösterge üç kat: [ad ··· puan] / açıklama / şerit. Şerit 120
+       piksel sabit değil, sütunun genişliğinde: puan uzunluk olarak daha
+       ince okunuyor ve ad ile puan aynı hatta, aralarında boşluk yığılmıyor.
+   Seçiciler kap sınıfıyla iki kat (`.scope .x`): MarketBoards modülüyle
+   aynı özgüllükte kalırsa modüller arası sıra kazananı belirlerdi.
+   Rayda (≥1280, panel 350) ve telefonda kap < 640: bu blok hiç çalışmıyor.
+   Ölçüm (dört gösterge, iki tema aynı): açıklama 455 × 2 satır → tek satır
+   (1024: 934, 768: 678); ad ile şerit arasındaki 307–342 piksellik boşluk
+   yok (ad ile puan aynı hatta, şerit sütun genişliğinde: 1024'te 347,
+   768'de 219); panel boyu 1024: 335 → 265 · 768: 335 → 296. Yatay taşma
+   0, taşan/kırpılan öğe 0 (768/820/940/960/1024/1279); ≥1280 ve 390'da
+   panelin 50 / 46 kutusu birebir aynı. */
+.scope { container: sentiment-compact / inline-size; }
+
+@container sentiment-compact (min-width: 640px) {
+  .scope .lead { max-width: none; }
+  .scope .body { display: grid; grid-template-columns: 180px minmax(0, 1fr); align-items: center; column-gap: 32px; }
+  .scope .chips { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); column-gap: 28px; }
+  .scope .chips > li {
+    grid-template-columns: minmax(0, 1fr) auto;
+    grid-template-rows: auto auto auto;
+    align-items: baseline;
+    row-gap: 2px;
+    padding-block: 12px;
+  }
+  .scope .chips > li:nth-child(-n + 2) { border-top: 0; }
+  .scope .name { display: contents; }
+  .scope .name small { grid-column: 1 / -1; grid-row: 2; }
+  .scope .score { display: contents; }
+  .scope .score b { grid-column: 2; grid-row: 1; align-self: baseline; }
+  .scope .track { grid-column: 1 / -1; grid-row: 3; width: auto; margin-top: 10px; }
+}
