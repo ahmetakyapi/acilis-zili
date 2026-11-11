@@ -44,7 +44,24 @@ acilis-zili.ornek.com {
 	# başlıklarını kendiliğinden ekliyor. İlki giriş kaba kuvvet sayacının
 	# anahtarı (auth.ts → signInKey), ikincisi Auth.js'in çerezi `Secure`
 	# işaretlemesi için gerekli.
-	reverse_proxy 127.0.0.1:3000 {
+	# MAVİ-YEŞİL (11 Kasım): iki upstream, her an biri ayakta (deploy
+	# sırasında birkaç saniye ikisi). `first`: sağlıklı olan ilki; aktif
+	# yoklama (`/api/health/live`, iki saniyede bir, iki başarıyla sağlıklı)
+	# yeni açılan portu ancak cevap verince devreye alıyor, kapanan portu bir
+	# yoklamada düşürüyor. Arada kapanan porta giden istek 15 saniyeye kadar
+	# ötekine yeniden denenir (`lb_try_*`). Tek birimde her deploy birkaç
+	# saniyelik 502 bırakıyordu (sahibinin sorusu, 11 Kasım). Canlı sunucuda bu
+	# blok deploy/bluegreen-setup.sh ile yerinde kurulur; bu dosya ilk kurulum
+	# (bootstrap.sh) için.
+	reverse_proxy 127.0.0.1:3000 127.0.0.1:3001 {
+		lb_policy first
+		lb_try_duration 15s
+		lb_try_interval 250ms
+		health_uri /api/health/live
+		health_interval 2s
+		health_timeout 2s
+		health_passes 2
+		health_fails 1
 		# Gün akışı ucu 30 saniyede bir yoklanıyor; cron ucu ise 100 saniye
 		# bütçeli. Varsayılan vekil zaman aşımı ikincisini keserdi.
 		transport http {

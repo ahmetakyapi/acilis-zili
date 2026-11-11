@@ -27,6 +27,10 @@ APP_ROOT=/srv/acilis-zili
 ENV_FILE=/etc/acilis-zili.env
 KEEP=2
 HEALTH_URL=http://127.0.0.1:3000/
+# MAVİ-YEŞİL (11 Kasım): canlı port bu dosyada; kuruluysa (deploy/
+# bluegreen-setup.sh) yeni sürüm boştaki portta ayağa kalkar. Yoksa eski tek
+# birim yolu (aşağıda, "servis").
+ACTIVE_PORT_FILE=$APP_ROOT/shared/active-port
 
 log() { printf '\n\033[1;34m==> %s\033[0m\n' "$*"; }
 die() { printf '\033[1;31mHATA: %s\033[0m\n' "$*" >&2; exit 1; }
@@ -205,6 +209,59 @@ ln -sfn "$shared_cache" "$release/.next/cache/fetch-cache"
 previous=""
 if [[ -L "$APP_ROOT/current" ]]; then
 	previous=$(readlink -e "$APP_ROOT/current" || true)
+fi
+
+# MAVİ-YEŞİL GEÇİŞ (11 Kasım, sahibinin sorusu: "deployun böyle gitmesi
+# normal mi" — /bulmaca 502). Tek birimde `systemctl restart` eski süreci
+# kapatıp yenisini açıyordu ve arada Caddy'nin arkasında dinleyen yoktu:
+# her deploy birkaç saniyelik bir 502 penceresi. Kuruluysa (şablon birim +
+# canlı port dosyası, deploy/bluegreen-setup.sh) yeni sürüm BOŞTAKİ portta
+# başlar; canlı süreç o sırada eski sürümden hizmet vermeye devam eder.
+# Sağlık geçerse canlı port dosyası çevrilir, eski örnek durdurulur (Caddy
+# kapanan portu atlıyor: `lb_policy first` + aktif yoklama). Geçmezse yeni
+# örnek durdurulur, `current` geri alınır — canlı süreç hiç kesilmedi.
+bluegreen=0
+if [[ -f /etc/systemd/system/acilis-zili@.service && -r "$ACTIVE_PORT_FILE" ]]; then
+	live=$(tr -dc '0-9' <"$ACTIVE_PORT_FILE")
+	if [[ "$live" == 3000 || "$live" == 3001 ]]; then
+		bluegreen=1
+		idle=$([[ "$live" == 3000 ]] && echo 3001 || echo 3000)
+	fi
+fi
+
+if [[ $bluegreen -eq 1 ]]; then
+	log "servis (mavi-yeşil: canlı $live, yeni $idle)"
+	point_current "$release"
+	# `restart`, `start` değil: boştaki örnek bir önceki geçişten askıda
+	# kalmışsa eski kodla "çalışıyor" sayılmasın.
+	sudo systemctl restart "acilis-zili@$idle"
+	HEALTH_URL="http://127.0.0.1:$idle/"
+	log "sağlık"
+	if healthy; then
+		deployed=1
+		printf '%s\n' "$idle" >"$ACTIVE_PORT_FILE.tmp"
+		mv -f "$ACTIVE_PORT_FILE.tmp" "$ACTIVE_PORT_FILE"
+		sudo systemctl enable "acilis-zili@$idle" >/dev/null 2>&1 || warn "acilis-zili@$idle etkinleştirilemedi (yeniden başlatmada açılmayabilir)"
+		# Caddy'nin yeni portu sağlıklı görmesi için iki yoklama (2 sn arayla).
+		sleep 5
+		sudo systemctl stop "acilis-zili@$live" || warn "eski örnek ($live) durdurulamadı"
+		sudo systemctl disable "acilis-zili@$live" >/dev/null 2>&1 || true
+		bash "$release/deploy/cron-install.sh" || echo "UYARI: crontab güncellenemedi" >&2
+		find "$APP_ROOT/releases" -mindepth 1 -maxdepth 1 -type d |
+			sort | head -n "-$KEEP" | xargs -r rm -rf
+		if [[ $noindex_prod -eq 1 ]]; then
+			warn "canlı sürüm arama motorlarına KAPALI (SITE_INDEXABLE=false)"
+		fi
+		exit 0
+	fi
+	echo "YENİ ÖRNEK ($idle) AYAĞA KALKMADI — son 40 satır:" >&2
+	journalctl -u "acilis-zili@$idle" -n 40 --no-pager >&2 || true
+	sudo systemctl stop "acilis-zili@$idle" || true
+	if [[ -n "$previous" && -d "$previous" && "$previous" != "$release" ]]; then
+		point_current "$previous"
+		echo "canlı örnek ($live) kesilmedi; current önceki sürüme geri alındı: $previous" >&2
+	fi
+	exit 1
 fi
 
 log "servis"

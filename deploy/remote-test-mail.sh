@@ -26,7 +26,11 @@ set +a
 response=$(curl -sS --max-time 290 -w '\n%{http_code}' -G \
 	--data-urlencode "${KIND}=${ADDRESS}" \
 	-H @- \
-	"http://127.0.0.1:3000/api/cron/haftalik-posta" <<<"Authorization: Bearer ${CRON_SECRET}")
+# Canlı port (11 Kasım, mavi-yeşil): uygulama 3000 ya da 3001'de; hangisi
+# olduğunu deploy/update.sh bu dosyaya yazıyor. Dosya yoksa eski tek birim.
+APP_PORT=$( { tr -dc '0-9' </srv/acilis-zili/shared/active-port; } 2>/dev/null || true)
+APP_PORT=${APP_PORT:-3000}
+	"http://127.0.0.1:${APP_PORT}/api/cron/haftalik-posta" <<<"Authorization: Bearer ${CRON_SECRET}")
 status=${response##*$'\n'}
 body=${response%$'\n'*}
 echo "http ${status}: ${body:0:600}"

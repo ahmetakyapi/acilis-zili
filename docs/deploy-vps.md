@@ -199,6 +199,43 @@ Env" (`sync-app-env.yml`, deploy beklemeden ortam aktarımı), "Sync Claude
 Analysis Key", "Verify Claude Analysis", "Deneme Postası" (`test-mail.yml`).
 Duman testi (`smoke.yml`) ayrı iş akışıdır, dağıtım kapısı değil.
 
+## Mavi-Yeşil Geçiş (Kesintisiz Deploy, 11 Kasım)
+
+Tek servis biriminde `systemctl restart` eski süreci kapatıp yenisini açıyor,
+arada Caddy'nin arkasında dinleyen kalmıyordu: her deploy birkaç saniyelik
+502 bırakıyordu. Şimdi iki şablon örneği var, her an biri ayakta:
+
+- `acilis-zili@3000` ve `acilis-zili@3001` (`deploy/acilis-zili@.service`).
+  Canlı port `/srv/acilis-zili/shared/active-port` dosyasında.
+- `update.sh` yeni sürümü BOŞTAKİ portta başlatır, sağlık kontrolü geçince
+  canlı port dosyasını çevirir ve eski örneği durdurur. Geçmezse yeni örnek
+  durdurulur, `current` geri alınır; canlı süreç hiç kesilmez.
+- Caddy iki adresi de bilir (`lb_policy first`), `/api/health/live`'ı iki
+  saniyede bir yoklar, kapanan portu atlar; arada kapanan porta giden istek
+  15 saniyeye kadar ötekine yeniden denenir.
+- Cron betikleri ve ortam eşitleme betikleri canlı portu dosyadan okur.
+
+Kurulum `deploy/bluegreen-setup.sh` (root, idempotent): deploy iş akışı her
+koşuda update.sh'tan sonra BU commit'in kopyasıyla çalıştırır. Kuruluysa
+hiçbir şey yapmaz. İlk koşuda şablon birimi, sudoers'ı ve Caddy bloğunu
+kurar, eski `acilis-zili` birimini 3001'deki örneğe taşır. Caddy
+yapılandırması doğrulanmazsa eski dosyayı geri koyar ve eski düzende kalır.
+
+Elle bakmak ve müdahale etmek için:
+
+```bash
+cat /srv/acilis-zili/shared/active-port
+systemctl status 'acilis-zili@*'
+journalctl -u acilis-zili@3001 -n 50
+# Eski tek birime dönmek (acil): canlı örneği durdur, eski birimi aç, port dosyasını sil.
+sudo systemctl disable --now acilis-zili@3000 acilis-zili@3001
+sudo systemctl enable --now acilis-zili
+sudo rm /srv/acilis-zili/shared/active-port
+```
+
+Port dosyası silinince `update.sh` eski tek birim yoluna döner; Caddy iki
+upstream'i bilmeye devam eder, kapalı 3001'i atlar.
+
 ## Claude Analiz Anahtarını GitHub Üzerinden Aktarma
 
 Repository → Settings → Secrets and variables → Actions altında

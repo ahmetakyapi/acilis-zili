@@ -343,7 +343,15 @@ note "crontab (UTC): günlük senkron 10:30 hafta içi · alarm taraması 5 daki
 # --------------------------------------------------------------- ilk sürüm
 log "ilk sürüm — klon, npm ci, derleme, başlatma"
 sudo -u "$APP_USER" -H env REPO="$REPO" BRANCH="$BRANCH" bash "$DEPLOY_DIR/update.sh"
+
+# MAVİ-YEŞİL (11 Kasım): ilk sürüm eski tek birimle (port 3000) kalktı;
+# kurulum şablon birimi, sudoers'ı ve Caddy'nin iki upstream'ini kurup aynı
+# sürümü 3001'e taşır. Sonraki her deploy kesintisiz (deploy/update.sh →
+# "MAVİ-YEŞİL GEÇİŞ"). Gerekçe deploy/bluegreen-setup.sh başında.
+log "mavi-yeşil kurulum"
+UNIT_SRC="$DEPLOY_DIR/acilis-zili@.service" bash "$DEPLOY_DIR/bluegreen-setup.sh"
 rm -rf "$SRC"
+
 
 # --------------------------------------------------------------------- son
 log "bitti"

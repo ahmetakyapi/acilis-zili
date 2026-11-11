@@ -193,3 +193,25 @@ jobs:
             -o ServerAliveInterval=30 -o ServerAliveCountMax=4 \
             "ubuntu@${HOST}" \
             "sudo -u acilis -H bash /srv/acilis-zili/current/deploy/update.sh ${GITHUB_SHA}"
+      # MAVİ-YEŞİL KURULUM (11 Kasım, sahibinin isteği: "mavi yeşil geçişi
+      # kur"). update.sh'tan SONRA: canlı sürüm artık `/api/health/live`
+      # ucunu taşıyor, Caddy'nin aktif yoklaması ona bakabilir. Root olarak,
+      # BU COMMIT'in betiği ve birim dosyasıyla stdin'den (`current`
+      # uygulama kullanıcısının yazabildiği bir dizin; oradan root olarak
+      # okumak yetki yükseltme yolu olurdu). İdempotent: kuruluysa hiçbir şey
+      # yapmaz. İlk koşuda eski tek birimi 3001'deki şablon örneğe taşır;
+      # sonraki deploy'larda update.sh boştaki portu kullanır. Caddy
+      # yapılandırması doğrulanmazsa eskisini geri koyup eski düzende kalır
+      # (yeşil biter, günlükte uyarı). Gerekçe deploy/bluegreen-setup.sh.
+      - name: Mavi-yeşil kurulum
+        env:
+          SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+          HOST: ${{ vars.VPS_HOST }}
+        run: |
+          set -euo pipefail
+          install -m 600 /dev/null /tmp/deploy_key
+          printf '%s\n' "$SSH_KEY" > /tmp/deploy_key
+          { printf 'UNIT_B64=%s\n' "$(base64 -w0 'deploy/acilis-zili@.service')"; cat deploy/bluegreen-setup.sh; } |
+            ssh -i /tmp/deploy_key -o "StrictHostKeyChecking=${strict:-accept-new}" -o ConnectTimeout=15 \
+              -o ServerAliveInterval=30 -o ServerAliveCountMax=4 \
+              "ubuntu@${HOST}" "sudo bash -s"

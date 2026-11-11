@@ -21,7 +21,11 @@
 set -uo pipefail
 
 ENV_FILE=/etc/acilis-zili.env
-ENDPOINT=http://127.0.0.1:3000/api/cron/alarmlar
+# Canlı port (11 Kasım, mavi-yeşil): uygulama 3000 ya da 3001'de; hangisi
+# olduğunu deploy/update.sh bu dosyaya yazıyor. Dosya yoksa eski tek birim.
+APP_PORT=$( { tr -dc '0-9' </srv/acilis-zili/shared/active-port; } 2>/dev/null || true)
+APP_PORT=${APP_PORT:-3000}
+ENDPOINT=http://127.0.0.1:${APP_PORT}/api/cron/alarmlar
 
 [[ -r "$ENV_FILE" ]] || { logger -t acilis-alarm -p user.err "ortam dosyasi okunamadi: $ENV_FILE"; exit 1; }
 

@@ -41,6 +41,10 @@ PY
 ssh_args=(-i "$key_file" -o BatchMode=yes -o "StrictHostKeyChecking=${strict:-accept-new}" -o ConnectTimeout=15 -o ServerAliveInterval=30 -o ServerAliveCountMax=4 "ubuntu@$HOST")
 printf '%s' "$payload" | ssh "${ssh_args[@]}" "$remote_command"
 if [[ "${RESTART:-1}" != "0" ]]; then
-  ssh "${ssh_args[@]}" 'sudo -n systemctl restart acilis-zili && sudo -n systemctl is-active --quiet acilis-zili'
+  # Mavi-yeşil (11 Kasım): canlı örnek `acilis-zili@<port>`; port
+  # /srv/acilis-zili/shared/active-port'ta (deploy/update.sh). Dosya yoksa
+  # eski tek birim. Ortam yalnız yeniden başlatmada okunur, yani bu adım o
+  # örneği yeniden başlatır (birkaç saniyelik pencere; yeni sürüm yok).
+  ssh "${ssh_args[@]}" 'p=$(cat /srv/acilis-zili/shared/active-port 2>/dev/null | tr -dc 0-9); if [ -n "$p" ] && systemctl is-active --quiet "acilis-zili@$p"; then u="acilis-zili@$p"; else u=acilis-zili; fi; sudo -n systemctl restart "$u" && sudo -n systemctl is-active --quiet "$u"'
   echo 'App env synced; application service is active.'
 fi
