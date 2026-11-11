@@ -338,6 +338,16 @@ async function AnalysisBody({
           </div>
         }
       />
+      {/* SİTE SAHİBİNE KİŞİSEL DANIŞMAN — SAYFANIN TEPESİNDE (11 Kasım).
+          İlk turda panonun altında, üyelerin risk okumasının yerindeydi;
+          sahibi: "Claude danışman ekranın üstünde olsun, o kritik… beraber
+          soru cevap ilerleyelim". Başlık bandının hemen ardında: önce
+          danışmanın günlük/aylık notu ve sohbet, sonra ölçüler (danışman
+          aynı ölçüleri girdi olarak okuyor). Başka her okurda tavsiyesiz
+          risk okuması panonun altında aynen kalır. Gerekçe ve hukuki çizgi
+          lib/portfolio-advisor-model.ts. Örnek veri ekranında (`fixture`)
+          hiçbir zaman basılmaz. */}
+      {owner && <AdvisorDesk locale={locale} labels={t.portfolioAdvisor} />}
       {/* KART PANOSU. Sıra ekran düzeni kuralının sırası: ölçü kartları
           (künye şeridi gibi en üstte), ana görsel (sektör), yanında
           yoğunlaşma; sonra korelasyon, kur, bilanço, eksik sektörler ve
@@ -358,16 +368,10 @@ async function AnalysisBody({
         <ScenarioPanel analysis={analysis} risk={risk} fund={fund} weight={weight} basePath={basePath} locale={locale} A={A} V={V} />
       </div>
       <PanelFill />
-      {/* SİTE SAHİBİNE KİŞİSEL DANIŞMAN (11 Kasım, sahibinin isteği: "buraya
-          güzel Claude analiz yazalım, hem günlük hem aylık… bana danışmanlık
-          yapsın"). Sahipte risk okumasının yerini alır (danışman aynı risk
-          ölçülerini girdi olarak okur, üstüne eylem önerisi yazar); başka
-          her okurda tavsiyesiz risk okuması aynen kalır. Gerekçe ve hukuki
-          çizgi lib/portfolio-advisor-model.ts. Örnek veri ekranında
-          (`fixture`) hiçbir zaman basılmaz. */}
-      {owner ? (
-        <AdvisorDesk locale={locale} labels={t.portfolioAdvisor} />
-      ) : (
+      {/* Üyelerde Claude'un tavsiyesiz risk okuması ölçülerin altında
+          (ekran düzeni 5); site sahibinde danışman sayfanın tepesinde
+          (yukarıda). */}
+      {owner ? null : (
         <AnalysisNote locale={locale} labels={A.note} disclaimer={A.notAdvice} endpoint={noteEndpoint} />
       )}
       <DataStamp labels={t.data} source="Alpaca · State Street · TCMB" locale={locale} note={fill(A.stampNote, { date: dateLong(risk.session, locale) })} />

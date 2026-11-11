@@ -1,0 +1,69 @@
+/* Ortak sohbet bileşenleri (11 Kasım) — dev-starter `snippets/ui/chat-thread`
+   ve `chat-composer`ın açılış zili uyarlaması. Kaynaktan farkları:
+   - Mesajlar kayarak girmez (`.claude/rules/hareket.md` → "metin kaymaz");
+     kaynak `opacity 0 → 1, y 6 → 0` ile giriyordu.
+   - "Düşünüyor" göstergesi sitenin tek döngüsel imi `LoadingMark`
+     (`components/ui/LoadingState.tsx`); kaynak sonsuz nokta dalgasıydı.
+   - İkonlar Phosphor, renkler sitenin tokenları; gönder butonu birincil
+     eylem (`--shadow-button`), boşken soluk ve devre dışı.
+   Görsel dil kaynakla aynı: kullanıcı balonu sağda tonlu karo, asistan
+   metni balonsuz gövde metni. */
+
+.thread { display:flex; flex-direction:column; gap:18px; }
+.user { display:flex; justify-content:flex-end; }
+.userBubble {
+  max-width:85%; padding:10px 14px; border-radius:14px 14px 4px 14px;
+  background:var(--primary-tint); color:var(--text-strong); font-size:var(--text-read); line-height:1.55;
+  overflow-wrap:anywhere;
+}
+@media (min-width:640px) { .userBubble { max-width:75%; } }
+.assistant { display:flex; min-width:0; gap:10px; }
+.avatar {
+  display:grid; flex:none; place-items:center; width:28px; height:28px; margin-top:2px;
+  border-radius:999px; background:var(--primary-tint); color:var(--primary);
+}
+.assistantBody { min-width:0; flex:1; color:var(--text-body); font-size:var(--text-read); line-height:1.65; }
+.assistantBody p + p { margin-top:10px; }
+.assistantBody strong { color:var(--text-strong); font-weight:700; }
+.thinking { display:flex; align-items:center; gap:10px; color:var(--text-muted); font-size:var(--text-small); }
+
+/* Öneri hapları: boş durumda ve her asistan yanıtının altında (takip). */
+.suggestions { display:flex; flex-wrap:wrap; gap:8px; }
+.suggestion {
+  display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:0 14px;
+  border:1px solid var(--line); border-radius:999px; background:var(--surface-solid);
+  color:var(--text-strong); font-size:var(--text-small); font-weight:600; text-align:left;
+  transition:border-color 180ms var(--ease-brand), background-color 180ms var(--ease-brand);
+}
+@media (pointer:fine) { .suggestion { min-height:36px; } }
+.suggestion:hover { border-color:var(--primary-faint); background:var(--primary-tint); }
+.suggestion:active { scale:.97; }
+.suggestion:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.suggestion svg { flex:none; color:var(--primary); }
+.suggestion:disabled { opacity:.5; cursor:not-allowed; }
+
+/* Giriş kutusu */
+.composer {
+  display:flex; flex-direction:column; gap:8px; padding:10px 10px 10px 14px;
+  border:1px solid var(--line); border-radius:16px; background:var(--surface-solid);
+  box-shadow:var(--shadow-well); transition:border-color 180ms var(--ease-brand), box-shadow 180ms var(--ease-brand);
+}
+.composer:focus-within { border-color:var(--line-focus); box-shadow:var(--shadow-focus); }
+.label { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.row { display:flex; align-items:flex-end; gap:10px; }
+.field {
+  flex:1; min-width:0; min-height:24px; max-height:208px; resize:none; overflow-y:auto;
+  border:0; outline:0; background:transparent; color:var(--text-strong);
+  font:inherit; font-size:var(--text-read); line-height:1.5; field-sizing:content;
+}
+.field::placeholder { color:var(--text-muted); }
+.send {
+  display:grid; flex:none; place-items:center; width:40px; height:40px; border-radius:999px;
+  background:var(--primary); color:var(--on-primary); box-shadow:var(--shadow-button);
+  transition:opacity 180ms var(--ease-brand), background-color 180ms var(--ease-brand);
+}
+.send:hover:not(:disabled) { background:var(--primary-hover); }
+.send:active:not(:disabled) { scale:.97; }
+.send:disabled { opacity:.35; box-shadow:none; cursor:not-allowed; }
+.send:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.foot { display:flex; flex-wrap:wrap; justify-content:space-between; gap:4px 12px; color:var(--text-muted); font-size:var(--text-nano); }
