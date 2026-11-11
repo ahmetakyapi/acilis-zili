@@ -13,7 +13,7 @@ import { analysisHref } from "./analysis";
 import { formatEventValue, formatMoneyCompact, formatPercent, formatPrice } from "./utils";
 import { epsSurprise, revenueSurprise, type Surprise } from "./earnings-week";
 import { flowDeviation } from "./release-deviation";
-import { isSpotlight } from "./spotlight";
+import { inDayFlow } from "./earnings-today-split";
 import { getEarningsCalendar } from "./providers/finnhub";
 import { getReleasedObservation } from "./providers/fred";
 import { FED_WAIT_MS, getFomcRelease } from "./providers/fed";
@@ -170,7 +170,11 @@ export async function loadDayFlow(locale: Locale, userId?: string, requestedDate
      yoklama arkada sürer ve sonucu hafızaya düştüğü için sonraki turda
      gelir. Bulunmuş bildirim ve önceki tur hafızadan anında döndüğü için
      süre yalnız ilk soruyu keser. */
-  const shown = [...combined.values()].filter((row) => analysisMap.has(row.symbol) || watchedSet.has(row.symbol) || isSpotlight(row.symbol) || (meta[row.symbol]?.marketCap ?? 0) >= 50e9);
+  /* Akışa girme kuralı tek yerde (`inDayFlow`, 11 Kasım): ana sayfanın
+     "Bugün Bilanço Açıklayanlar" paneli aynı kümeyi tekrar etmemek için
+     aynı fonksiyonla süzüyor (`lib/earnings-today-split.ts`). */
+  const flowTraits = (symbol: string) => ({ symbol, analyzed: analysisMap.has(symbol), watched: watchedSet.has(symbol), marketCap: meta[symbol]?.marketCap });
+  const shown = [...combined.values()].filter((row) => inDayFlow(flowTraits(row.symbol)));
   const settled = (row: (typeof shown)[number]) => {
     const providerRow = live.get(row.symbol);
     return earningsStatus(providerRow?.epsActual ?? row.epsActual, providerRow?.revenueActual ?? row.revenueActual, analysisMap.has(row.symbol)) !== "scheduled";
@@ -186,7 +190,7 @@ export async function loadDayFlow(locale: Locale, userId?: string, requestedDate
   for (const row of combined.values()) {
     const analysis = analysisMap.get(row.symbol);
     const info = meta[row.symbol];
-    if (!analysis && !watchedSet.has(row.symbol) && !isSpotlight(row.symbol) && (info?.marketCap ?? 0) < 50e9) {
+    if (!inDayFlow(flowTraits(row.symbol))) {
       hiddenEarnings += 1;
       continue;
     }

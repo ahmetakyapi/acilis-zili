@@ -1,4 +1,4 @@
-import { MoonStars, SunHorizon } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUp, MoonStars, SunHorizon } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import {
@@ -10,7 +10,9 @@ import {
   TimingChip,
   LogoTile,
 } from "@/components/ui/primitives";
-import { getAnalysisBadges, getEarningsBetweenResult, getHolidays, getSymbolNames } from "@/lib/data";
+import { auth } from "@/auth";
+import { getAnalysisBadges, getEarningsBetweenResult, getHolidays, getSymbolNames, getUserSymbols } from "@/lib/data";
+import { splitEarningsToday } from "@/lib/earnings-today-split";
 import { isTradingDay, nextTradingDay, todayEt } from "@/lib/market-hours";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { epsSurprise, revenueSurprise, type Surprise } from "@/lib/earnings-week";
@@ -93,33 +95,60 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
     );
   }
 
-  const names = await getSymbolNames(rows.map((row) => row.symbol));
+  /* Aynı turda: adlar/piyasa değeri, günün BÜTÜN analizleri (dilden
+     bağımsız varlık; akış da öyle sayıyor) ve oturumlu okurun takip
+     listesi — üçü de akışa kimin girdiğini söylüyor (aşağıda). Takip
+     listesi okunamazsa boş küme: panel o şirketi tekrar gösterir ama
+     hiçbir şirketi kaybettirmez. */
+  const session = await auth();
+  const userId = session?.user?.id;
+  const [names, badges, watched] = await Promise.all([
+    getSymbolNames(rows.map((row) => row.symbol)),
+    getAnalysisBadges(null, locale, { from: today, to: today }),
+    userId ? getUserSymbols(userId).catch(() => [] as string[]) : Promise.resolve([] as string[]),
+  ]);
 
-  /* Beş satır, PİYASA DEĞERİNE göre. Sağlayıcı takvimi alfabetik döndürüyor
-     ve liste "APC · ATI · ATII · ATLC" diye başlıyordu: bugünün en büyük
+  /* AKIŞLA BÖLÜŞÜM (11 Kasım, sahibinin kararı: "bilanço tekrarını mantıklı
+     şekilde kırp"). Akışta saatiyle duran ve sonucu henüz gelmemiş bilanço
+     burada tekrar edilmiyor; panel günün geri kalanını ve sonucu gelenleri
+     gösteriyor, sonucu gelenler önde. Kural ve ölçüm
+     `lib/earnings-today-split.ts`; akışa girme kuralı `loadDayFlow` ile aynı
+     fonksiyon (`inDayFlow`). Hafta sonu panel sıradaki işlem gününü
+     gösterdiği için süzme yok (`sameDay`).
+
+     PANEL BOŞALIRSA HİÇ BASILMAZ (düşünülen alternatif: tek satırlık "Bugünün
+     bilançoları akışta" bağlantısı). Okur bu panele gelene dek akışı zaten
+     geçmiş oluyor; başlığı, sayacı ve "Tümünü Gör"ü olan bir panelin tek
+     cümlesi "yukarıda" demek olurdu — bir panel boyu boş çerçeve.
+     Kapsayıcı `[data-home-section]:empty` ile ızgaradan düşüyor
+     (TodayExperience.module.css). Bütün takvim boşsa eski boş durum
+     yukarıda yerinde: o, akışın da söylediği gerçek bir bilgi. */
+  const analyzed = new Set(
+    Object.keys(badges).filter((key) => key.endsWith(`:${today}`)).map((key) => key.slice(0, key.lastIndexOf(":"))),
+  );
+  const split = splitEarningsToday(rows, {
+    sameDay: today === calendarToday,
+    analyzed,
+    watched: new Set(watched),
+    marketCap: (symbol) => names[symbol]?.marketCap,
+  });
+  if (split.panel.length === 0) return null;
+
+  /* Beş satır. SIRA: sonucu gelenler önde, sonra PİYASA DEĞERİ
+     (`splitEarningsToday`). Sağlayıcı takvimi alfabetik döndürüyor ve
+     liste "APC · ATI · ATII · ATLC" diye başlıyordu: bugünün en büyük
      bilançosu 400 satır aşağıdaydı. Takvim ekranı zaten aynı sıralamayı
      kullanıyor.
      SEKİZDEN BEŞE. Panel ana sayfanın ortasında bir ÖZET; sekiz satır onu
      telefonda tek başına bir ekran boyu yapıyor ve altındaki bölümleri
      aşağı itiyordu. Kırpılan geri kalan zaten künyede sayıyla ("43 şirketin
      5 tanesi") ve "Tümünü Gör" ile duruyor. */
-  const shown = [...rows]
-    .sort(
-      (a, b) =>
-        (names[b.symbol]?.marketCap ?? 0) - (names[a.symbol]?.marketCap ?? 0),
-    )
-    .slice(0, 5);
-
-  const badges = await getAnalysisBadges(
-    shown.map((row) => row.symbol),
-    locale,
-    { from: today, to: today },
-  );
+  const shown = split.panel.slice(0, 5);
 
   return (
     <EarningsTodayView
       title={title}
-      total={rows.length}
+      total={split.panel.length}
       rows={shown.map((row) => ({
         id: row.id,
         symbol: row.symbol,
@@ -132,7 +161,9 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
         name: names[row.symbol]?.name ?? "",
         logoUrl: names[row.symbol]?.logoUrl ?? null,
         currency: names[row.symbol]?.currency ?? null,
+        marketCap: names[row.symbol]?.marketCap ?? null,
       }))}
+      inFlow={split.inFlow.map((row) => ({ symbol: row.symbol, logoUrl: names[row.symbol]?.logoUrl ?? null }))}
       badges={badges}
       locale={locale}
       t={t}
@@ -152,6 +183,8 @@ export type EarningsTodayRow = {
   name: string;
   logoUrl: string | null;
   currency: string | null;
+  /** USD piyasa değeri; yabancı para biriminde null (`SymbolMeta`). */
+  marketCap: number | null;
 };
 
 /**
@@ -176,6 +209,7 @@ export function EarningsTodayView({
   title,
   total,
   rows: shown,
+  inFlow = [],
   badges,
   locale,
   t,
@@ -184,10 +218,14 @@ export function EarningsTodayView({
   /** Günün toplam şirket sayısı — liste kırpıldıysa künyede. */
   total: number;
   rows: readonly EarningsTodayRow[];
+  /** Akışta duran, sonucu bekleyen bilançolar — satır olarak basılmaz,
+      panelin dibindeki künye onları adıyla akışa bağlar. */
+  inFlow?: readonly { symbol: string; logoUrl: string | null }[];
   badges: Record<string, AnalysisBadgeData | undefined>;
   locale: Locale;
   t: Dictionary;
 }) {
+  const maxCap = Math.max(0, ...shown.map((row) => row.marketCap ?? 0));
   const hourLabel: Record<string, string> = {
     bmo: t.earnings.beforeOpen,
     amc: t.earnings.afterClose,
@@ -230,7 +268,12 @@ export function EarningsTodayView({
           sütunlardan düşüyor ve sabit 5,5rem'de "EPS Beklentisi" iki
           satıra kırılıyordu (ölçüldü, 1280). Sütun aralığı da burada;
           subgrid onu üstten alıyor. */}
-      <ul className={cn("grid grid-cols-[auto_minmax(0,1fr)_max-content] gap-x-3 sm:grid-cols-[auto_minmax(0,1fr)_max-content_max-content_max-content] sm:gap-x-4", styles.list)}>
+      {/* GENİŞ DÜZEN KAP SORGUSUYLA (11 Kasım) — gerekçe ve ölçüm
+          EarningsToday.module.css → "GENİŞ KAP". Izgara şablonu modülde:
+          kırılım ekran değil panelin kendi eni (720 tablet, 976 ara,
+          826/946 rayın sol kolonu). */}
+      <div className={styles.frame}>
+      <ul className={styles.list}>
       {shown.map((row) => {
         const badge = badges[`${row.symbol}:${row.reportDate}`];
         return (
@@ -270,6 +313,7 @@ export function EarningsTodayView({
                 {row.name}
               </span>
             </span>
+            <CapCell value={row.marketCap} max={maxCap} label={t.homeEarnings.marketCap} locale={locale} />
             {/* BİLİNMEYEN SAAT ROZET DEĞİL, KÜNYE (28 Eylül). 28 Eylül'de beş
                 satırın dördü aynı gri "Saat Belirsiz" rozetini taşıyordu ve
                 panelde göze ilk çarpan şey bilginin YOKLUĞUYDU; tek gerçek
@@ -344,7 +388,55 @@ export function EarningsTodayView({
         );
       })}
       </ul>
+      </div>
+      {/* AKIŞA BAĞLAYAN KÜNYE (11 Kasım). Panel akıştaki ve sonucu bekleyen
+          bilançoları tekrar etmiyor; okur "TDG nerede?" diye sormasın diye
+          onları logosu ve sembolüyle tek satırda adlandırıp akışa
+          bağlıyor. Ayrı kutu değil, panelin içinde hairline'la ayrılmış
+          künye (`arayuz.md` → ekran sırası 6). */}
+      {inFlow.length > 0 && (
+        <a
+          href="#gunun-akisi"
+          className={styles.flowNote}
+          data-flow-note
+          aria-label={t.homeEarnings.inFlowAria.replace("{list}", inFlow.map((row) => row.symbol).join(", "))}
+        >
+          <span className={styles.flowLogos} aria-hidden>
+            {inFlow.slice(0, FLOW_NOTE_SYMBOLS).map((row) => (
+              <LogoTile key={row.symbol} symbol={row.symbol} logoUrl={row.logoUrl} size="sm" />
+            ))}
+          </span>
+          <span className={cn("numeral", styles.flowSymbols)} aria-hidden>
+            {inFlow.slice(0, FLOW_NOTE_SYMBOLS).map((row) => row.symbol).join(" · ")}
+            {inFlow.length > FLOW_NOTE_SYMBOLS && ` +${inFlow.length - FLOW_NOTE_SYMBOLS}`}
+          </span>
+          <span className={styles.flowText} aria-hidden>{t.homeEarnings.inFlow}</span>
+          <ArrowUp aria-hidden size={14} weight="bold" className={styles.flowArrow} />
+        </a>
+      )}
     </Panel>
+  );
+}
+
+/** Künyede adı yazılan en çok sembol — fazlası "+N" (akıştaki logo
+    şeridiyle aynı sınır mantığı, `MemberMarks`). */
+const FLOW_NOTE_SYMBOLS = 3;
+
+/** Geniş kapta piyasa değeri: yazılı değer + listenin en büyüğüne göre
+    kalın şerit (büyüklük, yargı değil — ton `--bar-soft`). */
+function CapCell({ value, max, label, locale }: { value: number | null; max: number; label: string; locale: Locale }) {
+  if (value === null || !(max > 0)) return <span aria-hidden className={styles.capEmpty} />;
+  const share = Math.max(0.02, Math.min(1, value / max));
+  return (
+    <span className={styles.cap}>
+      <span className={styles.capHead}>
+        <span className={cn("numeral", styles.capValue)}>{formatMoneyCompact(value, locale, "USD")}</span>
+        <span className={styles.figureNote}>{label}</span>
+      </span>
+      <span className="value-lane" data-draw>
+        <i className="value-bar bar-fill" data-end="end" style={{ left: 0, width: `${(share * 100).toFixed(1)}%` }} />
+      </span>
+    </span>
   );
 }
 

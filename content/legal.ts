@@ -15,7 +15,7 @@
    ========================================================================== */
 
 /** Metnin son güncellendiği tarih — sayfa künyesinde görünür (ET/TR farkı önemsiz). */
-export const LEGAL_UPDATED = "2026-10-25";
+export const LEGAL_UPDATED = "2026-11-11";
 
 const PRIVACY_TR = `Açılış Zili kişisel bir projedir ve ABD borsalarını Türkçe takip etmek için yapılmıştır. Bu sayfa, 6698 sayılı **Kişisel Verilerin Korunması Kanunu** (KVKK) kapsamında hangi verinin neden işlendiğini, nereye gittiğini ve senin hangi haklara sahip olduğunu anlatır.
 
@@ -137,8 +137,8 @@ Hepsi \`SameSite\` koruması ile ve oturum çerezi ek olarak \`HttpOnly\` bayra�
 | Neon (ABD/AB) | Veritabanı | Hesap, takip listesi ve portföy kayıtların |
 | Alpaca, Finnhub, FRED, TCMB | Fiyat, şirket, makro ve kur verisi | **Hiçbir şey** — bu istekleri sunucu kendi adına yapar |
 | DeepL | Haber başlıklarının çevirisi | **Hiçbir şey** — yalnızca haber metni gider |
-| Anthropic | Bülten ve yazı metinlerinin üretimi | **Hiçbir şey** — yalnızca piyasa verisi gider |
-| Resend (ABD) | Şifre sıfırlama e-postasını ve açtığın bildirim postalarını iletmek | Sıfırlama istediğinde ya da bildirim postasını açtıysan: e-posta adresin, kullanıcı adın ve postanın içeriği (alarmda hisse, hedef ve fiyat; özette piyasa takvimi ve takip listendeki bu haftanın bilançoları) |
+| Anthropic | Bülten ve yazı metinlerinin üretimi; portföy taraması ve haftanın özetindeki portföy okuması | Bülten ve yazılarda **hiçbir şey** — yalnızca piyasa verisi gider. Portföy taramasında ve haftanın özetindeki portföy okumasında pozisyonlarının sembolleri, ağırlık ve getiri yüzdeleri gider; kullanıcı adın, e-postan, adet ve tutar gitmez |
+| Resend (ABD) | Şifre sıfırlama e-postasını ve açtığın bildirim postalarını iletmek | Sıfırlama istediğinde ya da bildirim postasını açtıysan: e-posta adresin, kullanıcı adın ve postanın içeriği (alarmda hisse, hedef, fiyat ve hareketin kısa gerekçesi; özette piyasa takvimi, takip listendeki bu haftanın bilançoları ve portföyün varsa haftalık yüzde değişimi — tutar ve adet postaya yazılmaz) |
 | Tarayıcının bildirim servisi (Chrome'da Google, Firefox'ta Mozilla, Safari'de Apple) | Bildirimleri açtıysan alarm bildirimini cihazına taşımak | Şifreli bildirim (hisse, hedef ve fiyat); servis içeriği okuyamaz. Hangi servisin kullanılacağına tarayıcın karar verir |
 
 Veri sağlayıcılarıyla ilgili üç satır önemli: veri sağlayıcılarına giden isteklerde senin kimliğin yoktur. Bir hisseye baktığında sağlayıcı bunu "Açılış Zili'nin isteği" olarak görür, "şu kullanıcının isteği" olarak değil.
@@ -349,8 +349,8 @@ The product runs on the following infrastructure and data providers. Some of the
 | Neon (US/EU) | Database | Your account, watchlist and portfolio records |
 | Alpaca, Finnhub, FRED, CBRT | Price, company, macro and exchange rate data | **Nothing** — the server makes these requests on its own behalf |
 | DeepL | Translation of news headlines | **Nothing** — only the news text is sent |
-| Anthropic | Generation of brief and article text | **Nothing** — only market data is sent |
-| Resend (US) | Delivering the password reset email and the notification emails you turned on | When you request a reset or have turned on notification emails: your email address, your username and the email's content (for an alert: the stock, target and price; for the digest: the market calendar and this week's earnings from your watchlist) |
+| Anthropic | Generation of brief and article text; the portfolio scan and the portfolio reading in the weekly digest | For briefs and articles **nothing** — only market data is sent. For the portfolio scan and the weekly digest's portfolio reading: your holdings' symbols, weight and return percentages; never your username, email, quantities or amounts |
+| Resend (US) | Delivering the password reset email and the notification emails you turned on | When you request a reset or have turned on notification emails: your email address, your username and the email's content (for an alert: the stock, target, price and a short reason for the move; for the digest: the market calendar, this week's earnings from your watchlist and, if you have a portfolio, its weekly percentage change — amounts and quantities are never written in the email) |
 | Your browser's push service (Google for Chrome, Mozilla for Firefox, Apple for Safari) | Carrying an alert notification to your device, if you turned notifications on | An encrypted notification (symbol, target and price) the service cannot read. Your browser decides which service is used |
 
 The three data-provider rows matter: requests to data providers carry no identity of yours. When you look at a stock, the provider sees it as "a request from Opening Bell", not "a request from this user".

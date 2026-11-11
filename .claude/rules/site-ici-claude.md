@@ -5,6 +5,10 @@ paths:
   - "lib/claude-*.ts"
   - "lib/advice-guard.ts"
   - "lib/portfolio-scan*.ts"
+  - "lib/portfolio-advisor*.ts"
+  - "lib/portfolio-earnings-desk*.ts"
+  - "lib/portfolio-question*.ts"
+  - "lib/portfolio-weekly*.ts"
   - "lib/translate.ts"
   - "lib/weekly-commentary.ts"
   - "app/api/ai/**"
@@ -39,6 +43,12 @@ Rutinlerden ayrı, sunucunun kendi Claude çağrıları. Anahtar
   denetimi orada kapalı, sayı denetimi açık, seviyeler YALNIZ sunucunun
   verdiği listeden (teknik analiz seviyeleri, üç aylık bant, maliyet —
   `planLevels`). Üyelere asla açılmaz; önbellek anahtarı ayrı ("plan").
+  Aynı istisna (11 Kasım) şu yollarda da, aynı kurallarla: kişisel danışman
+  (`lib/portfolio-advisor*.ts`, /portfoy/analiz, yalnız sahip; hedef ağırlık
+  yalnız `REFERENCE_WEIGHTS`ten), Bilanço Masası
+  (`lib/portfolio-earnings-desk*.ts`), Portföyüne Sor
+  (`lib/portfolio-question*.ts`; senaryo hesabını sunucu yapar) ve pazar
+  postasındaki portföy karnesi (`lib/portfolio-weekly*.ts`; alıcının rolü).
 - **Claude analizi** (`/claude/[symbol]`, `lib/ai-analysis*.ts`,
   `/admin/ai`): yetki + günlük kota + tek eşzamanlı iş kilidi, başarısız işte
   hak iadesi, Zod şemalı JSON çıktı. Ayrıntı ve model notları

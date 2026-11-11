@@ -1,0 +1,135 @@
+/* Bilanço Masası (11 Kasım). Taramanın dili (PortfolioScan.module.css):
+   derinlik tonla (`surface-sunken` kartlar), gölge yok; renk yalnız yönde
+   ve sürprizde. Durum kartın tepesindeki 3 piksellik şeritte (bilanço,
+   teknik ve risk kartlarının dili): sonrası HBK sürprizinin yönü, öncesi
+   nötr. Ortak ölçüler `.claude/rules/arayuz.md` → "Ortak ölçüler": kart
+   başlığı 14/700, metin tabanı 12, çubuk 8 / kulvar 5, etiket çipi
+   22/12/600. Ölçüm TSX sonunda. */
+
+.sentinel { height:0; }
+.panel { display:flex; flex-direction:column; gap:16px; padding:16px; scroll-margin-top:120px; }
+@media (min-width:640px) { .panel { padding:22px; } }
+.spark { color:var(--primary); }
+.muted { color:var(--text-muted); font-size:var(--text-small); line-height:1.55; }
+.skeleton { display:flex; flex-direction:column; gap:10px; }
+.headline { color:var(--text-strong); font-size:clamp(17px, 1.8vw, 20px); font-weight:700; letter-spacing:-.02em; line-height:1.28; text-wrap:balance; }
+
+.group { display:flex; flex-direction:column; gap:10px; container-type:inline-size; }
+.groupTitle { display:inline-flex; align-items:center; gap:8px; color:var(--text-strong); font-size:14px; font-weight:700; }
+.groupTitle span { display:inline-flex; align-items:center; justify-content:center; min-width:20px; height:20px; padding:0 6px; border-radius:999px; background:var(--surface-sunken); color:var(--text-muted); font-size:var(--text-nano); font-weight:700; }
+
+/* Kartlar: dar kapta tek sütun, ≥ 720 iki sütun. Kap `.group` (kap
+   sorgusu kabın kendisine değil çocuklarına işler; `.cards`ın kendisi kap
+   olunca 946'da da tek sütun kalıyordu — ölçüldü). */
+.cards { display:grid; gap:10px; }
+@container (min-width:720px) { .cards { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+
+.card {
+  position:relative; display:flex; min-width:0; flex-direction:column; gap:12px;
+  padding:15px 14px 12px; border-radius:12px; background:var(--surface-sunken); overflow:hidden;
+  container-type:inline-size; --strip:var(--line-strong);
+}
+.card::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--strip); }
+.card[data-strip="up"] { --strip:var(--up); }
+.card[data-strip="down"] { --strip:var(--down); }
+.card[data-strip="flat"] { --strip:var(--flat); }
+
+.cardHead { display:flex; min-width:0; align-items:baseline; justify-content:space-between; gap:10px; }
+.identity { display:flex; min-width:0; align-items:baseline; gap:8px; }
+.identity:hover .symbol { color:var(--primary); }
+.symbol { color:var(--text-strong); font-size:15px; font-weight:700; transition:color 180ms var(--ease-brand); }
+.name { overflow:hidden; color:var(--text-muted); font-size:var(--text-tiny); white-space:nowrap; text-overflow:ellipsis; }
+.fiscal { flex:none; color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+
+.when { display:flex; flex-wrap:wrap; align-items:center; gap:6px; }
+.dayChip {
+  display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:999px;
+  background:var(--surface-solid); color:var(--text-strong); font-size:var(--text-nano); font-weight:700;
+}
+.bell { margin-left:2px; padding-left:7px; border-left:1px solid var(--line); color:var(--text-strong); }
+
+.label { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.lane { min-width:0; }
+.zero { position:absolute; top:-3px; bottom:-3px; left:50%; width:1px; background:var(--line-strong); }
+
+/* ---- Sonrası: gerçekleşen / beklenti ---- */
+.figures { display:flex; flex-direction:column; gap:12px; }
+.figure { display:flex; flex-direction:column; gap:8px; }
+.figureHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 10px; }
+.verdict { color:var(--text-body); font-size:var(--text-tiny); font-weight:700; }
+.verdict[data-tone="up"] { color:var(--up); }
+.verdict[data-tone="down"] { color:var(--down); }
+.pair { display:flex; flex-wrap:wrap; gap:4px 18px; }
+.pair > div { display:flex; align-items:baseline; gap:6px; }
+.pair dt { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.pair dd { color:var(--text-strong); font-size:var(--text-small); font-weight:700; }
+.pair > div + div dd { color:var(--text-body); font-weight:600; }
+
+.reaction { display:grid; grid-template-columns:max-content minmax(0,1fr) max-content; align-items:center; gap:10px; }
+.pending { grid-column:2 / -1; justify-self:end; color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
+
+/* ---- Öncesi: beklenti ve geçmiş ---- */
+.estimates { display:grid; grid-template-columns:repeat(2, minmax(0,1fr)); gap:8px; }
+.estimates > div { display:flex; min-width:0; flex-direction:column; gap:4px; padding:9px 10px; border-radius:10px; background:var(--surface-solid); }
+.estimates dt { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; line-height:1.35; }
+.estimates dd { color:var(--text-strong); font-size:16px; font-weight:700; letter-spacing:-.03em; }
+
+.history { display:flex; flex-direction:column; gap:6px; }
+.history ul { display:flex; flex-direction:column; gap:6px; }
+.historyTitle { color:var(--text-strong); font-size:var(--text-tiny); font-weight:700; }
+.historyHead, .history li { display:grid; grid-template-columns:62px minmax(0,1fr) 58px 58px; align-items:center; gap:10px; }
+/* Sütun başlığı yalnız iki sayı sütununun üstünde: "Son Çeyrekler"
+   62 piksellik ilk sütunda iki satıra kırılıyordu (ölçüldü 946 ve 390). */
+.historyHead { margin-top:-2px; color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.historyHead span:first-child { grid-column:2 / 4; text-align:right; }
+.historyHead span:nth-child(2) { text-align:right; }
+.quarter { color:var(--text-body); font-size:var(--text-tiny); font-weight:600; white-space:nowrap; }
+.histValue { font-size:var(--text-tiny); text-align:right; white-space:nowrap; }
+.histValue b { font-weight:700; }
+.inline { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+
+/* ---- İkisinde: pozisyon ---- */
+.position { display:grid; grid-template-columns:minmax(0,1fr) max-content max-content; align-items:end; gap:8px 16px; padding-top:10px; border-top:1px solid var(--line-soft); }
+.weight { display:grid; grid-template-columns:minmax(0,1fr) max-content; grid-template-areas:"label value" "lane lane"; align-items:baseline; gap:6px 8px; }
+.weight .label { grid-area:label; }
+.weight .lane { grid-area:lane; margin-bottom:2px; }
+.weight b { grid-area:value; color:var(--text-strong); font-size:var(--text-small); font-weight:700; }
+.metric { display:flex; flex-direction:column; align-items:flex-end; gap:2px; font-size:var(--text-small); white-space:nowrap; }
+.metric b { font-weight:700; }
+/* Dar kartta ağırlık kendi satırında: 322'lik telefonda etiket iki satıra
+   kırılıp çubuk ~70 piksele iniyordu (ölçüldü). */
+@container (max-width:420px) {
+  .position { grid-template-columns:repeat(2, minmax(0,1fr)); }
+  .weight { grid-column:1 / -1; }
+  .metric { align-items:flex-start; }
+}
+
+.note { color:var(--text-body); font-size:var(--text-small); line-height:1.6; }
+
+/* Sahibin görüşü: taramanın Kişisel Plan kutusu (sol kenarda mavi şerit). */
+.view { display:flex; flex-direction:column; gap:8px; padding:11px 12px; border-left:3px solid var(--primary); border-radius:8px; background:var(--surface-solid); }
+.viewRow { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.level { display:inline-flex; gap:5px; height:22px; align-items:center; padding:0 8px; border-radius:999px; background:var(--surface-sunken); color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.level b { color:var(--text-strong); font-size:var(--text-tiny); font-weight:700; }
+.level[data-kind="tp"] b { color:var(--up); }
+.level[data-kind="sl"] b { color:var(--down); }
+.viewText { color:var(--text-strong); font-size:var(--text-small); line-height:1.6; }
+
+.links { display:flex; flex-wrap:wrap; gap:0 18px; margin-block:-8px -6px; }
+.links a { display:inline-flex; min-height:44px; align-items:center; gap:4px; color:var(--primary); font-size:var(--text-small); font-weight:600; }
+.links a:hover { color:var(--primary-hover); }
+.links a svg { transition:translate 200ms var(--ease-brand); }
+.links a:hover svg { translate:3px 0; }
+
+.foot { display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:var(--text-tiny); line-height:1.55; }
+
+/* ---- Ana sayfa kartı: tek satır özet ---- */
+.brief { display:flex; flex-direction:column; gap:8px; padding:14px; border:1px solid var(--primary-faint); border-radius:12px; background:var(--premium-surface); }
+.briefHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 10px; }
+.briefTitle { display:inline-flex; align-items:center; gap:6px; color:var(--text-strong); font-size:14px; font-weight:700; }
+.briefMeta { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.briefLine { display:-webkit-box; overflow:hidden; color:var(--text-body); font-size:var(--text-small); font-weight:600; line-height:1.5; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
+.briefLink { display:inline-flex; min-height:44px; align-items:center; gap:4px; margin-block:-10px -12px; color:var(--primary); font-size:var(--text-small); font-weight:600; }
+.briefLink:hover { color:var(--primary-hover); }
+.briefLink svg { transition:translate 200ms var(--ease-brand); }
+.briefLink:hover svg { translate:3px 0; }

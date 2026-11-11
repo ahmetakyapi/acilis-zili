@@ -30,6 +30,11 @@ import { analysisVisualsEn } from "./analysis-visuals";
 import { brokerCardsEn } from "./broker-cards";
 import { feedVisualsEn } from "./feed-visuals";
 import { toolVisualsEn } from "./tool-visuals";
+import { portfolioWeeklyEn } from "./portfolio-weekly";
+import { portfolioAdvisorEn } from "./portfolio-advisor";
+import { portfolioAskEn } from "./portfolio-ask";
+import { earningsDeskEn } from "./earnings-desk";
+import { homeEarningsEn } from "./home-earnings";
 
 const en: typeof tr = {
   brand: {
@@ -4530,6 +4535,11 @@ const en: typeof tr = {
   stockWeek: stockWeekEn,
   /* Geçmiş seansı anlatan ana sayfa panellerinin künyesi (28 Ekim) — metin ayrı dosyada. */
   sessionAge: sessionAgeEn,
+  portfolioWeekly: portfolioWeeklyEn,
+  portfolioAdvisor: portfolioAdvisorEn,
+  portfolioAsk: portfolioAskEn,
+  earningsDesk: earningsDeskEn,
+  homeEarnings: homeEarningsEn,
 };
 
 export default en;

@@ -5,6 +5,9 @@ import { SentimentPulse } from "@/components/markets/SentimentPulse";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Money } from "@/components/portfolio/Money";
 import { PortfolioScanBrief } from "@/components/portfolio/PortfolioScan";
+import { AdvisorBrief } from "@/components/portfolio/analysis/AdvisorDesk";
+import { EarningsDeskBrief } from "@/components/portfolio/EarningsDesk";
+import { getAdmin } from "@/lib/admin";
 import { PrivacyToggle } from "@/components/portfolio/PrivacyToggle";
 import { ButtonLink, ChangePill, DataStamp, LogoTile, Panel, PanelLink } from "@/components/ui/primitives";
 import { formatLira } from "@/lib/fx";
@@ -49,7 +52,9 @@ export async function PortfolioSlot({ locale, t }: { locale: Locale; t: Dictiona
   const userId = session?.user?.id;
   if (!userId) return <SentimentPulse locale={locale} t={t} variant="compact" />;
   const [snapshot, privacy] = await Promise.all([loadPortfolioSnapshot(userId), getPrivacy()]);
-  if (snapshot) return <PortfolioSummary snapshot={snapshot} privacy={privacy} locale={locale} t={t} />;
+  /* Site sahibinde kartın altında danışmanın günlük özeti (11 Kasım). */
+  const owner = snapshot ? (await getAdmin())?.userId === userId : false;
+  if (snapshot) return <PortfolioSummary snapshot={snapshot} privacy={privacy} locale={locale} t={t} owner={owner} />;
   /* `loadPortfolio` istek içinde önbellekli: ikinci soru ücretsiz. */
   const data = await loadPortfolio(userId);
   if (!data.ok) return <SentimentPulse locale={locale} t={t} variant="compact" />;
@@ -88,11 +93,13 @@ function PortfolioSummary({
   privacy,
   locale,
   t,
+  owner = false,
 }: {
   snapshot: PortfolioSnapshot;
   privacy: boolean;
   locale: Locale;
   t: Dictionary;
+  owner?: boolean;
 }) {
   const { views, totals, names, quotes, days, day, dayBasis } = snapshot;
   const L = t.today;
@@ -329,6 +336,13 @@ function PortfolioSummary({
           günün ilk açılışında yazılır (lib/portfolio-scan.ts). Yazılamazsa
           bölüm hiç basılmaz. */}
       <PortfolioScanBrief locale={locale} labels={t.portfolioScan} />
+      {/* Bilanço Masası'nın tek satırlık özeti (11 Kasım): portföyde yaklaşan
+          ya da yeni açıklanmış bilanço varsa; yoksa hiçbir şey basmaz. */}
+      <EarningsDeskBrief locale={locale} labels={t.earningsDesk} />
+      {/* DANIŞMANIN BUGÜNÜ (11 Kasım, sahibinin isteği: "ana sayfaya da
+          özet bilgiler yazsın o karta"). Yalnız site sahibinde: günlük
+          danışman notunun başlığı ve ilk üç adımı; tamamı /portfoy/analiz. */}
+      {owner && <AdvisorBrief locale={locale} labels={t.portfolioAdvisor} />}
 
       {/* KÜNYE SADELEŞTİ (10 Kasım, sahibinin sorusu: "kartın altındaki
           bilgilere gerek var mı"). Burada iki ikonlu cümle vardı: "bugün

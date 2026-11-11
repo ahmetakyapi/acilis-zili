@@ -6,7 +6,9 @@ import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { FoldToggle } from "@/components/ui/FoldToggle";
 import directory from "@/components/motion/DirectoryExperience.module.css";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
+import { AdvisorDesk } from "@/components/portfolio/analysis/AdvisorDesk";
 import { AnalysisNote } from "@/components/portfolio/analysis/AnalysisNote";
+import { getAdmin } from "@/lib/admin";
 import { CorrelationHeat, type HeatCell } from "@/components/portfolio/analysis/CorrelationHeat";
 import { PanelFill } from "@/components/portfolio/analysis/PanelFill";
 import { Money } from "@/components/portfolio/Money";
@@ -229,6 +231,7 @@ async function AnalysisBody({
   const V = t.portfolioAnalysisVisuals;
   let analysis: PortfolioAnalysis | null;
   let count: number;
+  const owner = "userId" in source && (await getAdmin())?.userId === source.userId;
   if ("userId" in source) {
     const loaded = await getUserAnalysis(source.userId);
     if (!loaded.ok) {
@@ -355,7 +358,18 @@ async function AnalysisBody({
         <ScenarioPanel analysis={analysis} risk={risk} fund={fund} weight={weight} basePath={basePath} locale={locale} A={A} V={V} />
       </div>
       <PanelFill />
-      <AnalysisNote locale={locale} labels={A.note} disclaimer={A.notAdvice} endpoint={noteEndpoint} />
+      {/* SİTE SAHİBİNE KİŞİSEL DANIŞMAN (11 Kasım, sahibinin isteği: "buraya
+          güzel Claude analiz yazalım, hem günlük hem aylık… bana danışmanlık
+          yapsın"). Sahipte risk okumasının yerini alır (danışman aynı risk
+          ölçülerini girdi olarak okur, üstüne eylem önerisi yazar); başka
+          her okurda tavsiyesiz risk okuması aynen kalır. Gerekçe ve hukuki
+          çizgi lib/portfolio-advisor-model.ts. Örnek veri ekranında
+          (`fixture`) hiçbir zaman basılmaz. */}
+      {owner ? (
+        <AdvisorDesk locale={locale} labels={t.portfolioAdvisor} />
+      ) : (
+        <AnalysisNote locale={locale} labels={A.note} disclaimer={A.notAdvice} endpoint={noteEndpoint} />
+      )}
       <DataStamp labels={t.data} source="Alpaca · State Street · TCMB" locale={locale} note={fill(A.stampNote, { date: dateLong(risk.session, locale) })} />
     </>
   );
