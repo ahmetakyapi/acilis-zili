@@ -32,6 +32,8 @@ import { toolVisualsTr } from "./tool-visuals";
 import { portfolioWeeklyTr } from "./portfolio-weekly";
 import { portfolioAdvisorTr } from "./portfolio-advisor";
 import { portfolioAskTr } from "./portfolio-ask";
+import { claudeBriefTr } from "./claude-brief";
+import { pushPrefsTr } from "./push-prefs";
 import { earningsDeskTr } from "./earnings-desk";
 import { homeEarningsTr } from "./home-earnings";
 
@@ -4804,7 +4806,7 @@ const tr = {
   },
   notifications: {
     title: "Bildirimler",
-    hint: "Fiyat alarmın tetiklendiğinde bu cihaza bildirim gelir; site kapalıyken de. İzin cihaz başına verilir: telefonda ve bilgisayarda ayrı ayrı aç.",
+    hint: "Alarm ve seçtiğin özetler bu cihaza bildirim olarak gelir; site kapalıyken de. İzin cihaz başına verilir: telefonda ve bilgisayarda ayrı ayrı aç.",
     enable: "Bu Cihazda Aç",
     enabling: "Açılıyor…",
     disabling: "Kapatılıyor…",
@@ -5161,6 +5163,8 @@ const tr = {
   portfolioWeekly: portfolioWeeklyTr,
   portfolioAdvisor: portfolioAdvisorTr,
   portfolioAsk: portfolioAskTr,
+  claudeBrief: claudeBriefTr,
+  pushPrefs: pushPrefsTr,
   earningsDesk: earningsDeskTr,
   homeEarnings: homeEarningsTr,
 };

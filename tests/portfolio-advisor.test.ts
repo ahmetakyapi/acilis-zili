@@ -40,7 +40,7 @@ test("girdide başvuru ağırlıkları var; model yalnız onları yazabilir", ()
   const input = advisorInput("daily", rows, null, null, "tr", "11 Kasım Çarşamba");
   const parsed = JSON.parse(input);
   assert.equal(parsed.referenceWeights.length, REFERENCE_WEIGHTS.length);
-  const base = { summary: "Özet.", actions: [], risks: [], outlook: "" };
+  const base = { summary: "Özet.", actions: [], risks: [], outlook: "", followUps: [] };
   assert.equal(checkAdvisor({ ...base, headline: "A'yı %25'e indir" }, input, ["A"]).ok, true);
   assert.equal(checkAdvisor({ ...base, headline: "A'yı %23'e indir" }, input, ["A"]).ok, false);
 });
@@ -55,6 +55,7 @@ test("denetim: bilinmeyen sembol düşer, boş eylem atılır, en çok 5 eylem",
     actions: [action("a"), action("ZZZ"), action(null, ""), action(null), action(null), action(null), action(null)],
     risks: [],
     outlook: "",
+    followUps: ["A'yı %25'e indirsem ne olur?", "A'yı %23'e indirsem?", "A'yı %25'e indirsem ne olur?"],
   };
   const checked = checkAdvisor(out, input, ["A"]);
   assert.equal(checked.ok, true);
@@ -62,5 +63,7 @@ test("denetim: bilinmeyen sembol düşer, boş eylem atılır, en çok 5 eylem",
     assert.equal(checked.text.actions.length, 5);
     assert.equal(checked.text.actions[0]!.symbol, "A");
     assert.equal(checked.text.actions[1]!.symbol, null);
+    /* Takip soruları: girdide olmayan sayı (23) ve tekrar düşer. */
+    assert.deepEqual(checked.text.followUps, ["A'yı %25'e indirsem ne olur?"]);
   }
 });

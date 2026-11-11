@@ -3,6 +3,7 @@ import { db } from "./db";
 import { users, watchlistItems, watchlists } from "./schema";
 import { getUserAvatar } from "./avatar-data";
 import { getNotificationPrefs } from "./notification-prefs";
+import { getPushPrefs } from "./push-prefs";
 import { exportEmailPrefs } from "./email-notify";
 import { getUserPercentAlerts } from "./percent-alerts";
 import { getProfileSettings } from "./profile-data";
@@ -42,7 +43,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
   /* Portföy iki paket paralel yazılırken bu dosyanın dışında kalmıştı:
      indirme "hesabın tuttuğu her şey" diyordu ama pozisyonları vermiyordu
      (28 Eylül, belge taramasında bulundu). KVKK veri taşınabilirliği. */
-  const [lists, avatar, portfolio, alerts, sales, push, profile, percent, prefs, posts, inbox, emailPrefs] = await Promise.all([
+  const [lists, avatar, portfolio, alerts, sales, push, profile, percent, prefs, posts, inbox, emailPrefs, pushKinds] = await Promise.all([
     db
       .select()
       .from(watchlists)
@@ -61,6 +62,7 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
        `exportInbox`ta (20 Ekim). */
     exportInbox(userId),
     exportEmailPrefs(userId),
+    getPushPrefs(userId),
   ]);
   const items = lists.length
     ? await db
@@ -181,6 +183,8 @@ export async function loadAccountExport(userId: string, now: Date = new Date()):
         }))
       : null,
     notificationPrefs: prefs.available ? { earningsReminder: prefs.earningsReminder } : null,
+    /* Push tür tercihleri (11 Kasım) — satır yoksa varsayılanla, okurun Ayarlar'da gördüğü değer. */
+    pushPrefs: pushKinds.available ? pushKinds.prefs : null,
     emailPrefs,
     notificationDevices: push.available
       ? push.subscriptions.map((sub) => ({

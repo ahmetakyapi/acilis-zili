@@ -621,6 +621,57 @@ export const pushSubscriptions = pgTable(
   ],
 );
 
+/**
+ * PUSH TÜR TERCİHLERİ (11 Kasım) — hangi bildirim türü cihazlara gitsin.
+ *
+ * Cihaz kaydı tek bir onaydı ve push'un ana türü (fiyat/yüzde alarmı) ona
+ * bağlıydı; cuma portföy özeti gelince "alarmlar gelsin, özet gelmesin"
+ * (ya da tersi) seçilebilmeli. Satır yalnız okur anahtarı DEĞİŞTİRİNCE
+ * yazılır; satır yoksa varsayılan (lib/push-prefs-model.ts →
+ * defaultPushPref: fiyat alarmı açık — eski davranış; haftalık özet
+ * kapalı, site sahibinde açık). `kind` modeldeki listeden; okunurken
+ * bilinmeyen tür yok sayılır.
+ *
+ * KENDİ TABLOSU (user_avatars kuralı): `notification_prefs`e sütun
+ * eklenmedi — migration deploy'da uygulanmıyor, tablo yokken Ayarlar'daki
+ * anahtarlar basılmaz, alarm push'u eskisi gibi gider, özet hiç gitmez.
+ */
+export const pushPreferences = pgTable(
+  "push_preferences",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    kind: text("kind").notNull(),
+    enabled: boolean("enabled").notNull(),
+    updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.kind] })],
+);
+
+/**
+ * ZAMANLANMIŞ PUSH DEFTERİ (11 Kasım) — aynı özetin ikinci kez gitmemesi.
+ *
+ * Cuma özetinin ucu günde birkaç kez çağrılıyor (yaz/kış saati ve yarım
+ * gün aynı satırlarla kapsansın diye, deploy/cron-install.sh). Gönderimden
+ * ÖNCE `(user_id, key)` satırı açılır (anahtar `portfolio-week:<pazartesi>`);
+ * açılamazsa o hafta o okura gitmiş demektir. Hiçbir cihaza ulaşamayan
+ * gönderimin satırı geri silinir, sonraki koşu yeniden dener. Tablo yoksa
+ * özet HİÇ gitmez (tekrarı engelleyemeyen gönderim okuru her koşuda
+ * öttürürdü). 60 günden eski satırları özetin kendi koşusu siler.
+ */
+export const pushSends = pgTable(
+  "push_sends",
+  {
+    userId: uuid("user_id")
+      .notNull()
+      .references(() => users.id, { onDelete: "cascade" }),
+    key: text("key").notNull(),
+    sentAt: timestamp("sent_at", { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [primaryKey({ columns: [t.userId, t.key] })],
+);
+
 export const portfolioOrder = pgTable("portfolio_order", {
   userId: uuid("user_id")
     .primaryKey()

@@ -156,28 +156,36 @@ test("hesaplanamayan senaryo bloğu", () => {
 
 test("kabul kararı: sayı denetimi, tavsiye denetimi, sahip istisnası", () => {
   const grounding = JSON.stringify({ portfolio: { lastSession: "+%1,20" }, positions: [{ symbol: "SNDK", weight: "%40" }] });
-  const ok = decidePortfolioAnswer({ verdict: "answered", paragraphs: ["SNDK portföyün %40'ı.", " "], measures: [], partial: false }, grounding, "tr");
+  const ok = decidePortfolioAnswer({ verdict: "answered", paragraphs: ["SNDK portföyün %40'ı.", " "], measures: [], partial: false, followUps: [] }, grounding, "tr");
   assert.deepEqual(ok, { kind: "answered", paragraphs: ["SNDK portföyün %40'ı."], partial: false, charge: true });
 
-  const made = decidePortfolioAnswer({ verdict: "answered", paragraphs: ["SNDK %55 ağırlıkta."], measures: [], partial: false }, grounding, "tr");
+  const made = decidePortfolioAnswer({ verdict: "answered", paragraphs: ["SNDK %55 ağırlıkta."], measures: [], partial: false, followUps: [] }, grounding, "tr");
   assert.equal(made.kind, "rejected");
   assert.equal(made.charge, false);
 
-  const advice = decidePortfolioAnswer({ verdict: "answered", paragraphs: ["SNDK %40 ağırlıkta; bir kısmını satmalısın."], measures: [], partial: false }, grounding, "tr");
+  const advice = decidePortfolioAnswer({ verdict: "answered", paragraphs: ["SNDK %40 ağırlıkta; bir kısmını satmalısın."], measures: [], partial: false, followUps: [] }, grounding, "tr");
   assert.equal(advice.kind, "rejected");
   /* Sahip: görüş serbest, sayı denetimi yine açık. */
-  const owner = decidePortfolioAnswer({ verdict: "advice", paragraphs: ["SNDK %40 ağırlıkta; bir kısmını satmalısın."], measures: [], partial: true }, grounding, "tr", { adviceAllowed: true });
+  const owner = decidePortfolioAnswer({ verdict: "advice", paragraphs: ["SNDK %40 ağırlıkta; bir kısmını satmalısın."], measures: [], partial: true, followUps: [] }, grounding, "tr", { adviceAllowed: true });
   assert.deepEqual(owner, { kind: "answered", paragraphs: ["SNDK %40 ağırlıkta; bir kısmını satmalısın."], partial: true, charge: true });
-  const ownerMade = decidePortfolioAnswer({ verdict: "answered", paragraphs: ["Hedef 120 dolar."], measures: [], partial: false }, grounding, "tr", { adviceAllowed: true });
+  const ownerMade = decidePortfolioAnswer({ verdict: "answered", paragraphs: ["Hedef 120 dolar."], measures: [], partial: false, followUps: [] }, grounding, "tr", { adviceAllowed: true });
   assert.equal(ownerMade.kind, "rejected");
 
-  assert.equal(decidePortfolioAnswer({ verdict: "not_in_data", paragraphs: [], measures: [], partial: false }, grounding, "tr").kind, "unanswerable");
-  assert.equal(decidePortfolioAnswer({ verdict: "scenario_unavailable", paragraphs: ["x"], measures: [], partial: false }, grounding, "tr").kind, "scenario-unavailable");
-  assert.equal(decidePortfolioAnswer({ verdict: "answered", paragraphs: [], measures: [], partial: false }, grounding, "tr").kind, "rejected");
+  assert.equal(decidePortfolioAnswer({ verdict: "not_in_data", paragraphs: [], measures: [], partial: false, followUps: [] }, grounding, "tr").kind, "unanswerable");
+  assert.equal(decidePortfolioAnswer({ verdict: "scenario_unavailable", paragraphs: ["x"], measures: [], partial: false, followUps: [] }, grounding, "tr").kind, "scenario-unavailable");
+  assert.equal(decidePortfolioAnswer({ verdict: "answered", paragraphs: [], measures: [], partial: false, followUps: [] }, grounding, "tr").kind, "rejected");
 });
 
 test("senaryo anahtarı ayrıştırmayı ayırt eder", () => {
   assert.equal(scenarioKey({ status: "none" }), "none");
   assert.equal(scenarioKey(parsed("MU'yu %10'a indirsem")), "setWeight:MU:10");
   assert.notEqual(scenarioKey(parsed("SNDK'yi satsam")), scenarioKey(parsed("NVDA'yı satsam")));
+});
+
+test("takip soruları: girdide olmayan sayı, tekrar ve üyede tavsiye kalıbı düşer; en çok 3", async () => {
+  const { pickFollowUps } = await import("../lib/portfolio-question-core");
+  const grounding = JSON.stringify({ weight: "%25" });
+  const items = ["MU'yu %25'e indirsem ne olur?", "MU'yu %23'e indirsem?", "mu'yu %25'e indirsem ne olur?", "SNDK'yi satmalısın", "Sektör dağılımım nasıl?", "Bilanço riski hangisinde?", "Fazla soru?"];
+  assert.deepEqual(pickFollowUps(items, grounding, "tr", false), ["MU'yu %25'e indirsem ne olur?", "Sektör dağılımım nasıl?", "Bilanço riski hangisinde?"]);
+  assert.ok(pickFollowUps(["SNDK'yi satmalısın"], grounding, "tr", true).length === 1, "sahipte görüş kalıbı serbest");
 });

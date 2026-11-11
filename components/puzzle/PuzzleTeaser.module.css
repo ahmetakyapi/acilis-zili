@@ -12,7 +12,14 @@
    pirinç yakın, nötr uzak; dağılım yumuşak mavi, bugünün sütunu yeşil.
    SAYILARDA `tabular-nums` YOK (virgülü rakam genişliğine çekiyor). */
 
-.teaser { container-type:inline-size; padding:.875rem 1rem; }
+.teaser { container-type:inline-size; position:relative; padding:.875rem 1rem; }
+/* DURUM ŞERİDİ (11 Kasım görsel turu; oyundaki kapak ve tahminler
+   paneliyle aynı dil): sürüyor mavi (devam edecek bir oyun var), bildin
+   yeşil, olmadı kırmızı; oynanmamışken şerit yok. Kart ana sayfada da
+   durumunu tek bakışta söylesin. */
+.teaser[data-durum]:not([data-durum="idle"])::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--primary); pointer-events:none; }
+.teaser[data-durum="won"]::before { background:var(--up); }
+.teaser[data-durum="lost"]::before { background:var(--down); }
 .body {
   display:grid;
   grid-template-columns:4.5rem minmax(0,1fr) auto;

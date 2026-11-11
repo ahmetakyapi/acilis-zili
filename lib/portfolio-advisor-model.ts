@@ -1,5 +1,6 @@
 import { z } from "zod";
 import { ungroundedNumbers } from "@/lib/ai-grounding";
+import { pickFollowUps } from "@/lib/portfolio-question-core";
 import type { Locale } from "@/lib/i18n/config";
 import type { ScanRow } from "@/lib/portfolio-scan-model";
 import { weightedChange } from "@/lib/portfolio-scan-model";
@@ -69,6 +70,8 @@ export const AdvisorSchema = z.object({
   ),
   risks: z.array(z.object({ title: z.string(), detail: z.string() })),
   outlook: z.string(),
+  /** Sohbeti başlatan 2–3 soru (11 Kasım): Claude'un okura sorduğu ya da okurun sorabileceği. */
+  followUps: z.array(z.string()),
 });
 export type AdvisorOutput = z.infer<typeof AdvisorSchema>;
 
@@ -78,6 +81,7 @@ export type AdvisorText = {
   actions: { kind: AdvisorActionKind; symbol: string | null; title: string; detail: string }[];
   risks: { title: string; detail: string }[];
   outlook: string;
+  followUps: string[];
 };
 
 /**
@@ -144,7 +148,7 @@ export function advisorInput(
  * eylemin sembolü girdide olmalı (yoksa sembolsüz kalır). Bütün metin sayı
  * denetiminden geçmezse HİÇ basılmaz.
  */
-export function checkAdvisor(out: AdvisorOutput, input: string, symbols: readonly string[]): { ok: true; text: AdvisorText } | { ok: false; reason: string } {
+export function checkAdvisor(out: AdvisorOutput, input: string, symbols: readonly string[], locale: Locale = "tr"): { ok: true; text: AdvisorText } | { ok: false; reason: string } {
   const known = new Set(symbols);
   const text: AdvisorText = {
     headline: out.headline.trim(),
@@ -158,10 +162,13 @@ export function checkAdvisor(out: AdvisorOutput, input: string, symbols: readonl
       .slice(0, 5),
     risks: out.risks.map((r) => ({ title: r.title.trim(), detail: r.detail.trim() })).filter((r) => r.title && r.detail).slice(0, 3),
     outlook: out.outlook.trim(),
+    followUps: [],
   };
   if (!text.headline || !text.summary) return { ok: false, reason: "empty" };
   const all = [text.headline, text.summary, text.outlook, ...text.actions.flatMap((a) => [a.title, a.detail]), ...text.risks.flatMap((r) => [r.title, r.detail])].join(" ");
   const missing = ungroundedNumbers(all, input);
   if (missing.length) return { ok: false, reason: `ungrounded (${missing.join(" ")})` };
+  /* Takip soruları ayrı süzülür: tutmayan soru düşer, not kalır. */
+  text.followUps = pickFollowUps(out.followUps, input, locale, true);
   return { ok: true, text };
 }

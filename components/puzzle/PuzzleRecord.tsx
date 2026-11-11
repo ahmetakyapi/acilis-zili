@@ -1,6 +1,7 @@
 import type { CSSProperties } from "react";
 import type { Icon } from "@phosphor-icons/react";
 import { Archive, Crown, Fire, GameController, Sparkle, Target } from "@phosphor-icons/react/dist/ssr";
+import { TickingFigure } from "@/components/ui/TickingFigure";
 import { cn, formatPercentPlain } from "@/lib/utils";
 import { MAX_GUESSES, currentStreak, emptyStats, type PuzzleStats } from "@/lib/stock-puzzle";
 import type { Locale } from "@/lib/i18n/config";
@@ -55,6 +56,19 @@ import styles from "./PuzzleRecord.module.css";
  * MOBİL TURU (25 Ekim): telefonda (< 1024) hiç oynanmamışken şerit tek
  * satır ("Henüz oynanmadı…"); oynanmışsa dağılım çubukları 40 → 24
  * piksel. Masaüstü değişmedi.
+ *
+ * KAHRAMAN SAYI (11 Kasım görsel turu). Altı sayı aynı puntoda (16
+ * piksel) yan yana diziliydi; göz hangisinin önemli olduğunu seçemiyordu
+ * ve şerit bir künye satırı gibi okunuyordu. Oyunun duygusu SERİ: o
+ * şimdi başlık satırının sağında 24 piksel display sayı (700, −0,03em),
+ * alevi ve adıyla; kalan beş sayaç altında tek satır hücrelerde (3 + 2),
+ * dağılım en sağda. Seri önce hücrelerin solunda ayrı bir kolondu: 1280'de
+ * hücreler 265 piksele sıkışıp "Oynanan", "Kazanma", "En İyi Seri" kesildi
+ * (ölçüldü); başlık satırı zaten boştu.
+ * Seri rakamı oyun bitip değişince `TickingFigure` ile yerine yuvarlanır
+ * (katalogdaki canlı sayı; dev-starter `digit-roll`ın bu projedeki
+ * karşılığı, ara değer yok). Şeridin boyu bütçede kaldı (ölçüm
+ * StockPuzzle.module.css).
  */
 /** Hücrelerin simgeleri. */
 const FIGURE_ICONS: Record<string, Icon> = {
@@ -88,14 +102,16 @@ export function PuzzleRecord({
   const streak = currentStreak(value, today);
   const winRate = played > 0 ? (value.wins / played) * 100 : 0;
   const max = Math.max(1, ...value.distribution);
+  const hot = streak >= 2;
+  /* Kahraman sayı seri; geri kalan beş sayaç küçük hücrelerde. */
   const figures = [
     { key: "played", label: labels.played, text: String(played) },
     { key: "rate", label: labels.winRate, text: formatPercentPlain(winRate, locale, 0) },
-    { key: "streak", label: labels.streak, text: String(streak), hot: streak >= 2 },
     { key: "best", label: labels.best, text: String(value.best) },
     { key: "archive", label: labels.archiveWins, short: labels.archiveWinsShort, text: String(value.archiveWins) },
     { key: "pure", label: labels.pureWins, short: labels.pureWinsShort, text: String(value.pureWins) },
   ];
+  const StreakGlyph = FIGURE_ICONS.streak;
 
   return (
     <section className={cn(styles.record, className)} aria-labelledby="bulmaca-seri" title={labels.statsNote} data-tahta="seri" data-bos={played === 0 ? "" : undefined}>
@@ -104,14 +120,21 @@ export function PuzzleRecord({
           piksel) yerine tek cümle; masaüstünde şerit aynı (tek ekran
           bütçesi). */}
       {played === 0 && <p className={styles.empty}>{labels.statsEmpty}</p>}
+      <p className={styles.hero} data-hot={hot ? "" : undefined}>
+        <StreakGlyph aria-hidden size={18} weight={hot ? "fill" : "bold"} className={styles.heroGlyph} />
+        {/* Depo okununca bir kez yerine oturur (key: sunucu çizimi 0);
+            sonra yalnız oyun bitince değişen rakam döner (TickingFigure). */}
+        <TickingFigure key={stats ? "depo" : "sunucu"} value={String(streak)} className={cn(styles.heroValue, "numeral")} />
+        <span className={styles.heroLabel}>{labels.streak}</span>
+      </p>
       <dl className={styles.stats}>
         {figures.map((figure) => {
           const Glyph = FIGURE_ICONS[figure.key];
           const short = figure.short && figure.short !== figure.label ? figure.short : null;
           return (
-            <div key={figure.key} data-extra={figure.short ? "" : undefined} data-hot={figure.hot ? "" : undefined}>
+            <div key={figure.key} data-extra={figure.short ? "" : undefined}>
               <dt title={short ? figure.label : undefined}>
-                <Glyph aria-hidden size={14} weight={figure.hot ? "fill" : "bold"} className={styles.glyph} />
+                <Glyph aria-hidden size={14} weight="bold" className={styles.glyph} />
                 {short ? (
                   <span className={styles.label}>
                     <span aria-hidden>{short}</span>
@@ -134,10 +157,9 @@ export function PuzzleRecord({
             const isToday = todaySlot === i + 1;
             return (
               <li key={i} data-today={isToday ? "" : undefined} title={`${labels.distribution}: ${i + 1} → ${count}`}>
-                <span aria-hidden className={styles.col}>
-                  <span className={styles.bar} style={{ "--v": count / max } as CSSProperties}>
-                    {count > 0 && <span className={cn(styles.count, "numeral")}>{count}</span>}
-                  </span>
+                <span aria-hidden className={styles.col} style={{ "--v": count / max } as CSSProperties}>
+                  <span className={styles.bar} />
+                  {count > 0 && <span className={cn(styles.count, "numeral")}>{count}</span>}
                 </span>
                 <span className={cn(styles.key, "numeral")}>{i + 1}</span>
                 <span className="sr-only">{count}{isToday ? `, ${labels.distToday}` : ""}</span>

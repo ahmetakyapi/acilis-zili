@@ -32,6 +32,10 @@ export const portfolioAnalysisVisualsTr = {
   compare: {
     portfolio: "Portföy",
     benchmark: "S&P 500",
+    /* Etkin pozisyon kartının iki çubuğu (11 Kasım): etkin sayı ile
+       pozisyon sayısı aynı ölçekte, Portföy/S&P 500 çiftlerinin dilinde. */
+    effective: "Etkin",
+    total: "Toplam",
   },
   matrix: {
     title: "En Büyük {n} Pozisyonun Isı Haritası",
@@ -83,6 +87,8 @@ export const portfolioAnalysisVisualsEn: typeof portfolioAnalysisVisualsTr = {
   compare: {
     portfolio: "Portfolio",
     benchmark: "S&P 500",
+    effective: "Effective",
+    total: "Total",
   },
   matrix: {
     title: "Heat Map of the {n} Largest Positions",

@@ -1,9 +1,13 @@
-/* Altı nokta — gerekçe GuessDots.tsx. 8 piksel nokta, 5 piksel aralık:
-   dizi 65 piksel, PanelHeader künyesinin satırına sığıyor (390'da ölçüldü). */
-.dots { display:inline-flex; align-items:center; gap:5px; vertical-align:middle; }
-.dot { width:8px; height:8px; border-radius:999px; border:1.5px solid var(--line-strong); background:transparent; transition:background-color 180ms var(--ease-brand), border-color 180ms var(--ease-brand); }
-.dot[data-state="miss"] { border-color:var(--text-muted); background:var(--text-muted); }
-.dot[data-state="hit"] { border-color:var(--primary); background:var(--primary); }
+/* Hak şeridi — gerekçe GuessDots.tsx. Altı bölme 12 × 6 piksel, 3 piksel
+   aralık: şerit 87 piksel, PanelHeader künyesinin satırına sığıyor
+   (11 Kasım, 390 ve 1440'ta ölçüldü). Eskiden 8 piksellik halkalar, dizi
+   65 piksel. Dolgu `scaleX` ile (yalnız kompozitör); ilk boyamada geçiş
+   yok, durum değişince `--mark` süresinde soldan dolar. Uçlar 999. */
+.dots { display:inline-flex; align-items:center; gap:3px; vertical-align:middle; }
+.dot { position:relative; overflow:hidden; width:12px; height:6px; border-radius:999px; background:var(--line); }
+.dot::after { content:""; position:absolute; inset:0; border-radius:inherit; background:var(--text-muted); transform:scaleX(0); transform-origin:left center; transition:transform var(--mark) var(--ease-brand), background-color 180ms var(--ease-brand); }
+.dot[data-state="miss"]::after { transform:none; }
+.dot[data-state="hit"]::after { transform:none; background:var(--up); }
 @media (prefers-reduced-motion: reduce) {
-  .dot { transition:none; }
+  .dot::after { transition:none; }
 }

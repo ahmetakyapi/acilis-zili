@@ -381,7 +381,7 @@ function poolOptions(pool: readonly PoolEntry[], locale: Locale): PoolOption[] {
 
 type PuzzleError = "unavailable" | "unknown-symbol" | "duplicate" | "too-many";
 
-type PuzzleResult =
+export type PuzzleResult =
   | { ok: true; state: PuzzleState; options: PoolOption[] }
   | { ok: false; error: PuzzleError };
 

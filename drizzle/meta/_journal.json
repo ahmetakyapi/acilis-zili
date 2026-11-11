@@ -309,6 +309,13 @@
       "when": 1794145761993,
       "tag": "0043_alert_state",
       "breakpoints": true
+    },
+    {
+      "idx": 44,
+      "version": "7",
+      "when": 1794389716803,
+      "tag": "0044_push_preferences",
+      "breakpoints": true
     }
   ]
 }

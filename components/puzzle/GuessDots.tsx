@@ -16,6 +16,17 @@ import styles from "./GuessDots.module.css";
  *
  * Tek parça bir görsel: ekran okuyucuya yalnız `label` ("2/6 Tahmin");
  * noktalar `aria-hidden`.
+ *
+ * HAK ŞERİDİ (11 Kasım görsel turu, dev-starter `snippets/ui/meter`in
+ * bölmeli kipinden uyarlama: lucide/motion yok, yalnız CSS). Altı 8
+ * piksellik halka künyede okunmuyordu; sahibinin çizim kuralı da
+ * "büyüklük kalın yatay şeritle" (`.claude/rules/arayuz.md`). Şimdi altı
+ * bölmeli tek şerit (bölme 12 × 6 piksel, 3 piksel aralık): kullanılmamış
+ * hak kulvar (`--line`; `--line-soft` açık temada panelde kayboluyordu), yanlış dolu nötr, doğru `--up`. Doğru tahmin
+ * artık mavi değil yeşil: yeşil sitede "bildin" (skor, tutan karolar,
+ * kazanılan siluet), mavi yalnız etkileşim. Bileşenin adı ve API'si aynı
+ * (oyun ve ana sayfa kartı aynı şeridi basar). Bölme durum DEĞİŞİNCE bir
+ * kez soldan dolar (`scaleX` geçişi, `--mark`); ilk boyamada geçiş yok.
  */
 export function GuessDots({
   results,

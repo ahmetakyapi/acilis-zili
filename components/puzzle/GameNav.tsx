@@ -79,7 +79,8 @@ export function GameNav({
           )}
           <span className={styles.day} title={day.dateLong}>
             <b className="numeral">#{day.number}</b>
-            <span aria-hidden>{day.dateLabel}</span>
+            <span aria-hidden className={styles.dayShort}>{day.dateLabel}</span>
+            <span aria-hidden className={styles.dayLong}>{day.dateLong}</span>
             <span className="sr-only">{day.dateLong}</span>
           </span>
           {day.nextHref ? (

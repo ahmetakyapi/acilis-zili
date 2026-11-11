@@ -110,6 +110,17 @@
 .lane { position:absolute; left:0; right:0; top:calc(50% - 2.5px); height:var(--lane-h,5px); border-radius:999px; background:var(--line-soft); }
 
 .heat { display:flex; align-self:center; gap:2px; height:18px; min-width:0; }
+/* Logolu karo (11 Kasım): şerit 18 → 30 piksel, karo logoyu ortalıyor;
+   logo 22'lik karo, kendi zemini ve kıl halkasıyla tonlu karonun üstünde
+   okunur. Kap 480'in altında ya da üye 26'dan çoksa (karo < ~20 piksel)
+   logo gizli, şerit eski 18 pikseline döner. */
+.stage { container:heat / inline-size; }
+.cellLogo { display:none; }
+@container heat (min-width:480px) {
+  .heat:not([data-dense]) { height:30px; gap:3px; }
+  .heat:not([data-dense]) .cell { display:grid; place-items:center; min-width:24px; border-radius:6px; }
+  .heat:not([data-dense]) .cellLogo { display:block; width:20px; height:20px; box-shadow:0 0 0 1.5px var(--premium-surface); }
+}
 .heatLane { flex:1; border-radius:4px; background:var(--line-soft); }
 /* Renk: ısı haritasının kademeleri (eşikler `heatOf`: 0 · 0,5 · 1,5 · 3
    puan; en koyu kademe globals `--heat-deep-*`). ARA KADEMELER HARİTADAN

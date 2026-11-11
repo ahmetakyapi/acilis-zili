@@ -44,6 +44,9 @@
 /* Çapa: aynı sayfada aşağı iner — kıl çizgi bile yok, en sessiz kademe. */
 .quiet { border-color: transparent; background: transparent; padding-inline: 6px; }
 .quiet:hover .arrow { translate: 0 2px; }
+/* Çapanın etiketi her genişlikte görünür (11 Kasım; gerekçe AskStockChip). */
+.askLabel { color: var(--text-strong); }
+.chip:hover .askLabel { color: var(--primary-ink); }
 @media (prefers-reduced-motion: reduce) {
   .chip, .spark, .arrow { transition: none; }
   .chip:hover .spark { rotate: none; }

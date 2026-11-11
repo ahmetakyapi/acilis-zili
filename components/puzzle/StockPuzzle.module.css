@@ -14,6 +14,14 @@
   .leadBody, .cluesBody, .guessesBody { padding:0 1.25rem 1rem; }
 }
 
+/* DURUM ŞERİDİ (11 Kasım görsel turu): bitmiş oyunda tahminler paneli
+   tepesinde 3 piksellik şerit taşır, sitenin kart dili (bilanço, teknik,
+   risk kartları): bildin `--up`, olmadı `--down`. Oynanırken şerit yok
+   (henüz bir sonuç yok). Kapak kartı aynı şeridi taşır (PuzzleCover). */
+.guesses { position:relative; }
+.guesses[data-durum]::before { content:""; position:absolute; inset:0 0 auto; z-index:1; height:3px; background:var(--down); pointer-events:none; }
+.guesses[data-durum="won"]::before { background:var(--up); }
+
 .missing { margin:0 0 .625rem; font-size:var(--text-small); line-height:1.5; color:var(--text-muted); }
 .axisLock { display:inline-flex; align-items:center; gap:.3125rem; }
 
@@ -23,7 +31,10 @@
 .error { margin:0 0 .5rem; font-size:var(--text-small); color:var(--down); }
 /* Joker kısayolu: küçük tuş, yalnız ince imleçli ekranda (dokunmatikte
    klavye yok). Derinlik tonla, alt kenar bir ton koyu. */
-.kbd { display:none; min-width:1.125rem; padding:0 .25rem; border-radius:4px; border:1px solid var(--line); border-bottom-width:2px; background:var(--surface-sunken); font-family:var(--font-mono); font-size:var(--text-nano); font-weight:700; line-height:1.4; color:var(--text-muted); }
+/* 11 Kasım: dev-starter `snippets/ui/kbd`in "board" dili — küçük beyaz
+   karo, kıl çizgisi ve rayın hap gölgesi (`--shadow-raised`); eski kalın
+   alt kenar daktilo tuşu gibi ağırdı. Yazı gövde fontu (mono değil). */
+.kbd { display:none; min-width:1.25rem; height:1.25rem; padding:0 .3125rem; border-radius:5px; border:1px solid var(--line); background:var(--overlay-surface); box-shadow:var(--shadow-raised); font-size:var(--text-nano); font-weight:600; line-height:1.125rem; text-align:center; color:var(--text-muted); }
 @media (hover: hover) and (pointer: fine) and (min-width: 640px) {
   .kbd { display:inline-block; }
 }

@@ -44,95 +44,10 @@ export const watchlistTodayEn: typeof watchlistTodayTr = {
     "This reading was written with Claude from your watchlist and the last completed session's close; live prices on screen are not part of it. Not investment advice.",
 };
 
-export const askStockTr = {
-  title: "Bu Hisseye Sor",
-  intro: "Sorunu yaz; Claude yalnız bu sayfadaki veriden yanıtlar ve al/sat tavsiyesi vermez.",
-  label: "Bu hisse hakkındaki sorun",
-  placeholder: "Örneğin: son bilançoda beklentiyi aştı mı?",
-  submit: "Sor",
-  asking: "Claude sayfanın verisini okuyor…",
-  remaining: "{n}/{limit} Soru Hakkı Kaldı",
-  examplesLabel: "Örnek Sorular",
-  examples: ["Son bilançoda beklentiyi aştı mı?", "Analistler bu hisse için ne diyor?", "Temettü ödüyor mu, verimi ne kadar?"],
-  question: "Soru",
-  answer: "Claude'un Yanıtı",
-  advice: "Tavsiye Değil",
-  unanswerable: "Bu soruyu sayfadaki veriyle cevaplayamıyorum. Fiyat, değerleme, bilanço, analistler, temettü ya da haberlerle ilgili bir soru deneyebilirsin.",
-  sourcesLabel: "Yararlanılan Veri",
-  sources: {
-    session: "Son Seans",
-    valuation: "Değerleme",
-    scorecard: "Skor Kartı",
-    analysts: "Analist Dağılımı",
-    earnings: "Bilanço Geçmişi",
-    nextEarnings: "Sıradaki Bilanço",
-    dividends: "Temettü",
-    news: "Haber Başlıkları",
-    notes: "Claude Notları",
-  },
-  newsLabel: "Kaynak Haberler",
-  session: "{date} Kapanışına Kadar Veri",
-  signedOut: "Bu hisse hakkında merak ettiğini sor; Claude yanıtı yalnız bu sayfadaki veriden yazar, al/sat tavsiyesi vermez. Soru sormak için giriş yap.",
-  signIn: "Giriş Yap ve Sor",
-  previewSources: "Yanıtın Dayanabileceği Veri",
-  memberQuota: "Üyelere Günde {limit} Soru",
-  errors: {
-    quota: "Bugünkü soru hakkın doldu; yarın yeniden sorabilirsin.",
-    busy: "Önceki sorun hâlâ yanıtlanıyor; birkaç saniye bekle.",
-    budget: "Claude'un bugünkü payı doldu; biraz sonra yeniden dene.",
-    rate: "Biraz hızlı gittin; bir dakika içinde yeniden dene.",
-    question: "Soru 3 ile 300 karakter arasında olmalı.",
-    auth: "Oturumun kapanmış; yeniden giriş yap.",
-    error: "Yanıt şu an alınamadı; birazdan yeniden dene.",
-  },
-  disclosure:
-    "Yanıtlar Claude ile, yalnız bu sayfadaki veriden ve son tamamlanmış seansın kapanışından yazılır; yanıttaki her sayının veride geçmesi gerekir. Yatırım tavsiyesi değildir.",
-};
-
-export const askStockEn: typeof askStockTr = {
-  title: "Ask About This Stock",
-  intro: "Type your question; Claude answers only from the data on this page and gives no buy or sell advice.",
-  label: "Your question about this stock",
-  placeholder: "For example: did it beat estimates last quarter?",
-  submit: "Ask",
-  asking: "Claude is reading the page data…",
-  remaining: "{n}/{limit} Questions Left Today",
-  examplesLabel: "Example Questions",
-  examples: ["Did it beat estimates last quarter?", "What do analysts say about this stock?", "Does it pay a dividend, and what is the yield?"],
-  question: "Your Question",
-  answer: "Claude's Answer",
-  advice: "Not Advice",
-  unanswerable: "I can't answer this question with the data on this page. Try asking about the price, valuation, earnings, analysts, dividends or the news.",
-  sourcesLabel: "Data Used",
-  sources: {
-    session: "Last Session",
-    valuation: "Valuation",
-    scorecard: "Scorecard",
-    analysts: "Analyst Ratings",
-    earnings: "Earnings History",
-    nextEarnings: "Next Earnings",
-    dividends: "Dividends",
-    news: "Headlines",
-    notes: "Claude Notes",
-  },
-  newsLabel: "Source Headlines",
-  session: "Data Through the {date} Close",
-  signedOut: "Ask what you want to know about this stock; Claude answers only from the data on this page and gives no buy or sell advice. Sign in to ask.",
-  signIn: "Sign In and Ask",
-  previewSources: "Data an Answer Can Draw On",
-  memberQuota: "{limit} Questions a Day for Members",
-  errors: {
-    quota: "You've used today's questions; you can ask again tomorrow.",
-    busy: "Your previous question is still being answered; give it a few seconds.",
-    budget: "Claude's share for today is used up; try again a little later.",
-    rate: "That was quick; try again within a minute.",
-    question: "The question should be between 3 and 300 characters.",
-    auth: "Your session has ended; sign in again.",
-    error: "Couldn't get an answer right now; try again shortly.",
-  },
-  disclosure:
-    "Answers are written with Claude only from this page's data and the last completed session's close; every number in an answer must appear in that data. Not investment advice.",
-};
+/* `askStock` 11 Kasım'da kendi dosyasına taşındı (ask-stock.ts); adlar
+   buradan yeniden dışa aktarılıyor ki tr.ts / en.ts'teki içe aktarma ve
+   anahtar değişmesin. */
+export { askStockEn, askStockTr, type AskStockLabels } from "./ask-stock";
 
 /* Bu Hafta Neden Hareket Etti, kompakt kart (25 Ekim) — components/stock/
    WeekMoveCard.tsx. Kartın öteki metinleri `stockInsight`te (eski tam
@@ -148,4 +63,3 @@ export const stockWeekEn: typeof stockWeekTr = {
 };
 
 export type WatchlistTodayLabels = typeof watchlistTodayTr;
-export type AskStockLabels = typeof askStockTr;

@@ -4,9 +4,7 @@ import { auth } from "@/auth";
 import { SentimentPulse } from "@/components/markets/SentimentPulse";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Money } from "@/components/portfolio/Money";
-import { PortfolioScanBrief } from "@/components/portfolio/PortfolioScan";
-import { AdvisorBrief } from "@/components/portfolio/analysis/AdvisorDesk";
-import { EarningsDeskBrief } from "@/components/portfolio/EarningsDesk";
+import { ClaudeBrief } from "@/components/portfolio/ClaudeBrief";
 import { getAdmin } from "@/lib/admin";
 import { PrivacyToggle } from "@/components/portfolio/PrivacyToggle";
 import { ButtonLink, ChangePill, DataStamp, LogoTile, Panel, PanelLink } from "@/components/ui/primitives";
@@ -329,20 +327,21 @@ function PortfolioSummary({
       </div>
       </div>
 
-      {/* GÜNÜN TARAMASI (10 Kasım, sahibinin isteği: "her gün portföye AI
-          taraması… ana sayfadaki kısımda da gözüksün"). Claude'un o günkü
-          taraması: başlık, özet, üç tema; site sahibinde Kişisel Plan
-          hapları. İstemciden, kart görünüme yaklaşınca istenir; tarama o
-          günün ilk açılışında yazılır (lib/portfolio-scan.ts). Yazılamazsa
-          bölüm hiç basılmaz. */}
-      <PortfolioScanBrief locale={locale} labels={t.portfolioScan} />
-      {/* Bilanço Masası'nın tek satırlık özeti (11 Kasım): portföyde yaklaşan
-          ya da yeni açıklanmış bilanço varsa; yoksa hiçbir şey basmaz. */}
-      <EarningsDeskBrief locale={locale} labels={t.earningsDesk} />
-      {/* DANIŞMANIN BUGÜNÜ (11 Kasım, sahibinin isteği: "ana sayfaya da
-          özet bilgiler yazsın o karta"). Yalnız site sahibinde: günlük
-          danışman notunun başlığı ve ilk üç adımı; tamamı /portfoy/analiz. */}
-      {owner && <AdvisorBrief locale={locale} labels={t.portfolioAdvisor} />}
+      {/* CLAUDE · BUGÜN (11 Kasım). Burada üç ayrı kutu vardı — Günün
+          Taraması (10 Kasım), Bilanço Masası'nın satırı ve sahibe
+          Danışmanın Bugün (11 Kasım) — ve 1440'ta ~1.000 piksel tutuyordu;
+          sahibi: "çok daha görsel, çok daha kompakt, animasyonlu, daha
+          okunabilir". Tek bölüm: başlık + özet + tema hapları, pozisyon
+          başına logolu karo (beş seanslık şerit, görüş hapı, kâr al / zarar
+          kes), bilanço çipleri, bağlantılar. Gerekçe ve ölçüm
+          components/portfolio/ClaudeBrief.tsx. Logolar sunucudan
+          (`names`), istek yok. */}
+      <ClaudeBrief
+        locale={locale}
+        owner={owner}
+        logos={Object.fromEntries(Object.entries(names).map(([symbol, meta]) => [symbol, meta?.logoUrl ?? null]))}
+        labels={{ brief: t.claudeBrief, scan: t.portfolioScan, desk: t.earningsDesk, advisor: t.portfolioAdvisor }}
+      />
 
       {/* KÜNYE SADELEŞTİ (10 Kasım, sahibinin sorusu: "kartın altındaki
           bilgilere gerek var mı"). Burada iki ikonlu cümle vardı: "bugün

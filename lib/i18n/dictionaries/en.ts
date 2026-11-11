@@ -33,6 +33,8 @@ import { toolVisualsEn } from "./tool-visuals";
 import { portfolioWeeklyEn } from "./portfolio-weekly";
 import { portfolioAdvisorEn } from "./portfolio-advisor";
 import { portfolioAskEn } from "./portfolio-ask";
+import { claudeBriefEn } from "./claude-brief";
+import { pushPrefsEn } from "./push-prefs";
 import { earningsDeskEn } from "./earnings-desk";
 import { homeEarningsEn } from "./home-earnings";
 
@@ -4189,7 +4191,7 @@ const en: typeof tr = {
   },
   notifications: {
     title: "Notifications",
-    hint: "When a price alert fires, this device gets a notification — even with the site closed. Permission is per device: turn it on separately on your phone and your computer.",
+    hint: "Alerts and the summaries you choose arrive on this device as notifications, even with the site closed. Permission is per device: turn it on separately on your phone and your computer.",
     enable: "Turn On for This Device",
     enabling: "Turning On…",
     disabling: "Turning Off…",
@@ -4538,6 +4540,8 @@ const en: typeof tr = {
   portfolioWeekly: portfolioWeeklyEn,
   portfolioAdvisor: portfolioAdvisorEn,
   portfolioAsk: portfolioAskEn,
+  claudeBrief: claudeBriefEn,
+  pushPrefs: pushPrefsEn,
   earningsDesk: earningsDeskEn,
   homeEarnings: homeEarningsEn,
 };

@@ -13,6 +13,8 @@ import { Button } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
 import type { Dictionary } from "@/lib/i18n";
 import { deviceLabel } from "@/lib/push-device";
+import type { PushPrefs } from "@/lib/push-prefs-model";
+import { PushKindPrefs } from "./PushKindPrefs";
 
 /**
  * Ayarlar → Bildirimler. Gerekçe lib/push.ts ve public/sw.js.
@@ -73,6 +75,8 @@ export function PushSettings({
   publicKey,
   devices,
   earnings,
+  kinds,
+  kindLabels,
   labels,
 }: {
   /** `null`: sunucuda VAPID anahtarı yok — panel yalnızca bunu söylüyor. */
@@ -80,6 +84,9 @@ export function PushSettings({
   devices: number;
   /** Bilanço hatırlatması tercihi; `null` tablo yok demek — anahtar basılmaz. */
   earnings: { enabled: boolean } | null;
+  /** Push tür tercihleri (11 Kasım); `null` tablo yok — bölüm basılmaz. */
+  kinds?: PushPrefs | null;
+  kindLabels?: Dictionary["pushPrefs"];
   labels: Dictionary["notifications"];
 }) {
   const router = useRouter();
@@ -253,6 +260,19 @@ export function PushSettings({
             </span>
           )}
         </div>
+      )}
+
+      {/* TÜR TERCİHLERİ (11 Kasım) — gerekçe PushKindPrefs. Kilit hesaptaki
+          cihaz sayısından: bu tarayıcı kapalı ama telefon açıksa tercih
+          yine anlamlı. Bu cihaz az önce açıldıysa sunucu sayısı henüz
+          tazelenmemiş olabilir, `state` de sayılır. */}
+      {kinds && kindLabels && publicKey && state !== "unsupported" && (
+        <PushKindPrefs
+          prefs={kinds}
+          locked={devices === 0 && state !== "on" && state !== "disabling"}
+          labels={kindLabels}
+          onError={(text) => setFlash({ kind: "error", text })}
+        />
       )}
 
       {/* BİLANÇO HATIRLATMASI (15 Ekim) — hesap genelinde, cihaz başına

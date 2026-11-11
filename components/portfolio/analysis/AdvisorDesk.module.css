@@ -101,3 +101,18 @@
 .briefLink:hover { color:var(--primary-hover); }
 .briefLink svg { transition:translate 200ms var(--ease-brand); }
 .briefLink:hover svg { translate:3px 0; }
+
+/* ---- Danışmanla sohbet (11 Kasım) ----
+   Notun altında, hairline ile ayrık; sohbet bileşenleri ortak
+   (components/ai/chat). Ölçü çipleri yanıtın altında, yön renginde değer. */
+.chat { display:flex; flex-direction:column; gap:14px; padding-top:18px; border-top:1px solid var(--line-soft); }
+.chatHead { display:flex; flex-direction:column; gap:4px; }
+.chatHead .sectionTitle { margin-bottom:0; }
+.chatIntro { max-width:70ch; color:var(--text-muted); font-size:var(--text-small); line-height:1.55; }
+.chatError { color:var(--text-muted); font-size:var(--text-small); }
+.chatMeasures { display:flex; flex-wrap:wrap; gap:6px; margin-top:10px; }
+.chatMeasures li { display:inline-flex; align-items:baseline; gap:6px; padding:5px 10px; border-radius:999px; background:var(--surface-sunken); font-size:var(--text-tiny); }
+.chatMeasures span { color:var(--text-muted); font-weight:600; }
+.chatMeasures b { color:var(--text-strong); font-weight:700; }
+.chatMeasures li[data-tone="up"] b { color:var(--up); }
+.chatMeasures li[data-tone="down"] b { color:var(--down); }

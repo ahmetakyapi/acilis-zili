@@ -2,7 +2,7 @@ import "server-only";
 import { createHash } from "node:crypto";
 import { unstable_cache } from "next/cache";
 import { getAdmin } from "@/lib/admin";
-import { ClaudeBudgetError, memberClient } from "@/lib/claude-budget";
+import { ClaudeBudgetError, memberClient, ownerClient } from "@/lib/claude-budget";
 import { getDictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import { getPortfolioAnalysis } from "@/lib/portfolio-analysis";
@@ -16,6 +16,7 @@ import {
   PORTFOLIO_QUESTION_DAILY_LIMIT,
   PORTFOLIO_QUESTION_DAILY_MISSES,
   PortfolioAnswerSchema,
+  pickFollowUps,
   scenarioKey,
   unavailableScenario,
   type MeasureCard,
@@ -69,7 +70,14 @@ export type PortfolioAskAnswer = {
   owner: boolean;
   /** Verinin anlattığı son tamamlanmış seansın ET günü. */
   session: string;
+  /** Claude'un önerdiği takip soruları (denetimden geçmiş). */
+  followUps: string[];
 };
+
+/** Sohbetin önceki adımları (en yeni sonda) — yalnız bağlam, sayı kaynağı değil. */
+export type PortfolioTurn = { question: string; answer: string };
+const MAX_TURNS = 3;
+const TURN_ANSWER_CHARS = 600;
 
 export type PortfolioAskResult =
   | { ok: true; answer: PortfolioAskAnswer; remaining: number }
@@ -78,9 +86,16 @@ export type PortfolioAskResult =
 /* Sayaç `globalThis`te — gerekçe lib/stock-question.ts (Turbopack sayfa ve
    `/api` ucunu ayrı çalışma zamanlarına koyuyor). Hisse sorusundan AYRI
    depo: iki kutunun hakları birbirini yemez. */
-const shared = globalThis as typeof globalThis & { __azPortfolioQuestionQuota?: QuotaStore; __azPortfolioQuestionInflight?: Set<string> };
+const shared = globalThis as typeof globalThis & { __azPortfolioQuestionQuota?: QuotaStore; __azOwnerQuestionQuota?: QuotaStore; __azPortfolioQuestionInflight?: Set<string> };
 shared.__azPortfolioQuestionQuota ??= new Map();
 shared.__azPortfolioQuestionInflight ??= new Set();
+
+/* Sahibin ayrı kotası (11 Kasım): danışmanla sohbet bir oturumda birkaç tur
+   sürüyor; üyenin 5 sorusu ilk adımda bitiyordu. Bütçe kimliği de ayrı
+   (`ownerClient`, lib/claude-budget.ts → OWNER_DAILY_CALLS). */
+export const OWNER_QUESTION_DAILY_LIMIT = 30;
+shared.__azOwnerQuestionQuota ??= new Map();
+export const ownerQuestionQuota = createQuestionQuota(shared.__azOwnerQuestionQuota, OWNER_QUESTION_DAILY_LIMIT, undefined, 8);
 
 export const portfolioQuestionQuota = createQuestionQuota(
   shared.__azPortfolioQuestionQuota,
@@ -97,6 +112,9 @@ const RULES_TR = `Çıktı:
 - paragraphs: 1-3 kısa paragraf, toplam en çok 120 kelime. "not_in_data" ve "scenario_unavailable"da boş bırak.
 - measures: yanıtın dayandığı ölçülerin kimlikleri, en çok 6, önem sırasıyla. Biçim: "portfolio.<alan>" (portfolio bloğu), "<SEMBOL>.<alan>" (positions içindeki alan: weight, lastSession, lastFiveSessions, last21Sessions, sinceAverageCost), "risk.<alan>" (risk bloğu), "scenario.<alan>" (symbolWeight, top5Weight, largest, effectivePositions, sectorWeight).
 - partial: sorunun bir kısmı veride yoksa true (o kısmı yanıtta tek cümleyle söyle).
+- followUps: okurun sorabileceği 2-3 kısa takip sorusu (her biri en çok 12 kelime), bu yanıttan ve veriden doğan; birinci tekil şahısla ("SNDK'yi azaltsam ne olur?"). Yalnız veride yanıtı olan sorular; girdide olmayan sayı yazma.
+
+Sohbet: girdide "conversation" varsa önceki sorular ve senin kısa yanıtlarındır; bağlamı oradan al ("onu", "peki ya MU" gibi göndermeleri çöz), ama sayıları yine YALNIZ portfolio verisinden yaz.
 
 Senaryo: girdide "scenario" varsa ve "computable": true ise hesabı SİTE yaptı; önce (before) ve sonra (after) değerlerini aynen aktar, varsayımı (assumption) bir cümleyle an. Kendin hiçbir şey hesaplama: fark, toplam, ortalama, yeni ağırlık yok. "computable": false ise verdict "scenario_unavailable".
 
@@ -112,6 +130,9 @@ const RULES_EN = `Output:
 - paragraphs: 1-3 short paragraphs, at most 120 words in total. Empty for "not_in_data" and "scenario_unavailable".
 - measures: ids of the measures the answer relies on, at most 6, most important first. Format: "portfolio.<field>" (portfolio block), "<SYMBOL>.<field>" (a positions field: weight, lastSession, lastFiveSessions, last21Sessions, sinceAverageCost), "risk.<field>" (risk block), "scenario.<field>" (symbolWeight, top5Weight, largest, effectivePositions, sectorWeight).
 - partial: true if part of the question is not in the data (say so in one sentence).
+- followUps: 2-3 short follow-up questions (at most 12 words each) the reader could ask next, arising from this answer and the data; first person ("What if I trimmed SNDK?"). Only questions the data can answer; no numbers that are not in the input.
+
+Conversation: when the input has "conversation", it holds the earlier questions and your short answers; take context from it (resolve "it", "what about MU"), but take numbers ONLY from the portfolio data.
 
 Scenario: if the input has "scenario" with "computable": true, the SITE did the math; copy the before and after values exactly and mention the assumption in one sentence. Compute nothing yourself: no differences, sums, averages or new weights. If "computable": false, the verdict is "scenario_unavailable".
 
@@ -171,8 +192,11 @@ async function riskBlock(holdings: { symbol: string; quantity: number }[], local
  * Okurun sorusu. Kota ve uçuştaki soru burada; uç (app/api/ai/portfoy-sor)
  * kimlik, köken, bot ve soru denetimini yapmış olarak çağırır.
  */
-export async function askPortfolio(userId: string, question: string, locale: Locale): Promise<PortfolioAskResult> {
-  const remaining = () => portfolioQuestionQuota.left(userId);
+export async function askPortfolio(userId: string, question: string, locale: Locale, history: readonly PortfolioTurn[] = []): Promise<PortfolioAskResult> {
+  /* Sahip kendi kotasıyla (danışmanla sohbet); kim olduğu sorgudan önce. */
+  const ownerFirst = (await getAdmin())?.userId === userId;
+  const quota = ownerFirst ? ownerQuestionQuota : portfolioQuestionQuota;
+  const remaining = () => quota.left(userId);
   if (remaining() <= 0) return { ok: false, reason: "quota", remaining: 0 };
   if (inflight.has(userId)) return { ok: false, reason: "busy", remaining: remaining() };
   inflight.add(userId);
@@ -181,7 +205,8 @@ export async function askPortfolio(userId: string, question: string, locale: Loc
   try {
     const holdings = await holdingsOf(userId);
     if (!holdings) return { ok: false, reason: "empty", remaining: remaining() };
-    const [session, owner] = await Promise.all([expectedLastSession(), getAdmin().then((admin) => admin?.userId === userId)]);
+    const session = await expectedLastSession();
+    const owner = ownerFirst;
     const inputs = await gather(holdings, locale);
     const rows = scanRows(inputs);
     /* Taramayla aynı eşik: pozisyonların yarısı ölçülemiyorsa yanıt yarım veriye dayanırdı. */
@@ -196,6 +221,8 @@ export async function askPortfolio(userId: string, question: string, locale: Loc
     const risk = await riskBlock(holdings.map(([symbol, h]) => ({ symbol, quantity: h.quantity })), locale);
     const largestSector = base.sectors[0] ? `${base.sectors[0].sector} ${base.sectors[0].weight}` : null;
 
+    const turns = history.slice(-MAX_TURNS).map((t) => ({ question: t.question.slice(0, 300), answer: t.answer.slice(0, TURN_ANSWER_CHARS) }));
+    const turnsKey = turns.length ? createHash("sha256").update(JSON.stringify(turns)).digest("hex").slice(0, 12) : "-";
     const parsed = parseScenario(question, rows.map((r) => r.symbol));
     let scenario: QuestionContext["scenario"] = null;
     if (parsed.status === "unparsed") scenario = unavailableScenario(parsed.reason, locale);
@@ -219,32 +246,46 @@ export async function askPortfolio(userId: string, question: string, locale: Loc
 
     const answer = await unstable_cache(
       async (): Promise<PortfolioAskAnswer> => {
-        const out = await callClaude((owner ? OWNER_SYSTEM : SYSTEM)[locale], PortfolioAnswerSchema, JSON.stringify({ question, portfolio: context }), memberClient(userId));
+        const out = await callClaude(
+          (owner ? OWNER_SYSTEM : SYSTEM)[locale],
+          PortfolioAnswerSchema,
+          JSON.stringify({ question, ...(turns.length ? { conversation: turns } : {}), portfolio: context }),
+          owner ? ownerClient(userId) : memberClient(userId),
+        );
         wrote = true;
         if (!out) throw new Error("no-output");
         const decision = decidePortfolioAnswer(out, input, locale, { adviceAllowed: owner });
         /* Denetimden düşen yanıt ÖNBELLEĞE GİRMEZ ve hak düşmez (aşağıda `miss`). */
         if (decision.kind === "rejected") throw new RejectedAnswer(decision.reason, decision.missing);
         if (!("paragraphs" in decision))
-          return { kind: decision.kind, paragraphs: [], measures: [], partial: false, owner, session };
-        return { kind: decision.kind, paragraphs: decision.paragraphs, measures: pickMeasures(out.measures, catalog), partial: decision.partial, owner, session };
+          return { kind: decision.kind, paragraphs: [], measures: [], partial: false, owner, session, followUps: pickFollowUps(out.followUps, input, locale, owner) };
+        return {
+          kind: decision.kind,
+          paragraphs: decision.paragraphs,
+          measures: pickMeasures(out.measures, catalog),
+          partial: decision.partial,
+          owner,
+          session,
+          followUps: pickFollowUps(out.followUps, input, locale, owner),
+        };
       },
       /* Anahtar: soru + portföy parmak izi + seans + dil + sahiplik + senaryo
          ayrıştırması. Kullanıcı kimliği YOK: aynı portföy aynı yanıtı alır. */
-      ["portfolio-question-v1", owner ? "owner" : "member", locale, session, fingerprint, questionKey(question, locale), scenarioKey(parsed)],
+      /* v2 (11 Kasım): takip soruları ve sohbet bağlamı; bağlamın özeti anahtarda. */
+      ["portfolio-question-v2", owner ? "owner" : "member", locale, session, fingerprint, questionKey(question, locale), scenarioKey(parsed), turnsKey],
       { revalidate: ANSWER_TTL_S, tags: ["portfolio-question"] },
     )();
-    if (wrote) portfolioQuestionQuota.charge(userId);
+    if (wrote) quota.charge(userId);
     return { ok: true, answer, remaining: remaining() };
   } catch (error) {
     if (error instanceof RejectedAnswer) {
-      portfolioQuestionQuota.miss(userId);
+      quota.miss(userId);
       console.error(`[portföyüne sor] ${error.reason} (${error.missing.join(" ")})`);
       return { ok: false, reason: "unverified", remaining: remaining() };
     }
     if (error instanceof ClaudeBudgetError) return { ok: false, reason: "budget", remaining: remaining() };
     /* Claude'a gidildi ama çıktı gelmedi: çağrı ödendi, boşa giden deneme. */
-    if (wrote) portfolioQuestionQuota.miss(userId);
+    if (wrote) quota.miss(userId);
     console.error(`[portföyüne sor] ${error instanceof Error ? error.message : "?"}`);
     return { ok: false, reason: "error", remaining: remaining() };
   } finally {

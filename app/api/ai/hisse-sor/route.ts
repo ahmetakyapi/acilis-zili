@@ -8,11 +8,11 @@ import { rateLimit } from "@/lib/rate-limit";
 import { readTextCapped } from "@/lib/read-body";
 import { insightsConfigured } from "@/lib/stock-insights";
 import { askStock, questionQuota } from "@/lib/stock-question";
-import { normalizeQuestion } from "@/lib/stock-question-core";
+import { normalizeHistory, normalizeQuestion } from "@/lib/stock-question-core";
 import { isValidSymbol } from "@/lib/utils";
 
 /**
- * Bu Hisseye Sor (24 Ekim) — POST `{ symbol, question, locale }`. Gerekçe,
+ * Bu Hisseye Sor (24 Ekim) — POST `{ symbol, question, locale, history? }`. Gerekçe,
  * veri ve doğruluk kuralları lib/stock-question.ts.
  *
  * Çerez kimliğiyle ücretli çağrı başlatan uç: köken aynı site olmalı
@@ -20,11 +20,17 @@ import { isValidSymbol } from "@/lib/utils";
  * (lib/read-body.ts), bot ve oturumsuz geri çevrilir. Okur başına dakikada
  * 5 istek; günlük hak ve uçuştaki soru `askStock`ta. Fon sayfasında kutu
  * basılmıyor (değerleme, analist ve bilanço verisi yok); uç da kabul etmez.
+ *
+ * SOHBET (11 Kasım): gövde isteğe bağlı `history` taşır — aynı oturumdaki
+ * önceki en çok iki soru-yanıt (`normalizeHistory`, lib/stock-question-core.ts;
+ * fazlası ve bozuk tur sessizce atılır). Tavan 2 KB'den 6 KB'ye çıktı: soru
+ * 300 + iki tur × (300 + 320) karakter, Türkçe harf UTF-8'de iki bayt
+ * (en kötü ~3,9 KB) ve JSON payı. Günlük hak ve dakika sınırı aynen.
  */
 export const dynamic = "force-dynamic";
 export const maxDuration = 90;
 
-const MAX_BODY_BYTES = 2048;
+const MAX_BODY_BYTES = 6144;
 const PER_MINUTE = 5;
 
 const respond = (data: unknown, status = 200) =>
@@ -34,6 +40,8 @@ const Body = z.object({
   symbol: z.string().max(12),
   question: z.string().max(600),
   locale: z.enum(["tr", "en"]),
+  /* Biçim burada yalnız kabaca sınırlanır; temizlik ve kısaltma `normalizeHistory`. */
+  history: z.array(z.unknown()).max(4).optional(),
 });
 
 export async function POST(request: Request) {
@@ -60,7 +68,7 @@ export async function POST(request: Request) {
   if (!question) return respond({ ok: false, reason: "question", remaining: questionQuota.left(userId) }, 400);
   if (!isValidSymbol(symbol) || fundMetaOf(symbol) || !(await isKnownSymbol(symbol))) return respond({ ok: false, reason: "unknown" }, 404);
 
-  const result = await askStock(userId, symbol, question, body.locale);
+  const result = await askStock(userId, symbol, question, body.locale, normalizeHistory(body.history));
   const status = result.ok ? 200 : result.reason === "quota" || result.reason === "busy" ? 429 : result.reason === "budget" ? 503 : 502;
   return respond(result, status);
 }

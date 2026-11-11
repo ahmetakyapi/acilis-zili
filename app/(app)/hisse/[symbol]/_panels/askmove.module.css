@@ -14,9 +14,13 @@
    istenmeden önceki hâl; NVDA ve JPM, iki dil): 1920'de 286, 1280–1440
    354–372,
    1024'te 415–427, 768'de 649–687, 390'da 882–900. Panel her genişlikte
-   ilk ekranın altında; yedek yine gerçeğin ortasında. */
+   ilk ekranın altında; yedek yine gerçeğin ortasında.
+   11 Kasım: soru kolonu sohbete döndü (AskStock.tsx). 390'da öneriler
+   yatay kayan tek şerit değil alt alta üç hap; panel NVDA'da 903 → 993
+   (EN 1038). Telefon yedeği 890 → 1000; 1440'ta panel 358 → 354, yedek
+   aynı kaldı. 768/1024 bu turda ölçülmedi. */
 .skeleton { width: 100%; height: 362px; border-radius: 22px; }
 @media (min-width: 1600px) { .skeleton { height: 290px; } }
 @media (max-width: 1279px) { .skeleton { height: 420px; } }
 @media (max-width: 1023px) { .skeleton { height: 668px; } }
-@media (max-width: 639px) { .skeleton { height: 890px; } }
+@media (max-width: 639px) { .skeleton { height: 1000px; } }

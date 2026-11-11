@@ -524,13 +524,6 @@ export default async function TodayPage() {
           </Suspense>
         </DrawOnView>
 
-        {/* Dünya piyasaları: "bugün borsalar ne yapmış" sorusunun ABD'den
-            sonraki halkası. */}
-        <DrawOnView id="dunya-piyasalari" data-home-section="world">
-          <Suspense fallback={<PanelSkeleton rows={5} footer />}>
-            <WorldStrip locale={locale} t={t} />
-          </Suspense>
-        </DrawOnView>
 
 
         {/* ---- Teknik görünüm ----
@@ -596,6 +589,19 @@ export default async function TodayPage() {
             </Suspense>
           </div>
         ) : null}
+
+        {/* Dünya piyasaları: "bugün borsalar ne yapmış" sorusunun ABD'den
+            sonraki halkası.
+            SAĞ RAYIN BUGÜN PARÇASININ SONUNDA (11 Kasım, sahibinin isteği:
+            "dünya piyasaları biraz daha aşağıda olabilir, teknik analiz ve
+            favorilerin altında olsun"). Hareketlerin hemen ardındaydı; ABD
+            hisseleri (hareketler, teknik, okurun favorileri) önce, dünya
+            onların bağlamı. */}
+        <DrawOnView id="dunya-piyasalari" data-home-section="world">
+          <Suspense fallback={<PanelSkeleton rows={5} footer />}>
+            <WorldStrip locale={locale} t={t} />
+          </Suspense>
+        </DrawOnView>
       </div>
 
       {/* ================= Sol kolon, alt parça: BİLANÇO VE DÜN =================
@@ -616,15 +622,6 @@ export default async function TodayPage() {
             </Suspense>
           </DrawOnView>
         ) : null}
-        {/* ---- Bugün bilanço açıklayanlar ----
-             10 Kasım gecesi akışın ve bandın hemen ardına çıkmıştı (önce
-             telefonda 8.634. pikseldeydi); sahibi o kadar üstte istemedi —
-             yeri yukarıdaki parça notunda. */}
-        <div id="bugun-bilanco" data-home-section="earnings">
-          <Suspense fallback={<EarningsTodaySkeleton t={t} />}>
-            <EarningsToday locale={locale} t={t} />
-          </Suspense>
-        </div>
 
         {/* ---- Son Seansın Silueti (25 Ekim; 28 Ekim'de iki kolonun altına,
              10 Kasım gecesi dünün parçasına) ----
@@ -656,6 +653,22 @@ export default async function TodayPage() {
         <div id="mercek-seckisi" data-home-section="stories">
           <Suspense fallback={<SpotlightSkeleton />}>
             <StoriesSpotlight locale={locale} t={t} />
+          </Suspense>
+        </div>
+
+        {/* ---- Bugün bilanço açıklayanlar ----
+             10 Kasım gecesi akışın ve bandın hemen ardına çıkmıştı (önce
+             telefonda 8.634. pikseldeydi); sahibi o kadar üstte istemedi —
+             yeri yukarıdaki parça notunda.
+             MERCEĞİN ALTINDA, ANALİZLERİN ÜSTÜNDE (11 Kasım, sahibinin
+             isteği: "bugün bilanço açıklayanlar son mercek yazılarının
+             altına gelsin, son analizlerin üstüne"). Bilanço paneli ile
+             analizler arka arkaya: "bugün kim açıklıyor" → "açıklayanlar ne
+             yaptı". Panel artık akışta saatiyle duranları tekrar etmiyor
+             (lib/earnings-today-split.ts), çoğu gün kısa. */}
+        <div id="bugun-bilanco" data-home-section="earnings">
+          <Suspense fallback={<EarningsTodaySkeleton t={t} />}>
+            <EarningsToday locale={locale} t={t} />
           </Suspense>
         </div>
 

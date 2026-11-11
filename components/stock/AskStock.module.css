@@ -5,82 +5,83 @@
 
    KOMPAKT (25 Ekim): kendi paneli yok, tek panelin kolonu
    (AskMovePanel.tsx); başlık satırı, tek satır girdi + Sor, küçük çipler,
-   dipte künye. Eski ölçüler ve gerekçe AskStock.tsx başında. */
+   dipte künye. Eski ölçüler ve gerekçe AskStock.tsx başında.
 
-.ask { display: flex; min-width: 0; flex-direction: column; gap: 10px; scroll-margin-top: 140px; }
+   SOHBET (11 Kasım): öneri hapları, mesaj listesi ve giriş kutusu ortak
+   sohbet bileşenlerinden (components/ai/chat/Chat.module.css); burada
+   yalnız bu kolona özgü yerleşim ve yanıtın künyesi. Yanıt artık tonlu
+   kutu değil: asistan metni balonsuz (sohbet dilinin kuralı), künye
+   metnin altında kıl çizgiyle ayrık düz satırlar (arayuz.md → ekran
+   sırası 6: "uyarı için yeni kutu açılmaz"). Ölçüm AskStock.tsx başında. */
+
+.ask { display: flex; min-width: 0; flex-direction: column; gap: 12px; scroll-margin-top: 140px; }
 .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; }
 /* 10 Kasım: 13/750 → 14/700. Panel başlığı (`PanelHeader`) 16/700; panelin
    içindeki küçük kart başlığı tek ikinci basamak: 14/700 (ekranlar arası
    tutarlılık denetimi). Satır yüksekliği aynı (28). */
 .title { display: inline-flex; align-items: center; gap: 7px; margin: 0; font-size: var(--text-read); font-weight: 700; letter-spacing: -.01em; color: var(--text-strong); }
 .quota { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
+.quota[data-empty] { color: var(--down); }
 .intro { margin: -6px 0 0; font-size: var(--text-small); line-height: 1.5; color: var(--text-body); text-wrap: pretty; }
 
-.form { display: flex; gap: 8px; align-items: stretch; }
-.input {
-  flex: 1; min-width: 0; height: 44px;
-  padding: 0 14px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--page-bg);
-  font: inherit; font-size: var(--text-read); color: var(--text-strong);
-  transition: border-color .18s var(--ease-brand);
-}
-.input::placeholder { color: var(--text-muted); }
-.input:focus { outline: none; border-color: var(--line-focus); }
-.input:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 1px; }
-.input:disabled { opacity: .6; }
-.submit { flex: none; min-height: 44px; padding-inline: 18px; }
+/* Öneri hapları sarar; uzun soru hapın içinde iki satıra iner, kesilmez.
+   Telefonda dördüncü öneri gizli: dört uzun hap dört satır (≈200 piksel)
+   tutuyor ve giriş kutusunu ilk bakışın dışına itiyordu; üçü yetiyor,
+   dördüncüsü takip sorusu olarak sonra gelir. */
+.starters > li { max-width: 100%; }
+.starters a, .starters button { max-width: 100%; }
+@media (max-width: 639px) { .starters > li:nth-child(n + 4) { display: none; } }
 
-/* Çipler GERÇEK yükseklikte, `tap-44` yok: saran listede görünmez alan alt
-   satırdaki komşunun hedefini kapatıyor (globals.css → `.tap-44`, madde 2).
-   Telefonda tek satır yatay kayan şerit ve 44 piksel; geniş ekranda imleç
-   hassas, 32 piksel ve sarar. */
-.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
-.chip {
-  display: inline-flex; align-items: center;
-  min-height: 32px; padding: 4px 12px; border-radius: 999px; background: var(--surface-sunken);
-  font-size: var(--text-small); line-height: 1.3; color: var(--text-body); text-align: left; cursor: pointer; white-space: nowrap;
-  transition: background-color .18s var(--ease-brand), color .18s var(--ease-brand);
+.thread { padding-top: 2px; }
+
+.composer { margin-top: 2px; }
+.reset {
+  margin-left: auto; padding: 0; border: 0; background: none; cursor: pointer;
+  font: inherit; font-weight: 600; color: var(--text-muted);
+  transition: color .18s var(--ease-brand);
 }
-@media (max-width: 639px) {
-  .chips { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
-  .chips::-webkit-scrollbar { display: none; }
-  .chips > li { flex: none; }
-  .chip { min-height: 44px; }
-}
-.chip:hover:not(:disabled), a.chip:hover { background: var(--primary-tint); color: var(--text-strong); }
-.chip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
-.chip:disabled { cursor: default; opacity: .6; }
+.reset:hover { color: var(--primary-ink); }
+.reset:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 4px; }
 
 .signIn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
 .memberQuota { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
 
-.error { margin: 0; font-size: var(--text-small); font-weight: 600; color: var(--down); }
+.formError { margin: 0; font-size: var(--text-small); font-weight: 600; color: var(--down); }
 
-.exchange {
-  display: flex; flex-direction: column; gap: 8px; padding: 12px 14px 14px; border-radius: var(--radius-lg); background: var(--surface-sunken);
-  animation: as-rise .45s var(--ease-brand) both;
-}
-.askedLabel { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
-.asked { margin: -4px 0 4px; font-size: var(--text-read); font-weight: 600; color: var(--text-strong); overflow-wrap: anywhere; }
-.answerHead { display: flex; align-items: center; gap: 8px; }
-.badge { padding: 2px 8px; border-radius: 999px; font-size: var(--text-small); line-height: 18px; font-weight: 600; background: var(--brass-wash); color: var(--brass-ink); }
+/* Yanıt: metin, künye, takip. */
+.answer { display: flex; flex-direction: column; gap: 10px; }
+.text { margin: 0; color: var(--text-strong); text-wrap: pretty; overflow-wrap: anywhere; }
 .unanswerable { color: var(--text-body); }
-.sources { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 4px 0 0; }
-.sourcesLabel { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
-.source { padding: 2px 8px; border-radius: 999px; font-size: var(--text-small); line-height: 18px; font-weight: 600; background: var(--surface); color: var(--text-body); }
-.news ul { display: grid; gap: 2px; margin: 4px 0 0; padding: 0; list-style: none; }
-.stamp { margin: 2px 0 0; font-size: var(--text-small); color: var(--text-muted); }
+.meta { display: flex; flex-direction: column; gap: 6px; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.badge { margin-right: 6px; padding: 2px 8px; border-radius: 999px; font-size: var(--text-small); line-height: 18px; font-weight: 600; background: var(--brass-wash); color: var(--brass-ink); white-space: nowrap; }
+.sources { display: flex; flex-wrap: wrap; align-items: center; gap: 6px; margin: 0; }
+.sourcesLabel { margin: 0 2px 0 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
+.source { padding: 2px 8px; border-radius: 999px; font-size: var(--text-small); line-height: 18px; font-weight: 600; background: var(--surface-sunken); color: var(--text-body); white-space: nowrap; }
+.news ul { display: grid; gap: 2px; margin: 2px 0 0; padding: 0; list-style: none; }
+.stamp { margin: 0; font-size: var(--text-small); color: var(--text-muted); }
 
-/* Henüz yanıt yokken dayanılan veri künyesi; künyeyle birlikte dibe yaslı. */
-.hint { margin-top: auto; padding-top: 6px; }
-/* Yalnız iki kolonlu düzende: orada yan kolonun boyunu dolduruyor; alt alta
-   dizilişte boşluk yok, künye dipteki cümleyle yetiniyor. */
-@media (max-width: 1023px) { .hint { display: none; } }
-.hint .source { background: var(--surface-sunken); }
-.hint + .disclosure { margin-top: 0; }
+.followUps { display: flex; flex-direction: column; gap: 8px; margin-top: 4px; }
+.followLabel { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
+
+/* Hata satırı asistanın yerinde: ikonlu satır, kutu değil (görsel dil:
+   "uyarı hap yığını değil ikonlu satır"). */
+/* İkon ilk satırın hizasında, metin ve düğme ikinci sütunda: 390'da
+   metin ikiye bölününce ikon tek başına bir satırda kalıyordu (11 Kasım). */
+.failure { display: grid; grid-template-columns: auto minmax(0, 1fr); align-items: start; gap: 8px; margin: 0; font-size: var(--text-read); line-height: 1.5; color: var(--text-body); }
+.failureIcon { margin-top: 3px; color: var(--down); }
+.failureText { min-width: 0; }
+.failure .retry { grid-column: 2; justify-self: start; }
+.retry {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 32px; padding: 0 12px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--surface-solid);
+  font: inherit; font-size: var(--text-small); font-weight: 600; color: var(--text-strong); cursor: pointer;
+  transition: border-color .18s var(--ease-brand), background-color .18s var(--ease-brand);
+}
+.retry:hover { border-color: var(--primary-faint); background: var(--primary-tint); }
+.retry:active { scale: .97; }
+.retry:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+@media (pointer: coarse) { .retry { min-height: 44px; } }
 
 /* Künye kolonun dibinde: yan kolon uzunsa aradaki fark künyenin ÜSTÜNDE
    kalır, kutunun içine dağılmaz. */
 .disclosure { margin: auto 0 0; padding-top: 10px; border-top: 1px solid var(--line-soft); font-size: var(--text-small); line-height: 1.45; color: var(--text-muted); }
-
-@keyframes as-rise { from { opacity: 0; translate: 0 6px; } }
-@media (prefers-reduced-motion: reduce) { .exchange { animation: none !important; } }

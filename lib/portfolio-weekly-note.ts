@@ -72,8 +72,14 @@ export async function ownerIds(userIds: readonly string[]): Promise<Set<string>>
   }
 }
 
-/** Tutulan sembollerin haftası — tek seferde (bar önbelleği ortak), endekslerle aynı ölçü. */
-export async function heldMoves(symbols: Iterable<string>, data: DigestData, now: Date): Promise<Map<string, WeeklyMove>> {
+/** Tutulan sembollerin haftası — tek seferde (bar önbelleği ortak), endekslerle aynı ölçü.
+ *  11 Kasım: yalnız haftanın iki ucunu okur — cuma portföy özeti
+ *  (app/api/cron/portfoy-ozeti) DigestData kurmadan İÇİNDEKİ haftayı sorar. */
+export async function heldMoves(
+  symbols: Iterable<string>,
+  data: Pick<DigestData, "pastMonday" | "pastFriday">,
+  now: Date,
+): Promise<Map<string, WeeklyMove>> {
   const list = [...new Set(symbols)].slice(0, 200);
   if (list.length === 0) return new Map();
   const moves = await weeklyMoves(list, data.pastMonday, data.pastFriday, now).catch(() => []);

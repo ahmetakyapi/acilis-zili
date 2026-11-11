@@ -71,7 +71,7 @@ export function PuzzleCover({
   const silhouette = state.clues.find((clue) => clue.kind === "silhouette");
 
   return (
-    <Panel ref={ref} className={cn(styles.cover, className)} data-cevap={answer.symbol}>
+    <Panel ref={ref} className={cn(styles.cover, className)} data-cevap={answer.symbol} data-durum={state.status}>
       <PanelHeader className="py-2.5" title={won ? labels.wonTitle : labels.lostTitle} meta={labels.chartCaption} />
       <div className={styles.body}>
         <div className={cn(styles.identity, won && styles.wonIdentity)} data-tahta="cevap">

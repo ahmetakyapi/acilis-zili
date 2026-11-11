@@ -148,12 +148,12 @@ export function ClueBoard({
         const note = noteOf(clue, labels);
         const tone = clue.kind === "revenueGrowth" || clue.kind === "netMargin" ? (clue.pct >= 0 ? styles.up : styles.down) : undefined;
         return (
-          <li key={clue.kind} className={cn(styles.tile, fresh.has(clue.kind) && styles.fresh)} style={place(clue.kind)} title={note ? `${labels.clue[clue.kind]}: ${value}. ${note}` : undefined} data-tahta="ipucu">
+          <li key={clue.kind} className={cn(styles.tile, fresh.has(clue.kind) && styles.fresh)} style={place(clue.kind)} title={note ? `${labels.clue[clue.kind]}: ${value}. ${note}` : `${labels.clue[clue.kind]}: ${value}`} data-tahta="ipucu">
             <span className={styles.head}>
               <span aria-hidden className={styles.badge}>
                 <Glyph size={11} weight="bold" />
               </span>
-              <span className={styles.label}>{labels.clue[clue.kind]}</span>
+              <span className={styles.label}>{shortName(clue.kind, labels)}</span>
             </span>
             {clue.kind === "initial" ? (
               <span className={styles.keycap}>{value}</span>
@@ -171,12 +171,12 @@ export function ClueBoard({
         const opensAt = missesToOpen(kind);
         const next = status === "playing" && opensAt === misses + 1;
         return (
-          <li key={kind} className={cn(styles.tile, styles.locked, next && styles.next)} style={place(kind)} data-tahta="ipucu">
+          <li key={kind} className={cn(styles.tile, styles.locked, next && styles.next)} style={place(kind)} title={`${labels.clue[kind]}: ${fill(labels.lockedAt, { n: opensAt })}`} data-tahta="ipucu">
             <span className={styles.head}>
               <span aria-hidden className={styles.badge}>
                 <LockSimple size={11} weight="bold" />
               </span>
-              <span className={styles.label}>{labels.clue[kind]}</span>
+              <span className={styles.label}>{shortName(kind, labels)}</span>
             </span>
             <span className={styles.lockLine}>{fill(labels.lockedAt, { n: opensAt })}</span>
           </li>
@@ -185,6 +185,13 @@ export function ClueBoard({
     </ul>
     </div>
   );
+}
+
+/** Karodaki ad: sığmayan uzun ad kısasıyla ("Sembolün Harfleri" →
+    "Harf Kalıbı"; 1440'ta beş sütunlu ızgarada "Sembolün Harfl…" diye
+    kesiliyordu, 11 Kasım). Tam ad karonun `title`ında. */
+function shortName(kind: ClueKind, labels: StockPuzzleLabels): string {
+  return (labels.clueShort as Partial<Record<ClueKind, string>>)[kind] ?? labels.clue[kind];
 }
 
 /** Karonun açıklama cümlesi — `title` ve ekran okuyucu; karoda yer yemez. */

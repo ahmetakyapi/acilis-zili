@@ -2,8 +2,9 @@ import { auth } from "@/auth";
 import { AskStock } from "@/components/stock/AskStock";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { insightsConfigured } from "@/lib/stock-insights";
-import { questionQuota } from "@/lib/stock-question";
+import { questionQuota, stockSuggestions } from "@/lib/stock-question";
 import { QUESTION_DAILY_LIMIT } from "@/lib/stock-question-core";
+import type { Suggestion } from "@/lib/stock-question-suggest";
 
 /**
  * "Bu Hisseye Sor" panelinin kabuğu (24 Ekim). Burada yalnız oturum ve
@@ -12,10 +13,19 @@ import { QUESTION_DAILY_LIMIT } from "@/lib/stock-question-core";
  * çiziminde Claude çağrısı yok. Claude anahtarı yoksa panel hiç basılmaz.
  * Oturumsuz okura (botlar dahil) giriş çağrısı, örnek sorular ve yanıtın
  * yapısını anlatan önizleme (components/stock/AskStock.tsx).
+ *
+ * ÖNERİ SORULARI SUNUCUDA (11 Kasım): hisseye ve güne göre seçilir
+ * (`stockSuggestions`, lib/stock-question.ts; kural
+ * lib/stock-question-suggest.ts). Okunan veri sayfanın kendi panellerinin
+ * de sorduğu önbellekli yükleyiciler; Claude çağrısı yine YOK. Okuma
+ * düşerse liste boş kalır, kutu sözlükteki sabit örneklere döner.
  */
 export async function AskStockPanel({ symbol, locale, t }: { symbol: string; locale: Locale; t: Dictionary }) {
   if (!insightsConfigured()) return null;
-  const session = await auth();
+  const [session, suggestions] = await Promise.all([
+    auth(),
+    stockSuggestions(symbol, locale, t.askStock.suggest).catch((): Suggestion[] => []),
+  ]);
   const userId = session?.user?.id ?? null;
   return (
     <AskStock
@@ -25,6 +35,7 @@ export async function AskStockPanel({ symbol, locale, t }: { symbol: string; loc
       signedIn={userId !== null}
       remaining={userId ? questionQuota.left(userId) : 0}
       limit={QUESTION_DAILY_LIMIT}
+      suggestions={suggestions}
     />
   );
 }

@@ -27,7 +27,24 @@ const QUESTION_MAX_CHARS = 300;
  * etiketleriyle "Yararlanılan Veri" künyesi olarak basılır. Girdide olmayan
  * blok künyeye giremez (`usedSources`).
  */
-export const ASK_SOURCES = ["session", "valuation", "scorecard", "analysts", "earnings", "nextEarnings", "dividends", "news", "notes"] as const;
+export const ASK_SOURCES = [
+  "session",
+  "technical",
+  "valuation",
+  "scorecard",
+  "analysts",
+  "target",
+  "earnings",
+  "nextEarnings",
+  "dividends",
+  "news",
+  "notes",
+] as const;
+/* 11 Kasım: `technical` (sitenin son teknik analizinin seviyeleri) ve
+   `target` (güncel ortalama analist hedefi) eklendi. Öneri soruları
+   (lib/stock-question-suggest.ts) "Teknik görünüm ne diyor?" ve "Analist
+   hedefleri ne söylüyor?" diye soruyor; girdide bu bloklar yokken model ya
+   reddediyor ya da sayı denetiminden düşüyordu. Sıra sayfanın sırası. */
 export type AskSource = (typeof ASK_SOURCES)[number];
 
 const CONTROL_BELOW = 0x20;
@@ -170,4 +187,57 @@ export function decideAnswer(out: ModelAnswer, grounding: string, locale: "tr" |
   const advice = adviceMatches(text, locale);
   if (advice.length > 0) return { kind: "unanswerable", reason: "advice-pattern", missing: advice, charge: false };
   return { kind: out.verdict, text, charge: true };
+}
+
+/* ---------------------------------------------------------------------------
+   Sohbet geçmişi (11 Kasım, sahibinin isteği: "oradan seçsin veya kendisi
+   soru sorsun")
+
+   Bölüm artık bir sohbet: okur yanıtın altındaki takip sorusunu seçer ya da
+   kendisi yazar. "Peki geçen çeyrek?" gibi bir soru öncekine dayanır; bu
+   yüzden önceki en çok İKİ soru-yanıt girdiye KISA hâliyle eklenir.
+
+   - Geçmiş İSTEMCİDEN gelir, güvenilmeyen metindir: model ona talimat
+     olarak uymaz, yalnız sorunun neye dayandığını anlamak için okur.
+   - Sayı denetimi geçmişe DAYANMAZ (`decideAnswer` yalnız sayfa verisine
+     bakar): istemci uydurma bir "önceki yanıt" yazsa bile içindeki sayı
+     yeni yanıta kaynak olamaz.
+   - Maliyet: soru başına en çok 2 × (300 + 320) karakter ek girdi. Geçmişsiz
+     soru (bölümün ilk sorusu, öneri hapları) önbellek anahtarında hiç iz
+     bırakmaz (`historyKey` boş): aynı öneriyi soran iki okur aynı yanıtı
+     paylaşır, ikincisinin hakkı düşmez.
+   --------------------------------------------------------------------------- */
+
+export const HISTORY_TURNS = 2;
+export const HISTORY_ANSWER_CHARS = 320;
+
+export type HistoryTurn = { question: string; answer: string };
+
+const cleanText = (raw: string) =>
+  Array.from(raw, (ch) => (ch.charCodeAt(0) < CONTROL_BELOW || ch === DELETE ? " " : ch))
+    .join("")
+    .replace(/\s+/g, " ")
+    .trim();
+
+/** Önceki turlar: en çok son ikisi, soru temizlenmiş, yanıt kısaltılmış; bozuk tur atılır. */
+export function normalizeHistory(raw: unknown): HistoryTurn[] {
+  if (!Array.isArray(raw)) return [];
+  const turns: HistoryTurn[] = [];
+  for (const item of raw.slice(-HISTORY_TURNS)) {
+    if (!item || typeof item !== "object") continue;
+    const question = normalizeQuestion((item as { question?: unknown }).question);
+    const rawAnswer = (item as { answer?: unknown }).answer;
+    if (!question || typeof rawAnswer !== "string") continue;
+    const answer = cleanText(rawAnswer);
+    if (!answer) continue;
+    turns.push({ question, answer: answer.length > HISTORY_ANSWER_CHARS ? `${answer.slice(0, HISTORY_ANSWER_CHARS - 1).trimEnd()}…` : answer });
+  }
+  return turns;
+}
+
+/** Önbellek anahtarının geçmiş parçası; geçmiş yoksa boş dize (ilk soruların anahtarı değişmez). */
+export function historyKey(history: readonly HistoryTurn[], locale: "tr" | "en"): string {
+  if (history.length === 0) return "";
+  const folded = history.map((turn) => `${questionKey(turn.question, locale)}:${turn.answer}`).join("\n");
+  return createHash("sha256").update(folded).digest("hex").slice(0, 16);
 }

@@ -130,7 +130,11 @@ export function AskStockChip({ locale, className }: { locale: Locale; className?
   const t = getDictionary(locale).stockEntry;
   return (
     <a href={`#${ASK_ANCHOR}`} className={cn("tap-44", styles.chip, styles.quiet, className)}>
-      <span className={styles.go}>{t.ask}</span>
+      {/* `.go` DEĞİL (11 Kasım): `.go` 480 altında gizleniyor (rapor
+          çipinin "· Aç"ı için), çapanın TEK etiketi de onunla gidiyordu.
+          390'da çip 27 piksellik çıplak bir oka iniyor, `tap-44` alanı
+          kutudan 10 piksel taşıyordu (duman testi: "sıkışan +10px"). */}
+      <span className={styles.askLabel}>{t.ask}</span>
       <ArrowDown className={styles.arrow} size={13} weight="bold" aria-hidden />
     </a>
   );

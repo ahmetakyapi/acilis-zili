@@ -241,7 +241,13 @@ export function ThemeBoard({
                         </>
                       )}
                     </span>
-                    <span className={styles.heat}>
+                    {/* LOGOLU ISI KAROLARI (11 Kasım, sahibinin isteği: "o yeşil
+                        kırmızı olan yerlere şirketlerin logosunu koysak").
+                        Her karo bir üye; zemin yönün kademesi, ortada logosu
+                        — hangi şirketin taşıdığı renkten sonra ikinci bakışta
+                        okunuyor. Karo daralınca (kap < 480 ya da 26'dan çok
+                        üye) logo düşer, renk kalır (`data-dense`, CSS). */}
+                    <span className={styles.heat} data-dense={ranked.length > 26 || undefined}>
                       {ranked.length === 0 ? (
                         <i className={styles.heatLane} />
                       ) : (
@@ -256,7 +262,9 @@ export function ThemeBoard({
                                 data-level={heat.level}
                                 data-tip={`${point.symbol} ${pct(point.change)}`}
                                 style={{ "--k": Math.round((k / Math.max(ranked.length - 1, 1)) * HEAT_STAGGER) } as CSSProperties}
-                              />
+                              >
+                                <LogoTile symbol={point.symbol} logoUrl={logoOf(point.symbol)} size="xs" className={styles.cellLogo} />
+                              </i>
                             );
                           })}
                           {Array.from({ length: missing }, (_, k) => (
