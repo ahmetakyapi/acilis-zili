@@ -16,7 +16,6 @@ import { PrivacyToggle } from "@/components/portfolio/PrivacyToggle";
 import { getPrivacy } from "@/lib/privacy-server";
 import {
   composeAnalysisFacts,
-  effectivePips,
   heaviestSector,
   type LeadFact,
   pairScale,
@@ -410,7 +409,10 @@ function Metric({
   card?: boolean;
 }) {
   return (
-    <div className={card ? `panel ${styles.metric} ${styles.keyCard}` : styles.metric}>
+    /* Tepedeki 3 piksellik şerit değerin YÖNÜ (11 Kasım; ana sayfa portföy
+       karolarının dili): düşüş derinliği ve kur getirileri renginde,
+       yönsüz ölçüde nötr `--line-strong`. `data-tone` kabın üstünde. */
+    <div className={card ? `panel ${styles.metric} ${styles.keyCard}` : styles.metric} data-tone={tone}>
       <dt className={styles.metricLabel}>{label}</dt>
       {/* Açıklama etiketin altında, değer kutunun dibinde: açıklamaları
           farklı uzunlukta olsa da yan yana değerler aynı hatta biter.
@@ -435,96 +437,103 @@ function Metric({
 }
 
 /**
- * Tek kulvar: büyüklük çizgisi (nötr) ya da yönlü çizgi (`tone`). Kulvar
- * `--line-soft`, şerit `var(--lane-h, 5px)` — sitenin ince grafik dili
- * (CLAUDE.md "Grafik dili ince"). `tick`: aynı ölçekte bir gösterge çentiği
- * (betada S&P 500 = 1).
+ * TEK ÇİZİM: değerin çubuğu (11 Kasım görsel turu; sahibinin sözü, 10
+ * Kasım: "yatayda uzun kalın çizgi seviyorum"). Ekranın bütün büyüklükleri
+ * sitenin ortak çubuğuyla (`value-lane` / `value-bar`, globals.css →
+ * "DEĞER ÇUBUĞU"): kulvar 5, dolu çubuk 8, sıfırdan değere. İki RENK ROLÜ
+ * ekran boyunca sabit (Analysis.module.css başı): PORTFÖY `--pa-ink`
+ * (`--share-2`, ana sayfa portföy kartının pay ailesi), S&P 500 `--pa-bench`
+ * (`--share-rest`, nötr gri) ve 5 piksel — endeks kıyas, kahraman değil.
+ * Yön rengi yalnız işaretten (`tone`: düşüş derinliği).
+ *
+ * ESKİSİ (24 Ekim – 10 Kasım): `Lane` 5 piksellik soluk şerit, S&P 500 eşi
+ * aynı tonun %46 soluğu ve betada kıyas çentiği; "soluk, çentikli, okunmuyor"
+ * (sahibinin 11 Kasım ekran görüntüsü). Çentik kalktı: S&P 500 kendi
+ * çubuğunu taşıyor, kıyas iki çubuğun boyu.
+ *
+ * Çizim `bar-fill` + `data-draw` (DrawGate): ekranın altındaki çubuk son
+ * karede bekler, görünce bir kez dolar; kademe `--step` × sıra (≤ 9).
  */
-function Lane({ ratio, tone, tick, faint }: { ratio: number; tone?: "up" | "down"; tick?: number; faint?: boolean }) {
+function Bar({
+  ratio,
+  side = "portfolio",
+  tone,
+  step = 0,
+  hero = false,
+  tint,
+}: {
+  ratio: number;
+  side?: "portfolio" | "bench" | "before";
+  tone?: "up" | "down";
+  step?: number;
+  /** Kartın tek çizimiyse 12 piksel (arayüz kuralı: satırın kahramanı). */
+  hero?: boolean;
+  /** Pay ailesinden dilim tonu (yoğunlaşma satırları). */
+  tint?: string;
+}) {
+  const width = clamp01(ratio) * 100;
   return (
-    <span className={styles.lane} data-motion-track>
-      <span
-        className={styles.laneFill}
-        data-tone={tone}
-        data-faint={faint || undefined}
-        data-motion-draw="line"
-        style={{ width: `${clamp01(ratio) * 100}%`, transformOrigin: "left center" }}
-      />
-      {tick !== undefined && <span className={styles.laneTick} style={{ left: `${clamp01(tick) * 100}%` }} />}
+    <span className={`value-lane ${styles.bar}`} data-side={side} data-hero={hero || undefined} data-draw aria-hidden>
+      {width > 0 && (
+        <i
+          className="value-bar bar-fill"
+          data-tone={tone}
+          data-end="end"
+          style={
+            {
+              left: 0,
+              width: `${Math.max(width, 1.5)}%`,
+              "--bar-tone": tint,
+              animationDelay: `calc(${Math.min(step, 9)} * var(--step, 40ms))`,
+            } as CSSProperties
+          }
+        />
+      )}
     </span>
   );
 }
 
 /**
- * Portföy ve S&P 500 AYNI ölçekte, alt alta iki kulvar. Sayı kartın büyük
- * değeri ve alt satırı; çizgi "endeksin kaç katı" sorusunu okutmadan
- * cevaplıyor. Renk işaretten: düşüş derinliği eksi → `down`; oynaklık ve
- * beta yönsüz büyüklük → nötr (CompareScale'in kuralı).
+ * Portföy ve S&P 500 AYNI ölçekte, alt alta iki satır: etiket ve değer
+ * üstte, çubuk altta, kartın tam eninde (11 Kasım). Eski düzende etiket
+ * kulvarın solunda 4,6rem tutuyordu; 1440'ta kulvar 136, 390'da 50 piksele
+ * iniyordu (ölçüldü). Değer satırda yazılı: kartın büyük sayısı portföyün,
+ * S&P 500'ün sayısı alt satırdaki künyeden buraya geçti (künye kalktı,
+ * aynı sayı iki kez basılmıyor).
  */
-function PairLanes({
+function PairRows({
   portfolio,
   benchmark,
   labels,
+  show,
   tone,
   floor = 0,
-  tick,
 }: {
   portfolio: number;
   benchmark: number;
-  labels: VisualLabels["compare"];
+  labels: { portfolio: string; benchmark: string };
+  show: (value: number) => string;
   tone?: "down";
   floor?: number;
-  /** Ölçek üzerinde gösterge değeri (betada 1). */
-  tick?: number;
 }) {
   const scale = pairScale(portfolio, benchmark, floor);
-  const tickAt = tick !== undefined && scale.max > 0 ? tick / scale.max : undefined;
   return (
-    <span className={styles.pairLanes}>
-      <span className={styles.pairLane}>
-        <span className={styles.pairLaneLabel}>{labels.portfolio}</span>
-        <Lane ratio={scale.a} tone={tone} tick={tickAt} />
+    <span className={styles.duo}>
+      <span className={styles.duoRow}>
+        <span className={styles.duoLabel}>{labels.portfolio}</span>
+        <span className={`numeral ${styles.duoValue}`}>{tieFigures(show(portfolio))}</span>
+        <Bar ratio={scale.a} tone={tone} />
       </span>
-      <span className={styles.pairLane}>
-        <span className={styles.pairLaneLabel}>{labels.benchmark}</span>
-        <Lane ratio={scale.b} tone={tone} tick={tickAt} faint />
+      <span className={styles.duoRow} data-side="bench">
+        <span className={styles.duoLabel}>{labels.benchmark}</span>
+        <span className={`numeral ${styles.duoValue}`}>{tieFigures(show(benchmark))}</span>
+        <Bar ratio={scale.b} side="bench" step={1} />
       </span>
     </span>
   );
 }
 
-
-/**
- * Etkin pozisyon KUTULARI (31 Ekim; 25 Ekim'de halkaydı). Halka "etkin /
- * toplam" oranını çiziyordu; yoğun portföyde ince bir yay kalıyor ve kart
- * boş görünüyordu (sahibinin itirazı). Şimdi her pozisyon bir kutu, etkin
- * sayı kadarı dolu, kesir son kutuda kısmi dolgu (`effectivePips`, testli):
- * "5 kutunun 2,7'si dolu" okumadan görülür. Ton büyüklüğün yumuşak mavisi
- * (`--bar-soft`): dağınıklık bir yargı değil, yön rengi almaz. Kutular
- * soldan sırayla dolar (`data-motion-draw`), hareketi azaltana son kare.
- * Pozisyon sayısı `PIP_MAX`'ı aşarsa aynı oran tek kulvarda.
- */
-function EffectivePips({ count, effective }: { count: number; effective: number }) {
-  const pips = effectivePips(count, effective);
-  if (!pips) return <Lane ratio={count > 0 ? effective / count : 0} />;
-  return (
-    <span className={styles.pips} data-motion-track>
-      {pips.map((fill, index) => (
-        <span key={index} className={styles.pip}>
-          {fill > 0 && (
-            <span
-              className={styles.pipFill}
-              data-motion-draw="line"
-              style={{ width: `${fill * 100}%`, transformOrigin: "left center" }}
-            />
-          )}
-        </span>
-      ))}
-    </span>
-  );
-}
-
-/** Beta ölçeğinin tabanı: ölçek hiçbir zaman 1,5'in altına inmez, 1 çentiği hep içeride. */
+/** Beta ölçeğinin tabanı: ölçek hiçbir zaman 1,5'in altına inmez (S&P 500 = 1 çubuğu hep ölçeğin içinde). */
 const BETA_FLOOR = 1.5;
 
 /**
@@ -538,6 +547,15 @@ const BETA_FLOOR = 1.5;
  * sayılar eski panelin aynısı, aynı kaynaktan. Kartlar panelsiz (Günün
  * Grafiği panosunun künye kartları gibi); başlık ekran okuyucu için.
  * Künyesi (hesap penceresi) bandın alt satırında, cümlenin altında.
+ *
+ * 11 KASIM: bütün kartlar aynı iki satırlık çizimde (`PairRows`): portföy
+ * 8 piksellik dolu çubuk, S&P 500 5 piksellik gri çubuk, değerler satırda
+ * yazılı. Etkin pozisyon kartının kutu dizisi (31 Ekim, `effectivePips`;
+ * "5 kutunun 2,7'si dolu") de aynı dile geçti: "Etkin 6,0" ile "Toplam 11"
+ * aynı ölçekte iki çubuk — kutu dizisi bir çentik/nokta bulutu gibi
+ * okunuyordu (arayüz kuralı, 10 Kasım). `effectivePips` testli kaldı,
+ * ekranda kullanılmıyor. "S&P 500: %19,2" alt satırları kalktı: sayı artık
+ * çubuğun satırında.
  */
 function KeyStrip({ risk, locale, A, V }: { risk: PortfolioRisk; locale: Locale; A: Labels; V: VisualLabels }) {
   const L = A.concentration;
@@ -558,7 +576,7 @@ function KeyStrip({ risk, locale, A, V }: { risk: PortfolioRisk; locale: Locale;
             label={V.board.heaviest}
             value={pct(top.portfolio, locale)}
             sub={sectorLabel(top.key, locale) ?? top.key}
-            visual={<PairLanes portfolio={top.portfolio} benchmark={top.benchmark} labels={V.compare} />}
+            visual={<PairRows portfolio={top.portfolio} benchmark={top.benchmark} labels={V.compare} show={(value) => pct(value, locale)} />}
           />
         )}
         <Metric
@@ -567,7 +585,14 @@ function KeyStrip({ risk, locale, A, V }: { risk: PortfolioRisk; locale: Locale;
           value={num(c.effectiveCount, locale, 1)}
           aside={`/ ${c.count}`}
           sub={fill(V.board.effectiveSub, { count: c.count })}
-          visual={<EffectivePips count={c.count} effective={c.effectiveCount} />}
+          visual={
+            <PairRows
+              portfolio={c.effectiveCount}
+              benchmark={c.count}
+              labels={{ portfolio: V.compare.effective, benchmark: V.compare.total }}
+              show={(value) => (Number.isInteger(value) ? String(value) : num(value, locale, 1))}
+            />
+          }
         />
         {r && (
           <>
@@ -576,27 +601,25 @@ function KeyStrip({ risk, locale, A, V }: { risk: PortfolioRisk; locale: Locale;
               label={L.volatility}
               value={pct(r.volatility, locale)}
               aside={ratio !== null ? fill(V.board.ratio, { ratio: num(ratio, locale, 1) }) : undefined}
-              sub={fill(L.vsBenchmark, { value: pct(r.benchmarkVolatility, locale) })}
-              visual={<PairLanes portfolio={r.volatility} benchmark={r.benchmarkVolatility} labels={V.compare} />}
+              visual={<PairRows portfolio={r.volatility} benchmark={r.benchmarkVolatility} labels={V.compare} show={(value) => pct(value, locale)} />}
             />
             <Metric
               card
               label={L.beta}
               value={num(r.beta, locale)}
-              sub={L.betaHint}
-              visual={<PairLanes portfolio={r.beta} benchmark={1} labels={V.compare} floor={BETA_FLOOR} tick={1} />}
+              visual={<PairRows portfolio={r.beta} benchmark={1} labels={V.compare} floor={BETA_FLOOR} show={(value) => num(value, locale)} />}
             />
             <Metric
               card
               label={L.drawdown}
               value={formatPercent(r.maxDrawdown.depth, locale, 1)}
               tone={directionOf(r.maxDrawdown.depth)}
-              sub={fill(L.vsBenchmark, { value: formatPercent(r.benchmarkMaxDrawdown, locale, 1) })}
               visual={
-                <PairLanes
+                <PairRows
                   portfolio={r.maxDrawdown.depth}
                   benchmark={r.benchmarkMaxDrawdown}
                   labels={V.compare}
+                  show={(value) => formatPercent(value, locale, 1)}
                   tone={r.maxDrawdown.depth < 0 ? "down" : undefined}
                 />
               }
@@ -617,8 +640,12 @@ function KeyStrip({ risk, locale, A, V }: { risk: PortfolioRisk; locale: Locale;
  * yoğunlaşma kartının bütün yedek satırları açıldıktan sonra bile dibinde
  * 159 piksel boşluk kalıyordu (1440, ölçüldü). Az sektörde üç satırlık
  * düzen kalıyor: orada kısa kalan sektör kartı olurdu.
+ *
+ * 11 KASIM: iki düzen ayrımı (`DENSE_SECTORS = 6`) kalktı. Satır artık her
+ * sektör sayısında tek hat: ad · iki çubuk · iki pay · fark (640 ve üstü);
+ * telefonda ad ve fark üstte, çubuklar ve paylar altta. Gerekçe ve ölçüm
+ * Analysis.module.css → `.sectorRow`.
  */
-const DENSE_SECTORS = 6;
 
 /**
  * SEKTÖR DAĞILIMI ve S&P 500 — kompakt (25 Ekim, kart panosu). Eski panel
@@ -628,6 +655,14 @@ const DENSE_SECTORS = 6;
  * portföyde hiç olmayanlar altta "Portföyde Olmayan Sektörler" ızgarasında:
  * ad, S&P 500 payı ve boş kulvarda yalnız çentik. İkisi aynı ölçekte
  * (`sectorBoard`), hiçbir sektör düşmüyor.
+ *
+ * 11 KASIM (görsel tur; sahibinin ekran görüntüsü: "ad + çentikli ince
+ * şerit", "Portföyde Olmayan Sektörler çentik listesi"). Çentik kalktı: her
+ * sektörde portföyün 8 piksellik çubuğu ve altında S&P 500'ün 5 piksellik
+ * gri çubuğu, aynı ölçekte; fark iki çubuğun boyu, yanında yazılı.
+ * Portföyde olmayan sektörler AYNI satır biçiminde, yalnız S&P 500 çubuğuyla
+ * ve "8,5 Puan Eksik" farkıyla: iki liste tek tablo gibi okunur, çentik
+ * bulutu yok. En büyük punto (17/700) portföyün payında.
  */
 function SectorPanel({
   risk,
@@ -649,16 +684,23 @@ function SectorPanel({
   const board = sectors ? sectorBoard(sectors.rows) : null;
   /* Fark yarım puanın altındaysa "yakın": ondalık hassasiyet uydurmuyoruz. */
   const EVEN_PTS = 0.5;
-  const at = (value: number) => `${board ? clamp01(value / board.scale) * 100 : 0}%`;
-  /* Lejant başlığın sağında (kart panosu): ayrı satırda 35 piksel tutuyordu. */
+  const ratio = (value: number) => (board && board.scale > 0 ? value / board.scale : 0);
+  const diffOf = (diff: number) => {
+    const size = Math.abs(diff);
+    return size < EVEN_PTS
+      ? L.even
+      : fill(diff > 0 ? L.heavier : L.lighter, { pts: formatPrice(size, locale, { digits: 1 }) });
+  };
+  /* Lejant başlığın sağında (kart panosu): ayrı satırda 35 piksel tutuyordu.
+     Örnekler çubuğun kendisi: portföy 8, S&P 500 5 piksel. */
   const legend = sectors ? (
     <ul className={styles.legend}>
       <li>
-        <span className={styles.swatchBar} aria-hidden />
+        <span className={styles.swatch} aria-hidden />
         {L.legendPortfolio}
       </li>
       <li>
-        <span className={styles.swatchTick} aria-hidden />
+        <span className={styles.swatch} data-side="bench" aria-hidden />
         {L.legendBenchmark}
       </li>
     </ul>
@@ -670,48 +712,46 @@ function SectorPanel({
         {sectors && board ? (
           <>
             {board.held.length > 0 && (
-              <ul className={styles.sectorList} data-dense={board.held.length >= DENSE_SECTORS || undefined}>
-                {board.held.map((row, index) => {
-                  const diff = Math.abs(row.diff);
-                  const diffText =
-                    diff < EVEN_PTS
-                      ? L.even
-                      : fill(row.diff > 0 ? L.heavier : L.lighter, { pts: formatPrice(diff, locale, { digits: 1 }) });
-                  return (
-                    <li key={row.sector} className={styles.sectorRow}>
-                      <span className={styles.sectorName}>{sectorLabel(row.sector, locale) ?? row.sector}</span>
+              <ul className={styles.sectorList}>
+                {board.held.map((row, index) => (
+                  <li key={row.sector} className={styles.sectorRow}>
+                    <span className={styles.sectorName}>{sectorLabel(row.sector, locale) ?? row.sector}</span>
+                    <span className={styles.sectorBars}>
+                      <Bar ratio={ratio(row.portfolio)} step={index} />
+                      <Bar ratio={ratio(row.benchmark)} side="bench" step={index} />
+                    </span>
+                    <span className={styles.sectorFigures}>
                       <span className={`numeral ${styles.sectorShare}`}>{pct(row.portfolio, locale)}</span>
-                      <span className={styles.track} aria-hidden>
-                        <span
-                          className={styles.trackFill}
-                          style={{ width: at(row.portfolio), animationDelay: `${index * 40}ms` } as CSSProperties}
-                        />
-                        <span className={styles.trackTick} style={{ left: at(row.benchmark) }} />
+                      <span className={`numeral ${styles.sectorBench}`}>
+                        <span className="sr-only">{`${L.legendBenchmark} `}</span>
+                        {pct(row.benchmark, locale)}
                       </span>
-                      <span className={`numeral ${styles.sectorBench}`}>{tieFigures(`${L.legendBenchmark} ${pct(row.benchmark, locale)}`)}</span>
-                      <span className={`numeral ${styles.sectorDiff}`}>{tieFigures(diffText)}</span>
-                    </li>
-                  );
-                })}
+                    </span>
+                    <span className={`numeral ${styles.sectorDiff}`}>{tieFigures(diffOf(row.diff))}</span>
+                  </li>
+                ))}
               </ul>
             )}
             {board.absent.length > 0 && (
               <div className={styles.absent}>
                 <p className={styles.groupTitle}>{V.board.absent}</p>
-                <ul className={styles.absentGrid}>
-                  {board.absent.map((row) => {
+                <ul className={styles.sectorList} data-absent>
+                  {board.absent.map((row, index) => {
                     const name = sectorLabel(row.sector, locale) ?? row.sector;
                     const bench = pct(row.benchmark, locale);
                     return (
-                      <li key={row.sector} className={styles.absentItem} aria-label={fill(V.board.absentAria, { sector: name, bench })}>
-                        <span className={styles.absentName} aria-hidden>
+                      <li key={row.sector} className={styles.sectorRow} aria-label={fill(V.board.absentAria, { sector: name, bench })}>
+                        <span className={styles.sectorName} aria-hidden>
                           {name}
                         </span>
-                        <span className={`numeral ${styles.absentShare}`} aria-hidden>
-                          {bench}
+                        <span className={styles.sectorBars} aria-hidden>
+                          <Bar ratio={ratio(row.benchmark)} side="bench" step={board.held.length + index} />
                         </span>
-                        <span className={styles.absentLane} aria-hidden>
-                          <span className={styles.trackTick} style={{ left: at(row.benchmark) }} />
+                        <span className={styles.sectorFigures} aria-hidden>
+                          <span className={`numeral ${styles.sectorBench}`}>{bench}</span>
+                        </span>
+                        <span className={`numeral ${styles.sectorDiff}`} aria-hidden>
+                          {tieFigures(diffOf(-row.benchmark))}
                         </span>
                       </li>
                     );
@@ -735,8 +775,25 @@ function SectorPanel({
 
 /* -------------------------------------------------------- yoğunlaşma */
 
-/** Şerit diliminin tonu: birinci dilim tam `--bar-soft`, sıra ilerledikçe açılır. */
-const toneOf = (index: number) => `${Math.max(36, 100 - index * 11)}%`;
+/**
+ * Şerit diliminin tonu (11 Kasım): ana sayfa portföy kartının ve /portfoy
+ * halkasının PAY AİLESİ (`--share-1..4`, globals.css "PAY DAĞILIMI"),
+ * opak; beşinci ve altıncı dilim dördüncü basamakla nötrün karışımı,
+ * "Diğer" ve içindekiler `--share-rest`. Eskisi `--bar-soft`un %100 → %36
+ * soluklarıydı: son dilimler zeminde kayboluyor, şerit "soluk" okunuyordu
+ * (sahibinin 11 Kasım ekran görüntüsü). Renk sırayı taşır (ordinal),
+ * kimlik satırdaki ad ve yüzdede.
+ */
+const SHARE_TONES = [
+  "var(--share-1)",
+  "var(--share-2)",
+  "var(--share-3)",
+  "var(--share-4)",
+  "color-mix(in oklab, var(--share-4) 62%, var(--share-rest))",
+  "color-mix(in oklab, var(--share-4) 30%, var(--share-rest))",
+] as const;
+const REST_TONE = "var(--share-rest)";
+const toneOf = (index: number) => SHARE_TONES[Math.min(index, SHARE_TONES.length - 1)]!;
 
 /**
  * POZİSYONLARIN AĞIRLIĞI — yüzde yüzlük şerit (25 Ekim) ve altında
@@ -786,11 +843,7 @@ function WeightStrip({
         {names[symbol]?.name && <small>{names[symbol]!.name}</small>}
       </span>
       <span className={styles.posLane}>
-        <span
-          className={styles.posLaneFill}
-          data-motion-draw="line"
-          style={{ width: `${peak > 0 ? clamp01(weight / peak) * 100 : 0}%`, "--tone": tone, transformOrigin: "left center" } as CSSProperties}
-        />
+        <Bar ratio={peak > 0 ? weight / peak : 0} tint={tone} />
       </span>
       <span className={`numeral ${styles.posShare}`}>{pct(weight, locale)}</span>
     </li>
@@ -798,24 +851,28 @@ function WeightStrip({
   return (
     <div className={styles.strip}>
       <p className={styles.groupTitle}>{V.strip.title}</p>
-      <div className={styles.stripBar} role="img" aria-label={fill(V.strip.aria, { list })} data-motion-track>
+      <div className={styles.stripBar} role="img" aria-label={fill(V.strip.aria, { list })} data-draw>
         {segments.map((segment, index) => (
           <span
             key={segment.key}
-            className={styles.stripSeg}
-            data-rest={segment.symbol === null || undefined}
-            data-motion-draw="line"
-            style={{ flexGrow: segment.weight, "--tone": toneOf(index), transformOrigin: "left center" } as CSSProperties}
+            className={`bar-fill ${styles.stripSeg}`}
+            style={
+              {
+                flexGrow: segment.weight,
+                "--tone": segment.symbol === null ? REST_TONE : toneOf(index),
+                animationDelay: `calc(${Math.min(index, 9)} * var(--step, 40ms))`,
+              } as CSSProperties
+            }
           />
         ))}
       </div>
-      <ul className={styles.posList} aria-hidden data-fill-zone data-motion-track>
+      <ul className={styles.posList} aria-hidden data-fill-zone>
         {segments.map((segment, index) =>
           segment.symbol ? (
             row(segment.symbol, segment.weight, toneOf(index))
           ) : (
             <li key={segment.key} className={styles.posRow} data-rest>
-              <i className={styles.posSwatch} data-rest />
+              <i className={styles.posSwatch} style={{ "--tone": REST_TONE } as CSSProperties} />
               <span className={styles.posRestMark} />
               <span className={styles.posId}>
                 <b>{V.strip.rest}</b>
@@ -826,7 +883,7 @@ function WeightStrip({
             </li>
           ),
         )}
-        {restRows.map((rest) => row(rest.symbol, rest.weight, toneOf(segments.length), true))}
+        {restRows.map((rest) => row(rest.symbol, rest.weight, REST_TONE, true))}
       </ul>
     </div>
   );
@@ -856,9 +913,9 @@ function ConcentrationPanel({
           <Metric
             label={L.largest}
             value={tieFigures(`${c.largest.symbol} ${pct(c.largest.weight, locale)}`)}
-            visual={<Lane ratio={c.largest.weight / 100} />}
+            visual={<Bar ratio={c.largest.weight / 100} hero />}
           />
-          <Metric label={L.top5} value={pct(c.top5Share, locale)} visual={<Lane ratio={c.top5Share / 100} />} />
+          <Metric label={L.top5} value={pct(c.top5Share, locale)} visual={<Bar ratio={c.top5Share / 100} hero />} />
         </dl>
       </div>
       {/* "Yatırım Tavsiyesi Değildir" ilk ekranda bu kartta: sektör kartının
@@ -879,7 +936,10 @@ function CorrelationPanel({ risk, locale, A, V }: { risk: PortfolioRisk; locale:
   const L = A.correlation;
   const c = risk.correlation;
   /* Liste satırındaki çizgi: korelasyon −1..1, sıfır ortada (işaretli
-     kulvar). Nötr ton — "birlikte hareket" bir yargı değil. */
+     kulvar). Nötr ton — "birlikte hareket" bir yargı değil.
+     11 Kasım: 5 piksellik soluk şerit yerine ortak değer çubuğu (8,
+     portföy tonu); sıfır çizgisi `value-notch` (sessiz), eksi değer
+     sıfırdan SOLA büyür (`data-end="start"`, kaynak sağda). */
   const list = (pairs: NonNullable<typeof c>["top"]) => (
     <ul className={styles.pairList}>
       {pairs.map((pair) => (
@@ -888,16 +948,17 @@ function CorrelationPanel({ risk, locale, A, V }: { risk: PortfolioRisk; locale:
             {pair.a} · {pair.b}
           </span>
           <span className={`numeral ${styles.pairValue}`}>{num(pair.value, locale)}</span>
-          <span aria-hidden className={styles.signedLane} data-motion-track>
-            <span
-              className={styles.laneFill}
-              data-motion-draw="line"
-              style={{
-                left: pair.value < 0 ? `${50 - clamp01(-pair.value) * 50}%` : "50%",
-                width: `${clamp01(Math.abs(pair.value)) * 50}%`,
-                transformOrigin: pair.value < 0 ? "right center" : "left center",
-              }}
+          <span aria-hidden className={`value-lane ${styles.bar} ${styles.signedLane}`} data-draw>
+            <i
+              className="value-bar bar-fill"
+              data-end={pair.value < 0 ? "start" : "end"}
+              style={
+                pair.value < 0
+                  ? { right: "50%", width: `${Math.max(clamp01(-pair.value) * 50, 1)}%` }
+                  : { left: "50%", width: `${Math.max(clamp01(pair.value) * 50, 1)}%` }
+              }
             />
+            <i className="value-notch" data-quiet style={{ left: "50%" }} />
           </span>
         </li>
       ))}
@@ -1064,7 +1125,7 @@ function EarningsPanel({ risk, locale, A }: { risk: PortfolioRisk; locale: Local
                   {/* Haftanın payı en ağır haftaya göre — nötr büyüklük, mavi değil
                       (25 Ekim renk kararı: mavi yalnız etkileşim). */}
                   <span aria-hidden className={styles.weekLane}>
-                    <Lane ratio={heaviest > 0 ? week.weight / heaviest : 0} />
+                    <Bar ratio={heaviest > 0 ? week.weight / heaviest : 0} />
                   </span>
                 </li>
               ))}
@@ -1100,13 +1161,13 @@ function GapsPanel({ analysis, locale, A }: { analysis: PortfolioAnalysis; local
                       {tieFigures(fill(L.row, { portfolio: pct(gap.portfolio, locale), benchmark: pct(gap.benchmark, locale) }))}
                     </p>
                   </div>
-                  {/* Portföy payı ve S&P 500 çentiği aynı ölçekte (sektör
-                      panelinin dili): eksiğin boyu bir bakışta. */}
+                  {/* Portföy payı ve S&P 500 aynı ölçekte (sektör panelinin
+                      dili): eksiğin boyu bir bakışta. 11 Kasım: çentik
+                      yerine S&P 500'ün gri çubuğu, portföy payı sıfırsa
+                      portföy çubuğu boş kulvar. */}
                   <span aria-hidden className={styles.gapLane}>
-                    <Lane
-                      ratio={pairScale(gap.portfolio, gap.benchmark).a}
-                      tick={pairScale(gap.portfolio, gap.benchmark).b}
-                    />
+                    <Bar ratio={pairScale(gap.portfolio, gap.benchmark).a} />
+                    <Bar ratio={pairScale(gap.portfolio, gap.benchmark).b} side="bench" step={1} />
                   </span>
                   {gap.fund && (
                     <div>
@@ -1262,20 +1323,25 @@ function ScenarioPanel({
              Her ölçü artık bir kart: iki nokta aynı kulvarda (içi boş
              bugün, dolu fonla), aralarındaki çizgi değişimin kendisi. Renk
              nötr — oynaklığın düşmesi "iyi" diye boyanmaz (yukarıdaki not).
-             Sayılar tablodakinin aynısı, yalnız biçim değişti. */
+             Sayılar tablodakinin aynısı, yalnız biçim değişti.
+             11 KASIM: iki nokta ("düğmeli im", arayüz kuralı 10 Kasım:
+             okurun çözmesi gereken çizim) yerine aynı ölçekte iki çubuk:
+             bugün 5 piksel pay ailesinin açık basamağında (`--share-4`),
+             fonla 8 piksel portföy tonunda. Fark iki çubuğun boyu; S&P
+             500'ün grisi bu panelde yok, karışmasın. */
           <div className={styles.scenarioBlock}>
           <ul className={styles.legend} aria-hidden>
             <li>
-              <span className={styles.dumbbellKey} data-side="before" />
+              <span className={styles.swatch} data-side="before" />
               {L.before}
             </li>
             <li>
-              <span className={styles.dumbbellKey} data-side="after" />
+              <span className={styles.swatch} />
               {`${L.after} (${chosen.symbol})`}
             </li>
           </ul>
           <ul className={styles.scenarioCards} aria-label={`${L.before} / ${L.after} (${chosen.symbol})`} data-motion-stagger>
-            {rows.map((row) => (
+            {rows.map((row, index) => (
               <li
                 key={row.label}
                 className={styles.scenarioCard}
@@ -1287,16 +1353,9 @@ function ScenarioPanel({
                   <ArrowRight size={13} weight="bold" className={styles.scenarioArrow} />
                   <span className={styles.scenarioAfter}>{row.after}</span>
                 </p>
-                <span aria-hidden className={styles.dumbbell}>
-                  <span
-                    className={styles.dumbbellSpan}
-                    style={{
-                      left: `${Math.min(row.beforeAt, row.afterAt) * 100}%`,
-                      width: `${Math.abs(row.afterAt - row.beforeAt) * 100}%`,
-                    }}
-                  />
-                  <span className={styles.dumbbellDot} data-side="before" style={{ left: `${row.beforeAt * 100}%` }} />
-                  <span className={styles.dumbbellDot} data-side="after" style={{ left: `${row.afterAt * 100}%` }} />
+                <span aria-hidden className={styles.scenarioBars}>
+                  <Bar ratio={row.beforeAt} side="before" step={index} />
+                  <Bar ratio={row.afterAt} step={index + 1} />
                 </span>
                 <p className={styles.scenarioDelta} aria-hidden>
                   {row.delta ? tieFigures(row.delta) : V.scenario.same}

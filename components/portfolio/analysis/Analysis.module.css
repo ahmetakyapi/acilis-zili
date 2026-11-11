@@ -14,13 +14,28 @@
    #6bc9ff), panelde etkileşim mavisine yakın okunuyordu. İkincil eş
    (S&P 500) mavi ailenin soluğu değil NÖTR mürekkep: "senin portföyün"
    marka tonunda, "endeks" gri — iki kulvar tonuyla da ayrılıyor, sektör
-   kartındaki S&P çentiği zaten mürekkep rengindeydi. */
+   kartındaki S&P çentiği zaten mürekkep rengindeydi.
+   11 KASIM GÖRSEL TURU (sahibinin 1440 ekran görüntüsü: "Portföy/S&P 500
+   çiftleri ince 5 piksellik soluk şeritler ve çentikler", "panolar düz ve
+   soluk"). İki renk ROLÜ ekran boyunca sabit ve OPAK:
+   - `--pa-ink` PORTFÖY = `--share-2` (ana sayfa portföy kartı ve /portfoy
+     halkasının pay ailesi; açıkta #0d74c4, koyuda #35b8ff). `--bar-soft`
+     yarı saydamdı, gömük kart zemininde daha da soluyordu.
+   - `--pa-bench` S&P 500 = `--share-rest` (nötr gri, opak). Eskisi
+     `--text-muted`ın %46 soluğuydu.
+   - `--pa-before` senaryonun "bugün"ü = `--share-4` (pay ailesinin açık
+     basamağı): gri S&P 500'e ayrılmış, karışmasın.
+   Çizim tek: ortak değer çubuğu (`value-lane` 5 / `value-bar` 8, globals.css
+   "DEĞER ÇUBUĞU"); S&P 500 ve "bugün" 5 pikselde (kıyas, kahraman değil),
+   kartın tek çizimi 12 pikselde. Çentik ve nokta kalmadı (arayüz kuralı,
+   10 Kasım: "Büyüklük kalın yatay şeritle"). Değişkenler `.board`da:
+   panel başlığındaki lejant da `.body`nin dışında aynı tonları okur. */
 
-.body,
-.leadBlock,
-.keyStrip {
-  --pa-ink: var(--bar-soft);
-  --pa-ink-soft: color-mix(in srgb, var(--text-muted) 46%, transparent);
+.board,
+.leadBlock {
+  --pa-ink: var(--share-2);
+  --pa-bench: var(--share-rest);
+  --pa-before: var(--share-4);
 }
 
 .body {
@@ -77,7 +92,7 @@
   list-style: none;
   color: var(--text-muted);
   font-size: var(--text-small);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .legend li {
@@ -86,18 +101,26 @@
   gap: 7px;
 }
 
-.swatchBar {
+/* Lejantın örneği çubuğun kendisi (11 Kasım): portföy 8 piksel portföy
+   tonunda, S&P 500 ve senaryonun "bugün"ü 5 piksel kendi tonunda. Eski
+   örnek S&P 500 için 2 × 12 piksellik çentikti. */
+.swatch {
+  display: inline-block;
   width: 16px;
-  height: var(--lane-h, 5px);
+  height: 8px;
+  flex: none;
   border-radius: 999px;
   background: var(--pa-ink);
 }
 
-.swatchTick {
-  width: 2px;
-  height: 12px;
-  border-radius: 1px;
-  background: var(--text-strong);
+.swatch[data-side="bench"] {
+  height: 5px;
+  background: var(--pa-bench);
+}
+
+.swatch[data-side="before"] {
+  height: 5px;
+  background: var(--pa-before);
 }
 
 .sectorList {
@@ -108,16 +131,30 @@
   list-style: none;
 }
 
-/* Kompakt satır (25 Ekim, kart panosu): ad ve pay üstte, kulvar ortada,
-   S&P 500 payı ve fark altta. Eski satır 1400 piksellik üç sütundu; kart
-   artık panonun 7/12'si, sayılar kulvarın iki ucunda okunuyor. */
+/* SEKTÖR SATIRI (11 Kasım; eskisi 25 Ekim üç satır, 31 Ekim yoğun iki
+   satır — gerekçeleri AnalysisScreen.tsx → SectorPanel). 640 ve üstünde
+   TEK HAT: ad · iki çubuk (portföy 8, S&P 500 5) · iki pay alt alta ·
+   fark. Sütunlar sabit genişlikte: her satır kendi ızgarası, `auto`
+   sütunda çubukların başı satırdan satıra kayardı. Fark sütunu 7rem:
+   "40,1 Puan Fazla" / "40.1 Pts Over" 12 pikselde 92 piksel. Telefonda ad
+   ve fark üstte, çubuklar ve paylar altta.
+   Ölçüm (11 Kasım, örnek veri: 11 pozisyon, 7 sektörde pay, 4 sektör
+   yok; iki tema): 1440'ta satır 62 → 50 piksel, portföyde olmayan satır
+   30 → 37, kart 671 → 659 (yanındaki yoğunlaşma kartıyla eşit); 390'da
+   satır 94 → 76, kart 1004 → 980. Çubukların başı ve sonu her satırda aynı
+   x'te (1440: 265 / 591; 390: 35 / 283); 390–1440 arası beş genişlikte
+   ve İngilizcede yatay taşma, kırpılan metin, kutudan taşan öğe 0. */
 .sectorRow {
   display: grid;
-  grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas: "name share" "track track" "bench diff";
-  gap: 4px 12px;
-  align-items: baseline;
-  padding: 10px 0 11px;
+  /* Telefonda üç sütun: paylar sabit 3,6rem, fark üst satırda ikinci ve
+     üçüncü sütuna yayılır. İki sütunlu (`1fr auto`) ilk denemede payın
+     eni satırdan satıra değişiyor, çubukların sonu 8 piksel oynuyordu
+     (390, ölçüldü). */
+  grid-template-columns: minmax(0, 1fr) auto 3.6rem;
+  grid-template-areas: "name diff diff" "bars bars figures";
+  gap: 6px 14px;
+  align-items: center;
+  padding: 10px 0;
   border-top: 1px solid var(--line-soft);
 }
 
@@ -126,30 +163,12 @@
   padding-top: 2px;
 }
 
-/* Çok sektörlü portföy: iki satırlık satır (gerekçe AnalysisScreen.tsx →
-   DENSE_SECTORS). Yalnız geniş kartta; telefonda üç satır kalır. */
 @media (min-width: 640px) {
-  .sectorList[data-dense] .sectorRow {
-    grid-template-columns: minmax(0, 1fr) auto auto;
-    grid-template-areas: "name bench share" "track track diff";
-    gap: 2px 14px;
-    padding: 7px 0 8px;
-  }
-
-  .sectorList[data-dense] .sectorRow:first-child {
-    padding-top: 2px;
-  }
-
-  .sectorList[data-dense] .sectorShare {
-    font-size: 1.1rem;
-    min-width: 4.2rem;
-    text-align: right;
-  }
-
-  .sectorList[data-dense] .sectorDiff {
-    align-self: center;
-    min-width: 4.2rem;
-    text-align: right;
+  .sectorRow {
+    grid-template-columns: minmax(7.5rem, 10.5rem) minmax(0, 1fr) 3.9rem 7rem;
+    grid-template-areas: "name bars figures diff";
+    gap: 0 16px;
+    padding: 9px 0;
   }
 }
 
@@ -158,73 +177,64 @@
   min-width: 0;
   color: var(--text-strong);
   font-size: var(--text-read);
-  font-weight: 650;
+  font-weight: 600;
+  line-height: 1.25;
+}
+
+.sectorList[data-absent] .sectorName {
+  color: var(--text-body);
+}
+
+/* İki çubuk alt alta, aralık 7: 8 piksellik çubuk 5 piksellik kulvarı
+   1,5 piksel aşıyor, görünen boşluk 5,5. */
+.sectorBars {
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 7px;
+  grid-area: bars;
+  padding-block: 2px;
+}
+
+.sectorFigures {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  grid-area: figures;
+  line-height: 1.15;
 }
 
 .sectorShare {
-  grid-area: share;
   color: var(--text-strong);
-  font-size: 1.25rem;
-  font-weight: 800;
+  font-size: 15px;
+  font-weight: 700;
   letter-spacing: -0.02em;
   white-space: nowrap;
 }
 
 .sectorBench {
-  grid-area: bench;
   color: var(--text-muted);
   font-size: var(--text-small);
   font-weight: 600;
+  white-space: nowrap;
 }
 
 .sectorDiff {
   grid-area: diff;
-  color: var(--text-muted);
+  justify-self: end;
+  color: var(--text-body);
   font-size: var(--text-small);
-  font-weight: 650;
+  font-weight: 600;
+  text-align: right;
   white-space: nowrap;
 }
 
-/* Kulvar + portföy şeridi + S&P çentiği. */
-.track {
-  position: relative;
-  grid-area: track;
-  height: 12px;
-  margin: 2px 0;
+.sectorList[data-absent] .sectorDiff {
+  color: var(--text-muted);
 }
 
-.track::before,
-.absentLane::before {
-  position: absolute;
-  inset: 3.5px 0;
-  border-radius: 999px;
-  background: var(--line-soft);
-  content: "";
-}
-
-.trackFill {
-  position: absolute;
-  top: 3.5px;
-  left: 0;
-  height: var(--lane-h, 5px);
-  border-radius: 999px;
-  background: var(--pa-ink);
-  transform-origin: left center;
-  animation: pa-grow 0.7s var(--ease-brand) both;
-}
-
-.trackTick {
-  position: absolute;
-  top: 0;
-  width: 2px;
-  height: 12px;
-  margin-left: -1px;
-  border-radius: 1px;
-  background: var(--text-strong);
-}
-
-/* Portföyde olmayan sektörler: ad + S&P 500 payı + boş kulvarda çentik.
-   Telefonda tek, 640 ve üstünde iki sütun (390'da kart 326 piksel). */
+/* Portföyde olmayan sektörler: aynı satır biçimi, yalnız S&P 500 çubuğu
+   (11 Kasım; eskisi iki sütunlu ızgarada ad + boş kulvarda çentik + pay). */
 .absent {
   display: flex;
   flex-direction: column;
@@ -235,66 +245,6 @@
 
 .absent .groupTitle {
   margin: 0;
-}
-
-.absentGrid {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr);
-  gap: 0 28px;
-  margin: 4px 0 0;
-  padding: 0;
-  list-style: none;
-}
-
-/* 640'tan itibaren iki sütun. Her sektör tek satır: ad, boş kulvarda
-   çentik, S&P 500 payı (üç sütunlu ve kulvarı altta olan ilk sürüm
-   1440'ta 4 satır × 44 piksel tutuyordu; bu 5 × 30). */
-@media (min-width: 640px) {
-  .absentGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-}
-
-.absentItem {
-  display: grid;
-  grid-template-columns: minmax(0, 1.25fr) minmax(2.5rem, 1fr) 3rem;
-  grid-template-areas: "name lane share";
-  gap: 10px;
-  align-items: center;
-  min-height: 30px;
-  padding: 3px 0;
-}
-
-/* Ad KESİLMEZ, satır atlar: İngilizcede "Communication Services" ve
-   "Consumer Discretionary" 1440'ta üç noktayla kesiliyordu (ölçüldü). */
-.absentName {
-  grid-area: name;
-  min-width: 0;
-  color: var(--text-body);
-  font-size: var(--text-small);
-  font-weight: 650;
-  line-height: 1.25;
-}
-
-.absentShare {
-  grid-area: share;
-  text-align: right;
-  color: var(--text-muted);
-  font-size: var(--text-small);
-  font-weight: 700;
-}
-
-.absentLane {
-  position: relative;
-  display: block;
-  grid-area: lane;
-  height: 12px;
-}
-
-@keyframes pa-grow {
-  from {
-    transform: scaleX(0);
-  }
 }
 
 /* ---- Ölçü ızgarası: sayılar aynı hatta biter ---- */
@@ -393,13 +343,23 @@
 .metric.keyCard {
   gap: 0.25rem;
   background: var(--premium-surface);
-  padding: 12px 14px 13px;
+  padding: 15px 14px 14px;
 }
 
 @media (min-width: 768px) {
   .metric.keyCard {
-    padding: 13px 16px 14px;
+    padding: 16px 16px 15px;
   }
+}
+
+/* Künye şeridinin sayısı ekranın en büyük ölçüsü (11 Kasım): 1,6rem'lik
+   tavan panel içi karolarla aynıydı, şerit hiyerarşide panellerin altında
+   okunuyordu. Ölçüm (11 Kasım, iki tema): 1440'ta 25,6 → 30,4, 390'da
+   18,4 → 24 piksel; beş kartın değer dipleri aynı hatta (1440: beşi de 419; önce
+   "Kat" künyeli kartlar 6 piksel aşağıdaydı), çiftin S&P 500 çubuğu beşinde
+   491. 390'da kırpılan metin ve kutudan taşan öğe 0. */
+.keyCard .metricValue {
+  font-size: clamp(1.5rem, 1.1rem + 0.9vw, 1.9rem);
 }
 
 .metrics.keys {
@@ -413,20 +373,42 @@
 }
 
 .metric {
+  position: relative;
   display: flex;
   min-width: 0;
   flex-direction: column;
   gap: 0.3rem;
-  padding: 0.8rem 0.85rem;
+  overflow: hidden;
+  padding: calc(0.8rem + 3px) 0.85rem 0.8rem;
   border-radius: var(--radius-lg);
   background: var(--surface-sunken);
+}
+
+/* YÖN ŞERİDİ (11 Kasım; ana sayfa portföy karolarının dili, arayüz kuralı
+   "durum kartın tepesindeki 3 piksellik şeritte"): yönlü değerde (düşüş
+   derinliği, getiriler) `--up`/`--down`, yönsüzde nötr `--line-strong`.
+   Dolgu 3 piksel kalınır ki yazı şeride yapışmasın. */
+.metric::before {
+  position: absolute;
+  inset: 0 0 auto;
+  height: 3px;
+  background: var(--line-strong);
+  content: "";
+}
+
+.metric[data-tone="up"]::before {
+  background: var(--up);
+}
+
+.metric[data-tone="down"]::before {
+  background: var(--down);
 }
 
 .metricLabel {
   margin: 0;
   color: var(--text-body);
   font-size: var(--text-small);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 /* Değer dibe iner: farklı uzunluktaki etiketlere rağmen sayılar aynı hatta. */
@@ -449,7 +431,7 @@
   margin: 0;
   color: var(--text-strong);
   font-size: clamp(1.15rem, 4.4vw, 1.6rem);
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.03em;
   line-height: 1.1;
   white-space: nowrap;
@@ -580,13 +562,13 @@
   min-width: 0;
   color: var(--text-strong);
   font-size: var(--text-read);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .pairValue {
   color: var(--text-strong);
   font-size: var(--text-read);
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .pairRow > :last-child {
@@ -624,13 +606,13 @@
 .weekName {
   color: var(--text-strong);
   font-size: var(--text-read);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .weekShare {
   color: var(--text-strong);
   font-size: var(--text-read);
-  font-weight: 750;
+  font-weight: 700;
   white-space: nowrap;
 }
 
@@ -657,7 +639,7 @@
   background: var(--surface-sunken);
   color: var(--text-body);
   font-size: var(--text-small);
-  font-weight: 650;
+  font-weight: 600;
   transition: color 0.2s var(--ease-brand), background-color 0.2s var(--ease-brand);
 }
 
@@ -703,19 +685,21 @@ a.chip:hover {
   background: var(--surface-sunken);
 }
 
+/* Ad üstte, paylar altında — her kartta aynı (11 Kasım). Eskisi tek
+   satırda `space-between` ile sarıyordu: 1440'ta dört karttan biri
+   ("İletişim Hizmetleri") iki satıra inip öteki üçünden 22 piksel uzun
+   başlıyordu, çubuklar aynı hatta değildi. */
 .gapHead {
   display: flex;
-  flex-wrap: wrap;
-  align-items: baseline;
-  justify-content: space-between;
-  gap: 2px 10px;
+  flex-direction: column;
+  gap: 2px;
 }
 
 .gapName {
   margin: 0;
   color: var(--text-strong);
   font-size: var(--text-read);
-  font-weight: 750;
+  font-weight: 700;
 }
 
 .gapRow {
@@ -887,122 +871,84 @@ a.chip:hover {
   text-wrap: pretty;
 }
 
-/* ---- Kart içi çizimler: kulvar, eş çizgi, halka ---- */
+/* ---- Kart içi çizimler: değerin çubuğu ve Portföy/S&P 500 çifti ---- */
 
-/* Çizim değerin altında, her kartta aynı yükseklikte: yan yana kartların
-   değerleri yine aynı hatta biter (halka 36 px, iki kulvar 36 px). Tek
-   kulvar bloğun ortasında: dibe yaslıyken değerle arasında 31 piksellik
-   boşluk kalıyordu (1440, ölçüldü). */
+/* Çizim değerin altında. Künye kartlarında her kartta aynı yükseklikte
+   (iki satırlık çift): yan yana kartların değerleri aynı hatta biter.
+   (Eski not, 25–31 Ekim: halka 36 piksel, iki kulvar 36 piksel; tek
+   kulvar bloğun ortasında, dibe yaslıyken değerle arasında 31 piksellik
+   boşluk kalıyordu.) Panel içi karolarda tek çubuk, sabit yükseklik yok:
+   eski 36 piksellik yuva 12 piksellik çubuğun altında boşluk bırakıyordu. */
 .metricVisual {
   display: flex;
-  min-height: 36px;
   align-items: center;
-  margin-top: 4px;
+  margin-top: 6px;
 }
 
-.lane {
-  position: relative;
-  display: block;
+/* Ortak çubuğun bu ekrandaki rolleri (yalnız değişken; kural globals.css).
+   Kulvar tam en; S&P 500 ve "bugün" 5 piksel kendi tonunda, kartın tek
+   çizimi 12 piksel. */
+.bar {
   width: 100%;
-  height: var(--lane-h, 5px);
-  border-radius: 999px;
-  background: var(--line-soft);
+  --bar-tone: var(--pa-ink);
 }
 
-.laneFill {
-  position: absolute;
-  top: 0;
-  left: 0;
-  display: block;
-  height: 100%;
-  border-radius: 999px;
-  background: var(--pa-ink);
+.bar[data-side="bench"] {
+  --bar-tone: var(--pa-bench);
+  --bar-h: 5px;
 }
 
-.laneFill[data-faint] {
-  background: var(--pa-ink-soft);
+.bar[data-side="before"] {
+  --bar-tone: var(--pa-before);
+  --bar-h: 5px;
 }
 
-.laneFill[data-tone="down"] {
-  background: var(--down);
+.bar[data-hero] {
+  --bar-h: 12px;
 }
 
-.laneFill[data-tone="down"][data-faint] {
-  background: color-mix(in srgb, var(--down) 42%, transparent);
-}
-
-.laneTick {
-  position: absolute;
-  top: -3.5px;
-  width: 2px;
-  height: 12px;
-  margin-left: -1px;
-  border-radius: 1px;
-  background: var(--text-strong);
-}
-
-.pairLanes {
+/* PORTFÖY / S&P 500 ÇİFTİ (11 Kasım; gerekçe AnalysisScreen.tsx →
+   PairRows). Her satır: etiket solda, değer sağda, çubuk altta kartın tam
+   eninde. Eski düzende etiket kulvarın solunda 4,6rem tutuyordu ve kulvar
+   1440'ta 136, 390'da (etiket üstte) 127 piksel kalıyordu; şimdi kartın
+   iç eni. Portföy satırı mürekkep, S&P 500 satırı soluk metin. */
+.duo {
   display: grid;
   width: 100%;
-  gap: 6px;
+  gap: 7px;
 }
 
-.pairLane {
+.duoRow {
   display: grid;
-  grid-template-columns: 4.6rem minmax(0, 1fr);
-  align-items: center;
-  gap: 8px;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  gap: 3px 8px;
 }
 
-/* Telefonda kart 155 piksel: yan yana etiket kulvarı 50 piksele
-   indiriyordu (390, ölçüldü). Etiket kulvarın üstüne iner; kart içi çizim
-   bloğu bütün kartlarda aynı boy (56) kalır ki değerler aynı hatta bitsin. */
-@media (max-width: 639px) {
-  .pairLane {
-    grid-template-columns: minmax(0, 1fr);
-    gap: 3px;
-  }
-
-  .metricVisual {
-    min-height: 58px;
-  }
+.duoRow > .bar {
+  grid-column: 1 / -1;
+  margin-block: 1px;
 }
 
-.pairLaneLabel {
+.duoLabel {
   overflow: hidden;
-  color: var(--text-muted);
+  color: var(--text-body);
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight: 600;
   text-overflow: ellipsis;
   white-space: nowrap;
 }
 
-/* Etkin pozisyon kutuları (31 Ekim; gerekçe AnalysisScreen.tsx →
-   EffectivePips). Her pozisyon bir kutu, 14 piksel boy: halkanın 36
-   piksellik yuvasının ortasında, değerler yine aynı hatta biter. Kutu
-   aralığı 3 piksel; 20 kutu 390'daki 127 piksellik çizim alanında 4
-   piksele iner, tavan bu yüzden `PIP_MAX`. */
-.pips {
-  display: flex;
-  width: 100%;
-  gap: 3px;
+.duoValue {
+  color: var(--text-strong);
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  white-space: nowrap;
 }
 
-.pip {
-  position: relative;
-  display: block;
-  height: 14px;
-  flex: 1 1 0;
-  overflow: hidden;
-  border-radius: 3px;
-  background: var(--line-soft);
-}
-
-.pipFill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  display: block;
-  background: var(--pa-ink);
+.duoRow[data-side="bench"] .duoLabel,
+.duoRow[data-side="bench"] .duoValue {
+  color: var(--text-muted);
 }
 
 /* ---- Ağırlık şeridi ---- */
@@ -1017,24 +963,25 @@ a.chip:hover {
    arasındaki 2 piksellik zemin aralığı 5 piksellik şeritte okunmuyordu.
    Tek bir pozisyon aynı dilin kulvarı değil, bütünün parçası. Ton
    `--bar-soft`tan sıraya göre açılıyor (31 Ekim; eskiden `--primary-soft`). */
+/* 11 Kasım: 12 piksel (ana sayfa portföy kartının kalın yatay şeridi,
+   `PortfolioSlot.module.css` → `.stack`), dilimler pay ailesinin OPAK
+   basamaklarında (AnalysisScreen.tsx → SHARE_TONES); "Diğer" çizgili
+   desen değil düz `--share-rest`. Dilimler soldan sırayla dolar
+   (`bar-fill`, kademe `--step`). */
 .stripBar {
   display: flex;
   gap: 2px;
-  height: 10px;
+  height: 12px;
   overflow: hidden;
   border-radius: 999px;
+  background: var(--line-soft);
 }
 
 .stripSeg {
   display: block;
   min-width: 3px;
   flex-basis: 0;
-  border-radius: 2px;
-  background: color-mix(in oklab, var(--bar-soft) var(--tone, 60%), transparent);
-}
-
-.stripSeg[data-rest] {
-  background: repeating-linear-gradient(135deg, var(--pa-ink-soft) 0 3px, transparent 3px 6px);
+  background: var(--tone, var(--pa-ink));
 }
 
 /* Pozisyon satırları (31 Ekim; gerekçe AnalysisScreen.tsx → WeightStrip).
@@ -1068,12 +1015,7 @@ a.chip:hover {
   width: 10px;
   height: 10px;
   border-radius: 2px;
-  background: color-mix(in oklab, var(--bar-soft) var(--tone, 60%), transparent);
-}
-
-.posSwatch[data-rest] {
-  background: repeating-linear-gradient(135deg, var(--pa-ink-soft) 0 2px, transparent 2px 4px);
-  box-shadow: inset 0 0 0 1px var(--line);
+  background: var(--tone, var(--pa-ink));
 }
 
 /* "Diğer" satırında logo yerine boş yuva: sütunlar hizalı kalır. */
@@ -1098,6 +1040,7 @@ a.chip:hover {
 .posId b {
   flex: none;
   color: var(--text-strong);
+  font-size: 13px;
   font-weight: 700;
 }
 
@@ -1109,24 +1052,11 @@ a.chip:hover {
   white-space: nowrap;
 }
 
+/* Satırın çubuğu ortak değer çubuğu, dilimin tonunda (`tint`). */
 .posLane {
-  position: relative;
-  display: block;
-  height: var(--lane-h, 5px);
-  border-radius: 999px;
-  background: var(--line-soft);
-}
-
-.posRow[data-rest] .posLane {
-  background: transparent;
-}
-
-.posLaneFill {
-  position: absolute;
-  inset: 0 auto 0 0;
-  display: block;
-  border-radius: 999px;
-  background: color-mix(in oklab, var(--bar-soft) var(--tone, 60%), transparent);
+  display: flex;
+  min-width: 0;
+  align-items: center;
 }
 
 .posShare {
@@ -1146,24 +1076,11 @@ a.chip:hover {
 
 /* ---- Korelasyon: işaretli kulvar + ısı matrisi ---- */
 
+/* Sıfır çizgisi ortada (`value-notch` sessiz, `--line-strong`; sitenin
+   sıfır dili). Çubuk 8 piksel, kulvarın altında 2 piksel pay. */
 .signedLane {
-  position: relative;
-  display: block;
   grid-column: 1 / -1;
-  height: var(--lane-h, 5px);
-  border-radius: 999px;
-  background: var(--line-soft);
-}
-
-/* Sıfır çizgisi ortada (`--line-strong`, sitenin sıfır dili). */
-.signedLane::after {
-  position: absolute;
-  top: -3px;
-  left: 50%;
-  width: 1px;
-  height: 11px;
-  background: var(--line-strong);
-  content: "";
+  margin-block: 4px 2px;
 }
 
 .weekLane {
@@ -1171,7 +1088,9 @@ a.chip:hover {
 }
 
 .gapLane {
-  display: block;
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
   padding: 4px 0 2px;
 }
 
@@ -1181,8 +1100,14 @@ a.chip:hover {
 }
 
 @media (min-width: 1024px) {
+  /* Matris sütunu en az matrisin eni (11 Kasım): 0,95fr'lik sütun
+     1100–1300 arasında altı pozisyonlu matristen dardı; 1280'de ısı
+     satırları ızgaradan 19 piksel taşıyordu (ölçüldü). `max-content`
+     denendi: sütun matrisin altındaki paragrafların tek satırlık enine
+     açıldı, çift listeleri 1280'de 37 piksel taştı. `min-content` tabanı
+     matrisin en dar hâli (44 piksellik hücreler), üstü eski oran. */
   .corrLayout[data-has-matrix] {
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.25fr);
+    grid-template-columns: minmax(min-content, 0.95fr) minmax(0, 1.25fr);
     align-items: start;
   }
 
@@ -1290,7 +1215,7 @@ a.chip:hover {
 
 .heatRead .numeral {
   color: var(--text-strong);
-  font-weight: 750;
+  font-weight: 700;
 }
 
 /* ---- Senaryo kartları ---- */
@@ -1348,7 +1273,7 @@ a.chip:hover {
 .scenarioBefore {
   color: var(--text-muted);
   font-size: var(--text-read);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .scenarioArrow {
@@ -1359,72 +1284,23 @@ a.chip:hover {
 .scenarioAfter {
   color: var(--text-strong);
   font-size: clamp(1.1rem, 3.6vw, 1.35rem);
-  font-weight: 800;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 
-/* İki nokta aynı kulvarda: içi boş bugün, dolu fonla. */
-.dumbbell {
-  position: relative;
-  display: block;
-  height: 12px;
-  margin: 2px 6px 0;
-}
-
-.dumbbell::before {
-  position: absolute;
-  inset: 3.5px 0;
-  border-radius: 999px;
-  background: var(--line-soft);
-  content: "";
-}
-
-.dumbbellSpan {
-  position: absolute;
-  top: 3.5px;
-  height: var(--lane-h, 5px);
-  background: var(--pa-ink-soft);
-}
-
-.dumbbellDot,
-.dumbbellKey {
-  width: 12px;
-  height: 12px;
-  border-radius: 50%;
-}
-
-.dumbbellDot {
-  position: absolute;
-  top: 0;
-  margin-left: -6px;
-}
-
-.dumbbellDot[data-side="before"],
-.dumbbellKey[data-side="before"] {
-  background: var(--surface-solid);
-  box-shadow: inset 0 0 0 2px var(--pa-ink, var(--text-muted));
-}
-
-.dumbbellDot[data-side="after"],
-.dumbbellKey[data-side="after"] {
-  background: var(--pa-ink, var(--text-strong));
-}
-
-.dumbbellKey {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
+/* İki çubuk aynı ölçekte (11 Kasım; eskisi iki nokta ve aradaki şerit):
+   bugün 5 piksel `--pa-before`, fonla 8 piksel portföy tonu. */
+.scenarioBars {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  margin-top: 2px;
 }
 
 .scenarioDelta {
   margin: 0;
   color: var(--text-muted);
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight: 600;
 }
 
-@media (prefers-reduced-motion: reduce) {
-  .trackFill {
-    animation: none;
-  }
-}
