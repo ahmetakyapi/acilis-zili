@@ -59,6 +59,15 @@ import { clientKey, peekRateLimit, rateLimit, refundRateLimit } from "@/lib/rate
 
 export const CLIENT_DAILY_CALLS = 30;
 export const MEMBER_DAILY_CALLS = 15;
+/* SİTE SAHİBİNİN PAYI (11 Kasım). Sahibin günlük Claude işi üyeninkinin
+   birkaç katı: tarama + Kişisel Plan, günlük ve aylık danışman, Bilanço
+   Masası ve danışmanla soru-cevap sohbeti ("beraber soru cevap
+   ilerleyelim"). Üye payı (15) sohbeti birkaç soruda bitiriyordu. Sahip
+   kimliği (`ownerClient`) üye önekini taşır, yani genel tavanın üye payında
+   (%90) durur; yalnız kendi günlük sayacı geniş. Yalnız `getAdmin` ile
+   doğrulanmış oturumda kullanılır (lib/portfolio-question.ts,
+   lib/portfolio-advisor.ts). */
+export const OWNER_DAILY_CALLS = 60;
 /* Genel sayacın, her kimlik türünün durduğu payı: anonim %80, üye %90,
    nöbet tavanın tamamı (yukarıda 2 ve 4). Kimlik başına sayaçtan ayrı:
    bunlar TOPLAMI sınırlar. */
@@ -86,6 +95,10 @@ const MEMBER = "claude-member:";
 
 /** Oturumlu okurun bütçe kimliği (portföy notu) — kendi günlük sayacı; üyeler birlikte tavanın %90'ında durur. */
 export const memberClient = (userId: string) => `${MEMBER}${userId}`;
+
+const OWNER = `${MEMBER}owner:`;
+/** Site sahibinin bütçe kimliği — çağıran `getAdmin` ile doğrulamış olmalı. */
+export const ownerClient = (userId: string) => `${OWNER}${userId}`;
 
 /**
  * YALNIZ ÖNBELLEK (24 Ekim, sayfanın içindeki Claude). Takip listesi notu ve
@@ -120,7 +133,7 @@ export function takeCall(client?: string): void {
     /* Önce bakılır, sonra alınır: `rateLimit` reddettiği denemeyi de
        sayıyor; sayaç tavanın üstüne şişerse `refundCall`ın geri verdiği hak
        açılmazdı. */
-    const limit = member ? MEMBER_DAILY_CALLS : CLIENT_DAILY_CALLS;
+    const limit = client.startsWith(OWNER) ? OWNER_DAILY_CALLS : member ? MEMBER_DAILY_CALLS : CLIENT_DAILY_CALLS;
     if (!peekRateLimit(client, limit).allowed) throw new ClaudeBudgetError();
     rateLimit(client, limit, DAY_MS);
   }

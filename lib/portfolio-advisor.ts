@@ -1,7 +1,7 @@
 import "server-only";
 import { unstable_cache } from "next/cache";
 import { getAdmin } from "@/lib/admin";
-import { memberClient } from "@/lib/claude-budget";
+import { ownerClient } from "@/lib/claude-budget";
 import type { Locale } from "@/lib/i18n/config";
 import {
   AdvisorSchema,
@@ -52,6 +52,7 @@ Ufuk girdide (horizon): "günlük" ise son seans ve önümüzdeki günler; "ayl�
 - actions: öncelik sırasıyla 3-5 eylem. kind: trim (azalt / kâr al), add (ekle), diversify (çeşitlendir), hedge (riski sınırla), hold (koru), watch (izle). symbol: ilgili hisse (yoksa null). title: kısa, Title Case, en çok 6 kelime. detail: 2-3 cümle; NEDEN (ölçüler, teknik görüş, ağırlık, risk) ve NASIL (hedef ağırlık yalnız referenceWeights listesinden, örn. "%25'e indir").
 - risks: en çok 3 risk (title kısa ve Title Case, detail 1-2 cümle).
 - outlook: tek paragraf, en çok 45 kelime — önümüzdeki dönemde neyi izlemeli.
+- followUps: sohbeti açan 3 kısa soru (her biri en çok 12 kelime), birinci tekil şahısla, okurun sana sorabileceği ya da senin onun kararını netleştirmek için sorduğun ("MU'yu %25'e indirsem yoğunlaşma ne olur?", "Nakde mi geçmeliyim, sektör mü değiştirmeliyim?"). Yalnız verinin yanıtlayabileceği sorular.
 
 Kurallar:
 - YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, olay yazma; hesap yapma (yüzde, fiyat, hedef türetme yok). Sayıyı verilen biçimde aynen yaz. Hedef ağırlık yalnız referenceWeights'ten.
@@ -67,6 +68,7 @@ Output:
 - actions: 3-5 actions in priority order. kind: trim, add, diversify, hedge, hold, watch. symbol: the stock (null if none). title: short, Title Case, at most 6 words. detail: 2-3 sentences: WHY (measures, technical view, weight, risk) and HOW (target weights only from referenceWeights, e.g. "cut to 25%").
 - risks: at most 3 (short Title Case title, 1-2 sentence detail).
 - outlook: one paragraph, at most 45 words: what to watch next.
+- followUps: 3 short questions (at most 12 words each) that open the conversation, first person: what the reader could ask you, or what you would ask to sharpen the decision ("What if I cut MU to 25%?"). Only questions the data can answer.
 
 Rules:
 - Use ONLY the data given; no number, date or event not given; no computation (no derived percentages, prices or targets). Copy numbers exactly as formatted. Target weights only from referenceWeights.
@@ -90,7 +92,7 @@ async function write(horizon: AdvisorHorizon, rows: ScanRow[], risk: unknown, se
   const input = advisorInput(horizon, rows, risk, monthly, locale, dayLabel(session, locale));
   const out = await callClaude(SYSTEM[locale], AdvisorSchema, input, client);
   if (!out) throw new Error("no-output");
-  const checked = checkAdvisor(out, input, rows.map((r) => r.symbol));
+  const checked = checkAdvisor(out, input, rows.map((r) => r.symbol), locale);
   if (!checked.ok) throw new Error(checked.reason);
   return { horizon, text: checked.text, session, monthly, generatedAt: new Date().toISOString() };
 }
@@ -111,8 +113,9 @@ export async function getAdvisorReport(userId: string, horizon: AdvisorHorizon, 
   if (failed && Date.now() - failed < FAILURE_TTL) return null;
   try {
     return await unstable_cache(
-      () => write(horizon, scan.rows, risk, scan.session, locale, memberClient(userId)),
-      ["portfolio-advisor-v1", horizon, userId, period, fingerprint, locale],
+      () => write(horizon, scan.rows, risk, scan.session, locale, ownerClient(userId)),
+      /* v2 (11 Kasım): takip soruları; sahibin bütçe kimliği. */
+      ["portfolio-advisor-v2", horizon, userId, period, fingerprint, locale],
       { revalidate: horizon === "daily" ? 24 * 3600 : 31 * 24 * 3600, tags: ["portfolio-advisor"] },
     )();
   } catch (error) {

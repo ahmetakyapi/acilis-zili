@@ -33,6 +33,7 @@ import { toolVisualsEn } from "./tool-visuals";
 import { portfolioWeeklyEn } from "./portfolio-weekly";
 import { portfolioAdvisorEn } from "./portfolio-advisor";
 import { portfolioAskEn } from "./portfolio-ask";
+import { claudeBriefEn } from "./claude-brief";
 import { earningsDeskEn } from "./earnings-desk";
 import { homeEarningsEn } from "./home-earnings";
 
@@ -4538,6 +4539,7 @@ const en: typeof tr = {
   portfolioWeekly: portfolioWeeklyEn,
   portfolioAdvisor: portfolioAdvisorEn,
   portfolioAsk: portfolioAskEn,
+  claudeBrief: claudeBriefEn,
   earningsDesk: earningsDeskEn,
   homeEarnings: homeEarningsEn,
 };

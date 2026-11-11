@@ -13,7 +13,9 @@ import {
   Warning,
 } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
+import { ChatComposer, ChatThread, SuggestionChips, type ChatMessage } from "@/components/ai/chat/Chat";
 import { ChangePill, Panel, Skeleton } from "@/components/ui/primitives";
+import type { PortfolioAskAnswer, PortfolioTurn } from "@/lib/portfolio-question";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import type { AdvisorReport } from "@/lib/portfolio-advisor";
@@ -215,6 +217,102 @@ function Report({ report, labels, locale }: { report: AdvisorReport; labels: Lab
   );
 }
 
+/* DANIŞMANLA SOHBET (11 Kasım, sahibinin isteği: "bana öneriler yapsın,
+   beraber soru cevap ilerleyelim, kritik yapabilelim; ayrıca kendi
+   fikirlerini yapsın"). Notun hemen altında: Claude'un önerdiği sorular
+   (danışman çıktısının `followUps`ı; yoksa sabit üç soru), konuşma akışı ve
+   giriş kutusu. Uç Portföyüne Sor'un ucu (`/api/ai/portfoy-sor`): sahipte
+   açık görüş, senaryo hesabı sunucuda, sayı denetimi açık; son üç adım
+   `history` olarak gider. Her yanıtın altında Claude'un yeni takip
+   soruları. Sohbet oturum boyunca durur, sayfa yenilenince sıfırlanır. */
+type Turn = { id: string; question: string; answer: PortfolioAskAnswer | null; error: string | null };
+
+function AdvisorChat({ locale, labels, seeds }: { locale: Locale; labels: Labels; seeds: string[] }) {
+  const C = labels.chat;
+  const [turns, setTurns] = useState<Turn[]>([]);
+  const [busy, setBusy] = useState(false);
+  const [remaining, setRemaining] = useState<number | null>(null);
+  const ask = (question: string) => {
+    if (busy) return;
+    const id = `t${Date.now()}`;
+    const history: PortfolioTurn[] = turns
+      .filter((t) => t.answer && t.answer.paragraphs.length)
+      .slice(-3)
+      .map((t) => ({ question: t.question, answer: t.answer!.paragraphs.join(" ").slice(0, 1200) }));
+    setTurns((all) => [...all, { id, question, answer: null, error: null }]);
+    setBusy(true);
+    fetch("/api/ai/portfoy-sor", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ question, locale, history }),
+    })
+      .then((r) => r.json() as Promise<{ ok: boolean; answer?: PortfolioAskAnswer; reason?: string; remaining?: number }>)
+      .then((d) => {
+        if (typeof d.remaining === "number") setRemaining(d.remaining);
+        const err = d.ok && d.answer
+          ? d.answer.kind === "unanswerable"
+            ? C.errors.unanswerable
+            : d.answer.kind === "scenario-unavailable"
+              ? C.errors.scenario
+              : null
+          : (C.errors[(d.reason ?? "error") as keyof typeof C.errors] ?? C.errors.error);
+        setTurns((all) => all.map((t) => (t.id === id ? { ...t, answer: d.ok ? d.answer ?? null : null, error: err } : t)));
+      })
+      .catch(() => setTurns((all) => all.map((t) => (t.id === id ? { ...t, error: C.errors.error } : t))))
+      .finally(() => setBusy(false));
+  };
+  const messages: ChatMessage[] = turns.flatMap((t) => {
+    const out: ChatMessage[] = [{ id: `${t.id}-q`, role: "user", content: t.question }];
+    if (t.error) out.push({ id: `${t.id}-e`, role: "assistant", content: <p className={styles.chatError}>{t.error}</p> });
+    else if (t.answer && t.answer.paragraphs.length)
+      out.push({
+        id: `${t.id}-a`,
+        role: "assistant",
+        content: (
+          <>
+            {t.answer.paragraphs.map((p, i) => (
+              <p key={i}>{p}</p>
+            ))}
+            {t.answer.measures.length > 0 && (
+              <ul className={styles.chatMeasures} aria-label={C.measures}>
+                {t.answer.measures.map((m) => (
+                  <li key={m.id} data-tone={m.tone ?? undefined}>
+                    <span>{m.label}</span>
+                    <b className="numeral">{m.value}</b>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </>
+        ),
+      });
+    return out;
+  });
+  const last = [...turns].reverse().find((t) => t.answer);
+  const next = last?.answer?.followUps?.length ? last.answer.followUps : turns.length === 0 ? seeds : [];
+  return (
+    <section className={styles.chat} aria-label={C.title}>
+      <div className={styles.chatHead}>
+        <h3 className={styles.sectionTitle}>{C.title}</h3>
+        <p className={styles.chatIntro}>{C.intro}</p>
+      </div>
+      {messages.length > 0 && (
+        <ChatThread messages={messages} thinking={busy} thinkingLabel={C.thinking} label={C.log} youLabel={C.you} assistantLabel={C.assistant} />
+      )}
+      <SuggestionChips items={next} onPick={ask} disabled={busy || remaining === 0} label={C.suggestionsLabel} />
+      <ChatComposer
+        onSend={ask}
+        label={C.label}
+        placeholder={C.placeholder}
+        sendLabel={C.send}
+        busy={busy}
+        disabled={remaining === 0}
+        foot={remaining !== null ? <span>{C.remaining.replace("{n}", String(remaining))}</span> : undefined}
+      />
+    </section>
+  );
+}
+
 export function AdvisorDesk({ locale, labels }: { locale: Locale; labels: Labels }) {
   const [tab, setTab] = useState<AdvisorHorizon>("daily");
   const [entries, setEntries] = useState<Partial<Record<AdvisorHorizon, Entry>>>({});
@@ -263,6 +361,9 @@ export function AdvisorDesk({ locale, labels }: { locale: Locale; labels: Labels
       {(!entry || entry.status === "loading") && <Loading labels={labels} />}
       {entry?.status === "failed" && <p className={styles.unavailable}>{labels.unavailable}</p>}
       {report && <Report report={report} labels={labels} locale={locale} />}
+      {entries.daily?.status === "done" && (
+        <AdvisorChat locale={locale} labels={labels} seeds={entries.daily.report?.text.followUps?.length ? entries.daily.report.text.followUps : labels.chat.defaults} />
+      )}
       <p className={styles.disclosure}>{labels.disclosure}</p>
     </Panel>
   );

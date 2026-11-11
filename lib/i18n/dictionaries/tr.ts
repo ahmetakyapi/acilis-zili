@@ -32,6 +32,7 @@ import { toolVisualsTr } from "./tool-visuals";
 import { portfolioWeeklyTr } from "./portfolio-weekly";
 import { portfolioAdvisorTr } from "./portfolio-advisor";
 import { portfolioAskTr } from "./portfolio-ask";
+import { claudeBriefTr } from "./claude-brief";
 import { earningsDeskTr } from "./earnings-desk";
 import { homeEarningsTr } from "./home-earnings";
 
@@ -5161,6 +5162,7 @@ const tr = {
   portfolioWeekly: portfolioWeeklyTr,
   portfolioAdvisor: portfolioAdvisorTr,
   portfolioAsk: portfolioAskTr,
+  claudeBrief: claudeBriefTr,
   earningsDesk: earningsDeskTr,
   homeEarnings: homeEarningsTr,
 };

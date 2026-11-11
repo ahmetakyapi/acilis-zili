@@ -424,6 +424,8 @@ export const PortfolioAnswerSchema = z.object({
   measures: z.array(z.string()),
   /** Sorunun bir kısmı veride yok (yanıt kalanını anlatıyor). */
   partial: z.boolean(),
+  /** Claude'un önerdiği 2–3 takip sorusu (11 Kasım, danışmanla sohbet). */
+  followUps: z.array(z.string()),
 });
 export type PortfolioModelAnswer = z.infer<typeof PortfolioAnswerSchema>;
 
@@ -456,6 +458,32 @@ export function decidePortfolioAnswer(
   if (advice.length) return { kind: "rejected", reason: "advice-pattern", missing: advice, charge: false };
   /* Sahipte "advice" hükmü anlamsız (görüş serbest): yanıt düz "answered". */
   return { kind: options.adviceAllowed ? "answered" : out.verdict, paragraphs, partial: out.partial, charge: true };
+}
+
+/** En çok kaç takip sorusu; soru başına en çok kaç karakter. */
+export const MAX_FOLLOW_UPS = 3;
+const FOLLOW_UP_MAX_CHARS = 90;
+
+/**
+ * Takip soruları (11 Kasım). Sohbetin bir sonraki adımı; okur tıklayınca
+ * soru olduğu gibi gönderilir. Sayı denetimi burada da: girdide olmayan
+ * sayı taşıyan soru düşer (soru da okura basılan metindir). Üyede tavsiye
+ * kalıbı taşıyan soru da düşer. Tekrarlar ve uzunlar atılır.
+ */
+export function pickFollowUps(items: readonly string[], grounding: string, locale: Locale, adviceAllowed: boolean): string[] {
+  const seen = new Set<string>();
+  const out: string[] = [];
+  for (const raw of items) {
+    const q = raw.trim().replace(/\s+/g, " ");
+    const key = q.toLocaleLowerCase(locale === "en" ? "en-US" : "tr-TR");
+    if (!q || q.length > FOLLOW_UP_MAX_CHARS || seen.has(key)) continue;
+    if (ungroundedNumbers(q, grounding).length) continue;
+    if (!adviceAllowed && adviceMatches(q, locale).length) continue;
+    seen.add(key);
+    out.push(q);
+    if (out.length >= MAX_FOLLOW_UPS) break;
+  }
+  return out;
 }
 
 /** Önbellek anahtarının senaryo parçası — aynı soru anahtarında farklı ayrıştırma karışmasın. */

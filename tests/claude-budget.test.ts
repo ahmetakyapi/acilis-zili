@@ -72,3 +72,13 @@ test("üyeler birlikte %90'da durur, son onda bir yalnız nöbetin", () => {
   for (let i = 0; i < 5; i += 1) takeCall();
   assert.throws(() => takeCall(), ClaudeBudgetError);
 });
+
+test("site sahibinin kimliği geniş günlük payla, üye payından ayrı sayılır", async () => {
+  const { OWNER_DAILY_CALLS, ownerClient } = await import("../lib/claude-budget");
+  process.env.INSIGHT_DAILY_CAP = "1000";
+  const owner = ownerClient(`sahip-${Date.now()}`);
+  for (let i = 0; i < MEMBER_DAILY_CALLS + 1; i++) takeCall(owner);
+  assert.ok(OWNER_DAILY_CALLS > MEMBER_DAILY_CALLS);
+  for (let i = MEMBER_DAILY_CALLS + 1; i < OWNER_DAILY_CALLS; i++) takeCall(owner);
+  assert.throws(() => takeCall(owner), ClaudeBudgetError);
+});

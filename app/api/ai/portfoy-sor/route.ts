@@ -21,15 +21,19 @@ import { normalizeQuestion } from "@/lib/stock-question-core";
 export const dynamic = "force-dynamic";
 export const maxDuration = 90;
 
-const MAX_BODY_BYTES = 2048;
+/* 8 KB (11 Kasım): gövde artık sohbetin önceki üç adımını da taşıyor (soru ≤ 600 + yanıt ≤ 1.200 karakter × 3). */
+const MAX_BODY_BYTES = 8192;
 const PER_MINUTE = 4;
 
 const respond = (data: unknown, status = 200) =>
   NextResponse.json(data, { status, headers: { "Cache-Control": "private, no-store", Vary: "Cookie" } });
 
+/* `history` (11 Kasım): danışmanla sohbetin önceki adımları, en çok üç;
+   yalnız bağlam (lib/portfolio-question.ts → PortfolioTurn). */
 const Body = z.object({
   question: z.string().max(600),
   locale: z.enum(["tr", "en"]),
+  history: z.array(z.object({ question: z.string().max(600), answer: z.string().max(1200) })).max(3).optional(),
 });
 
 export async function POST(request: Request) {
@@ -54,7 +58,7 @@ export async function POST(request: Request) {
   const question = normalizeQuestion(body.question);
   if (!question) return respond({ ok: false, reason: "question", remaining: portfolioQuestionQuota.left(userId) }, 400);
 
-  const result = await askPortfolio(userId, question, body.locale);
+  const result = await askPortfolio(userId, question, body.locale, body.history ?? []);
   const status = result.ok
     ? 200
     : result.reason === "quota" || result.reason === "busy"
