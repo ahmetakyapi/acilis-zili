@@ -266,21 +266,20 @@ export function ChartThumb({
         <span className={styles.thumbValue} data-tone={item.dir === "flat" ? undefined : item.dir}>
           {item.display}
         </span>
+        {/* ORTAK DEĞER ÇUBUĞU (11 Kasım): kulvar 5, çubuk 8, sıfır çizgisi
+            ortak çentik — gerekçe DailyChart.module.css → "ORTAK SINIFLAR". */}
         {item.bar && (
-          <span
-            className={styles.lane}
-            data-zero={zero !== null ? "" : undefined}
-            style={zero !== null ? ({ "--zero": `${zero}%` } as CSSProperties) : undefined}
-            aria-hidden
-          >
+          <span className={`value-lane ${styles.lane}`} aria-hidden>
             {item.bar.size > 0 && (
               <span
-                className={`bar-fill ${styles.bar}`}
-                data-tone={item.dir === "flat" ? "neutral" : item.dir}
-                data-from={zero !== null && item.dir === "down" ? "right" : undefined}
+                className={`value-bar bar-fill ${styles.bar}`}
+                data-tone={item.dir === "flat" ? undefined : item.dir}
+                data-neutral={item.dir === "flat" ? "" : undefined}
+                data-end={zero !== null && item.dir === "down" ? "start" : "end"}
                 style={{ left: `${item.bar.start}%`, width: `${item.bar.size}%` }}
               />
             )}
+            {zero !== null && <span className="value-notch" data-quiet="" style={{ left: `${zero}%` }} />}
           </span>
         )}
       </>

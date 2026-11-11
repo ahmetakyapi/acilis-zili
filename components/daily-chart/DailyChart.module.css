@@ -104,26 +104,28 @@ a.thumbRow:focus-visible { outline: 2px solid var(--line-focus); outline-offset:
    açık karışımı, karşılaştırılan büyüklük UÇTAKİ 3 piksellik tam ton çentikte
    (`::after`, kulvardan 3'er piksel taşar). Kulvar bu yüzden `overflow`
    kesmiyor; çubuk zaten kulvarın içinde ve yuvarlak. */
-.lane { position: relative; height: 5px; border-radius: 999px; background: var(--line-soft); }
-.bar {
-  --tone: var(--up);
-  position: absolute; inset-block: 0; border-radius: 999px;
-  background: color-mix(in oklab, var(--tone) 34%, transparent);
-  transform-origin: left center;
-}
+/* ORTAK SINIFLAR (11 Kasım, tablet denetimi). Kulvar 5 piksel, çubuk de
+   5 piksellik açık tonlu dolgu + uçta 3 piksellik tam ton çentikti
+   (yukarıdaki 8 Kasım kararı); kural o geceden beri "satırın tek değerini
+   çizen şerit 8 piksel, dolu, yönün renginde" (`.claude/rules/arayuz.md` →
+   Ortak ölçüler; globals.css → "DEĞER ÇUBUĞU"). Çizim artık ortak sınıflar:
+   `value-lane` (5) + `value-bar bar-fill` (8, `data-tone` up/down, sıfıra
+   dayanan ucu düz: `data-end`), iki yönlü grafikte sıfır çizgisi
+   `value-notch[data-quiet]` (kulvarı 4'er piksel aşan 2 piksellik çizgi —
+   eskiden 1,5 piksel ve 3'er). Büyüklük boydan okunmaya devam ediyor;
+   "kırmızı duvar" itirazının ölçeği (boy = |değer| / en büyük) aynı.
+   Burada yalnız yer, kademe ve nötr ton kaldı; eski kopya kurallar
+   (`.lane`, `.bar` zemini, `::after` çentiği, `data-from`) silindi.
+   Ölçüm: çubuk 5 → 8, kulvar 5 (390/768/1024/1280/1440, iki tema). */
 /* Çizim globals'ın `.bar-fill` sınıfı (ChartThumb.tsx; 700 ms = `--draw`,
    520 ms idi). Kopya `thumb-bar` kalktı (10 Kasım 2026); burada yalnız
    kademe: `--step` × sıra, tavan on satır (80 + 40 ms × sıra idi).
    CSS modülü `animation` adını modül kapsamına alıyor (derlemede `Modül__bar-fill` oldu, çizim HİÇ oynamadı: `getAnimations()` ile yakalandı). Kap `data-draw` taşıyor. */
 .lane > .bar { animation-delay: calc(min(var(--i, 0), 10) * var(--step)); }
-.bar::after { content: ""; position: absolute; top: -3px; bottom: -3px; right: 0; width: 3px; border-radius: 2px; background: var(--tone); }
-.bar[data-tone="down"] { --tone: var(--down); }
-.bar[data-tone="neutral"] { --tone: var(--primary-soft); }
-.bar[data-from="right"] { transform-origin: right center; }
-.bar[data-from="right"]::after { right: auto; left: 0; }
+/* `oncesi` ve ölçeksiz liste yön taşımaz: çubuk birincilin yumuşak tonunda. */
+.bar[data-neutral] { --bar-tone: var(--primary-soft); }
 /* İki yönlü küçük hâlde sıfır çizgisi (25 Ekim): kulvar `overflow: hidden`
    olduğu için çizgi kulvarın içinde, çubuğun üstünde. */
-.lane[data-zero]::after { content: ""; position: absolute; inset-block: -3px; left: var(--zero); width: 1.5px; translate: -50% 0; background: var(--line-strong); }
 /* 10 Kasım: sıfır çizgisi kulvardan 3'er piksel taşar (kulvarın içindeydi)
    — satırlar gruplanınca çizgi bütün satırlarda aynı x'te bir EKSEN olarak
    okunsun; ölçü yan koldaki şeritlerin sıfır çizgisiyle aynı
@@ -246,6 +248,36 @@ a.stepBtn:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 
    eşit açılır. Altındaki künye bağlantı değil, komşu hedef yok. */
 @media (max-width: 639px) { .homeTitle { position: relative; } .homeTitle::after { content: ""; position: absolute; inset: 50% 0 auto; height: max(100%, 44px); translate: 0 -50%; } }
 .homeLabel { font-size: var(--text-tiny); line-height: 1.4; color: var(--text-muted); }
+
+/* GENİŞ KAPTA SATIR TEK KAT (11 Kasım, tablet denetimi). 768–1279'da panel
+   tam genişlikte (gerekçe TodayExperience.module.css → "PANO: TABLET
+   DÜZENİ 1279'A KADAR") ve satır rayın iki katlı kalıbını geriyordu: ad
+   solda, değer sağ uçta, aralarında 1024'te 629–741, 768'de 373–485
+   piksel boşluk; kulvar 900 piksellik tek çizgi (gerçek sayfa + sahte
+   sağlayıcı, iki tema aynı). Yan koldaki şeritlerin geniş kap kararının
+   aynısı (HomeLanes.module.css → "GENİŞ KAP"): [karo | ad | kulvar |
+   değer] tek hat. Ad sütunu 17rem tavanlı (en uzun ad "Monolithic Power
+   Systems (MPWR)" sığıyor, sığmazsa iki satıra iner, kesilmez), kulvar
+   kalan yeri alır, değer sütunu sabit tabanlı ki kulvarların iki ucu her
+   satırda aynı x'te olsun. Kap gövde (`.homeBody`): rayda (≥1280, kap
+   308) çalışmıyor.
+   Ölçüm (altı kalem 5↑ 1↓, iki tema aynı): ad → değer 629–741 / 373–485
+   piksel yerine ad → kulvar 74–184 (768 ve 1024 aynı hat), kulvar →
+   değer 16; satır 42 → 40, panel 466 → 448. Rayda ve 390'da panel boyu
+   aynı (501 / 543 / 483), değişen yalnız çubuğun kalınlığı (5 → 8). */
+.homeBody { container: chart-home / inline-size; }
+@container chart-home (min-width: 540px) {
+  .thumbRow,
+  .thumbRow[data-bar] {
+    grid-template-columns: 26px minmax(0, 17rem) minmax(0, 1fr) minmax(4.75rem, max-content);
+    grid-template-areas: "mark name lane value";
+    column-gap: 16px;
+  }
+  .thumbRow:not([data-bar]) { grid-template-areas: "mark name name value"; }
+  .thumbRow[data-bare] { grid-template-columns: minmax(0, 17rem) minmax(0, 1fr) minmax(4.75rem, max-content); grid-template-areas: "name lane value"; }
+  .thumbRow[data-subject] > .thumbValue { align-self: center; }
+  .groupHead { column-gap: 16px; }
+}
 
 /* Eğri her geçişte açıkça `--ease-brand` (25 Ekim düzeltmesi: üç geçiş
    eğrisizdi); hareketi azaltan okuyucuda renk değişimi anında. */

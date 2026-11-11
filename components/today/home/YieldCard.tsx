@@ -5,6 +5,8 @@ import { getDailyMarketSeries as getSeries, dailySourceLabel } from "@/lib/provi
 import { VIX_SERIES, vixBand } from "@/lib/vix";
 import { buildYieldCurve, CURVE_OBSERVATIONS } from "@/lib/macro-visual";
 import { curveCaption, YieldCurve } from "@/components/macro/YieldCurve";
+import { PanelSlack } from "@/components/today/home/PanelSlack";
+import pair from "./PanelPair.module.css";
 
 /**
  * ABD tahvil faizleri — 2, 5 ve 10 yıllık.
@@ -85,7 +87,9 @@ export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }
       : null;
 
   return (
-    <Panel>
+    /* Tablette Makro'yla çift: boş pay eğriye, kalanı VIX'in üstüne
+       (11 Kasım; gerekçe PanelPair.module.css). */
+    <Panel className={pair.fill}>
       {/* GÖZLEM TARİHİ BAŞLIKTA DEĞİL, PANELİN DİBİNDE. Başlıkta üçüncü öğe
           olarak duruyordu ve 360 piksellik ekranda 324 piksellik panele üç
           öğe sığmıyordu: başlık kesiliyor, künye ve bağlantı kelime
@@ -162,7 +166,7 @@ export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }
           piksele çıkıyordu (ölçüldü, 22 Eylül). Artık faiz hücreleriyle
           aynı kalıp: solda ad ve bant, sağda sayı ve altında değişimi. */}
       {vixLevel !== null && vixTone && (
-        <div className="grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-t border-line px-4 py-3">
+        <div className={cn("grid grid-cols-[minmax(0,1fr)_auto] items-center gap-x-3 border-t border-line px-4 py-3", pair.foot)}>
           <div className="flex min-w-0 flex-col items-start gap-1.5">
             <span className="plate text-nano">
               {t.markets.fearTitle}
@@ -221,6 +225,7 @@ export async function YieldCard({ locale, t }: { locale: Locale; t: Dictionary }
           </div>
         </div>
       )}
+      <PanelSlack />
     </Panel>
   );
 }

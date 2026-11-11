@@ -800,7 +800,8 @@
   .flowPanel { padding:16px 14px 0; }
   .dashboard { gap:24px; }
   .dashboard > [data-col] { gap:20px; }
-  .brief > section { padding:20px; }
+  /* 16 (11 Kasım): kart telefonda ~8 piksel kısalır, satırlar 8 piksel genişler (özet kartının telefon boyu turu, BriefBody). */
+  .brief > section { padding:16px; }
   .storySpotlight { border-radius:18px; }
   .storySpotlight > .storyLead { padding:18px; }
   .storyLead > div { gap:18px; }

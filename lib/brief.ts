@@ -118,7 +118,23 @@ const BRIEF_PHONE_PREVIEW_CHARS = 600;
  * Sonuç masaüstü kesmesinden erken değilse `desktopCut` döner: telefon
  * masaüstünden UZUN bir önizleme göstermez, kesme de eklenmez.
  */
-export function briefPhoneCut(lines: string[], desktopCut: number, budget = BRIEF_PHONE_PREVIEW_CHARS): number {
+/* AÇIKTA YALNIZ GİRİŞ (11 Kasım, sahibinin isteği — ana sayfa özet kartı).
+   Kart 390'da 1.296 piksel ölçüldü (sahte veri; canlıda 1.279) ve ~540
+   pikseli giriş paragrafı ile onu izleyen iki maddeydi. `afterLede = 0`
+   girişten sonra satır ZORUNLU tutmuyor: bütçe (`BRIEF_PHONE_LEDE_CHARS`)
+   girişle doluyorsa kesme hemen ardında; giriş kısaysa (bir-iki cümle)
+   bütçe dolana kadar sonraki satırlar da açıkta kalır. Öteki kurallar
+   (":" ile biten giriş listesinden, başlık paragrafından ayrılmaz) aynı.
+   160: tipik giriş 220–300 karakter ve tek başına duruyor; 240 denendi,
+   225 karakterlik girişe ilk maddeyi de ekledi (154 piksel, 390). */
+export const BRIEF_PHONE_LEDE_CHARS = 160;
+
+export function briefPhoneCut(
+  lines: string[],
+  desktopCut: number,
+  budget = BRIEF_PHONE_PREVIEW_CHARS,
+  afterLede = 1,
+): number {
   const textLength = (line: string) => line.replace(/^\s*(?:##\s+|-\s+)/, "").replace(/\*\*/g, "").trim().length;
   const isTable = (line: string | undefined) => Boolean(line?.trim().startsWith("|"));
   const lede = lines.findIndex((line) => !headingOf(line) && !line.trim().startsWith("- ") && !isTable(line));
@@ -126,7 +142,7 @@ export function briefPhoneCut(lines: string[], desktopCut: number, budget = BRIE
   let length = 0;
   for (let index = 0; index < Math.min(desktopCut, lines.length); index++) {
     length += textLength(lines[index]);
-    if (index < lede + 1 || length < budget) continue;
+    if (index < lede + afterLede || length < budget) continue;
     const line = lines[index].trim();
     if (headingOf(line)) continue;
     if (line.endsWith(":")) continue;

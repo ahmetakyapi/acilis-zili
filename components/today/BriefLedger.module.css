@@ -640,6 +640,14 @@
   line-height: 1.45;
   text-wrap: pretty;
 }
+/* TELEFONDA CÜMLE YOK (11 Kasım, özet kartının telefon boyu). Cümle hemen
+   altındaki dört karonun yönünü sözle tekrarlıyor ("Nasdaq 100 ve Dow
+   yükseldi, S&P 500 geriledi…") ve 390'da iki-üç satır, 61 + 12 piksel
+   tutuyordu. Karolar aynı bilgiyi rakam ve şeritle veriyor; cümle 640 ve
+   üstünde ve bülten sayfasında duruyor. */
+@media (max-width: 639px) {
+  .miniStory { display: none; }
+}
 /* Dört endeks: telefonda 2×2, 640 ve üstünde tek sıra. Satırlar subgrid —
    ad / rakam / şerit üç satır, dört karoda aynı hatta. */
 .miniGrid {

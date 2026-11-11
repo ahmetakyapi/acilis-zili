@@ -1,0 +1,38 @@
+/* ÇİFT PANELLERDE ÖLÜ PAY (11 Kasım, tablet denetimi). 768–1279'da ölçü
+   panelleri ikişer ve satırın boyuna geriliyor (TodayExperience.module.css
+   → "ÇİFTLER AYNI HATTA BİTER"): fark kısa panelin İÇİNDE, dibinde
+   kalıyordu. Canlıda Dünya Piyasaları Hareketler'e gerilip 768'de 96,
+   1024'te 97; Tahvil Makro'ya gerilip 1024'te 50, 768'de 29 piksel boş
+   bitiyordu. `FillColumn` yalnız ≥1280'de çalışıyor ve iki panelin de
+   açılacak yedek satırı yok (dünya listesi sabit dört fon, tahvil üç vade
+   + VIX; 30 yıllık yeni bir sağlayıcı çağrısı olurdu). Panele özgü iki
+   çözüm, yalnız bu bantta — rayda (≥1280) ve telefonda hiçbiri çalışmıyor:
+
+   TAHVİL: pay eğri minyatürüne gider. `PanelSlack` panelin boş payını
+   `--slack` olarak yazar, minyatürün çizim yüksekliği (`--plot-h`, kompakt
+   44) en çok 64 piksel uzar — eğri, noktalar ve bir ay önceki çizgi aynı
+   değişkenden ölçeklendiği için hepsi birlikte uzar (YieldCurve.module.css).
+   Tavanı aşan pay Korku Endeksi'nin ÜSTÜNE iner: VIX bloğu panelin dibine
+   yaslı, son satırı Makro'nun dibiyle aynı hatta.
+
+   DÜNYA: künye (dipnot + `DataStamp`) panelin dibine yaslı. Listeye
+   eklenecek gerçek satır yok; satır aralığını açmak boşluğu esnetmek
+   olurdu. Dipnotun kıl çizgisi ve damgası komşu panelin dibiyle aynı
+   hatta biter, pay ölçünün (liste) ile künyenin arasında kalır.
+
+   Ölçüm (gerçek sayfa + sahte sağlayıcı; komşu panel canlıdaki boya
+   uzatılarak, iki tema aynı) PanelSlack.tsx kullanımının yanında değil
+   burada, dosyanın sonunda. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .fill { display: flex; flex-direction: column; }
+  .fill > .foot { margin-top: auto; }
+  .fill figure[data-compact] { --plot-h: calc(44px + min(var(--slack, 0px), 64px)); }
+}
+/* ÖLÇÜM (11 Kasım; gerçek sayfa + sahte sağlayıcı, reduced-motion, iki
+   tema aynı; komşu panel canlıdaki farkı verecek kadar uzatıldı):
+     Tahvil dipteki ölü pay  768: 29 → 0 · 1024: 50 → 0 (eğri 44 → 73 / 94)
+     Dünya dipteki ölü pay   768: 96 → 0 · 1024: 97 → 0 (pay liste ile
+                             künye arasında: 96 / 97; künye dipte)
+   Yatay taşma 0, kutusundan taşan ya da kırpılan öğe 0 (768/820/960/
+   1024/1279). ≥1280 rayda ve 390'da iki panelin bütün kutuları birebir
+   aynı (öğe öğe karşılaştırıldı); `--slack` orada 0. */

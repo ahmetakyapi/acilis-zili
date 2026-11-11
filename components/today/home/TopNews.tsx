@@ -8,6 +8,7 @@ import { type Dictionary, type Locale } from "@/lib/i18n";
 import { displayZone, formatInZone, zoneDateKey, zoneTag } from "@/lib/session-clock";
 import { cn, headlineMentions, timeAgo, titleCaseLabel } from "@/lib/utils";
 import { withTranslations } from "@/lib/translate";
+import { newsHeadlineKey } from "@/lib/news-headline";
 
 /** Kartta gösterilen haber sayısı ve seçkinin tarandığı havuz. */
 const TOP_NEWS_COUNT = 6;
@@ -28,6 +29,10 @@ const TOP_NEWS_PER_SYMBOL = 2;
 const TOP_NEWS_PER_SOURCE = 2;
 /** Manşet kartının yanını doldurmak için basılan en fazla yedek satır. */
 const TOP_NEWS_FILL_MAX = 6;
+/** Metin manşetinin yanında (taban + yedek) en az kaç satır olmalı. Kutulu
+ *  metin manşeti 1024–1440'ta ~370 piksel, satır ~80–90: dört satır onu
+ *  karşılıyor, ötesini CSS germesi ve NewsFill kapatıyor (11 Kasım). */
+const TEXT_LEAD_MIN_ROWS = 4;
 /** Yedeklerin tarandığı havuz. Yedek, listedeki en eski satırdan daha eski
  *  olmak zorunda; 40'lık havuzun çoğu o satırdan yeni kalıyordu ve 1440'ta
  *  tek aday çıkıyordu (158 piksel boşluk, ölçüldü). */
@@ -46,7 +51,20 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
   /* Çevirisiz manşet kısa beklemeyle bu yanıtta çevrilir (kart kendi
      Suspense sınırında) — gerekçe `withTranslations`. Ana sayfa daha sabırsız:
      iki saniye; yetişmeyen arka planda biter. */
-  const wide = await withTranslations(await getLatestNews(TOP_NEWS_FILL_POOL), locale, 2000);
+  const fetched = await withTranslations(await getLatestNews(TOP_NEWS_FILL_POOL), locale, 2000);
+  /* TEKİLLEŞTİRME BAŞTA (11 Kasım). Aynı haberin "Update:" / "Güncelleme:"
+     önekli ya da sonu parantezli ikinci sürümü (anahtar `newsHeadlineKey`,
+     kuralı ve testi lib/news-headline.ts) havuza hiç girmiyor; ilk geleni
+     (en yeni) kalıyor. Aşağıdaki seçimlerin manşet karşılaştırmaları da
+     aynı anahtarla. */
+  const keyOf = (item: { headline: string }) => newsHeadlineKey(item.headline);
+  const seenKeys = new Set<string>();
+  const wide = fetched.filter((item) => {
+    const key = keyOf(item);
+    if (seenKeys.has(key)) return false;
+    seenKeys.add(key);
+    return true;
+  });
   const pool = wide.slice(0, TOP_NEWS_POOL);
 
   if (pool.length === 0) {
@@ -102,6 +120,30 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
     bySource.set(source, (bySource.get(source) ?? 0) + 1);
     ordered.push(item);
   }
+  /* SEYREK GÜNDE KAYNAK SINIRI DÖRDE KADAR GEVŞER (11 Kasım, sahibinin
+     isteği). Havuz tek siteden geldiğinde (canlıda görüldü) kaynak sınırı
+     listeyi iki habere indiriyordu: manşet yok, bant 192 piksel ve 36
+     piksellik bölüm başlığı içerikten ağır. "Tek sitenin beş haberi
+     seçki değil" kuralı ALTI haberlik seçkide geçerli kalıyor; dördün
+     altına inildiğinde önce havuzdan, sonra geniş havuzdan sembol
+     sınırına uyan haberle dörde tamamlanıyor — dört haber yedekle
+     manşet + üç satır, yedeksiz 2 × 2 (aşağıda `TEXT_LEAD_MIN_ROWS`).
+     Havuzda dört haber yoksa ne varsa. */
+  if (ordered.length < TOP_NEWS_FALLBACK) {
+    const symbolCount = new Map<string, number>();
+    for (const item of ordered) {
+      const symbol = item.symbols?.[0] ?? "";
+      if (symbol) symbolCount.set(symbol, (symbolCount.get(symbol) ?? 0) + 1);
+    }
+    for (const item of [...ranked, ...wide.slice(TOP_NEWS_POOL)]) {
+      if (ordered.length >= TOP_NEWS_FALLBACK) break;
+      if (ordered.includes(item)) continue;
+      const symbol = item.symbols?.[0] ?? "";
+      if (symbol && (symbolCount.get(symbol) ?? 0) >= TOP_NEWS_PER_SYMBOL) continue;
+      if (symbol) symbolCount.set(symbol, (symbolCount.get(symbol) ?? 0) + 1);
+      ordered.push(item);
+    }
+  }
   const shownCount = ordered.length >= TOP_NEWS_COUNT ? TOP_NEWS_COUNT : Math.min(ordered.length, TOP_NEWS_FALLBACK);
   const items = ordered
     .slice(0, shownCount)
@@ -132,13 +174,13 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
      (CLAUDE.md "Fotoğraf yok"); kartın yüzeyi ve tipografisi taşıyor. Üçten
      az haberli günde manşet yok — tek satırın yanı boş kalırdı. */
   const imageLead = items.find(hasImage) ?? null;
-  const leadCandidate =
+  const firstLead =
     imageLead ?? (items.length >= 3 ? (items.find((item) => Boolean(item.summary)) ?? items[0]) : null);
-  const baseRows = items.filter((item) => item !== leadCandidate);
-  const oldestShown = Math.min(...(baseRows.length ? baseRows : items).map((item) => item.publishedAt.getTime()));
+  const firstRows = items.filter((item) => item !== firstLead);
+  const oldestShown = Math.min(...(firstRows.length ? firstRows : items).map((item) => item.publishedAt.getTime()));
   const fillSymbols = new Set<string>();
   const shownIds = new Set(items.map((item) => item.id));
-  const seenHeadlines = new Set(items.map((item) => item.headline.trim().toLocaleLowerCase("en-US")));
+  const seenHeadlines = new Set(items.map(keyOf));
   const fillBySymbol = new Map<string, number>();
   for (const item of items) {
     const symbol = item.symbols?.[0] ?? "";
@@ -149,7 +191,7 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
     if (fill.length >= TOP_NEWS_FILL_MAX) break;
     if (shownIds.has(item.id)) continue;
     if (item.publishedAt.getTime() >= oldestShown) continue;
-    const headline = item.headline.trim().toLocaleLowerCase("en-US");
+    const headline = keyOf(item);
     if (seenHeadlines.has(headline)) continue;
     const symbol = item.symbols?.[0] ?? "";
     if (symbol && (fillSymbols.has(symbol) || (fillBySymbol.get(symbol) ?? 0) >= TOP_NEWS_PER_SYMBOL)) continue;
@@ -177,7 +219,24 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
      duruyor. Sınıra uyan aday yoksa bant dört satırda kalıyor.
      Telefonda tek sütun ve sayfa zaten ~10.200 piksel; orada basılmıyor
      (`pairFill`, CSS). Üç haberli düzen (`three`) kendi satırını
-     dolduruyor, ona dokunulmuyor. */
+     dolduruyor, ona dokunulmuyor.
+     11 KASIM: seyrek günde kaynak sınırı dörde kadar gevşiyor (yukarıda)
+     ve metin manşeti yanını dolduramayacaksa kalkıyor; bu dal o günlerin
+     2 × 2 / üçlü düzenini de taşıyor. */
+  /* METİN MANŞETİ YANINI DOLDURAMAYACAKSA BASILMAZ (11 Kasım). Seyrek
+     günde (sahte sağlayıcıyla canlının tek kaynaklı havuzu: üç benzersiz
+     haber, yedek yok) metin manşeti iki satırın yanında duruyordu: kutu
+     371, liste 179 piksel, 1024–1440'ta 192–210 piksellik basamak. Taban
+     ve yedek satırlar birlikte `TEXT_LEAD_MIN_ROWS`a varmıyorsa manşet
+     kalkıyor, haberler satır düzenine iniyor (üç haber tek sıra `three`,
+     iki/dört `pair`). Fotoğraflı manşete dokunulmuyor: görsel seçkinin
+     kendisi, boyu NewsFill'de görselin çerçevesiyle ayarlanıyor. */
+  const leadCandidate =
+    firstLead && !hasImage(firstLead) && firstRows.length + fill.length < TEXT_LEAD_MIN_ROWS ? null : firstLead;
+  const baseRows = items.filter((item) => item !== leadCandidate);
+  /* Tamamlama satırları basılan EN ESKİ haberden de eski olmalı: manşet
+     kalktıysa o da artık bir satır. */
+  const oldestRow = Math.min(...items.map((item) => item.publishedAt.getTime()));
   const pairWanted =
     !leadCandidate && baseRows.length >= 2 && baseRows.length !== 3 ? TOP_NEWS_COUNT - baseRows.length : 0;
   const pairCandidates: typeof pool = [];
@@ -189,11 +248,11 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
       const symbol = item.symbols?.[0] ?? "";
       if (symbol) symbolCount.set(symbol, (symbolCount.get(symbol) ?? 0) + 1);
     }
-    const headlines = new Set(items.map((item) => item.headline.trim().toLocaleLowerCase("en-US")));
+    const headlines = new Set(items.map(keyOf));
     for (const item of [...wide].sort((a, b) => b.publishedAt.getTime() - a.publishedAt.getTime())) {
       if (pairCandidates.length >= pairWanted) break;
-      if (shownIds.has(item.id) || item.publishedAt.getTime() >= oldestShown) continue;
-      const headline = item.headline.trim().toLocaleLowerCase("en-US");
+      if (shownIds.has(item.id) || item.publishedAt.getTime() >= oldestRow) continue;
+      const headline = keyOf(item);
       const source = item.source ?? "";
       const symbol = item.symbols?.[0] ?? "";
       if (headlines.has(headline)) continue;
@@ -320,6 +379,26 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
        sütun; liste yedek satırlarla manşetin doğal dibine kadar doluyor
        (NewsFill), dolmayan kısım listenin altında kalıyor.
 
+       11 KASIM: İKİ SÜTUN AYNI HATTA BİTİYOR (sahibinin isteği, "hepsini
+       yapalım"). "Kısa kalan sütun gerilmez, erken biter" kararı ≥1024'te
+       59–77 piksellik basamak bırakıyordu (1440'ta 59, 1280'de 74, 1024'te
+       77; sahte veri, metin manşeti, liste uzun). Kural boşluk ESNETMEDEN
+       kapatıyor, üç yolla:
+         1. Liste kısaysa yedek satırlar açılıyor (önceki gibi); son kalan
+            boşluk bir satırdan az.
+         2. Fotoğraflı manşette kalan fark GÖRSELİN boyuna yazılıyor:
+            NewsFill bir sonraki yedeği açmak ile açmamak arasında küçük
+            farkı seçiyor ve fotoğraf çerçevesini o kadar uzatıp kısaltıyor
+            (en çok −%20 / +%25; `object-cover`, kırpılan yalnız kenar).
+            Metin ve satır aralıkları hiç değişmiyor.
+         3. Metin manşeti (kutulu) liste boyuna gerilir; başlık ve özet
+            kutunun dibine yaslanır, logo ve künye tepede kalır — kutunun
+            içindeki boşluk satır aralarına dağılmıyor. Liste manşetten
+            kısaysa önce bir yedek daha açılıyor ki kutu gerilecek hedefi
+            bulsun. Liste kabı `align-content:start`: satırlar gerilmez.
+       JS kapalıyken 3 CSS ile çalışıyor; 1–2 açılmıyor, taban liste kalıyor.
+       Ölçüm TopNews.module.css → "AYNI HAT".
+
        DOM'DA MANŞET ÖNCE, EKRANDA KÜNYE VE SAAT ÖNDE — ızgara alanlarıyla;
        bağlantının erişilebilir adı başlıkla başlıyor. Satırlar `<ul>/<li>`:
        ekran okuyucu liste bilgisini kaybetmesin. */
@@ -430,7 +509,7 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
       })}
       </ul>
     </div>
-    {lead && fill.length > 0 && <NewsFill />}
+    {lead && <NewsFill />}
     </>
   );
 }

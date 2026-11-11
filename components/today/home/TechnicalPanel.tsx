@@ -13,7 +13,8 @@ import {
 } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
-import { formatEtDateCompact } from "@/lib/utils";
+import { cn, formatEtDateCompact } from "@/lib/utils";
+import pulseStyles from "@/components/technical/Technical.module.css";
 import { indexSnapshot } from "@/components/today/home/index-snapshot";
 
 /* ==========================================================================
@@ -68,7 +69,11 @@ export async function TechnicalPanel({ locale, t }: { locale: Locale; t: Diction
         tone="title"
         action={<PanelLink href="/teknik">{t.common.showAll}</PanelLink>}
       />
-      <div className="flex flex-col gap-3 px-4 pb-4 sm:px-5">
+      {/* Gövde bir KAP (11 Kasım): dağılımın iç ızgarası panelin
+          genişliğine göre kurulur — tablette tam genişlikte iki kolon,
+          rayda eski düzen (gerekçe Technical.module.css → "GENİŞ KAPTA
+          İKİ KOLON"). */}
+      <div className={cn("flex flex-col gap-3 px-4 pb-4 sm:px-5", pulseStyles.pulseScope)}>
         {latest && (
           <p className="text-tiny text-muted">
             {t.technical.latestEdition} ·{" "}

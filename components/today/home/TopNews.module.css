@@ -10,7 +10,26 @@
 @media (min-width:1024px) {
   /* İki bağımsız sütun, ikisi de tepeden başlıyor: kısa kalan geriliyor
      değil erken bitiyor (gerekçe TopNews.tsx). */
-  .withLead { grid-template-columns:minmax(0,1.12fr) minmax(0,1fr); align-items:start; }
+  /* AYNI HAT (11 Kasım; yukarıdaki karar değişti, gerekçe TopNews.tsx).
+     Sütunlar ızgara satırına gerilir (`stretch`) ama içerik gerilmez:
+     liste kabı `align-content:start` (satırlar doğal boyunda), metin
+     manşetinin kutusu boyu alır ve içindeki fark başlığın üstüne iner
+     (`margin-top:auto`). Fotoğraflı manşette fark görselin boyuna yazılır
+     (NewsFill). NewsFill ölçerken manşeti `align-self:start` ile doğal
+     boyuna döndürüyor.
+     ÖLÇÜM (sahte sağlayıcı, gerçek ana sayfa, iki tema; manşet dibi −
+     son satır dibi): metin manşeti 1024: −77 → 0, 1280: −74 → 0,
+     1440: −59 → 0. Fotoğraflı manşet: 1024 ve 1280'de 0 (görsel 280 →
+     256, 342 → 300 piksel); 1440'ta 30 piksel kaldı — sahte havuzda yedek
+     tükendi ve görsel −%20 sınırında (381 → 306). Seyrek gün (tek kaynak,
+     üç benzersiz haber): eskiden iki satır; şimdi tek sıra üç haber, bant
+     183–193 piksel, basamak yok. 390'da düzen değişmedi (tek sütun). */
+  .withLead { grid-template-columns:minmax(0,1.12fr) minmax(0,1fr); align-items:stretch; }
+  .withLead .list { align-content:start; }
+  .withLead .leadItem { display:flex; flex-direction:column; }
+  .withLead .lead { flex:1 1 auto; }
+  .withLead .leadText .leadHeadline,
+  .withLead .lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadHeadline { margin-top:auto; }
   .three { grid-template-columns:repeat(3,minmax(0,1fr)); column-gap:28px; }
 }
 
@@ -106,9 +125,14 @@
    kenarının 12–14 piksel dışına (1024/1440, ölçüldü), 390'da ekran
    kenarına 4 piksel kalıyordu. 92 = 77 + 12 dolgu + 3 pay; İngilizcesi
    ("38 Minutes Ago") de sığıyor. Telefonda 90 (dolgu 10): 88 denendi,
-   "45 Dakika Önce" 78 piksel ölçüldü ve pay sıfıra iniyordu. */
+   "45 Dakika Önce" 78 piksel ölçüldü ve pay sıfıra iniyordu.
+   11 KASIM: 92 → 98, telefonda 90 → 96. "36 Dakika Önce" bugün 84 piksel
+   ölçüldü (1024, sahte sağlayıcı; rakamlar `numeral` ile tabular) ve
+   sütunun 80'lik içerik alanından taşıp bölümün sol kenarının 5 piksel
+   dışına çıkıyordu; 390'da da aynı. 98 = 84 + 12 dolgu + 2 pay, telefonda
+   96 = 84 + 10 + 2. */
 .row {
-  --time-col:92px; --thumb:48px; --gap:14px;
+  --time-col:98px; --thumb:48px; --gap:14px;
   position:relative; display:grid; grid-template-columns:var(--time-col) var(--thumb) minmax(0,1fr);
   grid-template-areas:"time thumb headline" "time thumb byline"; grid-template-rows:auto auto; align-content:start;
   column-gap:var(--gap); min-width:0; border-radius:12px; color:inherit; transition:background-color 180ms var(--ease-brand);
@@ -145,7 +169,7 @@
 .rowByline { grid-area:byline; display:flex; flex-wrap:wrap; align-items:center; gap:4px 8px; padding:5px 10px 14px 0; color:var(--text-muted); font-size:var(--text-tiny); line-height:1.3; }
 
 @media (max-width:639px) {
-  .row { --time-col:90px; --thumb:44px; --gap:12px; }
+  .row { --time-col:96px; --thumb:44px; --gap:12px; }
   .rowTime { padding-right:10px; }
   .rowTime time { font-size:13px; }
   .thumb { width:44px; height:44px; }

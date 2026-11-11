@@ -9,6 +9,7 @@ import { type Dictionary, type Locale } from "@/lib/i18n";
 import { sharedLaneScale, WORLD_LANE_FLOOR } from "@/lib/home-figures";
 import { cn, directionOf, directionText, formatPercent, formatPercentPlain } from "@/lib/utils";
 import styles from "./HomeLanes.module.css";
+import pair from "./PanelPair.module.css";
 
 /**
  * Dünya piyasaları şeridi — ülke fonları üzerinden.
@@ -162,7 +163,9 @@ function WorldStripView({
     WORLD_LANE_FLOOR,
   );
   return (
-    <Panel>
+    /* Tablette Hareketler'le çift: künye dibe yaslı (11 Kasım; gerekçe
+       PanelPair.module.css). */
+    <Panel className={pair.fill}>
       <PanelHeader title={t.today.worldMarkets} tone="title" />
       <div className={styles.desk} data-draw>
         <LaneAxis
@@ -247,7 +250,7 @@ function WorldStripView({
       {/* DAMGA BURADA DA VAR. Künye fonun neyi vekil ettiğini söylüyordu ama
           yüzdelerin yaşını söyleyen hiçbir şey yoktu; panel tam da bayat
           veriyi büyük puntoyla göstermenin yasak olduğu yerdi. */}
-      <div className="border-t border-line-soft px-4 py-3 sm:px-5">
+      <div className={cn("border-t border-line-soft px-4 py-3 sm:px-5", pair.foot)}>
         <p className="text-tiny leading-relaxed text-muted">
           {allLastClose ? t.today.worldLastCloseHint : t.today.worldMarketsHint}
         </p>

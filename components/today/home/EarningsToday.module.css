@@ -30,3 +30,59 @@
   .phoneFigure { display: none; }
   .wideOnly { display: contents; }
 }
+
+/* GENİŞ KAP (11 Kasım; ana sayfa denetimi, 1024). Izgara şablonu Tailwind
+   sınıfından buraya taşındı ki panelin KENDİ enine göre kurulabilsin.
+   Sorun: 768–1279'da panel tam genişlikte açılıyor (tablet 720, ara 976),
+   ≥1280'de rayın sol kolonunda 826/946 — ve satırda ad ile zaman çipi
+   arasında 1024'te 492–550, 1440'ta 462–520 piksel boşluk kalıyordu (ad
+   sütunu tek `1fr`, öteki sütunlar `max-content`). Boşluk esnetilmez,
+   doldurulur: kap ≥ 700 pikselde adın sağına PİYASA DEĞERİ sütunu
+   giriyor — listenin sıralama ölçüsü, yazılı değer + listenin en büyüğüne
+   göre kalın şerit (`value-lane`/`value-bar`, büyüklük tonu). Ad ile bu
+   sütun kalan payı 1,4 : 1 bölüşüyor (`minmax(7rem, 1fr)`); çip ve iki
+   ölçü eskisi gibi `max-content`, beş satırda aynı hatta. 700'ün altında
+   (telefon, 640–767 tek kolon) sütun yok, düzen aynen.
+   Ad sütunu `fit-content(16rem)`: en uzun ad kadar, şerit sütunu
+   kalanı alıyor (önce 1,4fr : 1 denendi; kısa adlarda ad ile şerit
+   arasında yine 205–303 piksel kalıyordu).
+   Ölçüm (11 Kasım, sahte sağlayıcıyla gerçek sayfa, iki tema, hareket
+   azaltılmış): ad metninin sonu ile sağındaki ilk hücre arası 1024'te
+   492–550 → 16–97, 1440'ta 462–520 → 16–97, 1280'de (826) → 16–97, 768'de
+   (720) 355–442 → 16–97 (16 = en uzun ad, fark yalnız ad boyu); satır 57
+   piksel (değişmedi), çip/HBK/gelir sağ kenarları beş satırda aynı,
+   yatay taşma 0, kırpılan ve kutudan taşan öğe 0. Şeritler `bar-fill` ile
+   bir kez dolar (5 çubuk; hareketi azaltana `transform: none`). */
+.frame { container: earnings / inline-size; }
+.list { display: grid; grid-template-columns: auto minmax(0, 1fr) max-content; column-gap: 12px; }
+@media (min-width: 640px) {
+  .list { grid-template-columns: auto minmax(0, 1fr) max-content max-content max-content; column-gap: 16px; }
+}
+.cap, .capEmpty { display: none; }
+@container earnings (min-width: 700px) {
+  .list { grid-template-columns: auto fit-content(16rem) minmax(7rem, 1fr) max-content max-content max-content; }
+  .cap { display: grid; gap: 7px; align-content: center; min-width: 0; }
+  .capEmpty { display: block; }
+}
+.capHead { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.capValue { font-size: var(--text-tiny); font-weight: 600; line-height: 1.25; color: var(--text-body); white-space: nowrap; }
+
+/* AKIŞA BAĞLAYAN KÜNYE (11 Kasım) — gerekçe EarningsToday.tsx. Panelin
+   içinde hairline'la ayrılmış tek satır: logolar, semboller, söz, ok.
+   Geri bildirim tonla; ok iç bağlantı gibi 3 piksel (hareket.md). */
+.flowNote { display: flex; align-items: center; gap: 8px; min-width: 0; padding: 10px 16px; border-top: 1px solid var(--line); font-size: var(--text-tiny); line-height: 1.3; color: var(--text-muted); transition: background-color 180ms var(--ease-brand), color 180ms var(--ease-brand); }
+.flowNote:hover { background: var(--primary-tint); color: var(--text-body); }
+.flowNote:focus-visible { outline: 2px solid var(--primary); outline-offset: -2px; }
+/* Telefonda logolar düşer ve söz ikinci satıra kırılabilir: 354 piksellik
+   panelde tek satır sözü "Bugü…" diye kesiyordu (ölçüldü, 390). Cümle
+   kesilmez; logolar yalnız ≥640'ta. */
+.flowLogos { display: none; flex: none; gap: 4px; }
+.flowSymbols { flex: none; font-weight: 700; color: var(--text-strong); white-space: nowrap; }
+.flowText { min-width: 0; text-wrap: pretty; }
+.flowArrow { flex: none; margin-left: auto; color: var(--primary); transition: translate var(--mark) var(--ease-brand); }
+.flowNote:hover .flowArrow { translate: 0 -3px; }
+@media (min-width: 640px) {
+  .flowNote { padding-inline: 20px; }
+  .flowLogos { display: inline-flex; }
+  .flowText { white-space: nowrap; }
+}

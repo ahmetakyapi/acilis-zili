@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { briefPhoneCut, briefPreviewCut, headingOf } from "@/lib/brief";
+import { BRIEF_PHONE_LEDE_CHARS, briefPhoneCut, briefPreviewCut, headingOf } from "@/lib/brief";
 import { splitLedgerRefs, type LedgerRef } from "@/lib/brief-ledger";
 import { cn } from "@/lib/utils";
 import styles from "./BriefBody.module.css";
@@ -258,7 +258,10 @@ function BriefLines({
                 phoneClass(index),
                 size === "page"
                   ? "text-[1.3125rem] font-medium leading-[1.5] tracking-[-0.01em] text-strong max-sm:text-[1.1875rem]"
-                  : "text-[1.0625rem] font-medium leading-[27px] tracking-[-0.01em] text-strong",
+                  : /* Telefonda 15/23 (11 Kasım): 17/27'lik giriş 390'da yedi
+                       satır, 189 piksel ölçüldü ve kartın en uzun bloğuydu;
+                       gövdeden (14/22) bir basamak iri ve koyu kalıyor. */
+                    "text-[1.0625rem] font-medium leading-[27px] tracking-[-0.01em] text-strong max-sm:text-[0.9375rem] max-sm:leading-[23px]",
               )}
             >
               {renderInline(trimmed, String(index), refs)}
@@ -386,7 +389,20 @@ export function BriefBody({
        - `<details>` yerli kaldığı için JavaScript kapalıyken de çalışıyor.
      Masaüstünde katlama yoksa (kısa bülten) ama telefonda varsa katlama
      yalnızca telefonda basılıyor (`md:hidden`). */
-  const phoneCut = phonePreview ? briefPhoneCut(lines, cut) : cut;
+  /* TELEFONDA AÇIKTA YALNIZ GİRİŞ (11 Kasım, sahibinin isteği). Kart 390'da
+     1.296 piksel ölçüldü (sahte veri, canlıda 1.279); giriş ve onu izleyen
+     iki madde ~540 piksel tutuyordu. Kesme artık girişin hemen ardında
+     (`afterLede = 0`, 160 karakterlik bütçe — kısa girişte bir satır daha);
+     maddeler aynı "Tümünü Gör" katlamasında, bastığın yerde açılıyor
+     (`ExpandInPlace`, `<details>` yerli: JS kapalıyken de açılır). Giriş
+     telefonda 17/27 → 15/23 (`BriefLines`); kuyudaki endeks cümlesi
+     telefonda yok (BriefLedger.module.css → `.miniStory`).
+     ÖLÇÜM (sahte sağlayıcı, gerçek ana sayfa, iki tema, 390): kart
+     1.296 → 871 piksel; "dünkü özet" uyarısı (54 + 12) olmayan günde
+     ~805. Giriş 189 → 138, açıktaki iki madde 286 → 0, cümle 73 → 0.
+     1024/1280/1440 değişmedi (853/959/892). Yatay taşma 0; JS kapalıyken
+     kart aynı boyda, katlama yerli `<details>` ile açılıyor. */
+  const phoneCut = phonePreview ? briefPhoneCut(lines, cut, BRIEF_PHONE_LEDE_CHARS, 0) : cut;
   const phoneSplit = phoneCut < cut;
   const foldFrom = phoneSplit ? phoneCut : cut;
 
