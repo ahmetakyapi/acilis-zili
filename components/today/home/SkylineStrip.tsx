@@ -139,7 +139,7 @@ export async function SkylineStrip({
   );
   const names = Object.fromEntries(districts.map((district) => [district.key, posterName(district.key, locale)]));
   const signs = Object.fromEntries(districts.map((district) => [district.key, posterShortName(district.key, locale)]));
-  const posterHref = `/gun/${poster.date}`;
+  const posterHref = `/seans-silueti/${poster.date}`;
   /* Sahnenin ekran okuyucu adındaki sayılar künyedekiyle aynı kaynaktan
      (posterin genişliği); yoksa binalardan sayılıyor. */
   const adv = breadth?.advancing ?? stocks.filter((stock) => stock.change > 0).length;

@@ -1,5 +1,6 @@
 import type { NextConfig } from "next";
 import { PREVIEW_PARAM } from "./lib/preview";
+import { legacyRedirects } from "./lib/route-redirects";
 
 /**
  * Güvenlik başlıkları.
@@ -111,7 +112,7 @@ const EMBED_SOURCES = ["/gomulu/:path*", "/en/gomulu/:path*"];
  * `robots.txt`e YAZILMIYOR — gerekçesi `app/robots.ts` başında: `Disallow`
  * taramayı engeller ve arama motoru bu başlığı hiç okuyamaz.
  */
-const NOINDEX_PATHS = ["/gomulu", "/portfoy", "/favoriler", "/ayarlar", "/analizlerim", "/claude", "/yazilarim", "/raporum", "/bildirimler", "/admin"];
+const NOINDEX_PATHS = ["/gomulu", "/portfoy", "/favoriler", "/ayarlar", "/analizlerim", "/claude", "/yazilarim", "/zil-raporu", "/bildirimler", "/admin"];
 const NOINDEX_SOURCES = NOINDEX_PATHS.flatMap((path) => [
   path,
   `${path}/:path*`,
@@ -135,6 +136,15 @@ const nextConfig: NextConfig = {
      söylüyor (compress.md). Vercel bu ayarı yok sayıyor. Vekilsiz
      `next start` (yerel, duman testi) artık sıkıştırmasız döner. */
   compress: false,
+  /* ESKİ ADRESLER KALICI YÖNLENİR (11 Kasım): `/gun` → `/seans-silueti`,
+     `/teknik` → `/teknik-analiz`, `/tema` → `/temalar`, `/u` → `/uye`,
+     `/raporum` → `/zil-raporu`, `/risk` → `/risk-masasi`; `/en` önekli
+     hâlleri, alt yollar ve sorgu dahil, tek 308. Bu katmanda, çünkü
+     yapılandırma yönlendirmesi proxy'den (dil önekinin yeniden yazılması)
+     ÖNCE koşuyor — gerekçe ve tablo lib/route-redirects.ts başında. */
+  async redirects() {
+    return legacyRedirects();
+  },
   async headers() {
     return [
       { source: NOT_EMBED_SOURCE, missing: PREVIEW_QUERY, headers: SECURITY_HEADERS },

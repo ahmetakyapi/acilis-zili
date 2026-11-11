@@ -8,10 +8,10 @@ import { median, sameSessionMoves, themePhase, type ThemePhase } from "@/lib/the
 import { katilimMembers, katilimPool, themeRow, themeUniverse } from "@/lib/themes-data";
 
 /**
- * Temalar panosu — `/tema` dizininin ve ana sayfanın temalar bandının
+ * Temalar panosu — `/temalar` dizininin ve ana sayfanın temalar bandının
  * ORTAK veri katmanı (28 Eylül).
  *
- * Hesap `/tema/page.tsx` içindeydi; ana sayfa da aynı sıralamayı
+ * Hesap `/temalar/page.tsx` içindeydi; ana sayfa da aynı sıralamayı
  * göstermeye başlayınca buraya taşındı. İki ekran aynı fonksiyonu okuyor,
  * yani "günün en güçlü teması" iki yerde iki ayrı cevap veremez.
  *

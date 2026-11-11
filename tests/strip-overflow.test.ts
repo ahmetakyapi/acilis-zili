@@ -6,11 +6,11 @@ import { overflowingTabs } from "../components/layout/strip-overflow";
    altı sekme 558 piksel, aralık 6,4 × 5 = 32, şerit hücresinde 553 kalıyordu. */
 const TABS = [
   { href: "/piyasalar", rank: 1, width: 91 },
-  { href: "/teknik", rank: 4, width: 120 },
+  { href: "/teknik-analiz", rank: 4, width: 120 },
   { href: "/sirketler", rank: 6, width: 86 },
   { href: "/bilancolar", rank: 2, width: 98 },
   { href: "/mercek", rank: 3, width: 79 },
-  { href: "/tema", rank: 5, width: 84 },
+  { href: "/temalar", rank: 5, width: 84 },
 ] as const;
 const GAP = 6.4;
 
@@ -22,13 +22,13 @@ test("aralık sayılmazsa sığıyor görünen şerit aralıkla taşar", () => {
 
 test("taşmada önce en yüksek öncelik numarası iner", () => {
   assert.deepEqual([...overflowingTabs(TABS, 553, GAP)], ["/sirketler"]);
-  assert.deepEqual([...overflowingTabs(TABS, 480, GAP)], ["/sirketler", "/tema"]);
+  assert.deepEqual([...overflowingTabs(TABS, 480, GAP)], ["/sirketler", "/temalar"]);
 });
 
 test("gizlenen sekme kendi aralığını da götürür", () => {
   /* 590 − (86 + 6,4) = 497,6: tam o kadar yer varsa yalnız Şirketler iner. */
   assert.deepEqual([...overflowingTabs(TABS, 497.6, GAP)], ["/sirketler"]);
-  assert.deepEqual([...overflowingTabs(TABS, 497.5, GAP)], ["/sirketler", "/tema"]);
+  assert.deepEqual([...overflowingTabs(TABS, 497.5, GAP)], ["/sirketler", "/temalar"]);
 });
 
 test("yer yeterse hiçbir sekme inmez", () => {

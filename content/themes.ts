@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tematik listeler — `/tema` ve `/tema/[slug]`
+   Tematik listeler — `/temalar` ve `/temalar/[slug]`
 
    Neden depoda: bir temanın hangi şirketleri kapsadığı editoryal bir karar
    ve kod incelemesinden geçmeli (rehber ve sözlükle aynı gerekçe). Sayılar

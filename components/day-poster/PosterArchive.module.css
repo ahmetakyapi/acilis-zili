@@ -1,4 +1,4 @@
-/* Günün Posteri sayfası (/gun) — gerekçe PosterArchive.tsx.
+/* Günün Posteri sayfası (/seans-silueti) — gerekçe PosterArchive.tsx.
    Derinlik tonla, gölge ve cam yok; her geçiş `--ease-brand`. Renk yalnız
    işaretten (`directionText`): veri panelinde mavi sayı yok. */
 
@@ -89,7 +89,7 @@
 .footValue { font-weight: 700; }
 
 /* TELEFONDA İKİ SÜTUN, KÜÇÜK KART (25 Ekim, son inceleme). Tek sütunda
-   29 kart ~470'er piksel tutuyordu ve /gun 390'da 14.600 piksele
+   29 kart ~470'er piksel tutuyordu ve /seans-silueti 390'da 14.600 piksele
    uzuyordu; arşivin işi "hangi gün neydi"yi taramak, her kartı tek tek
    okutmak değil. Kart minyatürün kendisine iniyor: tarih ve endeks (Nasdaq 100'den beri QQQ),
    günün kısa başlığı, sahne minyatürü, genişlik şeridi. En güçlü/en

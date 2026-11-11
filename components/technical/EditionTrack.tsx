@@ -29,7 +29,7 @@ type TrackNode = {
  * GÜNÜN YAYINLARI ŞERİDİ (8 Kasım, sahibinin isteği: "daha görsel, alanı
  * daha iyi kullanacak şekilde").
  *
- * Yerine geçtiği iki künye düz metindi: /teknik kapağında "Son Yayın ·
+ * Yerine geçtiği iki künye düz metindi: /teknik-analiz kapağında "Son Yayın ·
  * Kapanış Öncesi · 6 Kasım Cuma · 21:45 TR", "Sıradaki Yayın · …" ve
  * "Her işlem günü 15:45, 19:45 ve 21:45"; detay kapağında aynı iki satır
  * küçük bir tanım tablosuydu ve kalan süre ("1 g 2 sa Sonra") 1440'ta tek
@@ -56,7 +56,7 @@ export function EditionTrack({
   locale,
   t,
 }: {
-  /** Şeridin anlattığı yayın — /teknik'te en yeni yayın, detayda sayfanın yayını. */
+  /** Şeridin anlattığı yayın — /teknik-analiz'de en yeni yayın, detayda sayfanın yayını. */
   edition: { sessionDate: string; slot: string };
   next: { at: Date; slot: TechnicalSlot } | null;
   /** `latest`: dizin kapağı ("Son Yayın"); `current`: detay kapağı ("Bu Yayın"). */

@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Tema detayı: kapağın okuması ve ölçü ızgarası — `/tema/[slug]`
+   Tema detayı: kapağın okuması ve ölçü ızgarası — `/temalar/[slug]`
    (10 Kasım 2026, yeniden tasarım). Karar kayıtları ThemeReading.tsx ve
    ThemeStats.tsx başında; harita ve "diğer temalar" Themes.module.css'te,
    tablo ThemeTable.module.css'te.

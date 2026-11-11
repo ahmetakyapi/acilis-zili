@@ -77,7 +77,7 @@ export function DayContext({
         meta={L.meta.replace("{date}", dateShort)}
         action={
           poster ? (
-            <Link href={`/gun/${context.date}`} prefetch={false} className={styles.headLink}>
+            <Link href={`/seans-silueti/${context.date}`} prefetch={false} className={styles.headLink}>
               {L.posterLink}
               <ArrowRight size={14} weight="bold" aria-hidden />
             </Link>

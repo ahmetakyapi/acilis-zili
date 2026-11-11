@@ -11,7 +11,7 @@ import { RollingFigure } from "./RollingFigure";
 import styles from "./ThemeBoard.module.css";
 
 /**
- * Temalar panosu — `/tema` dizininin gövdesi (10 Kasım 2026, yeniden tasarım).
+ * Temalar panosu — `/temalar` dizininin gövdesi (10 Kasım 2026, yeniden tasarım).
  *
  * ÖNCE: kapakta on satırlık sıralama, altında on kartlık asimetrik galeri.
  * Aynı medyan İKİ KEZ yazılıyordu (sıralamada 14 punto, kartta 54 punto) ve
@@ -63,7 +63,7 @@ import styles from "./ThemeBoard.module.css";
  * yönünün renginde çok hafif yıkanır (%5–6; çip yok, renk duvarı yok).
  * Sabahki "Günün En Güçlüsü" çipi satırda kalktı: aynı bilgi kapakta ve
  * sıranın kendisinde (01 ve son satır). Gece kapaktaki iki uç kutusu da
- * kalktı (app/(app)/tema/page.tsx → HeroSummary): uçları artık YALNIZ bu ton
+ * kalktı (app/(app)/temalar/page.tsx → HeroSummary): uçları artık YALNIZ bu ton
  * ve sıra söylüyor.
  *
  * SIRA VERİYE BAĞLI AMA KUTU OYNAMIYOR. Eski galeri sırayı veriye
@@ -184,7 +184,7 @@ export function ThemeBoard({
             );
             return (
               <li key={card.theme.slug} className={styles.item} data-draw style={{ "--i": index } as CSSProperties}>
-                <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.row} data-edge={edge}>
+                <Link href={`/temalar/${card.theme.slug}`} prefetch={false} className={styles.row} data-edge={edge}>
                   <span className={cn("numeral", styles.pos)} aria-hidden>
                     {String(index + 1).padStart(2, "0")}
                   </span>

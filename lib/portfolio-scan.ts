@@ -34,7 +34,7 @@ import { getTechnicalBoard } from "@/lib/technical-data";
  * detaylı çalışmalı" dedi. Tarama pozisyon başına beş girdiyi birleştiriyor:
  * son seans / beş seans / 21 seans değişimi ve maliyete göre getiri (tamam-
  * lanmış barlardan), üç aylık banttaki yer, yaklaşan bilanço (10 gün),
- * sitenin kendi teknik görüşü (yayımlanmışsa, /teknik), son 48 saatin
+ * sitenin kendi teknik görüşü (yayımlanmışsa, /teknik-analiz), son 48 saatin
  * manşetleri. Çıktı: başlık, özet, en çok dört tema, en çok sekiz
  * pozisyon notu. Çizim sunucunun (lib/portfolio-scan-model.ts).
  *

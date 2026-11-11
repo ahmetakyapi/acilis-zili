@@ -76,7 +76,7 @@ test("hrefs are unique", () => {
 
 test("isActive compares the locale-free path and never marks home elsewhere", () => {
   assert.equal(isActive("/en/piyasalar", "/piyasalar"), true);
-  assert.equal(isActive("/teknik/NVDA", "/teknik"), true);
+  assert.equal(isActive("/teknik-analiz/NVDA", "/teknik-analiz"), true);
   assert.equal(isActive("/en", "/"), true);
   assert.equal(isActive("/piyasalar", "/"), false);
   assert.equal(isActive("/en/rehber/pe-orani", "/rehber"), true);

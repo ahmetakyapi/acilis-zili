@@ -86,7 +86,7 @@ const EARNINGS_PAGE_HORIZON_DAYS = 100;
  *
  * `/portfoy` HİÇBİR ZAMAN buraya girmez: kişisel ekran, `noindex` (bkz.
  * next.config.ts → NOINDEX_PATHS). `/gomulu/*` da girmez: başka sitelerin
- * içinde çizilen parçalar. `/gun/[tarih]/kart` bir görsel, sayfa değil.
+ * içinde çizilen parçalar. `/seans-silueti/[tarih]/kart` bir görsel, sayfa değil.
  */
 const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   { path: "/vergi", priority: 0.7, frequency: "monthly", stamp: false },
@@ -98,7 +98,7 @@ const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   /* 25 Ekim: sitenin değişiklik geçmişi — içerik depoda, yalnız dağıtımla
      değişiyor; değişme anı sayfa için bilinmiyor, damga yok. */
   { path: "/yenilikler", priority: 0.4, frequency: "weekly", stamp: false },
-  { path: "/tema", priority: 0.7, frequency: "daily" },
+  { path: "/temalar", priority: 0.7, frequency: "daily" },
   { path: "/yatirimcilar", priority: 0.7, frequency: "weekly", stamp: false },
   /* 9 Ekim: dizine açık, menüde ve README'de var ama haritada yoktu. */
   { path: "/hisse-secimi", priority: 0.7, frequency: "weekly" },
@@ -122,7 +122,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     { path: "/piyasalar", priority: 0.8, frequency: "hourly" },
     { path: "/bilancolar", priority: 0.8, frequency: "daily" },
     { path: "/bilancolar/analizler", priority: 0.9, frequency: "daily" },
-    { path: "/teknik", priority: 0.8, frequency: "hourly" },
+    { path: "/teknik-analiz", priority: 0.8, frequency: "hourly" },
     { path: "/takvim", priority: 0.8, frequency: "daily" },
     { path: "/makro", priority: 0.7, frequency: "daily" },
     { path: "/sirketler", priority: 0.6, frequency: "weekly" },
@@ -189,7 +189,7 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
     entries.push(...bothLocales(`/sozluk/${slug}`, 0.6, "monthly", false));
   }
   for (const slug of THEME_SLUGS) {
-    entries.push(...bothLocales(`/tema/${slug}`, 0.6, "daily"));
+    entries.push(...bothLocales(`/temalar/${slug}`, 0.6, "daily"));
   }
   /* Yatırımcılar kodda (lib/investors.ts); veri çeyrekte bir, Kongre
      bildirimleri ayda birkaç kez değişiyor. */

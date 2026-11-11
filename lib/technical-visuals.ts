@@ -6,7 +6,7 @@ import type { Locale } from "@/lib/i18n";
 import { planPosition } from "@/lib/technical";
 
 /* --------------------------------------------------------------------------
-   Plan atlası — /teknik tepesindeki "16 Hisse, Tek Harita" (25 Ekim).
+   Plan atlası — /teknik-analiz tepesindeki "16 Hisse, Tek Harita" (25 Ekim).
 
    On altı kartın her biri kendi fiyat ölçeğinde: MU 832–984, ONDS 6–7.
    Fiyatın PLAN İÇİNDEKİ yerini yan yana okumak için ölçek ortaklaşıyor:
@@ -235,7 +235,7 @@ export function atlasSentence(summary: AtlasSummary, copy: AtlasSentenceCopy): s
 }
 
 /* --------------------------------------------------------------------------
-   Senaryo rayı — /teknik/[symbol] "Senaryolar" (25 Ekim).
+   Senaryo rayı — /teknik-analiz/[symbol] "Senaryolar" (25 Ekim).
 
    Senaryolar iki paragraf ve sayıları metnin içinde ("348,36 zirvesinin
    üstünde kapanış 350,29 ve 352,37'yi açar"). Rayın seviyeleri METİNDEN
@@ -302,7 +302,7 @@ export function scenarioPath(
 }
 
 /* --------------------------------------------------------------------------
-   Kapak çizimlerinin geometrisi (8 Kasım) — /teknik görüş dağılımının logo
+   Kapak çizimlerinin geometrisi (8 Kasım) — /teknik-analiz görüş dağılımının logo
    ızgarası ve detay kapağının gösterge çizimleri (`SignalGauges`). Saf
    aritmetik; hiçbiri yeni bir sayı üretmiyor, kayıttaki sayının yeri.
    -------------------------------------------------------------------------- */

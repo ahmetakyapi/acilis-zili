@@ -102,7 +102,7 @@ export function StanceGuide({
           Eylül kararıyla aynı dil. Görüşün anlamı (yukarıdaki cümle) her
           ekranda açık; "yoksa / varsa / kademeli mi" ve öteki görüşler
           telefonda "Ne Yapmalı?"ya dokununca YERİNDE açılıyor. Ölçüldü
-          (390, /teknik/NVDA): panel 1.010 → 250 piksel, sayfa 10.4 bin
+          (390, /teknik-analiz/NVDA): panel 1.010 → 250 piksel, sayfa 10.4 bin
           pikselin ~%7'si. 640'tan geniş ekranda anahtar yok, her şey açık
           (`FoldToggle phone`). Kapaktaki "SAT Ne Demek?" bağlantısı yine
           bu panele iner. */}

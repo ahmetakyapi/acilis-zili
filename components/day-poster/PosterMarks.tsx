@@ -15,7 +15,7 @@ import styles from "./PosterMarks.module.css";
  *   sayfası; arşivin otuz kartında değil, orası sayfa açılınca
  *   ekranda olmayan kartlarla dolu). Hareketi azaltana son kare.
  * Arşiv kartının on bir sektör kulvarı (`SectorLanes`) 25 Ekim'de kalktı:
- * kart artık günün sahnesinin minyatürünü taşıyor (`/gun/[tarih]/minyatur`).
+ * kart artık günün sahnesinin minyatürünü taşıyor (`/seans-silueti/[tarih]/minyatur`).
  */
 export function BreadthStrip({
   breadth,

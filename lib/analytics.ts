@@ -40,12 +40,12 @@ const ROUTE_PATTERNS: [RegExp, string][] = [
   [/^\/bilancolar\/[^/]+\/[^/]+$/, "/bilancolar/[symbol]/[period]"],
   [/^\/bilancolar\/[^/]+$/, "/bilancolar/[symbol]"],
   [/^\/hisse\/[^/]+$/, "/hisse/[symbol]"],
-  /* TEKNİK DETAY EKSİKTİ. `/teknik/[symbol]` rotası sonradan geldi ve
+  /* TEKNİK DETAY EKSİKTİ. `/teknik-analiz/[symbol]` rotası sonradan geldi ve
      buraya eklenmedi: panelin "Bölümler" listesi (açıklaması "Dinamik
      Sayfalar Şablonlarında Toplanır") `/teknik/mu`, `/teknik/sndk` diye
      sembol sembol satır basıyordu (23 Eylül denetimi). Eski satırlar
      okumada toplanıyor (lib/admin-data.ts → ROUTE_READ). */
-  [/^\/teknik\/[^/]+$/, "/teknik/[symbol]"],
+  [/^\/teknik-analiz\/[^/]+$/, "/teknik-analiz/[symbol]"],
   [/^\/mercek\/[^/]+$/, "/mercek/[slug]"],
   [/^\/rehber\/[^/]+$/, "/rehber/[slug]"],
   [/^\/haberler\/[^/]+$/, "/haberler/[id]"],
@@ -284,7 +284,7 @@ function canonicalCase(path: string): string {
   const bare = prefix ? path.slice(3) : path;
   const hisse = bare.match(/^\/hisse\/([^/]+)$/);
   if (hisse) return `${prefix}/hisse/${hisse[1].toUpperCase()}`;
-  const teknik = bare.match(/^\/teknik\/([^/]+)$/);
+  const teknik = bare.match(/^\/teknik-analiz\/([^/]+)$/);
   if (teknik) return `${prefix}${technicalHref(teknik[1])}`;
   const analiz = bare.match(/^\/bilancolar\/([^/]+)\/([^/]+)$/);
   if (analiz) return `${prefix}${analysisHref(analiz[1], analiz[2])}`;

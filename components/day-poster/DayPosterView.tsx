@@ -12,7 +12,7 @@ import { PosterBoard } from "./PosterBoard";
 import styles from "./DayPoster.module.css";
 
 /**
- * GÜNÜN POSTERİ — `/gun/[tarih]` sayfasının gövdesi (24 Ekim; 25 Ekim'de
+ * GÜNÜN POSTERİ — `/seans-silueti/[tarih]` sayfasının gövdesi (24 Ekim; 25 Ekim'de
  * yeniden kuruldu).
  *
  * Ekran düzeni CLAUDE.md sırasıyla: başlık (sağda tek denetim: önceki /
@@ -82,7 +82,7 @@ export function DayPosterView({
           skyline={skyline}
           locale={locale}
           t={t}
-          action={<PanelLink href="/gun">{L.archiveLink}</PanelLink>}
+          action={<PanelLink href="/seans-silueti">{L.archiveLink}</PanelLink>}
         />
       </Panel>
 

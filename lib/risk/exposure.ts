@@ -112,7 +112,7 @@ async function publicViews(symbols: string[]): Promise<{ technical: Map<string, 
   const board = await getTechnicalBoard();
   for (const { row } of board) {
     if (!wanted.has(row.symbol)) continue;
-    technical.set(row.symbol, { verdict: verdictOf(row.stance), date: row.sessionDate, href: `/teknik/${row.symbol}` });
+    technical.set(row.symbol, { verdict: verdictOf(row.stance), date: row.sessionDate, href: `/teknik-analiz/${row.symbol}` });
   }
   try {
     const rows = await db

@@ -9,7 +9,7 @@ import { daySignatureEn, daySignatureTr } from "@/lib/i18n/dictionaries/day-sign
 import { formatPercentPlain } from "@/lib/utils";
 
 /**
- * Posterin adları ve cümlesi — sayfa, `/gun` arşivi, ana sayfa şeridi,
+ * Posterin adları ve cümlesi — sayfa, `/seans-silueti` arşivi, ana sayfa şeridi,
  * paylaşım görseli ve meta açıklaması AYNI cümleyi buradan alıyor
  * (kurallar `lib/day-poster-story.ts`). Düz modül, `"use client"` değil.
  */

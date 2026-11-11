@@ -25,8 +25,8 @@ import { alpaca } from "@/lib/providers";
 /**
  * Günün Posteri'nin veri tarafı — kararların kendisi `lib/day-poster.ts`te.
  *
- * TEK KAYNAK, DÖRT YÜZEY. Poster sayfası (`/gun/[tarih]`), paylaşım görseli
- * (`/gun/[tarih]/gorsel`), arşiv minyatürü ve ana sayfanın siluet şeridi
+ * TEK KAYNAK, DÖRT YÜZEY. Poster sayfası (`/seans-silueti/[tarih]`), paylaşım görseli
+ * (`/seans-silueti/[tarih]/gorsel`), arşiv minyatürü ve ana sayfanın siluet şeridi
  * (`SkylineStrip`) aynı `getDayPoster` çağrısını yapıyor: şeritteki "38
  * Yükseldi" ile posterdeki aynı sayı (CLAUDE.md "Veri dürüstlüğü" 3).
  *

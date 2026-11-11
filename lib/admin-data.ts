@@ -315,7 +315,7 @@ async function breakdownBy(
       .where(where)
       .groupBy(column)
       /* EŞİTLİKTE ANAHTAR SIRASI. Yalnızca sayıya göre sıralanıyordu ve
-         eşit sayılı satırlar (7 günde `/teknik` ile `/teknik/[symbol]`,
+         eşit sayılı satırlar (7 günde `/teknik-analiz` ile `/teknik-analiz/[symbol]`,
          ikisi de 63) her yüklemede yer değiştiriyordu — Postgres eşitlikte
          bir sıra vaat etmiyor. Liste kesildiğinde (`limit`) hangi satırın
          dışarıda kalacağı da buna bağlıydı. */
@@ -331,18 +331,25 @@ async function breakdownBy(
 }
 
 /**
- * Rota şablonu OKUMADA da toplanıyor. `/teknik/[symbol]` deseni yazma
+ * Rota şablonu OKUMADA da toplanıyor. `/teknik-analiz/[symbol]` deseni yazma
  * tarafına sonradan eklendi (lib/analytics.ts); ondan önceki satırlar
  * `/teknik/mu` gibi ham duruyor. Üretim tablosunu bir migration ile
  * yeniden yazmak yerine sorgu eski satırları da şablona indiriyor: yeni
  * satırlar zaten şablonlu geliyor, ifade onlara dokunmuyor.
+ *
+ * ADRES DEĞİŞTİ (11 Kasım): `/teknik` → `/teknik-analiz` (eski adres 308
+ * ile yönleniyor, lib/route-redirects.ts). Eski satırlar (`/teknik`,
+ * `/teknik/[symbol]`, `/teknik/mu`) aynı ifadeyle YENİ adın şablonuna
+ * iniyor; yeni satırlar `/teknik-analiz/[symbol]` geliyor ve dokunulmuyor.
+ * Öteki taşınan rotaların (`/gun`, `/tema`, `/u`, `/raporum`, `/risk`)
+ * eski satırları sabit ya da kişisel adres, ham adlarıyla kalıyor.
  *
  * TEK PARÇALI `/bilancolar/[symbol]` 24 Ekim'e kadar YOKTU (şirket bazlı
  * bilanço sayfası o gün geldi); yazma tarafı onu artık şablonluyor
  * (lib/analytics.ts). Okumada eski satır yok — sayfa yeni, ham kalmış
  * satır birikmedi; buraya desen eklenmiyor.
  */
-const ROUTE_READ = sql<string>`regexp_replace(${pageViews.route}, '^(/en)?/teknik/[^/]+$', '\\1/teknik/[symbol]')`;
+const ROUTE_READ = sql<string>`regexp_replace(regexp_replace(${pageViews.route}, '^(/en)?/teknik/[^/]+$', '\\1/teknik-analiz/[symbol]'), '^(/en)?/teknik$', '\\1/teknik-analiz')`;
 
 /**
  * Yol OKUMADA sitenin kendi yazımına iniyor — `ROUTE_READ`ın yol karşılığı.
@@ -358,7 +365,7 @@ const ROUTE_READ = sql<string>`regexp_replace(${pageViews.route}, '^(/en)?/tekni
 const PATH_READ = sql<string>`case
   when ${pageViews.path} ~ '^(/en)?/hisse/[^/]+$'
     then regexp_replace(${pageViews.path}, '[^/]+$', '') || upper(substring(${pageViews.path} from '[^/]+$'))
-  when ${pageViews.path} ~ '^(/en)?/(teknik/[^/]+|bilancolar/[^/]+/[^/]+)$'
+  when ${pageViews.path} ~ '^(/en)?/(teknik(-analiz)?/[^/]+|bilancolar/[^/]+/[^/]+)$'
     then lower(${pageViews.path})
   else ${pageViews.path}
 end`;
@@ -1608,7 +1615,7 @@ export const getHealthChecks = cache(async function getHealthChecks(): Promise<
        fazladan bir tam gidiş-dönüş demekti. */
     getTrackingRange(),
     /* TEKNİK RUTİN HİÇ SORULMUYORDU (23 Eylül denetimi) — günde üç koşan,
-       rutinlerin en sıkı. Durduğunda /teknik bayatlıyor ve bu sayfa hiçbir
+       rutinlerin en sıkı. Durduğunda /teknik-analiz bayatlıyor ve bu sayfa hiçbir
        şey demiyordu. En yeni yayın gününün slotları yeterli: borçlu nöbet
        o günden eskiyse zaten kapanmış. */
     db

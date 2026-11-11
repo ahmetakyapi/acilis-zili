@@ -6,15 +6,15 @@ import { normalizePath, routeTemplate, shouldRecord } from "../lib/analytics";
  * Sayfa ölçümünün yazma kuralları — rota şablonu, yolun yazımı ve kimin
  * sayıldığı.
  *
- * 23 Eylül denetiminde panelin "Bölümler" listesi `/teknik/mu` ile
- * `/teknik/sndk`yi ayrı satır basıyordu (şablon eksikti), aynı sayfa büyük ve
+ * 23 Eylül denetiminde panelin "Bölümler" listesi `/teknik-analiz/mu` ile
+ * `/teknik-analiz/sndk`yi ayrı satır basıyordu (şablon eksikti), aynı sayfa büyük ve
  * küçük harfle iki satır oluyordu ve yöneticinin kendi gezintisi 30 günlük
  * trafiğin %29'unu tutuyordu.
  */
 
 test("teknik detay şablonda toplanıyor, dil öneki korunuyor", () => {
-  assert.equal(routeTemplate("/teknik/MU"), "/teknik/[symbol]");
-  assert.equal(routeTemplate("/en/teknik/mu"), "/en/teknik/[symbol]");
+  assert.equal(routeTemplate("/teknik-analiz/MU"), "/teknik-analiz/[symbol]");
+  assert.equal(routeTemplate("/en/teknik-analiz/mu"), "/en/teknik-analiz/[symbol]");
 });
 
 test("bilanço rotaları: sabit sayfalar sabit, analiz detayı şablonda", () => {
@@ -31,7 +31,7 @@ test("bilanço rotaları: sabit sayfalar sabit, analiz detayı şablonda", () =>
 test("sembollü yol sitenin kendi yazımına iniyor", () => {
   assert.equal(normalizePath("/hisse/mu"), "/hisse/MU");
   assert.equal(normalizePath("/en/hisse/brk.b"), "/en/hisse/BRK.B");
-  assert.equal(normalizePath("/teknik/MU"), "/teknik/mu");
+  assert.equal(normalizePath("/teknik-analiz/MU"), "/teknik-analiz/mu");
   assert.equal(normalizePath("/en/bilancolar/NVDA/4c-fy2026"), "/en/bilancolar/nvda/4c-fy2026");
   assert.equal(normalizePath("/bilancolar/analizler"), "/bilancolar/analizler");
   assert.equal(normalizePath("/bilancolar/NVDA"), "/bilancolar/nvda");

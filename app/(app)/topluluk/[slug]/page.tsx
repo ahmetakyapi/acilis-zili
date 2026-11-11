@@ -105,7 +105,7 @@ export default async function CommunityPostPage(props: PageProps<"/topluluk/[slu
               {/* Künye başlığın ALTINDA (kicker yasağı): yazar, tarih, süre. */}
               <div className="-mt-3 flex flex-wrap items-center gap-x-2.5 gap-y-1 text-small text-muted">
                 <Link
-                  href={`/u/${post.author.username}`}
+                  href={`/uye/${post.author.username}`}
                   className="inline-flex min-h-11 items-center gap-2 font-semibold text-body transition-colors hover:text-strong sm:min-h-0"
                 >
                   <AvatarTile

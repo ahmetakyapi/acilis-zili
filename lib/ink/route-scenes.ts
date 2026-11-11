@@ -22,7 +22,7 @@ const ROUTE_SCENES: readonly (readonly [prefix: string, scene: InkSceneName])[] 
   ["/mercek", "lens"],
   ["/rehber", "lens"],
   ["/bilancolar", "ledger"],
-  ["/teknik", "chart"],
+  ["/teknik-analiz", "chart"],
   ["/hisse", "chart"],
   ["/piyasalar", "chart"],
   ["/makro", "chart"],
@@ -43,7 +43,7 @@ const ROUTE_SCENES: readonly (readonly [prefix: string, scene: InkSceneName])[] 
   ["/sozluk", "lens"],
   ["/hisse-secimi", "searching"],
   ["/analizlerim", "ledger"],
-  ["/tema", "chart"],
+  ["/temalar", "chart"],
 ];
 
 export function sceneForPath(pathname: string | null): InkSceneName {

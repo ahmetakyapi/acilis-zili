@@ -1,4 +1,4 @@
-import { deleteRiskRule, toggleRiskRule } from "@/app/(app)/risk/actions";
+import { deleteRiskRule, toggleRiskRule } from "@/app/(app)/risk-masasi/actions";
 import { Panel, PanelHeader } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 import { day, fill, type Loc } from "@/lib/risk/format";

@@ -588,7 +588,7 @@ function PostsPanel({
       <PanelHeader
         title={L.postsTitle}
         meta={report.posts === 1 ? L.postsMetaOne : L.postsMeta.replace("{n}", number(report.posts))}
-        action={<PanelLink href={`/u/${report.username}`}>{L.toPosts}</PanelLink>}
+        action={<PanelLink href={`/uye/${report.username}`}>{L.toPosts}</PanelLink>}
       />
       <div className={styles.body}>
         <ul className={styles.posts}>
@@ -616,7 +616,7 @@ type Step = { href: string; icon: Icon; title: string; hint: string };
 function nextSteps(report: BellReportData, L: Labels): Step[] {
   const steps: Step[] = [
     {
-      href: `/u/${report.username}`,
+      href: `/uye/${report.username}`,
       icon: UserCircle,
       title: L.toProfile,
       hint: report.profilePublic ? L.nextPublic : L.nextPrivate,

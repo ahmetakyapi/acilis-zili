@@ -264,7 +264,7 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
       </nav>
 
       {/* PAYLAŞ BAŞLIĞIN SAĞINDA — sitenin öteki sayfalarının kalıbı
-          (`/teknik`, `/bilancolar`, `/rehber`: `PageHeader share=`). Yol
+          (`/teknik-analiz`, `/bilancolar`, `/rehber`: `PageHeader share=`). Yol
           satırında başlık kartının DIŞINDA duruyordu (24 Ekim denetimi). */}
       <PageHeader
         title={copy.title}

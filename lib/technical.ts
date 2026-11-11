@@ -145,7 +145,7 @@ export const SLOT_RANK: Record<TechnicalSlot, number> = {
  * öğlen ve kapanıştan 75 dakika önce — ABD yaz saatine geçince kendiliğinden
  * kayıyor. Burada ise eski UTC cron'u (`45 12,16,18`) duruyordu: 3 Kasım'dan
  * beri kayıtlar 13:51 / 17:51 / 19:50 UTC'de yazılırken (ölçüldü,
- * `published_at`) /teknik "Sıradaki Yayın 19:45 TR" diyor, panel nöbeti
+ * `published_at`) /teknik-analiz "Sıradaki Yayın 19:45 TR" diyor, panel nöbeti
  * gerçek koşudan bir saat önce "gecikti" sayıyordu. Saat artık ET duvar
  * saati; ekrana yazılan TR karşılığı o günün tarihiyle türetiliyor
  * (`slotInstant`): yazın 15:45 · 19:45 · 21:45, kışın 16:45 · 20:45 · 22:45 TR.
@@ -625,7 +625,7 @@ export function newestEdition(
 
 /** Detay sayfasının adresi — küçük harf, `analysisHref` ile aynı gerekçe. */
 export function technicalHref(symbol: string): string {
-  return `/teknik/${symbol.toLowerCase()}`;
+  return `/teknik-analiz/${symbol.toLowerCase()}`;
 }
 
 /**
@@ -640,7 +640,7 @@ export function technicalHref(symbol: string): string {
  * (denetimde ölçüldü: Günün Hareketleri "15 Dakika Gecikmeli" derken aynı
  * paketten gelen SNDK balonda "Şu An" yazıyordu).
  *
- * TEK YERDE, ÇÜNKÜ AYNI FİYAT İKİ YERDE DURUYOR. /teknik kartı ve dağılım
+ * TEK YERDE, ÇÜNKÜ AYNI FİYAT İKİ YERDE DURUYOR. /teknik-analiz kartı ve dağılım
  * logolarının balonu aynı kotasyonu yazıyor; kural iki kopyada ayrı
  * yaşasaydı bir gün aynı sayının birinde "Şu An", ötekinde "Son Fiyat"
  * yazardı. Ana sayfa paneli de aynı fonksiyonu soruyor.

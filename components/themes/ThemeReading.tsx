@@ -26,7 +26,7 @@ import { ThemeStrip } from "./ThemeStrip";
  * farkı olarak okunuyor (çentik ve içi boş im kalktı — gerekçe ve tarihçe
  * `ThemeStrip`). Ölçüt satırının anahtarı da çubuğun kendisi (eğik kare
  * değil). Üyelerin logoları kapağa DÖNDÜ ama küme olarak değil: sol
- * sütunda tek sıra, sabit 44 piksel (app/(app)/tema/[slug]/page.tsx →
+ * sütunda tek sıra, sabit 44 piksel (app/(app)/temalar/[slug]/page.tsx →
  * `HeroLogos`); sabahki 184 piksellik boş kutu sorunu yok.
  *
  * ÖLÇÜT KIYASI ancak ikisi AYNI SEANSI anlatıyorsa (kural eski

@@ -2,7 +2,7 @@
 
 import { useActionState, useState } from "react";
 import { Plus, X } from "@phosphor-icons/react";
-import { createRiskRule, type RuleActionState } from "@/app/(app)/risk/actions";
+import { createRiskRule, type RuleActionState } from "@/app/(app)/risk-masasi/actions";
 import { Button } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 import {

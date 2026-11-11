@@ -113,7 +113,7 @@ async function run(): Promise<NextResponse> {
         if (!alertId) continue;
         const sent = await sendToUser(userId, (deviceLocale) => ({
           ...messageFor(rule, outcome.symbols, deviceLocale),
-          url: withLocale("/risk", deviceLocale),
+          url: withLocale("/risk-masasi", deviceLocale),
           tag: `risk-${rule.id}`,
         }));
         delivered += sent;

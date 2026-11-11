@@ -133,7 +133,7 @@ export default async function ClaudePage(props: PageProps<"/claude/[symbol]">) {
         </div>
         <nav className={styles.identityLinks} aria-label={symbol}>
           <Link href={`/hisse/${encodeURIComponent(symbol)}`}>{t.nav.companies}</Link>
-          <Link href={`/teknik/${symbol.toLowerCase()}`}>{t.nav.technical}</Link>
+          <Link href={`/teknik-analiz/${symbol.toLowerCase()}`}>{t.nav.technical}</Link>
           <Link href={`/hisse-secimi/${encodeURIComponent(symbol)}`}>{t.screening.title}</Link>
         </nav>
       </div>

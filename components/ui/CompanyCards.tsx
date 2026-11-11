@@ -32,9 +32,9 @@ import type { Quote } from "@/lib/providers/types";
  *                          kartı kalktı: ham HTML 819 KB → ~744 KB, sayfanın
  *                          gzip'i önce 68.998, sonra 68.387-72.460 (gürültü içinde)
  *   /yatirimcilar          43 kayıt  2.254 B (sayfa 40.438 → 43.417)
- *   /tema/siber-guvenlik   40 kayıt  2.322 B (sayfa 34.425 → 37.025)
- *   /tema                  66 kayıt  2.827 B
- *   /teknik                15 kayıt    906 B (eski balon 1.602 B idi)
+ *   /temalar/siber-guvenlik   40 kayıt  2.322 B (sayfa 34.425 → 37.025)
+ *   /temalar                  66 kayıt  2.827 B
+ *   /teknik-analiz                15 kayıt    906 B (eski balon 1.602 B idi)
  *   /hisse/NVDA             8 kayıt    405 B
  * Kayıt başına ~45-75 B gzip; eski balon işaretlemesi logo başına ~110 B
  * idi. Kayıt YALNIZCA GÖRÜNEN logolar için basılıyor (açılır bölümdeki

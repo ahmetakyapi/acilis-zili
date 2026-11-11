@@ -77,7 +77,7 @@ function AuthorLine({
   return (
     <div className="flex flex-wrap items-center gap-x-2 gap-y-1 text-tiny text-muted">
       <Link
-        href={`/u/${post.author.username}`}
+        href={`/uye/${post.author.username}`}
         className="relative z-10 inline-flex min-h-11 items-center gap-2 text-small font-semibold text-body transition-colors hover:text-strong sm:min-h-0"
       >
         <AvatarTile
@@ -497,7 +497,7 @@ export function AuthorCard({
           <p className="numeral text-small text-muted">{facts.join(" · ")}</p>
         </div>
         <Link
-          href={`/u/${username}`}
+          href={`/uye/${username}`}
           className="inline-flex min-h-11 items-center gap-1 rounded-(--radius-md) border border-line bg-surface px-3 text-small font-semibold text-body transition-colors hover:border-primary-faint hover:text-primary sm:min-h-10"
         >
           {labels.profile}

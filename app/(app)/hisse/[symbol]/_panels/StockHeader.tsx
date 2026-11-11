@@ -141,7 +141,7 @@ export async function StockHeader({
   );
 
   const profile = profileResult.ok ? profileResult.data : null;
-  /* Künyedeki sektör, profil panelindekiyle ve /teknik dağılım balonuyla
+  /* Künyedeki sektör, profil panelindekiyle ve /teknik-analiz dağılım balonuyla
      AYNI tercih sırasından geliyor (`companySector`): GICS varsa o, yoksa
      sağlayıcının serbest metinli alanı. */
   const kunyeSektor = companySector(symbol, profile?.industry, locale);

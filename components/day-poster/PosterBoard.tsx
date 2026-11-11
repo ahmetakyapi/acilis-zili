@@ -13,7 +13,7 @@ import { posterName, posterShortName, posterStoryOf, posterStoryText } from "./s
 import styles from "./PosterBoard.module.css";
 
 /**
- * POSTERİN PANOSU — `/gun/[tarih]` ve `/gun`un en son seansı (25 Ekim,
+ * POSTERİN PANOSU — `/seans-silueti/[tarih]` ve `/seans-silueti`nin en son seansı (25 Ekim,
  * dördüncü kurulum: Günün Silueti).
  *
  * SAHİBİNİN İTİRAZI (canlıdaki "S&P 500, Hisse Hisse" sahnesi): "Çok kötü
@@ -86,7 +86,7 @@ export function PosterBoard({
         .replace("{dec}", String(breadth.declining))
         .replace("{flat}", String(breadth.unchanged))
     : "";
-  const imageHref = (query = "") => withLocale(`/gun/${poster.date}/gorsel${query}`, locale);
+  const imageHref = (query = "") => withLocale(`/seans-silueti/${poster.date}/gorsel${query}`, locale);
   const dateShort = formatEtDateCompact(poster.date, locale);
 
   return (

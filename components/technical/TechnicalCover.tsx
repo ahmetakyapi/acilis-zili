@@ -25,7 +25,7 @@ import styles from "./Technical.module.css";
 import cover from "./TechnicalCover.module.css";
 
 /**
- * Detay sayfasının kapağı — `app/(app)/teknik/[symbol]/page.tsx`ten taşındı
+ * Detay sayfasının kapağı — `app/(app)/teknik-analiz/[symbol]/page.tsx`ten taşındı
  * (8 Kasım). Sayfa veriyi topluyor, kapak yalnız çiziyor; böylece kapak
  * sahte veriyle de basılıp ölçülebiliyor. Kapağın karar kayıtları burada.
  *
@@ -106,7 +106,7 @@ export function TechnicalCover({
         {/* KİMLİK BLOĞU HİSSE SAYFASINA GİDİYOR.
             Logo ile ad sayfanın en büyük öğesiydi ve hiçbir yere
             gitmiyordu: teknik görüşü okuyan okuyucunun bir sonraki isteği
-            şirketin grafiğine bakmak ama künye çubuğu /teknik LİSTESİNE
+            şirketin grafiğine bakmak ama künye çubuğu /teknik-analiz LİSTESİNE
             çıkıyor, hisseye değil. Bağlantı logo + sembol + adı BİRLİKTE
             sarıyor; üçü aynı şeyi söylüyor, üç ayrı sekme durağı olmaları
             gerekmiyor. Künye satırları (bu yayının saati, sıradaki yayın)
@@ -280,7 +280,7 @@ export function TechnicalCover({
             kısmı özellikle "kötü görünüyor" diye işaretledi: 1440'ta kalan
             süre ("1 g 2 sa Sonra") sütuna sığmayıp tek başına ikinci satıra
             düşüyordu ve üç günlük nöbetten hangisinde olunduğu
-            görünmüyordu. Artık /teknik kapağıyla AYNI bileşen: yayın
+            görünmüyordu. Artık /teknik-analiz kapağıyla AYNI bileşen: yayın
             gününün üç nöbeti, bu yayın işaretli, sıradaki yayın (başka
             güne düşüyorsa ayrı düğüm) ve kalan süre başlık satırının
             sağında. SIRADAKİ YAYIN okuyucunun ikinci sorusu: elindeki görüş

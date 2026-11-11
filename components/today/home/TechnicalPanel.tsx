@@ -67,7 +67,7 @@ export async function TechnicalPanel({ locale, t }: { locale: Locale; t: Diction
       <PanelHeader
         title={t.technical.title}
         tone="title"
-        action={<PanelLink href="/teknik">{t.common.showAll}</PanelLink>}
+        action={<PanelLink href="/teknik-analiz">{t.common.showAll}</PanelLink>}
       />
       {/* Gövde bir KAP (11 Kasım): dağılımın iç ızgarası panelin
           genişliğine göre kurulur — tablette tam genişlikte iki kolon,

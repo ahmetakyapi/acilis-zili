@@ -143,7 +143,7 @@ export function ProfileSettings({
         </Button>
         {serverPublic && (
           <Link
-            href={`/u/${username}`}
+            href={`/uye/${username}`}
             className="inline-flex min-h-11 items-center gap-1.5 text-sm font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-0"
           >
             {labels.view}

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { interpretRiskDesk, type NoteActionResult } from "@/app/(app)/risk/actions";
+import { interpretRiskDesk, type NoteActionResult } from "@/app/(app)/risk-masasi/actions";
 import { Button } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 import styles from "./RiskDesk.module.css";

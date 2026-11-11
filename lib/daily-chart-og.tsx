@@ -8,7 +8,7 @@ import { barSpan, divergingScale, type DivergingScale } from "@/lib/daily-chart-
    GÖRSEL GRAFİĞİN KENDİSİ: başlık + tarih + sayfadaki blokla AYNI veri
    (aynı ayrıştırma, aynı ölçek kuralı: grubun en büyüğü). Satori CSS
    değişkeni okumuyor; renkler `lib/og.tsx` → `C` (açık tema). Eksi işareti
-   U+2212 gömülü fontta yok (`/gun/[tarih]/kart` notu) — ASCII tireye iner.
+   U+2212 gömülü fontta yok (`/seans-silueti/[tarih]/kart` notu) — ASCII tireye iner.
    ========================================================================== */
 
 export const DAILY_CHART_OG_SIZES = {

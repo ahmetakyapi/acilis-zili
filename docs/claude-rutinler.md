@@ -45,7 +45,7 @@ girmez; yerelde saklanacaksa `docs/*.local.md` (gitignore'da).
 | 2 | Haftalık Bülten | `CRON_TZ=Europe/Istanbul 30 9 * * 1` | Pazartesi 09:30 TR | Opus 5.5 | Claude_Code_Remote | `/bulten?tur=haftalik` |
 | 3 | Mercek Yazısı | `CRON_TZ=America/New_York 30 4,16 * * *` | her gün 04:30 ve 16:30 NY | Opus 5.5 | Claude_Code_Remote | `/mercek` |
 | 4 | Bilanço Analizi | `CRON_TZ=America/New_York 30 1,12,16,18 * * *` | her gün 01:30, 12:30, 16:30, 18:30 NY | Opus 5.5 | Claude_Code_Remote | `/bilancolar/analizler` |
-| 5 | Teknik Analist | `CRON_TZ=America/New_York 45 8,12,14 * * 1-5` | işlem günleri 08:45, 12:45, 14:45 NY | Opus 5.5 | Claude_Code_Remote | `/teknik` |
+| 5 | Teknik Analist | `CRON_TZ=America/New_York 45 8,12,14 * * 1-5` | işlem günleri 08:45, 12:45, 14:45 NY | Opus 5.5 | Claude_Code_Remote | `/teknik-analiz` |
 | 6 | Yaz Saati Nöbetçisi | — | **emekli** (§ 6) | — | — | — |
 | 7 | Günün Grafiği | `CRON_TZ=Europe/Istanbul 15 9 * * 2-6` (hedef: `CRON_TZ=America/New_York 25 16 * * 1-5`, § 7) | Salı–Cumartesi 09:15 TR (önceki seans) | Opus 5.5 | yok | `/gunun-grafigi` |
 | 8 | Görev Kontrolü | `CRON_TZ=America/New_York 5 10 * * *` | her gün 10:05 NY | Opus 5.5 | Claude_Code_Remote, Claude_Docs | yazmaz; düşen koşuyu yeniden çalıştırır, bildirim |
@@ -2955,7 +2955,7 @@ Her POST sonrası "ok": true doğrula ve bir sonraki yazıya geç.
 | Haftalık | `/bulten?tur=haftalik` listesinde bu haftanın kaydı |
 | Mercek | `/mercek` listesinin başında yeni yazı (her gün değil; ölçü haftalık) |
 | Analiz | `/bilancolar/analizler` → Günün Analizi kartında yeni şirket |
-| Teknik | `/teknik` → "Son Yayın" şeridinde bugünün tarihi ve yayının adı |
+| Teknik | `/teknik-analiz` → "Son Yayın" şeridinde bugünün tarihi ve yayının adı |
 | Günün Grafiği | `/gunun-grafigi` son seansı gösteriyor; metin otomatik yazıldığını söylüyorsa rutin o günü yazmamış, yedek yazmış |
 | Görev Kontrolü | Sorun varsa push bildirimi; her şey yolundaysa sessiz |
 | Kalite Denetimi | Cumartesi push bildirimi: "Haftalık denetim: YÜKSEK n, ORTA n, DÜŞÜK n" |

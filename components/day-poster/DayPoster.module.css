@@ -13,7 +13,7 @@
    piksel tutuyordu (56 piksellik başlık, altında tek satır açıklama, 24'er
    piksel dolgu) ve siluet ilk ekranın altında kalıyordu. Burada başlık
    solda 30–36 piksel, açıklama AYNI SATIRDA hairline'ın ardında, oklar
-   sağda; dar ekranda açıklama başlığın altına iner. Arşiv (`/gun`) aynı
+   sağda; dar ekranda açıklama başlığın altına iner. Arşiv (`/seans-silueti`) aynı
    bandı kullanıyor. Özgüllük: ezdiği kapak kuralları globals.css'te üç-
    dört sınıflık (`.page-masthead.page-masthead[data-embedded]`). */
 .band.band.band[data-embedded] {

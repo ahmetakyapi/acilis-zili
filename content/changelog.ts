@@ -165,7 +165,7 @@ export const CHANGELOG_TR = [
       // d5836db
       { kind: "yeni", area: "icerik", short: "Geniş ekranda yazının haritası", title: "Okuma Rayı", body: "Mercek ve rehber yazılarında geniş ekranın boş kenarında yazının bölümleri numarasıyla duruyor; okudukça her bölümün çizgisi doluyor, ara başlıkların cetveli de sen vardıkça çiziliyor.", href: "/rehber/borsa-nasil-isler" },
       // 73ab2d9
-      { kind: "iyilestirme", area: "piyasa", short: "RSI yarım halka, hacim basamak", title: "Çizimle Okunan Göstergeler", body: "Teknik kartlarda RSI eşik bölgeleriyle bir yarım halkada, hacim de olağana göre kaç basamak doldurduğuyla okunuyor; değer yalnız eşik aşılınca renkleniyor.", href: "/teknik" },
+      { kind: "iyilestirme", area: "piyasa", short: "RSI yarım halka, hacim basamak", title: "Çizimle Okunan Göstergeler", body: "Teknik kartlarda RSI eşik bölgeleriyle bir yarım halkada, hacim de olağana göre kaç basamak doldurduğuyla okunuyor; değer yalnız eşik aşılınca renkleniyor.", href: "/teknik-analiz" },
       // a3e89d9
       { kind: "iyilestirme", area: "icerik", short: "Önce manşet, rakamlar altta", title: "Önce Başlık Gelen Kartlar", body: "Mercek, bülten, Günün Grafiği ve hisse sayfasındaki yazı kartlarında sıra artık okuma sırası: önce manşet, sonra tarih ve özet, en altta yazının rakamları.", href: "/bulten" },
       // c1b250c, fdf948c
@@ -173,7 +173,7 @@ export const CHANGELOG_TR = [
       // cf4165b
       { kind: "duzeltme", area: "icerik", short: "Kış saatinde doğru yayın saati", title: "Bülten Saati Kış Saatinde", body: "ABD kış saatine geçince günlük özet de bir saat geç çıkmaya başladı; ana sayfa artık o günün saat farkıyla doğru saati yazıyor ve zamanında çıkan bülteni gecikmiş saymıyor.", href: "/bulten" },
       // cf4165b
-      { kind: "duzeltme", area: "piyasa", short: "Sıradaki teknik yayın doğru saatte", title: "Teknik Yayın Saatleri", body: "Teknik analiz sayfası sıradaki yayını New York saatine bağlı gerçek saatiyle gösteriyor; kış saatinde bir saat erken görünmüyor.", href: "/teknik" },
+      { kind: "duzeltme", area: "piyasa", short: "Sıradaki teknik yayın doğru saatte", title: "Teknik Yayın Saatleri", body: "Teknik analiz sayfası sıradaki yayını New York saatine bağlı gerçek saatiyle gösteriyor; kış saatinde bir saat erken görünmüyor.", href: "/teknik-analiz" },
     ],
   },
   {
@@ -197,7 +197,7 @@ export const CHANGELOG_TR = [
       // ea9fbd5, d17648d
       { kind: "duzeltme", area: "piyasa", title: "Grafiğin Günü Başlıkta", body: "Günün Grafiği bugüne ait değilse başlığı da “Dünün Grafiği” ya da “Cuma'nın Grafiği” oluyor; hisse grafiğinin günlük görünümü de gece barlarını bugün diye çizmiyor.", href: "/gunun-grafigi" },
       // d17648d
-      { kind: "iyilestirme", area: "piyasa", title: "Fiyat Merdiveni", body: "Teknik analiz detayında seviye tablosunun yerinde gerçek fiyat aralıklarıyla çizilen bir merdiven var: alım bölgesi, stop, hedef, destek ve direnç fiyatın imleciyle aynı eksende.", href: "/teknik/NVDA" },
+      { kind: "iyilestirme", area: "piyasa", title: "Fiyat Merdiveni", body: "Teknik analiz detayında seviye tablosunun yerinde gerçek fiyat aralıklarıyla çizilen bir merdiven var: alım bölgesi, stop, hedef, destek ve direnç fiyatın imleciyle aynı eksende.", href: "/teknik-analiz/NVDA" },
       // d17648d
       { kind: "iyilestirme", area: "bilanco", title: "Bilançosu Ne Zaman? Sayfası", body: "Şirketin bilanço sayfasında takvim yaprağı ve kalan gün, beklenti ile son çeyreğin çubukları ve çeyrek çeyrek karne var; aynı çeyreğin iki kez sayılması da düzeldi.", href: "/bilancolar/NVDA" },
       // f68b4d2
@@ -263,7 +263,7 @@ export const CHANGELOG_TR = [
     summary: "Silüetin etiketleri telefonda binaların üstünden kalktı; bilanço ufku açılışta bugünü gösteriyor ve telefonda büyük, okunur kartlar taşıyor.",
     items: [
       // 8d314a9
-      { kind: "iyilestirme", area: "piyasa", title: "Silüette Öne Çıkanlar", body: "Telefonda sahne yalnız binalar ve numara rozetleri; şirketler altta iki sütunlu Öne Çıkanlar listesinde, çipe dokununca binası aydınlanıyor.", href: "/gun" },
+      { kind: "iyilestirme", area: "piyasa", title: "Silüette Öne Çıkanlar", body: "Telefonda sahne yalnız binalar ve numara rozetleri; şirketler altta iki sütunlu Öne Çıkanlar listesinde, çipe dokununca binası aydınlanıyor.", href: "/seans-silueti" },
       // 375737d
       { kind: "iyilestirme", area: "bilanco", title: "Bilanço Ufku Bugünden Açılıyor", body: "Bilanço takvimi açılışta haftanın en kalabalık gününü değil bugünü, bugün boşsa önümüzdeki ilk dolu günü gösteriyor.", href: "/bilancolar" },
       // 375737d
@@ -294,7 +294,7 @@ export const CHANGELOG_TR = [
       // dc681c39
       { kind: "yeni", area: "bilanco", short: "Bilanço analizi beş kartlık hikâye", title: "Bilanço Hikâye Kartları", body: "Skorlu bir bilanço analizi beş kartlık bir hikâye olarak da okunuyor; her kartın telefona ve bağlantı önizlemesine uygun görseli var.", href: "/bilancolar/acn/4c-fy2026/hikaye" },
       // 76a9c338, 140825b9
-      { kind: "yeni", area: "piyasa", short: "Her seans bir şehir silueti", title: "Günün Posteri", body: "Tamamlanan her seans bir şehir silueti olarak çiziliyor: Nasdaq 100'ün her şirketi bir bina, genişliği piyasa değeri, boyu günlük değişim; binalar sektör mahallelerinde güçlüden zayıfa. Ana sayfadaki şerit son seansın siluetini açıyor, Ayarlar'dan zile ses de açabiliyorsun.", href: "/gun" },
+      { kind: "yeni", area: "piyasa", short: "Her seans bir şehir silueti", title: "Günün Posteri", body: "Tamamlanan her seans bir şehir silueti olarak çiziliyor: Nasdaq 100'ün her şirketi bir bina, genişliği piyasa değeri, boyu günlük değişim; binalar sektör mahallelerinde güçlüden zayıfa. Ana sayfadaki şerit son seansın siluetini açıyor, Ayarlar'dan zile ses de açabiliyorsun.", href: "/seans-silueti" },
       // 01f10d1f, 09dcab86
       { kind: "yeni", area: "piyasa", short: "Her gün bir grafik ve kısa açıklama", title: "Günün Grafiği", body: "Her işlem günü tek bir grafik ve yüz kelimelik bir açıklama yayımlanıyor; önceki günler arşivde duruyor.", href: "/gunun-grafigi" },
       // feat/olasiliklar
@@ -383,7 +383,7 @@ export const CHANGELOG_TR = [
       // 6ce96fc0
       { kind: "yeni", area: "kisisel", title: "Herkese Açık Profil", body: "İstersen Ayarlar'dan bir profil açıp portföyünün getirisini tutar göstermeden, aynı günlerde SPY'a yatırılsaydı sorusuyla karşılaştırmalı paylaşabiliyorsun; profil varsayılan olarak gizli.", href: "/ayarlar" },
       // a61c7cde
-      { kind: "yeni", area: "kisisel", title: "Zil Raporu", body: "Üyeliğin boyunca takip ettiğin hisseleri, tetiklenen alarmları ve portföyünün seyrini kaydırdıkça ilerleyen kişisel bir özet olarak okuyabiliyorsun.", href: "/raporum" },
+      { kind: "yeni", area: "kisisel", title: "Zil Raporu", body: "Üyeliğin boyunca takip ettiğin hisseleri, tetiklenen alarmları ve portföyünün seyrini kaydırdıkça ilerleyen kişisel bir özet olarak okuyabiliyorsun.", href: "/zil-raporu" },
       // 5bdfc0d0, 0047546e
       { kind: "yeni", area: "kisisel", title: "Bildirim Kutusu ve Yüzde Alarmı", body: "Fiyat alarmının yanında günlük yüzde değişim alarmı ve “bilanço yarın” hatırlatması geldi; hepsi başlıktaki zilin açtığı tek kutuda toplanıyor.", href: "/bildirimler" },
       // 19ea7330
@@ -497,7 +497,7 @@ export const CHANGELOG_TR = [
       // 244ff105, a83f499a
       { kind: "yeni", area: "piyasa", title: "Ünlü Yatırımcılar", body: "Buffett'tan Pelosi'ye ünlü yatırımcıların SEC beyanlarından portföyleri ve çeyrekte ne alıp sattıkları; Cathie Wood'un sayfasında ARK fonlarının günlük işlemleri de var.", href: "/yatirimcilar" },
       // 78e88b34, 2ae8768c
-      { kind: "yeni", area: "piyasa", title: "Temalar ve Karşılaştırma Çiftleri", body: "Yapay zekâ ve yarı iletkenler gibi on tematik liste ile yirmi hazır karşılaştırma çifti eklendi.", href: "/tema" },
+      { kind: "yeni", area: "piyasa", title: "Temalar ve Karşılaştırma Çiftleri", body: "Yapay zekâ ve yarı iletkenler gibi on tematik liste ile yirmi hazır karşılaştırma çifti eklendi.", href: "/temalar" },
       // d5a08bd8
       { kind: "yeni", area: "piyasa", title: "Hisse Sayfası Derinleşti", body: "Hisse sayfasına içeriden işlemler, bilanço öncesi beklenen hareket, sektörüne göre karne ve temettü panelleri geldi.", href: "/hisse/NVDA" },
       // 78e88b34, fd7b52b5
@@ -568,15 +568,15 @@ export const CHANGELOG_TR = [
     summary: "Teknik analiz listesine üç hisse eklendi, göstergeler ne anlama geldiklerini anlatmaya başladı. Şirket sayfası da hissenin günlük teknik görüşünü gösteriyor.",
     items: [
       // 1174ad95
-      { kind: "yeni", area: "piyasa", title: "AMD, INTC ve PLTR", body: "Teknik analiz listesine üç hisse eklendi; ilk yayına kadar Yayın Bekliyor olarak görünüyorlar.", href: "/teknik" },
+      { kind: "yeni", area: "piyasa", title: "AMD, INTC ve PLTR", body: "Teknik analiz listesine üç hisse eklendi; ilk yayına kadar Yayın Bekliyor olarak görünüyorlar.", href: "/teknik-analiz" },
       // 38085d14
-      { kind: "yeni", area: "piyasa", title: "Göstergeler Kendini Anlatıyor", body: "RSI, MACD, ATR ve pivot gibi ölçülerin her birinin altında ne anlama geldiğini söyleyen kısa bir açıklama var.", href: "/teknik/NVDA" },
+      { kind: "yeni", area: "piyasa", title: "Göstergeler Kendini Anlatıyor", body: "RSI, MACD, ATR ve pivot gibi ölçülerin her birinin altında ne anlama geldiğini söyleyen kısa bir açıklama var.", href: "/teknik-analiz/NVDA" },
       // de5b1fcf
       { kind: "yeni", area: "piyasa", title: "Şirket Sayfasında Teknik Kart", body: "Teknik analizi olan hissenin sayfasında görüş, fiyatın plana göre yeri ve gerekçenin ilk cümlesi en üstte duruyor.", href: "/hisse/NVDA" },
       // dc890798, c8a0a085
       { kind: "yeni", area: "piyasa", screen: "teknik", title: "Kapanış Öncesi Yayını", body: "Teknik analiz günde üç kez yayımlanmaya başladı ve sayfa bir sonraki yayının saatini de yazıyor." },
       // 965b55a4, 1ee83dc6
-      { kind: "yeni", area: "piyasa", title: "Paylaş ve Öteki Hisseler", body: "Teknik analiz sayfası paylaş butonu aldı; sayfanın sonundaki kartlarla listedeki öteki hisselere tek dokunuşla geçiliyor.", href: "/teknik/NVDA" },
+      { kind: "yeni", area: "piyasa", title: "Paylaş ve Öteki Hisseler", body: "Teknik analiz sayfası paylaş butonu aldı; sayfanın sonundaki kartlarla listedeki öteki hisselere tek dokunuşla geçiliyor.", href: "/teknik-analiz/NVDA" },
       // 31e13ab5
       { kind: "iyilestirme", area: "piyasa", title: "Karşılaştırmada Ölçek Çubukları", body: "Karşılaştırma tablosunda her sayının altındaki ince çubuk, hangisinin büyük olduğunu okumadan görmeyi sağlıyor.", href: "/karsilastir/spy-qqq" },
     ],
@@ -606,11 +606,11 @@ export const CHANGELOG_TR = [
     summary: "Seçili hisseler için her işlem günü yenilenen teknik analiz sayfası yayına girdi. Masaüstü başlık tek şeride indi ve teknik analiz orada kendi sekmesini aldı.",
     items: [
       // ad167f49
-      { kind: "yeni", area: "piyasa", title: "Teknik Analiz", body: "On iki hisse için Al, Tut ya da Sat görüşü, alım bölgesi, hedefler, stop, destek ve direnç her işlem günü güncelleniyor; göstergeler sitenin kendi verisinden hesaplanıyor.", href: "/teknik" },
+      { kind: "yeni", area: "piyasa", title: "Teknik Analiz", body: "On iki hisse için Al, Tut ya da Sat görüşü, alım bölgesi, hedefler, stop, destek ve direnç her işlem günü güncelleniyor; göstergeler sitenin kendi verisinden hesaplanıyor.", href: "/teknik-analiz" },
       // 1fb55872
-      { kind: "yeni", area: "piyasa", title: "Nereden Alınır, Nerede Vazgeçilir", body: "Plan şeridi bu üç soruyu doğrudan cevaplıyor, fiyat haritası da seviyeleri fiyata orantılı bir eksende gösteriyor.", href: "/teknik/NVDA" },
+      { kind: "yeni", area: "piyasa", title: "Nereden Alınır, Nerede Vazgeçilir", body: "Plan şeridi bu üç soruyu doğrudan cevaplıyor, fiyat haritası da seviyeleri fiyata orantılı bir eksende gösteriyor.", href: "/teknik-analiz/NVDA" },
       // be29fef5
-      { kind: "yeni", area: "piyasa", title: "Görüş Dağılımı", body: "Teknik analiz listesinin başında kaç hissenin Al, Tut ya da Sat dediği görülüyor ve liste görüşe göre süzülebiliyor.", href: "/teknik" },
+      { kind: "yeni", area: "piyasa", title: "Görüş Dağılımı", body: "Teknik analiz listesinin başında kaç hissenin Al, Tut ya da Sat dediği görülüyor ve liste görüşe göre süzülebiliyor.", href: "/teknik-analiz" },
       // 9e215d0c, d33c2952
       { kind: "iyilestirme", area: "icerik", title: "Tek Şeritlik Başlık", body: "Masaüstü başlık sadeleşti; ana sekmeler tek satırda, öteki sayfalar Daha Fazla menüsünde." },
       // 38c93cad

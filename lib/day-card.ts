@@ -16,7 +16,7 @@ import {
  * hareketlerinin HANGİ SEANSI anlattığı.
  */
 
-/** Adresin "bugün" takma adı — `/gun/bugun/kart` her gün günün kartı. */
+/** Adresin "bugün" takma adı — `/seans-silueti/bugun/kart` her gün günün kartı. */
 const TODAY_ALIAS = "bugun";
 
 /** Kabul edilen tarih penceresi: bugünden bu kadar gün geri ve ileri. */
@@ -28,7 +28,7 @@ const ISO_DATE = /^\d{4}-\d{2}-\d{2}$/;
 /**
  * Adresteki tarihi ET gününe çevirir; geçersizse `null` (rota 404 verir).
  *
- * PENCERE VAR: sınırsız bir tarih kabul edilseydi `/gun/1900-01-01/kart`
+ * PENCERE VAR: sınırsız bir tarih kabul edilseydi `/seans-silueti/1900-01-01/kart`
  * gibi binlerce adres her biri ayrı bir görsel çizimi tetikleyebilirdi.
  * Bir yıldan eski kart paylaşılmıyor, bir aydan uzak gelecekte takvim boş.
  */

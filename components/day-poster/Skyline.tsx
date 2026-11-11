@@ -10,7 +10,7 @@ import { SkyScene } from "./SkyScene";
 import styles from "./Skyline.module.css";
 
 /**
- * GÜNÜN SİLUETİ — posterin büyük sahnesi (`/gun/[tarih]`, `/gun`). Sahne
+ * GÜNÜN SİLUETİ — posterin büyük sahnesi (`/seans-silueti/[tarih]`, `/seans-silueti`). Sahne
  * ana sayfanın şeridiyle ORTAK (`SkyScene.tsx`: gök, yansıma, pencere
  * ritmi, logo karosu, ipucu, klavye, giriş; gerekçeler orada); bu bileşen
  * sayfanın dört düzenini seçiyor ve altına tablo ikizini koyuyor.

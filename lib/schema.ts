@@ -104,7 +104,7 @@ export const userAvatars = pgTable("user_avatars", {
 });
 
 /**
- * HERKESE AÇIK PROFİL (15 Ekim) — /u/[username] sayfasının ayarları.
+ * HERKESE AÇIK PROFİL (15 Ekim) — /uye/[username] sayfasının ayarları.
  *
  * VARSAYILAN GİZLİ: satır yoksa ya da `is_public` false ise profil sayfası
  * 404 verir — "kullanıcı var ama gizli" ile "kullanıcı yok" dışarıdan
@@ -1735,7 +1735,7 @@ export const appErrors = pgTable(
     day: date("day").notNull(),
     /** "server" | "client" */
     kind: text("kind").notNull(),
-    /** Rota şablonu: "/hisse/[symbol]", "/en/teknik/[symbol]". */
+    /** Rota şablonu: "/hisse/[symbol]", "/en/teknik-analiz/[symbol]". */
     route: text("route").notNull(),
     /** Next'in hata kimliği — okuyucunun hata ekranında gördüğü değer. */
     digest: text("digest"),

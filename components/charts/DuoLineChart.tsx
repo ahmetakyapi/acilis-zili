@@ -22,7 +22,7 @@ import styles from "./DuoLineChart.module.css";
  * X EKSENİ İNDİS, TAKVİM DEĞİL: her işlem günü eşit genişlikte (fiyat
  * grafiklerinin alışılmış dili); hafta sonları boşluk açmıyor. Tarih
  * etiketleri sunucuda biçimlenip geliyor — profilde YALNIZ AY (KVKK: alış
- * günü gösterilmez, gerekçe app/(app)/u/[username]/page.tsx).
+ * günü gösterilmez, gerekçe app/(app)/uye/[username]/page.tsx).
  *
  * OKUMA: imleçle, dokunuşla ve KLAVYEYLE (odaklan, ←/→, Home/End). Okuma
  * ayrı bir `role="status"` bölgesiyle duyuruluyor. Giriş: çizgiler soldan çiziliyor, alan sonra

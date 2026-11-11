@@ -14,7 +14,7 @@ import { DAILY_CHART_OG_SIZES, DailyChartOgCard, type DailyChartOgSize } from "@
  * ROUTE HANDLER, DOSYA TABANLI OG DEĞİL — `bilancolar/hafta/gorsel` ile aynı
  * gerekçe: dil adresin önekinden geliyor (`/en/...` İngilizce kart), boyut
  * sorgudan. `/api` altında değil: `robots.txt` `/api/`i engelliyor ve X'in
- * kart botu ona uyuyor (`/gun/[tarih]/kart` notu).
+ * kart botu ona uyuyor (`/seans-silueti/[tarih]/kart` notu).
  *
  * Kayıt değişmiyor (günün grafiği arşivlik); panel düzeltmesi bir saat içinde
  * görsele yansır.

@@ -942,8 +942,8 @@
 @media (min-width: 1024px) { .reportNav { --nav-lead-max: 340px; } }
 
 /* Sekmelerin önündeki "01 … 05" sayacı kalktı (23 Eylül): sıra
-   bildirmeyen bir süs — /teknik'teki "01" karosuyla aynı karar
-   (app/(app)/teknik/page.tsx) ve tasarım becerisinin §9.F maddesi. */
+   bildirmeyen bir süs — /teknik-analiz'deki "01" karosuyla aynı karar
+   (app/(app)/teknik-analiz/page.tsx) ve tasarım becerisinin §9.F maddesi. */
 .reportNav a[aria-current="location"] {
   color: var(--primary-ink);
 }

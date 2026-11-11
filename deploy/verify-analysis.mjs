@@ -42,7 +42,7 @@ try {
   console.log("Unauthenticated access and cross-origin generation: rejected.");
   phase = "page visibility";
   // Raporları herkes okur; üretim düğmesi yalnız yetkili hesapta (Yeni Analiz sekmesi).
-  for (const path of ["/hisse-secimi/NVDA", "/teknik/nvda", "/claude/NVDA"]) {
+  for (const path of ["/hisse-secimi/NVDA", "/teknik-analiz/nvda", "/claude/NVDA"]) {
     assert.equal((await fetch(`${base}${path}`, { headers: authorized })).status, 200);
     assert.equal((await fetch(`${base}${path}`, { headers })).status, 200);
   }

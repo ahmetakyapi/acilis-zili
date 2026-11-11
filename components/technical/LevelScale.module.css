@@ -13,7 +13,7 @@
    Buradaki eski kurallar (`.leg` yön şeritleri, renkli `.tick`, 14
    piksellik fiyat noktası, `scale-leg` / `scale-cursor` keyframes) silindi;
    bant kart rayı ve merdivenle aynı reçete (14 piksel, yarıçap 5, yıkama +
-   iç kenar — 10 Kasım "tek çizim ailesi"). Ölçüldü (/teknik/NVDA, MU, AAPL;
+   iç kenar — 10 Kasım "tek çizim ailesi"). Ölçüldü (/teknik-analiz/NVDA, MU, AAPL;
    1440, iki tema): kulvar 5, çubuk 8, eksen kutusu ve sayfa boyu aynı. */
 .axis > .lane { position:absolute; top:40px; right:0; left:0; --notch-out:4.5px; }
 .band { position:absolute; top:35.5px; height:14px; border-radius:5px; background:linear-gradient(var(--primary-wash), var(--primary-wash)), var(--premium-surface); box-shadow:inset 0 0 0 1px var(--primary-faint); }

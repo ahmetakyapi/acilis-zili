@@ -39,7 +39,7 @@
    "içe aktarılmadı, yeniden kuruldu" kopyası SİLİNDİ: başlık, sıralama imi,
    kimlik, kalın çubuk, sayı ölçüleri, satır cevabı ve künye
    components/markets/BoardTable.module.css'ten (panel `board.panel` +
-   `data-fit="lg"`, app/(app)/tema/[slug]/page.tsx). Kullanılmayan
+   `data-fit="lg"`, app/(app)/temalar/[slug]/page.tsx). Kullanılmayan
    `.capLane/.capTick/.capDot/.capAxis` (onluk eksen, sabah kalkmıştı) da
    gitti. Bu modülde yalnız BU tablonun sütunları: fazla genişlik Değişim
    şeridine gider (`--day-lane` esnek), sayı sütunları içeriği kadar.

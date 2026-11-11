@@ -66,7 +66,7 @@ export function TechnicalPulse({
   locale: Locale;
   /**
    * Balonun canlı fiyatı — SAYFANIN KENDİ kotasyon paketi. Yeni bir tur
-   * açılmıyor: /teknik kartların paketini, ana sayfa hareket panelinin
+   * açılmıyor: /teknik-analiz kartların paketini, ana sayfa hareket panelinin
    * paketini veriyor. Pakette olmayan sembol (ya da paket düşmüşse hepsi)
    * fotoğraftaki fiyata ve "Analiz Anında" etiketine düşüyor. Etiket
    * kartla aynı fonksiyondan (`livePriceLabel`): paket bayatsa ya da
@@ -348,13 +348,13 @@ export function TechnicalPulse({
                 <b>{group.rows.length}</b>
               </span>
               {/* BALON BURADA, KARTTA DEĞİL. Kimlik balonu 22 Eylül'e kadar
-                  /teknik kartlarının başlığında açılıyordu; kart kimliği zaten
+                  /teknik-analiz kartlarının başlığında açılıyordu; kart kimliği zaten
                   gösteriyor ve balon aynı bilgiyi ikinci kez veriyordu. Logo
                   ise yalnızca bir resim — okuyucu dağılımda bir hisseyi
                   ararken adı, sektörü ve fiyatı burada istiyor.
 
                   FİYAT SAYFANIN PAKETİNDEN (`quotes`). Balon bir süre
-                  fotoğraftaki fiyatı yazıyordu: /teknik 1440'ta balon
+                  fotoğraftaki fiyatı yazıyordu: /teknik-analiz 1440'ta balon
                   "Analiz Anında 1.081,31 $", hemen altındaki MU kartı
                   "Şu An 1.081,58 $" diyordu — aynı ekranda aynı hissenin iki
                   fiyatı, iki kaynaktan. */}

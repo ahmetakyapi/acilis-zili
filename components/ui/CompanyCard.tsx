@@ -14,7 +14,7 @@ import styles from "./CompanyCard.module.css";
    değişim.
 
    TEK KART, OLAY DELEGASYONU (28 Eylül). Eskiden üç ayrı balon vardı:
-   /teknik dağılımının şirket balonu (her logo kendi hazır işaretlemesini
+   /teknik-analiz dağılımının şirket balonu (her logo kendi hazır işaretlemesini
    sunucudan taşıyordu, sayfa başına ~2 KB gzip), tema haritasının künye
    kartı (`data-peek` JSON'u + tek istemci kartı) ve /piyasalar ısı
    haritasının hücre başına sunucuda çizilen kartları (30 hücre × tam kart
@@ -170,7 +170,7 @@ const SWAP_WINDOW_MS = 240;
  * alt çubuk.
  *
  * Ölçüldü (22 Eylül, 900 piksel yükseklik): bant masaüstünde 77-855,
- * telefon genişliğinde 77-812 (sekme çubuğu 820'de başlıyor). /teknik
+ * telefon genişliğinde 77-812 (sekme çubuğu 820'de başlıyor). /teknik-analiz
  * 1440'ta MU logosu 199-231, balon altında 240-447; ana sayfada logo 760'a
  * kaydırılınca balon üstte 542-749. 320'de balon 12-308, iki yanda 12
  * piksel. TR/EN × açık/koyu × 1440/1024/768/390/320 matrisinde her

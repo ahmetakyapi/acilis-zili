@@ -227,7 +227,7 @@ export const NAV_ITEMS: NavItem[] = [
        dar ekranda hangi sekmenin önce "Daha Fazla"ya ineceği ayrı bir karar.
        Şeritteki ad `nav.technical` — TR "Teknik Analiz", EN "Technicals";
        İngilizce tam ad ("Technical Analysis") 1024'te aralığı daraltıyordu. */
-    href: "/teknik",
+    href: "/teknik-analiz",
     label: (t) => t.technical.title,
     icon: ChartLineUp,
     inBottomBar: false,
@@ -305,7 +305,7 @@ export const NAV_ITEMS: NavItem[] = [
        "Daha Fazla"daydı; ana sayfaya tema bandı gelince her gün bakılan bir
        ekran oldu. Şeritte kısa ad ("Temalar"), taşıp panele inerse tam ad.
        Sığma ölçüsü aşağıda, nav-items başındaki tablonun altında. */
-    href: "/tema",
+    href: "/temalar",
     label: (t) => t.themes.eyebrow,
     icon: SquaresFour,
     inBottomBar: false,
@@ -418,7 +418,7 @@ export const NAV_ITEMS: NavItem[] = [
        sahibinin isteği): Portföy sütununun beşinci satırıydı, sütun
        ötekilerden uzun kalıyordu. Erişimi olanda bant dört karo, olmayanda
        eski üç karo; sütunlar her iki durumda eşit dört satır. */
-    href: "/risk",
+    href: "/risk-masasi",
     label: (t) => t.riskDesk.nav.label,
     icon: Gauge,
     inBottomBar: false,
@@ -450,7 +450,7 @@ export const NAV_ITEMS: NavItem[] = [
   {
     /* GÜNÜN POSTERİ ve GÜNÜN GRAFİĞİ (24 Ekim) — "Her Gün"ün başında:
        ikisi de her seansın sonunda yenilenen tek parça. */
-    href: "/gun",
+    href: "/seans-silueti",
     label: (t) => t.daySignature.poster.title,
     icon: Palette,
     inBottomBar: false,

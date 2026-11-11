@@ -18,7 +18,7 @@ import { RankBars, type RankRow } from "./RankBars";
  * Sektörler ve Temalar — ana sayfanın iki kolonunun altındaki tam
  * genişlik bant (28 Eylül).
  *
- * NEDEN BU İKİSİ, NEDEN BİRLİKTE. Sahibi `/tema`nın sıralamasını ana
+ * NEDEN BU İKİSİ, NEDEN BİRLİKTE. Sahibi `/temalar`ın sıralamasını ana
  * sayfada da görmek istedi ve "başka gösterebileceğimiz şeyler" sordu.
  * Adaylar tartıldı (Piyasa Nabzı zaten Portföy yuvasında, emtia şeridi ve
  * temettü birer liste daha, haftalık bilanço duvarı sağ kolondaki "Haftaya
@@ -37,7 +37,7 @@ import { RankBars, type RankRow } from "./RankBars";
  *
  * VERİ. Sektörler `/piyasalar`ın AYNI kotasyon anahtarından
  * (`loadBoardQuotes`: sektör + emtia + kripto fonları tek tur), temalar
- * `/tema`nın AYNI hesabından (`loadThemeBoard`). Yeni bir anahtar yok; iki
+ * `/temalar`ın AYNI hesabından (`loadThemeBoard`). Yeni bir anahtar yok; iki
  * ekran aynı yüzdeyi yazıyor. İkisi de kendi Suspense sınırında akıyor ve
  * yedekleri gerçek ızgarayla aynı şekli basıyor (CLS 0).
  *
@@ -61,7 +61,7 @@ import { RankBars, type RankRow } from "./RankBars";
  * Yerleşim ölçülerek seçildi; ölçüm MarketTexture.module.css → "ÖLÇÜM 10
  * KASIM". Silinen parçalar: `components/themes/ThemeRanking.tsx`,
  * `ThemeVisuals.tsx` → `SpreadStrip`, `Themes.module.css` → `.rank*`,
- * `.spread*`, `.tick*` (yalnız bu bant kullanıyordu; /tema ekranları
+ * `.spread*`, `.tick*` (yalnız bu bant kullanıyordu; /temalar ekranları
  * `ThemeBoard` ve `ThemeStrip`e geçmişti).
  */
 
@@ -322,7 +322,7 @@ const rankTitleOf = (phase: ThemePhase | null, t: Dictionary) =>
   phase === "pre-market" ? t.themes.rankTitlePre : phase === "lastClose" ? t.themes.rankTitleClose : t.themes.rankTitle;
 
 /**
- * Temaların sırası — medyana göre, `/tema`nın AYNI hesabından. Çubuk
+ * Temaların sırası — medyana göre, `/temalar`ın AYNI hesabından. Çubuk
  * yalnızca aynı seansı anlatan medyanlara basılıyor; ortak kümenin DIŞINDA
  * kalan tema (bu seansta hiç işlem görmemiş, yüzdesi son kapanışı anlatan)
  * listenin dibinde SAYISIZ duruyor: bir önceki günün medyanını bugünün
@@ -339,7 +339,7 @@ function themeRows(cards: readonly ThemeCard[], basis: "session" | "lastClose" |
     : cards;
   return sorted.map((card) => ({
     key: card.theme.slug,
-    href: `/tema/${card.theme.slug}`,
+    href: `/temalar/${card.theme.slug}`,
     name: themeTitle(card.theme, locale),
     value: inScale(card) ? card.median : null,
     bar: inScale(card),
@@ -515,7 +515,7 @@ function ThemeFrame({
           meta={meta}
           breadth={breadth}
           link={
-            <PanelLink href="/tema" className={styles.partLink}>
+            <PanelLink href="/temalar" className={styles.partLink}>
               {t.today.themesLink}
             </PanelLink>
           }
@@ -557,7 +557,7 @@ function ExtremeCard({
   const flat = Math.max(0, card.points.length - up - down);
   const split = card.up !== null && card.points.length > 0;
   return (
-    <Link href={`/tema/${card.theme.slug}`} prefetch={false} className={styles.extreme} data-tone={tone}>
+    <Link href={`/temalar/${card.theme.slug}`} prefetch={false} className={styles.extreme} data-tone={tone}>
       <span className={styles.extremeHead}>
         <span className={styles.extremeId}>
           <span className={styles.extremeTop}>
@@ -612,7 +612,7 @@ function ExtremeCard({
             {/* Telefonda yarım kart (130 piksel): "10 Üye Yükseliyor" iki
                 satıra kırılıyordu (ölçüldü, kart 263). Kısa söz denendi
                 ("10 Yükselen"): TR sığdı, EN ("10 Advancers · 7 Decliners")
-                yine kırıldı. Telefonda söz yerine yön OKU — /tema panosunun
+                yine kırıldı. Telefonda söz yerine yön OKU — /temalar panosunun
                 satırındaki "↑ 10 · ↓ 7" ile aynı im, iki dilde tek satır. */}
             <span className="text-up">
               <ArrowUp weight="bold" size={12} className={styles.splitIcon} />

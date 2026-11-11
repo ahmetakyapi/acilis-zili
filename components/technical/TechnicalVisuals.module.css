@@ -3,7 +3,7 @@
    kulvarı: `--line-soft` üstünde 5 piksellik şerit, ince çentikler; renk
    yalnız yön (hedef `--up`, stop ve satış `--down`), fiyat çubuğu nötr.
    ALIM BÖLGESİ TEK SINIF (25 Ekim): `.zoneBand` — alım planının yumuşak
-   yeşili. `/teknik/[symbol]` Görüş Geçmişi'nin "Planın Seyri" şeridi aynı
+   yeşili. `/teknik-analiz/[symbol]` Görüş Geçmişi'nin "Planın Seyri" şeridi aynı
    sınıfı kullanıyor; orada bölge görüşe göre maviydi, aynı bölge iki
    ekranda iki renkti. Görüş başlıkları görüş üçlüsünde (AL yeşil, TUT
    pirinç, SAT kırmızı — `verdictTextClass`, lib/analysis.ts).
@@ -169,7 +169,7 @@
   .inline { animation:none; }
 }
 
-/* ---- Senaryo rayı (/teknik/[symbol]) ----
+/* ---- Senaryo rayı (/teknik-analiz/[symbol]) ----
    Kap, iz, nokta ve uzaklık satırı Claude ekranının senaryo ekseninden
    (`components/ai/AnalysisVisuals.module.css` → `.axis*`); burada yalnız
    iki uçlu kulvar parçaları, sonraki durak çentikleri ve zincir. */

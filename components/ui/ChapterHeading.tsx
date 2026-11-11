@@ -16,7 +16,7 @@ import { cn } from "@/lib/utils";
  *   Beklentiler" diye açılıyordu; okuyucu tıkladığı yeri başka bir adla
  *   buluyordu.
  * - Sıra numarası yok ("01 · …"): tasarım becerisinin §9.F maddesi ve
- *   /teknik'te 23 Eylül'de kaldırılan "01" karosu ("sıra bildirmeyen bir
+ *   /teknik-analiz'de 23 Eylül'de kaldırılan "01" karosu ("sıra bildirmeyen bir
  *   süs") aynı kararı veriyor.
  * - İkon yok.
  * - `dek` isteğe bağlı TEK SATIRLIK bir VERİ cümlesi ("F/K 28,95 ·

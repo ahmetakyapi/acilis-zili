@@ -914,7 +914,7 @@ const tr = {
     openAnalysisAria: "{company} analizini aç",
   },
 
-  /* Teknik analiz — /teknik ve /teknik/[sembol].
+  /* Teknik analiz — /teknik-analiz ve /teknik-analiz/[sembol].
      Görüş etiketleri (AL/TUT/SAT) `analysis` bloğundan okunuyor: aynı karar,
      aynı sözlük. Burada yalnızca bu ekranlara özgü olanlar var. */
   technical: {
@@ -2284,7 +2284,7 @@ const tr = {
   },
 
   /* Hakkında ve Metodoloji (`/hakkinda`), gömülü parçalar (`/gomulu/*`) ve
-     Açılış Kartı (`/gun/[tarih]/kart`). Üçü de sitenin kendini dışarıya
+     Açılış Kartı (`/seans-silueti/[tarih]/kart`). Üçü de sitenin kendini dışarıya
      anlattığı yüzeyler; tek ad alanında duruyorlar. */
   about: {
     metaTitle: "Hakkında ve Metodoloji",
@@ -4402,7 +4402,7 @@ const tr = {
     signedOut: "Oturum bulunamadı. Tekrar giriş yap.",
     failed: "Şifre şu an değiştirilemedi; biraz sonra tekrar dene.",
   },
-  /* HERKESE AÇIK PROFİL (15 Ekim) — /u/[kullanici] sayfası ve Ayarlar'daki
+  /* HERKESE AÇIK PROFİL (15 Ekim) — /uye/[kullanici] sayfası ve Ayarlar'daki
      panel. Varsayılan gizli; gerekçe lib/schema.ts → userProfiles. */
   profile: {
     title: "Profil",
@@ -4446,7 +4446,7 @@ const tr = {
     },
     settings: {
       title: "Herkese Açık Profil",
-      hint: "Profilin kapalı başlar ve sen açmadan kimseye görünmez. Açarsan /u/kullanıcı-adın adresinde yalnızca burada işaretlediğin bloklar yayımlanır.",
+      hint: "Profilin kapalı başlar ve sen açmadan kimseye görünmez. Açarsan /uye/kullanıcı-adın adresinde yalnızca burada işaretlediğin bloklar yayımlanır.",
       bioLabel: "Tanıtım",
       bioLimit: "En çok {n} karakter.",
       bioPlaceholder: "Kendini bir iki cümleyle anlat; boş da bırakabilirsin.",
@@ -4492,7 +4492,7 @@ const tr = {
     rejectedTitle: "Yazın Geri Gönderildi",
     rejectedBody: "\u201C{title}\u201D için moderasyon notu var; düzeltip yeniden gönderebilirsin.",
   },
-  /* ZİL RAPORU (15 Ekim; 25 Ekim karne düzeni) — /raporum; gerekçe lib/report-data.ts ve components/report/BellReport.tsx. */
+  /* ZİL RAPORU (15 Ekim; 25 Ekim karne düzeni) — /zil-raporu; gerekçe lib/report-data.ts ve components/report/BellReport.tsx. */
   bellReport: {
     title: "Zil Raporu",
     subtitle: "Açılış Zili'ndeki kaydının özeti; her sayı senin verinden, hiçbiri tahmin değil.",
@@ -5076,7 +5076,7 @@ const tr = {
   changelog: changelogTr,
   /* Şirket ekranlarının kısa yolları (25 Ekim UX turu) — metin ayrı dosyada. */
   stockEntry: stockEntryTr,
-  /* Teknik analiz görselleri (25 Ekim, görsel zirve turu): /teknik tepesindeki
+  /* Teknik analiz görselleri (25 Ekim, görsel zirve turu): /teknik-analiz tepesindeki
      plan atlası ve detay sayfasındaki senaryo rayı. Cümle şablonları
      `lib/technical-visuals.ts` → `atlasSentence`. */
   technicalVisuals: {

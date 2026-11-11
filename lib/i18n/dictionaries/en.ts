@@ -3843,7 +3843,7 @@ const en: typeof tr = {
     },
     settings: {
       title: "Public Profile",
-      hint: "Your profile starts private and stays invisible until you open it. Once public, only the blocks you check here are published at /u/your-username.",
+      hint: "Your profile starts private and stays invisible until you open it. Once public, only the blocks you check here are published at /uye/your-username.",
       bioLabel: "About",
       bioLimit: "At most {n} characters.",
       bioPlaceholder: "Describe yourself in a sentence or two; you can leave it empty.",

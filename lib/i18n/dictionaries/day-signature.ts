@@ -1,6 +1,6 @@
 /**
  * `daySignature` ad alanı — "Zil ve Günün İmzası" (24 Ekim): Günün Posteri
- * (`/gun/[tarih]`, `/gun`), siluetin kendisi (`skyline`, 25 Ekim), ana
+ * (`/seans-silueti/[tarih]`, `/seans-silueti`), siluetin kendisi (`skyline`, 25 Ekim), ana
  * sayfanın son seans şeridi (`strip`) ve zil sesi anahtarı. Sözlüğün parçası (tr.ts / en.ts bunu `daySignature`
  * anahtarına koyuyor) ama ayrı dosyada, `datePicker` gibi: özellik tek
  * yerde okunuyor ve sözlüğün ortasına serpiştirilmiyor.

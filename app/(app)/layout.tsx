@@ -200,7 +200,7 @@ export default async function AppLayout({
              key … Check the render method of `AppShell`. It was passed a
              child from AppLayout." Bu öğe AppShell'in kök `div`inin sabit
              (`jsxs`) çocuk listesinde duruyor; React o listeyi doğrulanmış
-             sayıyor, ama RSC yükü büyüyünce (menüye /gun, dalda /bulmaca
+             sayıyor, ama RSC yükü büyüyünce (menüye /seans-silueti, dalda /bulmaca
              eklenince) bu Suspense öğesi ayrı bir parçaya çıkıp tembel
              (lazy) referans olarak geliyor ve çözülen öğenin doğrulama
              işareti 0 kalıyor. Anahtarsız + işaretsiz öğe uyarıyı

@@ -13,7 +13,7 @@ import type { Locale } from "@/lib/i18n";
 import { getPublishedPostsByUser } from "@/lib/user-post-data";
 
 /**
- * ZİL RAPORU (15 Ekim) — /raporum'un tek okuma yolu.
+ * ZİL RAPORU (15 Ekim) — /zil-raporu'nun tek okuma yolu.
  *
  * Rapor BEYAN DEĞİL KAYIT: her sayı hesabın kendi verisinden (üyelik günü,
  * takip listeleri, alarmlar, portföy — vitrinin aynı hesabı) ya da piyasa

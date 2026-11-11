@@ -36,7 +36,7 @@ export async function GET(request: Request) {
      tarihi kabul ettiği için yüz binlerce ayrı adres var ve her biri
      önbellek ıskası (`Cache-Control: public` kökte işe yaramıyor: Caddy
      önbelleklemiyor). Tek döngü tek Node sürecini çizime kilitleyebiliyordu.
-     Kardeşi `/gun/[tarih]/kart` aynı gerekçeyle sınırlı (15 Ekim); sayfanın
+     Kardeşi `/seans-silueti/[tarih]/kart` aynı gerekçeyle sınırlı (15 Ekim); sayfanın
      her görüntülenmesi İKİ görsel istediği için (yatay + dikey) sınır onun
      30'unun üstünde: haftalar arasında gezinen okuyucuya bol. */
   const gate = rateLimit(clientKey(request, "hafta-gorsel"), 40, 60_000);

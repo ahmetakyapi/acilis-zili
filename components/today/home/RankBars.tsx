@@ -86,7 +86,7 @@ export function RankBars({
   const ranked = values.length;
   /* Telefonda açık satırlar değeri olanların iki ucu; yedekte (hiç değer
      yok) baştan aynı sayıda satır — katlı kutu veri gelmeden de son
-     boyunda (25 Ekim, /tema). Çubuksuz satırlar sıralamanın dibinde ve uç
+     boyunda (25 Ekim, /temalar). Çubuksuz satırlar sıralamanın dibinde ve uç
      sayılmıyor: ön seansta "en zayıf üç" yerine üç tire görünüyordu. */
   const phoneShown = (index: number) =>
     ranked > 0 ? index < phoneEnds || (index >= ranked - phoneEnds && index < ranked) : index < phoneEnds * 2;

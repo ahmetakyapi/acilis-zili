@@ -91,13 +91,13 @@ function paginate(groups: TickerGroup[], wide: boolean): Page[] {
 
 /**
  * GEÇMİŞ BİR SEANSI ANLATAN SAYFALAR (25 Ekim) — Günün Posteri,
- * `/gun`, `/gun/2026-10-23` ve `/en/…` karşılıkları. Poster dört endeksi O GÜNÜN
+ * `/seans-silueti`, `/seans-silueti/2026-10-23` ve `/en/…` karşılıkları. Poster dört endeksi O GÜNÜN
  * kapanışıyla yazıyor; şerit aynı fonları ŞİMDİKİ kotasyonla (kapanıştan
  * sonra akşam seansı dahil) basınca aynı ekranda "QQQ +%0,06" ile
  * "−%0,01" yan yana duruyordu (CLAUDE.md "Veri dürüstlüğü" 3). Bu
  * sayfalarda endeks grubu döngüden çıkıyor; tahvil ve kur kalıyor.
  */
-const CLOSED_SESSION_PAGE = /^(?:\/en)?\/gun(?:\/\d{4}-\d{2}-\d{2})?\/?$/;
+const CLOSED_SESSION_PAGE = /^(?:\/en)?\/seans-silueti(?:\/\d{4}-\d{2}-\d{2})?\/?$/;
 
 /** Ana sayfanın kahramanı — endeksleri zaten büyük puntoyla gösteren blok. */
 const HERO_ID = "piyasa-ozeti";

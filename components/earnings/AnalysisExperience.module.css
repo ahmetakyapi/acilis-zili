@@ -56,7 +56,7 @@
 
 /* ---- Öne çıkan kart ----
    Derinlik TONLA: radyal süs ve gölge kalktı (sitenin kart kuralı). Büyük
-   bağlantı kartlarının ortak hover kuralı /teknik kartlarıyla aynı:
+   bağlantı kartlarının ortak hover kuralı /teknik-analiz kartlarıyla aynı:
    kalkma yok, gölge değişimi yok; kenar `--primary-faint`e döner, ok bir
    adım kayar. Ad altı çizilir, hap dolar — hangi yüzeyin bağlantı olduğunu
    hareket değil ton söylüyor.

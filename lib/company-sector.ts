@@ -8,7 +8,7 @@ import { industryLabel, sectorGroupOf, sectorLabel } from "@/lib/sectors";
  * Bir şirketin ekranda yazılacak sektörü — tercih sırası TEK YERDE.
  *
  * GICS ana sektörü (endeks tohumundan) varsa o, yoksa sağlayıcının serbest
- * metinli `industry` alanı. Sıra bir dönem /teknik kartında ve /hisse
+ * metinli `industry` alanı. Sıra bir dönem /teknik-analiz kartında ve /hisse
  * künyesinde ayrı ayrı yazılıydı; iki ekranın aynı şirket için ayrı sektör
  * adı yazması bir hata gibi okunurdu.
  *

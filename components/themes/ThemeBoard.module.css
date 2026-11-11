@@ -1,5 +1,5 @@
 /* ==========================================================================
-   Temalar panosu ve dizin kapağının özeti — `/tema` (10 Kasım 2026)
+   Temalar panosu ve dizin kapağının özeti — `/temalar` (10 Kasım 2026)
 
    Karar kaydı components/themes/ThemeBoard.tsx başında. Satır cevabı ton +
    sol kenarda 3 piksel mavi, hareket yalnız okta. Derinlik tonla; gölge
@@ -227,7 +227,7 @@
 }
 
 /* ==========================================================================
-   Dizin kapağının özeti — gerekçe app/(app)/tema/page.tsx → HeroSummary.
+   Dizin kapağının özeti — gerekçe app/(app)/temalar/page.tsx → HeroSummary.
 
    TARİHÇE: 29 Eylül tek çukur yüzey (yön oranı, iki uç tema, aralarındaki
    fark; iki uç kutusunda 28–36 puntoluk medyan, logolar, ad; kapsayıcı

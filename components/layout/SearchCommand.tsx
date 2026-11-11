@@ -502,7 +502,7 @@ export function SearchCommand({
      teknik analiz. İkisi de aynı düz listede, ok tuşu ikisinden de geçer. */
   const hitRows = shownHits.flatMap((hit) => [
     { hit, kind: "stock" as const, href: `/hisse/${hit.symbol}` },
-    ...(hit.technical ? [{ hit, kind: "technical" as const, href: `/teknik/${hit.symbol}` }] : []),
+    ...(hit.technical ? [{ hit, kind: "technical" as const, href: `/teknik-analiz/${hit.symbol}` }] : []),
   ]);
   const navItems = [
     ...hitRows.map((row) => row.href),

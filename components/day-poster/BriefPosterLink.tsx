@@ -15,7 +15,7 @@ export async function BriefPosterLink({ date, t }: { date: string; t: Dictionary
   return (
     <p className="mt-6 border-t border-primary-faint pt-3">
       <Link
-        href={`/gun/${date}`}
+        href={`/seans-silueti/${date}`}
         className="inline-flex min-h-11 items-center gap-1.5 text-small font-semibold text-primary transition-colors hover:text-primary-hover sm:min-h-0"
       >
         {t.daySignature.brief.posterLink}

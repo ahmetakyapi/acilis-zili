@@ -17,7 +17,7 @@ import { RouteProgress } from "./RouteProgress";
 import { NAV_ITEMS, isActive } from "./nav-items";
 
 /** Alt çubukta "Piyasa" sekmesini yakan ekranlar. */
-const MARKET_FAMILY = ["/hisse", "/sirketler", "/teknik", "/tema", "/karsilastir", "/makro", "/yatirimcilar"] as const;
+const MARKET_FAMILY = ["/hisse", "/sirketler", "/teknik-analiz", "/temalar", "/karsilastir", "/makro", "/yatirimcilar"] as const;
 
 export type ShellLabels = {
   brandName: string;

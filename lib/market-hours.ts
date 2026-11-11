@@ -620,7 +620,7 @@ export function quoteBasis(
  *     olağan saat işlemi hâlâ `session`; yüzde o seansı anlatıyor ama değer
  *     artık "Seans İçi" değil, seansın kapanışı → `sessionClose`.
  *   - Paket bugüne ait ama yaşlıysa (`QuoteResult.stale`, bkz. `packCurrent`)
- *     "şimdi" iddiası düşüyor → `lastPrice` (/teknik'in `livePriceLabel`ı ile
+ *     "şimdi" iddiası düşüyor → `lastPrice` (/teknik-analiz'in `livePriceLabel`ı ile
  *     aynı ad). Önceki seansı anlatan `lastClose` yaştan bağımsız kalıyor.
  * Yön rengi yalnızca `session`, `sessionClose`, `pre-market`, `after-hours`
  * için: `lastPrice` ve `lastClose` "bugün, şimdi" diyemiyor.

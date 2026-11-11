@@ -140,7 +140,7 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       `npm run db:migrate`; crontab satırını (`cron-bilanco.sh`) bu sürümün
       update.sh'ı İKİNCİ dağıtımda ekler (cron-alerts kuralı).
 - [x] **Migration 0032 (`user_profiles`) üretimde uygulanmalı.** Herkese açık
-      profil (varsayılan gizli). Tablo yokken `/u/[kullanici]` 404 verir ve
+      profil (varsayılan gizli). Tablo yokken `/uye/[kullanici]` 404 verir ve
       Ayarlar'daki Herkese Açık Profil paneli "şu an kaydedilemiyor" der
       (`lib/profile-data.ts`, `app/actions/profile.ts`). Üretim
       `DATABASE_URL`iyle `npm run db:migrate`.
@@ -207,7 +207,7 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       favori → hesap silme akışı `SMOKE_ALLOW_WRITES=1` ile gerçek bir
       veritabanına karşı bir kez bile koşmadı.
 - [x] **Teknik analiz rutini claude.ai'de kurulu** — tek görev, günde üç
-      koşu (`docs/claude-rutinler.md` § 5). `/teknik` canlıda dolu.
+      koşu (`docs/claude-rutinler.md` § 5). `/teknik-analiz` canlıda dolu.
 - [ ] (İsteğe bağlı) Neon şifresi + Finnhub anahtarı rotasyonu.
 
 ---

@@ -1390,7 +1390,7 @@ export function cityInk(row: SkyRow, stocks: readonly SkyStock[]): { districts: 
 export type SkyInk = { up: string; down: string; flat: string; horizon: string; water: string };
 
 /**
- * Durağan SVG — arşiv kartının minyatürü (`/gun/[tarih]/minyatur`). Yalnız
+ * Durağan SVG — arşiv kartının minyatürü (`/seans-silueti/[tarih]/minyatur`). Yalnız
  * binalar, su ve ufuk; yazı yok. Renkler çağırandan (dosya sayfanın CSS
  * değişkenlerini okuyamıyor).
  */

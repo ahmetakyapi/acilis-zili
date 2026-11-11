@@ -17,7 +17,7 @@ import dayStyles from "./DayPoster.module.css";
 import styles from "./PosterArchive.module.css";
 
 /**
- * GÜNÜN POSTERİ — en son seans ve arşiv, `/gun` (24 Ekim; 25 Ekim'de
+ * GÜNÜN POSTERİ — en son seans ve arşiv, `/seans-silueti` (24 Ekim; 25 Ekim'de
  * yeniden kuruldu).
  *
  * İLK SÜRÜM JENERİK BİR TABLOYDU: adı "Posterler" ama sayfada poster yoktu;
@@ -30,7 +30,7 @@ import styles from "./PosterArchive.module.css";
  *
  * ARŞİV KARTI POSTERİN KÜÇÜK HÂLİ (25 Ekim): günün silüetinin minyatürü
  * — Nasdaq 100'ün yüz binası, posterle aynı yerleşim — ve genişlik
- * şeridi. Minyatür statik bir SVG dosyası (`/gun/[tarih]/minyatur`,
+ * şeridi. Minyatür statik bir SVG dosyası (`/seans-silueti/[tarih]/minyatur`,
  * gerekçesi orada): kartlar `img` ile tembel yükleniyor, sayfanın HTML'i
  * otuz siluetin 3.000 binasını taşımıyor. Kutunun oranı sabit
  * (`object-fit: contain`), yani dosya gelince kart kaymıyor. Siluetin
@@ -126,7 +126,7 @@ async function ArchiveBody({ locale, t }: { locale: Locale; t: Dictionary }) {
           skyline={skyline}
           locale={locale}
           t={t}
-          action={<PanelLink href={`/gun/${latest.date}`}>{A.openPoster}</PanelLink>}
+          action={<PanelLink href={`/seans-silueti/${latest.date}`}>{A.openPoster}</PanelLink>}
         />
       </Panel>
 
@@ -160,7 +160,7 @@ function ArchiveCard({ poster, skyline, locale, t }: { poster: DayPoster; skylin
   const pct = (value: number) => formatPercent(value, locale);
   return (
     <Link
-      href={`/gun/${poster.date}`}
+      href={`/seans-silueti/${poster.date}`}
       className={styles.card}
       aria-label={A.cardLabel.replace("{date}", date).replace("{sentence}", story.sentence)}
     >
@@ -194,7 +194,7 @@ function ArchiveCard({ poster, skyline, locale, t }: { poster: DayPoster; skylin
              işlemiyor. Tembel yükleme `next/image`in varsayılanı. */
           <Image
             key={theme}
-            src={`/gun/${poster.date}/minyatur/${theme}`}
+            src={`/seans-silueti/${poster.date}/minyatur/${theme}`}
             alt=""
             width={MINI_W}
             height={MINI_H}

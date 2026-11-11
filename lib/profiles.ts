@@ -7,7 +7,7 @@
  * gelmez (gerekçe lib/avatars.ts).
  *
  * VARSAYILAN GİZLİ. Profil satırı olmayan ya da `isPublic: false` duran
- * hesap /u/... adresinde YOKMUŞ gibi görünür (404). Görünürlük KVKK'da
+ * hesap /uye/... adresinde YOKMUŞ gibi görünür (404). Görünürlük KVKK'da
  * açık rızaya bağlandı: anahtar Ayarlar'daki "Profilim Herkese Açık".
  */
 
@@ -35,7 +35,7 @@ export const PROFILE_DEFAULTS: ProfileSettings = {
 
 /**
  * Kullanıcı adının deseni — kayıttaki kuralın aynısı
- * (app/actions/auth.ts → usernameSchema). /u/[username] rotası parametreyi
+ * (app/actions/auth.ts → usernameSchema). /uye/[username] rotası parametreyi
  * sorguya vermeden önce bununla süzer: desene uymayan adres veritabanına
  * hiç gitmeden 404 olur.
  */

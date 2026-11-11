@@ -58,7 +58,7 @@ export const generateMetadata = pageMetadata({
 });
 
 /** Vurgulu karolar: Claude analizinin iki odağı (Teknik Analiz, Hisse Seçimi). */
-const FEATURED = new Set(["/teknik", "/hisse-secimi"]);
+const FEATURED = new Set(["/teknik-analiz", "/hisse-secimi"]);
 
 type Entry = {
   href: string;
@@ -124,7 +124,7 @@ export default async function MenuPage() {
       entries: [
         { href: "/favoriler", icon: Heart, title: t.nav.watchlist, hint: t.menu.hintWatchlist },
         { href: "/yazilarim", icon: PencilSimpleLine, title: t.community.mine.title, hint: t.menu.hintMyPosts },
-        { href: "/raporum", icon: BellRinging, title: t.bellReport.title, hint: t.menu.hintReport },
+        { href: "/zil-raporu", icon: BellRinging, title: t.bellReport.title, hint: t.menu.hintReport },
         { href: "/ayarlar", icon: Gear, title: t.nav.settings, hint: t.menu.hintSettings },
         { href: "/kvkk", icon: ShieldCheck, title: t.footer.privacy, hint: t.menu.hintPrivacy },
       ],

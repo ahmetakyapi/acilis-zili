@@ -80,7 +80,7 @@ export default async function TaxPage() {
           (`shareInTitle`) kapağın sağ kolonu üç bağlantıyla dolu olduğu için
           düğme sol kolonun ortasında, başlıkla bağlantılar arasında boşlukta
           yüzüyordu (sahibinin ekran görüntüsü). Görselli kapaklardaki gibi
-          (/tema/[slug]) açıklamanın altında, sola yaslı. */}
+          (/temalar/[slug]) açıklamanın altında, sola yaslı. */}
       <DirectoryHeader
         share={<PageShare path="/vergi" title={L.title} locale={locale} t={t} />}
         title={L.title}

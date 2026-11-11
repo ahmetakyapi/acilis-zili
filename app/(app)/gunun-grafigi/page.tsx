@@ -50,7 +50,7 @@ export default async function DailyChartIndexPage() {
   const [latest, ...archive] = rows;
   /* Boş durumun bağlantısı: son tamamlanmış seansın posteri. Okunamazsa
      arşiv sayfası (poster kendi tarihini orada seçtiriyor). */
-  const posterHref = latest ? null : await getLatestPosterDate().then((date) => `/gun/${date}`, () => "/gun");
+  const posterHref = latest ? null : await getLatestPosterDate().then((date) => `/seans-silueti/${date}`, () => "/seans-silueti");
   const [context, logos] = latest
     ? await Promise.all([getChartDayContext(latest.chartDate), getChartLogos(latest.chartMd, latest.locale)])
     : [null, {}];

@@ -52,7 +52,7 @@ export type PublicProfile = ProfileSettings & {
 };
 
 /**
- * /u/[username] sayfasının okuması. `null` üç durumu birden örter:
+ * /uye/[username] sayfasının okuması. `null` üç durumu birden örter:
  * kullanıcı yok, profil satırı yok, profil gizli. ÜÇÜNÜN DE CEVABI AYNI
  * (404) — "bu kullanıcı adı kayıtlı ama profili gizli" bilgisi, girişteki
  * sayım orakülü gibi (app/actions/auth.ts → DUMMY_HASH) dışarı sızmamalı.
@@ -131,7 +131,7 @@ export const getAuthorProfile = cache(async (rawUsername: string): Promise<Publi
 });
 
 /**
- * Sahibin KENDİ profil görünümü — /u/[username] sayfasının sahip önizlemesi.
+ * Sahibin KENDİ profil görünümü — /uye/[username] sayfasının sahip önizlemesi.
  * Gizliyken de döner: sahip, profili açmadan önce nasıl görüneceğini
  * görebilmeli. Profil satırı yoksa varsayılanlarla (gizli) döner; yalnızca
  * kullanıcı kaydının kendisi yoksa ya da tablo düşmüşse `null`.

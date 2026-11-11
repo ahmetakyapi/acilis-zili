@@ -13,7 +13,7 @@
    kalır" idi. YANLIŞTI: başlık `sticky` + `z-30`, yani kendi yığın
    bağlamını kuruyor ve menünün 40'ı yalnızca başlığın İÇİNDE sayılıyor;
    kök bağlamda menü 30'da. body'ye taşınan 35'lik balon açık bir Daha
-   Fazla menüsünün üstüne boyanıyordu (ölçüldü, /teknik koyu tema, menü
+   Fazla menüsünün üstüne boyanıyordu (ölçüldü, /teknik-analiz koyu tema, menü
    açıkken logoya gelince: 1440'ta menü 818-1122 x 81-447, SPCX balonu
    1054-1350 x 239-447; 1280'de menü 736-1040, balon 894-1190; 1024'te
    menü 688-992, MU balonu 516-812 x 262-470; üçünde de kesişimin
@@ -35,7 +35,7 @@
   /* Bir okuma, hedef değil: imleç kartın üstünden geçerken altındaki
      komşu logo çalışmaya devam ediyor. Eski ipucu imleci tutuyordu ve
      aşağı açıldığında beş-yedi komşu logoyu örtüyordu (ölçüldü, MU açıkken
-     /teknik 1440'ta NVDA, AMD, INTC, TSLA, ONDS elementFromPoint'te
+     /teknik-analiz 1440'ta NVDA, AMD, INTC, TSLA, ONDS elementFromPoint'te
      ipucunun altında kalıyordu). */
   pointer-events:none;
 }

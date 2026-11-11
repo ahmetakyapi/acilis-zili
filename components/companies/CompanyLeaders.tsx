@@ -44,7 +44,7 @@ export function CompanyLeaders({ leaders, locale, scrollLabels }: {
           className={styles.company} data-first={index === 0 || undefined} aria-label={`${item.name} (${item.symbol})${item.marketCap !== null ? ` · ${formatMoneyCompact(item.marketCap, locale)}` : ""}`}
           /* Şirket kartı (components/ui/CompanyCard); yerel `title=` ipucu
              kalktı — kartın yanında tarayıcının kendi ipucu da açılıp ikisi
-             üst üste biniyordu (/teknik'te 22 Eylül'de aynı karar). */
+             üst üste biniyordu (/teknik-analiz'de 22 Eylül'de aynı karar). */
           data-cc={cardKey(item.symbol, "leaders")}>
           <span className={styles.rank} aria-hidden="true">{index + 1}</span>
           <ArrowUpRight className={styles.open} size={12} aria-hidden="true" />

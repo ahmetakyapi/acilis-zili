@@ -113,7 +113,7 @@ function reorderOverLimit(userId: string): boolean {
 /**
  * Bir sembolün takip durumu değişince yapılan tazeleme: YALNIZ `/favoriler`.
  *
- * SEMBOL SAYFALARI TAZELENMİYOR (20 Ekim). Kalp `/hisse/X`, `/teknik/x` ve
+ * SEMBOL SAYFALARI TAZELENMİYOR (20 Ekim). Kalp `/hisse/X`, `/teknik-analiz/x` ve
  * `/hisse-secimi/X`'i de tazeliyordu. Her `revalidatePath` o sayfanın
  * okuduğu bütün `fetch`/`unstable_cache` girdilerini bir sonraki çizimde
  * ıskalatıyor: kalbi döngüyle açıp kapamak (kovayla bile hesap başına

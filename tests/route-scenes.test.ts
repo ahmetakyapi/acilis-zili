@@ -13,7 +13,7 @@ test("each section gets its own short film", () => {
   assert.equal(sceneForPath("/mercek"), "lens");
   assert.equal(sceneForPath("/bilancolar/analizler"), "ledger");
   assert.equal(sceneForPath("/bilancolar/NVDA/2026Q2"), "ledger");
-  assert.equal(sceneForPath("/teknik/NVDA"), "chart");
+  assert.equal(sceneForPath("/teknik-analiz/NVDA"), "chart");
   assert.equal(sceneForPath("/giris"), "hello");
   assert.equal(sceneForPath("/kayit"), "hello");
 });

@@ -17,7 +17,7 @@ export type ProfileActionState = { status: "idle" | "saved" | "failed" | "unavai
  * sağlayıcıya/tazelemeye gitmeden ÖNCE oran sınırı, değerler sunucuda
  * doğrulanır, satır zaten aynı hâldeyse yazmadan ve tazelemeden dönülür.
  *
- * Tazeleme DAR: yalnızca /u/{kullanıcı} ve /ayarlar. Avatar'ın aksine bu
+ * Tazeleme DAR: yalnızca /uye/{kullanıcı} ve /ayarlar. Avatar'ın aksine bu
  * veri başlık düzeninde durmuyor; layout-genişliğinde purge gerekmiyor.
  *
  * Tablo yokken (migration 0032 uygulanmadan) yazma düşer ve okuyucuya
@@ -74,9 +74,9 @@ export async function saveProfileAction(
     return { status: "unavailable" };
   }
 
-  /* Dil öneki sunucuda sökülüyor: /en/u/... da bu yola düşer, ayrıca
+  /* Dil öneki sunucuda sökülüyor: /en/uye/... da bu yola düşer, ayrıca
      tazelenmez (diğer eylemlerle aynı sözleşme). */
-  revalidatePath(`/u/${username}`);
+  revalidatePath(`/uye/${username}`);
   revalidatePath("/ayarlar");
   return { status: "saved" };
 }

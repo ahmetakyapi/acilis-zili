@@ -15,7 +15,7 @@ import { MIN_BREADTH_COVERAGE } from "./sentiment";
  * Bu dosya SAF: veritabanına ve sağlayıcıya dokunmuyor, ki her karar test
  * edilebilsin (tests/day-poster.test.ts). Veri tarafı
  * `lib/day-poster-data.ts`, sahnenin (Günün Silueti) yerleşimi
- * `lib/day-skyline.ts`, sayfa `/gun/[tarih]`.
+ * `lib/day-skyline.ts`, sayfa `/seans-silueti/[tarih]`.
  *
  * NASDAQ 100 ÜZERİNDEN (25 Ekim, üçüncü kurulum). Poster önce S&P 500'ün
  * ~500 hissesini ve on bir SPDR sektör fonunu anlatıyordu; sahne yüzlerce
@@ -47,7 +47,7 @@ import { MIN_BREADTH_COVERAGE } from "./sentiment";
  *  gerekçe (`lib/day-card.ts`): sınırsız tarih, sınırsız ayrı istek demek. */
 const POSTER_PAST_DAYS = 365;
 
-/** Paylaşım görselinin ölçüsü — sosyal ağ kartı (`/gun/[tarih]/gorsel`). */
+/** Paylaşım görselinin ölçüsü — sosyal ağ kartı (`/seans-silueti/[tarih]/gorsel`). */
 export const POSTER_OG_SIZE = { width: 1200, height: 630 } as const;
 
 /** Arşiv listesinde kaç seans — altı haftaya yakın. */
