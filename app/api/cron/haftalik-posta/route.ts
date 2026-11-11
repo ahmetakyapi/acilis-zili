@@ -14,6 +14,8 @@ import { weeklyEmailMessage, type DigestPersonal } from "@/lib/notify-emails";
 import { weeklyCommentary } from "@/lib/weekly-commentary";
 import { digestWeek, gatherDigest, watchlistSymbols, type DigestData } from "@/lib/weekly-digest";
 import { moversFor, watchedMoves, watchlistNote, watchlistNoteCap, type WatchWeek } from "@/lib/watchlist-note";
+import { portfolioWeek, type PortfolioWeek } from "@/lib/portfolio-weekly";
+import { heldMoves, ownerIds, portfolioLots, portfolioWeekNote, portfolioWeeklyNoteCap } from "@/lib/portfolio-weekly-note";
 
 /**
  * PAZAR ÖZETİ (16 Ekim; 17 Ekim'de pazartesiden pazara, sahibinin isteği)
@@ -219,6 +221,35 @@ async function run(request: Request): Promise<NextResponse> {
     }),
   );
 
+  /* HAFTALIK PORTFÖY KARNESİ (11 Kasım) — portföyü olan alıcıya kişisel
+     bölüm; hesap lib/portfolio-weekly.ts, not lib/portfolio-weekly-note.ts.
+     Ayrı posta değil (bütçe, çıkış kapsamı — gerekçe hesap modülünde).
+     Barlar tek sefer, notlar takip notlarından SONRA ve kendi tavanıyla;
+     pozisyonlar okunamazsa ya da hafta ölçülemezse bölüm basılmaz, posta
+     yine gider. Claude düşerse bölüm sayılarla, metinsiz. */
+  const lots = (await portfolioLots(recipients.map((r) => r.userId))) ?? new Map<string, never[]>();
+  const held = new Set([...lots.values()].flatMap((list) => list.map((lot) => lot.symbol)));
+  const heldWeek = held.size ? await heldMoves(held, anyDigest, now) : new Map();
+  const owners = lots.size ? await ownerIds([...lots.keys()]) : new Set<string>();
+  const portfolios = new Map<string, { week: PortfolioWeek; note: string | null; owner: boolean }>();
+  for (const recipient of recipients) {
+    const mine = lots.get(recipient.userId);
+    if (!mine?.length) continue;
+    const data = digests.get(recipient.locale)!;
+    const week = portfolioWeek(mine, heldWeek, data.aheadAll, data.pastMonday);
+    if (week) portfolios.set(recipient.userId, { week, note: null, owner: owners.has(recipient.userId) });
+  }
+  const portfolioQueue = [...portfolios.keys()].slice(0, portfolioWeeklyNoteCap());
+  await Promise.all(
+    Array.from({ length: 4 }, async () => {
+      for (let id = portfolioQueue.shift(); id; id = portfolioQueue.shift()) {
+        const recipient = byId.get(id)!;
+        const entry = portfolios.get(id)!;
+        entry.note = await portfolioWeekNote(id, recipient.locale, entry.week, digests.get(recipient.locale)!, entry.owner);
+      }
+    }),
+  );
+
   const counts = { sent: 0, duplicate: 0, failed: 0, unknown: 0, skipped: 0 };
   let budgetHit = false;
 
@@ -232,7 +263,15 @@ async function run(request: Request): Promise<NextResponse> {
         ? `weekly-resend:${data.thisMonday}:${recipient.userId}:${recipient.email.trim().toLowerCase()}`
         : `weekly:${data.thisMonday}:${recipient.userId}`;
     const result = await sendNotificationEmail(recipient, "weekly", dedupeKey, (r) => {
-      const mail = weeklyEmailMessage(r, data, personal, copy, weeks.get(recipient.userId));
+      const portfolio = portfolios.get(recipient.userId);
+      const mail = weeklyEmailMessage(
+        r,
+        data,
+        personal,
+        copy,
+        weeks.get(recipient.userId),
+        portfolio ? { ...portfolio, copy: getDictionary(recipient.locale).portfolioWeekly } : undefined,
+      );
       return testTo ? { ...mail, subject: `[Deneme] ${mail.subject}` } : mail;
     });
     if (result === "sent") counts.sent += 1;
@@ -256,5 +295,6 @@ async function run(request: Request): Promise<NextResponse> {
     catchUp,
     earningsRefreshed: refreshed.ok ? refreshed.rows : "failed",
     enrolled,
+    portfolios: portfolios.size,
   });
 }

@@ -28,6 +28,8 @@ import {
   type PriceRetry,
 } from "@/lib/alert-state";
 import { logNotifyFailure, notifyUserReport, type NotifyReport } from "@/lib/notifications";
+import { withReason, type AlertReason } from "@/lib/alert-reason";
+import { loadAlertReasons } from "@/lib/alert-reason-load";
 
 /**
  * Alarm taraması — `deploy/cron-alerts.sh` seans boyunca beş dakikada bir
@@ -201,6 +203,17 @@ export async function GET(request: Request) {
   const hits = findHits(pending, prices);
   const pctHits = findPercentHits(pendingPct, changes);
 
+  /* ALARM GEREKÇESİ (11 Kasım) — "neden hareket etti" tek cümlesi, yalnız
+     tetiklenen semboller için, işçilerden ÖNCE ve tek süre tavanıyla
+     (lib/alert-reason-load.ts → REASON_DEADLINE_MS, 2,5 sn). Yeni Claude
+     çağrısı yok; okuma düşerse ya da yetişmezse bildirim gerekçesiz gider.
+     Tavan tetik sahiplenme süresinden (`SWEEP_BUDGET_MS`) düşer, 50 sn'nin
+     yanında küçük. */
+  const reasons =
+    hits.length + pctHits.length > 0
+      ? await loadAlertReasons([...hits, ...pctHits].map((hit) => hit.symbol), now).catch(() => new Map<string, AlertReason>())
+      : new Map<string, AlertReason>();
+
   /* HESAP BAŞINA KUYRUK, ALTI İŞÇİ (20 Ekim). Tetikler tek tek, sırayla
      işleniyordu: her biri sahiplenme + gelen kutusu + push (cihaz başına 10
      sn tavan) + alarm postası (10 sn; düşerse 2 sn ara ve bir tekrar). Sert
@@ -250,7 +263,7 @@ export async function GET(request: Request) {
        gerekçe lib/push.ts → deliverPush. Önce bekle, SONRA topla (20 Ekim):
        `delivered += await …` sol yanı bekleme ÖNCESİ okur; altı işçi
        eşzamanlıyken üst üste binen iki tetikten biri sayaçtan düşüyordu. */
-    const report = await sendPriceNotice(hit, now);
+    const report = await sendPriceNotice(hit, now, reasons.get(hit.symbol));
     delivered += report?.push ?? 0;
     /* Sonuç kayda (lib/alert-state.ts): hiçbir kanal teslim etmediyse
        sonraki tarama bir kez daha dener. */
@@ -269,7 +282,7 @@ export async function GET(request: Request) {
     if (claimed.length === 0) return;
     triggered += 1;
     /* Önce bekle, sonra topla — gerekçe fiyat tetiğinde. */
-    const report = await sendPercentNotice(hit, now);
+    const report = await sendPercentNotice(hit, now, reasons.get(hit.symbol));
     delivered += report?.push ?? 0;
     await recordFirstNotify("percent", hit.id, report);
   });
@@ -309,32 +322,32 @@ type PercentNotice = PendingPercentAlert & { changePct: number };
  * anahtarı `alert:<id>:<tetik anı>` — `firedAt` tetik anının kendisi
  * olmalı, yoksa tekrar postası yeni bir posta sayılırdı.
  */
-async function sendPriceNotice(hit: PriceNotice, firedAt: Date): Promise<NotifyReport | null> {
+async function sendPriceNotice(hit: PriceNotice, firedAt: Date, reason?: AlertReason): Promise<NotifyReport | null> {
   return notifyUserReport(
     hit.userId,
     "alert",
     (locale) => {
       const p = alertPayload(hit, locale, getDictionary(locale).notifications);
-      return { title: p.title, body: p.body, path: `/hisse/${hit.symbol}`, tag: p.tag };
+      return { title: p.title, body: withReason(p.body, reason, locale), path: `/hisse/${hit.symbol}`, tag: p.tag };
     },
     withLocale,
-    { alertId: hit.id, kind: "price", symbol: hit.symbol, direction: hit.direction, target: hit.target, price: hit.price, firedAt },
+    { alertId: hit.id, kind: "price", symbol: hit.symbol, direction: hit.direction, target: hit.target, price: hit.price, firedAt, reason },
   ).catch((error) => {
     logNotifyFailure(error);
     return null;
   });
 }
 
-async function sendPercentNotice(hit: PercentNotice, firedAt: Date): Promise<NotifyReport | null> {
+async function sendPercentNotice(hit: PercentNotice, firedAt: Date, reason?: AlertReason): Promise<NotifyReport | null> {
   return notifyUserReport(
     hit.userId,
     "percent",
     (locale) => {
       const p = percentPayload(hit, locale, getDictionary(locale).notifications);
-      return { title: p.title, body: p.body, path: `/hisse/${hit.symbol}`, tag: p.tag };
+      return { title: p.title, body: withReason(p.body, reason, locale), path: `/hisse/${hit.symbol}`, tag: p.tag };
     },
     withLocale,
-    { alertId: hit.id, kind: "percent", symbol: hit.symbol, direction: hit.direction, thresholdPct: hit.thresholdPct, changePct: hit.changePct, firedAt },
+    { alertId: hit.id, kind: "percent", symbol: hit.symbol, direction: hit.direction, thresholdPct: hit.thresholdPct, changePct: hit.changePct, firedAt, reason },
   ).catch((error) => {
     logNotifyFailure(error);
     return null;
@@ -348,7 +361,7 @@ function retrySender(row: PriceRetry | PercentRetry): (() => Promise<NotifyRepor
     const price = Number(row.triggeredPrice);
     if (!isDirection(row.direction) || !Number.isFinite(target) || row.triggeredPrice == null || !(price > 0)) return null;
     const hit = { id: row.id, userId: row.userId, symbol: row.symbol, direction: row.direction, target, price };
-    return () => sendPriceNotice(hit, row.triggeredAt);
+    return async () => sendPriceNotice(hit, row.triggeredAt, (await loadAlertReasons([hit.symbol]).catch(() => null))?.get(hit.symbol));
   }
   const thresholdPct = Number(row.thresholdPct);
   const changePct = Number(row.triggeredPct);
@@ -356,7 +369,7 @@ function retrySender(row: PriceRetry | PercentRetry): (() => Promise<NotifyRepor
     return null;
   }
   const hit = { id: row.id, userId: row.userId, symbol: row.symbol, direction: row.direction, thresholdPct, changePct };
-  return () => sendPercentNotice(hit, row.triggeredAt);
+  return async () => sendPercentNotice(hit, row.triggeredAt, (await loadAlertReasons([hit.symbol]).catch(() => null))?.get(hit.symbol));
 }
 
 /**

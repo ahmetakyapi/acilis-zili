@@ -1,0 +1,93 @@
+/* Portföyüne Sor (PortfolioAsk.tsx). Dil "Bu Hisseye Sor"dan
+   (components/stock/AskStock.module.css): derinlik tonla — metin alanı
+   sayfa zemininde ve kuyuda (`--shadow-well`), yanıt `--surface-sunken`,
+   ölçü kartları yanıtın içinde `--surface`; gölge yok. Renk yalnız
+   etkileşimde (odak, çip), Claude iminde (pirinç) ve ölçünün yönünde. */
+
+.panel { scroll-margin-top: 140px; }
+.body { display: flex; min-width: 0; flex-direction: column; gap: 12px; padding: 0 16px 16px; }
+@media (min-width: 640px) { .body { padding: 0 20px 18px; } }
+
+.intro { margin: -4px 0 0; font-size: var(--text-small); line-height: 1.5; color: var(--text-body); text-wrap: pretty; max-width: 68ch; }
+
+/* Etiket ÜSTTE (görünür), placeholder cümle. */
+.form { display: flex; flex-direction: column; gap: 6px; }
+.label { font-size: var(--text-small); font-weight: 700; color: var(--text-strong); }
+.field { display: flex; gap: 8px; align-items: stretch; }
+.input {
+  flex: 1; min-width: 0; min-height: 64px; resize: vertical; max-height: 180px;
+  padding: 10px 14px; border: 1px solid var(--line); border-radius: var(--radius-md); background: var(--page-bg);
+  box-shadow: var(--shadow-well);
+  font: inherit; font-size: var(--text-read); line-height: 1.45; color: var(--text-strong);
+  transition: border-color .18s var(--ease-brand), box-shadow .18s var(--ease-brand);
+}
+.input::placeholder { color: var(--text-muted); }
+.input:focus { outline: none; border-color: var(--line-focus); box-shadow: var(--shadow-well), var(--shadow-focus); }
+.input:disabled { opacity: .6; }
+.submit { flex: none; align-self: flex-end; min-height: 44px; padding-inline: 20px; }
+
+/* Çipler AskStock'la aynı: telefonda tek satır kayan şerit ve 44 piksel,
+   geniş ekranda 32 piksel ve sarar (gerekçe orada). Uzun portföy sorusu
+   telefonda kayan şeritte tam okunur; kırpılmaz. */
+.chips { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.chip {
+  display: inline-flex; align-items: center;
+  min-height: 32px; padding: 4px 12px; border-radius: 999px; background: var(--surface-sunken);
+  font-size: var(--text-small); line-height: 1.3; color: var(--text-body); text-align: left; cursor: pointer; white-space: nowrap;
+  transition: background-color .18s var(--ease-brand), color .18s var(--ease-brand);
+}
+@media (max-width: 639px) {
+  .chips { flex-wrap: nowrap; overflow-x: auto; overflow-y: hidden; overscroll-behavior-x: contain; scrollbar-width: none; margin-inline: -16px; padding-inline: 16px; }
+  .chips::-webkit-scrollbar { display: none; }
+  .chips > li { flex: none; }
+  .chip { min-height: 44px; }
+}
+.chip:hover:not(:disabled) { background: var(--primary-tint); color: var(--text-strong); }
+.chip:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.chip:disabled { cursor: default; opacity: .6; }
+
+.error { margin: 0; font-size: var(--text-small); font-weight: 600; color: var(--down); }
+
+.exchange {
+  display: flex; min-width: 0; flex-direction: column; gap: 8px; padding: 14px 16px 16px; border-radius: var(--radius-lg); background: var(--surface-sunken);
+}
+.kicker { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
+.mark { color: var(--brass); }
+.asked { margin: -4px 0 4px; font-size: var(--text-read); font-weight: 600; color: var(--text-strong); overflow-wrap: anywhere; }
+.answerHead { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+.badge { padding: 2px 8px; border-radius: 999px; font-size: var(--text-small); line-height: 18px; font-weight: 600; background: var(--brass-wash); color: var(--brass-ink); }
+.paragraph { margin: 0; font-size: var(--text-read); line-height: 1.6; color: var(--text-strong); text-wrap: pretty; max-width: 72ch; overflow-wrap: anywhere; }
+.fallback { color: var(--text-body); }
+.partial { margin: 0; font-size: var(--text-small); line-height: 1.45; color: var(--text-muted); }
+
+.loading { display: inline-flex; align-items: center; gap: 7px; margin: 0; font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
+.loadingIcon { color: var(--brass); }
+.line { height: 12px; border-radius: 999px; }
+
+/* Ölçü kartları: telefonda iki, geniş kapta üç sütun; değer kartın
+   dibinde, kartlar aynı satırda aynı hatta biter (ekran düzeni 4). */
+.measureBlock { display: flex; flex-direction: column; gap: 6px; margin-top: 6px; }
+.measures { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin: 0; padding: 0; list-style: none; }
+@media (min-width: 640px) { .measures { grid-template-columns: repeat(3, minmax(0, 1fr)); } }
+.measure { display: grid; grid-template-rows: auto 1fr auto; min-width: 0; gap: 2px; padding: 9px 11px 10px; border-radius: var(--radius-md); background: var(--surface); }
+.measureScope { font-family: var(--font-mono); font-size: 11px; font-weight: 600; letter-spacing: .02em; color: var(--text-muted); overflow-wrap: anywhere; }
+.measureLabel { font-size: var(--text-small); font-weight: 600; line-height: 1.3; color: var(--text-body); overflow-wrap: anywhere; }
+.measureValue { margin-top: 2px; font-size: var(--text-read); font-weight: 700; letter-spacing: -.01em; color: var(--text-strong); overflow-wrap: anywhere; }
+.up { color: var(--up); }
+.down { color: var(--down); }
+.measureSkeleton { height: 64px; border-radius: var(--radius-md); }
+
+.stamp { margin: 2px 0 0; font-size: var(--text-small); color: var(--text-muted); }
+
+/* Boş durum: henüz soru yokken yanıtın dayanabileceği veri. */
+.preview { display: flex; flex-direction: column; gap: 6px; }
+.previewList { display: flex; flex-wrap: wrap; gap: 6px; margin: 0; padding: 0; list-style: none; }
+.previewItem { padding: 2px 8px; border-radius: 999px; font-size: var(--text-small); line-height: 18px; font-weight: 600; background: var(--surface-sunken); color: var(--text-body); }
+
+/* Künye panelin içinde, hairline ile (ekran düzeni 6). */
+.disclosure { margin: 0; padding: 12px 16px 14px; border-top: 1px solid var(--line-soft); font-size: var(--text-small); line-height: 1.45; color: var(--text-muted); }
+@media (min-width: 640px) { .disclosure { padding-inline: 20px; } }
+
+/* Hareket YOK (hareket.md: panel ve metin kayarak girmez; sonsuz döngü
+   yalnız yerleşik canlı imlerde). Bekleme iskeletle anlatılır; yanıt
+   yerine oturur. */

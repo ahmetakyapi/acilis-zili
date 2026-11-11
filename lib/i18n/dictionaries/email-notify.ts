@@ -96,6 +96,11 @@ export const emailNotifyTr = {
     typePercent: "Yüzde Alarmı",
     button: "{symbol} Sayfasını Aç",
     honesty: "Fiyat, tetik anındaki son işlemdir; posta sana birkaç dakika gecikmeyle ulaşabilir. Güncel fiyat için sayfaya bak.",
+    /* Alarm gerekçesi (11 Kasım) — seçim lib/alert-reason.ts. */
+    reasonTitle: "Neden Hareket Ediyor",
+    reasonFromNote: "Hisse Sayfasındaki Claude Notundan · Son Beş Seans",
+    reasonFromHeadline: "Son 48 Saatin Manşeti · {source}",
+    reasonFromHeadlineBare: "Son 48 Saatin Manşeti",
   },
   weeklyMail: {
     subject: "Açılış Zili · Haftanın Özeti · {range}",
@@ -238,6 +243,10 @@ export const emailNotifyEn: typeof emailNotifyTr = {
     typePercent: "Percent Alert",
     button: "Open {symbol}",
     honesty: "The price is the last trade at the moment of the trigger; this email may reach you a few minutes later. Check the page for the current price.",
+    reasonTitle: "Why It's Moving",
+    reasonFromNote: "From the Claude Note on the Stock Page · Last Five Sessions",
+    reasonFromHeadline: "Latest Headline of the Past 48 Hours · {source}",
+    reasonFromHeadlineBare: "Latest Headline of the Past 48 Hours",
   },
   weeklyMail: {
     subject: "Açılış Zili · Weekly Recap · {range}",

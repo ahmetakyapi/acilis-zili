@@ -115,9 +115,13 @@ const failures = new Map<string, number>();
 const FAILURE_TTL = 20 * 60_000;
 const NEWS_WINDOW_MS = 48 * 3600_000;
 
-type Holding = [string, { quantity: number; cost: number }];
+/* DIŞA AÇILDI (11 Kasım): "Portföyüne Sor" (lib/portfolio-question.ts)
+   aynı pozisyon birleştirmesini, aynı veri toplamayı ve aynı gün
+   biçimini kullanıyor; ikinci bir kopya iki ekranda aynı pozisyonun iki
+   ayrı ağırlığını basabilirdi (veri dürüstlüğü 3). Davranış değişmedi. */
+export type Holding = [string, { quantity: number; cost: number }];
 
-async function holdingsOf(userId: string): Promise<Holding[] | null> {
+export async function holdingsOf(userId: string): Promise<Holding[] | null> {
   const result = await getPortfolioPositions(userId);
   if (!result.ok || result.positions.length === 0) return null;
   /* Aynı hissenin lotları birleşir: adet toplanır, maliyet adetle ağırlıklı. */
@@ -129,7 +133,7 @@ async function holdingsOf(userId: string): Promise<Holding[] | null> {
   return [...holdings].sort(([a], [b]) => a.localeCompare(b));
 }
 
-async function gather(holdings: Holding[], locale: Locale) {
+export async function gather(holdings: Holding[], locale: Locale) {
   const symbols = holdings.map(([symbol]) => symbol);
   const [names, bars, ahead, board, news] = await Promise.all([
     getSymbolNames(symbols),
@@ -165,7 +169,7 @@ async function gather(holdings: Holding[], locale: Locale) {
   return inputs;
 }
 
-function dayLabel(locale: Locale) {
+export function dayLabel(locale: Locale) {
   return (date: string) =>
     new Intl.DateTimeFormat(locale === "en" ? "en-US" : "tr-TR", { weekday: "long", day: "numeric", month: "long", timeZone: "UTC" }).format(new Date(`${date}T12:00:00Z`));
 }

@@ -7,6 +7,8 @@ import { withLocale } from "@/lib/i18n/routing";
 import type { MarketStatus } from "@/lib/market-hours";
 import { alertPhase } from "@/lib/alert-phase";
 import { recordFirstNotify } from "@/lib/alert-state";
+import { withReason } from "@/lib/alert-reason";
+import { loadAlertReasons } from "@/lib/alert-reason-load";
 import { logNotifyFailure, notifyUserReport } from "@/lib/notifications";
 import { alertCrossed, sessionReadings, type PriceAlert, type SessionQuote } from "@/lib/price-alerts";
 import { priceAlerts } from "@/lib/schema";
@@ -75,17 +77,20 @@ export async function settleAlerts(
 
   if (claimed.length > 0) {
     after(async () => {
+      /* Gerekçe (11 Kasım) taramadakiyle aynı okuma ve tavan — lib/alert-reason-load.ts. */
+      const reasons = await loadAlertReasons(claimed.map((alert) => alert.symbol), now).catch(() => null);
       for (const alert of claimed) {
         const price = prices[alert.symbol]!;
+        const reason = reasons?.get(alert.symbol);
         const report = await notifyUserReport(
           userId,
           "alert",
           (locale) => {
             const p = alertPayload({ ...alert, userId, price }, locale, getDictionary(locale).notifications);
-            return { title: p.title, body: p.body, path: `/hisse/${alert.symbol}`, tag: p.tag };
+            return { title: p.title, body: withReason(p.body, reason, locale), path: `/hisse/${alert.symbol}`, tag: p.tag };
           },
           withLocale,
-          { alertId: alert.id, kind: "price", symbol: alert.symbol, direction: alert.direction, target: alert.target, price, firedAt: now },
+          { alertId: alert.id, kind: "price", symbol: alert.symbol, direction: alert.direction, target: alert.target, price, firedAt: now, reason },
         ).catch((error) => {
           logNotifyFailure(error);
           return null;

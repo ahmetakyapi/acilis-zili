@@ -14,6 +14,11 @@ import {
   PortfolioWorkbench,
 } from "@/components/portfolio/PortfolioWorkbench";
 import { PortfolioScanPanel } from "@/components/portfolio/PortfolioScan";
+import { PortfolioAsk } from "@/components/portfolio/PortfolioAsk";
+import { EarningsDesk } from "@/components/portfolio/EarningsDesk";
+import { getAdmin } from "@/lib/admin";
+import { portfolioQuestionQuota } from "@/lib/portfolio-question";
+import { PORTFOLIO_QUESTION_DAILY_LIMIT } from "@/lib/portfolio-question-core";
 import { Money } from "@/components/portfolio/Money";
 import { PrivacyToggle } from "@/components/portfolio/PrivacyToggle";
 import { getPrivacy } from "@/lib/privacy-server";
@@ -434,6 +439,23 @@ async function PortfolioBody({
           (lib/portfolio-scan.ts). Ana sayfa kartındaki "Taramanın Tamamı"
           buraya iner (`#tarama`). */}
       <PortfolioScanPanel locale={locale} labels={t.portfolioScan} />
+
+      {/* BİLANÇO MASASI (11 Kasım) — portföydeki hisselerin bilanço öncesi
+          brifi ve sonrası notu (lib/portfolio-earnings-desk*.ts). Yaklaşan
+          ya da yeni açıklanan bilanço yoksa hiçbir şey basmaz. */}
+      <EarningsDesk locale={locale} labels={t.earningsDesk} />
+
+      {/* PORTFÖYÜNE SOR (11 Kasım) — okur kendi portföyüne düz cümleyle soru
+          sorar; senaryo hesabını sunucu yapar, Claude yalnız anlatır
+          (lib/portfolio-question*.ts). Taramanın hemen ardında: önce günün
+          okuması, sonra okurun kendi sorusu. Site sahibinde açık görüş. */}
+      <PortfolioAsk
+        locale={locale}
+        labels={t.portfolioAsk}
+        remaining={portfolioQuestionQuota.left(userId)}
+        limit={PORTFOLIO_QUESTION_DAILY_LIMIT}
+        owner={(await getAdmin())?.userId === userId}
+      />
 
       <RealizedPanel data={realized} names={realizedNames} locale={locale} t={t} />
 

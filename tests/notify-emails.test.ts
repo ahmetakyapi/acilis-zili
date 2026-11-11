@@ -237,3 +237,53 @@ test("posta başlığı: birlikte okunan kelimeler birlikte kalır", () => {
   assert.equal(keepTogetherHtml("12 – 16 Ekim"), `12${nb}– 16${nb}Ekim`);
   assert.equal(keepTogetherHtml("A & B"), `A &amp;${nb}B`);
 });
+
+test("alarm postası: gerekçe kutusu kaynağıyla, gerekçe yoksa kutu yok (11 Kasım)", () => {
+  const base = { kind: "price" as const, symbol: "NVDA", direction: "above" as const, target: 180, price: 181, firedAt: new Date("2026-11-11T15:05:00Z") };
+  const headline = alertEmailMessage(
+    recipient,
+    { ...base, reason: { kind: "headline", text: { tr: "Nvidia yeni çip <anlaşması> imzaladı", en: "Nvidia signs chip deal" }, source: "Reuters" } },
+    tr.emailNotify,
+  );
+  for (const part of ["Neden Hareket Ediyor", "Nvidia yeni çip &lt;anlaşması&gt; imzaladı", "Son 48 Saatin Manşeti · Reuters"]) assert.ok(plain(headline.html).includes(part), part);
+  assert.match(headline.text, /Neden Hareket Ediyor: Nvidia yeni çip <anlaşması> imzaladı \(Reuters\)/);
+  const fromNote = alertEmailMessage({ ...recipient, locale: "en" }, { ...base, reason: { kind: "note", text: { tr: "x", en: "Shares rose after earnings." } } }, en.emailNotify);
+  assert.ok(fromNote.html.includes("From the Claude Note on the Stock Page"));
+  assert.ok(fromNote.html.includes("Shares rose after earnings."));
+  const none = alertEmailMessage(recipient, base, tr.emailNotify);
+  assert.ok(!none.html.includes("Neden Hareket Ediyor"));
+});
+
+test("haftalık posta: portföy karnesi oranla, tutarsız; not yoksa künyesi de yok (11 Kasım)", () => {
+  const week = {
+    changePct: 1.84,
+    covered: 3,
+    total: 4,
+    skippedLots: 1,
+    movers: [
+      { symbol: "NVDA", changePct: 6.2, weight: 40, contribution: 2.48 },
+      { symbol: "AAPL", changePct: -2.5, weight: 25, contribution: -0.62 },
+    ],
+    best: null,
+    worst: null,
+    ahead: [{ symbol: "TSLA", date: "2026-10-21", timing: "amc" as const }],
+  };
+  const portfolio = { week, note: "Portföyün haftayı +%1,8 ile kapattı.", owner: false, copy: tr.portfolioWeekly };
+  const mail = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify, undefined, portfolio);
+  const html = plain(mail.html);
+  for (const part of ["Portföyün Bu Hafta", "+%1,8", "S&amp;P 500 +%1,2", "+%6,2", "+2,5 puan", "−0,6 puan", "Bilanço Açıklayacak Pozisyonların", "· Kapanış Sonrası", "Portföyün haftayı +%1,8 ile kapattı.", tr.portfolioWeekly.noteLabel, "4 pozisyonun 3 tanesinin", "Hafta içinde alınan 1 lot", "/portfoy"]) {
+    assert.ok(html.includes(part), part);
+  }
+  /* Ortak ölçek: en büyük katkı tam şerit, AAPL oranında (25). */
+  assert.match(mail.html, /width:25%;height:5px/);
+  /* Kendi haftası piyasanın haftasından önce. */
+  assert.ok(html.indexOf("Portföyün Bu Hafta") < html.indexOf("Endeksler"));
+  assert.match(mail.text, /Portföyün Bu Hafta: \+%1,8/);
+  const bare = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify, undefined, { ...portfolio, note: null });
+  assert.ok(plain(bare.html).includes("Portföyün Bu Hafta"));
+  assert.ok(!plain(bare.html).includes(tr.portfolioWeekly.noteLabel));
+  const owner = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify, undefined, { ...portfolio, owner: true });
+  assert.ok(plain(owner.html).includes(tr.portfolioWeekly.ownerNoteLabel));
+  const none = weeklyEmailMessage(recipient, sampleDigest(), [], tr.emailNotify);
+  assert.ok(!plain(none.html).includes("Portföyün Bu Hafta"));
+});

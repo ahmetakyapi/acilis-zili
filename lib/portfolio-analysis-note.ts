@@ -74,7 +74,7 @@ const TOP_SECTORS = 3;
 const TOP_PAIRS_IN_NOTE = 3;
 
 /** Biçimlenmiş girdi — sayılar ekrandaki biçimle aynı (tek kaynak: aynı biçimlendiriciler). */
-function noteInput(analysis: PortfolioAnalysis, locale: Locale): string | null {
+export function noteInput(analysis: PortfolioAnalysis, locale: Locale): string | null {
   const risk = analysis.risk;
   if (!risk) return null;
   const plain = (value: number) => formatPercentPlain(value, locale, 1);

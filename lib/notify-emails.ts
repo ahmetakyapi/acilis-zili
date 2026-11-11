@@ -1,4 +1,5 @@
 import { randomUUID } from "node:crypto";
+import { reasonLine, type AlertReason } from "@/lib/alert-reason";
 import { escapeHtml, type Email } from "@/lib/email";
 import { C, FONT, MONO, brandedEmailHtml, emailButton, emailMeta, emailSection, emailText, keepTogetherHtml } from "@/lib/email-layout";
 import type { Recipient } from "@/lib/email-notify";
@@ -20,6 +21,8 @@ export function emailPercent(value: number, locale: Locale, digits = 2): string 
   return formatPercent(value, locale, digits).replace(/^([+\u2212])\s+/u, "$1");
 }
 import type { DigestData, DigestReport } from "@/lib/weekly-digest";
+import { weekPct, weekPoints, type PortfolioWeek } from "@/lib/portfolio-weekly";
+import type { portfolioWeeklyTr } from "@/lib/i18n/dictionaries/portfolio-weekly";
 
 /**
  * Bildirim postalarının şablonları (16 Ekim) — onay, alarm, pazartesi
@@ -93,9 +96,29 @@ export function confirmEmailMessage(input: {
    Alarm
    -------------------------------------------------------------------------- */
 
-export type AlertEmailInput =
+export type AlertEmailInput = (
   | { kind: "price"; symbol: string; direction: "above" | "below"; target: number; price: number; firedAt: Date }
-  | { kind: "percent"; symbol: string; direction: "up" | "down"; thresholdPct: number; changePct: number; firedAt: Date };
+  | { kind: "percent"; symbol: string; direction: "up" | "down"; thresholdPct: number; changePct: number; firedAt: Date }
+) & {
+  /** "Neden hareket etti" (11 Kasım) — seçim lib/alert-reason.ts; yoksa kutu basılmaz. */
+  reason?: AlertReason;
+};
+
+/**
+ * Gerekçe kutusu (11 Kasım) — karonun altında, butonun üstünde. Kaynağı
+ * künyede: not ise "Hisse Sayfasındaki Claude Notundan · Bu Hafta", manşet
+ * ise "Son Manşet · Reuters". Not beş seansı anlatır; künye bunu söyler ki
+ * okur cümleyi bugünün tek sebebi sanmasın.
+ */
+function reasonBlock(reason: AlertReason | undefined, locale: Locale, A: Copy["alertMail"]): string {
+  if (!reason) return "";
+  const label = reason.kind === "note" ? A.reasonFromNote : reason.source ? A.reasonFromHeadline.replace("{source}", reason.source) : A.reasonFromHeadlineBare;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:-8px 0 26px"><tr><td class="az-note" style="background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${C.brass};border-radius:14px;padding:14px 18px">
+<p class="az-muted" style="margin:0 0 4px;font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;color:${C.muted}">${escapeHtml(A.reasonTitle)}</p>
+<p class="az-ink" style="margin:0;font-family:${FONT};font-size:15px;line-height:22px;color:${C.ink}">${escapeHtml(reason.text[locale])}</p>
+<p class="az-muted" style="margin:6px 0 0;font-family:${FONT};font-size:11px;line-height:15px;color:${C.muted}">${escapeHtml(label)}</p>
+</td></tr></table>`;
+}
 
 function firedLabel(at: Date, locale: Locale, zoneName: string): string {
   const zone = displayZone(locale);
@@ -165,6 +188,7 @@ export function alertEmailMessage(recipient: Recipient, alert: AlertEmailInput, 
     `${bigLabel}: ${bigValue}`,
     `${sideLabel}: ${sideValue}`,
     ...meta.map((row) => `${row.label}: ${row.value}`),
+    ...(alert.reason ? ["", `${A.reasonTitle}: ${reasonLine(alert.reason, locale)}`] : []),
     "",
     stockUrl,
     "",
@@ -184,6 +208,7 @@ export function alertEmailMessage(recipient: Recipient, alert: AlertEmailInput, 
     origin: SITE_URL,
     bodyHtml: [
       tile,
+      reasonBlock(alert.reason, locale, A),
       emailButton(A.button.replace("{symbol}", alert.symbol), stockUrl),
       emailMeta(meta),
       emailText.note(copy.common.notAdvice, A.honesty),
@@ -543,7 +568,82 @@ function commentaryBlock(text: string | undefined, W: Copy["weeklyMail"], last: 
   }`;
 }
 
-export function weeklyEmailMessage(recipient: Recipient, data: DigestData, personal: DigestPersonal, copy: Copy, week?: WatchWeekLike): Email {
+/* ---- Haftalık Portföy Karnesi (11 Kasım) ----
+   Hesap lib/portfolio-weekly.ts (tutar yok, yalnız oran — gerekçe orada),
+   not lib/portfolio-weekly-note.ts. Yeri birinci bölümün başı: okurun
+   kendi haftası piyasanın haftasından önce okunur. Kutu takip listesi
+   kutusuyla aynı dil (açık zemin, sol çizgi); büyük sayı tek, çubuklar
+   portföye KATKIYI çizer (yüzde puan, ortak ölçek), renk yalnız işaretten. */
+
+export type PortfolioMail = {
+  week: PortfolioWeek;
+  note: string | null;
+  owner: boolean;
+  copy: typeof portfolioWeeklyTr;
+};
+
+function portfolioBlock(mail: PortfolioMail | undefined, data: DigestData, locale: Locale, W: Copy["weeklyMail"]): string {
+  if (!mail) return "";
+  const { week, copy: P } = mail;
+  const tone = TONE[toneOf(week.changePct)];
+  const sp = data.indices.find((i) => i.symbol === "SPY");
+  const maxAbs = Math.max(...week.movers.map((m) => Math.abs(m.contribution)), 0.0001);
+  const movers = week.movers
+    .map((m, i) => {
+      const t = TONE[toneOf(m.contribution)];
+      const pct = Math.max(3, Math.round((Math.abs(m.contribution) / maxAbs) * 100));
+      const rule = i ? `border-top:1px solid ${C.line};` : "";
+      return `<tr>
+<td valign="middle" width="58" class="az-rule" style="padding:8px 8px 8px 0;${rule}"><a href="${escapeHtml(pathFor(`/hisse/${m.symbol}`, locale))}" target="_blank" style="text-decoration:none"><strong class="az-ink" style="font-family:${MONO};font-size:13px;line-height:18px;color:${C.ink}">${escapeHtml(m.symbol)}</strong></a></td>
+<td valign="middle" class="az-rule" style="padding:8px 0;${rule}"><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0"><tr><td class="az-lane" bgcolor="${LANE}" style="background:${LANE};border-radius:3px;height:5px;font-size:0;line-height:0"><div class="${t.fill}" style="width:${pct}%;height:5px;border-radius:3px;background:${t.ink};font-size:0;line-height:0">&nbsp;</div></td></tr></table></td>
+<td valign="middle" align="right" width="62" class="${TONE[toneOf(m.changePct)].cls} az-rule" style="padding:8px 0 8px 8px;${rule}font-family:${FONT};font-size:13px;line-height:18px;font-weight:800;color:${TONE[toneOf(m.changePct)].ink};white-space:nowrap">${escapeHtml(weekPct(m.changePct, locale))}</td>
+<td valign="middle" align="right" width="74" class="az-muted az-rule" style="padding:8px 0 8px 8px;${rule}font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted};white-space:nowrap">${escapeHtml(weekPoints(m.contribution, locale))}</td>
+</tr>`;
+    })
+    .join("");
+  const ahead = week.ahead
+    .map(
+      (a, i) => `<tr>
+<td valign="middle" class="az-rule" style="padding:7px 0;${i ? `border-top:1px solid ${C.line};` : ""}"><a href="${escapeHtml(pathFor(`/hisse/${a.symbol}`, locale))}" target="_blank" style="text-decoration:none"><strong class="az-ink" style="font-family:${MONO};font-size:13px;line-height:18px;color:${C.ink}">${escapeHtml(a.symbol)}</strong></a></td>
+<td valign="middle" align="right" class="az-muted az-rule" style="padding:7px 0;${i ? `border-top:1px solid ${C.line};` : ""}font-family:${FONT};font-size:12px;line-height:18px;color:${C.muted}">${escapeHtml(`${dayLabel(a.date, locale)} · ${a.timing === "bmo" ? W.bmo : a.timing === "amc" ? W.amc : W.other}`)}</td>
+</tr>`,
+    )
+    .join("");
+  const footnotes = [
+    P.basis,
+    week.covered < week.total ? P.partial.replace("{covered}", String(week.covered)).replace("{total}", String(week.total)) : "",
+    week.skippedLots > 0 ? P.skipped.replace("{n}", String(week.skippedLots)) : "",
+  ].filter(Boolean);
+  const label = `<p class="az-muted" style="margin:14px 0 4px;font-family:${FONT};font-size:12px;line-height:16px;font-weight:700;color:${C.muted}">`;
+  return `<table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0" style="margin:22px 0 0"><tr><td class="az-note az-rise" style="${delay(80)}background:${C.sunken};border:1px solid ${C.line};border-left:3px solid ${C.primary};border-radius:14px;padding:16px 18px 14px">
+<p class="az-ink" style="margin:0 0 10px;font-family:${FONT};font-size:15px;line-height:20px;font-weight:800;color:${C.ink}">${escapeHtml(P.title)}</p>
+<table role="presentation" cellpadding="0" cellspacing="0" border="0"><tr>
+<td valign="bottom" style="padding:0 12px 0 0"><span class="${tone.cls}" style="font-family:${FONT};font-size:32px;line-height:36px;font-weight:800;letter-spacing:-.02em;color:${tone.ink};white-space:nowrap">${escapeHtml(weekPct(week.changePct, locale))}</span></td>
+${sp ? `<td valign="bottom" style="padding:0 0 5px">${chip(P.vsMarket.replace("{pct}", weekPct(sp.changePct, locale)), "flat")}</td>` : ""}
+</tr></table>
+<p class="az-muted" style="margin:4px 0 0;font-family:${FONT};font-size:12px;line-height:16px;color:${C.muted}">${escapeHtml(P.changeLabel)}</p>
+${movers ? `${label}${escapeHtml(P.moversTitle)}</p><p class="az-muted" style="margin:0 0 2px;font-family:${FONT};font-size:11px;line-height:15px;color:${C.muted}">${escapeHtml(P.moversNote)}</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${movers}</table>` : ""}
+${ahead ? `${label}${escapeHtml(P.aheadTitle)}</p><table role="presentation" width="100%" cellpadding="0" cellspacing="0" border="0">${ahead}</table>` : ""}
+${mail.note ? `<p class="az-ink" style="margin:14px 0 0;font-family:${FONT};font-size:14px;line-height:22px;color:${C.ink}">${escapeHtml(mail.note)}</p><p class="az-muted" style="margin:4px 0 0;font-family:${FONT};font-size:11px;line-height:15px;color:${C.muted}">${escapeHtml(mail.owner ? P.ownerNoteLabel : P.noteLabel)}</p>` : ""}
+<p class="az-muted" style="margin:12px 0 0;font-family:${FONT};font-size:11px;line-height:15px;color:${C.muted}">${escapeHtml(footnotes.join(" "))}</p>
+<p style="margin:10px 0 0"><a href="${escapeHtml(pathFor("/portfoy", locale))}" target="_blank" class="az-link" style="font-family:${FONT};font-size:13px;line-height:18px;font-weight:700;color:${C.primary};text-decoration:none">${escapeHtml(P.button)}&nbsp;&rarr;</a></p>
+</td></tr></table>`;
+}
+
+/** Düz metin eşi — HTML kutusunun aynı satırları. */
+function portfolioText(mail: PortfolioMail | undefined, data: DigestData, locale: Locale): string[] {
+  if (!mail) return [];
+  const { week, copy: P } = mail;
+  const sp = data.indices.find((i) => i.symbol === "SPY");
+  const lines = ["", `${P.title}: ${weekPct(week.changePct, locale)}${sp ? ` (${P.vsMarket.replace("{pct}", weekPct(sp.changePct, locale))})` : ""}`];
+  if (week.movers.length) lines.push(P.moversTitle, ...week.movers.map((m) => `- ${m.symbol}: ${weekPct(m.changePct, locale)} · ${weekPoints(m.contribution, locale)}`));
+  if (week.ahead.length) lines.push(P.aheadTitle, ...week.ahead.map((a) => `- ${a.symbol}: ${dayLabel(a.date, locale)}`));
+  if (mail.note) lines.push("", mail.note, `(${mail.owner ? P.ownerNoteLabel : P.noteLabel})`);
+  lines.push(P.basis, `${P.button}: ${pathFor("/portfoy", locale)}`);
+  return lines;
+}
+
+export function weeklyEmailMessage(recipient: Recipient, data: DigestData, personal: DigestPersonal, copy: Copy, week?: WatchWeekLike, portfolio?: PortfolioMail): Email {
   const W = copy.weeklyMail;
   const { locale } = recipient;
   const pastRange = weekRangeLabel(data.pastMonday, data.pastFriday, locale);
@@ -566,6 +666,7 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
       emailText.greeting(greeting),
       emailText.paragraph(W.intro),
       chapter("1", W.pastSection, pastRange),
+      portfolioBlock(portfolio, data, locale, W),
       commentaryBlock(data.commentary?.past, W, false),
       developmentsBlock(data, W),
       reportedBlock(data, W),
@@ -591,6 +692,7 @@ export function weeklyEmailMessage(recipient: Recipient, data: DigestData, perso
   });
 
   const text: string[] = [greeting, "", W.intro, "", `== ${W.pastSection} · ${pastRange} ==`];
+  text.push(...portfolioText(portfolio, data, locale));
   if (data.commentary) text.push("", data.commentary.past);
   if (data.indices.length) {
     text.push("", `${W.marketTitle} (${W.marketNote})`, ...data.indices.map((i) => `- ${i.label}: ${emailPercent(i.changePct, locale, 2)}`));

@@ -1,0 +1,103 @@
+/* Kişisel danışman (11 Kasım). Öne çıkan tek yüzey: mavi ince kenar ve
+   `premium-surface` (sayfanın "Claude" yüzeyi; gölge yok). Eylem
+   karolarında tür rengi tepedeki 3 piksellik şeritte (arayüz kuralı: durum
+   kartın tepesinde şerit): azalt/sınırla sıcak (down), ekle yeşil (up),
+   çeşitlendir mavi, koru/izle nötr. Ölçüm TSX başında. */
+
+.panel {
+  display:flex; flex-direction:column; gap:18px; padding:18px;
+  border-color:var(--primary-faint); background:var(--premium-surface);
+  border-radius:var(--radius-feature, var(--radius-panel)); scroll-margin-top:120px;
+}
+@media (min-width:640px) { .panel { padding:26px; } }
+
+.head { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px; }
+.titleRow { display:flex; flex-wrap:wrap; align-items:center; gap:10px; }
+.title { display:inline-flex; align-items:center; gap:8px; color:var(--text-strong); font-size:clamp(20px, 2vw, 24px); font-weight:700; letter-spacing:-.025em; }
+.spark { color:var(--primary); flex:none; }
+.badge { display:inline-flex; align-items:center; height:22px; padding:0 9px; border-radius:999px; background:var(--primary-tint); color:var(--primary-ink); font-size:var(--text-nano); font-weight:700; white-space:nowrap; }
+
+.tabs { display:inline-flex; gap:2px; padding:3px; border-radius:999px; background:var(--surface-sunken); box-shadow:var(--shadow-well); }
+.tab { min-height:36px; padding:0 16px; border-radius:999px; color:var(--text-muted); font-size:var(--text-small); font-weight:600; transition:background-color 180ms var(--ease-brand), color 180ms var(--ease-brand); }
+.tab:hover { color:var(--text-strong); }
+.tab[aria-selected="true"] { background:var(--surface-solid); color:var(--text-strong); box-shadow:var(--shadow-raised); }
+.tab:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.tab:active { scale:.97; }
+
+.meta { margin-top:-8px; color:var(--text-muted); font-size:var(--text-tiny); font-weight:600; }
+.loading { display:flex; flex-direction:column; gap:10px; color:var(--text-muted); font-size:var(--text-small); }
+.unavailable { color:var(--text-muted); font-size:var(--text-small); }
+
+.report { display:flex; flex-direction:column; gap:22px; }
+.lead { display:flex; flex-direction:column; gap:10px; max-width:72ch; }
+.headline { color:var(--text-strong); font-size:clamp(20px, 2.3vw, 27px); font-weight:700; letter-spacing:-.03em; line-height:1.2; text-wrap:balance; }
+.summary { color:var(--text-body); font-size:var(--text-read); line-height:1.65; }
+
+.sectionTitle { display:inline-flex; align-items:center; gap:6px; margin-bottom:10px; color:var(--text-strong); font-size:14px; font-weight:700; }
+
+/* Eylem karoları: dar kapta alt alta, ≥ 720'de iki sütun. */
+.actions { display:grid; gap:10px; container-type:inline-size; }
+@media (min-width:720px) { .actions { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.action {
+  position:relative; display:flex; flex-direction:column; gap:8px; overflow:hidden;
+  padding:16px 16px 15px; border-radius:12px; background:var(--surface-solid);
+  --kind:var(--line-strong);
+}
+.action::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--kind); }
+/* Şerit tonu (`--kind`) ile hap yazısı (`--kind-ink`) ayrı: nötr türde
+   (koru/izle) şerit `--line-strong`, ama aynı ton hap yazısında soluk ve
+   "devre dışı" gibi okunuyordu (ölçüm turu, 1440). */
+.action, .briefActions li { --kind-ink:var(--text-body); }
+.action[data-kind="trim"], .action[data-kind="hedge"] { --kind:var(--down); --kind-ink:var(--down); }
+.action[data-kind="add"] { --kind:var(--up); --kind-ink:var(--up); }
+.action[data-kind="diversify"] { --kind:var(--primary); --kind-ink:var(--primary-ink); }
+.actionHead { display:flex; flex-wrap:wrap; align-items:center; gap:8px; }
+.rank { display:inline-grid; place-items:center; width:22px; height:22px; border-radius:999px; background:var(--surface-sunken); color:var(--text-muted); font-size:var(--text-nano); font-weight:700; }
+.kind { display:inline-flex; align-items:center; gap:5px; height:22px; padding:0 8px; border-radius:999px; background:var(--surface-sunken); color:var(--kind-ink, var(--text-body)); font-size:var(--text-nano); font-weight:700; }
+.symbol { color:var(--text-strong); font-size:var(--text-small); font-weight:700; }
+.symbol:hover { color:var(--primary); }
+.actionTitle { color:var(--text-strong); font-size:15px; font-weight:700; line-height:1.3; }
+.actionDetail { color:var(--text-body); font-size:var(--text-small); line-height:1.6; }
+
+.split { display:grid; gap:14px; }
+@media (min-width:720px) { .split { grid-template-columns:minmax(0,1fr) minmax(0,1fr); } }
+.risks, .outlook { padding:16px; border-radius:12px; background:var(--surface-sunken); }
+.risks .sectionTitle { color:var(--down); }
+.risks ul { display:flex; flex-direction:column; gap:10px; }
+.risks li { display:flex; flex-direction:column; gap:2px; font-size:var(--text-small); line-height:1.55; color:var(--text-body); }
+.risks b { color:var(--text-strong); font-weight:700; }
+.outlook p { color:var(--text-body); font-size:var(--text-small); line-height:1.65; }
+
+/* Aylık karne */
+.monthly { display:flex; flex-direction:column; gap:12px; padding:16px; border-radius:12px; background:var(--surface-sunken); }
+.monthly .sectionTitle { margin-bottom:0; }
+.versus { display:flex; flex-wrap:wrap; gap:10px; }
+.versus > div { display:flex; flex-direction:column; gap:6px; min-width:128px; padding:10px 12px; border-radius:10px; background:var(--surface-solid); }
+.versus dt { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
+.contribGrid { display:grid; gap:14px; }
+@media (min-width:720px) { .contribGrid { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+.contribGrid h4 { margin-bottom:6px; color:var(--text-muted); font-size:var(--text-nano); font-weight:700; }
+.contribGrid ul { display:flex; flex-direction:column; gap:8px; }
+.contrib { display:grid; grid-template-columns:52px minmax(0,1fr) max-content; align-items:center; gap:10px; }
+.contribSymbol { color:var(--text-strong); font-size:var(--text-small); font-weight:700; }
+.contribLane { position:relative; display:block; }
+.contrib b { font-size:var(--text-tiny); font-weight:700; white-space:nowrap; }
+
+.disclosure { padding-top:12px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:var(--text-tiny); line-height:1.55; }
+
+/* ---- Ana sayfa kartındaki özet ---- */
+.brief { display:flex; flex-direction:column; gap:10px; padding:14px; border:1px solid var(--primary-faint); border-radius:12px; background:var(--premium-surface); }
+.briefHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 10px; }
+.briefTitle { display:inline-flex; align-items:center; gap:6px; color:var(--text-strong); font-size:14px; font-weight:700; }
+.briefHeadline { color:var(--text-strong); font-size:16px; font-weight:700; letter-spacing:-.02em; line-height:1.3; text-wrap:balance; }
+.briefActions { display:flex; flex-direction:column; gap:7px; }
+.briefActions li { display:flex; min-width:0; align-items:center; gap:8px; font-size:var(--text-small); --kind:var(--line-strong); }
+.briefActions li[data-kind="trim"], .briefActions li[data-kind="hedge"] { --kind:var(--down); --kind-ink:var(--down); }
+.briefActions li[data-kind="add"] { --kind:var(--up); --kind-ink:var(--up); }
+.briefActions li[data-kind="diversify"] { --kind:var(--primary); --kind-ink:var(--primary-ink); }
+.briefActions b { flex:none; color:var(--text-strong); font-weight:700; }
+.briefActionTitle { overflow:hidden; color:var(--text-body); white-space:nowrap; text-overflow:ellipsis; }
+.briefLink { display:inline-flex; min-height:44px; align-items:center; gap:4px; margin-block:-10px -12px; color:var(--primary); font-size:var(--text-small); font-weight:600; }
+.briefLink:hover { color:var(--primary-hover); }
+.briefLink svg { transition:translate 200ms var(--ease-brand); }
+.briefLink:hover svg { translate:3px 0; }
