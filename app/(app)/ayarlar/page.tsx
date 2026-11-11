@@ -22,6 +22,7 @@ import { PushSettings } from "@/components/notifications/PushSettings";
 import { EmailSettings } from "@/components/notifications/EmailSettings";
 import { getEmailPrefs } from "@/lib/email-notify";
 import { getNotificationPrefs } from "@/lib/notification-prefs";
+import { getPushPrefs } from "@/lib/push-prefs";
 import { getUserSubscriptions, pushPublicKey } from "@/lib/push";
 import { PreferenceSettings } from "@/components/layout/preference-controls";
 import { BellSoundToggle } from "@/components/sound/BellSoundToggle";
@@ -48,7 +49,7 @@ export default async function SettingsPage() {
   const session = await auth();
   if (!session?.user) redirect("/giris?devam=/ayarlar");
 
-  const [{ locale, t }, theme, avatar, push, profile, prefs, emailPrefs] = await Promise.all([
+  const [{ locale, t }, theme, avatar, push, profile, prefs, emailPrefs, pushKinds] = await Promise.all([
     getI18n(),
     getTheme(),
     session.user.id ? getUserAvatar(session.user.id) : Promise.resolve(null),
@@ -60,6 +61,7 @@ export default async function SettingsPage() {
     session.user.id
       ? getEmailPrefs(session.user.id)
       : Promise.resolve({ available: false, alerts: false, weekly: false, confirmed: false, pending: false }),
+    session.user.id ? getPushPrefs(session.user.id) : Promise.resolve(null),
   ]);
   const username = session.user.name ?? "";
   const initials = username.slice(0, 2).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US");
@@ -185,6 +187,8 @@ export default async function SettingsPage() {
               publicKey={pushPublicKey()}
               devices={push.subscriptions.length}
               earnings={prefs.available ? { enabled: prefs.earningsReminder } : null}
+              kinds={pushKinds?.available ? pushKinds.prefs : null}
+              kindLabels={t.pushPrefs}
               labels={t.notifications}
             />
           </div>

@@ -6,6 +6,8 @@ import { getLocale, getDictionary } from "@/lib/i18n";
 import { withLocale } from "@/lib/i18n/routing";
 import { rateLimit } from "@/lib/rate-limit";
 import { pushConfigured, pushSubscriptionSchema, removeSubscription, saveSubscription, sendToUser } from "@/lib/push";
+import { setPushPref } from "@/lib/push-prefs";
+import { isPushKind } from "@/lib/push-prefs-model";
 import { notificationPrefs } from "@/lib/schema";
 
 /**
@@ -69,6 +71,18 @@ export async function setEarningsReminderAction(enabled: boolean): Promise<{ ok:
   } catch {
     return { ok: false };
   }
+}
+
+/**
+ * Push tür anahtarı (11 Kasım) — "Fiyat Alarmları", "Haftalık Portföy
+ * Özeti". Gerekçe lib/push-prefs-model.ts. Tür tarayıcıdan gelir ve
+ * güvenilmez: listede yoksa yazılmaz. Satır OTURUMUN hesabına yazılır.
+ */
+export async function setPushPrefAction(kind: unknown, enabled: unknown): Promise<{ ok: boolean }> {
+  const id = await userId();
+  if (!id || !isPushKind(kind) || typeof enabled !== "boolean") return { ok: false };
+  if (!rateLimit(`push-pref:${id}`, 10, 60_000).allowed) return { ok: false };
+  return { ok: await setPushPref(id, kind, enabled) };
 }
 
 /** "Deneme Bildirimi Gönder" — dakikada üç; kendi cihazlarına. */

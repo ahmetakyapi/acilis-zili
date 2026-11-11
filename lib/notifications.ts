@@ -4,6 +4,7 @@ import { db } from "@/lib/db";
 import { notifications, users } from "@/lib/schema";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { sendToUser } from "@/lib/push";
+import { pushKindEnabled } from "@/lib/push-prefs";
 import { sendAlertEmail } from "@/lib/alert-email";
 import type { AlertEmailInput } from "@/lib/notify-emails";
 
@@ -19,6 +20,9 @@ import type { AlertEmailInput } from "@/lib/notify-emails";
  */
 
 export type NotificationKind = "alert" | "percent" | "earnings" | "post_approved" | "post_rejected";
+
+/** "Fiyat Alarmları" push tercihine bağlı türler (lib/push-prefs-model.ts). */
+const PRICE_KINDS: ReadonlySet<NotificationKind> = new Set(["alert", "percent"]);
 
 type NotificationText = {
   title: string;
@@ -120,7 +124,12 @@ export async function notifyUserReport(
       else await new Promise((resolve) => setTimeout(resolve, INBOX_RETRY_MS));
     }
   }
-  const delivered = await sendToUser(userId, (deviceLocale) => {
+  /* TÜR TERCİHİ (11 Kasım): okur "Fiyat Alarmları"nı kapattıysa alarm
+     push'u gitmez; gelen kutusu ve (açıksa) posta yine yazılır — tercih
+     yalnız cihaza giden kanalı susturur. Varsayılan açık, okunamazsa da
+     açık (lib/push-prefs.ts → pushKindEnabled). */
+  const pushAllowed = PRICE_KINDS.has(kind) ? await pushKindEnabled(userId, "price") : true;
+  const delivered = !pushAllowed ? 0 : await sendToUser(userId, (deviceLocale) => {
     const push = text(deviceLocale);
     return {
       title: push.title,

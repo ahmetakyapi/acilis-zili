@@ -39,6 +39,12 @@ LINES=(
 	# varsa dokunmaz. Akşam kapanıştan sonra, sabah hafta sonu dahil telafi.
 	"30 22 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-grafik.sh"
 	"45 11 * * * /bin/bash $APP_ROOT/current/deploy/cron-grafik.sh"
+	# Cuma portföy özeti push'u (11 Kasım — gerekçe deploy/cron-portfoy-ozeti.sh).
+	# CRON_TZ burada çalışmadığı için (aşağıda) yaz/kış saatini uç çözer:
+	# satırlar her iki durumu ve yarım günü kapsar, erken koşu "not-due"
+	# deyip döner, okur başına hafta anahtarı tekrarı engeller.
+	"7 5,7 * * 2-6 /bin/bash $APP_ROOT/current/deploy/cron-portfoy-ozeti.sh"
+	"37 18 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-portfoy-ozeti.sh"
 	# Ortak veri önbelleğinin budaması (20 Ekim — gerekçe update.sh). Next
 	# diskteki kaydı hiç silmiyor; sürüm dizinleri budanırken önbellek de
 	# gidiyordu, ortak dizinde biriken tarihli adresler (gün başlangıçlı

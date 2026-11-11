@@ -120,6 +120,8 @@ export type AccountExport = {
     | null;
   /** Bildirim tercihleri (15 Ekim) — `null` tablo okunamadıysa ya da satır yoksa. */
   notificationPrefs?: { earningsReminder: boolean } | null;
+  /** Push tür tercihleri (11 Kasım) — fiyat alarmı, cuma portföy özeti; `null` tablo yoksa. */
+  pushPrefs?: { price: boolean; weekly: boolean } | null;
   /** E-posta bildirim tercihleri (16 Ekim) — `null` satır ya da tablo yoksa. */
   emailPrefs?: { alerts: boolean; weekly: boolean; confirmedEmail: string | null; confirmedAt: string | null } | null;
   /**

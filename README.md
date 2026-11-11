@@ -388,6 +388,7 @@ ritmine bağlı.
 | `percent_alerts` | Günlük yüzde değişim alarmları (eşik + yön, tek seferlik) | Kullanıcı eylemi (hisse sayfası) |
 | `price_alert_state` · `percent_alert_state` | Alarm başına devreye giriş anı ve bildirim durumu (bildirildi, deneme sayısı); tablo yokken eski davranış | `lib/alert-state.ts` (yeniden kurma eylemi + alarm taraması) |
 | `notification_prefs` | Hesap genelinde bildirim anahtarları (bilanço hatırlatması) | Kullanıcı eylemi (Ayarlar) |
+| `push_preferences` · `push_sends` | Push tür tercihleri (fiyat alarmı varsayılan açık; haftalık portföy özeti kapalı, site sahibinde açık — satır yalnız değiştirilince) ve zamanlanmış push'un tekrar defteri (okur + hafta anahtarı, 60 gün); tablolar yokken alarm push'u eskisi gibi, özet hiç gitmez | Kullanıcı eylemi (Ayarlar) + `/api/cron/portfoy-ozeti` |
 | `user_posts` | Topluluk yazıları: taslak → kuyruk → yayın/red durum makinesi | Kullanıcı eylemi (editör) + moderasyon |
 | `notifications` | Bildirim kutusu: alarm, bilanço ve moderasyon bildirimlerinin kalıcı kaydı (90 gün) | `lib/notifications.ts` → `notifyUser` (cron + moderasyon) |
 | `symbols` | Sembol künyesi: ad, borsa, sektör, logo, piyasa değeri, hisse sayısı | Tohum + cron + sayfa isteği |
@@ -731,6 +732,7 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 | `/api/push/yenile` | Service worker'ın `pushsubscriptionchange` olayında aboneliği yenilemesi (oturum çereziyle) |
 | `/api/e-posta/ayril` | Tek tıkla çıkış (RFC 8058, `List-Unsubscribe-Post`): yalnız POST, girişsiz, IP başına sınırlı |
 | `/api/cron/bilanco` | "Bilanço yarın" hatırlatması: günde bir, tercihi açan hesaplara takip listelerindeki yarınki bilançoları tek bildirimde gönderir (`CRON_SECRET`) |
+| `/api/cron/portfoy-ozeti` | Cuma portföy özeti push'u: 05:07 ve 07:07 UTC (salı–cumartesi) ile 18:37 UTC (hafta içi) çağrılır; haftanın son işlem gününün barı kesinleşince (tatil/yarım gün dahil), Türkiye'de gece değilse (23:00–08:00 TR sabaha kayar) tercihi açık ve portföyü olan okura haftalık yüzde + en çok etkileyen pozisyon, tutar yok; tekrarı `push_sends` önler, Claude yok (`lib/portfolio-week-push.ts`, `CRON_SECRET`) |
 | `/api/cron/risk` | Risk Masası kuralları: 21:40 UTC (kapanıştan sonra) ve 11:15 UTC (FRED gelince) aynı tamamlanmış seansı değerlendirir; kural yalnız tetiklendiği gün Web Push gönderir, e-posta yok (`CRON_SECRET`) |
 | `/api/cron/olasiliklar` | Olasılıkların günlük anlık görüntüsü: saatte bir çağrılır (`deploy/cron-olasiliklar.sh`), günde bir yazar; seçim gecesi ve Fed saatinde sıklaşır. `KALSHI_API_BASE` isteğe bağlı (`CRON_SECRET`) |
 
