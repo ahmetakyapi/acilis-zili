@@ -1,6 +1,7 @@
 "use client";
 
 import {
+  type KeyboardEvent as ReactKeyboardEvent,
   useCallback,
   useEffect,
   useId,
@@ -41,10 +42,18 @@ import styles from "./DatePicker.module.css";
  *     Rakam yazana ayraç kendiliğinden gelir; alan bırakılınca ya da Enter'a
  *     basılınca metin çözülür (`lib/date-input.ts`). Okunamayan ya da
  *     aralık dışı metin DEĞERİ DEĞİŞTİRMEZ ve altında nedenini söyler.
- *   - SEÇMEK: sağdaki düğme (ya da alanda Alt+↓) takvimi açar. Başlıkta ay
- *     ve yıl İKİ AYRI LİSTE: yıllar önceki bir ekstre tarihine yüz kez
- *     "önceki ay"a basmadan iniliyor. Listeler yerli `<select>`, yani
- *     telefonda işletim sisteminin kendi çarkı açılıyor.
+ *   - SEÇMEK: sağdaki düğme (ya da alanda Alt+↓) takvimi açar. Başlık
+ *     ("Kasım 2026") bir BUTON: basınca YIL IZGARASI, yıl seçilince AY
+ *     IZGARASI, ay seçilince o ayın günleri. 2019'daki bir alışa üç
+ *     dokunuşla iniliyor (yıl → ay → gün).
+ *     NEDEN YERLİ LİSTE DEĞİL (12 Kasım, sahibinin şikâyeti: "portföyde
+ *     geçmiş yıl tarih girilemiyor"): başlıkta görünmez iki yerli `<select>`
+ *     vardı. Chromium'da çalışıyordu, ama liste popover'ın ve modal
+ *     `<dialog>`un İÇİNDE açılıyor; Safari'de listenin açılışı odağı
+ *     bileşenin dışına taşıyıp pencereyi kapatabiliyor, telefonda da
+ *     görünmez listeye isabet etmek için 70 piksellik etiketi bulmak
+ *     gerekiyordu. Kendi ızgaramız her motorda aynı davranıyor, 44 piksel
+ *     dokunma hedefi taşıyor ve aralık dışındaki yıl/ayı kapalı gösteriyor.
  *   Değer her zaman ISO "YYYY-AA-GG"; `name` verilirse gizli bir alanla
  *   forma gidiyor, yani gönderilen form alanı değişmedi.
  *
@@ -128,23 +137,100 @@ const isoToDate = (iso: string) => new Date(Number(iso.slice(0, 4)), Number(iso.
 const dateToIso = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}`;
 const monthOf = (iso: string) => isoToDate(`${iso.slice(0, 7)}-01`);
+/** Ay sırası (yıl × 12 + ay) — aralık karşılaştırması tek sayıyla. */
+const monthIndex = (date: Date) => date.getFullYear() * 12 + date.getMonth();
+const fromIndex = (index: number) => new Date(Math.floor(index / 12), index % 12, 1);
+
+type View = "days" | "months" | "years";
+type PeriodItem = { key: number; label: string; disabled: boolean; selected: boolean; today: boolean };
+
+/**
+ * YIL / AY IZGARASI. Oklar odak taşır (sağ/sol bir, yukarı/aşağı bir
+ * satır; kapalı hücrenin üstünden atlar), Home/End uçlara. Açılışta odak
+ * gösterilen yılda/ayda; yıl listesi uzunsa (sınırsız alanda 51 yıl) o yıl
+ * kabın ortasına kaydırılır.
+ */
+function PeriodGrid({
+  items,
+  columns,
+  focusKey,
+  label,
+  onPick,
+}: {
+  items: PeriodItem[];
+  columns: number;
+  focusKey: number;
+  label: string;
+  onPick: (key: number) => void;
+}) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useLayoutEffect(() => {
+    const grid = ref.current;
+    if (!grid) return;
+    const target =
+      grid.querySelector<HTMLButtonElement>(`button[data-key="${focusKey}"]:not(:disabled)`) ??
+      grid.querySelector<HTMLButtonElement>("button:not(:disabled)");
+    if (!target) return;
+    /* Kabı kendimiz kaydırıyoruz: `scrollIntoView` modal diyaloğun ve
+       sayfanın kendisini de kaydırırdı. */
+    grid.scrollTop = target.offsetTop - grid.clientHeight / 2 + target.offsetHeight / 2;
+    target.focus({ preventScroll: true });
+  }, [focusKey]);
+
+  const onKeyDown = (event: ReactKeyboardEvent<HTMLDivElement>) => {
+    const buttons = Array.from(ref.current?.querySelectorAll<HTMLButtonElement>("button") ?? []);
+    const from = buttons.indexOf(document.activeElement as HTMLButtonElement);
+    if (from < 0) return;
+    const step =
+      event.key === "ArrowRight" ? 1 : event.key === "ArrowLeft" ? -1 : event.key === "ArrowDown" ? columns : event.key === "ArrowUp" ? -columns : 0;
+    let to = -1;
+    if (step !== 0) {
+      for (let i = from + step; i >= 0 && i < buttons.length; i += step) {
+        if (!buttons[i].disabled) {
+          to = i;
+          break;
+        }
+      }
+    } else if (event.key === "Home") {
+      to = buttons.findIndex((b) => !b.disabled);
+    } else if (event.key === "End") {
+      to = buttons.findLastIndex((b) => !b.disabled);
+    } else {
+      return;
+    }
+    event.preventDefault();
+    if (to >= 0) buttons[to].focus();
+  };
+
+  return (
+    <div ref={ref} className={styles.period} data-columns={columns} role="group" aria-label={label} onKeyDown={onKeyDown}>
+      {items.map((item) => (
+        <button
+          key={item.key}
+          type="button"
+          data-key={item.key}
+          className={cn("numeral", styles.periodItem)}
+          disabled={item.disabled}
+          aria-pressed={item.selected}
+          data-today={item.today || undefined}
+          onClick={() => onPick(item.key)}
+        >
+          {item.label}
+        </button>
+      ))}
+    </div>
+  );
+}
 
 /** Kütüphanenin sınıf adları yerine modülün sınıfları; varsayılan stil hiç yüklenmiyor. */
 const CALENDAR_CLASSES = {
   root: styles.calendar,
   months: styles.months,
   month: styles.month,
-  month_caption: styles.caption,
-  caption_label: styles.captionLabel,
-  dropdowns: styles.dropdowns,
-  dropdown_root: styles.dropdownRoot,
-  dropdown: styles.dropdown,
-  months_dropdown: styles.monthsDropdown,
-  years_dropdown: styles.yearsDropdown,
-  nav: styles.navGroup,
-  button_previous: styles.nav,
-  button_next: styles.nav,
-  chevron: styles.chevron,
+  /* Kütüphanenin başlığı yalnızca ekran okuyucuya (ızgaranın adı); görünen
+     başlık ve oklar bu bileşenin (`view` durumu). */
+  month_caption: "sr-only",
   month_grid: styles.grid,
   weekdays: styles.week,
   weekday: styles.weekdayHead,
@@ -162,10 +248,6 @@ const CALENDAR_CLASSES = {
   weeks_before_exit: styles.weeksBeforeExit,
   weeks_after_enter: styles.weeksAfterEnter,
   weeks_after_exit: styles.weeksAfterExit,
-  caption_after_enter: styles.captionAfterEnter,
-  caption_after_exit: styles.captionAfterExit,
-  caption_before_enter: styles.captionBeforeEnter,
-  caption_before_exit: styles.captionBeforeExit,
 };
 
 /* IZGARA `div`, `table` DEĞİL: seçici ekstre önizlemesinin tablo hücresinin
@@ -204,10 +286,6 @@ const CALENDAR_PARTS: Partial<CustomComponents> = {
       {children}
     </div>
   ),
-  Chevron: ({ orientation, className }) => {
-    const Icon = orientation === "left" ? CaretLeft : orientation === "right" ? CaretRight : CaretDown;
-    return <Icon weight="bold" size={orientation === "down" ? 11 : 14} className={className} aria-hidden />;
-  },
 };
 
 const supportsPopover = () =>
@@ -251,6 +329,7 @@ export function DatePicker({
     [onValidityChange],
   );
   const [open, setOpen] = useState(false);
+  const [view, setView] = useState<View>("days");
   const [month, setMonth] = useState(() => monthOf(valid ? current : todayProp && isIsoDay(todayProp) ? todayProp : todayIso()));
   const [sheet, setSheet] = useState(false);
   const [reducedMotion, setReducedMotion] = useState(false);
@@ -290,6 +369,41 @@ export function DatePicker({
     ...(max ? [{ after: isoToDate(max) }] : []),
   ];
   const longDate = (iso: string) => fmt(iso, { day: "numeric", month: "long", year: "numeric", weekday: "long" });
+
+  /* ---- Yıl / ay ızgarası ---- */
+  const firstIndex = monthIndex(startMonth);
+  const lastIndex = monthIndex(endMonth);
+  const shownIndex = monthIndex(month);
+  const shownYear = month.getFullYear();
+  const goTo = (index: number) => setMonth(fromIndex(Math.min(lastIndex, Math.max(firstIndex, index))));
+  const selectedYear = valid ? Number(current.slice(0, 4)) : null;
+  const selectedMonth = valid ? Number(current.slice(5, 7)) - 1 : null;
+  const todayMonth = Number(today.slice(5, 7)) - 1;
+  const yearItems: PeriodItem[] = [];
+  for (let y = startMonth.getFullYear(); y <= endMonth.getFullYear(); y++) {
+    yearItems.push({ key: y, label: String(y), disabled: false, selected: y === selectedYear, today: y === thisYear });
+  }
+  const monthItems: PeriodItem[] = Array.from({ length: 12 }, (_, m) => {
+    const index = shownYear * 12 + m;
+    return {
+      key: m,
+      label: new Intl.DateTimeFormat(intl, { month: "long" }).format(new Date(shownYear, m, 1)),
+      disabled: index < firstIndex || index > lastIndex,
+      selected: shownYear === selectedYear && m === selectedMonth,
+      today: shownYear === thisYear && m === todayMonth,
+    };
+  });
+  const caption =
+    view === "years"
+      ? `${startMonth.getFullYear()} – ${endMonth.getFullYear()}`
+      : view === "months"
+        ? String(shownYear)
+        : new Intl.DateTimeFormat(intl, { month: "long", year: "numeric" }).format(month);
+  /* Oklar günlerde bir ay, ay ızgarasında bir yıl kaydırır; yıl ızgarası
+     zaten bütün aralığı gösteriyor. */
+  const navStep = view === "months" ? 12 : 1;
+  const canPrev = view === "months" ? shownYear > startMonth.getFullYear() : shownIndex > firstIndex;
+  const canNext = view === "months" ? shownYear < endMonth.getFullYear() : shownIndex < lastIndex;
 
   /* ODAK DÖNÜŞÜ. Masaüstünde alana; telefonun alt çekmecesinde TAKVİM
      DÜĞMESİNE (28 Eylül denetimi): dokunuşla seçilen günün ardından metin
@@ -356,6 +470,7 @@ export function DatePicker({
     const typed = parseDateInput(shown, locale);
     const start = typed ?? (valid ? current : today);
     setMonth(monthOf(clampIso(start, min, max)));
+    setView("days");
     setReducedMotion(window.matchMedia("(prefers-reduced-motion: reduce)").matches);
     setSheet(window.matchMedia(SHEET_QUERY).matches);
     setOpen(true);
@@ -548,7 +663,9 @@ export function DatePicker({
             if (event.key !== "Escape") return;
             event.preventDefault();
             event.stopPropagation();
-            closePicker();
+            /* Yıl/ay ızgarasında Escape bir adım geri: günlere döner. */
+            if (view !== "days") setView("days");
+            else closePicker();
           }}
           onPointerDown={(event) => {
             /* Çekmecenin karartmasına basmak kapatır: karartmaya basışın
@@ -569,6 +686,68 @@ export function DatePicker({
             </div>
           )}
 
+          <div className={styles.caption}>
+            <button
+              type="button"
+              className={cn("numeral", styles.captionButton)}
+              aria-expanded={view !== "days"}
+              aria-label={view === "days" ? `${L.pickPeriod}, ${caption}` : `${L.backToDays}, ${caption}`}
+              data-view={view}
+              onClick={() => setView(view === "days" ? "years" : view === "months" ? "years" : "days")}
+            >
+              <span aria-live="polite">{caption}</span>
+              <CaretDown weight="bold" size={12} className={styles.captionCaret} aria-hidden />
+            </button>
+            {view !== "years" && (
+              <div className={styles.navGroup}>
+                <button
+                  type="button"
+                  className={styles.nav}
+                  aria-label={view === "months" ? L.prevYear : L.prevMonth}
+                  aria-disabled={!canPrev || undefined}
+                  onClick={() => canPrev && goTo(shownIndex - navStep)}
+                >
+                  <CaretLeft weight="bold" size={14} aria-hidden />
+                </button>
+                <button
+                  type="button"
+                  className={styles.nav}
+                  aria-label={view === "months" ? L.nextYear : L.nextMonth}
+                  aria-disabled={!canNext || undefined}
+                  onClick={() => canNext && goTo(shownIndex + navStep)}
+                >
+                  <CaretRight weight="bold" size={14} aria-hidden />
+                </button>
+              </div>
+            )}
+          </div>
+
+          {view === "years" && (
+            <PeriodGrid
+              items={yearItems}
+              columns={4}
+              focusKey={shownYear}
+              label={L.chooseYear}
+              onPick={(year) => {
+                goTo(year * 12 + month.getMonth());
+                setView("months");
+              }}
+            />
+          )}
+          {view === "months" && (
+            <PeriodGrid
+              items={monthItems}
+              columns={3}
+              focusKey={month.getMonth()}
+              label={L.chooseMonth}
+              onPick={(m) => {
+                goTo(shownYear * 12 + m);
+                setView("days");
+              }}
+            />
+          )}
+
+          {view === "days" && (
           <DayPicker
             mode="single"
             required={false}
@@ -578,8 +757,7 @@ export function DatePicker({
             showOutsideDays
             fixedWeeks
             animate={!reducedMotion}
-            captionLayout="dropdown"
-            navLayout="after"
+            hideNavigation
             month={month}
             onMonthChange={setMonth}
             startMonth={startMonth}
@@ -595,16 +773,24 @@ export function DatePicker({
             modifiersClassNames={{ weekend: styles.weekend }}
             formatters={{
               formatWeekdayName: (date) => new Intl.DateTimeFormat(intl, { weekday: "short" }).format(date),
-              formatMonthDropdown: (date) => new Intl.DateTimeFormat(intl, { month: "long" }).format(date),
             }}
             components={CALENDAR_PARTS}
           />
+          )}
 
           <div className={styles.foot}>
-            {!sheet && (
-              <p className={cn("numeral", styles.footValue)} data-empty={!valid || undefined}>
-                {valid ? longDate(current) : L.empty}
+            {view !== "days" ? (
+              /* Izgarada alt satır yazma yolunu hatırlatıyor: tam tarihi bilen
+                 okuyucu için yazmak üç dokunuştan da hızlı. */
+              <p className={styles.footHint}>
+                {L.typeHint.replace("{example}", formatDateInput(`${shownYear}-03-14`, locale))}
               </p>
+            ) : (
+              !sheet && (
+                <p className={cn("numeral", styles.footValue)} data-empty={!valid || undefined}>
+                  {valid ? longDate(current) : L.empty}
+                </p>
+              )
             )}
             <button type="button" className={styles.footAction} disabled={!inRange(today)} onClick={() => commit(today)}>
               {L.today}

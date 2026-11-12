@@ -21,7 +21,16 @@ export const datePickerTr = {
   beforeMin: "{date} tarihinden önce olamaz.",
   afterMax: "{date} tarihinden sonra olamaz.",
   selected: "Seçili",
-  keyboardHint: "Oklar gün, PageUp ve PageDown ay, Shift ile yıl değiştirir; ay ve yıl üstteki listelerden de seçilir.",
+  keyboardHint: "Oklar gün, PageUp ve PageDown ay, Shift ile yıl değiştirir; başlığa basınca yıl ve ay ızgarası açılır.",
+  pickPeriod: "Yıl ve Ay Seç",
+  backToDays: "Günlere Dön",
+  chooseYear: "Yıl Seç",
+  chooseMonth: "Ay Seç",
+  prevMonth: "Önceki Ay",
+  nextMonth: "Sonraki Ay",
+  prevYear: "Önceki Yıl",
+  nextYear: "Sonraki Yıl",
+  typeHint: "Yazarak da girebilirsin: {example}",
 };
 
 export const datePickerEn: typeof datePickerTr = {
@@ -35,5 +44,14 @@ export const datePickerEn: typeof datePickerTr = {
   beforeMin: "Can't be before {date}.",
   afterMax: "Can't be after {date}.",
   selected: "Selected",
-  keyboardHint: "Arrows move by day, PageUp and PageDown by month, add Shift for a year; month and year can also be picked from the lists above.",
+  keyboardHint: "Arrows move by day, PageUp and PageDown by month, add Shift for a year; press the heading to open the year and month grid.",
+  pickPeriod: "Choose Year and Month",
+  backToDays: "Back to Days",
+  chooseYear: "Choose a Year",
+  chooseMonth: "Choose a Month",
+  prevMonth: "Previous Month",
+  nextMonth: "Next Month",
+  prevYear: "Previous Year",
+  nextYear: "Next Year",
+  typeHint: "You can also type it: {example}",
 };
