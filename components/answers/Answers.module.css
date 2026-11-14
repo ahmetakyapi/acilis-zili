@@ -78,6 +78,19 @@
   .table :is(th,td):first-child { padding-left:16px; }
   .table :is(th,td):last-child { padding-right:16px; }
 }
+/* 360: TABLO PANELE SIĞAR (14 Kasım 2026). `/takvim/fomc` "Sıradaki
+   Tarihler" 360'ta 322 piksellik panelde 347 istiyordu (tarih 136 + saat 97
+   + açıklama 114; `olc.mjs` "tablo: 25 px kayıyor"); panel taşmayı kestiği
+   için "Nokta Grafiği" çipinin sağı kırpılıyordu. Saat sütununu başlığı
+   belirliyordu ("Türkiye Saati" tek satır, 97) ve alt künyesi ("New York
+   14:00", bölünmez): ikisi de sarar, sütun saatin kendi enine iner. Dolguyu
+   kısmak denendi (8 → 2) ve bırakıldı: "28 Temmuz 2027" ile saat 4 piksele
+   yapışıyordu. Sütun düşmedi (üçü de gerekli), yazı küçülmedi.
+   Ölçüm: tablo scrollWidth − kap 25 → 0 (360, iki tema). */
+@media (max-width: 379px) {
+  .table th { white-space:normal; }
+  .table [data-num] .subPhone { min-width:4.6em; white-space:normal; }
+}
 
 /* Panel içi düz paragraf ve saç teliyle ayrılmış künye. */
 .prose { margin:0; padding:0 20px 16px; max-width:76ch; font-size:var(--text-read); line-height:1.7; color:var(--text-body); }
@@ -89,6 +102,14 @@
 @media (max-width: 639px) {
   .prose, .notes { padding-inline:16px; }
   .note, .inlineLinks { padding-inline:16px; }
+  /* DOKUNMA HEDEFİ 44 (14 Kasım 2026). Künyedeki bağlantılar cümle içinde
+     değil, kendi satırında duran eylemler; 390'da 116×21 ve 307×21, 360'ta
+     sarınca 290×42 ölçüldü (`/takvim/fomc`, `olc.mjs`). Görünmez `::after`
+     burada yetmez: iki bağlantı alt alta 6 piksel arayla sarıyor, alanları
+     kesişirdi. Bağlantı gerçek 44 piksellik satır olur; dikey dolgu aynı
+     kadar azalır (12/14 → 1/3). */
+  .inlineLinks { row-gap:0; padding-block:1px 3px; }
+  .inlineLinks a { display:flex; align-items:center; min-height:44px; }
 }
 
 /* BAĞLANTI ŞERİDİ. Kart değil: künye başlık ve çipler. Çipler sarar,
@@ -106,3 +127,11 @@
 .crumbs a { font-weight:600; color:var(--text-muted); transition:color .2s var(--ease-brand); }
 .crumbs a:hover { color:var(--primary-ink); }
 .crumbs [aria-current] { font-weight:600; color:var(--text-strong); }
+/* Ekmek kırıntısı bağlantısı telefonda 99×18 (360) / 116×21 ölçüldü (14
+   Kasım 2026). Satırı 44'e çıkarmak başlığı 26 piksel aşağı iterdi; alan
+   görünmez büyür (globals.css `.tap-44` ile aynı kalıp, burada modülün
+   kendi kuralı): üstünde ve altında dokunulabilir komşu yok. */
+@media (max-width: 639px) {
+  .crumbs a { position:relative; }
+  .crumbs a::after { content:""; position:absolute; inset-inline:0; top:50%; height:44px; translate:0 -50%; }
+}

@@ -580,6 +580,7 @@ function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, 
         openId={openId}
         leadId={viewingToday && "id" in lead ? lead.id : null}
         onPick={toggle}
+        steady={autoTour && viewingToday}
         detailId={(id) => `${detailId}-${id.replace(/[^a-zA-Z0-9_-]/g, "_")}`}
         renderDetail={(event) => {
           const status = displayFlowStatus(event, nowMs);
@@ -696,7 +697,8 @@ function DayPreview({ preview, hiddenToday = 0, locale, labels, railLabels, nowM
           <h3>{hiddenToday > 0 ? labels.emptyMajorTitle : labels.emptyTitle}</h3>
           <p>
             {hiddenToday > 0 && <>{labels.emptyMajorHint.replace("{count}", String(hiddenToday))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link>{" "}</>}
-            {labels.previewLead.replace("{day}", day).replace("{n}", String(events.length))}
+            {/* Tek olayda tekil cümle (14 Kasım 2026): EN "1 events on the flow" yazıyordu. */}
+            {(events.length === 1 ? labels.previewLeadOne : labels.previewLead).replace("{day}", day).replace("{n}", String(events.length))}
           </p>
         </div>
       </div>

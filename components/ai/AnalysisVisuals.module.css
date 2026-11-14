@@ -117,7 +117,24 @@ li[data-tone="down"] .returnPlot > span { top:50%; background:var(--down); trans
 .metrics [data-tone="down"] dd { color:var(--down); }
 @media(max-width:899px) { .scorecard { grid-template-columns:minmax(0,1fr); } }
 @media (prefers-reduced-motion: reduce) { .metrics > div { opacity:1 !important; translate:0 0 !important; animation:none !important; } }
-.axisMath { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; padding-top:12px; border-top:1px solid var(--line-soft); }
+/* SENARYO HESABI HÜCRELERİ (14 Kasım 2026, ikinci tur). Üç eşit hücre; uçtaki
+   değer "−%12,4 · 2,3 ATR" tek parça (`.figure` satır kırmaz) ve 14/650
+   puntoda ~110 piksel ister. 360'ta hücre 79 piksel: içerik 22 piksel
+   taşıyor, iki haneli yüzdede ortadaki Ödül / Risk sayısına biniyordu
+   (teknik sayfa ve şirket analizi raporu). Şimdi yüzde ve ATR ayrı bölünmez
+   gruplar; kap (dl) 420 pikselin altındaysa ATR künye tonunda ALT satıra
+   iner, ayraç nokta kalkar. Kap sorgusu görünüm sorgusu değil: aynı eksen
+   1024'te iki kolonlu düzenin dar kolonunda da duruyor.
+   Ölçüm (AMD/MU/TSLA, uzun değerle): hücre taşması 22 → 0, komşu hücreyle
+   kesişim 0 (360, 390, 1024; iki tema). */
+.axisMath { container-type:inline-size; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; padding-top:12px; border-top:1px solid var(--line-soft); }
+.axisMath dd:global(.figure) { min-width:0; white-space:normal; }
+.axisPct,.axisAtr { white-space:nowrap; }
+.axisAtr > i { font-style:normal; }
+@container (max-width:419px) {
+  .axisAtr { display:block; font-size:12px; line-height:1.35; font-weight:600; letter-spacing:0; color:var(--text-muted); }
+  .axisAtr > i { display:none; }
+}
 .axisMath > div { display:grid; gap:2px; }
 .axisMath > div:nth-child(2) { text-align:center; }
 .axisMath > div:last-child { text-align:right; }

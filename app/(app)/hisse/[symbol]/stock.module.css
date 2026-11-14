@@ -988,9 +988,12 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
   .companyOverview .chartPanel { --price-chart-controls:38px; }
   .chartSkeleton { height:calc(var(--price-chart-height) + 117px); }
 }
+/* 108 → 154, +187 → +233 (14 Kasım 2026): telefonda aralık rayı iki satır
+   (4 × 2, gerekçe PriceChart.module.css → "SEKİZ ARALIK İKİ SATIR");
+   denetim bloğu 117 → 163 piksel, yedekler aynı 46 pikseli ayırıyor. */
 @media(max-width:639px) {
-  .companyOverview .chartPanel { --price-chart-controls:108px; }
-  .chartSkeleton { height:calc(var(--price-chart-height) + 187px); }
+  .companyOverview .chartPanel { --price-chart-controls:154px; }
+  .chartSkeleton { height:calc(var(--price-chart-height) + 233px); }
 }
 
 /* Kimlik yedeğinin satırları: kalp düğmesi satırı 36 (telefonda 30) + alt
@@ -1632,7 +1635,15 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    alanlar ikişer piksel kesişiyor ve her daireye 42 piksel kalıyordu (390,
    `elementFromPoint` ile ölçüldü). Aynı sayı, yeterli özgüllükle: 30 + 14.
    Şerit 12 piksel daralıyor; yanındaki çipler zaten kayan şerit. */
-@media(max-width:639px) { .companyOverview .identityTools .identityMeta { gap:14px; } }
+/* 14 → 16 (14 Kasım 2026, ikinci tur). Adım tam 44 olunca komşu alanlar
+   aynı piksel sınırında bitişiyor ve sınırdaki yarım piksel DOM'da sonra
+   gelen komşuya düşüyordu: `elementFromPoint` merkezden +21,5'te bir
+   sonraki butonu buluyor, ortak ölçüm (`olc.mjs`) dört butondan üçünü
+   "yatayda < 44" sayıyordu (NVDA, ZETA, SPY; 390 ve 360). Adım 46: alanlar
+   arasında 2 piksel pay. Ölçüm: merkezin ±22 pikselinde butonun kendisine
+   düşen örnek 43/44 → 44/44 (dört buton, 390 ve 360); şerit 6 piksel daha
+   daralıyor, yanındaki çipler kayan şerit, sayfa yatay taşması 0. */
+@media(max-width:639px) { .companyOverview .identityTools .identityMeta { gap:16px; } }
 
 /* SEYREK ÖLÇÜDE KATILIM SOLA GEÇER (14 Kasım 2026, görsel tur). Boş ölçüler
    artık hücre açmıyor (MetricsCard); kârı, temettüsü ve analisti olmayan

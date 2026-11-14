@@ -89,6 +89,14 @@
 .sb-stage:focus-visible { outline: 2px solid var(--line-focus, var(--primary)); outline-offset: 3px; }
 .sb-stage .iso-stage { --anatomy-paper: var(--anatomy-card); }
 .sb-stage .iso-svg { overflow: visible; }
+/* KADRAN YAZILARI (14 Kasım 2026; gerekçe art.tsx). Sahne 630 pikselin
+   altındaysa kadrandaki rakam ve künye 12 pikselin altına düşer: basılmaz.
+   Kap sorgusu, çünkü sahnenin eni ekranla doğru orantılı değil (1024'te
+   467, 768'de 678 piksel). */
+.sb-stage { container: sb-stage / inline-size; }
+@container sb-stage (max-width: 629px) {
+  .sb-stage .iso-face-text { display: none; }
+}
 
 /* Dilim tonları 26/22 → 34/30 (15 Ekim): soluk dilimler telefonda kadranı
    "anlamsız" bırakıyordu — rengi bir kademe doldurmak dilimleri saat

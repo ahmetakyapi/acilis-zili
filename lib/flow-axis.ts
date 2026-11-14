@@ -84,6 +84,37 @@ export function axisHours(domain: AxisDomain): { at: number; major: boolean }[] 
   return out;
 }
 
+/**
+ * LOGONUN BOYU PİYASA DEĞERİNDEN — üç kademe (14 Kasım 2026, ikinci tur).
+ * Bilanço bayrağının imi şirketin logosu; bütün logolar aynı boydaydı ve
+ * 4 trilyonluk şirket ile takip listesinden gelen 8 milyarlık şirket eksende
+ * aynı ağırlıkta duruyordu. Sürekli ölçek DEĞİL: piyasa değerleri üç büyüklük
+ * mertebesine yayılıyor, orantılı boy ya okunmaz küçük ya da satırı taşıran
+ * bir logo verirdi; üç kademe bir bakışta ayrılır. Alt eşik akışa girme
+ * eşiğinin kendisi (`DAY_FLOW_EARNINGS_MIN_CAP`, 50 milyar $: altındaki
+ * şirket akışta yalnız takip, analiz ya da adla seçildiği için durur), üst
+ * eşik 500 milyar $ (dev şirket). Değeri bilinmeyen en küçük kademede: boy
+ * bilinmeyen bir büyüklüğü iddia etmez.
+ */
+export type CapTier = "sm" | "md" | "lg";
+export const CAP_TIER_MIN = { md: 50e9, lg: 500e9 } as const;
+
+export function capTier(marketCap: number | null | undefined): CapTier {
+  if (typeof marketCap !== "number" || !Number.isFinite(marketCap)) return "sm";
+  return marketCap >= CAP_TIER_MIN.lg ? "lg" : marketCap >= CAP_TIER_MIN.md ? "md" : "sm";
+}
+
+/** Çok şirketli pencerede imde duran şirket: piyasa değeri en büyük olan.
+    Eşitlikte ve hiçbirinin değeri bilinmiyorsa listede ilk gelen (liste
+    sunucuda takip edilen önce, sonra büyükten küçüğe sıralı). */
+export function leadMember<T extends { marketCap?: number | null }>(members: readonly T[]): T | null {
+  let lead: T | null = null;
+  for (const member of members) {
+    if (lead === null || (member.marketCap ?? -1) > (lead.marketCap ?? -1)) lead = member;
+  }
+  return lead;
+}
+
 export type FlagInput = { id: string; minutes: number | null };
 
 export type PlacedFlag = {
@@ -136,6 +167,22 @@ const EPS = 1e-9;
  * bakan iki bayrak (biri sağa, biri sola açılan, aralarında bir genişlikten
  * az) kat değiştirerek çözülemez: orada direk bayrağın arkasında kalır
  * (akşam seansının son iki saatinde iki olay; ender).
+ *
+ * SOLA AÇILANLAR AYNA BASAMAK KURAR, SAĞA AÇILANLARIN ÜSTÜNDE (14 Kasım
+ * 2026, ikinci tur). Sola açılan bayraklar da sondan başa yerleşiyordu:
+ * akşam seansının son iki saatine üç olay yığılınca (TR 02:30, 03:00, 03:30)
+ * en geç olan en alt kata iniyor, solundaki iki direk ve kapanış sonrası
+ * bilançosunun direği onun katından geçiyordu. `room` o direklerde kesildiği
+ * için bayrak taban eninde kalıyor, başlık kırpılıyordu ("Fed Üyesi …";
+ * 1440'ta bayrak 176, 1024'te 130 piksel). Sola açılan bayrakta kural tersine
+ * işler: bayrak direğin SOLUNA uzandığı için altından geçebilecek direkler
+ * DAHA ERKEN olanlardır. O yüzden:
+ *  1. önce sağa açılanlar yerleşir (sondan başa, yukarıdaki kural);
+ *  2. sonra sola açılanlar BAŞTAN SONA yerleşir ve sağa açılan komşunun
+ *     üstünde, soldan sağa YÜKSELEN bir basamak kurar: her birinin solunda
+ *     kalan direkler kendi katının altında biter, bayrak engelsiz uzar.
+ * Aynı dakikadaki küme yine listede ilk gelen en üstte. Kat sayısı değişmez
+ * (üçlü + kapanış bilançosu: 4 → 4).
  */
 export function layoutFlags(items: FlagInput[], domain: AxisDomain, flagShare: number): FlagLayout {
   const loose = items.filter((item) => item.minutes === null).map((item) => item.id);
@@ -156,8 +203,13 @@ export function layoutFlags(items: FlagInput[], domain: AxisDomain, flagShare: n
     };
   });
   const done: Box[] = [];
-  for (let i = boxes.length - 1; i >= 0; i--) {
-    const box = boxes[i]!;
+  /* Yerleşim sırası: önce sağa açılanlar sondan başa, sonra sola açılanlar
+     erkenden geçe (aynı dakikada listede son gelen önce: küme sırası
+     korunur). Sola açılan, sağa açılan komşunun üstüne çıkar. */
+  const flipped = boxes.map((box, index) => ({ box, index })).filter(({ box }) => box.flip)
+    .sort((a, b) => a.box.minutes - b.box.minutes || b.index - a.index).map(({ box }) => box);
+  const order = [...boxes.filter((box) => !box.flip).reverse(), ...flipped];
+  for (const box of order) {
     let row = 0;
     for (let guard = 0; guard < 200; guard++) {
       const clash = done.find((other) =>

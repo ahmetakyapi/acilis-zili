@@ -289,7 +289,10 @@
   /* Aralık 6 → 18 (10 Kasım, telefon turu): logo 26 piksel, adım 44; `.tap-44`
      artık yatayda da 44 açıyor ve komşu alanlar tam bitişiyor (beş logo 202
      piksel, satır 300+). Önce: alan 26×44, adım 32. */
-  .summaryPeers { margin-top:4px; column-gap:18px; }
+  /* 18 → 20 (14 Kasım 2026): tam 44 adımda komşu alanlar aynı piksel
+     sınırında bitişiyor, sınırdaki yarım piksel sonraki logoya düşüyordu
+     (`olc.mjs`: dört logo "26×26, yatayda < 44"). Adım 46; beş logo 210. */
+  .summaryPeers { margin-top:4px; column-gap:20px; }
 }
 /* TELEFONDA TEK SATIR KÜNYE (30 Eylül, "burayı da iyileştirelim"). Bir
    önceki sürüm her bilgiyi iki satıra koyuyordu (etiket üstte, değer altta)

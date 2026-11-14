@@ -21,7 +21,33 @@
 .crossed { padding:1px 7px; border-radius:999px; font-size:12px; line-height:16px; font-weight:700; }
 .crossed[data-state="passed"] { background:var(--up-wash); color:var(--up); }
 .crossed[data-state="broken"] { background:var(--down-wash); color:var(--down); }
-@media (max-width:479px) {
-  .list { column-gap:10px; grid-template-columns:max-content minmax(32px,1fr) max-content max-content; }
-  .away { min-width:46px; }
+/* DAR KAP: çubuk satırın ALTINA iner (14 Kasım 2026, ikinci tur). Dört
+   sütun tek satırda sığmıyordu: ad sütunu `max-content` olduğu için en
+   uzun ad ("Güncel Fiyat" + "15 Dakika Gecikmeli" çipi, 212 piksel) bütün
+   satırları genişletiyor, bölge fiyatı ("484,93 – 500,16 $", 121) eklenince
+   290 piksellik liste 452 istiyordu; sayfa 360'ta 81, 390'da 51 piksel
+   yatay taşıyordu (AMD; MU 18, TSLA 64), 1024'te iki kolonlu düzenin dar
+   kolonunda liste 65 piksel panelin dışına çıkıyordu. Şimdi üst satır
+   ad | fiyat | uzaklık (ad esner ve sarar, sayı sütunları yine
+   `max-content`, sağ kenar tek hat), çubuk ikinci satırda tam genişlik:
+   uzaklık dar kapta da uzun kalın şeritle okunur. Sorgu görünüme değil
+   KABA bakar (`.wrap`): eşik dört sütunun en uzun adla istediği genişlik.
+   Ölçüm (AMD, iki tema): liste scrollWidth − clientWidth 360'ta 162 → 0,
+   1024'te 65 → 0 (fiyat satırının −10 piksellik zemin payı hariç); sayfa
+   yatay taşması 81/51 → 0. */
+.wrap { container-type:inline-size; }
+@container (max-width:499px) {
+  .list { column-gap:10px; grid-template-columns:minmax(0,1fr) max-content max-content; }
+  .row { row-gap:7px; padding-block:9px 11px; }
+  .name { grid-area:1 / 1; }
+  .value { grid-area:1 / 2; }
+  .away { grid-area:1 / 3; min-width:46px; }
+  .lane { grid-area:2 / 1 / 3 / -1; }
+  /* Fiyat satırı: gecikme çipi 103 piksellik ad hücresinde iki satıra
+     kırılıyordu. Ad kutusu çözülür (`contents`), çip ikinci satıra tek
+     parça iner; bu satırın kulvarı yalnız orta çentikti (bilgi taşımıyor),
+     yerini çipe bırakır. */
+  .row[data-kind="price"] .name { display:contents; }
+  .row[data-kind="price"] .badge { grid-area:2 / 1 / 3 / -1; justify-self:start; white-space:nowrap; }
+  .row[data-kind="price"] .lane { display:none; }
 }

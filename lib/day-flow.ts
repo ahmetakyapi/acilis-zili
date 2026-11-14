@@ -10,6 +10,10 @@ export type FlowMember = {
   symbol: string;
   logoUrl: string | null;
   watched: boolean;
+  /** Piyasa değeri, USD (`symbols.market_cap`); bilinmiyorsa `null`. Eksen
+      imindeki logonun boyu ve çok şirketli pencerede imde duran şirket
+      bundan (`capTier`, `leadMember`; lib/flow-axis.ts). */
+  marketCap: number | null;
   status: FlowStatus;
   href: string;
   eps?: string;

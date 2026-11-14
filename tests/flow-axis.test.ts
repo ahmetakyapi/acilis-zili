@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { axisBands, axisDomain, axisHours, axisShare, bandOf, flowLead, layoutFlags, minutesOfClock, remainingParts, type FlagInput } from "../lib/flow-axis";
+import { axisBands, axisDomain, axisHours, axisShare, bandOf, capTier, flowLead, layoutFlags, leadMember, minutesOfClock, remainingParts, type FlagInput } from "../lib/flow-axis";
 
 /* Günün ekseni (components/today/flow/FlowAxis.tsx): bant sınırları,
    olayın eksendeki yeri, basamaklı bayrak yerleşimi ve "sıradaki olay". */
@@ -96,22 +96,67 @@ test("sağ uca sığmayan bayrak sola açılır", () => {
 test("bayrak açıldığı yöndeki ilk engele kadar uzayabilir", () => {
   const layout = layoutFlags(flags("08:00", "08:30", "08:30", "16:00", "19:30"), NORMAL, 0.13);
   const [early, top, low, close, late] = layout.placed;
-  /* 19:30 sola açılır ve en altta; 16:00 onunla üst üste bindiği için bir kat yukarıda. */
-  assert.deepEqual(layout.placed.map((flag) => flag.row), [2, 1, 0, 1, 0]);
+  /* 16:00 en altta; sola açılan 19:30 onunla üst üste bindiği için bir kat yukarıda. */
+  assert.deepEqual(layout.placed.map((flag) => flag.row), [2, 1, 0, 0, 1]);
   /* 08:00 en üst katta: sağında o kata yükselen direk yok, eksenin sonuna dek boş. */
   assert.ok(Math.abs(early!.room - (1 - early!.at)) < 1e-9);
-  /* 08:30'un iki bayrağı da 16:00 direğine kadar (direk birinci kata yükseliyor). */
-  assert.ok(Math.abs(top!.room - (close!.at - top!.at)) < 1e-9);
+  /* 08:30'un alt bayrağı 16:00 direğine kadar. */
   assert.ok(Math.abs(low!.room - (close!.at - low!.at)) < 1e-9);
-  /* 16:00'nın katında sağda engel yok. */
-  assert.ok(Math.abs(close!.room - (1 - close!.at)) < 1e-9);
+  /* 16:00'nın sağındaki ilk engel 19:30 direği (birinci kata yükseliyor). */
+  assert.ok(Math.abs(close!.room - (late!.at - close!.at)) < 1e-9);
   assert.equal(late!.flip, true);
-  /* 19:30 sola açılır; solunda, katını kesen ilk direk 16:00 (birinci kata yükseliyor). */
-  assert.ok(Math.abs(late!.room - (late!.at - close!.at)) < 1e-9);
+  /* 19:30 sola açılır; katındaki komşu (08:30'un üst bayrağı) taban enini korur. */
+  assert.ok(Math.abs(late!.room - (late!.at - (top!.at + 0.13))) < 1e-9);
+  assert.ok(Math.abs(top!.room - 0.13) < 1e-9);
   /* Aynı katta karşı karşıya iki bayrak birbirinin payına girmez. */
   const pair = layoutFlags(flags("13:00", "19:30"), NORMAL, 0.13).placed;
   assert.deepEqual(pair.map((flag) => flag.row), [0, 0]);
   assert.ok(pair[0]!.at + pair[0]!.room <= pair[1]!.at - pair[1]!.room + 1e-9);
+});
+
+test("sola açılan bayraklar soldan sağa yükselen basamak kurar: solundaki direk katından geçmez", () => {
+  /* Akşam seansının son iki saatine üç olay (TR 22:30, 23:00, 23:30). */
+  const share = 0.14;
+  const layout = layoutFlags(flags("18:30", "19:00", "19:30"), NORMAL, share);
+  assert.ok(layout.placed.every((flag) => flag.flip));
+  assert.deepEqual(layout.placed.map((flag) => flag.row), [0, 1, 2]);
+  assert.equal(layout.rows, 3);
+  /* En geç olan en üstte ve solunda engel yok: eksenin başına dek uzayabilir. */
+  for (const flag of layout.placed.slice(1)) assert.ok(flag.room > share + 1e-9, `${flag.id} taban eninde kaldı`);
+  assert.ok(Math.abs(layout.placed[2]!.room - layout.placed[2]!.at) < 1e-9);
+  /* Hiçbir direk, sola açılan bir bayrağın (genişlemiş) kutusundan geçmez. */
+  for (const a of layout.placed) for (const b of layout.placed) {
+    if (a === b || b.row < a.row) continue;
+    assert.ok(!(b.at > a.at - a.room + 1e-9 && b.at < a.at - 1e-9), `${b.id} direği ${a.id} bayrağını kesiyor`);
+  }
+});
+
+test("sola açılan kümede listede ilk gelen yine en üstte; sağa açılan komşunun üstüne çıkarlar", () => {
+  const layout = layoutFlags(flags("16:00", "19:00", "19:00", "19:30"), NORMAL, 0.14);
+  const [close, top, low, late] = layout.placed;
+  assert.equal(close!.flip, false);
+  assert.deepEqual([close!.row, low!.row, top!.row, late!.row], [0, 1, 2, 3]);
+  /* Kapanış bilançosunun direği yalnız en alt katta: sola açılanları kesmez. */
+  for (const flag of [top!, low!, late!]) assert.ok(flag.at - flag.room < close!.at - 1e-9, `${flag.id} 16:00 direğinde kesildi`);
+});
+
+test("logo kademesi piyasa değerinden: 50 ve 500 milyar dolar eşikleri", () => {
+  assert.equal(capTier(null), "sm");
+  assert.equal(capTier(undefined), "sm");
+  assert.equal(capTier(Number.NaN), "sm");
+  assert.equal(capTier(8e9), "sm");
+  assert.equal(capTier(50e9), "md");
+  assert.equal(capTier(499e9), "md");
+  assert.equal(capTier(500e9), "lg");
+  assert.equal(capTier(4.4e12), "lg");
+});
+
+test("çok şirketli pencerede imde en büyük şirket; değer yoksa listede ilk gelen", () => {
+  const members = [{ symbol: "ZETA", marketCap: 8e9 }, { symbol: "NVDA", marketCap: 4.4e12 }, { symbol: "HD", marketCap: 380e9 }];
+  assert.equal(leadMember(members)!.symbol, "NVDA");
+  assert.equal(leadMember([{ symbol: "A", marketCap: null }, { symbol: "B" }])!.symbol, "A");
+  assert.equal(leadMember([{ symbol: "A", marketCap: null }, { symbol: "B", marketCap: 1e9 }])!.symbol, "B");
+  assert.equal(leadMember([]), null);
 });
 
 const NOW = Date.parse("2026-11-13T14:50:00Z");

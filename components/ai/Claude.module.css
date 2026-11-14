@@ -179,33 +179,60 @@
 .historyTags { display:flex; justify-content:flex-end; gap:6px; font-family:var(--font-mono); font-size:12px; color:var(--text-muted); }
 .historyTags b { font-family:var(--font-sans); padding:2px 8px; border-radius:999px; background:var(--primary-wash); color:var(--primary-ink); font-weight:650; white-space:nowrap; }
 
-/* ---- Claude paneli (ClaudeCta.tsx): sayfanın kendi okumasından SONRA ----
-   Her odak bir satır: halka · karar, zaman ve oluşturan · eylemler. Panel
-   sitenin öteki panelleriyle aynı dil (PanelHeader, ton farkı). Dar panelde
-   eylemler satırın altına iner ve ikiye bölünür (kap sorgusu). */
+/* ---- Claude paneli (ClaudeCta.tsx → ClaudeCtaView) ----
+   SADE BANT (14 Kasım 2026, ikinci tur; gerekçe bileşenin başında). Raporu
+   olan odak başına tek düz satır: halka (40) · görüş hapı · künye (odak,
+   tarih, oluşturan; 12 piksel, künye tonu) · "Raporu Aç". Satırlar çukur
+   kart değil, kıl çizgiyle ayrılır; panel sitenin öteki panelleriyle aynı
+   dil. "Yeni Analiz Oluştur" başlıkta tek buton (PanelHeader `action`).
+   Dar kapta (< 520) künye hapın altına iner, buton satırın sağında kalır.
+   `.ctaRing`, `.ctaBody`, `.ctaMeta` şirket kartınındır (aşağıda), bant
+   kullanmaz.
+
+   Ölçüm (sahte verili önizleme; 1440 / 390 / 360, iki tema; iki rapor, tek
+   rapor, rapor yok × okur isteyebilir / isteyemez, tek odak, uzun ad):
+   - buton sayısı, iki raporlu bant: 4 → 3 (birincil 2 → 1); rapor yokken
+     bant 2 + buton 2 → cümle 1 + buton 1;
+   - bandın boyu, 1440: iki rapor 373 → 268, tek rapor 311 → 178, rapor
+     yok 284 → 135; 390: iki rapor 571 → 445, tek rapor 447 → 264, rapor
+     yok 396 → 201;
+   - en büyük punto: karar 20/800 → halkadaki puan 13,6 / hap 12;
+   - yatay taşma 0, kutusundan taşan öğe 0, < 44 dokunma hedefi 0. */
 .ctaPanel { container-type:inline-size; }
-.ctaRows { display:grid; gap:10px; padding:0 16px; }
-.ctaRow { display:grid; grid-template-columns:48px minmax(0,1fr) auto; align-items:center; gap:14px 16px; padding:14px 16px; border-radius:18px; background:var(--surface-sunken); }
-.ctaRing { width:48px; height:48px; border-radius:50%; border:2px dashed var(--line-strong); box-sizing:border-box; }
-.ctaBody { display:grid; gap:4px; min-width:0; }
-.ctaFocus { font-size:12px; font-weight:700; color:var(--text-muted); }
-.ctaVerdict { width:fit-content; font-size:20px; font-weight:800; letter-spacing:-.03em; line-height:1.15; color:var(--text-strong); }
-.ctaVerdict:hover { text-decoration:underline; text-underline-offset:3px; }
-.ctaRow[data-verdict="buy"] .ctaVerdict { color:var(--up); }
-.ctaRow[data-verdict="sell"] .ctaVerdict { color:var(--down); }
-.ctaRow[data-verdict="hold"] .ctaVerdict { color:var(--brass-ink); }
-.ctaMeta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 14px; font-size:13px; color:var(--text-muted); }
-.ctaAuthor { display:inline-flex; align-items:center; gap:6px; font-weight:600; color:var(--text-body); }
-.ctaNone { font-size:14.5px; color:var(--text-body); }
-.ctaActions { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:8px; }
-/* Sıradaki teknik yayın: satırların altında sessiz bir künye satırı (kutu değil). */
+.ctaTool { font-weight:600; }
+.ctaRows { display:grid; margin:0; padding:0 20px; list-style:none; }
+.ctaRow { display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:center; gap:14px; min-height:64px; padding-block:10px; border-top:1px solid var(--line-soft); }
+.ctaRingEmpty { width:40px; height:40px; border-radius:50%; border:2px dashed var(--line-strong); box-sizing:border-box; }
+.ctaLine { display:flex; flex-wrap:wrap; align-items:center; gap:6px 14px; min-width:0; }
+.ctaPlain { font-size:12px; font-weight:700; letter-spacing:.03em; color:var(--text-body); }
+.ctaStamp { display:flex; flex-wrap:wrap; align-items:center; gap:2px 12px; min-width:0; font-size:12px; line-height:18px; color:var(--text-muted); }
+.ctaHead { display:inline-flex; flex-wrap:wrap; align-items:center; gap:4px 10px; min-width:0; }
+.ctaHead > b { font-size:12px; line-height:18px; font-weight:600; color:var(--text-body); }
+.ctaAuthor { display:inline-flex; align-items:center; gap:6px; min-width:0; font-weight:600; color:var(--text-body); overflow-wrap:anywhere; }
+.ctaAvatar { flex:none; width:22px; height:22px; border-radius:50%; font-size:12.7px; }
+/* Rapor yok: tek cümle + tek buton. */
+.ctaEmpty { display:flex; align-items:center; justify-content:space-between; gap:12px 24px; padding:14px 20px 18px; border-top:1px solid var(--line-soft); }
+.ctaEmpty > p { max-width:68ch; margin:0; font-size:14px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
+.ctaEmpty > a { flex:none; }
+/* Künyeler panelin içinde, kıl çizgiyle ayrılmış düz paragraflar (kutu değil). */
+.ctaNotes { display:grid; gap:6px; margin:0 20px; padding:12px 0 16px; border-top:1px solid var(--line-soft); }
+/* Sıradaki teknik yayın notu. Taban kural Claude sayfasındaki kopyanındır
+   (`ClaudeWorkbench`, `data-stage`); bandın içindeki künye bir kademe küçük. */
 .ctaEdition { display:flex; align-items:flex-start; gap:10px; margin:14px 16px 0; padding:0 4px; font-size:13.5px; line-height:1.55; color:var(--text-body); }
 .ctaEdition[data-stage] { margin:0; padding:0; }
 .ctaEdition svg { flex:none; width:18px; height:18px; margin-top:1px; fill:none; stroke:var(--primary-ink); stroke-width:2; stroke-linecap:round; }
-.ctaHint { margin:14px 16px 0; padding:12px 4px 16px; border-top:1px solid var(--line); font-size:13px; line-height:1.55; color:var(--text-muted); }
-@container (max-width: 560px) {
-  .ctaRow { grid-template-columns:48px minmax(0,1fr); }
-  .ctaActions { grid-column:1 / -1; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); }
+.ctaNotes > .ctaEdition { gap:8px; margin:0; padding:0; font-size:13px; }
+.ctaNotes > .ctaEdition svg { width:16px; height:16px; margin-top:2px; }
+.ctaHint { margin:0; font-size:12px; line-height:1.55; color:var(--text-muted); }
+@container (max-width: 519px) {
+  .ctaRows, .ctaEmpty { padding-inline:16px; }
+  .ctaNotes { margin-inline:16px; }
+  .ctaRow { gap:12px; }
+  .ctaLine { flex-direction:column; align-items:flex-start; gap:5px; }
+  .ctaEmpty { flex-direction:column; align-items:flex-start; }
+  /* Başlıktaki "Araç: Claude" künyesi dar kapta butonla aynı satıra sığmaz;
+     aynı bilgi alttaki açıklama cümlesinde. */
+  .ctaTool { display:none; }
 }
 /* ---- Şirket sayfası: teknik analizi olmayan hissede Şirket Analizi kartı ----
    Teknik kartla (Technical.module.css → .stockCard) aynı kap dili: aynı
@@ -213,6 +240,9 @@
 .companyCard { display:grid; gap:14px; padding:18px 20px 20px; border:1px solid var(--line); border-radius:var(--radius-panel, 22px); background:var(--premium-surface); }
 .companyHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
 .companyTool { font-size:13px; font-weight:600; color:var(--text-muted); }
+.ctaRing { width:48px; height:48px; border-radius:50%; border:2px dashed var(--line-strong); box-sizing:border-box; }
+.ctaBody { display:grid; gap:4px; min-width:0; }
+.ctaMeta { display:flex; flex-wrap:wrap; align-items:center; gap:4px 14px; font-size:13px; color:var(--text-muted); }
 .companyLatest { display:grid; grid-template-columns:40px minmax(0,1fr); align-items:center; gap:12px; min-height:48px; }
 .companyVerdict { font-size:18px; font-weight:800; letter-spacing:-.03em; color:var(--text-strong); }
 .companyCard[data-verdict="buy"] .companyVerdict { color:var(--up); }

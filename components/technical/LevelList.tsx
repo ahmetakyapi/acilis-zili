@@ -108,6 +108,7 @@ export function LevelList({
   };
 
   return (
+    <div className={styles.wrap}>
     <ol className={styles.list} data-draw>
       {rows.map((row) => {
         if (row.kind === "price") {
@@ -169,5 +170,6 @@ export function LevelList({
         );
       })}
     </ol>
+    </div>
   );
 }
