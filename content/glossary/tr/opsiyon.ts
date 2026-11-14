@@ -49,7 +49,7 @@ export const TR_OPSIYON: GlossaryTexts<"opsiyon"> = {
   "parada": {
     term: "Parada, Paranın İçinde ve Dışında",
     definition:
-      "Bu üç ifade, opsiyonun kullanım fiyatının hisse fiyatına göre nerede durduğunu anlatır. Alım opsiyonu, hisse kullanım fiyatının üzerindeyse paranın içinde (ITM), altındaysa paranın dışında (OTM), iki fiyat hemen hemen eşitse parada (ATM) sayılır; satım opsiyonunda içi ve dışı tersine döner. Paranın dışındaki bir opsiyonun primi yalnızca zaman değerinden oluşur.",
+      "Parada, paranın içinde ve paranın dışında ifadeleri, opsiyonun kullanım fiyatının hisse fiyatına göre nerede durduğunu anlatır. Alım opsiyonu, hisse kullanım fiyatının üzerindeyse paranın içinde (ITM), altındaysa paranın dışında (OTM), iki fiyat hemen hemen eşitse parada (ATM) sayılır; satım opsiyonunda içi ve dışı tersine döner. Paranın dışındaki bir opsiyonun primi yalnızca zaman değerinden oluşur.",
     example:
       "Hisse 100 dolarken 90 dolar kullanım fiyatlı alım opsiyonu paranın içinde (içsel değeri 10 dolar), 110 dolarlık paranın dışında, 100 dolarlık ise paradadır. Aynı fiyatlarda 110 dolarlık satım opsiyonu paranın içindedir.",
     match: ["paranın içinde", "paranın dışında", "ITM", "OTM"],

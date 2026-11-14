@@ -69,7 +69,7 @@ export const EN_MAKRO: GlossaryTexts<"makro"> = {
   "hazine-tahvili": {
     term: "US Treasury Securities",
     definition:
-      "Treasuries are the debt securities the US Treasury issues to borrow money. Those maturing in up to a year are called bills, those of 2 to 10 years notes, and the 20 and 30-year ones bonds. A bond's price and its yield move in opposite directions: when the price falls, the yield rises. The 10-year Treasury yield is a reference point for many calculations, from mortgage rates to stock valuations.",
+      "US Treasury securities, known as Treasuries, are the debt securities the US Treasury issues to borrow money. Those maturing in up to a year are called bills, those of 2 to 10 years notes, and the 20 and 30-year ones bonds. A bond's price and its yield move in opposite directions: when the price falls, the yield rises. The 10-year Treasury yield is a reference point for many calculations, from mortgage rates to stock valuations.",
     example:
       "If you buy a bond with a $1,000 face value that pays $40 a year for $1,000, your yield is 4%. If its market price drops to $950, the same $40 is a current yield of about 4.2% for a new buyer.",
     match: ["Treasuries", "Treasury bond", "Treasury bonds", "Treasury yield", "Treasury yields", "10-year Treasury"],
@@ -121,7 +121,7 @@ export const EN_MAKRO: GlossaryTexts<"makro"> = {
   "sahm-kurali": {
     term: "Sahm Rule",
     definition:
-      "Named after economist Claudia Sahm, the Sahm rule is a recession indicator. It triggers when the three-month average of the unemployment rate rises 0.5 percentage points or more above its lowest three-month average of the previous 12 months. Historically it has flagged the start of recessions at an early stage. It is an observed regularity, not a law of economics, and it can mislead when, for example, labor supply changes quickly.",
+      "The Sahm rule, named after economist Claudia Sahm, is a recession indicator. It triggers when the three-month average of the unemployment rate rises 0.5 percentage points or more above its lowest three-month average of the previous 12 months. Historically it has flagged the start of recessions at an early stage. It is an observed regularity, not a law of economics, and it can mislead when, for example, labor supply changes quickly.",
     example:
       "If the three-month average unemployment rate hit a low of 3.6% during the past year and now stands at 4.1%, the gap is 0.5 points and the rule has triggered.",
     match: ["sahm rule"],
