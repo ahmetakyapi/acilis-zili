@@ -3,6 +3,7 @@ import { GLOSSARY_SLUGS } from "@/content/glossary";
 import { GUIDE_SLUGS } from "@/content/guide";
 import { DEFAULT_LOCALE } from "@/lib/i18n/config";
 import { LOCALE_HEADER, localeFromHeader, withLocale } from "@/lib/i18n/routing";
+import { INDEX_PAGES, indexPageCopy, indexPagePath } from "@/lib/index-pages";
 import { SITE_URL } from "@/lib/site";
 
 /**
@@ -20,6 +21,15 @@ import { SITE_URL } from "@/lib/site";
 type Entry = [path: string, title: string, note?: string];
 type Section = [heading: string, entries: Entry[]];
 
+/** Endeks bileşen sayfaları — ad ve adres `lib/index-pages.ts`ten (tek kaynak). */
+function indexEntries(locale: "tr" | "en"): Entry[] {
+  return INDEX_PAGES.map((page) => [
+    indexPagePath(page.key),
+    indexPageCopy(page, locale).heading,
+    locale === "tr" ? "Bileşenlerin tam listesi: fiyat, günlük değişim, piyasa değeri" : "Full constituent list: price, daily change, market cap",
+  ]);
+}
+
 function sections(tr: boolean): Section[] {
   const guides = GUIDE_SLUGS.length;
   const terms = GLOSSARY_SLUGS.length;
@@ -28,6 +38,7 @@ function sections(tr: boolean): Section[] {
         ["Bugün", [
           ["/", "Ana Sayfa", "Açılışa geri sayım, endeksler, günün akışı"],
           ["/piyasalar", "Piyasalar", "S&P 500, Nasdaq 100 ve Dow bileşenleri, ısı haritası, sektörler"],
+          ...indexEntries("tr"),
           ["/bulten", "Günlük Bülten", "Her gün açılış öncesi özet; arşiv"],
           ["/gunun-grafigi", "Günün Grafiği", "Her seansın tek grafiği ve kısa açıklaması"],
           ["/haberler", "Haberler", "Şirket ve piyasa haberleri, Türkçe"],
@@ -73,6 +84,7 @@ function sections(tr: boolean): Section[] {
         ["Today", [
           ["/", "Home", "Countdown to the open, indices, the day's flow"],
           ["/piyasalar", "Markets", "S&P 500, Nasdaq 100 and Dow constituents, heat map, sectors"],
+          ...indexEntries("en"),
           ["/bulten", "Daily Brief", "A pre-open summary every day; archive"],
           ["/gunun-grafigi", "Chart of the Day", "One chart per session with a short note"],
           ["/haberler", "News", "Company and market news"],

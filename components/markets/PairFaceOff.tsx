@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
-import type { ComparePair } from "@/content/compare-pairs";
+import { comparePairsOf, type ComparePair } from "@/content/compare-pairs";
 import { seriesColorOf } from "@/lib/chart-series";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -145,21 +145,36 @@ export async function PairFaceOff({
  * sembolün depo dosyasından (`logoSrc`), yani burada bir veri turu yok.
  * İç bağlantı ağının bu ucu burası: bu adresler başka hiçbir yerden
  * bağlanmıyor.
+ *
+ * 14 Kasım 2026 (SEO denetimi ikinci tur): yukarıdaki cümle sorunun
+ * kendisiydi — yirmi çift sayfası yalnız birbirine bağlıydı. Aynı kartlar
+ * artık `/karsilastir` dizininde ("Hazır Çiftler", boş durumda ve seçim
+ * varken) ve hisse sayfasında (`PairLinks`: sembolün üyesi olduğu çiftler,
+ * "Nvidia ve AMD Karşılaştırması") da basılıyor. `title` başlığı, `label`
+ * kartın metnini değiştirir; `wide` uzun metinli kartı geniş ve iki
+ * satırlı yapar (hisse sayfasında bir-üç kart).
  */
 export function OtherPairs({
   pairs,
   joiner,
   t,
+  title = t.pairs.others,
+  label,
+  wide = false,
 }: {
   pairs: readonly ComparePair[];
   joiner: string;
   t: Dictionary;
+  title?: string;
+  /** Kart metni; verilmezse yalnız adlar ("Nvidia ve AMD"). */
+  label?: (names: string) => string;
+  wide?: boolean;
 }) {
   return (
     <Panel>
-      <PanelHeader title={t.pairs.others} />
-      <nav aria-label={t.pairs.others} className={styles.others}>
-        <ul className={styles.otherGrid}>
+      <PanelHeader title={title} />
+      <nav aria-label={title} className={styles.others}>
+        <ul className={styles.otherGrid} data-wide={wide ? "" : undefined}>
           {pairs.map((entry) => (
             <li key={entry.slug}>
               <Link href={`/karsilastir/${entry.slug}`} prefetch={false} className={styles.other}>
@@ -168,7 +183,7 @@ export function OtherPairs({
                     <LogoTile key={symbol} symbol={symbol} size="md" className={styles.otherLogo} />
                   ))}
                 </span>
-                <span className={styles.otherName}>{entry.names.join(joiner)}</span>
+                <span className={styles.otherName}>{label ? label(entry.names.join(joiner)) : entry.names.join(joiner)}</span>
                 <ArrowRight size={14} weight="bold" aria-hidden className={styles.otherArrow} />
               </Link>
             </li>
@@ -176,5 +191,25 @@ export function OtherPairs({
         </ul>
       </nav>
     </Panel>
+  );
+}
+
+/**
+ * Hisse (ve fon) sayfasında: sembol küratörlü bir çiftin üyesiyse o çiftin
+ * sayfasına bağlantı (14 Kasım 2026). Üye değilse HİÇBİR ŞEY basılmaz.
+ * Saf: çiftler depoda, veri turu yok.
+ */
+export function PairLinks({ symbol, t }: { symbol: string; t: Dictionary }) {
+  const pairs = comparePairsOf(symbol);
+  if (pairs.length === 0) return null;
+  return (
+    <OtherPairs
+      pairs={pairs}
+      joiner={t.pairs.joiner}
+      t={t}
+      title={t.pairs.forSymbol}
+      label={(names) => t.pairs.metaTitle.replace("{names}", names)}
+      wide
+    />
   );
 }

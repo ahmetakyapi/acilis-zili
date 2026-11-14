@@ -2220,6 +2220,8 @@ const en: typeof tr = {
       "On one chart, at one scale: return, valuation and risk measures side by side.",
     introTitle: "Why Compare These Two",
     others: "More Comparisons",
+    ready: "Ready-Made Pairs",
+    forSymbol: "Comparisons",
     versus: "vs",
     capShare: "Share of Combined Market Value",
     joiner: " vs ",

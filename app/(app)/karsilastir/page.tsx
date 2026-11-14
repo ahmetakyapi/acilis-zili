@@ -4,6 +4,8 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { Fragment } from "react";
 import { GuideHint } from "@/components/article/GuideHint";
 import { CompareEmpty, type ComparePreset } from "@/components/markets/CompareEmpty";
+import { OtherPairs } from "@/components/markets/PairFaceOff";
+import { COMPARE_PAIRS } from "@/content/compare-pairs";
 import { CompareNoteCard } from "@/components/markets/CompareNoteCard";
 import {
   CompareChartPanel,
@@ -236,6 +238,11 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
             <p className="text-small text-muted">{t.compare.trimmedNote}</p>
           )}
           <CompareEmpty presets={PRESETS} t={t} />
+          {/* HAZIR ÇİFTLER (14 Kasım, SEO ikinci tur): yirmi küratörlü çift
+              sayfası yalnız birbirine bağlıydı; dizin onları hiç
+              göstermiyordu. Boş durumda hazır setlerin altında, seçim
+              varken tahtanın metin yerinde (`children`). */}
+          <OtherPairs pairs={COMPARE_PAIRS} joiner={t.pairs.joiner} t={t} title={t.pairs.ready} />
         </>
       ) : (
         /* BAŞLIK DA TAHTANIN İÇİNDE. Aralık denetimi sayfa başlığının sağında
@@ -247,7 +254,9 @@ export default async function ComparePage(props: PageProps<"/karsilastir">) {
           dropped={dropped}
           currency={currency}
           realAvailable={realAvailable}
-        />
+        >
+          <OtherPairs pairs={COMPARE_PAIRS} joiner={t.pairs.joiner} t={t} title={t.pairs.ready} />
+        </CompareBoard>
       )}
 
       <GuideHint

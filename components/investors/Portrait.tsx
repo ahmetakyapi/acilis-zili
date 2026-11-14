@@ -74,7 +74,11 @@ export function Portrait({
       <span className={cn(styles.portrait, className)} data-size={size}>
         <Image
           src={photo.src}
-          alt=""
+          /* 14 Kasım (SEO): sayfanın ana portresi (`detail`) ve dizin kartı
+             (`cast`) kişinin adını taşır — görsel aramada portre adsızdı.
+             Küçük çiplerde (`chip`, `sm`) boş kalır: ad hemen yanında
+             yazılı, ekran okuyucu satır satır iki kez duymasın. */
+          alt={size === "detail" || size === "cast" ? investor.name : ""}
           width={px}
           height={px}
           sizes={`${px}px`}

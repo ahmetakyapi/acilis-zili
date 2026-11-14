@@ -3,6 +3,7 @@ import polish from "@/components/motion/UtilityExperience.module.css";
 import { Suspense } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { BriefBody } from "@/components/today/BriefBody";
+import { SectionLabelHeader } from "@/components/ui/SectionLabelHeader";
 import { BriefPosterLink } from "@/components/day-poster/BriefPosterLink";
 import { PageShare } from "@/components/article/PageShare";
 import {
@@ -54,6 +55,12 @@ import { ledgerWindow } from "@/lib/brief-ledger";
  * verilmezse dönemin en yenisi (`/bulten`). Seçim artık adreste bir YOL:
  * arşivdeki her satır sayının kalıcı adresine gidiyor.
  */
+/** Kapak: sayı sayfasında künye (`label`), arşivde sayfa başlığı (`title`). */
+function Masthead(props: { title?: string; label?: string; subtitle?: string; action?: React.ReactNode }) {
+  const { title, label, ...rest } = props;
+  return label ? <SectionLabelHeader label={label} {...rest} /> : <PageHeader title={title ?? ""} {...rest} />;
+}
+
 export function BriefArchiveView({
   period,
   issue,
@@ -72,8 +79,15 @@ export function BriefArchiveView({
       <ScrollProgress />
       {/* Kabuk veri beklemez: sekmeler hemen boyanır, tıklama anında tepki
           verir ve altındaki içerik akarak gelir. */}
-      <PageHeader
-        title={period === "weekly" ? t.brief.weeklyTitle : t.brief.title}
+      {/* SAYI SAYFASINDA `h1` MANŞET (14 Kasım, SEO ikinci tur). Kapak her
+          sayıda aynı `h1`i ("Günlük Bülten") taşıyordu, aranan başlık
+          makalenin `h2`siydi. Sayı sayfasında (`issue` var) bölüm adı aynı
+          görünümde künye (`SectionLabelHeader`), manşet `h1`; arşiv
+          ekranında (`/bulten`) bölüm adı `h1` kalır. Görünüm aynı. */}
+      <Masthead
+        {...(issue
+          ? { label: period === "weekly" ? t.brief.weeklyTitle : t.brief.title }
+          : { title: period === "weekly" ? t.brief.weeklyTitle : t.brief.title })}
         subtitle={
           period === "weekly" ? t.brief.weeklySubtitle : t.brief.subtitle
         }
@@ -99,7 +113,7 @@ export function BriefArchiveView({
         key={`${period}:${issue?.briefDate ?? ""}`}
         fallback={<ArchiveSkeleton band={ledgerExpected(issue?.briefDate, period)} />}
       >
-        <ArchiveBoard period={period} issue={issue} locale={locale} t={t} />
+        <ArchiveBoard period={period} issue={issue} headlineAs={issue ? "h1" : "h2"} locale={locale} t={t} />
       </Suspense>
     </MotionExperience>
   );
@@ -108,11 +122,14 @@ export function BriefArchiveView({
 async function ArchiveBoard({
   period,
   issue,
+  headlineAs: Headline,
   locale,
   t,
 }: {
   period: BriefPeriod;
   issue?: DailyBriefRow;
+  /** Manşetin etiketi: sayı sayfasında `h1`, arşiv ekranında `h2`. */
+  headlineAs: "h1" | "h2";
   locale: Locale;
   t: Dictionary;
 }) {
@@ -191,9 +208,9 @@ async function ArchiveBoard({
                 ve paylaş satırı manşetin üstündeydi; artık altında, mercek
                 kapağındaki künye satırıyla aynı yerde. Haftalık kaydın
                 kurgu satırı bilerek manşetten önce kalıyor (aşağıdaki not). */}
-            <h2 lang={brief.locale} className="text-title font-bold leading-tight tracking-[-0.03em] text-strong sm:text-heading">
+            <Headline lang={brief.locale} className="text-title font-bold leading-tight tracking-[-0.03em] text-strong sm:text-heading">
               {brief.headline}
-            </h2>
+            </Headline>
             <div className="mt-3 flex flex-wrap items-center gap-x-3 gap-y-1">
               {/* Dönem künyesi ("Günlük"/"Haftalık") burada duruyordu; bölüm
                   künyeleri 9 Ekim 2026'da kalktı. Dönem sayfa başlığında ve

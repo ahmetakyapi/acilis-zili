@@ -6,6 +6,7 @@ import { withLocale } from "@/lib/i18n/routing";
 import { earningsHref } from "@/lib/earnings-company";
 import type { Metadata } from "next";
 import { analysisTitle } from "@/lib/seo-titles";
+import { ogImageUrl } from "@/lib/og-image";
 import { LogoTile } from "@/components/ui/primitives";
 import { quarterGaps } from "@/components/earnings/quarter-gaps";
 import type { RailMark } from "@/components/ui/PriceRail";
@@ -47,6 +48,7 @@ import {
   articleOpenGraph,
   metaDescription,
   missingMetadata,
+  fittedTitle,
 } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
@@ -119,7 +121,7 @@ export async function generateMetadata(
   return {
     /* Arama niyetiyle: "… Bilanço Sonuçları" / "… Earnings Results"
        (25 Ekim) — gerekçe ve uzunluk kuralı `lib/seo-titles.ts`. */
-    title: analysisTitle(row.company, row.symbol, row.periodLabel, locale),
+    title: fittedTitle(analysisTitle(row.company, row.symbol, row.periodLabel, locale), locale),
     description: metaDescription(row.headline),
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
@@ -606,8 +608,11 @@ export default async function AnalysisDetailPage(
     <MotionExperience className={styles.report}>
       <ScrollProgress />
       <ArticleJsonLd
-        headline={`${row.company} ${row.periodLabel}`}
+        /* `<title>` ile AYNI yardımcı (14 Kasım): "NVIDIA (NVDA) 1Ç FY2027
+           Bilanço Sonuçları"; dil metnin dili. Eskiden yalnız ad + dönem. */
+        headline={analysisTitle(row.company, row.symbol, row.periodLabel, row.locale as Locale)}
         description={row.headline}
+        image={ogImageUrl("/(app)/bilancolar/[symbol]/[period]", analysisHref(symbol, period))}
         path={analysisHref(symbol, period)}
         locale={row.locale as Locale}
         published={row.publishedAt}

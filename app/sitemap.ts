@@ -19,6 +19,7 @@ import { allFunds } from "@/db/seed/symbols";
 import { getDailyChartArchive } from "@/lib/daily-chart-data";
 import { dailyChartHref } from "@/lib/daily-chart";
 import { EVENT_PAGE_SLUGS } from "@/lib/event-pages";
+import { INDEX_PAGES, indexPagePath } from "@/lib/index-pages";
 
 type Locale = (typeof LOCALES)[number];
 type SitemapItem = { path: string; locale: Locale; modified: Date };
@@ -138,6 +139,9 @@ export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
   const staticRoutes: StaticRoute[] = [
     { path: "/", priority: 1, frequency: "hourly" },
     { path: "/piyasalar", priority: 0.8, frequency: "hourly" },
+    /* Endeks bileşen sayfaları (14 Kasım, SEO ikinci tur): eskiden
+       `?endeks=` sorgusuydu ve haritaya yazılacak adresleri yoktu. */
+    ...INDEX_PAGES.map((page) => ({ path: indexPagePath(page.key), priority: 0.8, frequency: "hourly" as const })),
     { path: "/bilancolar", priority: 0.8, frequency: "daily" },
     { path: "/bilancolar/analizler", priority: 0.9, frequency: "daily" },
     { path: "/teknik-analiz", priority: 0.8, frequency: "hourly" },

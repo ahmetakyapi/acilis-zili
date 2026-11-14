@@ -1,12 +1,15 @@
 import type { Metadata } from "next";
 import { notFound } from "next/navigation";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
-import { getBriefIssue } from "@/lib/data";
+import { getBriefIssue, getStoryEditedAt } from "@/lib/data";
+import { briefRevisionKey } from "@/lib/content-write";
+import { ogImageUrl } from "@/lib/og-image";
 import { getI18n, type Locale } from "@/lib/i18n";
 import { isLocale } from "@/lib/i18n/config";
 import {
   articleOpenGraph,
   metaDescription,
+  fittedTitle,
   missingMetadata,
 } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
@@ -47,7 +50,8 @@ export async function briefIssueMetadata(
        alta durmasın, her sayı kendi haberiyle okunsun. Tarih ve dönem
        eklenmiyor — manşetler zaten 60-70 harf ve sonuna kök şablon marka
        adını ekliyor; fazlası arama sonucunda kesiliyordu. */
-    title: brief.headline,
+    /* 14 Kasım: manşet + marka eki 65'i aşıyorsa ek düşer (ölçülen 80). */
+    title: fittedTitle(brief.headline, locale),
     description: metaDescription(briefSummary(brief.bodyMd)),
     alternates: pageAlternates(briefHref(tarih, period), locale, locales),
     openGraph: articleOpenGraph(locale, {
@@ -72,6 +76,11 @@ export async function BriefIssuePage({
   /* Künye sayının kendi dilinde — gerekçe mercek sayfasında: çevirisi
      olmayan sayıda canonical yazıldığı dile gidiyor. */
   const briefLocale = isLocale(brief.locale) ? brief.locale : locale;
+  /* `dateModified` (14 Kasım): üretim anı ile son panel düzeltmesinden yeni
+     olan — site haritasının kuralı (`getBriefArchive` → `modifiedAt`).
+     Düzeltmenin anı sürüm fotoğrafında, bültenin anahtarıyla. */
+  const editedAt = await getStoryEditedAt(briefRevisionKey(brief.briefDate, period), brief.locale);
+  const modified = editedAt && brief.generatedAt && editedAt > brief.generatedAt ? editedAt : brief.generatedAt;
 
   return (
     <>
@@ -83,6 +92,8 @@ export async function BriefIssuePage({
         path={path}
         locale={briefLocale}
         published={brief.generatedAt}
+        modified={modified}
+        image={ogImageUrl(period === "weekly" ? "/(app)/bulten/haftalik/[tarih]" : "/(app)/bulten/[tarih]", path)}
       />
       <BreadcrumbJsonLd
         locale={briefLocale}

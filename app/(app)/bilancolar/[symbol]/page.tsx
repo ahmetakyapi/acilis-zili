@@ -56,7 +56,7 @@ import {
 import { getExpectedMove, HISTORY_LOOKBACK_DAYS, pastReportEvents } from "@/lib/expected-move-data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { addEtDays, daysBetweenEt, todayEt } from "@/lib/market-hours";
-import { missingMetadata } from "@/lib/page-meta";
+import { fittedTitle, missingMetadata } from "@/lib/page-meta";
 import { zoneTag } from "@/lib/session-clock";
 import { getDailyCloses } from "@/lib/providers/alpaca-options";
 import { getEarningsSurprises } from "@/lib/providers/finnhub";
@@ -198,7 +198,10 @@ export async function generateMetadata(
   if (!data.known && data.analyses.length === 0 && !data.next) return missingMetadata(locale);
   const { copy } = textsOf(data, symbol, locale, t);
   return {
-    title: copy.metaTitle,
+    /* 14 Kasım: tam kalıp 90 karaktere çıkıyordu; ekle sığan ilk aday
+       ("NVIDIA Bilançosu Ne Zaman? 20 Kasım, ~00:00 TR"), o da sığmazsa
+       marka eki düşer (`fittedTitle`). */
+    title: fittedTitle([copy.metaTitle, copy.metaTitleShort], locale),
     description: copy.description,
     alternates: pageAlternates(earningsHref(symbol), locale),
     /* İNCE SAYFA DİZİNE GİRMEZ: takvimde tarihi de okunmuş çeyreği de

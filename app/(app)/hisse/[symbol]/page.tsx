@@ -19,7 +19,7 @@ import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { getI18n } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { stockTitle } from "@/lib/seo-titles";
-import { missingMetadata } from "@/lib/page-meta";
+import { fittedTitle, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { industryLabel } from "@/lib/sectors";
 import { fundMetaOf } from "@/db/seed/symbols";
@@ -64,6 +64,7 @@ import { AskStockChip, ClaudeEntryChip } from "@/components/stock/ClaudeEntryChi
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import depth from "./_panels/depth.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import { PairLinks } from "@/components/markets/PairFaceOff";
 import { EXPECTED_MOVE_HORIZON_DAYS } from "@/lib/expected-move";
 import { daysBetweenEt } from "@/lib/market-hours";
 import { indexMemberOf } from "@/db/seed/indices";
@@ -153,7 +154,7 @@ export async function generateMetadata(
   return {
     /* "… Hissesi: Fiyat, Grafik ve Bilanço" / "… Stock: …" (25 Ekim);
        fonda "ETF: Fiyat ve Grafik". Gerekçe `lib/seo-titles.ts`. */
-    title: name ? stockTitle(name, symbol, locale, { fund: Boolean(fund) }) : symbol,
+    title: name ? fittedTitle(stockTitle(name, symbol, locale, { fund: Boolean(fund) }), locale) : symbol,
     description,
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
@@ -231,6 +232,8 @@ export default async function StockPage(
     return (
       <MotionExperience className={styles.page}>
         <ScrollProgress />
+        {/* Fon dalında kırıntı künyesi yoktu (14 Kasım SEO denetimi). */}
+        <BreadcrumbJsonLd locale={locale} items={[{ name: t.nav.companies, path: "/sirketler" }, { name: `${fund.name} (${symbol})`, path: `/hisse/${symbol}` }]} />
         {/* FON KÜNYESİ KENDİ ADIYLA: "Şirket Dosyası" bir sepetin adı değil. */}
         <StockBreadcrumb symbol={symbol} t={t}>
           <span className={styles.pageLabel}>{t.stock.fundEyebrow}</span>
@@ -295,6 +298,7 @@ export default async function StockPage(
             <FundHoldings symbol={symbol} locale={locale} t={t} />
           </Suspense>
         )}
+        <PairLinks symbol={symbol} t={t} />
       </MotionExperience>
     );
   }
@@ -851,6 +855,8 @@ export default async function StockPage(
       <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-xl)" />}>
         <PeersCard symbol={symbol} locale={locale} t={t} />
       </Suspense>
+      {/* Küratörlü çiftin üyesiyse çift sayfasına bağlantı (14 Kasım). */}
+      <PairLinks symbol={symbol} t={t} />
 
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak.

@@ -212,6 +212,9 @@ async function run({ width, height, theme, order, motion }) {
     errors = [];
     try {
       if (clockNow) await page.clock.setFixedTime(clockNow());
+      /* Dil çerezi rotanın önekine sıfırlanır: `/en/…` ziyareti `az-locale=en`
+         yazar ve aynı koşudaki sonraki öneksiz rotalar İngilizce ölçülürdü. */
+      await context.addCookies([{ name: "az-locale", value: route.startsWith("/en/") || route === "/en" ? "en" : "tr", url: base }]);
       /* Yerelde her gezinme ayrı "adres"ten gelir: site IP başına kota tutar
          (`lib/rate-limit.ts`) ve art arda açılan hisse sayfaları 200 koduyla
          "Biraz Yavaşla" ekranını döndürüp temiz ölçülüyordu (14 Kasım). */

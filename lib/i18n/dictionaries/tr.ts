@@ -2754,6 +2754,9 @@ const tr = {
       "Aynı grafikte, aynı ölçekte: getiri, değerleme ve risk ölçüleri yan yana.",
     introTitle: "Bu İkili Neden Karşılaştırılır",
     others: "Diğer Karşılaştırmalar",
+    /* 14 Kasım: dizindeki liste ve hisse sayfasındaki bağlantı paneli. */
+    ready: "Hazır Çiftler",
+    forSymbol: "Karşılaştırmalar",
     /* Kahramanda iki şirketin arasındaki mühür ve paylaştırma çubuğu. */
     versus: "ve",
     capShare: "Toplam Piyasa Değerinden Pay",

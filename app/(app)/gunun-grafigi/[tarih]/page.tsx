@@ -8,11 +8,12 @@ import { GuideHint } from "@/components/article/GuideHint";
 import { ShareButton } from "@/components/article/ShareButton";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import styles from "@/components/daily-chart/DailyChart.module.css";
-import { DataStamp, PageHeader } from "@/components/ui/primitives";
+import { DataStamp } from "@/components/ui/primitives";
+import { SectionLabelHeader } from "@/components/ui/SectionLabelHeader";
 import { getI18n } from "@/lib/i18n";
 import { isLocale, type Locale } from "@/lib/i18n/config";
 import { withLocale } from "@/lib/i18n/routing";
-import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
+import { articleOpenGraph, fittedTitle, metaDescription, missingMetadata } from "@/lib/page-meta";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import { cn, formatEtDateCompact, formatEtDateLong, safeExternalUrl } from "@/lib/utils";
 import { DAILY_CHART_STAMP_SOURCE, dailyChartHref, dailyChartImageHref, firstSentence } from "@/lib/daily-chart";
@@ -50,7 +51,8 @@ export async function generateMetadata(props: PageProps<"/gunun-grafigi/[tarih]"
   const date = formatEtDateLong(row.chartDate, imageLocale);
   const image = (kind: "yatay" | "dikey") => absoluteUrl(dailyChartImageHref(row.chartDate, kind), imageLocale);
   return {
-    title: row.title,
+    /* 14 Kasım: başlık + marka eki 65'i aşıyorsa ek düşer (ölçülen 75). */
+    title: fittedTitle(row.title, locale),
     description: metaDescription(firstSentence(row.bodyMd)),
     alternates: pageAlternates(dailyChartHref(row.chartDate), locale, locales),
     openGraph: {
@@ -97,6 +99,8 @@ export default async function DailyChartPage(props: PageProps<"/gunun-grafigi/[t
         locale={rowLocale}
         published={row.publishedAt}
         modified={row.updatedAt}
+        /* Künyenin `og:image`iyle aynı adres (yukarıda `image("yatay")`). */
+        image={absoluteUrl(dailyChartImageHref(row.chartDate, "yatay"), rowLocale)}
       />
       <BreadcrumbJsonLd
         locale={rowLocale}
@@ -113,8 +117,12 @@ export default async function DailyChartPage(props: PageProps<"/gunun-grafigi/[t
           rutinin başlığı ana kartın h2'si. Sağdaki tek denetim grubu: günler
           arası oklar + tarih, iki görsel indirme ve Paylaş (küçük düğmeler);
           telefonda başlığın altında tek satır. */}
-      <PageHeader
-        title={d.title}
+      {/* 14 Kasım (SEO ikinci tur): kapak AYNI görünümde ama `h1` değil
+          künye (`SectionLabelHeader`); `h1` rutinin başlığı, ana kartta
+          (`ChartBoard` → `headingLevel`). Her günün sayfası aynı `h1`i
+          ("Günün Grafiği") taşıyordu. */}
+      <SectionLabelHeader
+        label={d.title}
         action={
           <div className={styles.headTools}>
             <nav aria-label={d.dayNav} className={styles.dayStep}>
@@ -182,6 +190,7 @@ export default async function DailyChartPage(props: PageProps<"/gunun-grafigi/[t
         locale={locale}
         labels={d}
         headingId={`grafik-${row.chartDate}`}
+        headingLevel={1}
         footer={
           <div className={styles.notes}>
             <p>{d.dataNote}</p>

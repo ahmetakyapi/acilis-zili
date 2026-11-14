@@ -233,6 +233,11 @@ export const COMPARE_PAIRS = [
 
 export const COMPARE_PAIR_SLUGS: readonly string[] = COMPARE_PAIRS.map((pair) => pair.slug);
 
+/** Sembolün üyesi olduğu çiftler — hisse sayfasındaki bağlantılar (14 Kasım). */
+export function comparePairsOf(symbol: string): ComparePair[] {
+  return COMPARE_PAIRS.filter((pair) => (pair.symbols as readonly string[]).includes(symbol));
+}
+
 export function comparePairBySlug(slug: string): ComparePair | null {
   return COMPARE_PAIRS.find((pair) => pair.slug === slug) ?? null;
 }

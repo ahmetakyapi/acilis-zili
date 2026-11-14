@@ -36,8 +36,10 @@ import {
 } from "@/lib/data";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getStoryNeighbors } from "@/lib/story-neighbors";
+import { ogImageUrl } from "@/lib/og-image";
 import {
   articleOpenGraph,
+  fittedTitle,
   metaDescription,
   missingMetadata,
 } from "@/lib/page-meta";
@@ -64,7 +66,8 @@ export async function generateMetadata(props: PageProps<"/mercek/[slug]">) {
   ]);
   if (!story) return missingMetadata(locale);
   return {
-    title: story.title,
+    /* 14 Kasım: uzun başlıkta marka eki düşer (ölçülen 84) — `fittedTitle`. */
+    title: fittedTitle(story.title, locale),
     description: metaDescription(story.dek),
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
@@ -427,6 +430,7 @@ export default async function StoryPage(props: PageProps<"/mercek/[slug]">) {
         published={story.publishedAt}
         /* Gerçek düzeltme anı (`getStoryEditedAt`); yoksa ilk yayın. */
         modified={editedAt ?? story.publishedAt}
+        image={ogImageUrl("/(app)/mercek/[slug]", `/mercek/${story.slug}`)}
       />
       <BreadcrumbJsonLd
         locale={story.locale as Locale}

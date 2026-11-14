@@ -168,8 +168,12 @@ export default async function EarningsWeekPage(props: PageProps<"/bilancolar/haf
       {/* BAŞLIK BÖLÜMÜN ADI, açıklama bu sekmenin: öteki üç sekmenin kuralı
           (gerekçe `app/(app)/bilancolar/page.tsx`). "Haftalık Bilanço
           Takvimi" adı sayfa başlığında (metadata) ve görselde kalıyor. */}
+      {/* 14 Kasım (SEO ikinci tur): `h1` artık bu sekmenin aranan adı,
+          "Haftalık Bilanço Takvimi" — `<title>` ve görselle aynı. Öteki üç
+          sekme bölüm adını taşımaya devam ediyor; yukarıdaki kural bu
+          sekmede bilerek bozuldu (dört sayfa aynı `h1`i taşıyordu). */}
       <DirectoryHeader
-        title={t.analysis.title}
+        title={w.title}
         description={t.earningsWeek.description}
         tabs={<EarningsTabs active="week" t={t} inHeader />}
       >

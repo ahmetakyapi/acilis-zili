@@ -64,6 +64,8 @@ type CompanyWhen = {
   estimated: boolean;
   /** `<title>`ın soru işaretinden sonraki kısmı; tarih yoksa null. */
   titleWhen: string | null;
+  /** Aynı kısmın pencere adsız kısa hâli ("20 Kasım, ~00:00 TR"); uzun başlıkta. */
+  titleWhenShort: string | null;
   /** Okurun birincil saatiyle kapanış (amc) — "23:00". */
   closeClock: string | null;
   /** Okurun birincil saatiyle açılış (bmo) — "16:30". */
@@ -90,6 +92,7 @@ export function companyWhen(
       window: "none",
       estimated: false,
       titleWhen: null,
+      titleWhenShort: null,
       closeClock: null,
       openClock: null,
       secondaryClock: null,
@@ -115,6 +118,7 @@ export function companyWhen(
       window,
       estimated: false,
       titleWhen: `${localDay}, ~${pair.primary} ${tag} · ${names.afterClose}`,
+      titleWhenShort: `${localDay}, ~${pair.primary} ${tag}`,
       closeClock: shifted ? `${localDay} ${pair.primary}` : pair.primary,
       openClock: null,
       secondaryClock: pair.secondary,
@@ -127,6 +131,7 @@ export function companyWhen(
       window,
       estimated: false,
       titleWhen: `${day} · ${names.beforeOpen}`,
+      titleWhenShort: day,
       closeClock: null,
       openClock: pair.primary,
       secondaryClock: pair.secondary,
@@ -138,6 +143,7 @@ export function companyWhen(
       window,
       estimated: false,
       titleWhen: `${day} · ${names.duringMarket}`,
+      titleWhenShort: day,
       closeClock: null,
       openClock: null,
       secondaryClock: null,
@@ -148,6 +154,7 @@ export function companyWhen(
     window,
     estimated: true,
     titleWhen: day,
+    titleWhenShort: day,
     closeClock: null,
     openClock: null,
     secondaryClock: null,
@@ -176,7 +183,7 @@ export function companyCopy(input: {
   /** Tahmini etiketi ("Tahmini") — başlıkta parantezle. */
   labels: EarningsSeasonLabels["company"];
   windowLower: string | null;
-}): { title: string; metaTitle: string; description: string; answer: string; lead: string } {
+}): { title: string; metaTitle: string; metaTitleShort: string; description: string; answer: string; lead: string } {
   const { name, symbol, when, labels } = input;
   const base = { name, symbol };
   const title = fill(labels.title, base);
@@ -184,6 +191,7 @@ export function companyCopy(input: {
     return {
       title,
       metaTitle: fill(labels.metaTitleNone, base),
+      metaTitleShort: fill(labels.metaTitleNone, base),
       description: fill(labels.metaDescriptionNone, base),
       answer: labels.answerNone,
       lead: fill(labels.leadNone, base),
@@ -198,6 +206,10 @@ export function companyCopy(input: {
   };
   const titleWhen = when.estimated ? `${when.titleWhen} (${labels.estimatedTag})` : (when.titleWhen ?? "");
   const metaTitle = fill(labels.metaTitle, { ...base, when: titleWhen });
+  /* Pencere adsız kısa kalıp (14 Kasım): tam başlık 65–90 karakter; sayfa
+     ekle sığan ilk adayı seçer (`fittedTitle`). `~` ve "Tahmini" kalır. */
+  const shortWhen = when.titleWhenShort ?? when.titleWhen ?? "";
+  const metaTitleShort = fill(labels.metaTitle, { ...base, when: when.estimated ? `${shortWhen} (${labels.estimatedTag})` : shortWhen });
   const description = when.estimated
     ? fill(labels.metaDescriptionEstimated, { ...values, date: input.dateShort })
     : fill(labels.metaDescription, { ...values, date: input.dateShort });
@@ -220,6 +232,7 @@ export function companyCopy(input: {
   return {
     title,
     metaTitle,
+    metaTitleShort,
     description,
     answer: fill(answerTemplate, values),
     lead: fill(leadTemplate, values),

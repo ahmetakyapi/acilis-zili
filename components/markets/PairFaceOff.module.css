@@ -242,6 +242,17 @@
   gap: 0.5rem;
 }
 
+/* Hisse sayfasındaki bağlantı kartı (14 Kasım): metin "Goldman Sachs ve
+   Morgan Stanley Karşılaştırması" kadar uzayabiliyor; 15,5rem'lik kartta
+   üç noktayla kesiliyordu. Kart geniş, metin gerekirse iki satır. */
+.otherGrid[data-wide] {
+  grid-template-columns: repeat(auto-fill, minmax(min(100%, 22rem), 1fr));
+}
+
+.otherGrid[data-wide] .otherName {
+  white-space: normal;
+}
+
 .other {
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;

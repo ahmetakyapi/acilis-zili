@@ -5,7 +5,8 @@ import { checkBearer, type AuthOutcome } from "@/lib/api-auth";
 import { db } from "@/lib/db";
 import { earningsAnalyses } from "@/lib/schema";
 import { isLocale } from "@/lib/i18n/config";
-import { canonicalPeriod, periodSlug } from "@/lib/analysis";
+import { analysisHref, canonicalPeriod, periodSlug } from "@/lib/analysis";
+import { analysisChanged, indexNowUrls, notifyIndexNow } from "@/lib/indexnow";
 import { isoDateSchema, localeInputSchema } from "@/lib/content-write";
 import {
   EXTRAS_INPUT_SHAPE,
@@ -434,6 +435,23 @@ export async function POST(request: Request) {
     generatedBy: "claude",
   };
 
+  /* INDEXNOW (14 Kasım): yeni ya da metni değişen analiz bildirilir. Ölçü
+     yazmadan ÖNCEKİ satır; okunamazsa bildirim atlanır, yazma etkilenmez
+     (bildirim ipucu — gerekçe lib/indexnow.ts). */
+  const before = await db
+    .select({
+      headline: earningsAnalyses.headline,
+      summary: earningsAnalyses.summary,
+      analysis: earningsAnalyses.analysis,
+      verdict: earningsAnalyses.verdict,
+      score: earningsAnalyses.score,
+    })
+    .from(earningsAnalyses)
+    .where(and(eq(earningsAnalyses.symbol, symbol), eq(earningsAnalyses.period, period), eq(earningsAnalyses.locale, locale)))
+    .limit(1)
+    .then((rows) => ({ row: rows[0] ?? null }))
+    .catch(() => null);
+
   /* `returning` ekleri bağlamak için: upsert çakışmada satırın `id`sini
      koruyor, yani düzeltilen analiz aynı kimlikte kalıyor. */
   const [saved] = await db
@@ -448,6 +466,10 @@ export async function POST(request: Request) {
       set: { ...values, updatedAt: new Date() },
     })
     .returning({ id: earningsAnalyses.id });
+
+  if (saved && before && isLocale(locale) && analysisChanged(before.row, values)) {
+    notifyIndexNow(indexNowUrls([analysisHref(symbol, period)], [locale]));
+  }
 
   /* EKLER ANA KAYDI BEKLETMEZ, BOZMAZ. Tablo henüz yoksa (migration
      deploy'dan sonra elle uygulanıyor) analiz yine yazılıyor; yanıttaki

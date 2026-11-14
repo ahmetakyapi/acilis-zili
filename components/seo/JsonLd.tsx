@@ -1,4 +1,4 @@
-import { SITE_URL } from "@/lib/site";
+import { SITE_URL, TELEGRAM_URL } from "@/lib/site";
 import { withLocale } from "@/lib/i18n/routing";
 import type { Locale } from "@/lib/i18n/config";
 
@@ -107,7 +107,9 @@ export function SiteJsonLd({ locale }: { locale: Locale }) {
              kişi; içerikler onun adına YAZILMIYOR, o yüzden aşağıdaki
              makale künyelerinde yazar kişi değil kuruluş. */
           founder: FOUNDER,
-          sameAs: [REPO_URL],
+          /* Telegram kanalı tanımlıysa (lib/site.ts → TELEGRAM_URL; yoksa
+             alan yalnız depo): kuruluşun doğrulanabilir ikinci profili. */
+          sameAs: [REPO_URL, ...(TELEGRAM_URL ? [TELEGRAM_URL] : [])],
         }}
       />
       <Block
@@ -150,8 +152,16 @@ export function ArticleJsonLd({
   locale,
   published,
   modified,
+  image,
   type = "Article",
 }: {
+  /**
+   * Sayfanın ZATEN ürettiği paylaşım görselinin MUTLAK adresi (14 Kasım).
+   * Google'ın makale zengin sonucu görseli istiyor; alan yoktu. Yeni görsel
+   * üretilmez: `og:image` ile aynı dosya (dosya tabanlı kartta
+   * `lib/og-image.ts` → `ogImageUrl`, Route Handler kartında kendi adresi).
+   */
+  image?: string;
   /**
    * `NewsArticle` yalnızca TARİHE BAĞLI yayın için: bülten sayısı bir günün
    * haberidir. Mercek bir mekanizmayı, rehber bir kavramı anlatıyor; onlar
@@ -179,6 +189,11 @@ export function ArticleJsonLd({
         ...(description ? { description } : {}),
         inLanguage: locale,
         mainEntityOfPage: url,
+        ...(image ? { image } : {}),
+        /* Sitede ücretli duvar yok: bütün yazılar girişsiz okunur. */
+        isAccessibleForFree: true,
+        /* Tarih yalnız BİLİNİYORSA. Rehber yazısı depoda, yayın anı
+           tutulmuyor: uydurma tarih yazılmaz, alan boş kalır. */
         ...(published ? { datePublished: iso(published) } : {}),
         ...(modified ? { dateModified: iso(modified) } : {}),
         /* Yazar bir kişi değil, yayın: metinler editoryal ekipten değil

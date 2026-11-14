@@ -32,7 +32,9 @@ export async function generateMetadata() {
   const { t } = await getI18n();
   return {
     title: t.errors.notFoundTitle,
-    robots: { index: false, follow: false },
+    /* `noindex`i Next basıyor; kökteki "index, follow" mirası kesilir —
+       gerekçe lib/page-meta.ts → `missingMetadata` (14 Kasım). */
+    robots: null,
   };
 }
 
