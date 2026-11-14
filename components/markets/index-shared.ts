@@ -6,6 +6,7 @@ import {
   type IndexMember,
 } from "@/db/seed/indices";
 import type { Locale } from "@/lib/i18n";
+import { LANE_STEPS } from "@/lib/market-scales";
 import type { Quote } from "@/lib/providers/types";
 import { SIGN_GAP } from "@/lib/utils";
 
@@ -68,6 +69,46 @@ export function approxPoints(value: number, locale: Locale): string {
     { maximumFractionDigits: 0 },
   ).format(Math.abs(rounded));
   return `~${sign}${SIGN_GAP}${formatted}`;
+}
+
+/** `bodySpan`ın okuduğu yüzdelik: üyelerin dörtte üçü kolun içinde kalır. */
+export const BODY_SPAN_QUANTILE = 0.75;
+
+/**
+ * Kulvarın tam kolu, listenin GÖVDESİNE göre (14 Kasım 2026, görsel tur).
+ *
+ * `laneSpan` "body" kipi 90. yüzdeliği ölçer; haftalık değişimde kuyruk
+ * uzundur (tek sektörün sert haftası) ve o ölçekte gövdedeki satırlar
+ * 3–10 piksellik noktalara düşüyordu (karar: MembersTable.tsx → "HAFTALIK
+ * ÖLÇEK GÖVDEYE GÖRE"). Burada ölçü mutlak değerlerin 75. yüzdeliği; taban
+ * (`floor`) ve okunur basamaklar (`LANE_STEPS`) `laneSpan` ile aynı, yani
+ * künyedeki sayı yine "±%8" gibi yuvarlak. Ölçeği aşan satır kola dayanır
+ * ve ucunda kesik taşır (`laneOver`). Sonlu olmayan değer atlanır.
+ */
+export function bodySpan(values: readonly (number | null | undefined)[], floor: number): number {
+  const sorted = values
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value))
+    .map((value) => Math.abs(value))
+    .sort((a, b) => a - b);
+  const mark = sorted.length > 0 ? sorted[Math.max(0, Math.ceil(sorted.length * BODY_SPAN_QUANTILE) - 1)] : 0;
+  const need = Math.max(floor, mark);
+  return LANE_STEPS.find((step) => need <= step + 1e-9) ?? LANE_STEPS[LANE_STEPS.length - 1];
+}
+
+/**
+ * Sütunun dayanıklı tavanı: en büyük İKİNCİ mutlak değer (14 Kasım 2026).
+ *
+ * Emtia panosunda çubuk ölçeği sütunun en büyüğüydü; yılbaşından +%110
+ * yapan tek fon (ham petrol) ötekilerin hepsini nokta boyuna indiriyordu.
+ * Tek uç değer ölçeği belirlemez (`laneSpan`ın dersi): o satır kola dayanır,
+ * ucunda kesik taşır. Tek değerli sütunda o değerin kendisi; boşta 0.
+ */
+export function robustPeak(values: readonly (number | null | undefined)[]): number {
+  const sorted = values
+    .filter((value): value is number => typeof value === "number" && Number.isFinite(value))
+    .map((value) => Math.abs(value))
+    .sort((a, b) => b - a);
+  return sorted[1] ?? sorted[0] ?? 0;
 }
 
 export type Row = {

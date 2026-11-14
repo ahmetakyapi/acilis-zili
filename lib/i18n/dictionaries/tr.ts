@@ -1830,6 +1830,9 @@ const tr = {
     /* 10 Kasım, görsel tur: dağılım çizimi, hareket ölçeği, açılış imi. */
     distributionCaption: "Günlük Değişim Dağılımı",
     distributionAria: "{n} şirketin günlük değişim dağılımı; medyan {median}.",
+    /* 14 Kasım, görsel tur: dağılım kahraman boyda (IndexSelection.tsx). */
+    distributionMedian: "Medyan",
+    distributionTotal: "{n} Şirket",
     movementScaleFull: "Tam Şerit {pct}",
     openTick: "Açılış",
     /* 10 Kasım, bileşen tablosu: haftalık sütun, piyasa değeri payı, künye. */
@@ -2515,6 +2518,9 @@ const tr = {
     /* 10 Kasım: yöntem metinleri katlamada; emtia panosunda YBB çizgisi. */
     pulseHowTo: "Nasıl Okunur",
     trendColumn: "YBB Seyri",
+    /* 14 Kasım, görsel tur: emtia çubuklarının yazılı ölçeği (EtfBoards.tsx). */
+    barScale: "Tam Çubuk",
+    barOver: "Ucu Kesik Çubuk Ölçeği Aşar",
 
     /* ---- Makro ikinci halka ---- */
     weekEnding: "{date} ile Biten Hafta",

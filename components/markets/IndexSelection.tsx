@@ -1,12 +1,12 @@
-import type { ReactNode } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ChangePill, Panel, Skeleton } from "@/components/ui/primitives";
+import { Panel, Skeleton } from "@/components/ui/primitives";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { changeHistogram, histogramShare, HISTOGRAM_LIMIT } from "@/lib/market-scales";
 import type { ThemePhase } from "@/lib/theme-stats";
-import { cn, formatPercent, formatPercentPlain } from "@/lib/utils";
+import { cn, directionOf, directionText, formatPercent, formatPercentPlain } from "@/lib/utils";
 import { INDEX_TABS, type TabKey } from "./index-shared";
 import styles from "./MarketExperience.module.css";
 
@@ -28,9 +28,9 @@ export function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Local
           pay aynı yüzeyde üç bölme, aralarında saç çizgisi, üçü de dikeyde
           ortalı. Pay kutusunun kenarlığı kalktı — panelin kendisi kutu. */}
       {/* `data-aside`: pay basılmazsa ızgara iki kolona düşer (6 Kasım,
-          inceleme; MarketExperience.module.css → `.toolbarLayout`). */}
-      <div className={styles.toolbarLayout} data-aside={aside ? "" : undefined}>
-        <div className={styles.indexChoices}>
+          inceleme; MarketExperience.module.css → `.strip`, 14 Kasım'dan beri). */}
+      <div className={styles.strip} data-aside={aside ? "" : undefined}>
+        <div className={styles.stripTabs}>
         {/* "Piyasa Genişliği" künyesi çiplerin üstündeydi; 9 Ekim 2026'da
             bütün bölüm künyeleriyle kalktı (`PageHeader` yorumu). Çiplerin
             ne seçtiği adlarından, genişlik de "Yükselenlerin Payı"ndan okunuyor. */}
@@ -80,7 +80,7 @@ export function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Local
             yarısını tutuyordu; satırın sağı ise yalnızca liste tarihini
             taşıyordu. Pay buraya çıkınca kartın sağı ısı haritasına kaldı.
             Liste tarihi kartın kimlik bloğuna indi. */}
-        {aside && <div className={styles.tabsAside}>{aside}</div>}
+        {aside && <div className={styles.stripShare}>{aside}</div>}
       </div>
 
   </Panel>;
@@ -121,43 +121,74 @@ export function IndexIdentity({ tab, proxy, median: medianMove, phase, moves = n
      kurulduğu aynı küme (`sameSessionMoves`), yani küme karışıksa çizim de
      yok. Kutular `changeHistogram` (lib/market-scales.ts, testli). */
   const histogram = !loading && medianMove !== null && moves && moves.length > 0 ? changeHistogram(moves) : null;
-  return <div role="group" className={styles.toolbarIdentity} aria-label={`${label} · ${proxy}`} data-chart={histogram ? "" : undefined}>
-    {loading ? <Skeleton className="h-7 w-48 max-w-full" /> : medianMove !== null ? (
-      <div className={styles.selectedIndexReading}>
-        <span className={styles.medianLabel}>{medianLabel}</span>
-        <ChangePill changePct={medianMove} locale={locale} className={styles.medianPill} />
-        <p className={styles.medianHint}>{t.markets.medianHint}</p>
-      </div>
-    ) : <span className={styles.selectedIndexEmpty}>{t.markets.medianMissing}</span>}
+  /* DAĞILIM KAHRAMAN BOYDA (14 Kasım 2026, görsel tur). Çizim 236 × 34
+     pikseldi (1440, ölçüldü): ekranın en öğretici çizimi bir künye boyunda
+     kalmış, kutuların boyu ve medyanın yeri okunmuyordu. Şimdi şeridin orta
+     bölmesinin tamamı (1440: 493 × 92): her kutunun üstünde şirket SAYISI
+     yazılı (boyu okurun tahmin etmesi gerekmiyor), eksende her tam puanda
+     etiket, medyan düğmesiz düz bir çizgi ve adı başlık satırında
+     (`arayuz.md`: "düğmeli im kullanılmaz"). Şerit üç bölme, ÜÇ ORTAK SATIR
+     (başlık · çizim · künye; `subgrid`): medyanın sayısı, dağılımın tabanı
+     ve payın rayı aynı hatta biter. Medyan artık hap değil display sayı
+     (30/700, yön renginde): bölmenin en anlamlı değeri. Bu yüzden blok iki
+     kardeş basar: medyan (`.stripMedian`) ve dağılım (`.hist`). */
+  const ticks = Array.from({ length: HISTOGRAM_LIMIT * 2 - 1 }, (_, i) => i - (HISTOGRAM_LIMIT - 1));
+  return <>
+    <div role="group" className={styles.stripMedian} aria-label={`${label} · ${proxy}`}>
+      {loading ? <Skeleton className="h-9 w-40 max-w-full" /> : medianMove !== null ? (
+        <>
+          <p className={styles.medianRead}>
+            <span className={styles.medianLabel}>{medianLabel}</span>
+            <strong
+              className={cn("numeral", styles.medianFigure, directionText(directionOf(medianMove)))}
+            >
+              {formatPercent(medianMove, locale)}
+            </strong>
+          </p>
+          <p className={styles.medianHint}>{t.markets.medianHint}</p>
+        </>
+      ) : <span className={styles.selectedIndexEmpty}>{t.markets.medianMissing}</span>}
+    </div>
+    {loading && <div className={styles.hist} aria-hidden><span /><Skeleton className={styles.histSkeleton} /><span /></div>}
     {histogram && histogram.peak > 0 && medianMove !== null && (
       <figure
-        className={styles.dist}
+        className={styles.hist}
         role="img"
         aria-label={t.markets.distributionAria
           .replace("{n}", String(histogram.total))
           .replace("{median}", formatPercent(medianMove, locale))}
       >
-        <div className={styles.distPlot} aria-hidden>
+        <p className={styles.histHead} aria-hidden>
+          <span>{t.markets.distributionCaption}</span>
+          <span className={styles.histKey}><i />{t.markets.distributionMedian}</span>
+          <span className={cn("numeral", styles.histTotal)}>{t.markets.distributionTotal.replace("{n}", String(histogram.total))}</span>
+        </p>
+        <div className={styles.histPlot} aria-hidden>
           {histogram.bins.map((bin) => (
-            <span key={bin.from} className={styles.distSlot}>
+            <span key={bin.from} className={styles.histSlot}>
+              {bin.count > 0 && <b className="numeral">{bin.count}</b>}
               <i
                 data-side={bin.side}
                 data-empty={bin.count === 0 || undefined}
                 data-motion-draw="bar"
-                style={{ height: bin.count === 0 ? undefined : `${Math.max(6, (bin.count / histogram.peak) * 100).toFixed(1)}%` }}
+                style={{ "--share": (bin.count / histogram.peak).toFixed(4) } as CSSProperties}
               />
             </span>
           ))}
-          <b className={styles.distMedian} style={{ left: `${(histogramShare(medianMove) * 100).toFixed(2)}%` }} />
+          <em className={styles.histMedian} style={{ left: `${(histogramShare(medianMove) * 100).toFixed(2)}%` }} />
         </div>
-        <figcaption className={cn("numeral", styles.distAxis)} aria-hidden>
-          <span>≤ {formatPercent(-HISTOGRAM_LIMIT, locale, 0)}</span>
-          <span>{t.markets.distributionCaption}</span>
-          <span>≥ {formatPercent(HISTOGRAM_LIMIT, locale, 0)}</span>
-        </figcaption>
+        <p className={cn("numeral", styles.histAxis)} aria-hidden>
+          <span data-end="start">≤ {formatPercent(-HISTOGRAM_LIMIT, locale, 0)}</span>
+          {ticks.map((value) => (
+            <span key={value} style={{ left: `${(histogramShare(value) * 100).toFixed(2)}%` }}>
+              {value === 0 ? "0" : formatPercent(value, locale, 0)}
+            </span>
+          ))}
+          <span data-end="end">≥ {formatPercent(HISTOGRAM_LIMIT, locale, 0)}</span>
+        </p>
       </figure>
     )}
-  </div>;
+  </>;
 }
 
 /**
@@ -175,15 +206,19 @@ export function BreadthSummary({
     { key: "down", value: declining, fill: "bg-down", tone: "text-down", label: t.markets.declining },
   ];
   return (
-    <div className={styles.shareBox}>
-      <div className={styles.shareHead}>
-        <span>{t.markets.advancingShare}</span>
+    <div className={styles.share}>
+      {/* ÜÇ SATIR: künye · sayı + ray · sayaçlar (14 Kasım 2026). Şeridin üç
+          bölmesi aynı üç satırı paylaşıyor (`subgrid`, gerekçe
+          `IndexIdentity` → "DAĞILIM KAHRAMAN BOYDA"); pay bölmesinin en
+          anlamlı değeri (yüzde) display boyda, rayın hemen üstünde. Ray 5 →
+          8 piksel ("büyüklük kalın yatay şeritle okunur"). */}
+      <div className={styles.shareBody}>
+        <p className={styles.shareLabel}>{t.markets.advancingShare}</p>
         {/* SEKME DEĞİŞİNCE SAYI YUVARLANIR (10 Kasım): pay, seçimin ilk
             cevabı; sekmeye basınca Suspense sınırı yeniden bağlanıyor ve
             `RollingFigure` (CSS, sunucuda) o an bir kez dönüyor. Şerit ilk
             ekranda (1440×900'de y≈350), bileşenin kuralına uygun. */}
-        <strong className="numeral"><RollingFigure value={formatPercentPlain(share, locale, 0)} /></strong>
-      </div>
+        <strong className={cn("numeral", styles.shareFigure)}><RollingFigure value={formatPercentPlain(share, locale, 0)} /></strong>
       {/* Ray TEK süpürmeyle açılıyor (14 Ekim). Üç dilimin her biri ayrı
           `bar-fill` + `data-motion-draw` taşıyordu ve her dilim KENDİ sol
           kenarından scaleX ile büyüyordu: flex kutuları yerinde durduğu
@@ -199,6 +234,7 @@ export function BreadthSummary({
         <div className={styles.breadthRail}>
           {parts.map((part) => part.value > 0 && <span key={part.key} className={part.fill} style={{ flex: part.value }} />)}
         </div>
+      </div>
       </div>
       <dl className={styles.shareCounts}>
         {parts.map((part) => (

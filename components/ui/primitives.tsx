@@ -95,8 +95,18 @@ export function PanelHeader({
         /* 14 → 16 (9 Ekim, sahibinin isteği: "bazı başlıklar küçülmüş").
            Panel başlığı gövdeyle aynı puntodaydı ve ancak kalınlıkla
            ayrılıyordu; tablo satırlarının (13) bir piksel üstünde bir satır
-           gibi okunuyordu. 16 hâlâ sıkı degradenin sınırında (globals.css). */
-        <h2 className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">
+           gibi okunuyordu.
+           PANEL BAŞLIĞI DÜZ MÜREKKEP (14 Kasım 2026, görsel tur "Zil
+           Defteri"; sahibinin isteği: "yeni bir kimlik katabiliriz"). Marka
+           degradesi sayfa başlığında, bölüm başlığında ve panel başlığında
+           AYNI anda duruyordu: üç basamak aynı sesle konuşunca hiyerarşi
+           yalnız puntoya kalıyor, on panelli ekranda on küçük mavi başlık
+           veriden önce göze geliyordu. Degrade artık sayfa ve bölüm
+           manşetinin; panel başlığı `text-strong` ile basılır ve
+           `data-ink="plain"` genel başlık mürekkebinden (globals.css →
+           "MÜREKKEP YALNIZCA KISA MANŞETTE") çıkar. Piyasalar ve şirket
+           detay ajanları aynı ezmeyi modüllerinde ayrı ayrı yazmıştı. */
+        <h2 data-ink="plain" className="w-fit text-lead font-bold tracking-[-0.015em] text-strong">
           {title}
         </h2>
       )}

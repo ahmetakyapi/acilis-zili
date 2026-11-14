@@ -764,3 +764,214 @@
    yükleme iskeletini (page.tsx → DetailSkeleton) biçimliyor; tablonun
    kendisi components/markets/MembersTable.module.css'te. Karar kayıtları
    yerinde bırakıldı. */
+
+/* ==========================================================================
+   14 Kasım 2026 — görsel tur, "Zil Defteri" (Piyasalar). Karar kayıtları:
+   page.tsx ("DÖRT ENDEKS, ŞERİDİN LİSTESİ", "TEK PANEL, İKİ YARI"),
+   IndexSelection.tsx ("DAĞILIM KAHRAMAN BOYDA"), MoverPanel.tsx ("KALIN
+   ÇUBUK"). Önceki katmanların üstüne yazar; ölçümler dosyanın sonunda.
+
+   NOT: seçim şeridi yeni sınıflarla kuruldu (`.strip*`, `.hist*`, `.share`);
+   yukarıdaki `.toolbarLayout`, `.toolbarIdentity`, `.tabsAside`, `.shareBox`,
+   `.dist*`, `.selectedIndexReading`, `.medianPill` kuralları artık hiçbir
+   TSX'te geçmiyor — karar kayıtları için yerinde bırakıldı.
+   ========================================================================== */
+
+/* ---- Kapak: başlık satırı + dört endeks ----
+   Önce (1440, canlı): kapak iki kolon; solda başlık ve iki satır açıklama,
+   altında ~100 piksel ölü alan, sağda üç kart. Sonra: tek kolon; başlık,
+   açıklama ve paylaş TEK satırda, altında dört kart tam genişlikte. Kart
+   sayfanın kahraman yüzeyi: fiyat display boyda (700, −0,03em), eğri 64
+   piksel. */
+.marketHeader { grid-template-columns:minmax(0,1fr); grid-template-areas:"mast" "cards"; gap:16px; }
+.page .marketHeader:global(.page-frame.page-frame.page-frame) { gap:16px; }
+.masthead > header { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:4px 16px; }
+.masthead > header > :global(.page-title-row) { display:contents; }
+.masthead > header h1 { grid-column:1; grid-row:1; }
+.masthead > header :global(.page-title-actions) { grid-column:2; grid-row:1; }
+.page .masthead > header > p { grid-column:1 / -1; grid-row:2; max-width:64ch; margin:0; font-size:14px; line-height:1.55; }
+@media(min-width:1024px) {
+ /* Açıklama başlıkla AYNI taban çizgisinde; degrade başlık 0,12em yukarı
+    kalktığı için açıklama da aynı pay kadar (`arayuz.md` → "Display
+    başlığın yanındaki metin 0,12em kalkar"). */
+ .masthead > header { grid-template-columns:auto minmax(0,1fr) auto; align-items:baseline; column-gap:22px; }
+ .page .masthead > header > p { grid-column:2; grid-row:1; max-width:none; translate:0 calc(var(--heading-page) * -.12); }
+ .masthead > header :global(.page-title-actions) { grid-column:3; align-self:center; }
+}
+.indexGrid { grid-template-columns:repeat(4,minmax(0,1fr)); gap:12px; }
+.price { font-weight:700; letter-spacing:-.03em; }
+.identity > .indexName { font-weight:700; }
+/* Yer tutucu boyları ÖLÇÜLDÜ (kartlar + damga satırı): 1200+ 210 + 30,
+   768–1199 2 × 210 + 12 + 30, telefon 4 × 76 + 3 × 8 + ~50. */
+.indexSkeleton,.indexUnavailable { min-height:240px; border-radius:var(--radius-panel); }
+@media(min-width:768px) {
+ .marketHeader .indexCard { display:flex; flex-direction:column; min-height:0; padding:16px 16px 14px; }
+ .marketHeader .chart { flex:1 1 64px; min-height:64px; margin-top:14px; }
+ .marketHeader .reading { margin-top:10px; }
+ .marketHeader .dayRange { margin-top:12px; }
+ .price { font-size:36px; line-height:1.05; }
+}
+@media(min-width:768px) and (max-width:1199px) {
+ .indexGrid { grid-template-columns:repeat(2,minmax(0,1fr)); }
+ .indexSkeleton,.indexUnavailable { min-height:462px; }
+}
+@media(min-width:1200px) and (max-width:1359px) { .price { font-size:30px; } .marketHeader .indexCard { padding-inline:14px; } }
+@media(max-width:767px) {
+ .indexGrid { grid-template-columns:minmax(0,1fr); gap:8px; }
+ .indexSkeleton,.indexUnavailable { min-height:378px; }
+}
+
+/* ---- Seçim şeridi: üç bölme, üç ortak satır ----
+   Önce (1440, canlı): çipler · medyan hapı + cümle + 236 × 34 dağılım · pay;
+   üç bölme dikeyde ortalı, tabanları ayrı (medyan cümlesi 451, dağılım
+   ekseni 441, sayaçlar 448). Sonra: ızgara üç satır (başlık · çizim ·
+   künye), bölmeler `subgrid` ile aynı satırları paylaşır: medyan sayısının,
+   dağılım tabanının ve pay rayının dibi AYNI pikselde. Dağılım orta
+   bölmenin tamamı. 768–1199: çipler üstte, medyan ile pay yan yana,
+   dağılım tam genişlik. Telefon: hepsi alt alta. */
+/* Çift sınıf: yukarıdaki `.indexTabs > div { padding:0 }` kuralını geçer. */
+.indexTabs > .strip { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; padding:14px; }
+.strip > * { min-width:0; }
+.stripTabs { min-width:0; }
+.stripMedian { display:flex; align-items:flex-end; justify-content:space-between; flex-wrap:wrap; gap:4px 16px; }
+.medianRead { display:flex; flex-direction:column; gap:4px; }
+.medianLabel { color:var(--text-body); font-size:12px; font-weight:600; line-height:1.3; }
+.medianFigure { font-size:30px; font-weight:700; line-height:1; letter-spacing:-.03em; }
+.stripMedian > .medianHint { display:block; flex:1 1 180px; max-width:34ch; margin:0; color:var(--text-muted); font-size:12px; line-height:1.45; white-space:normal; }
+.hist { display:flex; flex-direction:column; gap:6px; margin:0; min-width:0; }
+.histHead { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 14px; color:var(--text-body); font-size:12px; font-weight:600; line-height:1.3; }
+.histKey { display:inline-flex; align-items:center; gap:6px; color:var(--text-muted); }
+.histKey > i { width:2px; height:12px; border-radius:1px; background:var(--text-strong); }
+.histTotal { margin-left:auto; color:var(--text-muted); font-weight:400; }
+/* Kutular: üstte sayı (12), altında çubuk. Çubuğun boyu kutudaki şirket
+   sayısının en dolu kutuya oranı (`--share`), sayı satırı (16) düşüldükten
+   sonra; boş kutuda çubuk da sayı da yok. Sıfır iki yarının arasında,
+   taban çizgisi `--line-strong`. */
+.histPlot { position:relative; display:flex; align-items:flex-end; gap:3px; height:92px; border-bottom:1px solid var(--line-strong); }
+.histPlot::before { content:""; position:absolute; left:50%; top:14px; bottom:0; width:1px; margin-left:-.5px; background:var(--line); }
+.histSlot { display:flex; flex:1 1 0; flex-direction:column; align-items:stretch; justify-content:flex-end; height:100%; min-width:0; }
+.histSlot > b { height:16px; color:var(--text-body); font-size:12px; font-weight:600; line-height:16px; text-align:center; }
+.histSlot > i { display:block; height:calc((100% - 16px) * var(--share, 0)); min-height:3px; border-radius:3px 3px 0 0; background:var(--down); transform-origin:center bottom; }
+.histSlot > i[data-side="up"] { background:var(--up); }
+.histSlot > i[data-empty] { height:0; min-height:0; }
+/* Medyan: düğmesiz, 2 piksellik düz çizgi; adı başlık satırındaki anahtarda. */
+.histMedian { position:absolute; top:0; bottom:-4px; width:2px; margin-left:-1px; border-radius:1px; background:var(--text-strong); }
+.histAxis { position:relative; height:16px; color:var(--text-muted); font-size:12px; font-weight:400; line-height:16px; white-space:nowrap; }
+.histAxis > span { position:absolute; top:0; translate:-50% 0; }
+.histAxis > span[data-end="start"] { left:0; translate:none; }
+.histAxis > span[data-end="end"] { right:0; translate:none; }
+.histSkeleton { height:92px; border-radius:8px; }
+.stripShare { min-width:0; }
+.share { display:flex; flex-direction:column; gap:8px; }
+.shareLabel { color:var(--text-body); font-size:12px; font-weight:600; line-height:1.3; }
+.shareBody { display:flex; flex-direction:column; gap:10px; }
+.shareBody > .shareLabel { margin-bottom:-6px; }
+.shareFigure { color:var(--text-strong); font-size:30px; font-weight:700; line-height:1; letter-spacing:-.03em; }
+.share .breadthRail { gap:2px; height:8px; margin:0; border-radius:999px; background:transparent; }
+.share .breadthRail > span { border-radius:999px; }
+.share .shareCounts dd { font-weight:700; }
+/* Sayaçlar sığmazsa SARAR, kolonu taşırmaz (EN: "Advancing / Unchanged /
+   Declining" 300 piksellik bölmeyi 34 piksel aşıyordu; 1440, ölçüldü). */
+.share, .shareBody { min-width:0; }
+.share .shareCounts { flex-wrap:wrap; row-gap:2px; }
+/* 360–479: yedi eksen etiketi 330 piksele sığmıyor; tek puanlar (±1, ±3
+   arası) düşer, uçlar ve sıfır kalır. */
+@media(max-width:479px) { .histAxis > span:nth-child(even) { display:none; } .histPlot { gap:2px; } }
+@media(max-width:767px) {
+ .strip > * + * { padding-top:14px; border-top:1px solid var(--line-soft); }
+ .stripMedian > .medianHint { flex-basis:140px; text-align:right; }
+}
+@media(min-width:768px) {
+ .indexTabs > .strip { grid-template-columns:repeat(2,minmax(0,1fr)); gap:18px 0; padding:16px 0; }
+ .strip > * { padding-inline:20px; }
+ .stripTabs, .hist { grid-column:1 / -1; }
+ .stripMedian { flex-direction:column; align-items:flex-start; justify-content:flex-end; flex-wrap:nowrap; gap:8px; }
+ .stripMedian > .medianHint { flex:none; max-width:42ch; }
+ .stripShare { border-left:1px solid var(--line-soft); }
+ .hist { padding-top:16px; border-top:1px solid var(--line-soft); }
+}
+/* 768–1199: yerler AÇIK yazılı (otomatik akışta pay, tam genişlikteki
+   dağılımın altına tek başına düşüp sağını boş bırakıyordu; 1024, ölçüldü). */
+@media(min-width:768px) and (max-width:1199px) {
+ .stripTabs { grid-row:1; }
+ .stripMedian { grid-column:1; grid-row:2; }
+ .stripShare { grid-column:2; grid-row:2; }
+ .hist { grid-row:3; }
+}
+@media(min-width:1200px) {
+ .indexTabs > .strip { grid-template-columns:max-content minmax(0,1fr) minmax(280px,340px); grid-template-rows:auto auto auto; gap:8px 0; padding:16px 4px; }
+ .stripTabs { grid-column:1; grid-row:1; align-self:start; }
+ .stripMedian, .hist, .stripShare, .share { display:grid; grid-template-rows:subgrid; gap:8px 0; }
+ .stripMedian { grid-column:1; grid-row:2 / 4; justify-content:normal; align-items:normal; }
+ .stripMedian > .medianRead { align-self:end; }
+ /* Cümle kolonu genişletmez (kolon çiplerin eni kadar): katkısı sıfır,
+    genişliği kolondan. */
+ .stripMedian > .medianHint { width:0; min-width:100%; max-width:none; }
+ .hist { grid-column:2; grid-row:1 / 4; padding-top:0; border-top:0; border-left:1px solid var(--line-soft); }
+ .hist > .histHead { align-self:end; }
+ .stripShare { grid-column:3; grid-row:1 / 4; }
+ .share { grid-row:1 / 4; }
+ .share > .shareBody { grid-row:2; justify-content:flex-end; }
+ .share > .shareCounts { grid-row:3; }
+ /* Pay basılmadıysa (veri yok) dağılım sağ kenara dek uzar. */
+ .indexTabs > .strip:not([data-aside]) { grid-template-columns:max-content minmax(0,1fr); }
+}
+
+/* ---- Hareketler: tek panel, iki yarı, künye bandı ----
+   Önce: iki ayrı panel + panellerin DIŞINDA yetim ölçek notu. Sonra: tek
+   panel; yarılar arasında saç çizgisi, not panelin dibinde bant. Çubuk 5
+   piksel saydam şeritten 5 piksellik kulvar üstünde 8 piksellik opak
+   dolguya. */
+.movers { gap:0; overflow:hidden; border-radius:var(--radius-panel); background:var(--premium-surface); }
+.movers > .mover { min-width:0; border-radius:0; background:none; }
+.movers > .mover + .mover { border-left:1px solid var(--line); }
+.movers > .movementScale { grid-column:1 / -1; margin:0; padding:10px 18px; border-top:1px solid var(--line); color:var(--text-muted); font-size:12px; line-height:1.6; }
+.movementScale > i { height:8px; border-radius:999px; background:var(--bar-soft, var(--line-strong)); }
+.moverTrack { min-height:8px; }
+.moverTrack::before { content:none; }
+.moverLane { flex:1 1 100%; }
+@media(min-width:1200px) { .moverTrack { margin-top:8px; } }
+@media(max-width:767px) {
+ .movers > .mover + .mover { border-left:0; border-top:1px solid var(--line); }
+ .movers > .movementScale { padding-inline:16px; }
+}
+
+/* ---- Isı haritası: ara genişlikler ----
+   1024–1199'da 15 sütun karoyu 55 piksele indiriyordu ("−%10,95" 12/600
+   ≈ 50 piksel, dolgu 3 + 3): yüzde karonun kenarına dayanıyordu. 1200'e
+   dek 10 × 3. */
+@media(max-width:1199px) { .heatGrid { grid-template-columns:repeat(10,minmax(0,1fr)); } }
+@media(max-width:639px) { .heatGrid { grid-template-columns:repeat(5,minmax(0,1fr)); } }
+.heatSymbol { font-weight:700; }
+.heatPct { font-weight:600; }
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM — 14 Kasım 2026, "Zil Defteri" (gerçek sayfa + sahte sağlayıcı;
+   kapalı piyasa, açılış öncesi ve seans içi; TR ve EN; Nasdaq 100 / S&P 500
+   / Dow; 360 / 390 / 768 / 1024 / 1280 / 1440; iki tema — sayılar temadan
+   bağımsız). Önce = canlı 6b07e84.
+   - Sayfada yatay taşma 0 (her genişlik, her hâl); tablo kapları
+     (`scrollWidth − clientWidth`) 0 / 0 / 0.
+   - Kapak (1440): önce iki kolon, başlık kolonunda ~100 piksel boş, üç kart
+     290 × 174. Sonra tek kolon: başlık tek satır, dört kart 309 × 210
+     (açılış öncesi 227; eğri yokken 102), 1280'de 279 × 205, 768–1199'da
+     2 × 2 (1024: 457 × 210), telefonda dört satır 316 × 76.
+   - Seçim şeridi (1440): dağılım 236 × 34 → 493 × 92 (1280: 373 × 92; 768:
+     678 × 92; 390: 324 × 92). Üç bölmenin tabanı: medyan sayısı, dağılımın
+     taban çizgisi ve pay rayı AYNI pikselde (1440: 524 / 524 / 524; 1280:
+     516 / 516 / 516); künye satırlarının tepesi de (532 / 532 / 532).
+     Panel 120 → 202 piksel. EN'de pay bölmesi taşmıyor (ilk ölçüm 34 piksel).
+   - Hareketler: çubuk 5 → 8 piksel (kulvar 5), on kartın yüzdesi ve kulvarı
+     tek hatta (1440: yüzde dibi 10/10 aynı, kulvar dibi 10/10 aynı). Ölçek
+     notu panelin içinde.
+   - Isı haritası: karo 1440'ta 80, 1280'de 72 (15 sütun), 1024'te 88 ve
+     768'de 62 (10 sütun; önce 1024'te 15 sütun, karo 55), 390'da 62, 360'ta
+     56; yüzde ile karo kenarı arası en az 10 piksel (360).
+   - Tipografi: `main` içinde < 12 piksel metin 0 (kadranın "0" ve "100"
+     uçları SVG birimiyle 9,4; ekranda 12,2–14 piksel). Telefonda (390, 360)
+     44 pikselden küçük hedef 0: 97 hedefin 97'si `elementFromPoint` ile
+     kendi 44 × 44 alanında.
+   - Hareket: ilk karede yalnız `opacity` / `transform` / `clip-path` /
+     `scale`; `reducedMotion: "reduce"` altında koşan animasyon 0, dağılım
+     kutuları, hareket çubukları ve ray son karede.
+   -------------------------------------------------------------------------- */

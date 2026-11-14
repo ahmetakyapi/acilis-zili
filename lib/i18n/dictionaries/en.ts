@@ -1424,6 +1424,8 @@ const en: typeof tr = {
     asOf: "List Composition",
     distributionCaption: "Daily Move Distribution",
     distributionAria: "Distribution of daily moves across {n} companies; median {median}.",
+    distributionMedian: "Median",
+    distributionTotal: "{n} Companies",
     movementScaleFull: "Full Bar {pct}",
     openTick: "Open",
     capShare: "Share",
@@ -2009,6 +2011,8 @@ const en: typeof tr = {
       "Sources: VIX from Cboe (FRED as fallback), the ICE BofA high-yield spread via FRED, SPY and TLT daily closes and S&P 500 quotes from Alpaca.",
     pulseHowTo: "How to Read It",
     trendColumn: "YTD Trend",
+    barScale: "Full Bar",
+    barOver: "A Cut Tip Exceeds the Scale",
 
     weekEnding: "Week Ending {date}",
     sahmBelow: "Below Threshold",

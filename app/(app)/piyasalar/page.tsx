@@ -43,6 +43,7 @@ import { getChartBarsMulti, getQuotes, getWeeklyChanges } from "@/lib/providers"
 import { quoteBasis, type MarketStatus } from "@/lib/market-hours";
 import { sessionDomain } from "@/components/today/index-feed";
 import type { Quote } from "@/lib/providers/types";
+import { INDEX_STRIP } from "@/db/seed/symbols";
 import {
   cn,
   formatCompact,
@@ -58,22 +59,23 @@ import { pageMetadata } from "@/lib/page-meta";
 export const generateMetadata = pageMetadata({
   path: "/piyasalar",
   tr: {
-    title: "Piyasalar",
+    title: "S&P 500, Nasdaq ve Dow Hisseleri: Isı Haritası",
     description:
-      "Endeksler, piyasa genişliği ve gün içi hareket — ABD piyasasının nabzı.",
+      "S&P 500, Nasdaq 100 ve Dow Jones hisseleri tek ekranda: ısı haritası, günün en çok artan ve düşenleri, sektör performansı ve piyasa genişliği.",
   },
   en: {
-    title: "Markets",
+    title: "S&P 500, Nasdaq and Dow Stocks: Heat Map",
     description:
-      "Indices, market breadth and intraday moves — the pulse of the US market.",
+      "S&P 500, Nasdaq 100 and Dow Jones stocks on one screen: heat map, top gainers and losers, sector performance and market breadth.",
   },
 });
 
 /**
  * Piyasalar — nabız ekranı.
  *
- * Üstte üç büyük endeksin kartı (proxy ETF fiyatı + gün içi eğrisi), altında
- * ABD tahvil faizleri ve getiri eğrisinin durumu. Seçilen endeks için gün
+ * Üstte dört endeksin kartı (proxy ETF fiyatı + gün içi eğrisi; 14 Kasım
+ * 2026'dan beri Russell 2000 dahil), altında seçim şeridi (medyan, günlük
+ * değişim dağılımı, yükselenlerin payı). Seçilen endeks için gün
  * içi genişlik (kaç hisse artıda), en çok hareket edenler ve tam bileşen
  * listesi gösterilir. Üyelik statik, kotasyonlar canlı; hesaplanan her sayı
  * elimizdeki fiyatlardan türer — tahmin yok.
@@ -198,7 +200,9 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
           /* Ölçülmüş yükseklikler, tahmin değil: kartlar mobilde alt alta
               (3 × 152 + 2 × 12 boşluk = 480), `sm`den itibaren tek sıra (152).
               Yedek 132px'ti; mobilde 348 piksellik bir sıçrama demekti ve
-              sıçrama ekranın TA TEPESİNDE oluyordu. */
+              sıçrama ekranın TA TEPESİNDE oluyordu.
+              14 Kasım 2026: dört kart; yeni boylar `.indexSkeleton`de
+              (MarketExperience.module.css, ölçümüyle). */
           fallback={
             <Skeleton className={styles.indexSkeleton} />
           }
@@ -233,9 +237,8 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
           <>
             <IndexTabs tab={tab} locale={locale} t={t}
               identity={<IndexIdentity tab={tab} proxy={active.proxy} median={null} phase={null} locale={locale} t={t} loading />}
-              aside={<div className={styles.shareBox} aria-hidden="true">
-                <div className={styles.shareHead}><Skeleton className="h-3 w-28" /><Skeleton className="h-6 w-12" /></div>
-                <Skeleton className="h-2 w-full" />
+              aside={<div className={styles.share} aria-hidden="true">
+                <div className={styles.shareBody}><Skeleton className="h-3 w-28" /><Skeleton className="h-8 w-16" /><Skeleton className="h-2 w-full" /></div>
                 <div className={styles.shareCounts}>{[0, 1, 2].map((key) => <Skeleton key={key} className="h-5 w-16" />)}</div>
               </div>}
             />
@@ -307,6 +310,9 @@ export default async function MarketsPage(props: PageProps<"/piyasalar">) {
    Endeks kartları — üç büyük endeks, gün içi eğrisiyle
    ========================================================================== */
 
+/** Kapakta seçici OLMAYAN endeks kartları — üyeliği sitede tutulmayanlar. */
+const HERO_EXTRA = [{ key: "russell", label: "Russell 2000", proxy: "IWM" }] as const;
+
 async function IndexCards({
   activeTab,
   sort,
@@ -321,10 +327,17 @@ async function IndexCards({
   t: Dictionary;
 }) {
   const status = await getStatus();
-  const proxies = INDEX_TABS.map((entry) => entry.proxy);
+  /* DÖRT ENDEKS, ŞERİDİN LİSTESİ (14 Kasım 2026, görsel tur). Kapak üç kart
+     basıyordu, sayfanın dibindeki sabit şerit ise dördüncüyü (Russell 2000)
+     de gösteriyordu: küçük şirketlerin endeksi "piyasanın nabzı" diyen
+     ekranda yoktu. Liste artık alt şeridinki (`INDEX_STRIP`): anahtar aynı
+     olduğu için kotasyon isteği şeritle TEK tura iniyor (önce kapak üç
+     sembolle ayrı bir tur atıyordu; `getQuotes` sıralı anahtarla
+     tekilleştirir). Russell'ın üye listesi sitede yok; kartı bir seçici
+     değil, fonun kendi sayfasına giden bağlantı (`HERO_EXTRA`). */
   const [quotesResult, bars] = await Promise.all([
-    getQuotes([...proxies], status),
-    getChartBarsMulti([...proxies], "1D", status),
+    getQuotes([...INDEX_STRIP], status),
+    getChartBarsMulti([...INDEX_STRIP], "1D", status),
   ]);
 
   if (!quotesResult.ok) return <Panel className={styles.indexUnavailable}><EmptyState title={t.common.noData} hint={t.common.noDataHint} scene="chart" /></Panel>;
@@ -336,7 +349,10 @@ async function IndexCards({
   // The selected index occupies the first visual position. Keep DOM and
   // keyboard order aligned with that position; the toolbar keeps its order.
   // Keep all three positions stable when the active index changes.
-  const orderedTabs = INDEX_TABS;
+  const orderedTabs: readonly { key: string; label: string; proxy: string; tab: boolean }[] = [
+    ...INDEX_TABS.map((entry) => ({ key: entry.key, label: entry.label, proxy: entry.proxy, tab: true })),
+    ...HERO_EXTRA.map((entry) => ({ ...entry, tab: false })),
+  ];
 
   return (
     <div className={styles.indexOverview}>
@@ -359,14 +375,15 @@ async function IndexCards({
         return (
           <IndexCard
             key={entry.key}
-            href={`/piyasalar?endeks=${entry.key}&sirala=${sort}&yon=${dir}`}
+            href={entry.tab ? `/piyasalar?endeks=${entry.key}&sirala=${sort}&yon=${dir}` : `/hisse/${entry.proxy}`}
+            external={!entry.tab}
             label={entry.label}
             proxy={entry.proxy}
             quote={quote}
             points={points}
             sparkOk={quote ? quoteBasis(quote, status) !== "lastClose" : false}
             rail={rail}
-            selected={entry.key === activeTab}
+            selected={entry.tab && entry.key === activeTab}
             order={order}
             locale={locale}
             t={t}
@@ -424,7 +441,8 @@ async function IndexDetail({
        (`getQuotes` sıralı anahtarla tekilleştiriyor). Tek sembol sorulunca
        anahtar farklı oluyor ve fazladan bir Alpaca isteği + bir veritabanı
        yazması çıkıyordu. */
-    getQuotes([...INDEX_TABS.map((entry) => entry.proxy)], status),
+    /* 14 Kasım: liste kapakla birlikte `INDEX_STRIP` oldu (dört fon). */
+    getQuotes([...INDEX_STRIP], status),
     getSymbolNames(members.map((m) => m.symbol)),
     /* HAFTALIK DEĞİŞİM (10 Kasım, sahibinin isteği: "haftalık değişim de
        koyabiliriz buraya"). Kaynak Şirketler tablosununkiyle AYNI
@@ -609,7 +627,14 @@ async function IndexDetail({
 
       {withQuote.length > 0 && (
         <>
-          <div id="market-movers" className={styles.movers} data-motion-stagger>
+          {/* TEK PANEL, İKİ YARI (14 Kasım 2026, görsel tur). Artanlar ve
+              düşenler iki ayrı paneldi, ortak ölçek notu ise ikisinin
+              DIŞINDA, sayfa zemininde yetim bir satırdı ("notu panele
+              bağla"). İki liste aynı ölçeği paylaşan tek bir okuma: artık
+              tek panelin iki yarısı (aralarında saç çizgisi), not panelin
+              künye bandı — 6 Kasım'ın "not iki panelin ORTAK ölçeğini
+              söylüyor" kararının yeri değişmedi, kabı geldi. */}
+          <Panel id="market-movers" className={styles.movers}>
             {/* Künye SEÇKİNİN PAYDASINI söylüyor: "Günün En Çok Artanları"
                 beş satır basıyor ama hangi kümenin beşi olduğunu yazmıyordu.
                 Endeks 102 şirketse "102 şirketin 5 tanesi" — aynı kalıp
@@ -660,7 +685,7 @@ async function IndexDetail({
               <span>{t.markets.movementScale}</span>
               <span className="numeral">{t.markets.movementScaleFull.replace("{pct}", formatPercentPlain(movementScale, locale))}</span>
             </p>
-          </div>
+          </Panel>
         </>
       )}
 
@@ -675,25 +700,27 @@ async function IndexDetail({
         locale={locale}
         t={t}
         cards={{ ...cardContext, skip: carded }}
+        /* DAMGA PANELİN İÇİNDE (14 Kasım 2026). Tablonun altında, sayfa
+           zemininde tek başına bir satırdı (1440'ta y≈1437, panelden 20
+           piksel kopuk); ekran düzeni 6-7: künye ve damga panelin içinde. */
+        footer={source ? (
+          <DataStamp
+            labels={t.data}
+            source={source}
+            at={stampAt}
+            stale={stale}
+            locale={locale}
+            /* Seans dışında değişim sütunu satır satır farklı bir güne
+               dayanabiliyor; not /sirketler'de vardı, burada yoktu. Seans
+               içinde not yok — orada bütün semboller aynı günü gösteriyor. */
+            note={
+              status.session === "pre-market" || status.session === "after-hours"
+                ? t.data.extendedNote
+                : undefined
+            }
+          />
+        ) : undefined}
       />
-
-      {source && (
-        <DataStamp
-          labels={t.data}
-          source={source}
-          at={stampAt}
-          stale={stale}
-          locale={locale}
-          /* Seans dışında değişim sütunu satır satır farklı bir güne
-             dayanabiliyor; not /sirketler'de vardı, burada yoktu. Seans
-             içinde not yok — orada bütün semboller aynı günü gösteriyor. */
-          note={
-            status.session === "pre-market" || status.session === "after-hours"
-              ? t.data.extendedNote
-              : undefined
-          }
-        />
-      )}
     </>
   );
 }
@@ -743,9 +770,9 @@ function DetailSkeleton({ rows, contribution }: { rows: number; contribution: bo
         </div>
       </Panel>
 
-      <div className={styles.movers}>
+      <Panel className={styles.movers}>
         {[0, 1].map((panel) => (
-          <Panel key={panel} className={styles.mover}>
+          <div key={panel} className={styles.mover}>
             <div className={styles.moverSkeletonHead}>
               <Skeleton className="h-5 w-40" /><Skeleton className="h-3 w-24" />
             </div>
@@ -760,9 +787,10 @@ function DetailSkeleton({ rows, contribution }: { rows: number; contribution: bo
                 </li>
               ))}
             </ul>
-          </Panel>
+          </div>
         ))}
-      </div>
+        <div className={styles.movementScale}><Skeleton className="h-3 w-72 max-w-full" /></div>
+      </Panel>
 
       {/* Satır boyu gerçek tabloyla aynı (10 Kasım: 46 piksel, telefonda
           48 ve ilk on beş — MembersTable.module.css); eski yer tutucu 54
