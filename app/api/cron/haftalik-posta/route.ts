@@ -233,6 +233,13 @@ async function run(request: Request): Promise<NextResponse> {
   const owners = lots.size ? await ownerIds([...lots.keys()]) : new Set<string>();
   const portfolios = new Map<string, { week: PortfolioWeek; note: string | null; owner: boolean }>();
   for (const recipient of recipients) {
+    /* KARNE YALNIZ ONAYLI ADRESE (14 Kasım portföy güvenlik denetimi). Özet
+       onaysız adrese de gider (sahibinin kararı, `enrollWeeklyDefault`) ve
+       herkese aynı piyasa özetidir; karne ise kişinin tuttuğu sembolleri,
+       haftalık oranlarını ve Claude notunu taşır. Kayıtta adresini yanlış
+       yazan üyenin karnesi bir yabancının kutusuna düşerdi. Onaysız alıcı
+       özeti karnesiz alır. */
+    if (recipient.confirmed !== true) continue;
     const mine = lots.get(recipient.userId);
     if (!mine?.length) continue;
     const data = digests.get(recipient.locale)!;

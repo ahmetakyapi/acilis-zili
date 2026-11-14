@@ -168,12 +168,22 @@ export const loadShowcase = cache(
       })
       .sort((a, b) => b.returnPct - a.returnPct);
 
+    /* HER YÜZDE SUNUCUDA BİR ONDALIĞA YUVARLANIR (14 Kasım portföy güvenlik
+       denetimi). Ekran ağırlığı bir ondalıkla yazıyordu ama çubuğun satır içi
+       stili ham sayıdan üretiliyordu (`width:34.56789012345679%`): oturumsuz
+       bir ziyaretçi piyasa kapalıyken ağırlık / fiyat oranlarından adet
+       oranlarını, tam sayı adetlerde gerçek adetleri çıkarabiliyordu. Bu
+       modülün sözü "tutar, adet, maliyet hiçbir durumda gösterilmez";
+       "Alıştan Bugüne" çizgisi aynı nedenle yuvarlı (`profilePoints`),
+       çubuklar o önlemin dışında kalmıştı. Yuvarlama burada, kaynağında:
+       sayfa, RSC yükü ve her çizim aynı kaba sayıyı görür. */
+    const coarse = (value: number) => Math.round(value * 10) / 10;
     return {
-      weights,
-      moves,
-      sectors: sectorWeights(sectorItems).map(({ sector, pct }) => ({ sector, pct })),
-      returnPct: ((totalValue - totalCost) / totalCost) * 100,
-      spyReturnPct: spyCost > 0 ? ((spyValue - spyCost) / spyCost) * 100 : null,
+      weights: weights.map(({ symbol, pct }) => ({ symbol, pct: coarse(pct) })),
+      moves: moves.map(({ symbol, returnPct }) => ({ symbol, returnPct: coarse(returnPct) })),
+      sectors: sectorWeights(sectorItems).map(({ sector, pct }) => ({ sector, pct: coarse(pct) })),
+      returnPct: coarse(((totalValue - totalCost) / totalCost) * 100),
+      spyReturnPct: spyCost > 0 ? coarse(((spyValue - spyCost) / spyCost) * 100) : null,
       spyCoverage: totalCost > 0 ? spyCost / totalCost : 0,
       sinceDay,
       symbolCount: valueBySymbol.size,

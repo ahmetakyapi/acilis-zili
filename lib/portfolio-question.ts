@@ -269,10 +269,13 @@ export async function askPortfolio(userId: string, question: string, locale: Loc
           followUps: pickFollowUps(out.followUps, input, locale, owner),
         };
       },
-      /* Anahtar: soru + portföy parmak izi + seans + dil + sahiplik + senaryo
-         ayrıştırması. Kullanıcı kimliği YOK: aynı portföy aynı yanıtı alır. */
+      /* Anahtar: kullanıcı + soru + portföy parmak izi + seans + dil +
+         sahiplik + senaryo ayrıştırması. Kullanıcı kimliği 14 Kasım'da girdi
+         (portföy güvenlik denetimi): yanıt sızmıyordu ama önbellek isabetinde
+         hak düşmediği için "bu portföy bu soruyu sordu mu" bilgisi
+         okunabiliyordu; kişisel sonuç veren öteki altı anahtar da kimlikli. */
       /* v2 (11 Kasım): takip soruları ve sohbet bağlamı; bağlamın özeti anahtarda. */
-      ["portfolio-question-v2", owner ? "owner" : "member", locale, session, fingerprint, questionKey(question, locale), scenarioKey(parsed), turnsKey],
+      ["portfolio-question-v3", userId, owner ? "owner" : "member", locale, session, fingerprint, questionKey(question, locale), scenarioKey(parsed), turnsKey],
       { revalidate: ANSWER_TTL_S, tags: ["portfolio-question"] },
     )();
     if (wrote) quota.charge(userId);

@@ -307,9 +307,11 @@ export type Recipient = {
   username: string;
   locale: Locale;
   unsubToken: string;
+  /** Adres çift onaydan geçmiş mi; yalnız `weeklyRecipients` doldurur. */
+  confirmed?: boolean;
 };
 
-function toRecipient(row: { userId: string; email: string; username: string; locale: string; unsubToken: string }): Recipient {
+function toRecipient(row: { userId: string; email: string; username: string; locale: string; unsubToken: string; confirmed?: boolean }): Recipient {
   return { ...row, locale: isLocale(row.locale) ? row.locale : "tr" };
 }
 
@@ -346,7 +348,10 @@ export async function deliverableRecipient(userId: string, kind: EmailKind): Pro
 export async function weeklyRecipients(): Promise<Recipient[] | null> {
   try {
     const rows = await db
-      .select(recipientColumns)
+      .select({
+        ...recipientColumns,
+        confirmed: sql<boolean>`${emailPrefs.confirmedEmail} is not null and ${emailPrefs.confirmedEmail} = ${users.email}`,
+      })
       .from(emailPrefs)
       .innerJoin(users, eq(users.id, emailPrefs.userId))
       .where(and(eq(emailPrefs.weekly, true), isNotNull(users.email)));

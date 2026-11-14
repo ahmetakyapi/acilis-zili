@@ -38,6 +38,11 @@ const IPV6 = /\b(?:[0-9a-f]{1,4}:){3,7}[0-9a-f]{1,4}\b/gi;
 /** E-posta ve IP biçimli parçaları örter, uzunluğu sınırlar. */
 export function scrubErrorText(text: string, max: number): string {
   const scrubbed = text
+    /* Sürücünün hata iletisi sorgunun PARAMETRELERİNİ de taşır (drizzle:
+       "Failed query: … params: …"); orada kullanıcı kimliği, sembol, adet ya
+       da maliyet olabilir. Satırın geri kalanı kesilir (14 Kasım portföy
+       güvenlik denetimi); sorgu metni tanı için kalır. */
+    .replace(/\bparams:[^\n]*/gi, "params: [gizlendi]")
     .replace(EMAIL, "[e-posta]")
     .replace(IPV4, "[ip]")
     .replace(IPV6, "[ip]")
