@@ -1,6 +1,7 @@
 import { sql } from "drizzle-orm";
 import {
   boolean,
+  check,
   date,
   doublePrecision,
   index,
@@ -209,7 +210,15 @@ export const portfolioPositions = pgTable(
       .notNull()
       .defaultNow(),
   },
-  (t) => [index("portfolio_positions_user_idx").on(t.userId, t.boughtAt)],
+  (t) => [
+    index("portfolio_positions_user_idx").on(t.userId, t.boughtAt),
+    /* ADET POZİTİF (14 Kasım, 0046; sahibinin onayı). Eşzamanlı satış adedi
+       eksiye düşürebiliyordu; kod tarafı `lib/portfolio-write.ts`te kapandı
+       (parti hiç sıfıra inmez, tükenince silinir), bu kısıt son savunma.
+       Migration `NOT VALID` ekler ve var olan satırlarda ihlal YOKSA
+       doğrular: veri silmez, eski bir eksi satır migration'ı düşürmez. */
+    check("portfolio_positions_quantity_positive", sql`${t.quantity} > 0`),
+  ],
 );
 
 /**
