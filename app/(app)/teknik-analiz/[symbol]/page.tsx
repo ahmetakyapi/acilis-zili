@@ -65,7 +65,7 @@ export async function generateMetadata(
      istek içi önbellekten (`getSymbolNames`, aynı liste = aynı anahtar);
      tüzel ek ("Corporation", "Inc.") başlıkta yer tutmasın diye kırpılır. */
   const names = await getSymbolNames([...TECHNICAL_SYMBOLS]);
-  const company = (names.get(upper) ?? "")
+  const company = (names[upper]?.name ?? "")
     .replace(/,?\s+(Corporation|Corp\.?|Incorporated|Inc\.?|Holdings?|Technologies|Technology|Group|Company|Co\.?|Ltd\.?|PLC|plc|N\.?V\.?|S\.?A\.?)$/g, "")
     .replace(/,?\s+(Corporation|Corp\.?|Inc\.?|Holdings?)$/g, "")
     .trim();

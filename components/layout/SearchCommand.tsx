@@ -16,14 +16,18 @@ import {
 import { createPortal } from "react-dom";
 import { AnimatePresence, motion } from "motion/react";
 import { useRouter } from "next/navigation";
-import { ArrowUpRight, ClockCounterClockwise, MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight, ClockCounterClockwise, Gear, Info, MagnifyingGlass, X } from "@phosphor-icons/react/dist/ssr";
 import { LogoTile } from "@/components/ui/primitives";
 import type {
   SearchHit,
   SearchResponse,
+  SiteGroup,
+  SiteHit,
   WritingHit,
 } from "@/app/api/search/route";
 import { cn, isValidSymbol } from "@/lib/utils";
+import { highlightRange } from "@/lib/search-highlight";
+import { NAV_ITEMS } from "./nav-items";
 import { InkCanvas } from "@/components/ink/InkCanvas";
 
 /**
@@ -108,18 +112,42 @@ function pushRecent(item: Recent) {
   }
 }
 
-/** Eşleşen kısmı vurgular — büyük/küçük ve Türkçe harf farkı gözetmeden. */
+/** Eşleşen kısmı vurgular — büyük/küçük ve Türkçe harf farkı gözetmeden.
+    Yer, uçla aynı katlamayla bulunuyor (14 Kasım): "sozluk" yazan okurun
+    bulduğu "Sözlük" satırı da işaretlenir (`lib/search-highlight.ts`). */
 function Highlight({ text, term }: { text: string; term: string }) {
-  const needle = term.trim().toLocaleLowerCase("tr-TR");
-  if (!needle) return <>{text}</>;
-  const at = text.toLocaleLowerCase("tr-TR").indexOf(needle);
-  if (at < 0) return <>{text}</>;
+  const range = highlightRange(text, term);
+  if (!range) return <>{text}</>;
   return (
     <>
-      {text.slice(0, at)}
-      <mark className="palette-mark">{text.slice(at, at + needle.length)}</mark>
-      {text.slice(at + needle.length)}
+      {text.slice(0, range[0])}
+      <mark className="palette-mark">{text.slice(range[0], range[1])}</mark>
+      {text.slice(range[1])}
     </>
+  );
+}
+
+/* SİTE İÇİ SONUCUN İKONU (14 Kasım) — YENİ İKON DİLİ YOK. Sayfa satırı,
+   menüde o sayfanın yanında duran ikonu taşır (`NAV_ITEMS`; dizi kabukla
+   birlikte zaten istemcide, palete yük getirmiyor). Sözlük terimi Sözlük'ün,
+   tema Temalar'ın, yatırımcı Ünlü Yatırımcılar'ın ikonunu alır: okur satırın
+   türünü, menüden tanıdığı işaretten okur. Menüde satırı olmayan iki sayfa
+   (Ayarlar, Hakkında) kendi ikonuyla; alt sayfa üst sayfasınınkiyle
+   (/bulmaca/hangisi-buyuk → /bulmaca). */
+const PAGE_ICONS = new Map(NAV_ITEMS.map((item) => [item.href, item.icon]));
+const EXTRA_ICONS: Record<string, typeof Gear> = { "/ayarlar": Gear, "/hakkinda": Info };
+const KIND_HOME: Record<Exclude<SiteHit["kind"], "page">, string> = {
+  glossary: "/sozluk",
+  theme: "/temalar",
+  investor: "/yatirimcilar",
+};
+function siteIcon(hit: SiteHit): typeof Gear {
+  if (hit.kind !== "page") return PAGE_ICONS.get(KIND_HOME[hit.kind]) ?? MagnifyingGlass;
+  return (
+    PAGE_ICONS.get(hit.href) ??
+    EXTRA_ICONS[hit.href] ??
+    PAGE_ICONS.get(`/${hit.href.split("/")[1]}`) ??
+    MagnifyingGlass
   );
 }
 
@@ -226,6 +254,10 @@ export function SearchCommand({
   const [query, setQuery] = useState("");
   const [hits, setHits] = useState<SearchHit[]>([]);
   const [writings, setWritings] = useState<WritingHit[]>([]);
+  /* Site içi sonuçlar (sayfa, sözlük, tema, yatırımcı) ve sembollerin önüne
+     geçip geçmeyecekleri — ikisi de uçtan (gerekçe route.ts → `site`). */
+  const [site, setSite] = useState<SiteGroup[]>([]);
+  const [siteFirst, setSiteFirst] = useState(false);
   const [active, setActive] = useState(0);
   const [loading, setLoading] = useState(false);
   /* Arama HATASI ile SONUÇ YOKLUĞU ayrı şeyler. Uç 429 döndüğünde istemci
@@ -249,6 +281,8 @@ export function SearchCommand({
     setQuery("");
     setHits([]);
     setWritings([]);
+    setSite([]);
+    setSiteFirst(false);
     setActive(0);
     setLoading(false);
     setFailure(null);
@@ -422,6 +456,8 @@ export function SearchCommand({
         setFailure(null);
         setHits(cached.hits ?? []);
         setWritings(cached.writings ?? []);
+        setSite(cached.site ?? []);
+        setSiteFirst(cached.siteFirst ?? false);
         setActive(0);
         return;
       }
@@ -434,6 +470,8 @@ export function SearchCommand({
         if (!res.ok || data.error) {
           setHits([]);
           setWritings([]);
+          setSite([]);
+          setSiteFirst(false);
           setActive(0);
           setFailure(
             res.status === 429
@@ -448,6 +486,8 @@ export function SearchCommand({
         setFailure(null);
         setHits(data.hits ?? []);
         setWritings(data.writings ?? []);
+        setSite(data.site ?? []);
+        setSiteFirst(data.siteFirst ?? false);
         setActive(0);
         /* YARIM YANIT ÖNBELLEĞE GİRMİYOR (20 Ekim). Sunucu sağlayıcı
            genişletmesini kota ya da sağlayıcı hatası yüzünden atladıysa
@@ -494,6 +534,7 @@ export function SearchCommand({
   // Kutu boşaltıldığında eski sonuçlar gösterilmez — türetilmiş görünüm.
   const shownHits = query.trim() ? hits : [];
   const shownWritings = query.trim() ? writings : [];
+  const shownSite = query.trim() ? site : [];
 
   /* Klavye gezinmesi TEK bir düz liste üzerinde yürür. İki ayrı bölüm iki
      ayrı indeks tutsaydı ok tuşu sembollerin sonunda takılırdı; okuyucu için
@@ -504,8 +545,21 @@ export function SearchCommand({
     { hit, kind: "stock" as const, href: `/hisse/${hit.symbol}` },
     ...(hit.technical ? [{ hit, kind: "technical" as const, href: `/teknik-analiz/${hit.symbol}` }] : []),
   ]);
+  /* SIRA: sembol → site içi → yazı; sorgu bir sayfanın, terimin ya da
+     kişinin adının kendisiyse site içi sonuçlar başa geçer (`siteFirst`,
+     kararı uç verir — route.ts). Düz listedeki yerler buradan: her bölüm
+     kendi başlangıcını bilir, ok tuşu bölümlerin arasından kesintisiz geçer. */
+  const siteRows = shownSite.flatMap((group) =>
+    group.hits.map((hit, index) => ({ hit, group, first: index === 0 })),
+  );
+  const siteLeads = siteFirst && siteRows.length > 0;
+  const hitStart = siteLeads ? siteRows.length : 0;
+  const siteStart = siteLeads ? 0 : hitRows.length;
+  const writingStart = hitRows.length + siteRows.length;
+  const hitHrefs = hitRows.map((row) => row.href);
+  const siteHrefs = siteRows.map((row) => row.hit.href);
   const navItems = [
-    ...hitRows.map((row) => row.href),
+    ...(siteLeads ? [...siteHrefs, ...hitHrefs] : [...hitHrefs, ...siteHrefs]),
     ...shownWritings.map((w) => `/${w.kind}/${w.slug}`),
   ];
 
@@ -520,7 +574,9 @@ export function SearchCommand({
       event.preventDefault();
       const href = navItems[active];
       if (href) {
-        const row = hitRows[active];
+        /* Son aramalara yalnız SEMBOL yazılır; dizin sembol bölümünün
+           içindeyse satır odur (bölüm artık listenin başında olmayabilir). */
+        const row = hitRows[active - hitStart];
         go(href, row ? { symbol: row.hit.symbol, name: row.hit.name } : undefined);
         return;
       }
@@ -533,6 +589,61 @@ export function SearchCommand({
       if (typed && isValidSymbol(typed)) go(`/hisse/${typed}`);
     }
   }
+
+  /* ---- Site İçi Sonuçlar (14 Kasım) ----
+     Araç ve sayfalar, sözlük terimleri, temalar, ünlü yatırımcılar: tür
+     başına bir başlık (uçtan, o dilde ve Title Case), altında satırlar.
+     SATIR, HİSSE SATIRININ KALIBI: solda karo, iki satır metin, seçili
+     satırda sağda ok. Karo logonun yerine menüdeki ikon karosu
+     (`.masthead-row-icon`, "Daha Fazla" panelinin satırıyla aynı sınıf);
+     palete yeni stil yazılmadı. İki yerde basılıyor (sembollerin önü ya da
+     arkası), o yüzden değişkende. Başlık ve satırlar listenin doğrudan
+     çocuğu, sembol ve yazı bölümleriyle aynı düz yapı.
+     ÖLÇÜM (14 Kasım; 1440 ve 390, TR ve EN, hareket azaltılmış): telefonda
+     site içi satır 62 piksel (hisse satırıyla aynı, ≥ 44), metin solu
+     hisse satırıyla aynı hatta (465 / 465, telefonda 64 / 64), listede ve
+     sayfada yatay taşma 0. */
+  const siteSection = siteRows.flatMap(({ hit, group, first }, rowIndex) => {
+    const position = siteStart + rowIndex;
+    const Icon = siteIcon(hit);
+    return [
+      first && (
+        <p key={`grup-${group.kind}`} id={`palet-grup-${group.kind}`} className="palette-group px-5 pb-1.5 pt-2">
+          {group.label}
+        </p>
+      ),
+      <button
+        key={hit.href}
+        id={`palet-secenek-${position}`}
+        style={{ animationDelay: `${Math.min(position, 8) * 22}ms` }}
+        role="option"
+        aria-selected={position === active}
+        type="button"
+        onClick={() => go(hit.href)}
+        onMouseEnter={() => setActive(position)}
+        className={cn(
+          /* Aralık 8 (hisse satırında 12): karo 36, logo karosu 32. İkisinde de
+             metin soldan 44 pikselde başlar; 12 ile site içi satırların metni
+             sembollerinkinden 4 piksel içeride kalıyordu (ölçüm: 469 / 465). */
+          "palette-row palette-option flex w-full items-center gap-2 px-5 py-2.5 text-left text-base max-sm:py-3",
+          position === active && "is-active",
+        )}
+      >
+        <span className="masthead-row-icon" aria-hidden>
+          <Icon size={18} weight="duotone" />
+        </span>
+        <span className="min-w-0 flex-1">
+          <span className="block truncate font-semibold text-strong">
+            <Highlight text={hit.title} term={query} />
+          </span>
+          <span className={cn("block truncate text-small", position === active ? "text-strong" : "text-body")}>
+            {hit.detail}
+          </span>
+        </span>
+        <ArrowUpRight aria-hidden size={15} className="palette-go shrink-0" />
+      </button>,
+    ];
+  });
 
   return (
     <>
@@ -714,6 +825,8 @@ export function SearchCommand({
                 </div>
               )}
 
+              {siteLeads && siteSection}
+
               {shownHits.length > 0 && (
                 <p
                   id="palet-grup-semboller"
@@ -723,8 +836,11 @@ export function SearchCommand({
                 </p>
               )}
 
-              {hitRows.map(({ hit, kind, href }, index) =>
-                kind === "stock" ? (
+              {hitRows.map(({ hit, kind, href }, rowIndex) => {
+                /* Düz listedeki yer: site içi sonuçlar öndeyse semboller
+                   onların ardından başlar. */
+                const index = hitStart + rowIndex;
+                return kind === "stock" ? (
                   <button
                     key={href}
                     id={`palet-secenek-${index}`}
@@ -775,8 +891,10 @@ export function SearchCommand({
                       <span className="sr-only"> · {hit.symbol}</span>
                     </span>
                   </button>
-                ),
-              )}
+                );
+              })}
+
+              {!siteLeads && siteSection}
 
               {/* ---- Yazılar ----
                   Sembolden SONRA: paletin ana işi hâlâ hisseye gitmek ve
@@ -792,7 +910,7 @@ export function SearchCommand({
               )}
 
               {shownWritings.map((writing, index) => {
-                const position = hitRows.length + index;
+                const position = writingStart + index;
                 return (
                   <button
                     key={`${writing.kind}-${writing.slug}`}
@@ -841,6 +959,7 @@ export function SearchCommand({
                 !failure &&
                 query.trim() &&
                 shownHits.length === 0 &&
+                siteRows.length === 0 &&
                 shownWritings.length === 0 && (
                   /* SONUÇ YOK, ZİL ARIYOR. Paletin tüm sonuç alanı boşken
                      tek satırlık bir cümle bekleyişin sonu gibi duruyordu;
@@ -860,9 +979,12 @@ export function SearchCommand({
             <div className="hidden gap-[18px] border-t border-line px-5 py-3 text-tiny text-muted sm:flex">
               <span>↑↓ {hints.move}</span>
               <span>↵ {hints.open}</span>
-              {shownHits.length > 0 && (
+              {/* Sayı listedeki SATIR sayısı (14 Kasım): yalnız sembolleri
+                  sayıyordu; site içi sonuçlar ve yazılar da ok tuşuyla
+                  gezilen aynı listenin satırları. */}
+              {navItems.length > 0 && (
                 <span className="ml-auto numeral">
-                  {shownHits.length}
+                  {navItems.length}
                 </span>
               )}
             </div>

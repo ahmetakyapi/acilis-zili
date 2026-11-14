@@ -29,6 +29,7 @@ import { analysisVisualsTr } from "./analysis-visuals";
 import { brokerCardsTr } from "./broker-cards";
 import { feedVisualsTr } from "./feed-visuals";
 import { toolVisualsTr } from "./tool-visuals";
+import { searchPaletteTr } from "./search-palette";
 import { portfolioWeeklyTr } from "./portfolio-weekly";
 import { portfolioAdvisorTr } from "./portfolio-advisor";
 import { portfolioAskTr } from "./portfolio-ask";
@@ -5177,6 +5178,8 @@ const tr = {
   feedVisuals: feedVisualsTr,
   /* Araç ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
   toolVisuals: toolVisualsTr,
+  /* ⌘K paletinin site içi sonuçları (14 Kasım) — metin ayrı dosyada. */
+  searchPalette: searchPaletteTr,
   /* Risk Masası (25 Ekim) — kişiye özel ekran; metin ayrı dosyada. */
   riskDesk: riskDeskTr,
   /* Topluluk ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
