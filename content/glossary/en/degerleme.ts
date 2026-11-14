@@ -189,7 +189,7 @@ export const EN_DEGERLEME: GlossaryTexts<"degerleme"> = {
   "temettu": {
     term: "Dividend",
     definition:
-      "A dividend is a cash payment a company makes to its shareholders out of its profits. In the US the board of directors declares dividends, and most companies pay them quarterly. To receive a dividend you must buy the stock before the ex-dividend date; on the ex-date the share price usually opens lower by roughly the amount of the dividend.",
+      "A dividend is a distribution a company makes to its shareholders out of its profits, usually in cash and occasionally in additional shares. In the US the board of directors declares dividends, and most companies pay them quarterly. To receive a dividend you must buy the stock before the ex-dividend date; on the ex-date the share price usually opens lower by roughly the amount of the dividend.",
     example:
       "A company paying a quarterly dividend of $0.50 per share pays $2 per share a year.",
     match: ["dividend"],

@@ -23,29 +23,29 @@ export const TR_BILANCO: GlossaryTexts<"bilanco"> = {
     match: ["mali yıl"],
   },
   "konsensus": {
-    term: "Konsensüs Beklentisi",
+    term: "Piyasa Beklentisi (Konsensüs)",
     definition:
-      "Konsensüs beklentisi, bir şirketi izleyen analistlerin hisse başı kâr, gelir gibi kalemler için yaptığı tahminlerin ortalaması ya da medyanıdır. Veri sağlayıcıları bu tahminleri toplayıp yayımlar ve kaynağa göre rakam biraz farklı olabilir. Bilanço günü sonuçlar bu rakamla kıyaslanır: fiyat mutlak sonuca değil, sonucun beklentiye göre nerede kaldığına tepki verir. Beklenti zaten yüksekse iyi bir sonuç bile hayal kırıklığı sayılabilir.",
-    match: ["konsensüs beklenti", "konsensüs tahmin", "analist beklenti"],
+      "Piyasa beklentisi (konsensüs), bir şirketi izleyen analistlerin hisse başı kâr, gelir gibi kalemler için yaptığı tahminlerin ortalaması ya da medyanıdır. Veri sağlayıcıları bu tahminleri toplayıp yayımlar ve kaynağa göre rakam biraz farklı olabilir. Bilanço günü sonuçlar bu rakamla kıyaslanır: fiyat mutlak sonuca değil, sonucun beklentiye göre nerede kaldığına tepki verir. Beklenti zaten yüksekse iyi bir sonuç bile hayal kırıklığı sayılabilir.",
+    match: ["piyasa beklentisi", "konsensüs beklenti", "konsensüs tahmin", "analist beklenti"],
   },
   "eps-surprizi": {
     term: "EPS Sürprizi",
     definition:
-      "EPS sürprizi, açıklanan hisse başı kârın konsensüs beklentisinden ne kadar saptığıdır ve genellikle yüzde olarak verilir. Beklentinin üstündeki sonuca beklentiyi aşma, altındakine beklentinin gerisinde kalma denir. Tarihsel olarak şirketlerin çoğunluğu beklentiyi aşar, bu yüzden küçük bir aşım piyasa için sürpriz sayılmayabilir. Fiyatın tepkisi yalnızca bu rakama değil gelir, marjlar ve rehberliğe de bağlıdır; beklentiyi aşıp düşen hisse sık görülür.",
+      "EPS sürprizi, açıklanan hisse başı kârın piyasa beklentisinden ne kadar saptığıdır ve genellikle yüzde olarak verilir. Beklentinin üstündeki sonuca beklentiyi aşma, altındakine beklentinin gerisinde kalma denir. Tarihsel olarak şirketlerin çoğunluğu beklentiyi aşar, bu yüzden küçük bir aşım piyasa için sürpriz sayılmayabilir. Fiyatın tepkisi yalnızca bu rakama değil gelir, marjlar ve şirketin öngörüsüne de bağlıdır; beklentiyi aşıp düşen hisse sık görülür.",
     example:
-      "Konsensüs hisse başı kâr beklentisi 2,00 dolar, açıklanan rakam 2,10 dolarsa sürpriz (2,10 - 2,00) / 2,00 = %5'tir.",
+      "Piyasanın hisse başı kâr beklentisi 2,00 dolar, açıklanan rakam 2,10 dolarsa sürpriz (2,10 - 2,00) / 2,00 = %5'tir.",
     match: ["EPS sürprizi", "kâr sürprizi"],
   },
   "rehberlik": {
-    term: "Rehberlik (Şirket Beklentisi)",
+    term: "Öngörü (Şirket Rehberliği)",
     definition:
-      "Rehberlik (şirket beklentisi), şirket yönetiminin gelecek çeyrek ya da mali yıl için gelir, kâr veya marj gibi kalemlerde paylaştığı kendi tahminidir; çoğunlukla bir aralık olarak verilir. Yasal bir zorunluluk değildir ve her şirket vermez. Piyasa rehberliği konsensüs beklentisiyle kıyaslar: biten çeyrek iyi olsa bile rehberlik beklentinin altında kalırsa hisse düşebilir. Rehberliğin yükseltilmesi ya da düşürülmesi çoğu zaman sonuçların kendisinden daha fazla fiyat hareketi yaratır.",
-    match: ["şirket rehberliği", "yönetim rehberliği", "yıllık rehberlik", "rehberliğini yükselt", "rehberliğini düşür"],
+      "Öngörü (şirket rehberliği, İngilizcede guidance), şirket yönetiminin gelecek çeyrek ya da mali yıl için gelir, kâr veya marj gibi kalemlerde paylaştığı kendi tahminidir; çoğunlukla bir aralık olarak verilir. Yasal bir zorunluluk değildir ve her şirket vermez. Piyasa öngörüyü kendi beklentisiyle kıyaslar: biten çeyrek iyi olsa bile öngörü beklentinin altında kalırsa hisse düşebilir. Öngörünün yükseltilmesi ya da düşürülmesi çoğu zaman sonuçların kendisinden daha fazla fiyat hareketi yaratır.",
+    match: ["şirket öngörüsü", "yıllık öngörü", "öngörüsünü yükselt", "öngörüsünü düşür", "şirket rehberliği", "yönetim rehberliği", "yıllık rehberlik", "rehberliğini yükselt", "rehberliğini düşür"],
   },
   "bilanco-toplantisi": {
     term: "Bilanço Toplantısı",
     definition:
-      "Bilanço toplantısı, şirket yönetiminin sonuçlar açıklandıktan kısa süre sonra düzenlediği, analistlerin ve yatırımcıların dinleyebildiği telekonferans ya da canlı yayındır. Genellikle yönetimin sunumuyla başlar ve analistlerin sorularıyla devam eder. Rakamların arkasındaki nedenler, rehberliğin gerekçesi ve yönetimin tonu burada ortaya çıkar. Hisse fiyatı sonuçlar açıklandıktan sonra toplantı sırasında yön değiştirebilir.",
+      "Bilanço toplantısı, şirket yönetiminin sonuçlar açıklandıktan kısa süre sonra düzenlediği, analistlerin ve yatırımcıların dinleyebildiği telekonferans ya da canlı yayındır. Genellikle yönetimin sunumuyla başlar ve analistlerin sorularıyla devam eder. Rakamların arkasındaki nedenler, öngörünün gerekçesi ve yönetimin tonu burada ortaya çıkar. Hisse fiyatı sonuçlar açıklandıktan sonra toplantı sırasında yön değiştirebilir.",
     match: ["bilanço toplantı", "bilanço sonrası toplantı"],
   },
   "yillik-bazda": {

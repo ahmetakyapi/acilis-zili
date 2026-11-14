@@ -37,7 +37,7 @@ export const EN_MAKRO: GlossaryTexts<"makro"> = {
   "politika-faizi": {
     term: "Policy Rate (Federal Funds Rate)",
     definition:
-      "The federal funds rate is the rate banks charge each other to lend reserves held at the Fed overnight, and the FOMC sets a target range for it a quarter of a percentage point wide. It anchors borrowing costs across the economy, from credit cards to mortgages. When the Fed raises it, borrowing gets more expensive and the economy is pushed to slow; cutting it does the opposite. Stock valuations respond too, because future profits are discounted back to today at a higher or lower rate.",
+      "The policy rate is the central bank's main interest rate; in the US it is the federal funds rate, the rate banks charge each other to lend reserves held at the Fed overnight, and the FOMC sets a target range for it a quarter of a percentage point wide. It anchors borrowing costs across the economy, from credit cards to mortgages. When the Fed raises it, borrowing gets more expensive and the economy is pushed to slow; cutting it does the opposite. Stock valuations respond too, because future profits are discounted back to today at a higher or lower rate.",
     match: ["federal funds rate", "fed funds rate", "fed funds", "policy rate"],
   },
   "nokta-grafigi": {
