@@ -11,7 +11,7 @@ export const EN_ICERIDEN: GlossaryTexts<"iceriden"> = {
   "iceriden-islem": {
     term: "Insider Trading",
     definition:
-      "Insider trading is the buying and selling of a company's shares by its officers, directors or shareholders who own more than 10% of the stock. These trades are legal in the US and are reported to the SEC on Form 4. Trading on material information that has not been made public is illegal and a different matter. Investors often explain insider sales by ordinary reasons such as taxes, diversification or pre-arranged selling plans, while several executives buying with their own money tends to draw more attention.",
+      "Insider trading is the buying and selling of a company's shares by its officers, directors or shareholders who own more than 10% of the stock; these trades are legal in the US and are reported to the SEC on Form 4. Trading on material information that has not been made public is illegal and a different matter. Investors often explain insider sales by ordinary reasons such as taxes, diversification or pre-arranged selling plans, while several executives buying with their own money tends to draw more attention.",
     match: ["insider trading", "insider buying", "insider selling"],
   },
   "form-4": {

@@ -17,7 +17,7 @@ Aşağıdaki prompt blokları **canlı rutinlerin birebir kopyasıdır**; tek fa
 anahtar satırındaki `BURAYA_SECRET` yer tutucusudur. Çalışan kopya her zaman
 claude.ai'dekidir: ikisi ayrışırsa canlı doğrudur, bu dosya geride kalmıştır.
 
-**Son eşitleme:** 8 Kasım 2026, `list_triggers` çıktısından (sekiz rutin).
+**Son eşitleme:** 8 Kasım 2026, `list_triggers` çıktısından (sekiz rutin). 14 Kasım: Mercek, Bilanço, Teknik ve Günün Grafiği bloklarına dil bütünlüğü ve Title Case satırları eklendi; sahibi canlıya yapıştırana dek canlı bir adım geride (ROUTEMAP açık işi).
 
 **Yeniden eşitlemek için:** Claude Code oturumunda Claude_Code_Remote
 `list_triggers` (`recurring: true`, `limit: 40`; `has_more` true ise
@@ -1159,7 +1159,7 @@ GÖRSEL BLOKLAR — satırlar `|` ile ayrılır. Her yazıda EN AZ ÜÇ görsel 
 
   Tablo → en fazla 8 satır ve 4 sütun.
 
-  ::: grafik MU | 3M | Micron — bugünden geriye üç ay
+  ::: grafik MU | 3M | Micron: Bugünden Geriye Üç Ay
   :::
   → GERÇEK FİYAT GRAFİĞİ: sembol | aralık | açıklama. Aralıklar: 1D 1W 1M 3M 6M YTD 1Y 5Y.
     Veri sağlayıcıda her sembol yoktur; olmayan sembolde blok SESSİZCE DÜŞER. GÜVENLİ LİSTE: API'nin indices dizisindeki semboller (QQQ, SPY, DIA, IWM) ya da o günün earnings.notable listesindeki bir şirket. Egzotik sembol denemek serbest, ama TEK grafiğin o olmasın. /hisse/<sembol> adresinin 200 dönmesi sembolün veride olduğunu GÖSTERMEZ.
@@ -1206,6 +1206,7 @@ Göndermeden önce her maddeyi gerçekten kontrol et; kelime ve karakteri python
   [ ] Yer ve kurum adları ve sayı biçimi Türkçe mi?
   [ ] Her İngilizce alıntının ardında Türkçe karşılık var mı; İngilizce kalan parça tek cümle ve ~150 karakterin altında mı; birebir olmayan yerde tırnak yok mu?
   [ ] Yasak vurgu kalıplarını taradım mı — kuruş, taban tabana, çakılı, cephane/silah, çarpıcı, dikkat çekici, şaşırtıcı, "asıl cümle"?
+  [ ] Blok başlıkları, tablo başlıkları ve `::: grafik` künyesi Title Case mi ("Micron: Bugünden Geriye Üç Ay")? `sources[].label` yayının ya da belgenin özgün adı mı, Türkçe tarif ("… haberi", "… bülteni") yok mu?
 
 ═══ 8. GÖNDER — önce Türkçe, sonra İngilizce ═══
 
@@ -1767,6 +1768,8 @@ SERT SINIRLAR: strengths/risks/upcoming ≤6 madde · guidance ≤5 satır · qu
  · quarterly_revenue: `value` aynı, `label`/`note` çevrilir ("4Ç26" → "Q4 26", "1Ç27Ö" → "Q1 27E").
  · guidance: low/high/consensus aynı; `label`, `note`, `evaluation`, `unit` çevrilir ("Piyasa Beklentisi" → "Market Expectation", "Beklentinin %2,5 Altında ▼" → "2.5% Below Estimate ▼", "Uyumlu ✓" → "In Line ✓").
  · ceo_quote.quote TAMAMEN İngilizce, Türkçe karşılık yok, yıldız yok · topics çevrilir · verdict buy/hold/sell KALIR.
+ · ceo_quote.title ve sources[].label da çevrilir, url AYNI kalır: "Başkan & CEO · Kazanç Çağrısı" → "Chairman & CEO · Earnings Call", "SanDisk 4Ç FY26 Bülteni" → "SanDisk Q4 FY26 Press Release".
+ · GÖNDERMEDEN ÖNCE İngilizce gövdede Türkçe harf ara (ç ğ ı ö ş ü İ): şirket ve kişi adı dışındaki her eşleşme çevrilmemiş kalıntıdır, düzelt.
  · eps_ttm ve growth_pct aynı sayı; yalnızca `growth_basis` çevrilir ("son 12 ay" → "trailing twelve months", "ileriye dönük 12 ay" → "next twelve months", "şirket öngörüsü 2027" → "company guidance 2027").
  · Ritim kuralları İngilizcede de geçerli (otuz kelimeyi geçen cümle yok, bir cümle bir fikir). Çeviri uzar, %10 pay: summary paragrafı ≤88, analysis gövdesi ≤165 kelime.
 
@@ -1775,7 +1778,7 @@ SERT SINIRLAR: strengths/risks/upcoming ≤6 madde · guidance ≤5 satır · qu
 "Hayır" olan maddeyi düzelt, sonra gönder.
   [ ] AKIŞ: today_et context'ten · önce has_charts false ve bugün/dün rapor veren yarım kayıtlar · öğlen bmo notu seans içi + "akşam güncellenecek"; akşam yalnız tepki/fiyat, ibare iki dilde silindi · Kademe 1 akşam, Kademe 2 gece (ibare silindi), sonra akşamdan kalan HAZIR şirketler; sabah yalnız tepki alanları 20:00 ET fiyatıyla, ibare duruyorsa tam ZENGİNLEŞTİR · 4. onarım yeni analizlerden sonra, en fazla üç kayıt, ilerleme raporda.
   [ ] UZUNLUK (python3 ile): headline 2-3 cümle, 120-600 karakter · summary paragrafları 55-80 kelime (EN ≤88), aralarındaki fark ≤15 · summary + analysis 700-1000 · 30 kelimeyi geçen cümle yok · strengths/risks/upcoming tek cümle · analysis başlıkları ≤60 karakter, son bölüm bir ölçü bırakıyor.
-  [ ] BİÇİM: segment adları TR kayıtta Türkçe · highlights ve künyeler Title Case · TR'de yüzde işareti sayıdan önce, EN'de sonra · metin alanlarında ham HTML yok · "Konsensüs"/"Katalizörler" ve şablondaki SNDK sayıları yok.
+  [ ] BİÇİM: segment adları TR kayıtta Türkçe · highlights ve künyeler Title Case · TR'de yüzde işareti sayıdan önce, EN'de sonra · metin alanlarında ham HTML yok · "Konsensüs"/"Katalizörler" ve şablondaki SNDK sayıları yok · İngilizce kayıtta Türkçe harf taraması temiz (sources.label ve ceo_quote.title dahil).
   [ ] ZORUNLU ALANLAR: price · market_cap · return_1y_pct; target_price · analyst_count · upside_pct; revenue_yoy_pct · eps_surprise_pct · reaction_pct dolu (zararda da, işaretiyle) · highlights 6, revenue_footer 3, guidance_footer 3 · card_image_url/base64 gönderilmedi.
   [ ] ALAN KURALLARI: quarterly_revenue HAM DOLAR, note yalnız öngörü satırında ve birimsiz · guidance'ta note ile evaluation ayrı, yargı tekrarsız, tek sayıda low = high, unit ≤8 karakter, EN'de "billion".
   [ ] EPS VE BÜYÜME: eps_ttm dolu (boşsa yayımlama), son dört çeyreğin toplamı, `eps` ile aynı tanımda · growth_pct ile growth_basis ya ikisi var ya hiç; taban merdivenin en üst uyan basamağı, etiket dört ifadeden biri, değer pozitif, tabanı eps_ttm · F/K ve PEG'in kendisi hiçbir alanda yok.
@@ -2014,6 +2017,7 @@ Her hisse için copy.tr ve copy.en; aynı içerik, editoryal çeviri:
 - Türkçede yüzde işareti sayıdan önce ("%3,2"), ondalık virgülle ("219,74 $"); sayıdan sonra gelen ek kesmeyle ayrılır ("%35'ten"). İngilizcede "3.2%", "$219.74".
 - Para kısaltması Türkçede "Mn $" / "Mr $", İngilizcede "$…M" / "$…B".
 - Günlük dil: "y/y" değil "yıllık"; "Konsensüs" değil "Piyasa Beklentisi".
+- Dil bütünlüğü: `copy.en`de Türkçe sözcük ya da kısaltma kalmaz ("Mr $" → "$…B", "TR saatiyle" → "Istanbul time"). Göndermeden önce İngilizce metinde ç ğ ı ö ş ü İ ara; şirket adı dışındaki her eşleşme çevrilmemiş kalıntıdır.
 
 ## ADIM 6 — BİÇİM
 - Yapısal alanlardaki sayılar HAM ve NOKTALI yazılır: 219.74 — "219,74 $" değil. (Metin içi yazım 5E'deki gibidir.)
@@ -2345,6 +2349,8 @@ JSON
 
 Sonra İngilizce: AYNI grafik, ad sütunu name_en, değerler pct.en; başlık ve
 metin çeviri değil, İngilizce okura yazılmış aynı fikir. "locale": "en".
+İngilizce kayıtta Türkçe sözcük kalmaz (grafik başlığı ve künye dahil);
+göndermeden önce ç ğ ı ö ş ü İ ara, özel ad dışındaki eşleşmeyi çevir.
 
 Var olanı düzeltmek için önce oku:
 

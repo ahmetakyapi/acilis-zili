@@ -37,7 +37,7 @@ export const TR_MAKRO: GlossaryTexts<"makro"> = {
   "politika-faizi": {
     term: "Politika Faizi (Federal Fon Oranı)",
     definition:
-      "Politika faizi (federal fon oranı), bankaların Fed'deki rezervlerini birbirlerine bir gecelik borç verirken uyguladığı faizdir ve FOMC bunun için çeyrek puan genişliğinde bir hedef aralık belirler. Bu oran, kredi kartından konut kredisine kadar ekonomideki faizlerin çıpası sayılır. Fed faizi artırdığında borçlanma pahalanır ve ekonomi yavaşlamaya itilir, indirdiğinde tersi olur. Hisse değerlemeleri de bu orandan etkilenir, çünkü gelecekteki kârlar daha yüksek bir faizle bugüne indirgenir.",
+      "Politika faizi, merkez bankasının para politikasını yürüttüğü temel faizdir; ABD'de bu, bankaların Fed'deki rezervlerini birbirlerine bir gecelik borç verirken uyguladığı federal fon oranıdır ve FOMC bunun için çeyrek puan genişliğinde bir hedef aralık belirler. Bu oran, kredi kartından konut kredisine kadar ekonomideki faizlerin çıpası sayılır. Fed faizi artırdığında borçlanma pahalanır ve ekonomi yavaşlamaya itilir, indirdiğinde tersi olur. Hisse değerlemeleri de bu orandan etkilenir, çünkü gelecekteki kârlar daha yüksek bir faizle bugüne indirgenir.",
     match: ["politika faizi", "federal fon oranı", "fed funds", "federal funds"],
   },
   "nokta-grafigi": {

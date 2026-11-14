@@ -189,7 +189,7 @@ export const TR_DEGERLEME: GlossaryTexts<"degerleme"> = {
   "temettu": {
     term: "Temettü",
     definition:
-      "Temettü, şirketin kârının hissedarlarına nakit olarak dağıttığı bölümüdür. ABD'de temettü kararını yönetim kurulu verir ve çoğu şirket üç ayda bir öder. Temettüyü alabilmek için hisseyi hak düşüm tarihinden önce almış olmak gerekir; hak düşüm günü hisse fiyatı genellikle temettü tutarı kadar aşağıdan açılır.",
+      "Temettü, şirketin kârının hissedarlarına dağıttığı bölümüdür; çoğunlukla nakit ödenir, nadiren ek hisse olarak verilir. ABD'de temettü kararını yönetim kurulu verir ve çoğu şirket üç ayda bir öder. Temettüyü alabilmek için hisseyi hak düşüm tarihinden önce almış olmak gerekir; hak düşüm günü hisse fiyatı genellikle temettü tutarı kadar aşağıdan açılır.",
     example:
       "Hisse başına çeyreklik 0,50 dolar temettü ödeyen şirketin yıllık temettüsü hisse başına 2 dolardır.",
     match: ["temettü", "kâr payı"],

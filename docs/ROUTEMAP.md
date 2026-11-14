@@ -27,7 +27,7 @@ GitHub Actions → "Migrate DB" iş akışı, `check` modu (salt okunur).
 |---|---|
 | Sayfa rotası | 90 `page.tsx` (13'ü `/admin`; açık sayfalar `/en` önekiyle ikinci bir adreste daha) |
 | API ucu | 61 `route.ts` `app/api` altında (+ `app/` içinde paylaşım görselleri, RSS ve `llms.txt`) |
-| Veritabanı tablosu | 60 · 46 migration (0000–0045 üretimde uygulandı, 0045 `claude_spend`: 14 Kasım) |
+| Veritabanı tablosu | 60 · 47 migration (0000–0046 üretimde uygulandı, 0045–0046: 14 Kasım) |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · TCMB EVDS (isteğe bağlı) · SEC EDGAR (13F, Form 4) · OpenFIGI · House Clerk · Federal Reserve · Kalshi · Cboe · ABD Hazinesi · ARK / Global X ETF dosyaları · GİB (`lib/providers/`) |
 | Ortam değişkeni | 38 (`.env.example`) |
 | Zamanlanmış iş | 9 uç `app/api/cron/*`: günlük senkron, alarmlar, bilanço hatırlatması, haberler + çeviri, pazar özeti postası, Telegram, olasılıklar, risk, Günün Grafiği yedeği. Saatleri tek yerde: `deploy/cron-install.sh` |
@@ -51,11 +51,11 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       - **Sahibi teyit etmeli:** GitHub depo değişkeni `VPS_HOST_KEY` dolu mu
         (boşsa SSH adımları `accept-new` ile koşuyor); e-posta adresi onaylı
         mı (pazar postasındaki portföy karnesi artık yalnız onaylı adrese).
-      - **Sahibine sorulacak migration:** `portfolio_positions` adet sütununa
-        `CHECK (quantity > 0)` (veri değiştiren). Kod tarafı kapandı: satış
-        koşullu düşüm + bekçiyle tek işlemde, satır tavanı kilit + koşullu
-        eklemeyle (`lib/portfolio-write.ts`); kısıt eklenince kod değişmez.
-        Önce `SELECT … WHERE quantity <= 0` ile var olan satırlara bakılır.
+      - **Migration 0046 adet kısıtı (14 Kasım, sahibinin onayıyla):**
+        `portfolio_positions` `CHECK (quantity > 0)` `NOT VALID` eklenir;
+        var olan satırlarda ihlal yoksa aynı migration doğrular. Veri
+        silmez; eski bir eksi satır varsa kısıt yeni yazımları yine korur,
+        doğrulanmamış kalır (`pg_constraint.convalidated`).
       - **Migration 0045 (`claude_spend`) üretimde uygulandı (14 Kasım):**
         Migrate DB `check` (bekleyen yalnız 0045, eşleşmeyen kayıt yok) →
         `apply`. Claude genel bütçesi artık tabloda sayılıyor.
@@ -65,12 +65,10 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
         (değişken tanımlıysa o önce gelir); dosya, deploy'un günlüğe bastığı
         anahtarla dolduruluyor. Sunucu yeniden kurulursa deploy durur:
         yeni anahtarı doğrulayıp dosyayı güncelle.
-      - **claude.ai'de yeniden yapıştırma isteyen rutin önerileri:** Mercek
-        örneğindeki `::: grafik` künyesi Title Case ("Micron: Bugünden
-        Geriye Üç Ay"); Bilanço'da İngilizce kayıt için `sources.label`
-        çevirisi satırı ve "İngilizce kayıtta Türkçe harf taraması"
-        maddesi; Günün Grafiği ve Teknik Analist promptlarına "Dil
-        bütünlüğü" ve "Sayının kaynağı" (`content/kurallar/ortak.md`).
+      - **claude.ai'de yeniden yapıştırılacak (sahibi, 14 Kasım):** Mercek,
+        Bilanço, Teknik Analist ve Günün Grafiği bloklarına dil bütünlüğü ve
+        Title Case satırları `docs/claude-rutinler.md`'ye işlendi; canlı
+        rutinlere yapıştırılınca bu madde kapanır.
       - **Canlıda bakılacak (yeni istemler gerçek modelle denenmedi):**
         bilanço haftasındaki hissede "Yaklaşan bilançoda piyasa ne
         bekliyor?", bilanço ertesinde tepki sorusu, ≥ %4 hareketli hissede

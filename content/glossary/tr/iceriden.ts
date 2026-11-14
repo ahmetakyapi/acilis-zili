@@ -11,7 +11,7 @@ export const TR_ICERIDEN: GlossaryTexts<"iceriden"> = {
   "iceriden-islem": {
     term: "İçeriden İşlem",
     definition:
-      "İçeriden işlem, bir şirketin yöneticilerinin, yönetim kurulu üyelerinin ya da hisselerinin %10'undan fazlasına sahip ortaklarının o şirketin hisselerini alıp satmasıdır. Bu işlemler ABD'de yasaldır ve SEC'e Form 4 ile bildirilir. Kamuya açıklanmamış önemli bir bilgiye dayanarak işlem yapmak ise yasa dışıdır ve ayrı bir şeydir. Yatırımcılar içeriden satışları çoğu zaman vergi, çeşitlendirme ya da önceden planlanmış satış programları gibi sıradan sebeplerle açıklar; birden fazla yöneticinin kendi cebinden alım yapması ise daha çok dikkat çeker.",
+      "İçeriden işlem, bir şirketin yöneticilerinin, yönetim kurulu üyelerinin ya da hisselerinin %10'undan fazlasına sahip ortaklarının o şirketin hisselerini alıp satmasıdır; bu işlemler ABD'de yasaldır ve SEC'e Form 4 ile bildirilir. Kamuya açıklanmamış önemli bir bilgiye dayanarak işlem yapmak ise yasa dışıdır ve ayrı bir şeydir. Yatırımcılar içeriden satışları çoğu zaman vergi, çeşitlendirme ya da önceden planlanmış satış programları gibi sıradan sebeplerle açıklar; birden fazla yöneticinin kendi cebinden alım yapması ise daha çok dikkat çeker.",
     match: ["içeriden işlem", "içeriden alım", "içeriden satış"],
   },
   "form-4": {
