@@ -37,14 +37,14 @@ import type { GaugeView } from "@/components/macro/MacroGauges";
 export const generateMetadata = pageMetadata({
   path: "/makro",
   tr: {
-    title: "Makro",
+    title: "ABD Enflasyonu, Fed Faizi ve İstihdam Verileri",
     description:
-      "Enflasyon, istihdam ve faiz — ABD ekonomisinin ana göstergeleri.",
+      "ABD enflasyonu (TÜFE, PCE), işsizlik, Fed politika faizi ve getiri eğrisi: son değer, önceki dönem ve sıradaki açıklama tarihi, FRED verisiyle.",
   },
   en: {
-    title: "Macro",
+    title: "US Inflation, Fed Rate and Jobs Data",
     description:
-      "Inflation, employment and rates — the main gauges of the US economy.",
+      "US inflation (CPI, PCE), unemployment, the Fed funds rate and the yield curve: latest reading, prior period and next release date, from FRED.",
   },
 });
 

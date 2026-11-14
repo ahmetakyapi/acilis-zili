@@ -11,12 +11,12 @@ import { BriefArchiveView } from "./BriefArchiveView";
 export const generateMetadata = pageMetadata({
   path: "/bulten",
   tr: {
-    title: "Bülten",
-    description: "Günlük ve haftalık piyasa bülteninin arşivi.",
+    title: "ABD Borsası Günlük Bülteni ve Arşivi",
+    description: "ABD borsasının günlük ve haftalık bülteni: açılış öncesi özet, endeksler, öne çıkan veriler ve bilançolar; geçmiş sayıların tamamı arşivde.",
   },
   en: {
-    title: "Brief",
-    description: "Archive of the daily and weekly market brief.",
+    title: "Daily US Market Brief and Archive",
+    description: "The daily and weekly US market brief: a pre-open summary of indices, key data and earnings, with every past issue in the archive.",
   },
 });
 

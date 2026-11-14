@@ -23,11 +23,11 @@ export const generateMetadata = pageMetadata({
   path: "/topluluk",
   tr: {
     title: "Topluluk",
-    description: "Üyelerin yazdığı, moderasyondan geçmiş piyasa yazıları.",
+    description: "Üyelerin ABD borsası üzerine yazdığı, moderasyondan geçmiş piyasa yazıları ve hisse değerlendirmeleri.",
   },
   en: {
     title: "Community",
-    description: "Member-written market posts, published after review.",
+    description: "Member-written posts and stock write-ups on the US market, published after review.",
   },
 });
 

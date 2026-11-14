@@ -33,14 +33,14 @@ import { pageMetadata } from "@/lib/page-meta";
 export const generateMetadata = pageMetadata({
   path: "/rehber",
   tr: {
-    title: "Rehber",
+    title: "ABD Borsası Rehberi: Sıfırdan Hisse Yatırımı",
     description:
-      "Borsayı anlatan yazılar — kavramdan stratejiye, kolaydan zora.",
+      "ABD borsasına sıfırdan başlayanlar için sıralı rehber: hisse nedir, nasıl alınır, vergi, bilanço okuma, Fed ve enflasyon. Türkçe ve ücretsiz.",
   },
   en: {
-    title: "Guide",
+    title: "US Stock Market Guide for Beginners",
     description:
-      "Writing that explains the market — from concept to strategy, easy to hard.",
+      "A step-by-step guide to the US stock market for beginners: what a stock is, how to buy, taxes, reading earnings, the Fed and inflation.",
   },
 });
 

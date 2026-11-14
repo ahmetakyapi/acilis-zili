@@ -18,6 +18,7 @@ import { getTechnicalBoard } from "@/lib/technical-data";
 import { allFunds } from "@/db/seed/symbols";
 import { getDailyChartArchive } from "@/lib/daily-chart-data";
 import { dailyChartHref } from "@/lib/daily-chart";
+import { EVENT_PAGE_SLUGS } from "@/lib/event-pages";
 
 type Locale = (typeof LOCALES)[number];
 type SitemapItem = { path: string; locale: Locale; modified: Date };
@@ -95,6 +96,10 @@ const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   { path: "/sozluk", priority: 0.8, frequency: "weekly", stamp: false },
   { path: "/bulmaca", priority: 0.6, frequency: "daily", stamp: false },
   { path: "/bulmaca/arsiv", priority: 0.4, frequency: "daily", stamp: false },
+  /* 14 Kasım denetimi: ikisi de dizine açık (canonical ve hreflang tam) ama
+     haritada yoktu — 9 Ekim'deki `/hisse-secimi` vakasının aynısı. */
+  { path: "/bulmaca/hangisi-buyuk", priority: 0.5, frequency: "daily", stamp: false },
+  { path: "/seans-silueti", priority: 0.6, frequency: "daily" },
   /* 25 Ekim: sitenin değişiklik geçmişi — içerik depoda, yalnız dağıtımla
      değişiyor; değişme anı sayfa için bilinmiyor, damga yok. */
   { path: "/yenilikler", priority: 0.4, frequency: "weekly", stamp: false },
@@ -112,6 +117,19 @@ const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   { path: "/gunun-grafigi", priority: 0.7, frequency: "daily" },
   /* Olasılıklar (25 Ekim): günde bir yenilenen anlık görüntü. */
   { path: "/olasiliklar", priority: 0.7, frequency: "daily" },
+  /* Soru sayfaları (14 Kasım, SEO denetimi). Saatler sayfası günün durum
+     cümlesini taşıyor, her gün değişir. Tatil sayfası yalnız "sıradaki
+     tatil" cümlesinde, olay sayfaları yeni tarih ya da gerçekleşen değer
+     geldikçe değişir; değişme anı bilinmediği için damga yok. Olay listesi
+     `lib/event-pages.ts` → `EVENT_PAGES` ile aynı evren. */
+  { path: "/abd-borsasi-saatleri", priority: 0.8, frequency: "daily" },
+  { path: "/abd-borsasi-tatil-gunleri", priority: 0.7, frequency: "weekly", stamp: false },
+  ...EVENT_PAGE_SLUGS.map((slug) => ({
+    path: `/takvim/${slug}`,
+    priority: 0.7,
+    frequency: "weekly" as const,
+    stamp: false,
+  })),
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

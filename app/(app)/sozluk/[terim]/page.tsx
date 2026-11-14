@@ -29,6 +29,7 @@ import { getI18n } from "@/lib/i18n";
 import { metaDescription, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { articleAutoLinker } from "@/lib/autolink-data";
+import { eventPageForGlossary } from "@/lib/event-pages";
 
 /**
  * Sözlük terimi.
@@ -86,6 +87,7 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
   const links = glossaryIncoming().get(term.slug) ?? 0;
   const { lede, rest } = splitLede(term.definition);
   const autoLink = await articleAutoLinker(locale, { excludeTerm: term.slug });
+  const eventPage = eventPageForGlossary(term.slug);
   const categoryLabel = glossaryCategoryLabel(term.category, locale);
   const CategoryIcon = GLOSSARY_CATEGORY_ICONS[term.category];
   const visual = GLOSSARY_VISUALS[term.slug];
@@ -160,6 +162,18 @@ export default async function GlossaryTermPage(props: PageProps<"/sozluk/[terim]
           )}
           {/* PAYLAŞ (8 Ekim) — bir terimin tanımı en çok paylaşılan şey;
               okuma ekranlarının hepsinde olan düğme burada yoktu. */}
+          {/* OLAY SAYFASINA TEK SATIR (14 Kasım): takvimde kendi sayfası olan
+              terim (FOMC, TÜFE, tarım dışı istihdam, PCE) "ne zaman"
+              sorusunun cevabına bağlanır; eşleşme `lib/event-pages.ts`. */}
+          {eventPage && (
+            <Link
+              href={`/takvim/${eventPage.slug}`}
+              className="tap-44 mt-3 inline-flex w-fit min-h-8 items-center gap-1.5 text-read font-semibold text-primary-ink transition-colors hover:text-primary-hover"
+            >
+              {t.eventPages.pages[eventPage.slug].link}
+              <ArrowRight aria-hidden weight="bold" size={13} />
+            </Link>
+          )}
           <PageShare path={`/sozluk/${term.slug}`} title={term.term} locale={locale} t={t} className="mt-4" />
         </div>
       </header>
