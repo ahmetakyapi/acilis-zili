@@ -16,6 +16,7 @@ import { getUserAnalysis } from "@/lib/portfolio-analysis";
 import { noteInput } from "@/lib/portfolio-analysis-note";
 import { getPortfolioScan } from "@/lib/portfolio-scan";
 import type { ScanRow } from "@/lib/portfolio-scan-model";
+import { GROUNDING, NUMBERS, OWNER_VIEW, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, completedDailyBars, insightsConfigured } from "@/lib/stock-insights";
 
 /**
@@ -52,12 +53,14 @@ Ufuk girdide (horizon): "günlük" ise son seans ve önümüzdeki günler; "ayl�
 - actions: öncelik sırasıyla 3-5 eylem. kind: trim (azalt / kâr al), add (ekle), diversify (çeşitlendir), hedge (riski sınırla), hold (koru), watch (izle). symbol: ilgili hisse (yoksa null). title: kısa, Title Case, en çok 6 kelime. detail: 2-3 cümle; NEDEN (ölçüler, teknik görüş, ağırlık, risk) ve NASIL (hedef ağırlık yalnız referenceWeights listesinden, örn. "%25'e indir").
 - risks: en çok 3 risk (title kısa ve Title Case, detail 1-2 cümle).
 - outlook: tek paragraf, en çok 45 kelime — önümüzdeki dönemde neyi izlemeli.
-- followUps: sohbeti açan 3 kısa soru (her biri en çok 12 kelime), birinci tekil şahısla, okurun sana sorabileceği ya da senin onun kararını netleştirmek için sorduğun ("MU'yu %25'e indirsem yoğunlaşma ne olur?", "Nakde mi geçmeliyim, sektör mü değiştirmeliyim?"). Yalnız verinin yanıtlayabileceği sorular.
+- followUps: sohbeti açan üç kısa soru (her biri en çok on iki kelime), birinci tekil şahısla, okurun bu notu okuyunca sana soracağı. Her biri TEK şey sorar ve üçü farklı açıdan gelir: bir öncelik sorusu, bir senaryo, bir risk ya da takvim sorusu. Notta zaten cevapladığın şeyi sorma. Senaryo sorusu sitenin hesaplayabildiği kalıpta olmalı: okurun kendi pozisyonlarından tek hisse ve net eylem ("…yarısını satsam yoğunlaşma nasıl değişir?", "…referenceWeights'teki bir ağırlığa indirsem ne olur?"); tutarsız ("biraz azaltsam") ya da iki hisseli senaryo yazma. Soruda girdide olmayan sayı olmaz.
 
 Kurallar:
-- YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, olay yazma; hesap yapma (yüzde, fiyat, hedef türetme yok). Sayıyı verilen biçimde aynen yaz. Hedef ağırlık yalnız referenceWeights'ten.
+- ${GROUNDING.tr}
+- ${NUMBERS.tr} Hedef ağırlık yalnız referenceWeights'ten.
 - Risk ölçüleri "bugünkü ağırlıklarla geçen yıl"; gerçek geçmiş getirin gibi anlatma.
-- Kesin fiyat tahmini yok ("kesin yükselir" değil). Sakin, net Türkçe; "sen" diye hitap et. Ünlem, emoji, madde işareti yok.`,
+- ${OWNER_VIEW.tr}
+- ${VOICE.tr} "Sen" diye hitap et. Madde işareti yok.`,
   en: `You are the PERSONAL PORTFOLIO ADVISOR for the owner of Açılış Zili. Only the portfolio's owner reads this and explicitly asks you for advice and clear recommendations: what to trim, what to add, how to diversify, what to watch. No hedging boilerplate; be clear and give reasons.
 
 The horizon is in the input: "daily" covers the last session and the days ahead; "monthly (last 21 sessions)" reviews the last 21 sessions versus the S&P 500, the contributors and detractors, and rebalancing for the month ahead.
@@ -68,12 +71,14 @@ Output:
 - actions: 3-5 actions in priority order. kind: trim, add, diversify, hedge, hold, watch. symbol: the stock (null if none). title: short, Title Case, at most 6 words. detail: 2-3 sentences: WHY (measures, technical view, weight, risk) and HOW (target weights only from referenceWeights, e.g. "cut to 25%").
 - risks: at most 3 (short Title Case title, 1-2 sentence detail).
 - outlook: one paragraph, at most 45 words: what to watch next.
-- followUps: 3 short questions (at most 12 words each) that open the conversation, first person: what the reader could ask you, or what you would ask to sharpen the decision ("What if I cut MU to 25%?"). Only questions the data can answer.
+- followUps: three short questions (at most twelve words each) that open the conversation, in the first person: what the reader would ask you after reading this note. Each asks ONE thing and the three come from different angles: one on priority, one scenario, one on risk or the calendar. Do not ask what the note already answered. A scenario question must be in a form the site can compute: one stock from the reader's own positions and a clear action ("What if I sell half of …?", "What if I bring … to a weight from referenceWeights?"); never a vague ("trim a bit") or two-stock scenario. No number in a question that is not in the input.
 
 Rules:
-- Use ONLY the data given; no number, date or event not given; no computation (no derived percentages, prices or targets). Copy numbers exactly as formatted. Target weights only from referenceWeights.
+- ${GROUNDING.en}
+- ${NUMBERS.en} Target weights only from referenceWeights.
 - Risk measures apply today's weights to the past year; do not present them as actual past returns.
-- No certain price predictions. Calm, clear English; address the reader as "you". No exclamation marks, emoji or bullets.`,
+- ${OWNER_VIEW.en}
+- ${VOICE.en} Address the reader as "you". No bullets.`,
 } as const;
 
 const failures = new Map<string, number>();
@@ -115,7 +120,8 @@ export async function getAdvisorReport(userId: string, horizon: AdvisorHorizon, 
     return await unstable_cache(
       () => write(horizon, scan.rows, risk, scan.session, locale, ownerClient(userId)),
       /* v2 (11 Kasım): takip soruları; sahibin bütçe kimliği. */
-      ["portfolio-advisor-v2", horizon, userId, period, fingerprint, locale],
+      /* v3 (14 Kasım): istem ortak kurallara geçti; takip soruları hesaplanabilir kalıpta. */
+      ["portfolio-advisor-v3", horizon, userId, period, fingerprint, locale],
       { revalidate: horizon === "daily" ? 24 * 3600 : 31 * 24 * 3600, tags: ["portfolio-advisor"] },
     )();
   } catch (error) {

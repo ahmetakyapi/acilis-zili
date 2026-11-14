@@ -88,8 +88,6 @@ const MAX_CHARS = 300;
 /** Sunucuya giden önceki tur sayısı ve yanıt kısaltması (core'daki sınırla aynı; sunucu yine keser). */
 const HISTORY_TURNS = 2;
 const HISTORY_ANSWER_CHARS = 320;
-/* Sözlükteki sabit örneklerin konuları, sırasıyla (öneri listesi boşsa). */
-const EXAMPLE_TOPICS: SuggestTopic[] = ["lastEarnings", "analysts", "dividend"];
 
 type Turn = { id: string; question: string; topic: SuggestTopic | null; answer: AskAnswer };
 type ErrorKey = keyof AskStockLabels["errors"];
@@ -116,9 +114,12 @@ export function AskStock({
 }) {
   const titleId = useId();
   const searchParams = useSearchParams();
-  const pool: Suggestion[] = suggestions.length
-    ? suggestions
-    : labels.examples.map((text, i) => ({ topic: EXAMPLE_TOPICS[i] ?? "session", text }));
+  /* SABİT ÖRNEK YEDEĞİ YOK (14 Kasım). Liste boşsa eskiden sözlükteki üç
+     sabit soru basılıyordu ("Son bilançoda beklentiyi aştı mı?", "Analistler
+     ne diyor?", "Temettü ödüyor mu?"): listenin boş olması tam da o verilerin
+     OLMADIĞI anlamına geliyor, üç hap da "cevaplayamıyorum"a çıkıyordu. Veri
+     yoksa hap yok; okur kendi sorusunu yazar. */
+  const pool: Suggestion[] = suggestions;
   const starters = pool.slice(0, STARTER_COUNT);
   /* Girişten dönüş: adresteki öneri kutuya yazılır, GÖNDERİLMEZ. Yalnız
      sunucunun bu sayfa için seçtiği öneriler ya da sözlükteki örnekler kabul
@@ -250,16 +251,18 @@ export function AskStock({
           {/* Oturumsuz öneriler giriş bağlantısı; görünüm ortak öneri hapı
               (Chat.module.css → `.suggestion`), bileşen düğme bastığı için
               sınıfıyla. */}
-          <ul className={cn(chat.suggestions, styles.starters)} aria-label={labels.startersLabel}>
-            {starters.map((item) => (
-              <li key={item.text}>
-                <Link href={signInHref(symbol, item.text)} className={chat.suggestion} rel="nofollow">
-                  <Sparkle size={13} weight="fill" aria-hidden />
-                  {item.text}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          {starters.length > 0 && (
+            <ul className={cn(chat.suggestions, styles.starters)} aria-label={labels.startersLabel}>
+              {starters.map((item) => (
+                <li key={item.text}>
+                  <Link href={signInHref(symbol, item.text)} className={chat.suggestion} rel="nofollow">
+                    <Sparkle size={13} weight="fill" aria-hidden />
+                    {item.text}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          )}
           <div className={styles.signIn}>
             <ButtonLink href={signInHref(symbol)} variant="primary" rel="nofollow">
               {labels.signIn}

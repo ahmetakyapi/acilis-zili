@@ -9,6 +9,7 @@ import { getChartBarsMulti } from "@/lib/providers";
 import { getRawMetrics } from "@/lib/providers/finnhub-depth";
 import { storedMetricsFrom } from "@/lib/scorecard";
 import { industryLabel, sectorLabel } from "@/lib/sectors";
+import { BILINGUAL_RULES, ruleList } from "@/lib/claude-prompt-rules";
 import { callClaude, expectedLastSession, remembered, UngroundedError, type InsightText } from "@/lib/stock-insights";
 import { formatPercentPlain, formatPercentText, peRatioOf } from "@/lib/utils";
 
@@ -71,13 +72,16 @@ Return tr / en, each with:
 - points: 3–4 points, each title at most 6 words, detail at most 32 words. One point on the path (volatility and the deepest drawdown, if supplied); two or three points contrasting the companies on the supplied fundamentals (valuation, growth, margins, balance sheet) or their sectors. Pick contrasts where the supplied figures actually differ.
 
 Rules:
-- Use ONLY the supplied JSON. Never invent figures, dates, prices, events, causes, guidance or analyst views. If a field is null or missing, it is unknown; do not mention it.
-- Numbers: copy them exactly as formatted in the input for that language (each number is given as {tr, en}). Do not compute anything (no differences, ratios, sums, averages or rankings of your own): the differences and the ranking you may need are supplied.
-- Describe, do not judge: never say which stock is better, cheaper in a recommending sense, or which to buy, sell or hold. No predictions of price direction, no "opportunity", no targets. A higher multiple or volatility is a fact to state, not a verdict.
-- Plain, calm newspaper prose; no exclamation marks, emoji or hype. Refer to companies by name or symbol.
-- If a stock's series starts later than the period (seriesStart differs from the window), say its figures cover a shorter span.
-- Write the "tr" object in natural, everyday Turkish financial language as used in Turkish financial media (getiri, oynaklık, en derin düşüş, F/K, gelir büyümesi, net kâr marjı). Point titles are short labels in Title Case (Turkish: "Değerlemede Belirgin Fark"; conjunctions ve/ile lowercase). Summaries are normal sentences.
-- Write the "en" object in plain English with the same content.`;
+${ruleList([
+  BILINGUAL_RULES.grounding,
+  `${BILINGUAL_RULES.numbers} The differences and the ranking you may need are supplied; use those.`,
+  `${BILINGUAL_RULES.noAdvice} Never say which stock is better, cheaper in a recommending sense, or which to buy, sell or hold. A higher multiple or volatility is a fact to state, not a verdict.`,
+  `The first sentence of the summary names the stock that led and the one that lagged over the period; refer to companies by name or symbol.`,
+  `If a stock's series starts later than the period (seriesStart differs from the window), say its figures cover a shorter span.`,
+  BILINGUAL_RULES.voice,
+  `${BILINGUAL_RULES.tr} Compare-screen terms: getiri, oynaklık, en derin düşüş, F/K, gelir büyümesi, net kâr marjı.`,
+  BILINGUAL_RULES.en,
+])}`;
 
 const both = (format: (locale: "tr" | "en") => string) => ({ tr: format("tr"), en: format("en") });
 const pct = (value: number, digits = 2) => both((l) => formatPercentText(value, l, digits));
@@ -214,7 +218,8 @@ export async function getCompareNote(symbols: string[], range: CompareRange, cli
       },
       /* v3 (8 Kasım): tamamlanmış seans = kapanış + 20 dk (settledSessionOf);
          eski kuralla 16:00–16:20 ET arasında yarım bardan yazılan kayıt kalmasın. */
-      ["compare-note-v3", b.key],
+      /* v4 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
+      ["compare-note-v4", b.key],
       { revalidate: 36 * 3600, tags: ["stock-insight"] },
     )();
     /* Figürün sayıları her istekte aynı seans barlarından (hisse notuyla aynı). */

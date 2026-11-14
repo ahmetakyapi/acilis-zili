@@ -3,6 +3,7 @@ import { betaZodOutputFormat } from "@anthropic-ai/sdk/helpers/beta/zod";
 import { z } from "zod";
 import { numbersGrounded } from "@/lib/ai-grounding";
 import { claudeKey } from "@/lib/claude-key";
+import { GROUNDING, NUMBERS, UNTRUSTED_NEWS, VOICE } from "@/lib/claude-prompt-rules";
 import type { Locale } from "@/lib/i18n/config";
 import { emailPercent } from "@/lib/notify-emails";
 import type { DigestData } from "@/lib/weekly-digest";
@@ -40,9 +41,11 @@ const SYSTEM = {
 - ahead: yeni haftada nelere dikkat edileceği — hangi gün hangi büyük şirket açıklıyor, önemli veriler. Şirketleri adıyla an; günlük şirket sayısı verme. En çok 60 kelime.
 
 Kurallar:
-- YALNIZ verilen veriyi kullan. Verilmeyen hiçbir sayı, tarih, fiyat ya da olay yazma; hesap yapma (fark, toplam, ortalama yok). Sayıyı kullanırsan verilen biçimde aynen yaz.
+- ${GROUNDING.tr}
+- ${NUMBERS.tr}
+- ${UNTRUSTED_NEWS.tr}
 - Fiyat ya da endeks yönü tahmini yapma, al/sat/tut önerme, "fırsat" deme. Neyin izleneceğini söyle, ne olacağını değil.
-- Düz, sakin, gazete dili. Ünlem, emoji, başlık, madde işareti yok. "Sen" diye hitap edebilirsin.
+- ${VOICE.tr} Başlık ve madde işareti yok. "Sen" diye hitap edebilirsin.
 - Bir bölüm için veri yoksa o paragrafı kısa tut ve veri yokluğunu uydurma bir anlatıyla doldurma.`,
   en: `You write a short weekly commentary for Açılış Zili's Sunday digest email. The reader is an individual investor following US markets.
 
@@ -51,9 +54,11 @@ Write two paragraphs:
 - ahead: what to watch in the week ahead — which big company reports on which day, and key data. Name the companies; no per-day company counts. At most 60 words.
 
 Rules:
-- Use ONLY the data given. Do not write any number, date, price or event that is not given; do not compute (no differences, sums or averages). If you use a number, copy it exactly as formatted.
+- ${GROUNDING.en}
+- ${NUMBERS.en}
+- ${UNTRUSTED_NEWS.en}
 - No predictions of price or index direction, no buy/sell/hold advice, no "opportunity". Say what to watch, not what will happen.
-- Plain, calm newspaper prose. No exclamation marks, emoji, headings or bullet points. Address the reader as "you" if needed.
+- ${VOICE.en} No headings or bullet points. Address the reader as "you" if needed.
 - If a section has no data, keep that paragraph short and do not fill the gap with invented narrative.`,
 } as const;
 

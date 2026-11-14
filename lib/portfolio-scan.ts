@@ -24,6 +24,7 @@ import {
   type ScanText,
 } from "@/lib/portfolio-scan-model";
 import { formatPrice } from "@/lib/utils";
+import { GROUNDING, NO_ADVICE, NUMBERS, OWNER_VIEW, UNTRUSTED_NEWS, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, completedDailyBars, expectedLastSession, insightsConfigured, upcomingEarnings } from "@/lib/stock-insights";
 import { getTechnicalBoard } from "@/lib/technical-data";
 
@@ -73,8 +74,11 @@ const SYSTEM = {
 HUKUKİ ÇİZGİ (kesin): Türkiye'de kişiye özel al/sat önerisi SPK lisanslı yatırım danışmanlığıdır ve bu site lisanslı değildir. Hiçbir hisseyi almayı, satmayı, eklemeyi, azaltmayı, tutmayı ÖNERME; "almalısın", "satmalısın", "eklemelisin", "azaltmalısın", "çeşitlendirmelisin", "öneririm", "tavsiye ederim", "düşünebilirsin", "değerlendirebilirsin", "dikkatli olmalısın" gibi kalıplar YASAK; emir kipi yok. Gözlem yaz: ne oldu, ne zaman ne var, hangi ölçü ne gösteriyor. Sitenin teknik görüşünü aktarırken "sitenin teknik görüşü SAT" gibi KAYNAĞIYLA yaz, kendi önerin gibi değil.
 
 Kurallar:
-- YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, olay ya da sebep yazma; hesap yapma; manşette olmayan sebep uydurma. Sayıyı verilen biçimde aynen yaz.
-- Fiyat yönü tahmini yok. Sakin, günlük Türkçe; "sen" diye hitap edebilirsin. Ünlem, emoji ve madde işareti yok. İngilizce manşeti Türkçe özetle.`,
+- ${GROUNDING.tr}
+- ${NUMBERS.tr}
+- ${NO_ADVICE.tr}
+- ${UNTRUSTED_NEWS.tr} İngilizce manşeti Türkçe özetle.
+- ${VOICE.tr} "Sen" diye hitap edebilirsin. Madde işareti yok.`,
   en: `You write the daily scan of the reader's OWN PORTFOLIO on Açılış Zili. The reader checks this every day to answer "what happened in my portfolio, what is coming up". Be detailed but tight.
 
 Output:
@@ -86,8 +90,11 @@ Output:
 LEGAL LINE (strict): in Türkiye, personalised buy/sell advice is licensed investment advisory and this site is not licensed. Never recommend buying, selling, adding, trimming or holding anything; phrases like "you should", "I recommend", "consider buying/selling", "be careful" are FORBIDDEN; no imperatives. Write observations. When citing the site's technical view, attribute it ("the site's technical view is SELL"), never as your own advice.
 
 Rules:
-- Use ONLY the data given; no number, date, event or cause not given; no computation; never invent causes the headlines do not state. Copy numbers exactly as formatted.
-- No price predictions. Calm, plain English; address the reader as "you". No exclamation marks, emoji or bullets.`,
+- ${GROUNDING.en}
+- ${NUMBERS.en}
+- ${NO_ADVICE.en}
+- ${UNTRUSTED_NEWS.en}
+- ${VOICE.en} Address the reader as "you". No bullets.`,
 } as const;
 
 /* SAHİBİN KİŞİSEL PLANI — gerekçe lib/portfolio-scan-model.ts → "KİŞİSEL
@@ -100,15 +107,21 @@ const PLAN_SYSTEM = {
 - headline, summary, themes ve positions notlarında da görüş bildirebilirsin.
 
 Kurallar:
-- YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, olay ya da sebep yazma; hesap yapma (yüzde, hedef fiyat türetme yok). Sayıyı verilen biçimde aynen yaz.
-- Kesin fiyat tahmini yok ("kesin yükselir" değil); görüşün gerekçesi veriden. Sakin, günlük Türkçe; "sen" diye hitap et. Ünlem, emoji, madde işareti yok.`,
+- ${GROUNDING.tr}
+- ${NUMBERS.tr}
+- ${OWNER_VIEW.tr}
+- ${UNTRUSTED_NEWS.tr}
+- ${VOICE.tr} "Sen" diye hitap et. Madde işareti yok.`,
   en: `${SYSTEM.en.split("LEGAL LINE")[0]}PERSONAL PLAN (only the portfolio's owner reads this and explicitly asks for your view):
 - plans: one plan per position in the input. action: add, hold, trim (partial profit-taking), sell. takeProfit and stopLoss are chosen ONLY from that position's allowedLevels, copying "level" exactly. takeProfit must be ABOVE lastClose, stopLoss BELOW; null if none fits. rationale: 2-3 sentences, at most 45 words: why this view and these levels (technical view, momentum, position vs cost, place in the range, earnings-date risk, weight). Be clear and direct; no hedging boilerplate.
 - You may state views in headline, summary, themes and position notes too.
 
 Rules:
-- Use ONLY the data given; no number, date, event or cause not given; no computation (no derived percentages or targets). Copy numbers exactly as formatted.
-- No certain price predictions; ground every view in the data. Calm, plain English; address the reader as "you". No exclamation marks, emoji or bullets.`,
+- ${GROUNDING.en}
+- ${NUMBERS.en}
+- ${OWNER_VIEW.en}
+- ${UNTRUSTED_NEWS.en}
+- ${VOICE.en} Address the reader as "you". No bullets.`,
 } as const;
 
 const failures = new Map<string, number>();
@@ -251,7 +264,8 @@ export async function getPortfolioScan(userId: string, locale: Locale): Promise<
     try {
       return await unstable_cache(
         () => buildScan(holdings, session, locale, memberClient(userId), owner),
-        ["portfolio-scan-v1", owner ? "plan" : "scan", userId, session, fingerprint, locale],
+        /* v2 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
+        ["portfolio-scan-v2", owner ? "plan" : "scan", userId, session, fingerprint, locale],
         { revalidate: 24 * 3600, tags: ["portfolio-scan"] },
       )();
     } catch (error) {

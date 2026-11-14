@@ -39,3 +39,9 @@ Bir paragraf bir fikir; en fazla üç cümle, çoğu bir ya da iki. Ortalama cü
 
 ## Biçim
 Ham HTML yazma; site `<a href>` gibi etiketleri ekrana basar. Bağlantı `[metin](/adres)` biçimindedir; İngilizce sürümde adres değişmez, yalnız görünen metin çevrilir.
+
+## Dil bütünlüğü: kaynak adları, künyeler, kısaltmalar
+Bir kayıtta öteki dilden kelime kalmaz; gövde kadar kaynak etiketi, künye, alıntı başlığı, blok başlığı ve tablo başlığı da kaydın dilindedir. İngilizce kayıtta Türkçe sözcük ya da kısaltma kalmaz ("Bülteni" → "Press Release", "Kazanç Çağrısı" → "Earnings Call", "4Ç FY26" → "Q4 FY26", "Mr $" → "$…B", "TR saatiyle" → "Istanbul time"); Türkçe kayıtta İngilizce etiket kalmaz ("Press Release" → "Basın Bülteni", "Q4" → "4Ç"). Yayın, kurum ve belge özel adları iki dilde aynıdır (Reuters, Bloomberg, SEC, Federal Register, 10-Q). Göndermeden önce İngilizce metinde Türkçe harf ara (ç, ğ, ı, ö, ş, ü, İ): özel ad dışındaki her eşleşme çevrilmemiş bir kalıntıdır, düzelt.
+
+## Sayının kaynağı
+Her sayı ya API bağlamından ya da adını verebileceğin bir kaynaktan gelir. İkisi de yoksa sayı yazılmaz; "yaklaşık", "civarı", "… dolaylarında" ile yumuşatıp yazmak da uydurmadır. Sayı yoksa onun yerine sıfat da konmaz ("sert düşüş", "güçlü büyüme"): olgu neyse o yazılır ya da cümle çıkar. Kaynaktaki sayıyı yuvarlarken basamağı koru (%4,3 → "%4" olabilir, "%5" olamaz) ve aynı sayıyı yazının her yerinde aynı yazımla kullan.

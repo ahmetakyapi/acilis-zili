@@ -4,6 +4,7 @@ import { z } from "zod";
 import { numbersGroundedAcrossLocales } from "@/lib/ai-grounding";
 import type { Locale } from "@/lib/i18n/config";
 import { emailPercent, type DigestPersonal } from "@/lib/notify-emails";
+import { GROUNDING, NO_ADVICE, NUMBERS, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, insightsConfigured } from "@/lib/stock-insights";
 import { weeklyMoves, type DigestData } from "@/lib/weekly-digest";
 
@@ -54,13 +55,17 @@ const SYSTEM = {
   tr: `Açılış Zili'nin pazar postasında okurun TAKİP LİSTESİ için kısa bir not yazıyorsun. Tek paragraf, en çok 60 kelime: takip ettiği hisselerden geride kalan haftada en çok hareket edenler (S&P 500'e göre), ve varsa yeni haftada bilanço açıklayacak olanlar.
 
 Kurallar:
-- YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, sebep ya da olay yazma, hesap yapma. Sayıyı verilen biçimde aynen yaz.
-- Fiyat yönü tahmini, al/sat/tut önerisi, "fırsat" yok. Sakin, günlük Türkçe; "sen" diye hitap edebilirsin. Ünlem, emoji, madde işareti yok.`,
+- ${GROUNDING.tr} Hareketin sebebi verilmedi; sebep yazma.
+- ${NUMBERS.tr}
+- ${NO_ADVICE.tr}
+- ${VOICE.tr} "Sen" diye hitap edebilirsin. Madde işareti yok.`,
   en: `You write a short note about the reader's WATCHLIST for Açılış Zili's Sunday email. One paragraph, at most 60 words: which watched stocks moved most in the week behind (relative to the S&P 500), and which report earnings in the week ahead, if any.
 
 Rules:
-- Use ONLY the data given; no number, date, cause or event that is not given, no computation. Copy numbers exactly as formatted.
-- No price predictions, no buy/sell/hold advice, no "opportunity". Calm, plain English; address the reader as "you". No exclamation marks, emoji or bullets.`,
+- ${GROUNDING.en} The cause of a move is not given; do not write one.
+- ${NUMBERS.en}
+- ${NO_ADVICE.en}
+- ${VOICE.en} Address the reader as "you". No bullets.`,
 } as const;
 
 const Schema = z.object({ text: z.string() });
@@ -91,7 +96,8 @@ export async function watchlistNote(
         if (!numbersGroundedAcrossLocales(text, input)) throw new Error("ungrounded");
         return text;
       },
-      ["watchlist-note-v1", userId, data.thisMonday, locale],
+      /* v2 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
+      ["watchlist-note-v2", userId, data.thisMonday, locale],
       { revalidate: 7 * 24 * 3600, tags: ["watchlist-note"] },
     )();
   } catch (error) {
