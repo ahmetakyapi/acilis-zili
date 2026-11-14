@@ -79,6 +79,12 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
         (`/piyasalar/sp-500`), küratörlü karşılaştırma çiftlerine iç
         bağlantı, makale JSON-LD'sine `image`, 104 sözlük tanımının terimle
         başlaması, Mercek ay arşivi, IndexNow'a bilanço analizi.
+      - **Ortak ölçüm betiğinin (`olc.mjs`) ilk koşusunda çıkanlar:**
+        `/teknik-analiz/[symbol]` 360'ta senaryo hücresi (`.axisMath`,
+        `components/ai/AnalysisVisuals.module.css`) 22 piksel taşıyor; hisse
+        sayfasında kota ekranı ("Biraz Yavaşla") HTTP 200 dönüyor; hisse
+        kimlik butonları yan yana 30×30 (büyütülmüş alanları örtüşüyor);
+        `/takvim/fomc` bağlantıları 390'da 21 piksel yüksekliğinde.
       - **Görsel, sonraki tur:** Bugünün Akışı'nda logonun piyasa değeriyle
         orantısı (`FlowMember`a `marketCap`); akşam seansına yığılan üç
         olayda bayrak başlığı kırpılıyor; telefonda sekiz grafik aralığı
