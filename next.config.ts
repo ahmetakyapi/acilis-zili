@@ -121,6 +121,9 @@ const NOINDEX_SOURCES = NOINDEX_PATHS.flatMap((path) => [
 ]);
 
 const nextConfig: NextConfig = {
+  /* `x-powered-by: Next.js` başlığı basılmaz (14 Kasım): çerçeve sürümünü
+     meraklısına ilan etmenin okura faydası yok. */
+  poweredByHeader: false,
   /* Kongre bildirimlerinin PDF'i sunucuda okunuyor (lib/providers/
      house-ptr.ts). pdf.js Node'da çalışanını kendi dosyasından dinamik
      içe aktarıyor; sunucu paketine girerse o yol kırılıyor. Paket
@@ -297,6 +300,13 @@ const nextConfig: NextConfig = {
   },
   experimental: {
     turbopackFileSystemCacheForDev: true,
+    /* CSS ROTAYA GÖRE GRUPLANIR (14 Kasım performans denetimi). Varsayılan
+       birleştirme her sayfaya 1,0-1,24 MB (183-223 kB aktarım) boyamayı
+       engelleyen CSS indiriyordu, kapsama %16-21; yavaş 4G'de ilk boyamayı
+       CSS belirliyordu (`/teknik-analiz`: TTFB 631 → CSS bitti 4.109 → FCP
+       4.564 ms). `graph` (yalnız Turbopack) rotanın kullanmadığı modülleri
+       ortak parçadan ayırır, karşılığında birkaç istek daha yapar. */
+    cssChunking: "graph",
     /* Yirmi yedi dosya ikonları `@phosphor-icons/react/dist/ssr` barrel'ından
        çekiyor ve o giriş noktası binden fazla ikonu tek tek yeniden dışa
        aktarıyor. Üretim demeti ağaç sarsmayla temizleniyor (paket

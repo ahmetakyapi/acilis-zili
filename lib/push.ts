@@ -1,4 +1,5 @@
 import { ECDH } from "node:crypto";
+import { lookup } from "node:dns/promises";
 import webpush from "web-push";
 import { z } from "zod";
 import { and, eq, inArray } from "drizzle-orm";
@@ -70,6 +71,42 @@ export function pushEndpointAllowed(value: string): boolean {
   if (host === "localhost" || host.endsWith(".localhost") || !host.includes(".")) return false;
   if (/^\d{1,3}(\.\d{1,3}){3}$/.test(host) || host.startsWith("[")) return false;
   return true;
+}
+
+/**
+ * Adres genel internete mi ait — özel, döngü, bağlantı-yerel ve ayrılmış
+ * aralıklar reddedilir (14 Kasım güvenlik denetimi). `pushEndpointAllowed`
+ * yalnız METNE bakar: A kaydı `10.x` ya da `169.254.169.254`e çözülen bir
+ * alan adı oradan geçer ve "Deneme Bildirimi" sunucuya iç ağa kör bir POST
+ * attırırdı (https + sertifika doğrulaması etkiyi daraltıyordu, kapatmıyordu).
+ */
+export function isPublicAddress(address: string): boolean {
+  const mapped = /^::ffff:(\d{1,3}(?:\.\d{1,3}){3})$/i.exec(address);
+  const v4 = mapped ? mapped[1] : /^\d{1,3}(\.\d{1,3}){3}$/.test(address) ? address : null;
+  if (v4) {
+    const [a, b] = v4.split(".").map(Number);
+    if (a === 0 || a === 10 || a === 127 || a >= 224) return false;
+    if (a === 100 && b >= 64 && b <= 127) return false; // CGNAT
+    if (a === 169 && b === 254) return false;
+    if (a === 172 && b >= 16 && b <= 31) return false;
+    if (a === 192 && (b === 168 || b === 0)) return false;
+    if (a === 198 && (b === 18 || b === 19)) return false;
+    return true;
+  }
+  const v6 = address.toLowerCase();
+  if (v6 === "::" || v6 === "::1") return false;
+  if (/^f[cd]/.test(v6) || /^fe[89ab]/.test(v6) || v6.startsWith("ff")) return false;
+  return v6.includes(":");
+}
+
+/** Uç adresin alan adı yalnız genel adreslere mi çözülüyor; çözülemeyen ad reddedilir. */
+async function resolvesPublicly(endpoint: string): Promise<boolean> {
+  try {
+    const addresses = await lookup(new URL(endpoint).hostname, { all: true });
+    return addresses.length > 0 && addresses.every((entry) => isPublicAddress(entry.address));
+  } catch {
+    return false;
+  }
 }
 
 /**
@@ -186,6 +223,9 @@ export async function deliverPush(
 ): Promise<number> {
   if (!pushEndpointAllowed(subscription.endpoint)) return 410;
   if (!pushKeysValid(subscription.keys.p256dh, subscription.keys.auth)) return 410;
+  /* 0 = "ulaşılamadı": abonelik silinmez (geçici DNS hatası gerçek aboneyi
+     düşürmesin), istek de atılmaz. */
+  if (!(await resolvesPublicly(subscription.endpoint))) return 0;
   try {
     const details = webpush.generateRequestDetails(subscription, body, {
       /* Bir saat içinde teslim edilemeyen fiyat bildirimi artık haber değil;

@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { createECDH } from "node:crypto";
-import { deliverPush, pushEndpointAllowed, pushKeysValid, pushSubscriptionSchema } from "../lib/push";
+import { deliverPush, isPublicAddress, pushEndpointAllowed, pushKeysValid, pushSubscriptionSchema } from "../lib/push";
 
 /* Push uç adresi doğrulaması (lib/push.ts → pushEndpointAllowed). Uç adres
    okuyucudan geliyor; sunucu ona POST atıyor. Gerçek servisler hep alan adı
@@ -68,4 +68,23 @@ test("şema bozuk anahtarlı aboneliği kaydettirmez", () => {
 test("bozuk anahtarlı satır teslimde fırlatmaz, ölü (410) sayılır", async () => {
   const status = await deliverPush({ endpoint: "https://push.example.com/a", keys: { p256dh: offCurve, auth: goodAuth } }, "{}");
   assert.equal(status, 410);
+});
+
+/* Alan adı üzerinden iç ağa istek (14 Kasım güvenlik denetimi): metin
+   denetimini geçen bir ad özel adrese çözülebilir; teslimden önce çözülen
+   adres de denetlenir. */
+test("özel, döngü ve bağlantı-yerel adresler genel sayılmaz", () => {
+  for (const address of [
+    "10.0.0.5", "127.0.0.1", "169.254.169.254", "172.16.0.1", "172.31.255.255", "192.168.1.1",
+    "100.64.0.1", "0.0.0.0", "224.0.0.1", "::1", "::", "fc00::1", "fd12:3456::1", "fe80::1",
+    "::ffff:10.0.0.5", "::ffff:127.0.0.1",
+  ]) {
+    assert.equal(isPublicAddress(address), false, address);
+  }
+});
+
+test("genel adresler kabul edilir", () => {
+  for (const address of ["142.250.74.10", "172.15.0.1", "172.32.0.1", "100.63.0.1", "2a00:1450:4001:81b::200a", "::ffff:8.8.8.8"]) {
+    assert.equal(isPublicAddress(address), true, address);
+  }
 });

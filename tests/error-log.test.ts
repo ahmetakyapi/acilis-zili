@@ -53,3 +53,11 @@ test("Error olmayan fırlatılan değer de okunuyor", () => {
   assert.equal(describeError(withDigest).digest, "42");
   assert.equal(describeError(withDigest).message, "boom");
 });
+
+test("sorgu parametreleri hata kaydına düşmez", () => {
+  const text = scrubErrorText('Failed query: select * from "portfolio_lots" where "user_id" = $1\nparams: 7c1e,NVDA,12.5,161.01\nat db', 500);
+  assert.equal(text.includes("NVDA"), false);
+  assert.equal(text.includes("12.5"), false);
+  assert.match(text, /params: \[gizlendi\]/);
+  assert.match(text, /portfolio_lots/);
+});
