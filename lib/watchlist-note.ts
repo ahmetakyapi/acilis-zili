@@ -7,6 +7,7 @@ import { emailPercent, type DigestPersonal } from "@/lib/notify-emails";
 import { GROUNDING, NO_ADVICE, NUMBERS, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, insightsConfigured } from "@/lib/stock-insights";
 import { weeklyMoves, type DigestData } from "@/lib/weekly-digest";
+import { logReason, userCacheTag, userLogId } from "@/lib/user-tag";
 
 /**
  * TAKİP LİSTESİNE ÖZEL HAFTA NOTU (18 Ekim, sahibinin isteği) — pazar
@@ -98,10 +99,10 @@ export async function watchlistNote(
       },
       /* v2 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
       ["watchlist-note-v2", userId, data.thisMonday, locale],
-      { revalidate: 7 * 24 * 3600, tags: ["watchlist-note"] },
+      { revalidate: 7 * 24 * 3600, tags: ["watchlist-note", userCacheTag(userId)] },
     )();
   } catch (error) {
-    console.error(`[takip notu] ${userId}: ${error instanceof Error ? error.message : "?"}`);
+    console.error(`[takip notu] ${userLogId(userId)}: ${logReason(error)}`);
     return null;
   }
 }

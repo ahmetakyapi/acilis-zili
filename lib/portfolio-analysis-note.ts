@@ -12,6 +12,7 @@ import { GROUNDING, NO_ADVICE, NUMBERS, VOICE } from "@/lib/claude-prompt-rules"
 import { callClaude, insightsConfigured } from "@/lib/stock-insights";
 import { formatMeasure } from "@/lib/portfolio-risk";
 import { formatPercentPlain, formatPercentText } from "@/lib/utils";
+import { logReason, userCacheTag, userLogId } from "@/lib/user-tag";
 
 /**
  * CLAUDE'UN RİSK OKUMASI (24 Ekim) — /portfoy/analiz'in metin paneli.
@@ -172,11 +173,11 @@ export async function getAnalysisNote(userId: string, locale: Locale): Promise<A
       () => writeAnalysisNote(analysis, locale, memberClient(userId)),
       /* v3 (14 Kasım): istem ortak kurallara geçti; terim ilk geçtiği yerde açıklanıyor. */
       ["portfolio-analysis-note-v3", userId, analysis.input.session, analysis.fingerprint, locale],
-      { revalidate: 24 * 3600, tags: ["portfolio-analysis-note"] },
+      { revalidate: 24 * 3600, tags: ["portfolio-analysis-note", userCacheTag(userId)] },
     )();
   } catch (error) {
     failures.set(failKey, Date.now());
-    console.error(`[portföy analizi notu] ${userId}: ${error instanceof Error ? error.message : "?"}`);
+    console.error(`[portföy analizi notu] ${userLogId(userId)}: ${logReason(error)}`);
     return null;
   }
 }

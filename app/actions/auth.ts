@@ -4,6 +4,7 @@ import { randomUUID } from "node:crypto";
 import { compare, hash } from "bcryptjs";
 import { and, eq, isNull, or, sql } from "drizzle-orm";
 import { AuthError } from "next-auth";
+import { revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { after } from "next/server";
 import { z } from "zod";
@@ -18,6 +19,7 @@ import { safeRedirectTarget } from "@/lib/safe-redirect";
 import { SITE_URL } from "@/lib/site";
 import { getDictionary, getLocale } from "@/lib/i18n";
 import { normalizeUsername } from "@/lib/utils";
+import { userCacheTag } from "@/lib/user-tag";
 import {
   AUTH_WINDOW_MS,
   DELETE_ACCOUNT_LIMIT,
@@ -414,6 +416,18 @@ export async function deleteAccountAction(
      silinmiş hesabın çerezleri beş dakika daha geçerli sayılıyor, hesap
      arayüzü boş veriyle çiziliyor ve her yazma yabancı anahtarda patlıyordu. */
   forgetPasswordFingerprint(userId);
+  /* KİŞİSEL CLAUDE NOTLARI DA DÜŞER (14 Kasım güvenlik denetimi).
+     Veritabanı CASCADE ile temiz; portföyden ve takip listesinden türeyen
+     notlar ise `unstable_cache`te kalıyordu. Kişisel sonuç veren her
+     önbellek `user:<kimlik>` etiketi taşır (lib/user-tag.ts). `expire: 0`:
+     bayat kayıt servis edilmez (öteki `revalidateTag` çağrılarıyla aynı
+     biçim, app/api/cron/daily/route.ts).
+     SINIRI: Next'in dosya önbelleğinde etiket kaydı SÜRECİN belleğindedir
+     (tags-manifest); kaydın diskteki dosyası silinmez ve mavi-yeşil geçişte
+     öteki süreç bu çağrıyı görmez. Asıl koruma anahtardaki kullanıcı
+     kimliği: silinmiş hesabın kaydını soracak oturum kalmaz. Dosyalar en
+     geç 31 günde gece budamasıyla gider (deploy/cron-install.sh). */
+  revalidateTag(userCacheTag(userId), { expire: 0 });
 
   // signOut yönlendirmeyi kendi atar; buradan sonrası çalışmaz.
   await signOut({ redirectTo: "/" });

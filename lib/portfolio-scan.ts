@@ -27,6 +27,7 @@ import { formatPrice } from "@/lib/utils";
 import { GROUNDING, NO_ADVICE, NUMBERS, OWNER_VIEW, UNTRUSTED_NEWS, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, completedDailyBars, expectedLastSession, insightsConfigured, upcomingEarnings } from "@/lib/stock-insights";
 import { getTechnicalBoard } from "@/lib/technical-data";
+import { logReason, userCacheTag, userLogId } from "@/lib/user-tag";
 
 /**
  * GÜNLÜK PORTFÖY TARAMASI (10 Kasım) — eski "Portföyünün Kısa Okuması"nın
@@ -266,11 +267,11 @@ export async function getPortfolioScan(userId: string, locale: Locale): Promise<
         () => buildScan(holdings, session, locale, memberClient(userId), owner),
         /* v2 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
         ["portfolio-scan-v2", owner ? "plan" : "scan", userId, session, fingerprint, locale],
-        { revalidate: 24 * 3600, tags: ["portfolio-scan"] },
+        { revalidate: 24 * 3600, tags: ["portfolio-scan", userCacheTag(userId)] },
       )();
     } catch (error) {
       failures.set(failKey, Date.now());
-      console.error(`[portföy taraması] ${userId}: ${error instanceof Error ? error.message : "?"}`);
+      console.error(`[portföy taraması] ${userLogId(userId)}: ${logReason(error)}`);
     }
   }
   /* Metinsiz yedek: ölçüler ve işaretler yine okurun. */

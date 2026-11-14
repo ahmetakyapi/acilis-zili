@@ -27,6 +27,7 @@ import {
   watchlistFingerprint,
   type DayMove,
 } from "@/lib/watchlist-today-core";
+import { logReason, userCacheTag, userLogId } from "@/lib/user-tag";
 
 /**
  * TAKİP LİSTEM BUGÜN (24 Ekim, "sayfanın içinde Claude") — ana sayfadaki
@@ -188,13 +189,13 @@ export async function getWatchlistToday(userId: string, locale: Locale): Promise
          eski kuralla 16:00–16:20 ET arasında yarım bardan yazılan kayıt kalmasın. */
       /* v5 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
       ["watchlist-today-v5", userId, session, watchlistFingerprint(symbols), locale],
-      { revalidate: 24 * 3600, tags: ["watchlist-today"] },
+      { revalidate: 24 * 3600, tags: ["watchlist-today", userCacheTag(userId)] },
     )();
     return { ...base, note };
   } catch (error) {
     /* Pay reddi notun başarısızlığı değil (lib/claude-budget.ts): hatırlanmaz. */
     if (!(error instanceof ClaudeBudgetError)) failures.set(failKey, Date.now());
-    console.error(`[takip notu bugün] ${userId}: ${error instanceof Error ? error.message : "?"}`);
+    console.error(`[takip notu bugün] ${userLogId(userId)}: ${logReason(error)}`);
     return { ...base, note: null };
   }
 }

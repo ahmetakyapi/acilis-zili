@@ -7,7 +7,7 @@ import { z } from "zod";
 import { ungroundedNumbers } from "@/lib/ai-grounding";
 import { BILINGUAL_RULES, ruleList } from "@/lib/claude-prompt-rules";
 import { selectNews } from "@/lib/ai-analysis-core";
-import { ClaudeBudgetError, refundCall, takeCall } from "@/lib/claude-budget";
+import { ClaudeBudgetError, releaseCall, reserveCall } from "@/lib/claude-budget";
 import { claudeKey } from "@/lib/claude-key";
 import { getHolidays, getStatus, getSymbolNames, guncelBilanco } from "@/lib/data";
 import { db } from "@/lib/db";
@@ -210,7 +210,10 @@ export async function completedDailyBars(symbol: string): Promise<Bar[] | null> 
 export async function callClaude<T extends z.ZodType>(system: string, schema: T, input: string, client?: string): Promise<z.infer<T> | null> {
   const apiKey = claudeKey();
   if (!apiKey) return null;
-  takeCall(client);
+  /* Genel sayaç veritabanında (14 Kasım): hak tek deyimde alınır, makbuzu
+     iadeye gider. Veritabanı düşerse karar belleğe iner, çağrı engellenmez
+     (lib/claude-budget.ts → "KALICI SAYAÇ"). */
+  const ticket = await reserveCall(client);
   const model = insightModel();
   const anthropic = new Anthropic({ apiKey, maxRetries: 1, timeout: 60_000 });
   const response = await anthropic.beta.messages
@@ -222,14 +225,14 @@ export async function callClaude<T extends z.ZodType>(system: string, schema: T,
       output_config: { effort: "low", format: betaZodOutputFormat(schema) },
       messages: [{ role: "user", content: input }],
     })
-    .catch((error: unknown) => {
+    .catch(async (error: unknown) => {
       /* Aşırı yük ve kesinti (20 Ekim): sunucunun reddettiği istek
          ücretlenmez, hakkı da yanmasın — yoksa bir kesinti saatinde açılan
          sayfalar tavanı bitiriyor, API dönünce notlar gece yarısına dek
          kapalı kalıyordu. İki sayaç birden döner: genel tavan ve
-         istemcinin günlük payı (lib/claude-budget.ts → refundCall). Zaman
+         istemcinin günlük payı (lib/claude-budget.ts → releaseCall). Zaman
          aşımı geri verilmez: yanıt üretilmiş olabilir. */
-      if (error instanceof Anthropic.APIError && error.status !== undefined && (error.status === 429 || error.status >= 500)) refundCall(client);
+      if (error instanceof Anthropic.APIError && error.status !== undefined && (error.status === 429 || error.status >= 500)) await releaseCall(client, ticket);
       throw error;
     });
   if (response.stop_reason === "refusal") return null;

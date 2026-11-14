@@ -14,6 +14,7 @@ import type { Exposure } from "./exposure";
 import { day, num, pct, signedNum, signedPct, type Loc } from "./format";
 import { describeCondition, type ConditionLabels } from "./rules";
 import type { StoredRule } from "./store";
+import { logReason, userCacheTag, userLogId } from "@/lib/user-tag";
 
 /**
  * CLAUDE'UN MASA YORUMU (25 Ekim) — "Masayı Yorumla" düğmesi.
@@ -195,13 +196,13 @@ export async function getDeskNote(userId: string, input: string | null, session:
       () => writeNote(input, locale, memberClient(userId)),
       /* v2 (14 Kasım): istem ortak kurallara geçti; terim ilk geçtiği yerde açıklanıyor. */
       ["risk-desk-note-v2", userId, session, digest, locale],
-      { revalidate: 24 * 3600, tags: ["risk-desk-note"] },
+      { revalidate: 24 * 3600, tags: ["risk-desk-note", userCacheTag(userId)] },
     )();
     return { ok: true, note };
   } catch (error) {
     if (error instanceof ClaudeBudgetError) return { ok: false, reason: "budget" };
     failures.set(failKey, Date.now());
-    console.error(`[risk masası notu] ${userId}: ${error instanceof Error ? error.message : "?"}`);
+    console.error(`[risk masası notu] ${userLogId(userId)}: ${logReason(error)}`);
     return { ok: false, reason: "failed" };
   }
 }
