@@ -10,7 +10,7 @@
 > rota eksikti ve okuyan onu güncel sanıyordu. İki yerde tutulan bir liste er geç
 > birbirinden ayrı düşer. Rota tablosu artık yalnızca README'de.
 
-**Son güncelleme:** 2026-11-08
+**Son güncelleme:** 2026-11-14
 **Durum:** 🟢 CANLI — https://aciliszili.com
 
 ---
@@ -25,8 +25,8 @@ GitHub Actions → "Migrate DB" iş akışı, `check` modu (salt okunur).
 
 | | |
 |---|---|
-| Sayfa rotası | 87 `page.tsx` (13'ü `/admin`; açık sayfalar `/en` önekiyle ikinci bir adreste daha) |
-| API ucu | 55 `route.ts` `app/api` altında (+8 `app/` içinde: paylaşım görselleri ve RSS) |
+| Sayfa rotası | 90 `page.tsx` (13'ü `/admin`; açık sayfalar `/en` önekiyle ikinci bir adreste daha) |
+| API ucu | 61 `route.ts` `app/api` altında (+ `app/` içinde paylaşım görselleri, RSS ve `llms.txt`) |
 | Veritabanı tablosu | 59 · 45 migration (0000–0044 üretimde uygulandı, 0044: 11 Kasım) |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · TCMB EVDS (isteğe bağlı) · SEC EDGAR (13F, Form 4) · OpenFIGI · House Clerk · Federal Reserve · Kalshi · Cboe · ABD Hazinesi · ARK / Global X ETF dosyaları · GİB (`lib/providers/`) |
 | Ortam değişkeni | 38 (`.env.example`) |
@@ -47,6 +47,42 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
 
+- [ ] **14 Kasım turundan kalanlar** (denetim raporları oturumda üretildi; özet burada):
+      - **Sahibi teyit etmeli:** GitHub depo değişkeni `VPS_HOST_KEY` dolu mu
+        (boşsa SSH adımları `accept-new` ile koşuyor); e-posta adresi onaylı
+        mı (pazar postasındaki portföy karnesi artık yalnız onaylı adrese).
+      - **Sahibine sorulacak migration:** `portfolio` adet sütununa
+        `CHECK (quantity > 0)` + satışta koşullu düşüm (iki sekmeden aynı
+        anda satışta adet eksiye düşebiliyor; veri değiştiren migration).
+      - **claude.ai'de yeniden yapıştırma isteyen rutin önerileri:** Mercek
+        örneğindeki `::: grafik` künyesi Title Case ("Micron: Bugünden
+        Geriye Üç Ay"); Bilanço'da İngilizce kayıt için `sources.label`
+        çevirisi satırı ve "İngilizce kayıtta Türkçe harf taraması"
+        maddesi; Günün Grafiği ve Teknik Analist promptlarına "Dil
+        bütünlüğü" ve "Sayının kaynağı" (`content/kurallar/ortak.md`).
+      - **Canlıda bakılacak (yeni istemler gerçek modelle denenmedi):**
+        bilanço haftasındaki hissede "Yaklaşan bilançoda piyasa ne
+        bekliyor?", bilanço ertesinde tepki sorusu, ≥ %4 hareketli hissede
+        "neden %X düştü", Portföyüne Sor'da "yarısını satsam" senaryosu;
+        sunucu günlüğünde `ungrounded` / `advice-pattern` sıklığı.
+      - **Performans, sonraki tur:** `Technical.module.css` (129 kB, ana
+        sayfada %4 kullanılıyor) bileşen ailesine göre bölünmeli; `motion`
+        paketi `LazyMotion` ile kritik yoldan çıkmalı (22 dosya);
+        `/bilancolar`da manifest dışı logolar 1000×1000 PNG (435 kB); ana
+        sayfa HTML'i 1,15 MB. `cssChunking: "graph"` sayfa başına CSS'i
+        yarıya indirdi ama dosya sayısı 12–31 oldu: canlıda FCP ölçülmeli.
+      - **Güvenlik, bilinçli bırakılan:** Claude günlük bütçesi ve hız
+        sayaçları süreç belleğinde (her deploy'da sıfırlanır; kalıcı sayaç
+        kendi tablosunu ister); hesap silinince Claude notları sunucudaki
+        ortak önbellekte kalıyor (dışarıdan okunamaz).
+      - **SEO, sonraki tur:** endeks bileşenlerine yol tabanlı adres
+        (`/piyasalar/sp-500`), küratörlü karşılaştırma çiftlerine iç
+        bağlantı, makale JSON-LD'sine `image`, 104 sözlük tanımının terimle
+        başlaması, Mercek ay arşivi, IndexNow'a bilanço analizi.
+      - **Görsel, sonraki tur:** Bugünün Akışı'nda logonun piyasa değeriyle
+        orantısı (`FlowMember`a `marketCap`); akşam seansına yığılan üç
+        olayda bayrak başlığı kırpılıyor; telefonda sekiz grafik aralığı
+        düğmesi 38 piksel; "Şirket Analizi" bandı (`ClaudeCta`) sade değil.
 - [x] **Migration 0044 üretimde uygulandı (11 Kasım):** `push_preferences` (push tür tercihi) + `push_sends` (cuma portföy özeti tekrar defteri); yalnız ekleyen, Migrate DB `check` → `apply`.
 - [x] **Migration 0043 üretimde uygulandı (8 Kasım):** `price_alert_state` +
       `percent_alert_state`. Kayıtta 1 Kasım 08:01 UTC tarihli, depoda

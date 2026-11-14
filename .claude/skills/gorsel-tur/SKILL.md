@@ -111,4 +111,15 @@ gelirse ortak bileşene sen terfi ettirirsin (birleştirmeden sonra).
 - 10 Kasım: sahibinin çizim tercihleri kuralda (`arayuz.md` → "Büyüklük
   kalın yatay şeritle", ortak tablo `BoardTable`, ortak çubuk `.value-bar`).
   Yeni ekranda önce onlara bak; nokta/çentik/eksen çözdüren çizim önerme.
-
+- 14 Kasım: ortak brife "bölüm ve panel başlığı düz mürekkep" yazıldı; oysa
+  başlık degradesi sahibinin 24 Eylül kararıydı (globals.css → "KART VE
+  PANEL BAŞLIKLARI DA"). Üç ajan başlıkları düzleştirdi, iki ajan karar
+  yorumunu görüp dokunmadı; birleştirmede hepsi geri alındı. Ortak brife
+  kimlik yönü yazmadan önce o yönün dokunduğu token/kuralın karar yorumunu
+  OKU (`grep -n "sahibinin" app/globals.css`); § 2'deki "tur kararı geri
+  almaz" brifi yazan ana oturum için de geçerli.
+- 14 Kasım: sahte sağlayıcının teknik analiz satırları `swingHighs` taşımıyor;
+  birleşik hâlde `/teknik-analiz/NVDA` yerelde 500 döndü (canlı satırlarda
+  alan var). Ajan kendi yamalı kopyasıyla ölçmüştü. Ajanın sahte veri eki
+  scratchpad'de kalmasın: birleştirmede `.claude/skills/olcum/sahte-saglayici.cjs`e
+  taşı, yoksa birleşik ölçüm o ekranı göremez.

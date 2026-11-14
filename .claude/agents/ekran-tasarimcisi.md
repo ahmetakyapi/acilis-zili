@@ -8,8 +8,8 @@ ve raporun Türkçe.
 
 ## Başlamadan
 
-1. `git fetch origin main && git merge --ff-only origin/main`; brifteki
-   taban SHA'sında ya da sonrasında değilsen dur.
+1. Taban: brif bir DAL verdiyse `git fetch origin <dal> && git merge
+   --ff-only origin/<dal>`, vermediyse `origin/main`. Olmuyorsa dur.
 2. OKU: kök `CLAUDE.md`, `.claude/rules/arayuz.md`, `.claude/rules/hareket.md`,
    `.claude/rules/yazim.md`, `.claude/rules/veri-ve-onbellek.md`,
    `.claude/rules/diller.md`, `.claude/rules/kucuk-ama-kritik.md`,
@@ -21,6 +21,11 @@ ve raporun Türkçe.
    `node_modules/next/dist/docs/` altında; kod yazmadan önce oku.
 
 ## Yöntem
+
+- SAHİBİNİN KAYITLI KARARINI GERİ ALMA. Değiştireceğin şeyin yanında
+  "sahibinin isteği" diyen bir karar yorumu varsa (başlık degradesi,
+  solan tablo altı, ekran sırası) brif ne derse desin dokunma; raporda
+  "karar: dokunmadım" diye yaz. Brif ile karar çelişiyorsa karar kazanır.
 
 - Önce BAK: brifteki "önce" dilimlerini Read ile tek tek oku; ekranı
   hiyerarşi, ritim, boşluk, hiza, yoğunluk, tipografi ölçeği, boş durum,
@@ -40,6 +45,11 @@ ve raporun Türkçe.
   kendi ekranının ad alanına, iki dile birlikte ekle.
 
 ## Kanıt
+
+Sahte veriye ek gerekiyorsa scratchpad'de özel kopya bırakma: yamayı
+raporda `.claude/skills/olcum/sahte-saglayici.cjs` için ver. Ölçüm tablosu
+ortak betikle (`olcum` skill'i → `olc.mjs`, varsa); kendi betiğin yalnız
+onun ölçmediği şey için.
 
 `olcum` skill'i: sahte verili geçici rota (canlıdaki gerçek değerlere
 benzet: uzun ad, eksik alan, negatif, sıfır), 390 ve 1440 (kırılım varsa

@@ -170,11 +170,11 @@ dosyayı işe başlamadan OKUR. Kural değişince orada güncellenir.
 başlamadan), `olcum` (geçici önizleme rotasıyla görsel ölçüm),
 `gorsel-tur` (canlıyı dilimli oku → bulgu listesi → ekran başına ajan →
 yeniden ölç), `ajan-dagitimi` (paralel worktree ajanları ve birleştirme),
-`yayin` (toplu commit, `main`, Deploy izleme). **Proje ajanları**
-(`.claude/agents/`): `ekran-tasarimcisi` (tek ekranın görsel sahibi,
-ölçerek teslim eder), `gorsel-denetci` (salt okunur ölçüm). Bir tuzak
-yaşanınca ilgili skill'e tek satır ders yazılır; atıfların tazeliğini ve
-bu haritanın eksiksizliğini `tests/agentic-files.test.ts` denetler.
+`yayin` (toplu commit, `main`, Deploy izleme), `denetim` (güvenlik,
+performans, eksik, SEO: salt okunur ajanlar → düzeltme). **Proje ajanları**
+(`.claude/agents/`): `ekran-tasarimcisi` (tek ekranın görsel sahibi),
+`gorsel-denetci` (salt okunur ölçüm). Bir tuzak yaşanınca ilgili skill'e
+tek satır ders; atıfları ve bu haritayı `tests/agentic-files.test.ts` denetler.
 
 ## Yerelde
 
