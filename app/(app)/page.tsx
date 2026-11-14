@@ -61,14 +61,14 @@ export const generateMetadata = pageMetadata({
   path: "/",
   absoluteTitle: true,
   tr: {
-    title: "Açılış Zili · ABD Piyasa Takibi",
+    title: "Açılış Zili · ABD Borsası Türkiye Saatiyle, Açılışa Geri Sayım",
     description:
-      "ABD borsalarında bugün ne var: ekonomik takvim, bilanço tarihleri, haberler ve favori hisselerin, saatleriyle birlikte tek ekranda.",
+      "ABD borsası bugün açık mı, kaçta açılıyor? Türkiye saatiyle açılışa geri sayım, endeksler, bilanço ve ekonomik takvim, haberler; tek ekranda, ücretsiz.",
   },
   en: {
-    title: "Opening Bell · US Market Tracker",
+    title: "Opening Bell · US Stock Market in Türkiye Time, Countdown to the Open",
     description:
-      "What's happening in US markets today: economic calendar, earnings dates, news and your watchlist on one screen, with the times.",
+      "Is the US stock market open today, and when does it open in Istanbul time? Countdown to the bell, indices, earnings and economic calendars, news; free, on one screen.",
   },
 });
 
@@ -362,14 +362,20 @@ export default async function TodayPage() {
             255, 390'da 339, 320'de 366 piksel ölçüldü. İskelet artık başlık +
             iki satır kartı — en sık görülen günün şekli. Olay sayısı üçü
             geçen günde liste + sonuç paneli daha uzun ve ölçü tutmuyor;
-            takas bilinçli, amaç eski 600 piksellik sıçramayı kapatmak. */}
+            takas bilinçli, amaç eski 600 piksellik sıçramayı kapatmak.
+            14 KASIM: akış günün eksenine döndü (DayFlow → "GÜNÜN EKSENİ").
+            Dört olaylı gün 1440'ta 614, hafta sonu önizlemesi 489, boş gün 276;
+            390'da 860–1050 piksel (sahte veriyle ölçüldü). İskelet yeni
+            şekli taşıyor: başlık cümlesi, eksen, ayrıntı kartı (1440'ta
+            ~490, 390'da ~650 piksel). */}
         <Suspense
           fallback={
             <>
               <div className={styles.flowHeader}>{flowHeading}</div>
               <div aria-hidden className={cn("grid gap-3 pt-3.5", styles.flowSkeleton)}>
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-12 w-64 max-w-full" />
+                <Skeleton className="h-64 w-full sm:h-48" />
+                <Skeleton className="h-56 w-full sm:h-28" />
               </div>
             </>
           }
@@ -648,8 +654,11 @@ export default async function TodayPage() {
              10 KASIM GECESİ: DÜNÜN PARÇASININ SONUNDA. Yazılar geçmiş
              olayları anlatıyor ("Son Mercek Yazıları") ve telefonda bugünün
              bilançosundan, haberinden ve hareketinden önce okunuyordu.
-             Yüzeyi yine ayrışıyor: accent kenarlık ve çok soluk degrade —
-             ana sayfada degrade kullanan tek yüzey. */}
+             Yüzeyi bir dönem accent kenarlık ve çok soluk degradeyle
+             ayrışıyordu. 14 KASIM (görsel tur): KUTUSUZ AÇIK BÖLÜM — bölüm
+             başlığı, hairline, manşet ve satırlar sayfa zemininde; bloğu
+             ayıran manşetin boyu ve rakam karoları (gerekçe
+             TodayExperience.module.css → "ÜÇ KAT"). */}
         <div id="mercek-seckisi" data-home-section="stories">
           <Suspense fallback={<SpotlightSkeleton />}>
             <StoriesSpotlight locale={locale} t={t} />
@@ -683,7 +692,9 @@ export default async function TodayPage() {
              "son bilanço analizleri merceğin altında olmalı, ekranın en altı
              uygun"). Geçmiş seansların analizleri; kolonun son paneli olduğu
              için kolon dengesini de o kapatıyor (`FillColumn` yedek
-             satırları). Telefonda merceğin ardında. */}
+             satırları). Telefonda merceğin ardında.
+             14 KASIM: kutusuz açık bölüm (Mercek ve haberlerle aynı deyim);
+             sütun başlığı listenin tepesinde (LatestAnalyses). */}
         <DrawOnView id="bilanco-analizleri" data-home-section="analyses" className={styles.analyses}>
           <Suspense fallback={<PanelSkeleton rows={5} />}>
             <LatestAnalyses locale={locale} t={t} />
@@ -741,16 +752,21 @@ export default async function TodayPage() {
              artık net: BUGÜN akışta, YARIN VE SONRASI aşağıdaki "Haftaya
              Bakış"ta. Telefonda 173 piksel (390), rayda 121–241 piksel
              kısalıyor. */}
-        <Panel data-home-section="week">
+        {/* KUTUSUZ (14 Kasım, görsel tur): üç satırlık kısa liste, kutu
+            içeriğinden ağırdı. Üstte hairline, panel başlığı ölçüsünde
+            başlık, satırlar sayfa zemininde (gerekçe
+            TodayExperience.module.css → "ÜÇ KAT"). */}
+        <section data-home-section="week" className={styles.open}>
           <PanelHeader
             title={t.today.weekAhead}
             tone="title"
+            className="!px-0"
             action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
           />
           <Suspense fallback={<ListSkeleton rows={3} />}>
             <WeekAhead locale={locale} t={t} />
           </Suspense>
-        </Panel>
+        </section>
 
         {/* ---- Hisseyi Bil (24 Ekim; 25 Ekim'de buraya indi) ----
              Bir dönem seans zilinin altında, ızgaranın DIŞINDA tam genişlik
@@ -793,8 +809,11 @@ export default async function TodayPage() {
            genişlik bant (sahibinin isteği: "haberler yine altta olsun").
            Telefonda da arka plan ölçülerinin ardında, seans zilinden önce. */}
       <section data-home-section="news" data-rise-scope id="haber-akisi" className={cn(styles.news, styles.wideRow, "min-w-0")}>
-        <div className="flex items-center justify-between gap-3 border-b border-line pb-3">
-          <h2 className={styles.newsHeading}>
+        {/* Başlık satırı öteki açık bölümlerle (Mercek, analizler) AYNI
+            kalıp: üstte hairline (`.sectionHead`); tam genişlik bant olduğu için
+            başlık bölüm basamağında (`.sectionTitle`, 14 Kasım). */}
+        <div className={styles.sectionHead}>
+          <h2 className={styles.sectionTitle}>
             {t.today.topNews}
           </h2>
           <div className="flex shrink-0 items-center gap-3">

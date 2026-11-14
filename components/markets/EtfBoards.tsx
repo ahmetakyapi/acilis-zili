@@ -1,7 +1,8 @@
-import { CaretDown, CaretUp, CaretUpDown, ClockCounterClockwise } from "@phosphor-icons/react/dist/ssr";
+import { CaretDown, CaretUp, CaretUpDown, ClockCounterClockwise, Info } from "@phosphor-icons/react/dist/ssr";
 import { AnchorSettle } from "@/components/layout/AnchorSettle";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ScaleBar } from "@/components/markets/CompareScale";
+import { ZeroBar } from "@/components/markets/BoardTable";
+import { robustPeak } from "@/components/markets/index-shared";
 import { DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import { Sparkline } from "@/components/ui/Sparkline";
@@ -28,7 +29,7 @@ import {
   NO_VALUE,
 } from "@/lib/utils";
 import { heatCeiling, heatShare, sectorLeaders } from "@/lib/macro-visual";
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import styles from "./MarketBoards.module.css";
 
 /**
@@ -177,7 +178,16 @@ function ReturnCell({
         {formatPercent(value, locale)}
       </span>
       {/* Değer yoksa çubuk yok: sıfır uzunluk "hareket yok" demek olurdu. */}
-      {value !== null && <ScaleBar ratio={value / peak} signed tone="signal" className={styles.bar} />}
+      {/* 14 Kasım 2026 (görsel tur): KALIN ÇUBUK, DAYANIKLI ÖLÇEK. Çubuk 72
+          piksel tavanlı 5 piksellik ince şeritti (`ScaleBar`) ve ölçek
+          sütunun EN BÜYÜĞÜYDÜ: yılbaşından +%110 yapan tek fon (ham petrol)
+          YBB sütununda ötekileri 3–10 piksellik noktalara indiriyordu
+          (canlı, 1440). Şimdi bileşen tablosunun çubuğu (`ZeroBar`: kulvar
+          5, dolgu 8, sıfır ortada, hücrenin eni kadar) ve ölçek sütunun
+          en büyük İKİNCİSİNİN yuvarlak tavanı (`robustPeak` +
+          `heatCeiling`); aşan satır kola dayanıp ucunda kesik taşır, tavan
+          panelde yazılı ("Tam Çubuk"). */}
+      {value !== null && <ZeroBar value={value} span={peak} className={styles.returnLane} />}
     </td>
   );
 }
@@ -239,6 +249,20 @@ const LEGEND_STEPS = [
   { tone: "up", share: 0.5 },
   { tone: "up", share: 1 },
 ] as const;
+
+/** "Nasıl Okunur" katlaması — Piyasa Nabzı'nın kalıbı (`.howTo`). */
+function HowTo({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <details className={styles.howTo}>
+      <summary>
+        <Info size={15} weight="bold" aria-hidden />
+        {label}
+        <CaretDown size={13} weight="bold" aria-hidden className={styles.howToCaret} />
+      </summary>
+      <div className={styles.howToBody}>{children}</div>
+    </details>
+  );
+}
 
 function BoardStamp({
   quotes,
@@ -474,12 +498,19 @@ export function SectorPerformanceView({
               </tbody>
             </table>
           </ScrollEdges>
-          <div className={styles.notes}>
+          {/* YÖNTEM KATLI (14 Kasım 2026, görsel tur). Dört künye paragrafı
+              matrisin altında açık duruyordu: 1440'ta ~150 piksellik bir
+              metin duvarı (y≈880–1030), matrisin kendisinin dörtte biri.
+              Nabız panelinin 10 Kasım kararıyla aynı kalıp: "Nasıl Okunur"
+              katlaması (yerli `<details>`, JS'siz, yerinde açılır).
+              Metinlerin hiçbiri silinmedi; rengin anlamı lejantta zaten
+              görünür. */}
+          <HowTo label={x.pulseHowTo}>
             <p>{v.heatNote}</p>
             <p>{x.sectorsProxyNote}</p>
             <p>{x.dayNote}</p>
             <p>{x.periodNote}</p>
-          </div>
+          </HowTo>
         </>
       )}
       <BoardStamp quotes={quotes} lastDate={lastDate} locale={locale} t={t} />
@@ -526,8 +557,12 @@ export function CommodityBoardView({
   const hasData = all.some((row) => row.quote || row.returns.lastDate);
   /* Ölçek İKİ GRUBUN TOPLAMINDAN: kripto fonları emtianın birkaç katı
      oynuyor ve grup başına ölçek, IBIT'in %6'sını GLD'nin %1'iyle aynı
-     uzunlukta çizerdi. Tek ölçekte kripto satırları doğal olarak uzun. */
-  const peak = peaks(all, COMMODITY_COLUMNS);
+     uzunlukta çizerdi. Tek ölçekte kripto satırları doğal olarak uzun.
+     14 Kasım: sütunun en büyüğü değil en büyük İKİNCİSİNİN yuvarlak tavanı
+     (gerekçe `ReturnCell`). */
+  const peak = Object.fromEntries(
+    COMMODITY_COLUMNS.map((key) => [key, heatCeiling(Math.max(robustPeak(all.map((row) => valueOf(row, key))), Number.EPSILON))]),
+  ) as Record<ColumnKey, number>;
   const labels: Record<ColumnKey, { short: string; long: string }> = {
     g1: { short: x.colDay, long: x.colDayLong },
     h1: { short: x.colWeek, long: x.colWeekLong },
@@ -544,7 +579,7 @@ export function CommodityBoardView({
         </th>
       </tr>
       {rows.map((row) => (
-        <tr key={row.symbol}>
+        <tr key={row.symbol} data-draw>
           <th scope="row" className={styles.labelCell}>
             <Link href={`/hisse/${row.symbol}`} prefetch={false} className={styles.labelLink}>
               {/* Satırın adı FONUN adı: "GLD · Altın ETF". Emtianın adı
@@ -637,17 +672,27 @@ export function CommodityBoardView({
               {group(x.cryptoGroup, crypto.rows)}
             </table>
           </ScrollEdges>
-          <div className={styles.notes}>
+          {/* Görünür kalan: çubuğun ölçeği ve (varsa) son kapanış imi —
+              çizimi okumak için gereken iki şey. Yöntem paragrafları
+              katlı (gerekçe sektör panosunda, "YÖNTEM KATLI"). */}
+          <div className={styles.scaleKey}>
+            <p className={cn("numeral", styles.heatScale)}>
+              <span>{x.barScale}</span>{" "}
+              {COMMODITY_COLUMNS.map((key) => `${labels[key].short} ±${formatPercentPlain(peak[key], locale, 0)}`).join(" · ")}
+              {all.some((row) => COMMODITY_COLUMNS.some((key) => Math.abs(valueOf(row, key) ?? 0) > peak[key])) && ` · ${x.barOver}`}
+            </p>
             {all.some((row) => row.lastClose) && (
               <p className={styles.basisKey}>
                 <ClockCounterClockwise size={12} weight="bold" aria-hidden />
                 {t.market.lastClose}
               </p>
             )}
+          </div>
+          <HowTo label={x.pulseHowTo}>
             <p>{x.commoditiesNote}</p>
             <p>{x.cryptoNote}</p>
             <p>{x.dayNote}</p>
-          </div>
+          </HowTo>
         </>
       )}
       <BoardStamp

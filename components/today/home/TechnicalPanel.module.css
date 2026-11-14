@@ -1,0 +1,74 @@
+/* ANA SAYFA TEKNİK PANELİ (14 Kasım, görsel tur) — gerekçe
+   TechnicalPanel.tsx → `TechnicalPanelView`.
+
+   Ölçüm (gerçek sayfa + sahte sağlayıcı; 12 hisse + 4 bekleyen: AL 0,
+   TUT 6, SAT 6; iki tema aynı), önce → sonra:
+     · 1440 (ray 350): panel 411 → 494. Halka (112 piksel, lejantın
+       söylediğini ikinci kez söylüyordu) kalktı; karo 35 × 35 ADSIZ →
+       hücre 52 × 57 SEMBOLLÜ, satır başına 6; 7 ve 9 hisselik küme 4 + 3 /
+       5 + 4 dizilir (önizleme rotası), sarkan tek logo yok.
+     · 390: panel 317 → 494 (hücre 52 × 57); 1024 (tablet, tam genişlik):
+       472, hücre 66 × 57.
+     · < 44 piksel dokunma hedefi (390, `elementFromPoint`): 16 → 0.
+     · Çizim: şerit dilimleri `bar-fill` 700 ms (`getAnimations()`: 3),
+       hareketi azaltanda 0.
+   Panel bir KAP: hücre düzeni panelin enine göre (rayda `--cols`, tablette
+   `auto-fill`). */
+.body { display:flex; flex-direction:column; gap:14px; padding:2px 20px 16px; container:technical-home / inline-size; }
+
+/* ---- Üç sayı + kalın şerit ---- */
+.tally { display:grid; gap:10px; }
+.counts { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:12px; margin:0; }
+.counts > div { display:grid; gap:2px; min-width:0; }
+.counts dt { color:var(--text-muted); font-size:var(--text-small); font-weight:700; letter-spacing:.03em; line-height:1.3; }
+.counts > [data-verdict="buy"] dt { color:var(--up); }
+.counts > [data-verdict="hold"] dt { color:var(--verdict-hold); }
+.counts > [data-verdict="sell"] dt { color:var(--down); }
+/* Display sayı: 700, −0,03em (ortak ölçü). Pay sayının taban çizgisinde,
+   künye puntosunda. */
+.counts dd { display:flex; align-items:baseline; gap:6px; margin:0; color:var(--text-strong); font-size:28px; font-weight:700; letter-spacing:-.03em; line-height:1.05; }
+.counts dd small { color:var(--text-muted); font-size:var(--text-small); font-weight:600; letter-spacing:0; }
+/* Boş görüş yerinde durur ama susar: sütun hizası bozulmaz, "AL 0" okunur. */
+.counts > [data-empty] dt, .counts > [data-empty] dd { color:var(--text-muted); }
+/* Şerit 12 piksel: panelin kahraman çizimi (kural: satırın kahramanıysa
+   12–14). Dilimler arası 2 piksel yüzey; uçlar 999. */
+.strip { display:flex; gap:2px; height:12px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.strip > i { min-width:6px; background:var(--line-strong); transform-origin:left center; animation-delay:calc(var(--i, 0) * var(--step, 40ms)); }
+.strip > [data-verdict="buy"] { background:var(--verdict-buy); }
+.strip > [data-verdict="hold"] { background:var(--verdict-hold); }
+.strip > [data-verdict="sell"] { background:var(--verdict-sell); }
+
+/* ---- Görüş kümeleri ---- */
+.group { display:grid; gap:4px; padding-top:12px; border-top:1px solid var(--line-soft); }
+.groupHead { display:flex; align-items:center; justify-content:space-between; gap:10px; color:var(--text-muted); font-size:var(--text-small); font-weight:600; }
+.pending { display:flex; align-items:center; gap:10px; min-width:0; padding-top:12px; border-top:1px solid var(--line-soft); }
+.pendingSymbols { min-width:0; color:var(--text-muted); font-family:var(--font-mono); font-size:var(--text-small); font-weight:600; line-height:1.4; overflow-wrap:anywhere; }
+.pendingTag { flex:none; display:inline-flex; align-items:center; height:22px; padding-inline:8px; border-radius:999px; background:var(--surface-sunken); color:var(--text-muted); font-size:var(--text-small); font-weight:600; }
+/* Hücre en az 50 piksel en (rayda satır başına 6: altışar hisselik küme
+   tek satır, sarkan tek logo yok): "GOOGL" (mono 12/600 ≈ 36) ve iki
+   satırlık "Sata Döndü" sığar. Kenarlara −6: hücrenin dolgusu logoyu panelin içerik
+   hattına oturtur. */
+.cells { display:grid; grid-template-columns:repeat(var(--cols,6),minmax(0,1fr)); gap:2px; margin:0 -6px; padding:0; list-style:none; }
+.cell { display:flex; flex-direction:column; align-items:center; gap:5px; min-height:56px; padding:7px 2px 6px; border-radius:10px; text-align:center; transition:background-color 180ms var(--ease-brand); }
+.cell b { color:var(--text-strong); font-family:var(--font-mono); font-size:var(--text-small); font-weight:600; line-height:1.1; transition:color 180ms var(--ease-brand); }
+.cell small { color:var(--text-muted); font-size:var(--text-small); font-weight:600; line-height:1.15; text-wrap:balance; }
+.cell:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+.cell:active { scale:.97; }
+@media (hover:hover) and (pointer:fine) {
+  .cell:hover { background:var(--primary-tint); }
+  .cell:hover b { color:var(--primary-ink); }
+}
+
+/* ---- Yayın künyesi ---- */
+.editions { display:grid; gap:4px; margin:0; padding-top:12px; border-top:1px solid var(--line-soft); font-size:var(--text-small); line-height:1.5; }
+.editions > div { display:flex; flex-wrap:wrap; justify-content:space-between; gap:0 12px; }
+.editions dt { color:var(--text-muted); }
+.editions dd { margin:0; color:var(--text-body); font-weight:600; }
+
+/* Geniş kapta (tablet, tam genişlik) sayılar ve şerit solda dar bir blok
+   olmaz: üç sütun doğal genişliğinde, şerit tam satır. Künye tek satır. */
+@container technical-home (min-width:640px) {
+  .cells { grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); }
+  .counts { grid-template-columns:repeat(3,minmax(0,160px)); }
+  .editions { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:32px; }
+}

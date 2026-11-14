@@ -1,0 +1,110 @@
+/* Beklenti karnesi defteri (QuarterLedger.tsx; gerekçe orada). İki sütun:
+   solda özet (kaç çeyrekte aşıldı, ortalama sapma, beklenen hareket),
+   sağda çeyrek satırları. Kutu içinde kutu yok: özet sütunu saç teliyle
+   ayrılır, satırlar saç teliyle. Şeritler ortak değer çubuğu sınıflarıyla
+   (TSX'te); burada yalnız yer ve değişken.
+   ÖLÇÜM (14 Kasım, gerçek sayfa + sahte sağlayıcı, TR, açık/koyu) dosyanın
+   sonunda. */
+.ledger { display:grid; grid-template-columns:minmax(0,1fr); gap:20px; padding:0 20px 20px; min-width:0; }
+
+/* ---- Özet ---- */
+.summary { display:flex; flex-direction:column; gap:16px; min-width:0; }
+.score { display:flex; flex-direction:column; gap:6px; min-width:0; }
+/* Panelin en büyük sayısı: display sayı 700, −0,03em (ortak ölçü). */
+.scoreValue { font-size:56px; font-weight:700; letter-spacing:-.03em; line-height:1; color:var(--text-strong); }
+.scoreValue > span { font-size:28px; color:var(--text-muted); }
+.scoreLabel { font-size:13px; font-weight:600; line-height:1.35; color:var(--text-body); }
+.scoreStrip { margin-top:6px; max-width:14rem; }
+.fact { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0; padding-top:12px; border-top:1px solid var(--line-soft); }
+.fact dt { font-size:12px; font-weight:600; color:var(--text-muted); }
+.fact dd { margin:0; font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+.fact dd[data-tone="up"] { color:var(--up); }
+.fact dd[data-tone="down"] { color:var(--down); }
+.move { display:flex; flex-direction:column; gap:14px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.moveTitle { font-size:14px; font-weight:700; color:var(--text-strong); }
+.moveRow { display:flex; flex-direction:column; gap:7px; min-width:0; }
+.moveLabel { display:flex; align-items:baseline; justify-content:space-between; gap:10px; font-size:12px; font-weight:600; color:var(--text-muted); }
+.moveLabel b { font-size:15px; font-weight:700; letter-spacing:-.01em; color:var(--text-body); white-space:nowrap; }
+.moveRow[data-strong] .moveLabel b { font-size:20px; letter-spacing:-.03em; color:var(--text-strong); }
+.moveMeta { font-size:12px; line-height:1.3; color:var(--text-muted); }
+
+/* ---- Satırlar ---- */
+.main { display:flex; flex-direction:column; min-width:0; }
+.head { display:none; }
+.rows { display:flex; flex-direction:column; margin:0; padding:0; list-style:none; }
+/* Telefon ve dar kap: üç satırlık öbek (çeyrek + sapma · şerit · sayılar +
+   tepki). Tablo değil, kaymaz. */
+.row {
+  display:grid; grid-template-columns:minmax(0,1fr) max-content; grid-template-areas:"period surprise" "lane lane" "values reaction";
+  align-items:center; gap:10px 12px; padding-block:14px; border-top:1px solid var(--line-soft); min-width:0;
+}
+.row:first-child { border-top:0; padding-top:0; }
+.period { grid-area:period; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; min-width:0; }
+.periodName { font-size:14px; font-weight:700; color:var(--text-strong); white-space:nowrap; }
+.periodDate { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+.lane { grid-area:lane; --notch-out:5px; min-width:0; }
+/* Şeritler satır sırasıyla dolar; kademe adımı merdivenden, toplamı ≤ 320 ms. */
+.lane :global(.bar-fill) { animation-delay:calc(var(--i, 0) * var(--step, 40ms)); }
+.values { grid-area:values; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 8px; min-width:0; }
+.actual { font-size:15px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
+.estimate { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+.surprise { grid-area:surprise; display:inline-flex; align-items:baseline; justify-content:flex-end; gap:4px; font-size:13px; font-weight:700; color:var(--text-body); white-space:nowrap; }
+.surprise[data-tone="up"] { color:var(--up); }
+.surprise[data-tone="down"] { color:var(--down); }
+.reaction { grid-area:reaction; display:flex; align-items:center; justify-content:flex-end; gap:8px; min-width:0; }
+.reactionLabel { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+.reactionStrip { display:none; }
+.reactionValue { font-size:13px; font-weight:700; color:var(--text-body); white-space:nowrap; }
+.reactionValue[data-tone="up"] { color:var(--up); }
+.reactionValue[data-tone="down"] { color:var(--down); }
+.note { margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft); max-width:72ch; font-size:12px; line-height:1.6; color:var(--text-muted); }
+
+/* 760'tan itibaren satır TEK HAT: çeyrek · şerit · sayılar · sapma · tepki.
+   Sütunlar bütün satırlarda aynı (alt ızgara); tepki sütunu yalnız en az bir
+   satırda ölçülmüş tepki varken açılır (`data-reaction`). */
+@media(min-width:760px) {
+  .main { display:grid; grid-template-columns:max-content minmax(8rem,1fr) max-content max-content; column-gap:20px; align-content:start; }
+  .ledger[data-reaction] .main { grid-template-columns:max-content minmax(8rem,1fr) max-content max-content minmax(11rem,15rem); }
+  .head,.rows,.row { display:grid; grid-template-columns:subgrid; grid-column:1 / -1; }
+  .head { padding-bottom:8px; border-bottom:1px solid var(--line-soft); font-size:12px; font-weight:600; color:var(--text-muted); }
+  .head > span:nth-child(4) { text-align:right; }
+  .row { grid-template-areas:none; row-gap:0; padding-block:15px; }
+  .row:first-child { padding-top:15px; }
+  .period,.lane,.values,.surprise,.reaction { grid-area:auto; }
+  .period { flex-direction:column; flex-wrap:nowrap; gap:1px; }
+  .values { flex-direction:column; flex-wrap:nowrap; align-items:flex-end; gap:1px; }
+  .reaction { justify-content:flex-start; }
+  .reactionLabel { display:none; }
+  .reactionStrip { display:block; flex:1 1 0; min-width:0; }
+  .reactionValue { min-width:4.2rem; text-align:right; }
+  .note { grid-column:1 / -1; }
+}
+/* 1100'den itibaren özet solda sabit sütun, saç teliyle ayrılmış. */
+@media(min-width:1100px) {
+  .ledger { grid-template-columns:17rem minmax(0,1fr); gap:0 32px; }
+  .summary { padding-right:32px; border-right:1px solid var(--line-soft); }
+}
+/* 640–1099: özet satırların üstünde yan yana öbekler. */
+@media(min-width:640px) and (max-width:1099px) {
+  .summary { flex-direction:row; flex-wrap:wrap; align-items:flex-start; gap:16px 32px; padding-bottom:16px; border-bottom:1px solid var(--line-soft); }
+  .score { flex:0 0 13rem; }
+  .fact { flex:0 0 11rem; flex-direction:column; align-items:flex-start; gap:4px; padding-top:0; border-top:0; }
+  .move { flex:1 1 16rem; padding-top:0; border-top:0; }
+}
+@media(max-width:639px) {
+  .ledger { padding:0 16px 16px; }
+  .scoreValue { font-size:44px; }
+  .scoreValue > span { font-size:22px; }
+}
+
+/* ÖLÇÜM (14 Kasım, gerçek sayfa + sahte sağlayıcı, TR/EN, açık/koyu; NVDA
+   dört çeyrek + iki ölçülmüş tepki + beklenen hareket, HD iki kaçıran
+   çeyrek, RKLB zarar eden ve sıfırı geçen çeyrekler):
+   1440: özet sütunu 272 piksel, satır 72–73 piksel, kulvar dört satırda
+   aynı x'te (468–954; tepki sütunu yokken 468–1214); panel 401 piksel,
+   özet ile satırların dibi arasında 20 piksel. 1280: kulvar 448–814.
+   390: satır 83–98 piksel (üç satırlık öbek), kulvar 35–355, tablo yok,
+   yatay kayma yok. Sayımlar (390 ve 360): yatay taşma 0, < 12 piksel metin
+   0, < 44 hedef 0, kutudan taşan 0. Hareket: `bar-fill` satır başına bir
+   kez (`getAnimations()`: şirket sayfasında 11 şerit), `reduce` altında
+   çalışan animasyon 0. */

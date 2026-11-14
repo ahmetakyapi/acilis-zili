@@ -54,10 +54,6 @@ export async function AnalystTrendPanel({ symbol, locale, t }: { symbol: string;
   const n = trend.periods.length;
   const monthOf = (period: string) => monthName.format(new Date(`${period}T12:00:00Z`));
   const yearOf = (period: string) => monthYear.format(new Date(`${period}T12:00:00Z`));
-  /* Çizginin noktaları: sütun ortası (i + .5) / n, yükseklik al tarafının
-     payı — sütunda Güçlü Al ile Al'ın bittiği sınırın kendisi. */
-  const points = trend.buyShare.map((share, i) => (share === null ? null : { x: ((i + 0.5) / n) * 100, y: share }));
-  const drawn = points.filter((p): p is { x: number; y: number } => p !== null);
 
   return (
     <Panel className={styles.panel}>
@@ -66,101 +62,72 @@ export async function AnalystTrendPanel({ symbol, locale, t }: { symbol: string;
         {/* TEPEDE TEK CÜMLE (25 Ekim): grafiğin söylediği, veriden. Sayılar
             çizginin üstündeki etiketlerle aynı yuvarlama (`buyShareShift`). */}
         {sentence && <p className={visuals.shiftSentence}>{sentence}</p>}
-        {/* %100 YIĞILI SÜTUNLAR (25 Ekim). 39 sayılık tablo dört ayın
-            dağılımını okutmak için her hücreyi tek tek karşılaştırtıyordu;
-            sütun aynı ayı bir şekil olarak gösteriyor ve yeşil kütlenin boyu
-            al tarafının payı. Çizgi o sınırın aydan aya yolu. Tablo silinmedi,
-            aşağıda katlı: sayıyı arayan bir dokunuşla buluyor. Sütun odakta
-            ve dokunuşta o ayın beş sayısını açıyor. */}
-        <figure
-          className={visuals.stackWrap}
-          style={{ "--n": n, marginTop: sentence ? 12 : 4 } as CSSProperties}
-          aria-label={v.stackLabel}
-        >
-          <div className={visuals.stackShares} aria-hidden>
-            {trend.buyShare.map((share, i) => (
-              <span key={trend.periods[i]} className="numeral">
-                {share === null ? "–" : formatPercentPlain(share, locale, 0)}
-              </span>
-            ))}
-          </div>
-          <div className={visuals.stackPlot}>
+        {/* AY BAŞINA YATAY %100 ŞERİT (14 Kasım 2026, görsel tur). 25 Ekim'de
+            39 sayılık tablonun yerine dört YIĞILI SÜTUN gelmişti; canlıda
+            sütunlar neredeyse özdeş çıktı (NVDA: %94 / %94 / %96 / %96) ve
+            150 piksellik çizim alanı iki puanlık farkı okutamıyordu, üstüne
+            binen kesik "Al Tarafı Payı" çizgisi de düz bir hat. Aynı veri
+            şimdi alt alta dört yatay şerit (12 piksel, sitenin kalın şerit
+            dili): yeşil kütlenin bittiği yer al tarafının payı, aylar tek
+            eksende olduğu için sınırın kayması bir basamak olarak okunuyor;
+            pay sağda yazıyla. Değişimin asıl taşıyıcısı kovaların kendi
+            sayısı: lejant son ayın sayısını ve dönem başına göre farkı
+            (renksiz, gerekçe yukarıda) birlikte basıyor. Çizim alanı 132
+            piksellik sütunlardan dört satıra (4 × 28) indi; tablo katlamada
+            duruyor. */}
+        <figure className={visuals.shareWrap} style={{ marginTop: sentence ? 12 : 4 } as CSSProperties} aria-label={v.stackLabel}>
+          <ol className={visuals.shareRows}>
             {trend.periods.map((period, i) => {
               const total = trend.totals[i]!;
-              let start = 0;
-              const share = trend.buyShare[i];
+              const share = trend.buyShare[i] ?? null;
               const label = v.columnAria
                 .replace("{month}", `${monthOf(period)} ${yearOf(period)}`)
                 .replace("{n}", String(total))
                 .replace("{share}", share === null ? "–" : String(Math.round(share)));
               return (
-                <div key={period} className={visuals.stackCol} tabIndex={0} role="img" aria-label={label}>
-                  <span className={visuals.stackBar} data-motion-draw="bar" style={{ transformOrigin: "center bottom" }} aria-hidden>
+                <li key={period} role="img" aria-label={label} data-last={i === n - 1 || undefined}>
+                  <span className={visuals.shareMonth} aria-hidden>
+                    {monthOf(period)} <b>{yearOf(period)}</b>
+                  </span>
+                  <span className={cn(visuals.shareStrip, "bar-fill")} data-draw="" aria-hidden>
                     {ANALYST_BUCKETS.map((bucket) => {
                       const value = trend.rows.find((row) => row.bucket === bucket)!.values[i]!;
-                      const len = total > 0 ? (value / total) * 100 : 0;
-                      const top = start;
-                      start += len;
-                      /* Dilimler mutlak konumda: sınırlar tam payında, 2 px
-                         kart zemini aralık her dilimden yarımşar kesiliyor —
-                         çizgi Güçlü Al + Al sınırına piksel piksel oturuyor. */
-                      return len > 0 ? (
-                        <i
-                          key={bucket}
-                          style={{
-                            position: "absolute",
-                            insetInline: 0,
-                            top: `calc(${top}% + 1px)`,
-                            height: `max(1px, calc(${len}% - 2px))`,
-                            background: BUCKET_INK[bucket],
-                          }}
-                        />
-                      ) : null;
+                      return value > 0 ? <i key={bucket} style={{ flexGrow: value, background: BUCKET_INK[bucket] }} /> : null;
                     })}
                   </span>
-                  <span className={visuals.stackTip} aria-hidden>
-                    <b>
-                      {monthOf(period)} {yearOf(period)} · {v.analysts.replace("{n}", String(total))}
-                    </b>
-                    {trend.rows.map((row) => (
-                      <span key={row.bucket}>
-                        <em>
-                          <i style={{ background: BUCKET_INK[row.bucket] }} />
-                          {labels[row.bucket]}
-                        </em>
-                        <span className="numeral">{row.values[i]}</span>
-                      </span>
-                    ))}
+                  <span className={cn("numeral", visuals.shareValue)} aria-hidden>
+                    {share === null ? "–" : formatPercentPlain(share, locale, 0)}
                   </span>
-                </div>
+                  <span className={cn("numeral", visuals.shareTotal)} aria-hidden>
+                    {v.analysts.replace("{n}", String(total))}
+                  </span>
+                </li>
               );
             })}
-            {drawn.length > 1 && (
-              <svg className={cn(visuals.stackLine, "spark-line")} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-                <polyline className={visuals.stackLineHalo} points={drawn.map((p) => `${p.x},${p.y}`).join(" ")} />
-                <polyline className={visuals.stackLineInk} points={drawn.map((p) => `${p.x},${p.y}`).join(" ")} />
-              </svg>
-            )}
-            {drawn.map((p) => (
-              <i key={p.x} aria-hidden className={cn(visuals.stackPoint, "spark-dot")} style={{ left: `${p.x}%`, top: `${p.y}%` }} />
-            ))}
-          </div>
-          <div className={visuals.stackMonths} aria-hidden>
-            {trend.periods.map((period) => (
-              <span key={period}>
-                {monthOf(period)} <b>{yearOf(period)}</b>
-              </span>
-            ))}
-          </div>
-          <figcaption className={visuals.stackLegend}>
-            <span>
-              <i className={visuals.stackLegendLine} aria-hidden />
-              {v.lineLabel}
+          </ol>
+          {/* KOVA KOVA "ÖNCE → SONRA" (14 Kasım 2026). Lejant yalnız son ayın
+              sayısını basıyordu; değişimin kendisi ("Tut 4 → 2") katlı
+              tablodaydı. Beş kova, dönemin ilk ve son ayı, renksiz fark:
+              panelin başlığındaki soruya ("nasıl değişti") açık cevap.
+              Şeritlerin lejantı da bu liste (renk karosu aynı). */}
+          <figcaption className={visuals.bucketList}>
+            <span className={visuals.bucketHead} aria-hidden>
+              <span />
+              <span className="numeral">{monthOf(trend.periods[0]!)} {yearOf(trend.periods[0]!)}</span>
+              <span />
+              <span className="numeral">{monthOf(trend.periods[n - 1]!)} {yearOf(trend.periods[n - 1]!)}</span>
+              <span>{d.atChangeShort}</span>
             </span>
             {trend.rows.map((row) => (
-              <span key={row.bucket}>
-                <i aria-hidden style={{ background: BUCKET_INK[row.bucket] }} />
-                {labels[row.bucket]} <b className="numeral">{row.values.at(-1)}</b>
+              <span key={row.bucket} className={visuals.bucketRow} data-changed={row.delta !== 0 || undefined}>
+                <span className={visuals.bucketName}>
+                  <i aria-hidden style={{ background: BUCKET_INK[row.bucket] }} />
+                  {labels[row.bucket]}
+                </span>
+                <span className="numeral">{row.values[0]}</span>
+                <span aria-hidden className={visuals.bucketArrow}>→</span>
+                <b className="numeral">{row.values.at(-1)}</b>
+                <em className="numeral">{signed(row.delta)}</em>
               </span>
             ))}
           </figcaption>

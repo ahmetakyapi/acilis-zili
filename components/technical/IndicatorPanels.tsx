@@ -223,6 +223,17 @@ function MacdPanel({ snapshot, locale, t }: { snapshot: TechnicalSnapshot; local
       <div className={styles.indicatorBody}>
         {macd ? (
           <>
+            {/* KARTIN SAYISI (14 Kasım 2026, görsel tur). Altı kartın beşi bir
+                display okumayla açılıyor (RSI 26,0; hacim 3,8×; ATR 9,86 $),
+                MACD ise üç ince şeritti ve kartın dibinde ~70 piksel boş
+                zemin kalıyordu (1440, ölçüldü: şeritlerin dibi ile künye
+                arası 74 piksel). Boşluk esnetilmedi, dolduruldu: kartın
+                etiketini ("Sinyalin Altında") belirleyen sayı, histogram,
+                öteki kartlarla aynı `bigFigure` ölçüsünde. Yeni veri yok. */}
+            <p className={styles.bigFigure}>
+              {formatPrice(macd.histogram, locale, { digits: 2 })}
+              <span className="ml-2 text-small font-semibold text-muted">{t.technicalVisuals.macdGap}</span>
+            </p>
             <dl className={styles.rows}>
               {([
                 [t.technical.macdLine, macd.macd],

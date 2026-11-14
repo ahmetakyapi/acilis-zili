@@ -1,0 +1,304 @@
+/* GÜNÜN EKSENİ — gerekçe `FlowAxis.tsx` başında (14 Kasım 2026).
+
+   TEK DOM, İKİ DÜZEN. Taban kurallar DAR düzeni çizer (telefon, tablet:
+   dikey zaman şeridi + üstte küçük harita); `@container flow (min-width:
+   880px)` aynı öğeleri GENİŞ düzene dizer (yatay eksen, bayraklar, altta
+   ayrıntı kartı). Kırılım kabın eninden: panelin içi 1024'lük ekranda ~930,
+   768'de ~690 piksel (ölçüm dosyanın sonunda).
+
+   Dil kahramandaki zil şeridinin (SessionRail.module.css): 8 piksellik
+   oluk, uçlar yuvarlak, ön/akşam seansı çukur ton, asıl seans mavinin
+   %30'u, geçen kısım düz mavi (ön ve akşam seansında yarı ton). Derinlik
+   tonla; gölge, cam, ışıma yok. Renk anlam taşır: mavi "şimdi" ve seçim,
+   yeşil/kırmızı yalnız sonucun yönü. Metin tabanı 12 piksel. */
+
+/* SIKI YOĞUNLUKTA EŞİK 220 PİKSEL YUKARIDA. Dörtten çok katlı gün tek
+   satırlık bayraklarla çizilir; bayrağın eni eksenin %14'ü olduğundan 880
+   piksellik kapta başlığa ~50 piksel kalıyordu (ölçüldü). Kap sorgusu
+   değişken almadığı için kabın kendisi 220 piksel dar ölçtürülür, eksen
+   eksi payla tam enine döner: sıkı eksen ancak 1100 pikselde yataya geçer. */
+.gauge { container:flow / inline-size; min-width:0; }
+.gauge[data-density="compact"] { margin-right:220px; }
+.gauge[data-density="compact"] > .axis { margin-right:-220px; }
+.axis { position:relative; min-width:0; }
+
+/* ---- Çizim katmanı: dar düzende küçük harita ----
+   12 piksellik nokta şeridi, 8 piksellik oluk, saat çentikleri, uç saatler.
+   Olaylar olukta değil ÜSTÜNDE birer nokta (boyu önemden): oluğun mavisi
+   noktayı yutmasın. */
+.decor { position:relative; height:52px; margin:12px 0 6px; }
+.track { position:absolute; inset:16px 0 auto; height:8px; overflow:hidden; border-radius:4px; background:var(--surface-sunken); animation:axis-draw var(--draw,700ms) var(--ease-brand) backwards; }
+.band { position:absolute; inset-block:0; overflow:hidden; }
+.band[data-band="regular"] { background:color-mix(in srgb, var(--primary) 30%, transparent); }
+/* İlerleme `scaleX` ile (globals `.bar-fill`: kaynak solda, bir kez dolar);
+   dakikalık adım 600 ms'lik geçişle, yerleşim oynamadan. */
+.elapsed { position:absolute; inset:0; background:var(--primary); transition:transform 600ms var(--ease-brand); }
+.band:not([data-band="regular"]) > .elapsed { opacity:.5; }
+.bell { position:absolute; top:12px; width:2px; height:16px; margin-left:-1px; border-radius:1px; background:var(--text-strong); }
+.hour { position:absolute; top:27px; width:1px; height:3px; margin-left:-.5px; background:var(--line-strong); }
+.hour[data-major] { height:6px; background:var(--text-muted); }
+/* Ayak noktası: olayın eksendeki yeri. Boy önemden (10 / 8 / 6); sonucu
+   gelen dolu, gelecek olan çerçeveli. */
+.foot { position:absolute; top:6px; width:8px; height:8px; border:2px solid var(--text-strong); border-radius:50%; background:var(--premium-surface); translate:-50% -50%; animation:axis-pop var(--mark,200ms) var(--ease-brand) 420ms backwards; }
+.foot[data-imp="high"] { width:10px; height:10px; }
+.foot[data-imp="low"] { width:6px; height:6px; border-width:1.5px; border-color:var(--text-muted); }
+.foot[data-done] { background:var(--text-strong); }
+.foot[data-imp="low"][data-done] { background:var(--text-muted); }
+.foot[data-open] { border-color:var(--primary); background:var(--primary); }
+.stem, .window { display:none; }
+/* "Şimdi": dar düzende olukta bir nokta (künyesi listedeki "Şimdi" satırında). */
+.now { position:absolute; inset:0; pointer-events:none; }
+.now > b { display:none; }
+.now > i { position:absolute; left:var(--now); top:20px; width:10px; height:10px; border-radius:50%; background:var(--primary); box-shadow:0 0 0 2px var(--premium-surface); translate:-50% -50%; transition:left 600ms var(--ease-brand); }
+/* NABIZ VERİYLE ATAR (SessionRail'in kuralı): halka dakikada bir, "şimdi"
+   ilerlediğinde BİR kez nefes alır; sürekli döngü yok. İki eş keyframes,
+   `data-beat` 0/1 arasında dönerken animasyonu yeniden tetikler. */
+.now > i::after { content:""; position:absolute; inset:-4px; border:1px solid var(--primary); border-radius:50%; opacity:0; }
+.now[data-beat="0"] > i::after { animation:axis-beat-a 2.4s var(--ease-brand) .6s 1; }
+.now[data-beat="1"] > i::after { animation:axis-beat-b 2.4s var(--ease-brand) .6s 1; }
+.scale { position:absolute; inset:36px 0 auto; height:16px; color:var(--text-muted); font-size:12px; font-weight:500; line-height:16px; white-space:nowrap; }
+.edge { position:absolute; top:0; }
+.edge[data-at="start"] { left:0; }
+.edge[data-at="end"] { right:0; }
+.edge[data-at="open"], .edge[data-at="close"] { translate:-50% 0; color:var(--text-body); font-weight:600; }
+.edge > em { display:none; font-style:normal; }
+.bandName { display:none; }
+
+/* ---- Dar düzen: dikey zaman şeridi ----
+   Sütunlar: OMURGA (44) | içerik | ok. Omurga çizgisi her satırın arkasında
+   iki yarım (`::before` imin üstü, `::after` altı): geçmiş yarılar dolu,
+   gelecek yarılar kesikli; gün çizginin kendisinde ikiye bölünür. */
+.events { --rail:44px; --c:24px; position:relative; margin:0; padding:0; list-style:none; }
+.events > li { position:relative; min-width:0; }
+.events > li::before, .events > li::after { content:""; position:absolute; left:calc(var(--rail) / 2 - 1px); width:2px; background:repeating-linear-gradient(to bottom, var(--line) 0 4px, transparent 4px 8px); }
+.events > li::before { top:0; height:var(--c); }
+.events > li::after { top:var(--c); bottom:0; }
+.events > li:first-child::before, .events > li:last-child::after { display:none; }
+.events > li[data-past]::before, .events > li[data-past]::after { background:var(--line-strong); }
+.trayLabel { display:none; }
+
+.item { border-radius:16px; transition:background-color 180ms var(--ease-brand); }
+.item[data-open] { background:var(--surface-sunken); }
+.flag { display:grid; width:100%; min-width:0; min-height:48px; grid-template-columns:var(--rail) auto minmax(0,1fr) 20px; align-items:start; padding:10px 10px 10px 0; border-radius:16px; color:var(--text-body); text-align:left; cursor:pointer; transition:background-color 180ms var(--ease-brand); }
+.flag:hover { background:var(--primary-tint); }
+.item[data-open] > .flag:hover { background:transparent; }
+.flag:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+
+/* İM: TÜR BİÇİMDE, ÖNEM BOY VE DOLGUDA, SONUÇ ROZETTE. Veri olayı daire:
+   yüksek önemli olan dolu mürekkep ve büyük, orta gömülü tonda, düşük küçük
+   ve yalnız çerçeve. Bilanço şirketin logosu (köşeli karo, çerçevesiz:
+   görsel kutunun kendisi); çok şirketli pencerede en büyük şirketin logosu
+   ve "+N". Zemin opak: omurga imin içinden görünmesin. */
+.marker { --m:28px; grid-column:1; grid-row:1 / span 3; position:relative; z-index:1; display:grid; place-items:center; justify-self:center; width:var(--m); height:var(--m); margin-top:calc(14px - var(--m) / 2); border:1px solid var(--line-strong); border-radius:50%; background:linear-gradient(var(--surface-sunken), var(--surface-sunken)) var(--premium-surface); color:var(--text-body); }
+.marker[data-imp="high"] { --m:32px; border-color:var(--text-strong); background:var(--text-strong); color:var(--premium-surface); }
+.marker[data-imp="low"] { --m:24px; border-color:var(--line-strong); background:var(--premium-surface); color:var(--text-body); }
+.marker[data-logo] { --m:28px; border:0; border-radius:8px; background:var(--premium-surface); }
+.markerLogo { width:var(--m); height:var(--m); border-radius:8px; }
+.marker > small { position:absolute; top:-7px; right:-10px; min-width:18px; padding:0 4px; border-radius:999px; background:var(--text-strong); color:var(--premium-surface); font-size:12px; font-weight:700; line-height:16px; text-align:center; }
+.badge { position:absolute; right:-5px; bottom:-5px; display:grid; place-items:center; width:15px; height:15px; border:2px solid var(--premium-surface); border-radius:50%; background:var(--flat); color:var(--on-primary); }
+.badge[data-dir="above"] { background:var(--up); }
+.badge[data-dir="below"] { background:var(--down); }
+/* Sıradaki olay: mavi halka (etkileşim rengi "buraya bak" der, yön değil). */
+.item[data-lead] .marker { outline:2px solid var(--primary); outline-offset:2px; }
+.item[data-past]:not([data-lead]) .marker:not([data-logo]):not([data-imp="high"]) { color:var(--text-muted); }
+
+.when { grid-column:2; grid-row:1; display:flex; align-items:baseline; gap:4px; padding-left:4px; color:var(--text-strong); white-space:nowrap; }
+.when > b { font-size:14px; font-weight:700; line-height:18px; letter-spacing:-.02em; }
+.when > small { color:var(--text-muted); font-size:12px; font-weight:500; }
+.when > .noTime { font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-body); }
+.figure { display:none; }
+.kind { grid-column:3; grid-row:1; display:flex; align-items:center; justify-content:flex-end; gap:8px; min-width:0; padding-left:10px; color:var(--text-muted); font-size:12px; line-height:18px; white-space:nowrap; }
+.kind > em { min-width:0; overflow:hidden; font-style:normal; text-overflow:ellipsis; }
+/* Önem çubukları (üç yükselen çubuk, takvimin `ImpactDots` anlamı). */
+.imp { display:inline-flex; flex:none; align-items:flex-end; gap:2px; height:12px; }
+.imp > i { width:3px; border-radius:1px; background:var(--line); }
+.imp > i:nth-of-type(1) { height:6px; }
+.imp > i:nth-of-type(2) { height:9px; }
+.imp > i:nth-of-type(3) { height:12px; }
+.imp[data-imp="high"] > i { background:var(--impact-high); }
+.imp[data-imp="medium"] > i:nth-of-type(-n+2) { background:var(--impact-med, var(--text-body)); }
+.imp[data-imp="low"] > i:nth-of-type(1) { background:var(--impact-low, var(--text-muted)); }
+.state { flex:none; color:var(--primary-ink); font-weight:600; }
+.title { grid-column:2 / span 2; grid-row:2; margin-top:2px; padding-left:4px; color:var(--text-strong); font-size:15px; font-weight:600; line-height:20px; letter-spacing:-.01em; overflow-wrap:anywhere; text-wrap:pretty; }
+.item[data-past]:not([data-open]) .title { color:var(--text-body); }
+.result { grid-column:2 / span 2; grid-row:3; display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:6px; padding-left:4px; }
+.value { display:flex; align-items:baseline; gap:6px; white-space:nowrap; }
+.value > small { color:var(--text-muted); font-size:12px; }
+.value > b { color:var(--text-strong); font-size:16px; font-weight:700; line-height:22px; letter-spacing:-.03em; }
+.value[data-pending] > b { color:var(--text-soft); font-size:15px; font-weight:600; }
+/* SAPMA HAPI: renk yalnız yön, hep okla ve sözle birlikte (yüksek çıkmanın
+   iyi mi kötü mü olduğu veriye göre değişir; renk yargı değil yön söyler). */
+.pill { display:inline-flex; align-items:center; gap:5px; min-height:24px; padding:0 10px 0 8px; border-radius:999px; background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
+.pill[data-dir="above"] { background:var(--up-wash); color:var(--up); }
+.pill[data-dir="below"] { background:var(--down-wash); color:var(--down); }
+/* Açık satırda özet sonuç basılmaz: aynı sayılar hemen altındaki kartta
+   (390'da "Beklenti %3,75–4,00" alt alta iki kez okunuyordu). */
+.item[data-open] .result { display:none; }
+.caret { grid-column:4; grid-row:1 / span 2; justify-self:end; margin-top:10px; color:var(--text-muted); transition:transform 280ms var(--ease-brand), color 180ms var(--ease-brand); }
+.item[data-open] .caret { transform:rotate(180deg); color:var(--primary-ink); }
+.detail { min-width:0; padding:2px 12px 12px calc(var(--rail) + 4px); }
+/* Kartın başlığı: dar düzende yalnız künye (ad satırda yazılı). */
+.detailHead > strong { display:none; }
+.detailHead > p { display:flex; flex-wrap:wrap; align-items:center; gap:2px 12px; margin:0 0 6px; color:var(--text-muted); font-size:12px; line-height:18px; }
+.detailHead > p > span:first-child { display:none; }
+.impTag { display:inline-flex; align-items:center; gap:6px; }
+.state[data-status="released"], .state[data-status="analyzed"], .state[data-status="held"], .state[data-status="scheduled"] { color:var(--text-body); }
+
+/* Zil satırı: seansın dönüm noktası olayların arasında. Omurgada yatay bir
+   çentik (eksendeki zil çentiğinin dikey şeritteki karşılığı). */
+.bellRow, .nowRow { display:flex; align-items:center; min-height:32px; --c:16px; }
+.bellText, .nowText { display:flex; align-items:baseline; gap:8px; margin-left:calc(var(--rail) + 4px); font-size:12px; line-height:16px; white-space:nowrap; }
+.bellText { color:var(--text-muted); }
+.bellText > small { font-size:12px; }
+.bellText > b { color:var(--text-body); font-weight:600; }
+.bellText > span { color:var(--text-body); font-weight:600; }
+.bellRow > .bellText::before { content:""; position:absolute; left:calc(var(--rail) / 2 - 8px); top:15px; width:16px; height:2px; border-radius:1px; background:var(--text-strong); }
+.nowText { flex:1; align-items:center; padding-right:10px; color:var(--primary-ink); font-weight:700; }
+.nowText > b { font-weight:700; }
+.nowText::before { content:""; position:absolute; left:calc(var(--rail) / 2 - 5px); top:11px; z-index:1; width:10px; height:10px; border-radius:50%; background:var(--primary); outline:4px solid var(--primary-wash); }
+.nowText::after { content:""; flex:1; height:1px; background:var(--primary-faint); }
+.events > .nowRow::before { background:var(--line-strong); }
+
+@keyframes axis-draw { from { clip-path:inset(0 100% 0 0 round 4px); } to { clip-path:inset(0 0 0 0 round 4px); } }
+@keyframes axis-pop { from { scale:0; } }
+@keyframes axis-rise { from { transform:scaleY(0); } }
+@keyframes axis-beat-a { from { transform:scale(.6); opacity:.7; } 80%, to { transform:scale(1.6); opacity:0; } }
+@keyframes axis-beat-b { from { transform:scale(.6); opacity:.7; } 80%, to { transform:scale(1.6); opacity:0; } }
+
+/* ============ GENİŞ DÜZEN: yatay eksen ============
+   Yukarıdan aşağı: "şimdi" künyesinin şeridi (--lane) · bayrak katları
+   (--rows × --row-h) · oluk · saat çentikleri · bant adları ve zil saatleri.
+   Bayrak direğin sağına açılır (sağ uçta soluna), eni eksenin %14'ü; kat
+   numarası ve yer satır içi değişkenlerden (--at, --r; lib/flow-axis.ts). */
+@container flow (min-width:880px) {
+  .axis { --row-h:56px; --lane:30px; --track-y:calc(var(--lane) + var(--rows) * var(--row-h) + 8px); --axis-h:calc(var(--track-y) + 50px); }
+  .axis[data-density="compact"] { --row-h:36px; }
+  .decor { position:absolute; inset:0 0 auto; height:var(--axis-h); margin:0; }
+  .track { inset:var(--track-y) 0 auto; }
+  .bell { top:calc(var(--track-y) - 5px); height:18px; }
+  .hour { top:calc(var(--track-y) + 11px); }
+  .foot { top:calc(var(--track-y) + 4px); }
+  .foot[data-done] { border-color:var(--premium-surface); box-shadow:0 0 0 1px var(--text-strong); }
+  .foot[data-imp="low"][data-done] { box-shadow:0 0 0 1px var(--text-muted); }
+  .foot[data-open] { border-color:var(--premium-surface); box-shadow:0 0 0 1px var(--primary); }
+  /* Direk: kümenin en üst katından oluğa. Geçmiş dolu, gelecek bir ton
+     açık; saati yaklaşık olan kesikli. Aşağıdan yukarı bir kez yükselir. */
+  .stem { display:block; position:absolute; top:calc(var(--lane) + (var(--rows) - 1 - var(--top)) * var(--row-h)); width:2px; height:calc((var(--top) + 1) * var(--row-h) + 8px); margin-left:-1px; border-radius:1px; background:var(--line-strong); transform-origin:center bottom; animation:axis-rise var(--draw,700ms) var(--ease-brand) 200ms backwards; }
+  .stem[data-past] { background:var(--text-muted); }
+  .stem[data-approx] { background:repeating-linear-gradient(to bottom, var(--text-muted) 0 4px, transparent 4px 8px); }
+  .stem[data-open] { background:var(--primary); }
+  /* Yaklaşık saatli bilançonun penceresi: bandı boyunca kesikli iz. */
+  .window { display:block; position:absolute; top:calc(var(--track-y) - 4px); height:1px; background:repeating-linear-gradient(to right, var(--text-muted) 0 4px, transparent 4px 9px); opacity:.6; }
+  /* "Şimdi": künye en üstte, ince çizgi bayrakların ARKASINDAN oluğa iner
+     (bayrak zemini opak), ucu oluktaki nabızlı nokta. Künye kenara
+     yaklaşınca içeride kalır; çizgi gerçek yerinde. */
+  .now::before { content:""; position:absolute; left:var(--now); top:22px; width:1px; height:calc(var(--track-y) - 18px); margin-left:-.5px; background:var(--primary); opacity:.55; }
+  .now > b { display:block; position:absolute; left:clamp(42px, var(--now), calc(100% - 42px)); top:0; padding:0 8px; border-radius:999px; background:var(--primary); color:var(--on-primary); font-size:12px; font-weight:700; line-height:22px; white-space:nowrap; translate:-50% 0; }
+  .now > i { top:calc(var(--track-y) + 4px); }
+  .scale { inset:calc(var(--track-y) + 24px) 0 auto; }
+  .edge > em { display:inline; }
+  .bandName { display:block; position:absolute; top:0; translate:-50% 0; }
+
+  .events { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; padding-top:var(--axis-h); position:static; }
+  .events > li { position:static; display:contents; }
+  .events > li::before, .events > li::after { display:none; }
+  /* Zil satırları geniş düzende eksenin kendisinde; söz ekran okuyucuda kalır. */
+  .bellText { position:absolute; width:1px; height:1px; margin:0; overflow:hidden; clip-path:inset(50%); }
+  .bellRow > .bellText::before { display:none; }
+  .nowRow { display:none !important; }
+
+  .flag { position:absolute; left:calc(var(--at) + 1px); top:calc(var(--lane) + (var(--rows) - 1 - var(--r)) * var(--row-h)); z-index:1; grid-template-columns:auto minmax(0,1fr); grid-template-rows:20px 20px; align-content:center; column-gap:9px; width:max-content; min-width:calc(var(--flag-w) - 2px); max-width:calc(var(--room) - 10px); height:calc(var(--row-h) - 4px); min-height:0; padding:0 6px 0 8px; border-radius:0 10px 10px 0; background:var(--premium-surface); }
+  .item[data-flip] > .flag { left:auto; right:calc(100% - var(--at) + 1px); border-radius:10px 0 0 10px; }
+  .flag:hover { background:linear-gradient(var(--primary-tint), var(--primary-tint)) var(--premium-surface); }
+  .item[data-open] > .flag, .item[data-open] > .flag:hover { background:linear-gradient(var(--primary-wash), var(--primary-wash)) var(--premium-surface); }
+  .flag:focus-visible { z-index:2; }
+  .marker { --m:30px; grid-column:1; grid-row:1 / span 2; align-self:center; justify-self:center; margin-top:0; }
+  .marker[data-imp="high"] { --m:34px; }
+  .marker[data-imp="low"] { --m:24px; }
+  .marker[data-logo] { --m:32px; }
+  /* İmler boyları farklı da olsa aynı düşey hatta: sütun en büyük imin eni. */
+  .axis:not([data-density="compact"]) .flag { grid-template-columns:34px minmax(0,1fr); }
+  .when { grid-column:2; grid-row:1; padding-left:0; min-width:0; }
+  .when > b { font-size:15px; line-height:20px; }
+  /* Sonuç bayrağın saat satırında: değer, yönü renginde. */
+  .figure { display:block; min-width:0; margin-left:6px; overflow:hidden; color:var(--text-body); font-size:12px; font-weight:700; text-overflow:ellipsis; }
+  .figure[data-dir="above"] { color:var(--up); }
+  .figure[data-dir="below"] { color:var(--down); }
+  .title { grid-column:2; grid-row:2; margin-top:0; padding-left:0; overflow:hidden; font-size:13px; line-height:20px; text-overflow:ellipsis; white-space:nowrap; }
+  .item[data-open] .title { color:var(--primary-ink); }
+  .kind, .result { position:absolute; width:1px; height:1px; margin:0; padding:0; overflow:hidden; clip-path:inset(50%); }
+  .caret { display:none; }
+
+  /* SIKI BAYRAK: tek satır (im · saat · başlık). Aynı direkteki sonraki
+     bayraklar saati yinelemez (üstteki söylüyor; ekran okuyucuda kalır). */
+  .axis[data-density="compact"] .flag { grid-template-columns:auto auto minmax(0,1fr); grid-template-rows:auto; align-items:center; column-gap:6px; padding:0 4px 0 6px; }
+  .axis[data-density="compact"] .marker { --m:20px; grid-row:1; }
+  .axis[data-density="compact"] .marker[data-imp="high"] { --m:22px; }
+  .axis[data-density="compact"] .marker[data-imp="low"] { --m:18px; }
+  .axis[data-density="compact"] .marker[data-logo] { --m:22px; border-radius:6px; }
+  .axis[data-density="compact"] .markerLogo { border-radius:6px; }
+  .axis[data-density="compact"] .marker > svg { width:12px; height:12px; }
+  .axis[data-density="compact"] .marker > small { display:none; }
+  /* Sıkı imde rozet imin KENDİSİ olur: 20 piksellik dairenin köşesine binen
+     13 piksellik rozet ikonu örtüyordu (ölçüldü, on üç olaylı gün). Sonucu
+     gelen veri, yönü renginde dolu bir daire ve ok; logoda rozet köşede kalır. */
+  .axis[data-density="compact"] .marker:not([data-logo]) > .badge { inset:-1px; width:auto; height:auto; border:0; }
+  .axis[data-density="compact"] .marker[data-logo] > .badge { right:-5px; bottom:-5px; width:13px; height:13px; }
+  .axis[data-density="compact"] .when { grid-column:2; grid-row:1; }
+  .axis[data-density="compact"] .when > small, .axis[data-density="compact"] .figure { display:none; }
+  .axis[data-density="compact"] .title { grid-column:3; grid-row:1; }
+  .axis[data-density="compact"] .item[data-follow] .when { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .axis[data-density="compact"] .item[data-follow] .title { grid-column:2 / span 2; }
+
+  /* SAATİ BİLİNMEYENLER TEPSİDE: eksende yeri yok, altında yan yana. */
+  .trayLabel { display:contents; }
+  .trayLabel > span { order:1; color:var(--text-muted); font-size:12px; font-weight:600; }
+  .item[data-loose] > .flag { position:relative; left:auto; top:auto; order:2; width:auto; max-width:280px; border:1px solid var(--line); border-radius:10px; padding:0 10px 0 8px; }
+  .item[data-loose] .when { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); }
+  .item[data-loose] .title { grid-row:1 / span 2; align-self:center; }
+
+  /* AYRINTI KARTI eksenin altında, tam en. Tepesindeki 3 piksellik şerit
+     durumu söyler (yerleşik dil): sonucun yönü, sonucu beklenen mavi,
+     planlı nötr. */
+  .detail { order:3; flex:1 1 100%; margin-top:4px; padding:14px 18px 14px; border-top:3px solid var(--line-strong); border-radius:4px 4px 16px 16px; background:var(--surface-sunken); }
+  .detail[data-dir="above"] { border-top-color:var(--up); }
+  .detail[data-dir="below"] { border-top-color:var(--down); }
+  .detail[data-dir="due"] { border-top-color:var(--primary); }
+  .item[data-open] { background:none; }
+  .detailHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 20px; margin-bottom:8px; }
+  .detailHead > strong { display:block; color:var(--text-strong); font-size:17px; font-weight:700; line-height:24px; letter-spacing:-.015em; }
+  .detailHead > p { margin:0; }
+  .detailHead > p > span:first-child { display:inline; }
+}
+
+/* İnce imleç yokken (dokunmatik tablet, yatay) sıkı bayrak 36 piksel
+   kalmasın: katlar 48'e çıkar. */
+@container flow (min-width:880px) {
+  @media (pointer:coarse) {
+    .axis[data-density="compact"] { --row-h:48px; }
+  }
+}
+
+@media (prefers-reduced-motion:reduce) {
+  .axis *, .axis *::before, .axis *::after { animation:none !important; transition:none !important; }
+}
+
+/* ÖLÇÜM (14 Kasım 2026; sahte verili önizleme + sahte sağlayıcıyla gerçek
+   `/`; 1440 / 1024 / 768 / 390 / 360, iki tema, TR ve EN; on bir senaryo:
+   olağan gün ×3 "şimdi" (ön seans, seans, akşam), on üç olaylı zirve günü,
+   tek saate beş olay, tek olay, boş gün, hafta sonu ve tatil önizlemesi,
+   yarım gün, akşam seansına yığılan gün; 165 görüntü):
+   - yatay taşma 0; panel dışına taşan metin 0; 12 pikselin altında metin 0;
+   - eksen etiketleri, bant adları, "şimdi" künyesi ve bayraklar arasında
+     kutu kesişimi 0 (bayrak sayısı 1–13);
+   - < 768'de 44 pikselin altında dokunma hedefi 0 (`elementFromPoint`),
+     geniş düzende en küçük bayrak 32 (sıkı), kaba imleçte 44;
+   - kap eni: 1440'ta 1270, 1024'te 926 (yatay; sıkı yoğunlukta dikey),
+     768'de 670, 390'da 330 (dikey);
+   - hareket: açılışta eksen başına oluk 1 + dolgu 3 + direk ve ayak başına
+     1'er + nabız 1 animasyon (dört olaylı günde 11), hepsi `transform` /
+     `clip-path` / `scale`, 1,5 sn sonra çalışan yalnız tek atımlık nabız,
+     sonsuz döngü 0; `reducedMotion: "reduce"` altında animasyon 0.
+   - panel boyu, dört olaylı gün: 1440'ta ~450 (satır listesi) → 614;
+     390'da ~700 → 858–1046 (açık olaya göre). Boş gün 1440'ta 208 → 276
+     (eksenle), hafta sonu önizlemesi 480 → 489. */

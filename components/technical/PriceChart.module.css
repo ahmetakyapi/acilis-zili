@@ -1,0 +1,102 @@
+/* Teknik analiz kapağının fiyat grafiği (14 Kasım 2026). Gerekçe
+   `PriceChart.tsx` başında. ORTAK ÖLÇÜLER (.claude/rules/arayuz.md): grafik
+   çizgisi 2 piksel, metin tabanı 12, ağırlıklar 400/600/700, renk yalnız
+   anlamdan (yön, etkileşim mavisi bölgede), gölge ve çerçeve yok.
+
+   ÜÇ SÜTUN: çizim (esnek) | bağ kanalı (16) | etiket sütunu (`--label-w`).
+   Yükseklik sabit: etiket payı (`LABEL_GAP`, 20/260) en kısa çizime göre
+   hesaplandığı için çizim 260'ın altına inmez.
+   Ölçüm (NVDA sekiz, AAPL yedi, TSLA beş etiket; 1440/1024/768/390/360,
+   iki tema): 768 ve üstünde çizim 340 piksel, komşu etiketler arası en az
+   boşluk 8,2 piksel (adım 26); 390 ve 360'ta 260 piksel, boşluk 2 (adım
+   20); çakışan etiket 0, kesilen etiket metni 0. Çizim genişliği 1440'ta
+   1.114, 390'da 188, 360'ta 158 piksel. */
+.chart { --label-w:132px; --plot-h:340px; display:grid; gap:8px; min-width:0; margin:0; }
+.frame { position:relative; display:grid; grid-template-columns:minmax(0,1fr) 16px var(--label-w); height:var(--plot-h); min-width:0; }
+.plot { position:relative; min-width:0; border-radius:10px; background:
+  linear-gradient(var(--line-soft),var(--line-soft)) 0 0 / 100% 1px no-repeat,
+  linear-gradient(var(--line-soft),var(--line-soft)) 0 100% / 100% 1px no-repeat; }
+
+/* ---- Seviyeler ---- */
+.level { position:absolute; left:0; right:0; height:0; border-top:1px dashed var(--line-strong); }
+.level[data-tone="target"] { border-top:1px solid var(--up); }
+.level[data-tone="sellLevel"] { border-top:1px solid var(--down); }
+.level[data-tone="stop"] { border-top:1.5px solid var(--down); }
+/* Bölge bir aralık, seviye değil: bant. Mavi sitenin etkileşim mavisi DEĞİL
+   burada "alan" tonu (`--primary-wash`); liste kartı rayı ve Tek Harita ile
+   aynı bant dili. */
+.band { position:absolute; left:0; right:0; border-block:1px solid color-mix(in srgb, var(--primary) 45%, transparent); background:var(--primary-wash); }
+/* Stopun altı: çizginin hemen altında 10 piksellik soluk düşüş şeridi.
+   İlk hâli stopdan çizimin dibine kadar yıkamaydı; yükselen bir hissede
+   (AAPL: altı ay önce 250, stop 344) geçmişin TAMAMI pembeye boyanıyor ve
+   grafik "her yer tehlike" diye okunuyordu (14 Kasım, kendi önizlemem).
+   Şerit yalnız çizginin hangi yanının "plan geçersiz" olduğunu söylüyor. */
+.void { position:absolute; left:0; right:0; height:10px; background:linear-gradient(color-mix(in srgb, var(--down-wash) 90%, transparent), transparent); }
+
+/* ---- Çizgiler ---- */
+.svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
+.svg path { fill:none; stroke:var(--text-muted); stroke-width:1.25; stroke-linejoin:round; stroke-linecap:round; vector-effect:non-scaling-stroke; }
+.svg path[data-price] { stroke:var(--text-strong); stroke-width:2; }
+.svg path[data-window="50"] { stroke-dasharray:5 3; }
+.svg path[data-window="200"] { stroke-dasharray:1.5 3.5; stroke-width:1.75; }
+.dot { position:absolute; right:-5px; width:10px; height:10px; margin-top:-5px; border:2px solid var(--premium-surface, var(--surface-solid)); border-radius:999px; background:var(--text-strong); box-sizing:border-box; }
+
+/* ---- Bağ kanalı ve etiketler ---- */
+.leaders { width:100%; height:100%; overflow:visible; }
+.leaders line { stroke:var(--line-strong); stroke-width:1; vector-effect:non-scaling-stroke; }
+.leaders line[data-tone="price"] { stroke:var(--text-strong); stroke-width:1.5; }
+.leaders line[data-tone="target"] { stroke:var(--up); }
+.leaders line:is([data-tone="stop"],[data-tone="sellLevel"]) { stroke:var(--down); }
+.leaders line[data-tone="entry"] { stroke:var(--primary); }
+.labels { position:relative; min-width:0; margin:0; padding:0; list-style:none; }
+.labels li { position:absolute; left:0; right:0; display:flex; align-items:baseline; justify-content:space-between; gap:6px; height:16px; margin-top:-8px; padding-left:6px; font-size:12px; line-height:16px; white-space:nowrap; }
+.labels li > span { min-width:0; overflow:hidden; text-overflow:ellipsis; font-weight:600; color:var(--text-muted); }
+.labels li > b { flex:none; font-weight:700; color:var(--text-strong); }
+.labels li[data-tone="target"] > span { color:var(--up); }
+.labels li:is([data-tone="stop"],[data-tone="sellLevel"]) > span { color:var(--down); }
+.labels li[data-tone="entry"] > span { color:var(--primary-ink); }
+/* Fiyat etiketi dolu çip: sütundaki tek "şimdi". Adı (Son Fiyat / Güncel
+   Fiyat) başlıkta büyük puntoyla yazılı; burada yalnız sayı sığar. */
+.labels li[data-tone="price"] { height:20px; margin-top:-10px; padding:0 7px; border-radius:6px; background:var(--text-strong); line-height:20px; }
+/* Çipin yazısı sayfa zemininin tonu (`--page-bg`, iki temada opak).
+   `--surface-solid` koyu temada yarı saydam beyaz: çip beyaz üstüne beyaz
+   basıyordu (14 Kasım, koyu tema önizlemesi). */
+.labels li[data-tone="price"] > span { font-weight:600; color:color-mix(in srgb, var(--page-bg) 78%, transparent); }
+.labels li[data-tone="price"] > b { color:var(--page-bg); }
+
+/* ---- Ay ekseni ve künye ---- */
+.months { position:relative; height:16px; margin-right:calc(var(--label-w) + 16px); font-size:12px; line-height:16px; color:var(--text-muted); }
+.months > span { position:absolute; top:0; padding-left:6px; border-left:1px solid var(--line-strong); white-space:nowrap; }
+.caption { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 16px; padding-top:10px; border-top:1px solid var(--line-soft); font-size:12px; line-height:1.4; color:var(--text-muted); }
+.legend { display:flex; flex-wrap:wrap; gap:2px 14px; color:var(--text-body); }
+.legend > span { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
+.legend > span::before { content:""; width:18px; border-top:1.25px solid var(--text-muted); }
+.legend > span[data-price]::before { border-top:2px solid var(--text-strong); }
+.legend > span[data-window="50"]::before { border-top-style:dashed; }
+.legend > span[data-window="200"]::before { border-top:2px dotted var(--text-muted); }
+.note { min-width:0; text-wrap:pretty; }
+
+/* ---- Okuma katmanı (istemci) ---- */
+.scrub { position:absolute; inset:0; touch-action:pan-y; cursor:crosshair; }
+.scrubLine { position:absolute; top:0; bottom:0; width:0; border-left:1px solid var(--text-muted); pointer-events:none; }
+.scrubDot { position:absolute; width:8px; height:8px; margin:-4px 0 0 -4px; border-radius:999px; background:var(--text-strong); box-shadow:0 0 0 2px var(--premium-surface, var(--surface-solid)); pointer-events:none; }
+.scrubRead { position:absolute; top:6px; display:inline-flex; align-items:baseline; gap:8px; padding:3px 8px; border:1px solid var(--line); border-radius:8px; background:var(--surface-solid); font-size:12px; line-height:18px; color:var(--text-body); white-space:nowrap; pointer-events:none; }
+.scrubRead[data-side="end"] { right:6px; }
+.scrubRead[data-side="start"] { left:6px; }
+.scrubRead > b { font-weight:700; color:var(--text-strong); }
+
+@media (max-width:767px) {
+  .chart { --label-w:112px; --plot-h:260px; }
+  .labels li { padding-left:4px; gap:4px; }
+  /* 112 piksellik sütunda iki etiket sığmıyor (390, ölçüldü): bölgenin
+     aralığı ("353,07-356,22", 78 piksel) adını "B…" diye kesiyordu, dört
+     haneli fiyatta çipin adı da kesiliyordu. Bölge yalnız adıyla (bandı
+     çizimde, sayıları hemen alttaki plan panelinde), çip yalnız sayıyla. */
+  .labels li[data-tone="entry"] > b { display:none; }
+  .labels li[data-tone="price"] { justify-content:flex-end; }
+  .labels li[data-tone="price"] > span { display:none; }
+  .note { flex-basis:100%; }
+}
+/* 360'ta çizim 158 piksel: altı ay etiketi 26'şar piksele düşüp birbirine
+   değiyordu (etiket 28). Dar ekranda iki ayda bir. */
+@media (max-width:479px) { .months > span:nth-child(even) { display:none; } }

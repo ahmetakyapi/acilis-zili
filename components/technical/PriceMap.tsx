@@ -8,7 +8,8 @@ import styles from "./Technical.module.css";
  * Dikey, fiyata orantılı `PriceMap` bileşeni teknik sayfada `PriceLadder`
  * ile değiştirilmişti ve hiçbir yerden çağrılmıyordu. Dosyada yalnız hâlâ
  * kullanılan iki parça kaldı: seviye notları (`PriceMapNotes`) ve geçilmiş
- * seviyenin anlamı (`crossedState`, PriceLadder okuyor). Haritanın ölçek
+ * seviyenin anlamı (`crossedState`; 14 Kasım'dan beri `LevelList` okuyor,
+ * PriceLadder o gün kalktı). Haritanın ölçek
  * dersleri (asgari ayrım ile kutu bütçesinin ayrı sayılar olması, notların
  * haritanın içinde çakışması) git geçmişinde: d17648d8 öncesi bu dosya.
  */

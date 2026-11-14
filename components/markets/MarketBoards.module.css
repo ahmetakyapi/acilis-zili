@@ -324,3 +324,106 @@
    0 · 390 196 → 0 · 1280 (yan yana) 24 → 0. Telefonda sektör: Sektör · 1G
    · 1A · YBB (karo 61–83 piksel); emtia: Fon · Fiyat · 1G · 1A (etiket 108;
    iki satıra inen tek ad "Ham Petrol ETF", satırı 55 → 71). Hücresinden taşan öğe 0. */
+
+/* ==========================================================================
+   14 Kasım 2026 — görsel tur, "Zil Defteri". Karar kayıtları:
+   SentimentPulse.tsx ("BEŞ GÖSTERGE, BEŞ SATIR"), EtfBoards.tsx ("KALIN
+   ÇUBUK, DAYANIKLI ÖLÇEK", "YÖNTEM KATLI"). Ölçümler dosyanın sonunda.
+   ========================================================================== */
+
+
+/* ---- Nabız (tam sürüm): kadran + beş satır ----
+   Önce (1440, canlı): kadran 260, göstergeler 2 sütun; beşinci tek, sağı
+   ~470 piksel boş. Sonra: kadran 300, sağda tek sütun beş satır; satır üç
+   kolon (ad · ray + ham okuma · puan). */
+.pulseFull .pulseList { grid-template-columns:minmax(0,1fr); }
+.pulseFull .pulseList > li { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:8px 16px; padding-block:12px; }
+.pulseFull .pulseList > li:first-child { border-top:0; }
+.pulseFull .pulseRowHead { display:contents; }
+.pulseFull .pulseName { grid-column:1; grid-row:1; }
+.pulseFull .pulseRowHead b { grid-column:2; grid-row:1; min-width:2.2ch; font-size:22px; line-height:1; text-align:right; }
+.pulseFull .scoreTrack { grid-column:1 / -1; grid-row:2; --lane-h:5px; }
+.pulseFull .pulseRaw { grid-column:1 / -1; grid-row:3; }
+/* Kalın dolgu: kulvar 5, dolgu 8 (kulvarı 1,5'er piksel aşar), opak; uçtaki
+   nokta bu sürümde yok. */
+.pulseFull .scoreTrack i { top:-1.5px; bottom:-1.5px; border-radius:0 999px 999px 0; background:var(--up); }
+.pulseFull .scoreTrack i[data-side="down"] { border-radius:999px 0 0 999px; background:var(--down); }
+.pulseFull .scoreTrack::after { top:-5px; bottom:-5px; z-index:1; }
+.pulseFull .scoreDot { display:none; }
+@media(min-width:900px) {
+  .pulseFull .pulseBody { grid-template-columns:minmax(240px,320px) minmax(0,1fr); gap:36px; align-items:center; padding-bottom:16px; }
+  .pulseFull .gauge { max-width:300px; }
+  .pulseFull .gaugeReading strong { font-size:48px; letter-spacing:-.03em; }
+  .pulseFull .gaugeReading { margin-top:-46px; }
+  .pulseFull .gaugeNote { max-width:220px; }
+  /* Satır tek kat: ad solda (sabit kolon), ray ortada, puan sağda; ham
+     okuma rayın altında. Beş rayın sıfırı ve ortası alt alta aynı hatta. */
+  .pulseFull .pulseList > li { grid-template-columns:minmax(200px,260px) minmax(0,1fr) max-content; grid-template-rows:auto auto; gap:6px 24px; padding-block:13px; }
+  .pulseFull .pulseName { grid-column:1; grid-row:1 / 3; align-self:center; }
+  .pulseFull .scoreTrack { grid-column:2; grid-row:1; align-self:end; margin-top:6px; }
+  .pulseFull .pulseRaw { grid-column:2; grid-row:2; }
+  /* Puan kolonu üç rakam eninde sabit ("100" de sığar): beş ray aynı yerde biter. */
+  .pulseFull .pulseRowHead b { grid-column:3; grid-row:1 / 3; align-self:center; min-width:3ch; font-size:26px; letter-spacing:-.03em; }
+}
+
+/* ---- Emtia: kalın sıfır ortalı çubuk (BoardTable `ZeroBar`) ---- */
+.returnLane { margin-top:8px; margin-left:auto; --lane-w:100%; min-width:56px; max-width:120px; }
+@media(min-width:640px) { .tableCompact .valueCell { min-width:76px; } }
+/* Telefonda taban yok: 360'ta dört sütun kaba sığmalı (ilk ölçüm: 76 + 56
+   tabanıyla içerik kaptan 14 piksel taşıyordu). */
+@media(max-width:639px) { .returnLane { min-width:44px; } }
+.scaleKey { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 16px; padding:10px 16px; border-top:1px solid var(--line-soft); }
+.scaleKey .heatScale { white-space:normal; }
+@media(min-width:640px) { .scaleKey { padding-inline:20px; } }
+
+/* ---- Yan yana iki pano: dipleri aynı hatta. Künye paragrafları katlamaya
+   girdi (`.howTo`); kısa panoda fark artık katlamanın ÜSTÜNE düşer (eski
+   kural `.notes`i itiyordu). ---- */
+@media(min-width:1200px) {
+  /* Kolon oranı 1,25 : 1 → 1,1 : 1 ve YBB çizgisi %22 → %18: emtia panosunun
+     çubuk kulvarı 58 → ~76 piksel (1440); sektör karosu 97 → 88. */
+  .boards { grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); }
+  .tableCompact .trendCell, .tableCompact .trendHead { width:18%; }
+  .boards > .board > .howTo { margin-top:auto; }
+  .boards > .board > .scaleKey + .howTo { margin-top:0; }
+}
+
+/* ---- Sektör panosu: cümle üstte, lejant ve yazılı ölçek altında tek satır.
+   Kolon daralınca (1,1 : 1) lejant sağa yaslı bloğuyla cümlenin altına
+   düşüp ortada asılı kalıyordu (1440, ölçüldü: x=201). ---- */
+.heatHead { flex-direction:column; align-items:stretch; gap:8px; }
+.heatLead { flex:none; max-width:72ch; }
+.heatKey { flex-direction:row; flex-wrap:wrap; align-items:center; gap:4px 18px; }
+.heatScale { white-space:normal; }
+
+/* ---- Telefonda sektör adı SÖZCÜK ORTASINDAN bölünmez. Etiket kolonu
+   `width:1%` + `overflow-wrap:anywhere` ile en dar hâline çöküyor (karolar
+   fazlayı alıyordu) ve adlar "Hamma / dde", "Gayrime / nkul", "Teknolo /
+   ji" diye kırılıyordu (390, canlı). Kolon artık otomatik: taban 90 piksel
+   (16 dolgu + 74 ad; en uzun tek TR sözcük "Gayrimenkul" 12/600 ≈ 72),
+   fazla genişlikten payını alır (390'da iki sözcüklü ad tek satıra sığar).
+   Taban 360'ın hesabından: üç karo son kapanış imiyle 3 × 71 + aralar 6 +
+   sağ dolgu 12 = 231; kap 322 − 231 = 91. Daha uzun tek sözcük (EN
+   "Communication") son çare olarak heceden kırılır. ---- */
+@media(max-width:639px) {
+  .heatTable .labelCell { width:auto; min-width:90px; }
+  .heatTable .labelName { min-width:74px; max-width:none; font-size:12px; overflow-wrap:anywhere; hyphens:auto; }
+}
+
+/* ÖLÇÜM — 14 Kasım 2026 (gerçek sayfa + sahte sağlayıcı; kapalı, açılış
+   öncesi, seans içi; TR/EN; iki tema). Önce = canlı 6b07e84.
+   - Nabız (1440): panel 520 → 492; kadran 260 → 300; beş satır tek sütun
+     (922 × 61–78), beş rayın solu ve eni aynı (x=721, 565 piksel); önce
+     beşinci göstergenin sağında ~470 piksel boş. 1024: ray 221. 390: satır
+     320 × 97.
+   - Sektör + Emtia (1440): iki panonun dibi aynı pikselde (6478 / 6478;
+     1280: 6518 / 6518). Künye duvarı (sektör 4, emtia 3 paragraf, ~150 /
+     ~110 piksel) "Nasıl Okunur" katlamasında (44 piksel).
+   - Emtia çubukları: önce 72 piksel tavanlı 5 piksellik şerit, YBB'de
+     3–10 piksel; sonra kulvar 66–71 (1440), 110–117 (1024), 76–82 (768),
+     dolgu 8 piksel; sahte veride kol başına 3–33 piksel, ölçeği aşan satır
+     kesik uçlu.
+   - Telefon: sektör adı sözcük ortasından bölünmüyor (390 ve 360, TR; önce
+     üç ad bölünüyordu). Kaplar 0 / 0 / 0 (360 EN dahil; ilk ölçümlerde
+     emtia 14, sektör EN 15 piksel taşıyordu).
+   - Panel başlıkları: 16/700, düz mürekkep (önce degrade). */

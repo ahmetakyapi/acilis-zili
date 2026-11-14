@@ -331,7 +331,16 @@ export function SentimentPulseView({
   }
 
   return (
-    <Panel id="piyasa-nabzi" className={styles.pulsePanel}>
+    /* BEŞ GÖSTERGE, BEŞ SATIR (14 Kasım 2026, görsel tur). Göstergeler iki
+       sütunlu ızgaradaydı: beşincisi tek kalıyor, sağında ~470 piksel boş
+       duruyordu (1440, canlı) ve kadran solda 260 piksellik küçük bir
+       çizimdi. Şimdi kadran solda büyük (300), göstergeler sağda TEK sütun;
+       her satır üç kolon: ad + ne ölçtüğü · ray + ham okuma · puan. Beş
+       rayın sıfırı, ortası ve ucu alt alta aynı hatta: beş puan tek bir
+       dikey okuma. Ray kalın (kulvar 5, dolgu 8), uçtaki nokta bu sürümde
+       yok ("düğmeli im kullanılmaz"; puanın yeri çubuğun ucu). Düzen
+       yalnız bu sürümde (`.pulseFull`); ana sayfanın kompakt özeti aynen. */
+    <Panel id="piyasa-nabzi" className={cn(styles.pulsePanel, styles.pulseFull)}>
       <PanelHeader title={x.pulseTitle} meta={x.pulseScale} />
       <p className={styles.pulseLead}>{x.pulseLead}</p>
       <div className={styles.pulseBody}>

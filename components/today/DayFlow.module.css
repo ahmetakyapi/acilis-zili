@@ -11,6 +11,12 @@
    bilerek silindi — iki düzenin kuralları er geç ayrı düşüyordu (bu dosyanın
    kendi "İKİYE BÖLÜNMÜŞTÜ" dersi).
 
+   EKSENE GEÇİŞ (14 Kasım, sahibinin isteği: "görselliği öne çıkaracak
+   gerçekten iyi bir tasarım"). Satır çizelgesi günün eksenine döndü; çizimi
+   `flow/FlowAxis.module.css`te. Bu dosyada künye şeridi, başlık cümlesi
+   (`.lead`), ayrıntı kartının içeriği (şirket satırları, üç değer + sapma
+   çizgisi) ve boş durumlar kaldı.
+
    TABULAR FİGÜR KALDIRILDI — ve bu bir hata düzeltmesiydi. Dosya altı yerde
    `tabular-nums` yazıyordu; Schibsted Grotesk'te bu ayar
    virgülü ve iki noktayı da rakam genişliğine çekiyor, yani ekranda
@@ -91,186 +97,66 @@
 .connection[data-state="error"] .connectionDot { background:var(--text-muted); box-shadow:none; }
 .spinner { animation:flow-spin 1.2s linear infinite; }
 
-/* ---- Omurga ----
-   Çizgi her satırın arkasında, düğüm sütununun ortasında; ilk satırda
-   düğümden başlar, son satırda düğümde biter. Ölçüler değişkende ki telefon
-   kırılımı tek yerden daraltsın.
+/* ---- Başlık cümlesi ----
+   "Sıradaki · Ekim TÜFE Verisi" solda, kalan süre sağda ve PANELİN EN
+   BÜYÜK PUNTOSU (display sayı 700, −0,03em): okurun sorusu "şimdi ne
+   olacak, ne kadar var". Birim ekleri sayıdan küçük (kahramandaki sayacın
+   dili). Sıradaki yoksa aynı yerde olayın saati. Cümlenin tamamı bir buton:
+   basınca o olayın ayrıntısı açılır (başka bir olaya bakan okur geri döner). */
+.lead { display:flex; width:100%; min-width:0; align-items:flex-end; justify-content:space-between; gap:12px 28px; padding:16px 0 4px; border-radius:12px; text-align:left; color:var(--text-body); cursor:pointer; }
+.leadText { display:flex; min-width:0; flex-direction:column; gap:2px; }
+.leadLabel { color:var(--text-muted); font-size:12px; font-weight:600; line-height:18px; }
+.lead[data-kind="next"] .leadLabel, .lead[data-kind="live"] .leadLabel, .lead[data-kind="awaiting"] .leadLabel { color:var(--primary-ink); }
+.lead strong { color:var(--text-strong); font-size:clamp(17px,1.5vw,20px); font-weight:600; line-height:1.3; letter-spacing:-.015em; overflow-wrap:anywhere; text-wrap:balance; transition:color 180ms var(--ease-brand); }
+.lead:hover strong { color:var(--primary-ink); }
+.leadFigure { display:flex; flex:none; flex-direction:column; align-items:flex-end; gap:1px; }
+.leadDigits { display:flex; align-items:baseline; gap:8px; white-space:nowrap; }
+.leadDigits > span { display:inline-flex; align-items:baseline; gap:3px; }
+.leadDigits b { color:var(--text-strong); font-size:clamp(30px,3.1vw,42px); font-weight:700; line-height:1; letter-spacing:-.03em; }
+.leadDigits small { color:var(--text-muted); font-size:14px; font-weight:600; }
+.leadFigure > em { color:var(--text-muted); font-size:12px; font-style:normal; font-weight:500; line-height:18px; white-space:nowrap; }
+/* GENİŞTE SAYI ÖNDE, CÜMLE YANINDA (14 Kasım, ikinci tur). İlk taslakta
+   başlık solda, sayı panelin sağ ucundaydı: 1440'ta aralarında ~950 piksel
+   boşluk, göz ikisini tek cümle olarak okumuyordu (ölçüldü: başlık 25–243,
+   sayı 1228–1295). Şimdi sayı solda, kıl çizgiyle ayrılmış cümle hemen
+   yanında: "1 sa 30 dk | Sıradaki · Ekim TÜFE Verisi". Telefonda başlık solda
+   sayı sağda kalır (satır 330 piksel, ikisi yan yana tek bakış). */
+@media (min-width:768px) {
+  .lead { justify-content:flex-start; align-items:center; gap:22px; }
+  .leadFigure { order:-1; align-items:flex-start; min-width:96px; padding-right:22px; border-right:1px solid var(--line); }
+}
 
-   SÜTUNLAR: SAAT | OMURGA | İÇERİK (6 Kasım, sahibinin isteği: "kolay
-   okuyup anlasın"). Düğüm saatin solundaydı; okuma "01 → saat → başlık"
-   sırasıyla numaradan başlıyordu ve numara bilgi taşımıyordu. Şimdi saat
-   en solda sağa yaslı bir sütun, omurga saat ile başlığın arasında: klasik
-   çizelge okuması "ne zaman · ne". Satır başına iki yarım çizgi var
-   (`::before` düğümün üstü, `::after` altı): GEÇMİŞ yarılar dolu
-   (`--line-strong`), GELECEK yarılar kesikli (`--line` kesikleri) — gün
-   çizginin kendisinde ikiye bölünür, "şimdi" işareti bölündüğü yerde durur.
-   `--node-c` düğümün merkezinin satır tepesine uzaklığı; başlığın ilk
-   satırı, saat ve düğüm bu hatta ortalı (ölçüm aşağıda, satır başı). */
-.timeline { --time:84px; --rail:44px; --node:30px; --node-c:19px; --rail-x:calc(var(--time) + var(--rail) / 2 - 1px); position:relative; margin:4px 0 0; padding:0; list-style:none; }
-.timeline > li { position:relative; min-width:0; }
-.timeline > li::before, .timeline > li::after { content:""; position:absolute; left:var(--rail-x); width:2px; background:repeating-linear-gradient(to bottom, var(--line) 0 4px, transparent 4px 8px); }
-.timeline > li::before { top:0; height:var(--node-c); }
-.timeline > li::after { top:var(--node-c); bottom:0; }
-.timeline > li:first-child::before, .timeline > li:last-child::after { display:none; }
-/* Geçmiş satırın omurgası dolu ve bir ton koyu: günün dolan kısmı çizgide
-   de okunur (kahramandaki rayla aynı fikir, yargısız). */
-.tlRow[data-past]::before, .tlRow[data-past]::after { background:var(--line-strong); }
+/* ---- Satır çizelgesinden eksene (14 Kasım) ----
+   Bu dosya 15 Ekim – 10 Kasım arasında satır çizelgesini çiziyordu (omurga,
+   düğüm, saat sütunu, sonuç sütunu, "şimdi" satırı, yerinde açılan gövde).
+   Çizim `flow/FlowAxis.module.css`e taşındı; o turların kararları orada
+   yaşıyor ve gerekçeleri şunlar:
+   - SAAT | OMURGA | İÇERİK okuması, geçmiş yarı dolu / gelecek yarı kesikli
+     omurga (6 Kasım, sahibinin isteği: "kolay okuyup anlasın").
+   - SATIRIN TAMAMI TEK BUTON; açık satır gömülü tonda bir kart, satırlar
+     arası kıl çizgi yok (21 Ekim ve 6 Kasım: kıl çizgi listeyi "tablo" gibi
+     gösteriyordu).
+   - İM TÜRÜ BİÇİMİYLE AYIRIR: veri daire, bilanço köşeli karo ve şirketin
+     logosu (10 Kasım); zemin opak (koyu temada omurga imin içinden
+     görünüyordu). Numaralı düğüm bilgi taşımıyordu (6 Kasım).
+   - SAPMA HAPI: renk yalnız yön, hep okla ve sözle (yüksek çıkmanın iyi mi
+     kötü mü olduğu veriye göre değişir).
+   - Açıklanmamış sonucun beklentisi bir TAHMİN: aynı yerde ama sönük.
+   - "Şimdi" büyük harfe çevrilmez (`text-transform:uppercase` Türkçede
+     "i → I" üretir); ayrım renk ve aralıkta.
+   - Rozetin zemin halkası görselin çerçevesi değil, iki öğenin ayracı
+     ("görselin etrafında çerçeve yok" kuralının bilinen istisnası).
+   Kalkanlar: kapalı satırdaki 72 piksellik küçük sapma çizgisi (bayrakta
+   yer yok; yön rozette, değer saat satırında, çizgi ayrıntı kartında) ve
+   gövdenin `0fr→1fr` açılışı (ayrıntı tek kart; açık olay değişince içerik
+   yer değiştirir, kayarak açılmaz). */
 
-/* AÇIK SATIR BİR KART (21 Ekim, sahibinin isteği: "görsel olarak daha iyi
-   duran bir şey"). Açık olay ile gövdesi düz zeminde akıp alttaki satıra
-   karışıyordu; şimdi başlık ve gövde tek bir gömülü yüzeyde, şirketler o
-   yüzeyin üstünde açık tonlu kartlar — derinlik tonla, gölgesiz. 6 Kasım:
-   kart satırın TAMAMINI kaplar (saat sütunu dahil) ve satırlar arası kıl
-   çizgiler kalktı — ayrımı omurga ve düğümler taşıyor, kıl çizgi her satırda
-   üçüncü bir yatay hat açıp listeyi "tablo" gibi gösteriyordu. */
-.tlRow { border-radius:16px; transition:background-color 180ms var(--ease-brand); }
-.tlRow[data-open] { background:var(--surface-sunken); }
-
-/* ---- Satır başı ----
-   SATIRIN TAMAMI TEK BUTON (6 Kasım): saat, düğüm, başlık, sonuç ve ok
-   aynı tıklama alanında; üzerine gelince bütün satır mavi tonla aydınlanır.
-   Hizalar sayıyla: dolgu 8 + 22 piksellik ilk satır → merkez 19; düğüm
-   (30) 4 piksel yukarı taşar, sonuç sütunu (26) 2 piksel — saat, düğüm,
-   başlığın ilk satırı ve sonuç aynı merkezde (1440'ta ölçüldü). İlk
-   denemede başlık 4 piksel üstte kalıyordu: satır yüksekliği yerine
-   metnin kutusu ölçülmüştü. */
-.tlHead { display:grid; width:100%; min-width:0; grid-template-columns:var(--time) var(--rail) minmax(0,1fr) auto 20px; align-items:start; padding:8px 14px 8px 0; border-radius:16px; text-align:left; color:var(--text-body); cursor:pointer; transition:background-color 180ms var(--ease-brand); }
-.tlHead:hover { background:var(--primary-tint); }
-.tlRow[data-open] .tlHead:hover { background:transparent; }
-/* Saat ve dilim TEK SATIR (28 Ekim, kompakt tur): "21:00" ile "TR" alt
-   alta durunca satır başlıktan değil saatten uzuyordu. Telefonda saat
-   başlığın üstüne iner (aşağıda). Saat sütunu sağa yaslı: dakikalar
-   omurgaya bakar, saatler alt alta aynı hatta biter. */
-.tlTime { display:flex; justify-content:flex-end; align-items:baseline; gap:4px; margin-top:0; padding-right:12px; color:var(--text-strong); white-space:nowrap; }
-.tlTime b { font-size:16px; line-height:22px; font-weight:600; letter-spacing:-.03em; }
-.tlTime[data-unknown="true"] b { font-size:12px; font-weight:600; line-height:22px; letter-spacing:0; white-space:normal; overflow-wrap:anywhere; }
-.tlTime small { color:var(--text-muted); font-size:12px; font-weight:500; }
-.tlRow[data-past]:not([data-open]) .tlTime b { color:var(--text-body); }
-
-/* DÜĞÜM TÜRÜ ÇİZER, DOLGUSU DURUMU SÖYLER (6 Kasım). Numara yerine türün
-   ikonu: bilanço binalar, veri yükselen çizgi — biçim farkı, renk değil
-   (renk anlam taşır: mavi etkileşim, yeşil/kırmızı yön). Durum dolguda:
-   gelecek çerçeveli, saati gelip sonucu beklenen mavi halkalı, sonucu gelmiş
-   sakin dolu ve köşesinde onay işareti, açık olan marka mavisi. Zemin
-   opak (`--premium-surface` üstüne ton): koyu temada yarı saydam zemin
-   omurgayı düğümün içinden gösteriyordu. */
-.tlNode { grid-column:2; position:relative; z-index:1; display:grid; place-items:center; justify-self:center; width:var(--node); height:var(--node); margin-top:-4px; border:1px solid var(--line-strong); border-radius:50%; background:var(--premium-surface); color:var(--text-body); transition:background-color 180ms var(--ease-brand), border-color 180ms var(--ease-brand), color 180ms var(--ease-brand); }
-.tlRow[data-past] .tlNode { border-color:var(--line); background:linear-gradient(var(--surface-sunken), var(--surface-sunken)) var(--premium-surface); color:var(--text-muted); }
-.tlRow:is([data-status="awaiting"], [data-status="live"], [data-status="partial"]) .tlNode { border-color:var(--primary); color:var(--primary-ink); outline:3px solid var(--primary-wash); }
-.tlRow[data-open] .tlNode { border-color:var(--primary); background:var(--primary); color:var(--on-primary); outline:0; }
-/* BİLANÇO KÖŞELİ, VERİ YUVARLAK (10 Kasım; gerekçe DayFlow.tsx → "DÜĞÜM
-   TÜRÜ BİÇİMİYLE AYIRIR"). Tek şirketli bilançoda karo şirketin logosu:
-   çerçevesiz, zeminsiz (görsel kutunun kendisi); durum halkası logonun
-   DIŞINDA — bekleyen mavi yıkama, açık olan 2 piksellik marka halkası
-   (dolgu logoyu boyayamaz). Ölçüldü (1440, on iki olay): omurgada 12 ikon
-   → 4 logo + 1 karo + 7 daire; 390'da tek şirketli satır 135 → 105 piksel
-   (logo satırı kalktı). */
-.tlNode[data-shape="tile"] { border-radius:9px; }
-.tlNode[data-logo] { border:0; background:var(--premium-surface); }
-.tlRow[data-past] .tlNode[data-logo] { background:var(--premium-surface); }
-.tlNodeLogo { width:var(--node); height:var(--node); border-radius:9px; }
-.tlRow[data-open] .tlNode[data-logo] { background:var(--premium-surface); outline:2px solid var(--primary); outline-offset:2px; }
-.tlTick { position:absolute; right:-4px; bottom:-4px; display:grid; place-items:center; width:14px; height:14px; border:2px solid var(--premium-surface); border-radius:50%; background:var(--up); color:var(--on-primary); }
-
-.tlSummary { grid-column:3; display:flex; min-width:0; flex-direction:column; gap:1px; padding-left:6px; }
-.tlSummary > strong { margin-top:0; color:var(--text-strong); font-size:15px; line-height:22px; font-weight:600; letter-spacing:-.01em; overflow-wrap:anywhere; text-wrap:pretty; }
-/* Geçmiş ve kapalı satırın başlığı bir ton sakin: göz sıradakine gitsin. */
-.tlRow[data-past]:not([data-open]) .tlSummary > strong { color:var(--text-body); font-weight:600; }
-
-/* Sonuç sütunu: logolar / sapma hapı / değer, tek hatta, başlığın ilk
-   satırıyla ortalı (26 piksellik logo −2 piksel payla merkez 19). */
-.tlAside { grid-column:4; display:flex; align-items:center; justify-content:flex-end; gap:12px; min-height:26px; margin-top:-2px; padding-left:16px; }
-.tlValue { display:flex; align-items:baseline; gap:6px; white-space:nowrap; }
-.tlValue small { color:var(--text-muted); font-size:12px; }
-.tlValue b { color:var(--text-strong); font-size:17px; line-height:22px; font-weight:700; letter-spacing:-.03em; }
-/* Açıklanmamış sonucun beklentisi bir TAHMİN: aynı yerde ama sönük
-   (FlowFigures'taki "açıklanmamış ölçü" kuralı). */
-.tlValue[data-pending] b { color:var(--text-soft); font-size:15px; font-weight:600; }
-.tlCaret { grid-column:5; justify-self:end; margin-top:4px; color:var(--text-muted); transition:transform .28s var(--ease-brand), color 180ms var(--ease-brand); }
-.tlRow[data-open] .tlCaret { transform:rotate(180deg); color:var(--primary-ink); }
-.tlHead:hover .tlCaret { color:var(--primary-ink); }
-
-/* SAPMA HAPI — gerçekleşenin beklentiye göre yeri, kapalı satırda. Renk
-   yalnız yön (`--up` üstünde, `--down` altında, eşitse nötr) ve hep sözle
-   ve okla birlikte: yüksek çıkmanın iyi mi kötü mü olduğu veriye göre
-   değişir (işsizlikte yüksek "kötü"), renk yargı değil yön söyler. */
-.devPill { display:inline-flex; align-items:center; gap:5px; height:24px; padding:0 10px 0 8px; border-radius:999px; background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
-.devPill > .numeral { margin-left:1px; font-weight:700; }
-.devPill[data-dir="above"] { background:var(--up-wash); color:var(--up); }
-.devPill[data-dir="below"] { background:var(--down-wash); color:var(--down); }
-
-/* Kapalı satırın küçük sapma çizgisi (10 Kasım; gerekçe DayFlow.tsx →
-   "BEKLENTİ ↔ GERÇEKLEŞEN"). 72 piksel: `DeviationLine` küçük hâlinin
-   rayı; noktanın zemin halkası kapalı satırın tonu. Yalnız geniş ekranda
-   (aşağıda, kırılımlar). */
-/* Çizgi hap ile değerin ARASINDA: değerler yakın genişlikte ("Gerçekleşen
-   %3,8"), çizgiler satırdan satıra aynı x'e düşer; hapın solundayken hap
-   uzunluğuna göre 60 piksel oynuyordu (1440, ölçüldü). */
-.tlDev { order:1; flex:none; width:72px; --dev-ring-shadow:0 0 0 2px var(--premium-surface); }
-.tlValue { order:2; }
-.tlHead:hover .tlDev { --dev-ring-shadow:0 0 0 2px var(--primary-tint), 0 0 0 2px var(--premium-surface); }
-.tlRow[data-open] .tlDev { visibility:hidden; }
-/* ÇİZİM: nokta beklentiden kendi yerine kayar, bacak sıfırdan açılır —
-   açık satırın büyük çizgisiyle aynı iki keyframes (`dev-travel`,
-   `dev-leg`, aşağıda), süre `--draw`, satır sırasına göre `--step` kademe
-   (tavan on satır = 400 ms). Çizelge `data-draw` taşır: ekranın altındaysa
-   son karede bekler, girince bir kez oynar. Yalnız `translate` / `scaleX`. */
-.tlDev [data-dot] { animation:dev-travel var(--draw,700ms) var(--ease-brand) calc(var(--i,0) * var(--step,40ms)) both; }
-.tlDev [data-leg] { animation:dev-leg var(--draw,700ms) var(--ease-brand) calc(var(--i,0) * var(--step,40ms)) both; }
-@media (max-width:1023px) { .tlDev { display:none; } }
-
-/* Tür ADI ve gerekirse durum — başlığın altındaki künye. */
-.cardKind { display:flex; align-items:center; flex-wrap:wrap; gap:2px 10px; color:var(--text-muted); font-size:12px; line-height:18px; }
-.cardKind em { font-style:normal; }
-
-/* Bilanço satırının logoları (gerekçe DayFlow → MemberMarks). Yan yana,
-   üst üste değil; rozet logonun köşesinde, zemin halkasıyla ayrışır (bu
-   halka GÖRSELİN ÇERÇEVESİ DEĞİL iki öğenin ayracı; CLAUDE.md "görselin
-   etrafında çerçeve yok" kuralının bilinen istisnası). */
-.memberMarks { display:flex; align-items:center; gap:12px; }
-.beatCount { color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
-.memberLogos { display:flex; align-items:center; gap:7px; }
-.memberLogo { position:relative; display:block; flex:none; }
-.memberTile { display:block; }
-.memberLogo > i { position:absolute; right:-5px; bottom:-5px; display:grid; place-items:center; width:15px; height:15px; border:2px solid var(--premium-surface); border-radius:50%; background:var(--flat); color:var(--on-primary); }
-.memberLogo[data-dir="beat"] > i { background:var(--up); }
-.memberLogo[data-dir="miss"] > i { background:var(--down); }
-.memberMore { display:grid; place-items:center; min-width:26px; height:26px; padding:0 6px; border-radius:8px; background:var(--surface-sunken); color:var(--text-body); font-size:12px; font-weight:600; }
-/* Önizlemenin logoları (DayPreview) — çizelgenin eski logo yığını. */
-.cardLogo { width:18px; height:18px; border:1px solid var(--line); border-radius:50%; }
 
 .status { display:inline-flex; align-items:center; gap:5px; color:var(--text-body); font-size:12px; line-height:1.5; font-weight:600; }
 .statusDot { width:5px; height:5px; flex-shrink:0; border-radius:50%; background:currentColor; }
 .status[data-status="released"],.status[data-status="analyzed"],.status[data-status="held"] { color:var(--up); animation:result-arrive 800ms var(--ease-brand) both; }
 .status[data-status="partial"],.status[data-status="awaiting"],.status[data-status="live"] { color:var(--primary-ink); }
 
-/* ---- "Şimdi" işareti ----
-   Saat sütununda "Şimdi 19:21", omurgada halkalı mavi nokta, içerikte
-   incecik bir çizgi: çizelgenin neresindeyiz. Üstündeki omurga dolu,
-   altındaki kesikli — geçmiş/gelecek ayrımı çizginin kendisinde.
-   BÜYÜK HARFE ÇEVRİLMİYOR: `text-transform:uppercase` Türkçede "i → I"
-   üretiyor (CLAUDE.md), ayrım renk ve aralıkta. */
-.nowMark { display:grid; grid-template-columns:var(--time) var(--rail) minmax(0,1fr); align-items:center; min-height:30px; }
-.timeline > .nowMark::before { top:0; height:50%; background:var(--line-strong); }
-.timeline > .nowMark::after { top:50%; }
-.nowTime { display:flex; justify-content:flex-end; align-items:baseline; gap:5px; padding-right:12px; color:var(--primary-ink); white-space:nowrap; }
-.nowTime small { font-size:12px; font-weight:600; }
-.nowTime b { font-size:13px; font-weight:700; }
-.nowDot { position:relative; z-index:1; justify-self:center; width:10px; height:10px; border-radius:50%; background:var(--primary); outline:4px solid var(--primary-wash); }
-.nowLine { display:flex; align-items:center; gap:10px; padding:0 14px 0 6px; }
-.nowLine b { display:none; color:var(--primary-ink); font-size:12px; font-weight:700; white-space:nowrap; }
-.nowLine::after { content:""; flex:1; height:1px; background:var(--primary-faint); }
-
-/* ---- Yerinde açılan gövde ----
-   0fr→1fr: kapanış da aynı eğriyle oynar; `inert` kapalı gövdenin
-   bağlantılarını sekme sırasından düşürür. Dolgu overflow'lu sarmalayıcının
-   İÇİNDEKİ öğelerin kenar boşluklarında — sarmalayıcıya dolgu verilse 0fr'de
-   tam kapanmazdı. Gövde başlığın hizasından başlar (saat + omurga sütunu
-   kadar içeride): metin başlığın altında, tek bir sol kenarda okunur. */
-.tlDetail { display:grid; grid-template-rows:0fr; transition:grid-template-rows .28s var(--ease-brand); }
-.tlRow[data-open] .tlDetail { grid-template-rows:1fr; }
-.tlDetailInner { overflow:hidden; min-width:0; min-height:0; padding:0 14px 0 calc(var(--time) + var(--rail) + 6px); }
-.tlDetailInner > :last-child { margin-bottom:10px; }
 
 .note { max-width:80ch; margin:2px 0 0; padding-left:11px; border-left:2px solid var(--primary-faint); color:var(--text-body); font-size:13px; line-height:1.65; text-wrap:pretty; }
 
@@ -321,8 +207,12 @@
 @media (min-width:1024px) {
   .resultsBlock[data-line] { grid-template-columns:minmax(0,420px) minmax(0,1fr); align-items:center; column-gap:36px; }
 }
-.results { display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:14px; margin:0; }
-.results > div { min-width:0; padding-left:12px; border-left:1px solid var(--line); }
+/* ESNEK SÜTUN (14 Kasım): değeri olmayan ölçü artık basılmıyor (DayFlow.tsx),
+   yani sütun sayısı bir ile üç arasında değişiyor. Sabit üç sütunlu ızgarada
+   iki ölçü kabın üçte ikisinde kalıyor, telefonda "%3,75–4,00" 100 piksellik
+   sütunda iki satıra kırılıyordu (390, ölçüldü). */
+.results { display:flex; gap:14px; margin:0; }
+.results > div { flex:1 1 0; min-width:0; padding-left:12px; border-left:1px solid var(--line); }
 .results > div:first-child { border-left:2px solid var(--line-strong); }
 .results dt { display:flex; align-items:center; gap:6px; color:var(--text-muted); font-size:12px; white-space:nowrap; }
 .results dd { margin-top:5px; color:var(--text-soft); font-size:20px; line-height:1.2; font-weight:600; letter-spacing:-.035em; overflow-wrap:anywhere; }
@@ -339,16 +229,15 @@
 .key[data-mark="notch"] { width:3px; height:9px; border-radius:2px; background:var(--text-muted); opacity:.7; }
 
 /* SAPMA ÇİZGİSİ — takvim kartının bileşeni (`DeviationLine`), biçimi
-   ReleasedData.module.css'te. Noktanın zemin halkası açık SATIRIN tonunda:
-   açık satır `--premium-surface` üstüne `--surface-sunken` (yarı saydam,
-   `.tlRow[data-open]`). İlk sürüm halkayı yalnız `--premium-surface`
-   veriyordu; nokta çentik/sıfırla çakışınca açık satırda bir ton açık bir
-   leke kalıyordu (6 Kasım, inceleme). Halka iki katlı gölge: üstteki kat
-   sunken, alttaki kart zemini — zeminin bileşimiyle birebir
-   (`--dev-ring-shadow`). Hareket: satır her açıldığında bileşen yeniden kurulur
-   (`key`) ve nokta beklentiden kendi yerine bir kez kayar, bacak sıfırdan
-   açılır — `--ease-brand`, yalnız dönüşüm; hareketi azaltana son kare
-   (aşağıdaki `prefers-reduced-motion` kuralı bütün animasyonları kapatır). */
+   ReleasedData.module.css'te. Çentiklerin zemin halkası AYRINTI KARTININ
+   tonunda: kart `--premium-surface` üstüne `--surface-sunken` (yarı saydam;
+   geniş düzende `.detail`, dar düzende açık satır — FlowAxis.module.css).
+   İlk sürüm halkayı yalnız `--premium-surface` veriyordu; im sıfırla
+   çakışınca bir ton açık bir leke kalıyordu (6 Kasım, inceleme). Halka iki
+   katlı gölge: üstteki kat sunken, alttaki kart zemini (`--dev-ring-shadow`).
+   Hareket: kart her açıldığında kurulur ve çubuk sıfırdan açılır —
+   `--ease-brand`, yalnız dönüşüm; hareketi azaltana son kare (aşağıdaki
+   `prefers-reduced-motion` kuralı bütün animasyonları kapatır). */
 .devBlock { display:flex; min-width:0; flex-direction:column; gap:8px; }
 .devLine { --dev-ring-shadow:0 0 0 2px var(--surface-sunken), 0 0 0 2px var(--premium-surface); }
 .devLine [data-dot] { animation:dev-travel 700ms var(--ease-brand) 120ms both; }
@@ -380,57 +269,25 @@
 /* SIRADAKİ GÜNE BAKIŞ (31 Ekim) — gerekçe DayFlow.tsx → DayPreview.
    Üst kıl çizgi yok: künye şeridinin alt çizgisi 15 piksel yukarıda ve
    boş durumdaki ikinci çizgi 1440'ta çift hat gibi okunuyordu.
-   Üç kat: başlık + tek cümle, saat cetveli, olay satırları. Cetvel
-   kahramandaki zil şeridinin dili (SessionRail.module.css): çukur oluk,
-   asıl seans mavinin %30'u; burada daha ince (5 piksel, CLAUDE.md "grafik
-   dili ince") çünkü sayfanın ana çizimi o değil. Satırlar çizelgenin
-   (`.tlRow`) numaralı düğümünü taşıyor, kartlar tonla ayrışıyor.
-   HAREKET BİR KEZ: oluk soldan kırpmayla çizilir (700 ms), noktalar
-   saat sırasıyla belirir, satırlar 70 ms arayla 6 piksel yükselir — hepsi
-   `--ease-brand`, opaklık ve dönüşüm; yerleşim oynamaz. */
+   14 Kasım: kendi cetveli (5 piksellik oluk, numaralı noktalar) ve üç olay
+   satırı kalktı; önizleme artık günün ekseninin kendisi (`FlowAxis`).
+   İki kat: başlık + tek cümle, eksen; dipte künye ve günü açan buton. */
 .preview { margin-top:4px; padding-top:12px; }
 .previewHead { display:flex; gap:14px; align-items:flex-start; }
 .previewIcon { display:grid; place-items:center; flex:none; width:38px; height:38px; border-radius:12px; background:var(--primary-tint); color:var(--primary); }
 .previewHead h3 { color:var(--text-strong); font-size:16px; line-height:1.4; font-weight:600; }
 .previewHead p { margin-top:3px; color:var(--text-body); font-size:13px; line-height:1.6; }
-.ruler { position:relative; height:46px; margin:16px 0 4px 52px; }
-.rulerTrack { position:absolute; inset:18px 0 auto; height:5px; overflow:hidden; border-radius:3px; background:var(--surface-sunken); animation:preview-draw var(--draw,700ms) var(--ease-brand) 120ms backwards; }
-.rulerRegular { position:absolute; inset-block:0; background:color-mix(in srgb, var(--primary) 30%, transparent); }
-/* Nokta olayın saatinde: 18 piksellik numaralı yuva, oluğun üstünde
-   ortalı. Numara aşağıdaki satırla eşleşiyor; olayın türü satırda yazılı,
-   noktada ikinci bir renk kodu yok. */
-.rulerDot { position:absolute; top:11px; display:grid; place-items:center; width:20px; height:20px; border:1px solid var(--primary); border-radius:50%; background:var(--premium-surface); color:var(--primary-ink); transform:translateX(-50%); animation:preview-dot var(--mark,200ms) var(--ease-brand) calc(420ms + var(--i, 0) * var(--step,40ms)) backwards; }
-.rulerDot b { font-size:12px; font-weight:700; line-height:1; }
-.rulerEnd { position:absolute; bottom:0; color:var(--text-muted); font-size:var(--text-tiny); font-weight:500; line-height:1.2; white-space:nowrap; }
-.rulerEnd[data-at="start"] { left:0; }
-.rulerEnd[data-at="open"], .rulerEnd[data-at="close"] { transform:translateX(-50%); color:var(--text-body); font-weight:600; }
-.rulerEnd[data-at="end"] { right:0; }
-.previewList { display:grid; gap:6px; margin-top:12px; }
-.previewRow { display:grid; grid-template-columns:38px 74px minmax(0,1fr) auto; align-items:center; gap:0 14px; min-height:52px; padding:7px 14px 7px 0; border-radius:12px; background:var(--surface-sunken); }
-.previewNode { display:grid; place-items:center; justify-self:center; width:26px; height:26px; border:1px solid var(--line-strong); border-radius:50%; background:var(--surface-solid); color:var(--text-body); }
-.previewNode b { font-size:12px; font-weight:700; line-height:1; }
-.previewTime { display:flex; flex-direction:column; gap:1px; }
-.previewTime b { color:var(--text-strong); font-size:16px; font-weight:600; line-height:1.15; }
-.previewTime small { color:var(--text-muted); font-size:12px; font-weight:500; }
-.previewMain { display:flex; flex-direction:column; gap:2px; min-width:0; }
-.previewMain strong { overflow:hidden; color:var(--text-strong); font-size:14px; font-weight:600; line-height:1.35; text-overflow:ellipsis; white-space:nowrap; }
-.previewMain em { color:var(--text-muted); font-size:12px; font-style:normal; font-weight:500; line-height:1.4; }
-.previewLogos { display:flex; align-items:center; }
-.previewLogos > *:not(:first-child) { margin-left:-5px; }
-.previewLogos .cardLogo { width:24px; height:24px; }
-.previewKind { display:grid; place-items:center; width:28px; height:28px; border-radius:50%; background:var(--primary-tint); color:var(--primary); }
 .previewFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:8px 16px; margin-top:12px; color:var(--text-muted); font-size:12px; line-height:1.5; }
 .previewFoot > span { display:flex; flex-wrap:wrap; gap:4px 12px; }
 .previewFoot b { color:var(--text-body); font-weight:600; }
 .previewOpen { display:inline-flex; align-items:center; gap:6px; min-height:36px; padding:0 14px; border-radius:10px; background:var(--primary-tint); color:var(--primary-ink); font-size:13px; font-weight:600; cursor:pointer; transition:background-color 180ms var(--ease-brand); }
 .previewOpen:hover { background:var(--primary-wash); }
-@keyframes preview-draw { from { clip-path:inset(0 100% 0 0 round 3px); } to { clip-path:inset(0 0 0 0 round 3px); } }
-@keyframes preview-dot { from { opacity:0; } }
 /* SATIRLAR KAYARAK GİRMİYOR (10 Kasım, ikinci tur). Önizleme satırları
    opaklık 0 + 6 piksel kaymayla, 70 ms arayla geliyordu: "her öğede
    soluklaş-ve-yukarı-kay" (`.claude/rules/hareket.md`). Hareket veriyi
-   çizen öğede kaldı: cetvel çizilir (--draw), noktalar yerine konur
-   (--mark, --step). Satır ilk karede yerinde. */
+   çizen öğede kaldı; 14 Kasım'dan beri o öğe günün ekseni (oluk çizilir,
+   direkler yükselir, ayak noktaları yerine konur). Bayrak ve satır ilk
+   karede yerinde. */
 .sourceDelay { margin-top:16px; color:var(--text-muted); font-size:12px; }
 .unavailable { display:flex; flex-wrap:wrap; align-items:center; justify-content:center; gap:15px; padding:36px 16px; color:var(--text-muted); font-size:13px; }
 .unavailable button { display:flex; align-items:center; gap:8px; padding:10px 14px; border:1px solid var(--line); border-radius:10px; color:var(--primary-ink); font-size:13px; cursor:pointer; }
@@ -483,48 +340,17 @@
   .connection { margin-left:auto; font-size:12px; }
   /* Sözcük gizleme kuralları artık her genişlikte (yukarıda, "KÜNYE
      SIKILAŞTI"). */
-  /* TELEFONDA SAAT SÜTUNU YOK (6 Kasım, 390'da ölçüldü): 84 piksellik saat
-     sütunu ile omurga başlığa ~200 piksel bırakıyor, "Ekim Tarım Dışı
-     İstihdam Verisi" üç satıra kırılıyordu. Saat başlığın ÜSTÜNE, kısa bir
-     künye olarak iner; omurga solda kalır, düğüm saat ile başlığın arasına
-     ortalanır (merkez 27: saat satırının merkezi 17, başlığınki 37; ölçüldü). Sonuç sütunu
-     başlığın altına iner. */
-  .timeline { --time:0px; --rail:38px; --node:28px; --node-c:27px; }
-  .tlHead { grid-template-columns:var(--rail) minmax(0,1fr) 18px; padding:8px 10px 10px 0; }
-  .tlNode { grid-column:1; grid-row:1 / span 2; margin-top:5px; }
-  .tlTime { grid-column:2; grid-row:1; justify-content:flex-start; margin-top:0; padding:0 0 0 6px; }
-  .tlTime b { font-size:13px; line-height:18px; }
-  /* Saati belirsiz satırda saat katı YOK (10 Kasım): başlığın üstünde tek
-     başına bir tire, 18 piksellik boş bir satırdı; sebep künyede zaten
-     yazılı ("Bilanço · Saat Belirtilmedi"). */
-  .tlTime[data-unknown="true"] { display:none; }
-  .tlRow:has(.tlTime[data-unknown="true"]) .tlNode { margin-top:-2px; }
-  .tlSummary { grid-column:2; grid-row:2; }
-  .tlSummary > strong { font-size:14px; line-height:20px; }
-  .tlCaret { grid-column:3; grid-row:1 / span 2; margin-top:16px; }
-  /* DEĞER BAŞLIĞIN ALTINDA (28 Ekim, 390'da ölçüldü): sağ sütunda
-     "Gerçekleşen %3,75–4,00" başlığa ~150 piksel bırakıyordu ve "Fed Faiz
-     Kararı (FOMC)" üç satıra kırılıp satır 62'den 101 piksele çıkıyordu.
-     Telefonda değer (ve 6 Kasım'dan beri sapma hapı ile logolar) özetin
-     altında tek satır, künyesiyle yan yana; değer önde. */
-  .tlAside { grid-column:2; grid-row:3; flex-wrap:wrap; justify-content:flex-start; gap:6px 10px; min-height:0; margin-top:6px; padding-left:6px; }
-  .tlAside:empty { display:none; }
-  .tlValue { order:-1; }
-  .tlValue b { font-size:15px; }
-  .nowLine b { display:inline; }
-  /* Saat sütunu yokken nokta ve çizgi kendi sütununda kalsın: gizli saat
-     ızgaradan düşünce nokta 0 piksellik ilk sütuna kayıyordu (390, ölçüldü). */
-  .nowTime { display:none; }
-  .nowDot { grid-column:2; }
-  .nowLine { grid-column:3; }
-  /* Sapma hapı varken "Gerçekleşen" adı düşer: değer + hap tek satıra
-     sığsın (390'da ad ile hap iki satıra kırılıp satırı 134 piksele
-     çıkarıyordu); hap "Beklentinin … Üstünde" diyerek sayının ne olduğunu
-     zaten söylüyor. Ad ekran okuyucuda kalır. */
-  .tlValue[data-with-pill] small { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
-  .nowLine { padding-right:10px; }
-  .tlDetailInner { padding:0 10px 0 calc(var(--rail) + 6px); }
-  .memberMarks { flex-wrap:wrap; gap:6px 12px; }
+  /* SATIR DÜZENİNİN TELEFON KARARLARI EKSENE TAŞINDI (14 Kasım;
+     flow/FlowAxis.module.css → "Dar düzen"). Ölçülerek alınmış kararlar
+     orada da geçerli: telefonda saat sütunu yok, saat başlığın ÜSTÜNDE kısa
+     künye (6 Kasım: 84 piksellik sütun başlığı üç satıra kırıyordu); saati
+     belirsiz satırda boş saat katı basılmaz (10 Kasım); değer ve sapma hapı
+     başlığın ALTINDA tek satır (28 Ekim: sağ sütunda "Fed Faiz Kararı
+     (FOMC)" üç satıra kırılıp satır 62'den 101 piksele çıkıyordu). */
+  .lead { align-items:flex-start; gap:10px 14px; padding:12px 0 2px; }
+  .lead strong { font-size:16px; line-height:22px; }
+  .leadFigure { align-items:flex-end; }
+  .leadDigits b { font-size:28px; }
   .tlMemberRow { padding:10px; gap:6px 10px; }
   /* Şirket satırı telefonda iki katlı: kimlik + bağlantı üstte, ölçüler
      altta tam genişlikte. Bağlantı açıkça ilk satıra: otomatik yerleşim onu
@@ -541,28 +367,19 @@
   .memberFoot > a { min-height:44px; }
   /* İlk sütun bir tık geniş: "● Gerçekleşen" işaretiyle 86 piksel, eşit
      üç sütunda 79 piksele sığmayıp kırpılıyordu (390, ölçüldü). */
-  .results { grid-template-columns:1.25fr 1fr 1fr; gap:8px; }
+  .results { gap:8px; }
+  .results > div:first-child { flex-grow:1.25; }
   .results > div { padding-left:8px; }
   .results dd { font-size:17px; }
   .results > div:first-child dd { font-size:19px; }
-  /* Önizleme telefonda: cetvel tam genişlik, satırda düğüm yok (numara
-     zaten cetvelde ve listede sıra belli), logolar başlığın altına iner. */
-  .ruler { margin-left:0; }
-  .previewRow { grid-template-columns:58px minmax(0,1fr) auto; gap:0 10px; padding:8px 10px 8px 12px; }
-  .previewNode { display:none; }
-  .previewTime b { font-size:15px; }
-  .previewLogos .cardLogo { width:20px; height:20px; }
   .previewOpen { min-height:44px; }
 }
 
 /* Üç sonuç sütunu 360px altında yan yana sığmıyor: gerçekleşen üstte, beklenti
    ve önceki altında — okunacak sayı zaten ilki. */
 @media (max-width:359px) {
-  /* 320'de cetvelin kapanış ve uç saatleri 2 piksel üst üste (ölçüldü);
-     zillerin saatleri kalır, eksenin iki ucu düşer. */
-  .rulerEnd[data-at="start"], .rulerEnd[data-at="end"] { display:none; }
-  .results { grid-template-columns:repeat(2,minmax(0,1fr)); }
-  .results > div:first-child { grid-column:1/-1; }
+  .results { flex-wrap:wrap; }
+  .results > div:first-child { flex-basis:100%; }
 }
 
 @media (prefers-reduced-motion:reduce) {

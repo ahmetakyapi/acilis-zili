@@ -1,6 +1,5 @@
-import { ArrowUpRight, CaretDown, CaretUp } from "@phosphor-icons/react/dist/ssr";
+import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { VerdictPill } from "@/components/ui/VerdictPill";
-import { ArcGauge, StepBars } from "@/components/ui/MiniGauges";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, verdictTextClass, type VerdictKey } from "@/lib/analysis";
@@ -9,7 +8,6 @@ import type { Quote } from "@/lib/providers/types";
 import type { TechnicalAnalysisRow } from "@/lib/schema";
 import {
   editionTime,
-  indicatorSignals,
   planPosition,
   slotLabel,
   stanceChangeLabel,
@@ -29,7 +27,6 @@ import {
 import { openWatchText, openWhyText } from "./open-plan";
 import { OpenRange, openRangeOf } from "./OpenRange";
 import { PlanRail } from "./PlanRail";
-import { PlanStrip } from "./PlanStrip";
 import styles from "./Technical.module.css";
 
 /** Değişim rozetinin rengi — yeni görüşün rengi, tek kaynaktan (25 Ekim:
@@ -184,32 +181,8 @@ export function TechnicalCard({
      çizgi üstünde nokta, hacimde 1× çentikli ölçek. Ayrıntı detay
      sayfasında (`SignalStrip`). 320'de çip şeridi iki satıra sarıp 58
      piksel oluyordu; üç sütun her genişlikte tek satır. */
-  const signals = indicatorSignals(snapshot, price);
-  const trend = signals.trend;
-  const trendDetail = trend
-    ? trend.above50 === null || trend.above200 === null
-      ? null
-      : trend.above50 && trend.above200
-        ? t.technical.trendAboveBoth
-        : !trend.above50 && !trend.above200
-          ? t.technical.trendBelowBoth
-          : trend.above50
-            ? t.technical.trendAbove50Below200
-            : t.technical.trendBelow50Above200
-    : null;
-  const rsi = signals.momentum;
-  const rsiZoneText =
-    rsi?.tone === "overbought" ? t.technical.rsiOverbought : rsi?.tone === "oversold" ? t.technical.rsiOversold : null;
-  /* Aşırı alım düşüş, aşırı satım yükseliş tonunda — çiplerdeki eşleme. */
-  const rsiTone = rsi?.tone === "overbought" ? "down" : rsi?.tone === "oversold" ? "up" : undefined;
-  const volume = signals.volume;
-  const maTag = (above: boolean | null, label: string) =>
-    above === null ? null : (
-      <i data-dir={above ? "up" : "down"}>
-        {above ? <CaretUp size={8} weight="fill" /> : <CaretDown size={8} weight="fill" />}
-        {label}
-      </i>
-    );
+  /* 14 Kasım 2026: üç ölçü karttan kalktı (kayıt aşağıda, eski yerinde);
+     hesap (`indicatorSignals`) detay sayfasında `SignalStrip`te sürüyor. */
 
   return (
     /* DÜZ KAP, `SpotlightCard` DEĞİL. Ortak spot kartı imleci izleyen bir
@@ -230,7 +203,7 @@ export function TechnicalCard({
           hâlinde). 640 ve üstünde anahtar yok, kart olduğu gibi.
           25 Ekim: risk rayı katlamadan çıktı, her genişlikte açık —
           gerekçe CSS'te (`.card:has(... :not(:checked))`). */}
-      <input type="checkbox" id={`kart-${row.symbol}`} className={cn("sr-only", styles.cardFoldInput)} />
+      {/* 14 Kasım 2026: katlama anahtarı kalktı (kayıt dosyanın sonunda). */}
       <div className={styles.cardHead}>
         {/* Kimlik balonu 22 Eylül'de dağılım logolarına taşındı: kart
             kimliği zaten gösteriyor, balon aynı bilgiyi ikinci kez veriyordu
@@ -310,7 +283,12 @@ export function TechnicalCard({
           <OpenRange {...openRange} locale={locale} t={t} />
         ) : (
           <>
-            <PlanStrip verdict={verdict} {...levelProps} price={price} showWhy={false} locale={locale} t={t} />
+            {/* 14 Kasım 2026: üç satırlık plan şeridi (`PlanStrip`: Nereden
+                Alınır / Nerede Satılır / Nerede Vazgeçilir) karttan kalktı;
+                ray planın tek çizimi (23 Eylül kaydı `PlanRail`de) ve aynı
+                seviyeleri fiyat ekseninde taşıyor. Sayıların tamamı detay
+                sayfasının plan panelinde. Gerekçe aşağıda, ölçü şeridinin
+                kaydında. */}
             <PlanRail verdict={verdict} price={price} snapshotPrice={snapshotPrice} {...levelProps} locale={locale} t={t} />
           </>
         )}
@@ -378,56 +356,19 @@ export function TechnicalCard({
           alt ızgarası); bir kartta şerit hiç basılmazsa o kartın ayak satırı
           bir satır yukarı kayar ve ızgara yine tırtıklanır. Boş şerit
           yüksekliksiz, yalnızca satırı tutuyor. */}
-      <div className={styles.gaugeBox}>
-        <ul className={styles.gauges}>
-          {trend && (
-            <li>
-              <span className={styles.gaugeHead}>
-                <span className={styles.gaugeName}>{t.technical.signalTrend}</span>
-                <span className={styles.gaugeValue} data-tone={trend.tone === "mixed" ? undefined : trend.tone}>
-                  {trend.tone === "up" ? t.technical.trendUp : trend.tone === "down" ? t.technical.trendDown : t.technical.trendMixed}
-                </span>
-                {trendDetail && <span className="sr-only">, {trendDetail}</span>}
-              </span>
-              <span className={styles.gaugeTags} aria-hidden>
-                {maTag(trend.above50, t.technical.ma50Short)}
-                {maTag(trend.above200, t.technical.ma200Short)}
-              </span>
-            </li>
-          )}
-          {rsi && (
-            <li>
-              <span className={styles.gaugeHead}>
-                <span className={styles.gaugeName}>RSI</span>
-                <span className={cn(styles.gaugeValue, "numeral")} data-tone={rsiTone}>
-                  {formatPrice(rsi.rsi, locale, { digits: 0 })}
-                </span>
-                {rsiZoneText && <span className="sr-only">, {rsiZoneText}</span>}
-              </span>
-              {/* YARIM HALKA (5 Kasım 2026): 30/70 çentikli kıl çizgi yerine
-                  eşik bölgeleri yıkamalı bir halka; değer sıfırdan dolar
-                  (gerekçe components/ui/MiniGauges.tsx). */}
-              <ArcGauge value={rsi.rsi} low={30} high={70} tone={rsiTone} className={styles.gaugeArt} />
-            </li>
-          )}
-          {volume && (
-            <li>
-              <span className={styles.gaugeHead}>
-                <span className={styles.gaugeName}>{t.technical.volume}</span>
-                <span className={cn(styles.gaugeValue, "numeral")}>{formatPrice(volume.ratio, locale, { digits: 1 })}×</span>
-              </span>
-              {/* BASAMAK ÇUBUKLARI (5 Kasım 2026): oran kaç eşiği geçtiyse o
-                  kadar basamak; üçüncü basamak 1× ("olağan"). Yoğun hacim
-                  mavi — yön söylemez (SignalStrip ile aynı eşleme). */}
-              <StepBars
-                value={volume.ratio}
-                tone={volume.tone === "heavy" ? "primary" : volume.tone === "light" ? "muted" : undefined}
-                className={styles.gaugeArt}
-              />
-            </li>
-          )}
-        </ul>
-      </div>
+      {/* 14 Kasım 2026 (görsel tur): ölçü şeridi (Trend, RSI, Hacim) karttan
+          KALKTI. Kart 1440'ta ~490 piksel boyundaydı ve yedi blok taşıyordu
+          (kimlik, fiyat, üç satır plan, ray, künye, cümle, üç ölçü); on altı
+          kart yan yana okunmuyor, SAT ile TUT kartlarının plan kutuları
+          farklı boyda olduğu için satırların iç hizası kayıyordu. Kartın
+          işi "bu hissede ne görünüyor ve fiyat plana göre nerede": görüş,
+          fiyat, TEK ölçek çizimi (ray) ve tek cümle. Üç ölçü detay
+          sayfasının "Göstergeler" bölümünde (`SignalStrip`,
+          `IndicatorPanels`); alt ızgara dört satıra indi (CSS `.cell`).
+          Ölçüm (önce canlı, sonra sahte veri): kart 1440'ta 488–516 → 346
+          piksel (bölgesiz TUT'un `OpenRange` satırı 429), 390'da 379–413 →
+          278–369; liste sayfası 1440'ta 5.836 → 4.998, 390'da 11.517 →
+          10.286 piksel. */}
 
       {/* ESKİ YAYIN AYAKTA ADIYLA (23 Eylül). On beş kartın on beşi aynı
           soluk künyeyi taşıyordu ("Kapanış Öncesi · 22 Eyl") ve pano beş
@@ -444,11 +385,9 @@ export function TechnicalCard({
           tamamı zaten bağlantı. On beş kartta telefonda ~700 piksel. İşaret
           sembolün yanına ok olarak çıktı, eski yayın etiketi cümlenin
           künyesine; kart beş satırlık alt ızgaraya indi (CSS `.cell`). */}
-      <label htmlFor={`kart-${row.symbol}`} className={styles.cardFold}>
-        <span className={styles.cardFoldMore}>{t.compact.more}</span>
-        <span className={styles.cardFoldLess}>{t.compact.less}</span>
-        <CaretDown size={12} weight="bold" aria-hidden />
-      </label>
+      {/* 14 Kasım 2026 (görsel tur): telefondaki "Devamı" anahtarı da kalktı.
+          Kart sadeleşti (görüş, fiyat, tek ray, tek cümle) ve 390'da
+          katlamadan da kısa; katlanacak bölüm kalmadı. */}
     </div>
   );
 }

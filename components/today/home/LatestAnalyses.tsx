@@ -4,7 +4,7 @@ import styles from "@/components/today/TodayExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
-import { Panel, PanelHeader, PanelLink, LogoTile } from "@/components/ui/primitives";
+import { PanelHeader, PanelLink, LogoTile } from "@/components/ui/primitives";
 import { getAnalyses, getSymbolNames } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { analysisHref, verdictLabel, verdictOf, } from "@/lib/analysis";
@@ -103,17 +103,33 @@ export function LatestAnalysesView({
   };
   const L = t.analysisVisuals.list;
 
+  const columns = [
+    { key: "revenue", label: L.revenue },
+    { key: "eps", label: L.eps },
+    { key: "reaction", label: L.reaction },
+  ] as const;
+
   return (
-    <Panel className="min-w-0">
+    /* KUTUSUZ AÇIK BÖLÜM (14 Kasım, görsel tur; gerekçe
+       TodayExperience.module.css → "ÜÇ KAT"). Panel ve `PanelHeader`
+       kalktı: üstte hairline, başlık panel başlığı ölçüsünde (Mercek ile
+       aynı), öne çıkan kart bölümün tek yüzeyi, satırlar sayfa zemininde. */
+    <section className={styles.open}>
       <PanelHeader
-        /* Başlık tonu ANA KOLONDA `title`: rol ayrımı yere değil İŞE bağlı
-           ve bu bir kayıt listesi, gösterge değil. Panel bir tur yan kolonda
-           dururken plakaya inmişti. */
         title={t.today.latestAnalyses}
-        action={
-          <PanelLink href="/bilancolar/analizler">{t.common.showAll}</PanelLink>
-        }
+        className="!px-0"
+        action={<PanelLink href="/bilancolar/analizler">{t.common.showAll}</PanelLink>}
       />
+      {/* SÜTUN BAŞLIĞI LİSTENİN TEPESİNDE (14 Kasım). Üç ölçünün adı
+          yalnız İLK satırın hücrelerinde yazıyordu (10 Kasım kararı: 45
+          tekrar yerine tek satır) ama o satır bir veri satırıydı: başlık
+          hücrenin içinde değerle aynı hatta duruyor, alttaki on dört
+          satırın sütunları başlıksız okunuyordu (canlı, 1440). Şimdi adlar
+          satırların ÜSTÜNDE kendi hattında, hücrelerle aynı ızgarada
+          (128 piksel × 3, aralık 24; hap sütunu `--pill`); her satır yalnız
+          değer + şerit taşır, ad ekran okuyucuda kalır. Başlık satırı
+          süs: `aria-hidden` (adlar hücrede `sr-only`). Kaç sütunun
+          göründüğüne yine panelin eni karar verir (kap sorgusu). */}
       <ul className={cn("divide-y divide-line-soft", rowStyles.list)}>
         {analyses.map((row, index) => {
           const verdict = verdictOf(row.verdict);
@@ -163,6 +179,17 @@ export function LatestAnalysesView({
                     </div>
                   </SpotlightCard>
                 </Link>
+                {analyses.length > 1 && (
+                  <div className={rowStyles.colHead} aria-hidden="true">
+                    <span>{t.today.analysesCompany}</span>
+                    <span className={rowStyles.metrics}>
+                      {columns.map((column) => (
+                        <span key={column.key} className={rowStyles.metric} data-key={column.key}>{column.label}</span>
+                      ))}
+                    </span>
+                    <span className={rowStyles.colPill}>{t.today.analysesVerdict}</span>
+                  </div>
+                )}
               </li>
             );
           }
@@ -181,7 +208,7 @@ export function LatestAnalysesView({
               <Link
                 href={analysisHref(row.symbol, row.period)}
                 prefetch={false}
-                className={cn("flex items-center gap-2.5 px-4 py-3 transition-colors hover:bg-primary-tint sm:gap-5 sm:px-5", rowStyles.row)}
+                className={cn("flex items-center gap-2.5 py-3 transition-colors hover:bg-primary-tint sm:gap-5", rowStyles.row)}
               >
                 <LogoTile symbol={row.symbol} logoUrl={logo} size="md" />
                 <span className="min-w-0 flex-1">
@@ -239,6 +266,6 @@ export function LatestAnalysesView({
           );
         })}
       </ul>
-    </Panel>
+    </section>
   );
 }

@@ -93,11 +93,19 @@ export async function UpcomingEarnings({
       {/* TAKVİME EKLE (8 Ekim). Bilanço takvimi, rapor kapağı ve analiz
           listesi bu düğmeyi taşıyordu; tarihin en çok bakıldığı yer olan
           bu kartta yoktu. Aynı uç (`/api/takvim`), aynı .ics. */}
+      {/* İKİ EYLEM TEK SATIRDA (14 Kasım 2026, görsel tur). İkisi panelin
+          doğrudan çocuğuydu: geniş ekranda ızgara "Bilanço Sayfası"nı
+          kendiliğinden ORTA sütunun altına yerleştiriyordu (EPS beklentisinin
+          altında, hiçbir şeyle hizasız; 1440, ölçüldü: x=518) ve kartın
+          altında 69 piksel boş zemin kalıyordu. Şimdi tek sarmal, sol
+          sütunda, aralıklı yan yana (telefonda da: 10 Kasım'daki "aralıksız
+          yan yana" kusuru sarmalın `gap`iyle çözülü, kart 40 piksel kısaldı). */}
+      <div className={styles.upcomingActions}>
       <AddToCalendar
         symbol={symbol}
         date={next.reportDate}
         label={t.earnings.addToCalendar}
-        className="mt-3 mb-0 w-fit self-start sm:mt-3 sm:mb-0"
+        className="m-0 w-fit"
       />
       {/* `flex`, `inline-flex` değil (10 Kasım, telefon turu): telefonda
           panel blok akışında ve iki satır içi kutu ("Takvime Ekle" ile bu
@@ -107,24 +115,29 @@ export async function UpcomingEarnings({
           (`/bilancolar/[symbol]`); takvim kartları da oraya gidiyor. */}
       <Link
         href={earningsHref(symbol)}
-        className="tap-44 mt-2 flex min-h-8 w-fit items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
+        className="tap-44 flex min-h-8 w-fit items-center gap-1 text-xs font-semibold text-primary hover:text-primary-hover"
       >
         {t.earningsSeason.company.pageLink}
         <ArrowUpRight size={12} weight="bold" aria-hidden />
       </Link>
+      </div>
       {(next.epsEstimate !== null || next.revenueEstimate !== null) && (
         /* İKİ ÖLÇÜ AYNI HATTA. Etiketler 84 piksellik hücrede iki
            satıra düşüyor (768'de ölçüldü) ve İkisi aynı anda düşmezse
            değerler birbirinden kayıyor: İngilizce tarafta "EPS ESTIMATE"
            tek satır, "REVENUE ESTIMATE" iki. Alt ızgara etiketi ve değeri
            iki hücrede de aynı satıra bağlıyor. */
+        /* BEKLENTİLER DISPLAY SAYI (14 Kasım 2026): 14/600 idi; kartın en
+           büyük puntosu tarihteydi ve piyasanın beklediği iki sayı künye
+           gibi okunuyordu (1440'ta orta sütunun altında 69 piksel boş).
+           Ortak display sayı ölçüsü: 20/700, −0,03em. */
         <dl className="mt-3 grid grid-cols-2 gap-3 border-t border-line-soft pt-3">
           {next.epsEstimate !== null && (
             <div className="row-span-2 grid grid-rows-subgrid gap-y-0.5">
               <dt className="text-nano text-muted">
                 {t.earnings.epsEstimate}
               </dt>
-              <dd className="numeral self-start text-sm font-semibold text-strong">
+              <dd className="numeral self-start text-[20px] leading-tight font-bold tracking-[-0.03em] text-strong">
                 {formatPrice(next.epsEstimate, locale, { currency: paraOpt })}
               </dd>
             </div>
@@ -134,7 +147,7 @@ export async function UpcomingEarnings({
               <dt className="text-nano text-muted">
                 {t.earnings.revenueEstimate}
               </dt>
-              <dd className="numeral self-start text-sm font-semibold text-strong">
+              <dd className="numeral self-start text-[20px] leading-tight font-bold tracking-[-0.03em] text-strong">
                 {formatMoneyCompact(
                   next.revenueEstimate,
                   locale,

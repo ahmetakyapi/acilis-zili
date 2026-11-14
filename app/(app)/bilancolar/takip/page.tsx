@@ -13,6 +13,8 @@ import {
   SegmentItem,
 } from "@/components/ui/primitives";
 import { AnalysisTable } from "@/components/earnings/AnalysisTable";
+import { CalendarSubscribe } from "@/components/calendar/CalendarSubscribe";
+import { FEED_MAX_SYMBOLS, feedUrls } from "@/lib/calendar-feed";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { EarningsCalendar } from "@/components/earnings/EarningsCalendar";
 import { EarningsTabs } from "@/components/earnings/EarningsTabs";
@@ -291,6 +293,23 @@ export default async function WatchedEarningsPage(
                 holidays={holidays}
               />
             )}
+            {/* TAKVİM ABONELİĞİ (14 Kasım 2026): okurun takip listesindeki
+                sembollerle kurulmuş bilanço akışı. Takvim bölümünün dibinde,
+                seçili aralıkta bilanço olmasa da basılıyor — abonelik
+                ekrandaki haftayı değil önümüzdeki ayları taşır. Akış
+                herkese açık ve adresle tanımlı (belirteç yok), liste
+                adreste; tavanı aşan listede ilk kırk sembol alınır ve ipucu
+                bunu söyler (`lib/calendar-feed.ts`). Bileşen
+                `components/calendar/`ta: iki ekranın ortağı. */}
+            <CalendarSubscribe
+              {...feedUrls({ kind: "bilanco", locale, symbols: userSymbols })}
+              labels={{ subscribe: t.calendarFeed.subscribe, copy: t.calendarFeed.copy, copied: t.calendarFeed.copied }}
+              hint={
+                userSymbols.length > FEED_MAX_SYMBOLS
+                  ? t.calendarFeed.earningsHintCapped.replaceAll("{max}", String(FEED_MAX_SYMBOLS))
+                  : t.calendarFeed.earningsHint
+              }
+            />
           </section>
         </>
       )}

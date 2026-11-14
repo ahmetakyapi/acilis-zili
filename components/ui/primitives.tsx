@@ -95,7 +95,12 @@ export function PanelHeader({
         /* 14 → 16 (9 Ekim, sahibinin isteği: "bazı başlıklar küçülmüş").
            Panel başlığı gövdeyle aynı puntodaydı ve ancak kalınlıkla
            ayrılıyordu; tablo satırlarının (13) bir piksel üstünde bir satır
-           gibi okunuyordu. 16 hâlâ sıkı degradenin sınırında (globals.css). */
+           gibi okunuyordu.
+           16 hâlâ sıkı degradenin sınırında (globals.css).
+           DEGRADE KALDI (14 Kasım 2026). Görsel turda panel başlığını düz
+           mürekkebe çevirmek denendi ve aynı gün geri alındı: 24 Eylül'de
+           sahibi "başlıkların hepsi mavi degrade tonumuzda olsun" demişti
+           ve tur yerleşik kararı geri almaz (`gorsel-tur` § 2). */
         <h2 className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">
           {title}
         </h2>

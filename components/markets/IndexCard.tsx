@@ -32,7 +32,10 @@ import styles from "./MarketExperience.module.css";
 type Rail = { domain: [number, number]; openAt: number; closeAt: number };
 
 /** Kartın SVG ölçüsü — Sparkline'a ve `sparkFrame`e aynı sayılar gider. */
-const SPARK = { height: 44, strokeWidth: 1.8 } as const;
+/* 14 Kasım 2026: 44 → 64. Kapak tek kolona geçti (dört kart yan yana) ve
+   eğri kartın ana görseli; 44 piksellik kutuda gün içi hareket bir çizik
+   gibi okunuyordu. Çizgi 1,8 → 2 ("mini grafik çizgisi 2 piksel"). */
+const SPARK = { height: 64, strokeWidth: 2 } as const;
 
 export function IndexCard({
   href,
@@ -44,10 +47,14 @@ export function IndexCard({
   rail,
   selected,
   order,
+  external = false,
   locale,
   t,
 }: {
   href: string;
+  /** Kart bir seçici değil, başka sayfaya giden bağlantı (Russell 2000,
+      14 Kasım 2026): gezinmede sayfa başa döner, `aria-current` taşımaz. */
+  external?: boolean;
   label: string;
   proxy: string;
   quote: Quote | null;
@@ -113,7 +120,8 @@ export function IndexCard({
   return (
     <Link
       href={href}
-      scroll={false}
+      scroll={external ? undefined : false}
+      prefetch={external ? false : undefined}
       /* SEÇİLİ OLAN YALNIZCA RENKLE SÖYLENİYORDU. Kart seçildiğinde
          accent kenarlık ve tint alıyor ama ekran okuyucuya hiçbir şey
          ulaşmıyordu. Sektör çipleri (/sirketler) bunu zaten yapıyor. */

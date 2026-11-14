@@ -1,0 +1,28 @@
+/* YILLAR TEK BLOKTA, KALIN YATAY ŞERİTLE (14 Kasım 2026, görsel tur).
+   Tam genişlikte yıllar dört sütunlu ölçü hücreleriydi: sayı tepede, şerit
+   hücrenin DİBİNDE (`margin-top:auto`); kolon son ödemelerin boyuna
+   gerildiği için sayı ile şeridi arasında ~60 piksel boş zemin kalıyordu
+   ve 5 piksellik şerit dört ayrı hücreye bölününce 0,04–0,16 $ yılları
+   nokta boyunda okunuyordu (canlı NVDA, 1440: dolgu 13–49 piksel, kulvar
+   158). Artık her genişlikte satır: yıl + ödeme sayısı | 12 piksellik dolu
+   şerit (satırın kahramanı, arayuz.md → "KALIN YATAY ŞERİT") | tutar.
+   Dört yıl tek eksende alt alta; "temettü artıyor mu" sorusu şeritlerin
+   boyundan okunuyor. Telefon düzeni (Dividends.module.css, < 640) zaten
+   buydu; iki genişlik tek kalıba indi. Ölçüm DividendPanel.tsx'te. */
+.years { display:grid; align-content:center; gap:0; margin:0; padding:6px var(--inset,16px); border-top:1px solid var(--line-soft); }
+.row { display:grid; grid-template-columns:minmax(5.5rem,auto) minmax(0,1fr) minmax(4.5rem,auto); align-items:center; column-gap:14px; min-height:44px; padding-block:6px; }
+.row + .row { border-top:1px solid var(--line-soft); }
+.row dt { display:flex; min-width:0; flex-direction:column; gap:1px; }
+.year { color:var(--text-strong); font-size:var(--text-read); font-weight:700; letter-spacing:-.01em; }
+.year small { margin-left:6px; color:var(--text-muted); font-size:12px; font-weight:400; letter-spacing:0; }
+.count { color:var(--text-muted); font-size:12px; }
+.row dd { display:contents; }
+.lane { --bar-h:12px; min-width:0; }
+.amount { color:var(--text-strong); font-size:16px; font-weight:700; letter-spacing:-.03em; text-align:right; white-space:nowrap; }
+@media (min-width:640px) { .years { padding-inline:20px; } .amount { font-size:18px; } }
+@media (min-width:1024px) {
+  /* Son Ödemeler'in yanında: blok kolonun ortasında değil TEPESİNDE başlar,
+     satırlar kolonun boyunu paylaşır (dip boşluğu satır aralarına değil
+     satırların kendi boyuna gider; dört yıl × ≥ 44). */
+  .years { align-content:stretch; grid-auto-rows:1fr; border-top:0; }
+}

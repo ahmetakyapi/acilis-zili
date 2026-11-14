@@ -34,12 +34,12 @@ import { plural } from "@/lib/utils";
 export const generateMetadata = pageMetadata({
   path: "/teknik-analiz",
   tr: {
-    title: "Teknik Analiz",
+    title: "ABD Hisseleri Teknik Analizi: Destek ve Direnç",
     description:
       "Takip edilen hisselerin günlük teknik görünümü: ortalamalar, destek ve direnç, alım bölgesi ve stop.",
   },
   en: {
-    title: "Technical Analysis",
+    title: "US Stocks: Technical Analysis and Levels",
     description:
       "Daily technical outlook for the stocks we follow: moving averages, support and resistance, entry zone and stop.",
   },
@@ -185,6 +185,30 @@ export default async function TechnicalPage() {
             Telefonda tek satırlık künye olarak kalıyor (CSS `.headStats`):
             orada başlık kartı zaten 491 piksel. Hesap ve "yakın" kuralı
             aşağıda, `summary`de; aynı sayılar atlas cümlesinde. */}
+        {/* 14 Kasım 2026 (görsel tur): üç sayı bağlamsız duruyordu ("4 Bölgede"
+            neyin dördü?). Üstüne ad ve payda ("Plana Göre Fiyat · 7 Alım
+            Planı"), altına aynı üç sayının kalın şeridi geldi: yedi planın
+            kaçı bölgede (yükseliş), kaçı yakın (nötr), kaçı stopun altında
+            (düşüş). Sayılar ve kural aynı (`summary`); yeni veri yok. */}
+        {board.length > 0 && latest && summary.plans > 0 && (
+          <div className={styles.headGauge}>
+            <p className={styles.headGaugeLabel}>
+              <b>{t.technical.proximityLabel}</b>
+              <span className="numeral">{t.technicalVisuals.plansCount.replace("{n}", String(summary.plans))}</span>
+            </p>
+            <span className="value-lane" data-draw aria-hidden style={{ "--lane-h": "8px" } as React.CSSProperties}>
+              {proximity.inZone > 0 && (
+                <i className="value-bar bar-fill" data-tone="up" data-end={proximity.near + proximity.belowStop === 0 ? "end" : undefined} style={{ left: 0, width: `${(proximity.inZone / summary.plans) * 100}%`, borderRadius: "999px 0 0 999px" }} />
+              )}
+              {proximity.near > 0 && (
+                <i className="value-bar bar-fill" style={{ left: `${(proximity.inZone / summary.plans) * 100}%`, width: `${(proximity.near / summary.plans) * 100}%`, borderRadius: 0 }} />
+              )}
+              {proximity.belowStop > 0 && (
+                <i className="value-bar bar-fill" data-tone="down" style={{ right: 0, width: `${(proximity.belowStop / summary.plans) * 100}%`, borderRadius: "0 999px 999px 0" }} />
+              )}
+            </span>
+          </div>
+        )}
         {board.length > 0 && latest && (
           <dl className={styles.headStats} aria-label={t.technical.proximityLabel}>
             <div data-tone={proximity.inZone > 0 ? "up" : undefined}>

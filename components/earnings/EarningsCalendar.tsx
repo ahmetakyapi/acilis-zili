@@ -1,4 +1,4 @@
-import { Suspense } from "react";
+import { Suspense, type CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import styles from "./EarningsCalendar.module.css";
@@ -17,12 +17,12 @@ import { verdictOf } from "@/lib/analysis";
 import { boardFor, buildVoteView, type VoteView } from "@/lib/earnings-vote";
 import type { VoteBoard } from "@/lib/earnings-vote-data";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import { SessionLane, type SessionLaneWindow } from "@/components/earnings/SessionLane";
-import { closeMinutesFor, daysBetweenEt, SESSION_BOUNDS, type MarketHoliday } from "@/lib/market-hours";
+import type { SessionLaneWindow } from "@/components/earnings/SessionLane";
+import { AFTER_HOURS_MINUTES, closeMinutesFor, daysBetweenEt, SESSION_BOUNDS, type MarketHoliday } from "@/lib/market-hours";
 import { clockOf, timePair, zoneTag } from "@/lib/session-clock";
 import { epsSurprise } from "@/lib/earnings-week";
 import { isSpotlight } from "@/lib/spotlight";
-import { cn, formatMoneyCompact, formatEtDateLong, formatPrice, NO_VALUE, plural } from "@/lib/utils";
+import { cn, formatMoneyCompact, formatEtDateLong, formatPrice, plural } from "@/lib/utils";
 import type { EarningsRow } from "@/lib/schema";
 
 /**
@@ -42,6 +42,10 @@ const HERO_COUNT = 2;
 const MID_COUNT = 6;
 /** Seyrek günde katlanmadan basılan en çok sembol (gerekçe `DaySection`). */
 const SPARSE_INLINE_MAX = 24;
+/** Görünür şirketi bu kadar ya da daha az olan gün satır düzeninde (gerekçe `DaySection`). */
+const ROW_MODE_MAX = 3;
+/** Katlamanın karosunda adı yazılan en büyük şirket sayısı. */
+const REST_PREVIEW = 5;
 
 export function timingOf(
   hour: string | null,
@@ -149,9 +153,16 @@ function cardFigures(
      ve silinmiyor; manşetten ikincil satıra iniyor, manşete EPS beklentisi
      (o da yoksa piyasa değeri) çıkıyor. Eşik 1 birim: yuvarlama artığı
      ("0,4 $") da sıfır sayılır, küçük ama gerçek gelir (12 B $) sayılmaz. */
+  /* SIFIR GELİR KARTTA HİÇ YAZILMAZ (14 Kasım, görsel tur). Yukarıdaki karar
+     sıfırı manşetten ikincil satıra indirmişti; canlıda (14 Kasım, ALLR)
+     tek kartlı günün kartında "Gelir 0,00 $" yine en çok göze batan satırdı
+     ve okura bir şey söylemiyordu: geliri olmayan şirketin geliri
+     beklenmiyor. Satır kalktı, yerini kartın öteki ölçüsü alıyor; veri
+     uydurulmuyor, yalnız anlamsız satır basılmıyor. */
   const noRevenue = revenue !== null && Math.abs(row.revenueEstimate ?? 0) < 1;
-  const headline = (noRevenue ? null : revenue) ?? eps ?? cap ?? revenue;
-  const tumu = [revenue, eps, cap].filter(
+  const shownRevenue = noRevenue ? null : revenue;
+  const headline = shownRevenue ?? eps ?? cap;
+  const tumu = [shownRevenue, eps, cap].filter(
     (figure): figure is Figure => figure !== null && figure !== headline,
   );
   /* MİNİ KARTTA EN FAZLA BİR İKİNCİL ÖLÇÜ. Yığın karttan karta 0–2 satır
@@ -203,6 +214,13 @@ type CalendarProps = {
  * okurun hiç dokunmadığı bir satır eklemek olurdu — o satırın yeri şirketin
  * bilanço sayfası.
  */
+/** Mini kart ızgarasının sütun sayıları (kırılım başına; CSS ile aynı). */
+const GRID_COLUMNS = [2, 3, 4, 6] as const;
+/** Katlama karosunun kaplayacağı sütun: satırın kalanı; satır doluysa tamamı. */
+function tileSpan(count: number, columns: number): number {
+  return columns - (count % columns);
+}
+
 function cardVote(row: EarningsRow, vote: CalendarProps["vote"]): VoteView | null {
   if (!vote?.board.available) return null;
   const view = buildVoteView({ row, holidays: vote.holidays, now: vote.now, ...boardFor(vote.board, row) });
@@ -333,7 +351,7 @@ function DaySection({
   vote: CalendarProps["vote"];
   holidays: readonly MarketHoliday[];
 }) {
-  const { heroes, mid, heroSet, midSet } = dayTiers(rows, meta);
+  const { heroes, mid: midAll, heroSet, midSet } = dayTiers(rows, meta);
   /* Günün iki zili okurun birincil saatiyle — baş kartın seans şeridi
      (`SessionLane`). Gün başına bir kez; kapanış o günün kapanışı. */
   const closeMinutes = closeMinutesFor(date, [...holidays]);
@@ -341,21 +359,23 @@ function DaySection({
     open: timePair(date, clockOf(SESSION_BOUNDS.regularOpen), locale).primary,
     close: timePair(date, clockOf(closeMinutes), locale).primary,
   };
-  const laneLabels = {
-    pre: t.earnings.beforeOpen,
-    regular: t.calendarVisuals.sessionLane.regular,
-    after: t.earnings.afterClose,
-    unknown: t.earnings.timeUnknown,
-    open: t.calendarVisuals.sessionLane.open,
-    close: t.calendarVisuals.sessionLane.close,
-    aria: t.calendarVisuals.sessionLane.aria,
-  };
+  const bellNames = { open: t.calendarVisuals.sessionLane.open };
+  /* SEYREK GÜN (10 Kasım): görünür katmana giren şirket yok. Gerekçe
+     aşağıda, `AlsoReporting` çağrısında. */
+  const sparse = heroes.length + midAll.length === 0;
+  /* AZ ŞİRKETLİ GÜN SATIR DÜZENİNDE (14 Kasım, görsel tur). Görünür
+     katmanında bir–üç şirket olan günde (hafta sonu, tatil arası; canlıda 14
+     Kasım Cumartesi: tek şirket) kartlar 240 piksellik kutular hâlinde sola
+     yaslanıyor, 1440'ta sağda ~1080 piksel ölü alan kalıyordu. O günün
+     bütün görünür şirketleri baş satır düzeninde, tam genişlikte basılır
+     (kimlik · pencere · beklentiler); kart ızgarası hiç kurulmaz. Dört ve
+     üstünde eski iki katman: devler satırda, sonrakiler ızgarada. */
+  const rowMode = !sparse && heroes.length + midAll.length <= ROW_MODE_MAX;
+  const lead = rowMode ? [...heroes, ...midAll] : heroes;
+  const mid = rowMode ? [] : midAll;
   /* Rozet satırı yalnız GÜNDE rozetli kart varken (10 Kasım): gerekçe
      aşağıda, mini kartın sınıf listesinde. */
   const midHasBadge = mid.some((row) => badges[`${row.symbol}:${row.reportDate}`] !== undefined);
-  /* SEYREK GÜN (10 Kasım): görünür katmana giren şirket yok. Gerekçe
-     aşağıda, `AlsoReporting` çağrısında. */
-  const sparse = heroes.length + mid.length === 0;
   const rest = rows.filter(
     (row) => !heroSet.has(row.symbol) && !midSet.has(row.symbol),
   );
@@ -384,6 +404,35 @@ function DaySection({
       locale={locale}
     />
   );
+  /* Katlamanın karosunda adı yazılan şirketler: kalanların piyasa değeri en
+     büyük birkaçı (değeri bilinmeyen sona). Yeni veri değil; `meta` zaten
+     sayfaya geliyor. */
+  const preview = [...rest]
+    .sort((x, y) => (meta[y.symbol]?.marketCap ?? 0) - (meta[x.symbol]?.marketCap ?? 0))
+    .slice(0, REST_PREVIEW)
+    .map((row) => row.symbol);
+  const also = (
+    <AlsoReporting
+    label={t.earnings.alsoReporting}
+    inline={sparse && rest.length <= SPARSE_INLINE_MAX}
+    total={rest.length}
+    unit={plural(rest.length, t.earnings.companyOne, t.earnings.companyMany)}
+    preview={preview}
+    labels={{ largest: t.calendarVisuals.dayList.largest, open: t.calendarVisuals.dayList.open, close: t.calendarVisuals.dayList.close }}
+    groups={[
+      { label: t.earnings.beforeOpen, tone: "pre", list: bmo },
+      { label: t.earnings.afterClose, tone: "post", list: amc },
+      { label: t.earnings.timeUnknown, tone: "neutral", list: other },
+    ].map((group) => ({
+      label: group.label,
+      tone: group.tone as "pre" | "post" | "neutral",
+      symbols: group.list.map((row) => ({
+        symbol: row.symbol,
+        watched: watchSet.has(row.symbol),
+      })),
+    }))}
+  />
+  );
   const away = daysBetweenEt(today, date);
   const watched = rows.filter((row) => watchSet.has(row.symbol)).length;
 
@@ -409,7 +458,11 @@ function DaySection({
           z-30, yani 20 aradaki doğru basamak. */}
       <div className={cn("sticky top-(--app-bar-h) z-20 mb-4 bg-page pt-1", styles.dateHeader)}>
         <div className="flex flex-wrap items-baseline gap-x-3 gap-y-1.5 border-t-2 border-strong pb-3 pt-3">
-          <h2 className="text-title font-bold tracking-[-0.03em] text-strong">
+          {/* BÖLÜM BAŞLIĞI BASAMAĞI (14 Kasım, görsel tur): ortak ölçü
+              `clamp(25px,2.8vw,36px)`/600. Düz mürekkep denendi ve aynı gün
+              geri alındı: başlık degradesi sahibinin 24 Eylül kararı
+              (globals.css → "KART VE PANEL BAŞLIKLARI DA"). */}
+          <h2>
             {formatEtDateLong(date, locale)}
           </h2>
           {/* UZAKLIK ROZETİ, YALNIZCA "BUGÜN" DEĞİL. Rozet iki şeyi birden
@@ -467,36 +520,51 @@ function DaySection({
         </div>
       </div>
 
-      {/* ---- Katman 1: hero satırları ---- */}
-      <div data-motion-stagger className={cn("flex flex-col gap-2.5", styles.heroList)}>
-        {heroes.map((row) => {
+      {/* ---- Katman 1: şirket satırları ---- */}
+      <div data-motion-stagger className={styles.heroList}>
+        {lead.map((row) => {
           const m = meta[row.symbol];
           const timing = timingOf(row.hour, t);
           const { headline, rest } = cardFigures(row, m, locale, t, false);
           const badge = badgeOf(row);
           const heroVote = voteOf(row);
+          const window = laneWindow(row.hour);
+          /* Pencerenin saati okurun birincil saatiyle: kapanış sonrası
+             kapanış zili `~` ile (rapor zilin ardından gelir, dakika
+             bilinmez), açılış öncesi açılış zili. Seans içi ve belirsizde
+             saat yazılmaz (uydurma kesinlik yok). */
+          const clock = window === "amc" ? `~${bells.close}` : window === "bmo" ? `${bellNames.open} ${bells.open}` : null;
           return (
             /* Kart bir <a> DEĞİL, içinde yüzeyi kaplayan bir <a> taşıyan
                kutu: analiz rozeti kendi bağlantısını taşıyor ve iç içe
                bağlantı geçersiz HTML. Görünüm birebir aynı kalıyor. */
-            /* `sm:flex-wrap`: oy satırı (varsa) geniş ekranda kimlik ve
-               ölçü sütununun ALTINDA tam genişlik bir satır; oysuz kartta
-               sarma hiçbir şeyi değiştirmiyor. */
             <div
               key={row.id}
-              /* ÜÇ BÖLGE: KİMLİK · SEANS ŞERİDİ · ÖLÇÜLER (10 Kasım, görsel
-                 kalite turu). Kart `sm:flex-row` + `sm:ml-auto` ile kimliği
-                 sola, ölçüleri sağa itiyordu; 1440'ta arada ~700 piksel ölü
-                 boşluk kalıyordu (canlı ekran görüntüsünden: kimliğin sağı
-                 x≈517, ölçülerin solu x≈1224, kart 1320×150). `justify-between` kuralının anlattığı
-                 hata: boşluk esnetilmez, doldurulur. Ortaya günün seans
-                 şeridi girdi (`SessionLane` — bilanço günün neresinde,
-                 Türkiye saatiyle), ölçüler sağda etiketi üstte üç hücrelik
-                 bir ölçü ızgarası oldu (taban çizgileri aynı hatta).
-                 Düzen `EarningsCalendar.module.css` → `.heroCard`; ölçüm
-                 orada. Analizi yayımlanmış bilançoda görüş, kartın
-                 tepesindeki 3 piksellik şeritte (sitenin kart dili). */
-              className={cn("panel-hover relative rounded-lg border border-line bg-surface-solid transition-colors", styles.heroCard)}
+              /* ÜÇ BÖLGE: KİMLİK · PENCERE · BEKLENTİLER (14 Kasım, görsel
+                 tur). 10 Kasım'da ortaya günün seans şeridi girmişti
+                 (`SessionLane`: 400 piksellik üç pencereli kulvar + iki
+                 zil); 1440'ta kimliğin sağındaki ~700 piksellik ölü boşluğu
+                 dolduruyordu. Canlıda (14 Kasım, 17–19 Kasım günleri) aynı
+                 şerit alt alta beş satırda AYNI iki saati ("17:30 Açılış /
+                 00:00 Kapanış") tekrar ediyor, satırın en geniş bölgesi
+                 şirkete özgü hiçbir şey söylemiyordu. Pencere artık küçük
+                 bir im: zaman çipi + üç dilimli 44 piksellik gün imi
+                 (bilançonun dilimi dolu; saati belirsizde im basılmaz) + Türkiye saati. Açılan yer
+                 beklentilere verildi: üç ölçü satırın sağ yarısında eşit
+                 sütunlarda, saç teliyle ayrılmış, günün bütün satırlarında
+                 AYNI x'te (alt ızgara). `SessionLane` bileşeni duruyor
+                 (kullanan kalmadı; ana oturuma not). Düzen ve ölçüm
+                 `EarningsCalendar.module.css` → `.heroCard`.
+                 KALKAN ESKİ KARARLAR (kayıt için): sembol bloğunun 104
+                 piksellik sabit genişliği (çipler kartlar arasında aynı
+                 hizada dursun diye; çip artık kimlik satırında değil, kendi
+                 sütununda, hiza alt ızgaradan), kimlik bloğunun dar ekranda
+                 `flex-1` olması (takvim düğmesi sağ kenara yaslansın diye;
+                 düğme pencere satırına indi, `ml-auto` orada), ölçü
+                 sütununun `sm:ml-auto` ile sağa itilmesi. Analizi
+                 yayımlanmış bilançoda görüş, kartın tepesindeki 3 piksellik
+                 şeritte (sitenin kart dili). */
+              className={cn("panel-hover relative border border-line bg-surface-solid transition-colors", styles.heroCard)}
               data-verdict={badge ? verdictOf(badge.verdict) : undefined}
             >
               {/* KART ŞİRKETİN BİLANÇO SAYFASINA (24 Ekim). Takvim bir
@@ -509,88 +577,72 @@ function DaySection({
                 href={earningsHref(row.symbol)}
                 prefetch={false}
                 aria-label={`${row.symbol} ${m?.name ?? ""}`}
-                className="absolute inset-0 rounded-lg"
+                className="absolute inset-0 rounded-[inherit]"
                 data-cc={row.symbol}
               />
-              <div className={cn("flex min-w-0 items-center gap-3 sm:gap-4", styles.heroWho)}>
-                {/* Hero logosu bir basamak büyük (56px): katman farkı
-                    yalnızca puntoyla değil ölçüyle de konuşuyor. */}
-                <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} size="xl" />
-                {/* DAR EKRANDA KALAN GENİŞLİĞİ KAPLIYOR (`flex-1`): içindeki
-                    takvim düğmesi ancak böyle kartın sağ kenarına
-                    yaslanabiliyor. Blok kendi içeriği kadar genişken
-                    `ml-auto` sembolün birkaç piksel sağına itiyordu ve düğme
-                    kartın ortasında, şirket adının üstünde asılı kalıyordu.
-                    Geniş ekranda blok yine içeriği kadar: sağdaki ölçü
-                    sütunu `sm:ml-auto` ile kendi yerini alıyor. */}
-                <div className="min-w-0 flex-1 sm:flex-initial">
-                  {/* Yıldız sembolün SOLUNDA ve sembol bloğu sabit
-                      genişlikte: zamanlama çipleri kartlar arasında aynı
-                      hizada dursun, sembolün kaç harf olduğuna göre
-                      sağa sola kaymasın. */}
-                  <div className="flex flex-wrap items-center gap-2">
-                    {/* SABİT GENİŞLİK YALNIZCA GENİŞ EKRANDA. 104 piksellik
-                        rezervasyon zamanlama çiplerini kartlar arasında aynı
-                        hizada tutmak için; telefonda ise satırı taşırıyordu:
-                        sembol (104) + çip (130) + takvim düğmesi (32) 254
-                        piksellik alana sığmıyor, düğme tek başına ikinci
-                        satıra düşüp şirket adının üstünde asılı kalıyordu.
-                        Dar ekranda sembol kendi genişliği kadar ve üçü aynı
-                        satırda. */}
-                    <span className="flex items-center gap-1.5 sm:min-w-[104px]">
-                      {watchSet.has(row.symbol) && (
-                        <span aria-hidden className="text-sm text-primary">
-                          ★
-                        </span>
-                      )}
-                      <span className="text-lead font-bold tracking-[-0.02em] text-strong">
-                        {row.symbol}
+              <div className={styles.heroWho}>
+                {/* Logo 56 piksel yalnız günün devlerinde; az şirketli günün
+                    satır düzeninde (`rowMode`) orta kartın logosu (44):
+                    katman farkı ölçüyle de konuşuyor. */}
+                <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} size={heroSet.has(row.symbol) ? "xl" : "lg"} />
+                <div className="min-w-0 flex-1">
+                  <p className={styles.heroSymbol}>
+                    {watchSet.has(row.symbol) && (
+                      <span aria-hidden className="mr-1.5 text-sm text-primary">
+                        ★
                       </span>
-                    </span>
-                    <TimingChip tone={timing.tone}>{timing.label}</TimingChip>
-                    {badge && <AnalysisBadge badge={badge} t={t} />}
-                    {/* Adıyla yazılı hâli yalnızca hero satırlarında ve
-                        yalnızca GENİŞ EKRANDA — günün en büyük iki bilançosu,
-                        takvime girmeye en çok değen ikisi.
-                        Telefonda metinli düğme ~130 piksel istiyor ve sembol
-                        (104) + zamanlama çipi (100) ile birlikte 286
-                        piksellik satıra sığmıyordu: satır kırılıyor, şirketin
-                        adı düğmenin altında öksüz bir üçüncü satır olarak
-                        kalıyordu. Dar ekranda ikonlu sürüm aynı işi 32
-                        pikselde yapıyor. */}
-                    <AddToCalendar
-                      symbol={row.symbol}
-                      date={row.reportDate}
-                      label={t.earnings.addToCalendar}
-                      compact
-                      className="ml-auto sm:hidden"
-                    />
-                    <AddToCalendar
-                      symbol={row.symbol}
-                      date={row.reportDate}
-                      label={t.earnings.addToCalendar}
-                      className="hidden sm:inline-flex"
-                    />
-                  </div>
-                  <p className="mt-[3px] truncate text-sm text-body">
-                    {m?.name ?? ""}
+                    )}
+                    {row.symbol}
                   </p>
+                  <p className={styles.heroName}>{m?.name ?? ""}</p>
                 </div>
               </div>
-              <SessionLane
-                window={laneWindow(row.hour)}
-                openClock={bells.open}
-                closeClock={bells.close}
-                closeMinutes={closeMinutes}
-                zone={zoneTag(locale).primary}
-                labels={laneLabels}
-                className={styles.heroLane}
-              />
+              {/* PENCERE: çip + gün imi + saat; takvim düğmesi satırın
+                  ucunda. Dar ekranda ikonlu düğme (44 piksel hedef), 640'tan
+                  itibaren adıyla yazılı hâli (eski gerekçe: metinli düğme
+                  telefonda satırı kırıyordu). */}
+              <div className={styles.heroWhen}>
+                <TimingChip tone={timing.tone}>{timing.label}</TimingChip>
+                <span
+                  aria-hidden
+                  className={styles.windowMark}
+                  data-window={window ?? "unknown"}
+                  style={
+                    {
+                      "--pre": SESSION_BOUNDS.regularOpen - SESSION_BOUNDS.preMarketOpen,
+                      "--regular": closeMinutes - SESSION_BOUNDS.regularOpen,
+                      "--after": AFTER_HOURS_MINUTES,
+                    } as CSSProperties
+                  }
+                >
+                  <i data-key="bmo" />
+                  <i data-key="dmh" />
+                  <i data-key="amc" />
+                </span>
+                {clock && (
+                  <span className={cn("figure", styles.heroClock)}>
+                    {clock} {zoneTag(locale).primary}
+                  </span>
+                )}
+                {badge && <AnalysisBadge badge={badge} t={t} />}
+                <AddToCalendar
+                  symbol={row.symbol}
+                  date={row.reportDate}
+                  label={t.earnings.addToCalendar}
+                  compact
+                  className={cn("ml-auto sm:hidden", styles.heroCalCompact)}
+                />
+                <AddToCalendar
+                  symbol={row.symbol}
+                  date={row.reportDate}
+                  label={t.earnings.addToCalendar}
+                  className={cn("hidden sm:inline-flex", styles.heroCal)}
+                />
+              </div>
               {/* ÖLÇÜ IZGARASI: etiket üstte, sayı altta; manşet bir basamak
                   büyük ama üç sayının TABAN ÇİZGİSİ aynı hatta (alt ızgara,
-                  ölçü `EarningsCalendar.module.css` → `.heroFigures`). Eski
-                  sağa yaslı yığında ikincil ölçüler "etiket sayı" çiftleri
-                  hâlinde 12 pikselde alt alta duruyordu. */}
+                  ölçü `EarningsCalendar.module.css` → `.heroFigures`). Olmayan
+                  ölçü sütun tutmaz. */}
               {headline ? (
                 <dl className={styles.heroFigures}>
                   {[headline, ...rest].map((figure, index) => (
@@ -612,41 +664,30 @@ function DaySection({
       </div>
 
       {/* ---- Katman 2: mini kartlar ----
-          Kartlar SABİT 184px genişlikteydi ve `flex-wrap` içinde duruyordu:
-          altı kart kapsayıcının tamamını doldurmuyor, kalan yer satırın
-          sağında ölü boşluk olarak kalıyordu — üstteki tam genişlik hero
-          satırlarının yanında bu kırık görünüyordu.
-
-          Davranış KART SAYISINA bağlı, çünkü tek bir kural ikisini birden
-          çözmüyor:
-
-            Kalabalık satır (4+) — `1fr` ile kartlar artan yeri paylaşır ve
-              satırı doldurur. Sabit genişlikte bırakılınca sağda ölü boşluk
-              kalıyordu ve üstteki tam genişlik hero satırlarının yanında
-              kırık görünüyordu.
-
-            Seyrek satır (1–3) — kartlar doğal genişliğinde kalır ve sola
-              yaslanır. Burada `1fr` felaket: o gün tek şirket açıklama
-              yaptığında kart satırın tamamına yayılıyor, "kart" olmaktan
-              çıkıp anlamsız bir banda dönüşüyordu.
-
-          Eşik 4: dörtten azı zaten satırı dolduracak kadar değil, o yüzden
-          germek yerine olduğu gibi bırakmak dürüst duruyor. */}
+          SABİT SÜTUN, KALAN YER KATLAMANIN KAROSUNA (14 Kasım, görsel tur).
+          Izgara sütun sayısını KART SAYISINDAN kuruyordu (`auto-fit` + ara
+          genişlikte `data-count` kuralları): altı kartlı günde kart 212,
+          beş kartlıda 256 piksel (canlı, 1440: 16 Kasım altı kart, 19 Kasım
+          beş kart) ve alt alta iki günün kartları hiçbir dikey hattı
+          paylaşmıyordu. Sütun sayısı artık yalnız GENİŞLİKTEN: 2 (telefon) ·
+          3 (640) · 4 (1024) · 6 (1280). Satırın artan hücreleri boş kalmaz:
+          "Diğer Açıklayanlar" katlaması ızgaranın SON KAROSU olur ve satırın
+          sonuna kadar uzar (`AlsoReporting` → karo; kaç sütun kaplayacağı
+          aşağıda hesaplanır). Satır tam dolduysa karo kendi satırında tam
+          genişlik bir şerit. Eski kararlar (4+ kartta `1fr`, 1–3 kartta
+          doğal genişlik) bu yüzden kalktı: 1–3 görünür şirketli gün zaten
+          satır düzeninde (`rowMode`), ızgaraya girmiyor. Ölçüm
+          `EarningsCalendar.module.css` → "SABİT SÜTUN". */}
       {mid.length > 0 && (
         <div
           data-motion-stagger
-          /* ARA GENİŞLİKTE SÜTUN SAYISI KART SAYISINDAN (10 Kasım, ikinci
-             tur). `auto-fit` 1024'te altı kartı 154 piksele indiriyor, adlar
-             "CoreWea…" diye kırpılıyordu; kurallar ve ölçüm
-             `EarningsCalendar.module.css` → "ARA GENİŞLİK". */
-          data-count={mid.length >= 4 ? mid.length : undefined}
-          className={cn(
-            "mt-2.5 grid gap-2.5",
-            styles.miniGrid,
-            mid.length >= 4
-              ? "grid-cols-[repeat(auto-fit,minmax(9.5rem,1fr))]"
-              : "grid-cols-[repeat(auto-fit,minmax(9.5rem,15rem))] justify-start",
-          )}
+          className={cn("grid", styles.miniGrid)}
+          style={
+            {
+              "--card-rows": 3 + (midHasBadge ? 1 : 0) + (midHasVote ? 1 : 0),
+              ...Object.fromEntries(GRID_COLUMNS.map((columns) => [`--tile-${columns}`, tileSpan(mid.length, columns)])),
+            } as CSSProperties
+          }
         >
           {mid.map((row, index) => {
             const m = meta[row.symbol];
@@ -695,7 +736,7 @@ function DaySection({
                    varsa satır bütün kartlarda var (oy satırının kuralı,
                    `midHasVote`); yoksa hiçbirinde yok. Satır sayısı 3–5. */
                 className={cn("panel-hover relative grid h-full min-w-0 grid-rows-subgrid gap-[11px] rounded-lg border border-line bg-surface-solid p-3.5 transition-colors", styles.miniCard)}
-                style={{ gridRow: `span ${3 + (midHasBadge ? 1 : 0) + (midHasVote ? 1 : 0)}` }}
+                style={{ gridRow: "span var(--card-rows)" }}
                 data-verdict={badge ? verdictOf(badge.verdict) : undefined}
                 data-result={result}
               >
@@ -847,23 +888,17 @@ function DaySection({
                       Satır bir sayı UYDURMUYOR, eksiği söylüyor: okuyucu
                       kartın neden seyrek olduğunu görüyor. Küçük şirketlerde
                       analist kapsamının olmaması bilgi, kusur değil. */}
-                  {/* İKİ SATIR, ÖTEKİ KARTLARLA AYNI HATTA (10 Kasım, görsel
-                      kalite turu). Tek satırlık "Beklenti Yok" künyesi kartı
-                      komşularından bir satır kısa bırakıyordu (tahminli
-                      kartta manşetin altında iki satır: EPS ve PD). Şimdi
-                      aynı iki yuva duruyor, değeri yok: "Gelir –", "EPS –".
-                      Yine sayı uydurulmuyor; eksik, yerinde gösteriliyor ve
-                      "Beklenti Yok" ekran okuyucuya kalıyor. */}
+                  {/* TEK SATIR, SÖZLE (14 Kasım, görsel tur). 10 Kasım'da
+                      buraya iki boş yuva konmuştu ("Gelir –", "EPS –":
+                      komşu kartlarla aynı satır sayısı için). Canlıda bir
+                      günün altı kartının ikisi-üçü bu tire çiftini taşıyor
+                      ve göz onları veri gibi okuyordu (BDVC, QNME, CNGO).
+                      Verisi olmayan ölçü artık yer tutmuyor; eksiği tek
+                      sessiz satır söylüyor. Kart yüksekliği alt ızgaradan
+                      geldiği için komşularıyla aynı; fark kartın dibinde
+                      bir satırlık pay. */}
                   {!capNote && rest.length === 0 && headline && (
-                    <dl className="mt-2 flex flex-col gap-[2px] text-small" data-empty>
-                      <span className="sr-only">{t.earnings.noEstimate}</span>
-                      {[t.earnings.revenueShort, "EPS"].map((label) => (
-                        <div key={label} aria-hidden className="flex items-baseline justify-between gap-2">
-                          <dt className="text-muted">{label}</dt>
-                          <dd className="figure font-semibold text-muted">{NO_VALUE}</dd>
-                        </div>
-                      ))}
-                    </dl>
+                    <p className={styles.noEstimate}>{t.earnings.noEstimate}</p>
                   )}
                   {capRatio !== null && (
                     <span aria-hidden className={styles.capLane}>
@@ -901,6 +936,7 @@ function DaySection({
               </div>
             );
           })}
+          {also}
         </div>
       )}
 
@@ -916,23 +952,7 @@ function DaySection({
           hemen altında tek satır çip olarak basılır. Daha kalabalık seyrek
           günde (profili gelmemiş onlarca sembol) katlama kalır — HTML yükü
           gerekçesi `AlsoReporting` başında. */}
-      <AlsoReporting
-        label={t.earnings.alsoReporting}
-        inline={sparse && rest.length <= SPARSE_INLINE_MAX}
-        total={rest.length}
-        groups={[
-          { label: t.earnings.beforeOpen, tone: "pre", list: bmo },
-          { label: t.earnings.afterClose, tone: "post", list: amc },
-          { label: t.earnings.timeUnknown, tone: "neutral", list: other },
-        ].map((group) => ({
-          label: group.label,
-          tone: group.tone as "pre" | "post" | "neutral",
-          symbols: group.list.map((row) => ({
-            symbol: row.symbol,
-            watched: watchSet.has(row.symbol),
-          })),
-        }))}
-      />
+      {mid.length === 0 && also}
     </section>
   );
 }

@@ -28,6 +28,12 @@ import css from "./SessionLane.module.css";
  * değil, yön rengi de değil — pencerenin iyi ya da kötü bir anlamı yok).
  * Çizim görünüme girince bir kez açılır (`data-motion-draw="line"`,
  * `MotionExperience`); sunucu son kareyi basar.
+ *
+ * 14 KASIM 2026 (görsel tur): takvimin baş satırı bu şeridi bıraktı. Aynı
+ * iki zil saati alt alta beş satırda tekrar ediyordu; pencere küçük bir gün
+ * imine indi (`EarningsCalendar.tsx` → "ÜÇ BÖLGE", `.windowMark`). Bileşeni
+ * şu an çizen ekran yok; pencere tipi (`SessionLaneWindow`) takvimde
+ * kullanılıyor. Silme ya da başka ekrana taşıma kararı ana oturumun.
  */
 
 export type SessionLaneWindow = "bmo" | "dmh" | "amc" | null;

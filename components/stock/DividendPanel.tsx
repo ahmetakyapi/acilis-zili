@@ -1,6 +1,5 @@
 import { frequencyLabel } from "@/components/calendar/DividendCalendar";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { ScaleBar } from "@/components/markets/CompareScale";
 import { DataStamp, EmptyState, Panel, PanelHeader } from "@/components/ui/primitives";
 import { getSymbolDividends } from "@/lib/dividend-data";
 import { getDictionary, type Locale } from "@/lib/i18n";
@@ -16,6 +15,7 @@ import {
 } from "@/lib/utils";
 import styles from "@/components/calendar/Dividends.module.css";
 import { rateDigits } from "./rate-digits";
+import yr from "./DividendYears.module.css";
 
 /**
  * Hisse sayfasının temettü paneli — sunucu bileşeni.
@@ -35,6 +35,11 @@ import { rateDigits } from "./rate-digits";
  */
 
 const RECENT_ROWS = 4;
+/* Tam genişlikte altı ödeme (14 Kasım 2026): Son Ödemeler kolonu yılların
+   yanında 75 piksel kısa bitiyordu (1440, ölçüldü: yıllar 212, liste 137);
+   elde on beş ödeme varken dördünü basıp boş zemin bırakmak yerine kolon
+   kendi verisiyle doluyor. */
+const RECENT_ROWS_WIDE = 6;
 /* Küçük tutarın hane sayısı: components/stock/rate-digits.ts (10 Kasım 2026). */
 
 export async function DividendPanel({
@@ -63,6 +68,17 @@ export async function DividendPanel({
   }
 
   const { past, next } = result;
+  /* TEMETTÜ ÖDEMEYEN ŞİRKETTE TEK SATIR (14 Kasım 2026, görsel tur). Boş
+     panel başlık + cümle + stopaj paragrafı + damga basıyordu (1320×182):
+     ödenmeyen bir temettünün vergisini anlatan dört satır. Yokluk bir
+     bilgi, tek cümlede kalır; stopaj notu ve damga ödeme olan şirkette. */
+  if (past.length === 0 && !next) {
+    return (
+      <Panel className={cn(styles.panel, wide && styles.panelWide)}>
+        <PanelHeader title={x.panelTitle} meta={x.panelNone} />
+      </Panel>
+    );
+  }
   const currentYear = Number(todayEt().slice(0, 4));
   const years = new Map<number, { total: number; count: number }>();
   for (const item of past) {
@@ -74,15 +90,12 @@ export async function DividendPanel({
   }
   const yearRows = [...years.entries()].sort(([a], [b]) => b - a);
   const peak = Math.max(...yearRows.map(([, entry]) => entry.total), Number.EPSILON);
-  const recent = [...past].reverse().slice(0, RECENT_ROWS);
+  const recent = [...past].reverse().slice(0, wide ? RECENT_ROWS_WIDE : RECENT_ROWS);
   const freq = frequencyLabel(result.frequency, t);
 
   return (
     <Panel className={cn(styles.panel, wide && styles.panelWide)}>
       <PanelHeader title={x.panelTitle} meta={freq ?? undefined} />
-      {past.length === 0 && !next ? (
-        <p className={styles.panelEmpty}>{x.panelNone}</p>
-      ) : (
         <>
           {next && (
             <div className={styles.nextStrip}>
@@ -113,17 +126,25 @@ export async function DividendPanel({
               gibi), `wide`da iki sütunluk ızgara. */}
           <div className={styles.panelBody}>
           {yearRows.length > 0 && (
-            <dl className={styles.years}>
+            /* YILLAR SATIR SATIR, 12 PİKSELLİK ŞERİTLE (14 Kasım 2026).
+               Gerekçe ve önceki ölçüm DividendYears.module.css. Şerit ortak
+               `value-lane`/`value-bar` (soldan dolar, `data-draw` ile ekrana
+               girince bir kez); oran yılların en büyüğüne göre. */
+            <dl className={yr.years}>
               {yearRows.map(([year, entry]) => (
-                <div key={year}>
+                <div key={year} className={yr.row}>
                   <dt>
-                    <span className="numeral">{year}</span>
-                    {year === currentYear && <span className={styles.partial}>{x.partialYear}</span>}
+                    <span className={cn("numeral", yr.year)}>
+                      {year}
+                      {year === currentYear && <small>{x.partialYear}</small>}
+                    </span>
+                    <span className={yr.count}>{plural(entry.count, x.paymentsOne, x.payments).replace("{n}", String(entry.count))}</span>
                   </dt>
                   <dd>
-                    <span className="numeral">{money(entry.total)}</span>
-                    <span className={styles.count}>{plural(entry.count, x.paymentsOne, x.payments).replace("{n}", String(entry.count))}</span>
-                    <ScaleBar ratio={entry.total / peak} signed={false} className={styles.yearBar} />
+                    <span className={cn("value-lane", yr.lane)} data-draw="" aria-hidden>
+                      <i className="value-bar bar-fill" style={{ left: 0, width: `${Math.max(1.5, (entry.total / peak) * 100)}%` }} />
+                    </span>
+                    <span className={cn("numeral", yr.amount)}>{money(entry.total)}</span>
                   </dd>
                 </div>
               ))}
@@ -162,7 +183,6 @@ export async function DividendPanel({
             </p>
           )}
         </>
-      )}
       <div className={styles.notes}>
         <p>
           {x.withholding}{" "}

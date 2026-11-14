@@ -166,7 +166,15 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
         {hasOpenMarket ? (
           <dl className={styles.readings}>
             {/* SIFIR OKUMA SOLUK (30 Eylül): "0,00 $ · 0 Kişi" dolu okumayla
-                aynı mürekkepte duruyordu; göz önce boş olana gidiyordu. */}
+                aynı mürekkepte duruyordu; göz önce boş olana gidiyordu.
+                14 Kasım 2026: soluk da olsa panelin EN BÜYÜK puntosunda
+                anlamsız bir değerdi (canlı NVDA: "0,00 $ · 0 Kişi", yanında
+                968 Mn $ ve onun eksilisi Net). Tek taraflı dönemde yalnız
+                işlem olan taraf basılır; öteki tarafın sıfırı ve Net (aynı
+                sayının işaretlisi) hemen alttaki denge satırında yazıyor
+                ("Alım %0 · Satış %100"). İki taraf da varsa üç okuma eskisi
+                gibi. */}
+            {(summary.buyers > 0 || summary.sellers === 0) && (
             <div className={styles.reading} data-zero={summary.buyers === 0 || undefined}>
               <dt>{d.insiderBuy}</dt>
               <dd className={cn("numeral", styles.readingValue)}>
@@ -174,6 +182,8 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
               </dd>
               <dd className={styles.readingMeta}>{people(summary.buyers)}</dd>
             </div>
+            )}
+            {(summary.sellers > 0 || summary.buyers === 0) && (
             <div className={styles.reading} data-zero={summary.sellers === 0 || undefined}>
               <dt>{d.insiderSell}</dt>
               <dd className={cn("numeral", styles.readingValue)}>
@@ -181,9 +191,10 @@ export async function InsiderPanel({ symbol, locale, t }: { symbol: string; loca
               </dd>
               <dd className={styles.readingMeta}>{people(summary.sellers)}</dd>
             </div>
+            )}
             {/* Net ancak iki taraf da tam fiyatlıysa: fiyatı düşen bir işlem
                 varken fark, eksik bir toplamdan kurulmuş olurdu. */}
-            {summary.buyUnpriced + summary.sellUnpriced === 0 && (
+            {summary.buyUnpriced + summary.sellUnpriced === 0 && summary.buyers > 0 && summary.sellers > 0 && (
             <div className={styles.reading}>
               <dt>{d.insiderNet}</dt>
               {/* Renk yalnızca işaretten: net alım artı, net satım eksi. */}

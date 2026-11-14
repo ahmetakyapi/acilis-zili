@@ -1,0 +1,26 @@
+/* Görüş şeridi (14 Kasım 2026). Gerekçe ve ölçüm `StanceHistory.tsx`.
+   Kalın yatay şerit dili: dilim 14 piksel (satırın kahramanı), uçlar
+   yuvarlak, boş nöbet kulvar tonunda (`--line-soft`). Renk görüşün tonu. */
+.root { display:grid; gap:14px; min-width:0; }
+.headline { font-size:clamp(18px, 1.5vw, 21px); line-height:1.3; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); }
+.strip { display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:6px; min-width:0; }
+.day { display:grid; gap:6px; min-width:0; }
+.turn { min-height:16px; font-size:12px; line-height:16px; font-weight:700; letter-spacing:.04em; white-space:nowrap; }
+.turn[data-verdict="buy"] { color:var(--verdict-buy); }
+.turn[data-verdict="hold"] { color:var(--verdict-hold); }
+.turn[data-verdict="sell"] { color:var(--verdict-sell); }
+.cells { display:grid; grid-template-columns:repeat(3, minmax(0,1fr)); gap:2px; height:14px; }
+.cells > i { border-radius:3px; background:var(--line-soft); }
+.cells > i:first-child { border-radius:999px 3px 3px 999px; }
+.cells > i:last-child { border-radius:3px 999px 999px 3px; }
+.cells > i[data-verdict="buy"] { background:var(--verdict-buy); }
+.cells > i[data-verdict="hold"] { background:var(--verdict-hold); }
+.cells > i[data-verdict="sell"] { background:var(--verdict-sell); }
+.date { overflow:hidden; font-size:12px; line-height:16px; color:var(--text-muted); text-overflow:ellipsis; white-space:nowrap; }
+.detail { border-top:1px solid var(--line-soft); }
+.detail > summary { display:flex; align-items:center; gap:6px; min-height:44px; color:var(--primary-ink); font-size:13px; font-weight:600; cursor:pointer; list-style:none; }
+.detail > summary::-webkit-details-marker { display:none; }
+.detail > summary::after { content:""; width:7px; height:7px; margin-left:2px; border-right:1.5px solid currentColor; border-bottom:1.5px solid currentColor; transform:translateY(-2px) rotate(45deg); transition:transform var(--mark) var(--ease-brand); }
+.detail[open] > summary::after { transform:translateY(1px) rotate(-135deg); }
+.detailBody { display:grid; gap:10px; min-width:0; padding-bottom:4px; }
+@media (prefers-reduced-motion: reduce) { .detail > summary::after { transition:none; } }

@@ -234,7 +234,13 @@ export async function MetricsCard({
      ADR'de dolar/TWD karışımı verir, BRK.B'de 0,002 basar. Yani ne olduğu
      gibi alınabiliyor ne yeniden kurulabiliyor. */
 
-  const cells = rows.map(([label, value, cell]) => ({
+  /* BOŞ ÖLÇÜ HÜCRE AÇMAZ (14 Kasım 2026, görsel tur). Kârı ya da temettüsü
+     olmayan şirkette ızgaranın yarısı tireydi (sahte küçük şirket: altı
+     hücrenin dördü "–", 1440). Değeri olmayan ölçü basılmaz; sütun sayısı
+     kalan hücreye göre (`data-count`). Hiçbiri yoksa eski liste kalır ki
+     kart boş bir kutuya dönmesin. */
+  const filled = rows.filter(([, value]) => value !== NO_VALUE);
+  const cells = (filled.length > 0 ? filled : rows).map(([label, value, cell]) => ({
     label,
     value,
     cell,

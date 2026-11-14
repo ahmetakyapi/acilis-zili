@@ -1,4 +1,4 @@
-import type { CSSProperties } from "react";
+import type { CSSProperties, ReactNode } from "react";
 import { CompanyCards } from "@/components/ui/CompanyCards";
 import { FoldToggle } from "@/components/ui/FoldToggle";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
@@ -23,6 +23,7 @@ import {
   PAGE_STEP,
   PHONE_ROWS,
   approxPoints,
+  bodySpan,
   type Row,
   type SortDir,
   type SortKey,
@@ -67,7 +68,10 @@ export function MembersTable({
   t,
   cards,
   basePath = "/piyasalar",
+  footer,
 }: {
+  /** Panelin dibindeki damga (`DataStamp`) — künyelerden sonra, panelin içinde. */
+  footer?: ReactNode;
   tab: TabKey;
   rows: Row[];
   /** Kaç satır basılacak — sıralama TAMAMI üzerinde, dilim sonra alınır. */
@@ -139,7 +143,22 @@ export function MembersTable({
      göre ölçek" yasağı duruyor: tek uç değer ölçeği belirlemez, kola
      dayanır ve ucunda kesik taşır. Künye gerçek ölçeği yazar. */
   const daySpan = laneSpan(rows.map((row) => row.quote?.changePct), DAY_LANE_SPAN, laneModeOf(sort === "degisim", dir));
-  const weekSpan = laneSpan(rows.map((row) => row.week), WEEK_LANE_SPAN, laneModeOf(sort === "hafta", dir));
+  /* 14 Kasım 2026 (görsel tur) — HAFTALIK ÖLÇEK GÖVDEYE GÖRE, UCA DEĞİL.
+     Canlıda (Nasdaq 100, 13 Kasım kapanışı) haftalık ölçek ±%15 çıktı:
+     90. yüzdelik, o haftanın sert düşen yarı iletken kuyruğunu ölçüyordu;
+     ekrandaki satırların haftalığı ise %1–7 ve 44 piksellik kolda 3–10
+     piksellik NOKTALARA düşüyordu — sahibinin 10 Kasım itirazının
+     ("nokta nokta ne anlatıyor") ta kendisi. Liste haftalığa göre SIRALI
+     DEĞİLKEN ölçek artık üyelerin 75. yüzdeliği (`bodySpan`,
+     index-shared.ts): gövdedeki satır kolun yarısını doldurur, kuyruktaki
+     dörtte bir kola dayanıp ucunda kesik taşır (ölçeği aşanın büyüklüğünü
+     yanındaki sayı söyler — `ZeroBar`ın kuralı). Haftalığa göre sıralıyken
+     değişmedi (`laneSpan` "rise"/"fall": görünen satırlar zaten uç).
+     Ölçek yine BÜTÜN üyelerden: "Daha Fazla Göster" çubukları yeniden
+     çizdirmez; künye gerçek ölçeği yazar. */
+  const weekSpan = sort === "hafta"
+    ? laneSpan(rows.map((row) => row.week), WEEK_LANE_SPAN, laneModeOf(true, dir))
+    : bodySpan(rows.map((row) => row.week), WEEK_LANE_SPAN);
   /* PİYASA DEĞERİ BİR DE ÇİZİM (26 Eylül). "Karşılaştırılan her büyüklük bir
      de çizgi olarak okunur" (CLAUDE.md); sütun yalnızca sayıydı ve "hangisi
      ne kadar büyük" basamak basamak okunuyordu.
@@ -161,7 +180,13 @@ export function MembersTable({
      ("%0,07") yazıyla söylüyor; logaritmik çubuk yasağı yerinde. Resmî
      endeks ağırlığı olmadığı tablo künyesinde yazılı. Dow fiyat ağırlıklı:
      orada pay yanıltırdı, basılmıyor (Katkı sütunu zaten var). */
-  const shareOf = tab === "dow" ? null : capShares(rows.map((row) => row.marketCap));
+  /* 14 Kasım 2026 (görsel tur): PAY YALNIZ PİYASA DEĞERİNE GÖRE SIRALIYKEN.
+     Her sıralamada basılıyordu: 11–12 piksel, soluk, satırların çoğunda
+     "%0,08"; okurun sormadığı bir sayı sütunu olarak tabloyu kalabalık
+     ediyordu. Pay, liste piyasa değerine göre dizildiğinde bir haber
+     ("Apple listenin %13'ü"); o sıralamada gövde mürekkebiyle basılır,
+     ötekilerde sütun da künye cümlesi de yok ("ya anlamlı yap ya düşür"). */
+  const shareOf = tab === "dow" || sort !== "cap" ? null : capShares(rows.map((row) => row.marketCap));
   /* HAFTALIK SÜTUN (10 Kasım, sahibinin isteği). Veri sayfada kuruluyor
      (`getWeeklyChanges`, Şirketler tablosuyla aynı kaynak). Sağlayıcı bar
      vermediyse hiçbir satırda değer yoktur ve sütun HİÇ basılmaz ("–"
@@ -244,6 +269,7 @@ export function MembersTable({
       style={{ "--fold-inset": "16px" } as CSSProperties}
       data-range={showRange || undefined}
       data-week={showWeek || undefined}
+      data-share={shareOf ? "" : undefined}
     >
       <CompanyCards
         symbols={fresh.map((row) => row.member.symbol)}
@@ -593,6 +619,7 @@ export function MembersTable({
       {showContribution && (
         <p className={board.note}>{t.markets.contributionHint}</p>
       )}
+      {footer && <div className={styles.stamp}>{footer}</div>}
     </Panel>
   );
 }

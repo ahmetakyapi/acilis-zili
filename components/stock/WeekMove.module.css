@@ -16,10 +16,14 @@
 .badge[data-explained="market"] { background: var(--primary-tint); color: var(--primary-ink); }
 .window { margin: -8px 0 0; font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
 
-/* Sayı solda, çizgi sağda (kap ≥ 440); dar kapta alt alta. Zemin tek ton
-   kademe (`--surface-sunken`): figür panelin içinde ayrı bir okuma. */
-.figure { display: grid; gap: 10px 20px; padding: 12px 14px 8px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
-@container (min-width: 440px) { .figure { grid-template-columns: auto minmax(0, 1fr); align-items: center; } }
+/* Sayı solda, şeritler sağda (kap ≥ 560); dar kapta alt alta. Zemin tek ton
+   kademe (`--surface-sunken`): figür panelin içinde ayrı bir okuma.
+   14 Kasım 2026: eşik 440 → 560. 1024'te kart panelin yarısında 470 piksel;
+   sol sütun (büyük sayı + S&P satırı, ~290) şerit kulvarına 0 piksel
+   bırakıyor, hacim sütunu kutudan 2 piksel taşıyordu (ölçüldü). Kulvarın
+   tabanı da 64 piksel. */
+.figure { display: grid; gap: 10px 24px; padding: 12px 14px 10px; border-radius: var(--radius-lg); background: var(--surface-sunken); }
+@container (min-width: 560px) { .figure { grid-template-columns: auto minmax(0, 1fr); align-items: center; } }
 .lead { display: flex; min-width: 0; flex-direction: column; gap: 2px; }
 .caption { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
 .big { margin: 0; font-size: 34px; line-height: 1.05; font-weight: 700; letter-spacing: -.04em; color: var(--text-strong); white-space: nowrap; }
@@ -33,59 +37,25 @@
 .gap[data-tone="up"] { background: var(--up-wash); color: var(--up); }
 .gap[data-tone="down"] { background: var(--down-wash); color: var(--down); }
 
-/* ÇİZİM ARTAN YERİ ALIR (10 Kasım 2026). Kart, soru kutusuyla aynı panelin
-   kolonu; not yokken ("şu an yok") ya da kısayken kolonun dibinde boş zemin
-   kalıyordu (NVDA 1440, notsuz hâl: ~90 piksel; sonra kolonun kendi 18
-   piksellik alt payı dışında 0). Figür kutusu esniyor, içinde
-   yalnız çizim uzuyor (64 piksel taban); sayılar ve gün satırı kendi
-   boyunda. Not geldiğinde yer nota gider, çizim tabanına iner. */
+/* GÜN GÜN ŞERİTLER (14 Kasım 2026; gerekçe WeekMoveCard.tsx). Satır:
+   gün | kulvar (sıfır ortada) | yüzde | hacim. Kutu kolonun artan yerini
+   alır (10 Kasım kararı sürüyor: not yokken kolonun dibinde boş zemin
+   kalmasın); artan yer satırlara eşit dağılır, şerit 12 pikselde kalır. */
 .figure { flex: 1 1 auto; }
-.spark { position: relative; display: flex; min-width: 0; flex-direction: column; align-self: stretch; margin: 0; }
-.plot { position: relative; min-height: 64px; flex: 1 1 64px; }
-.svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-.zero { stroke: var(--line-strong); stroke-width: 1; stroke-dasharray: 3 4; }
-.area { fill: color-mix(in oklab, var(--text-muted) 10%, transparent); stroke: none; }
-.area[data-tone="up"] { fill: color-mix(in oklab, var(--up) 12%, transparent); }
-.area[data-tone="down"] { fill: color-mix(in oklab, var(--down) 12%, transparent); }
-.stockLine, .marketLine { fill: none; stroke-linecap: round; stroke-linejoin: round; }
-.stockLine { stroke: var(--text-strong); stroke-width: 2; }
-.stockLine[data-tone="up"] { stroke: var(--up); }
-.stockLine[data-tone="down"] { stroke: var(--down); }
-.marketLine { stroke: var(--text-muted); stroke-width: 1.5; stroke-dasharray: 4 4; }
-.endDot { position: absolute; width: 9px; height: 9px; margin: -4.5px 0 0 -4.5px; border-radius: 50%; background: var(--text-strong); box-shadow: 0 0 0 3px var(--surface-sunken); }
-.endDot[data-tone="up"] { background: var(--up); }
-.endDot[data-tone="down"] { background: var(--down); }
-
-/* Gün gün: her seans çizgideki noktasının altında, aynı x. */
-.days { position: relative; height: 34px; margin: 4px 0 0; padding: 0; list-style: none; }
-.days > li { position: absolute; top: 0; display: grid; justify-items: center; width: 56px; margin-left: -28px; line-height: 15px; }
-/* SON GÜN KUTUNUN İÇİNDE, SATIRLAR AYRILAN YERDE (10 Kasım, telefon turu;
-   ölçüldü 390, /hisse/NVDA). Son seans çizginin sağ ucunda (%100): 56
-   piksellik etiket ortalanınca yarısı kutunun dışına taşıyor ve panel onu
-   kırpıyordu ("−%0," ve "2,2" yarım basılıyordu). Çizim ve gün satırı
-   telefonda sağdan 14 piksel içeri alınır: son etiketin taşan yarısı
-   (28) bu pay + kutunun 14 piksellik dolgusuna sığar; etiketler aynı
-   adımla dizilmeye devam eder (son etiketi sola yaslamak komşusuyla
-   çakıştırıyordu, denendi). Üç katlı etiket (gün, yüzde, hacim) satır
-   yüksekliği verilmediği için 54 piksel tutuyor, ayrılan 46 pikseli aşıp
-   lejantın üstüne biniyordu; satır 15 piksel (3 × 15 = 45). */
-@media (max-width: 639px) { .spark { padding-right: 14px; } }
+.daily { display: flex; min-width: 0; flex-direction: column; align-self: stretch; gap: 4px; margin: 0; }
+.days { display: grid; flex: 1 1 auto; grid-auto-rows: minmax(28px, 1fr); margin: 0; padding: 0; list-style: none; }
+.days > li { display: grid; grid-template-columns: 2.4rem minmax(64px, 1fr) 3.6rem 3.2rem; align-items: center; column-gap: 10px; min-width: 0; }
+.days > li + li { border-top: 1px solid var(--line-soft); }
+.lane { --bar-h: 12px; --notch-out: 5px; min-width: 0; }
+.marketNotch { --notch-tone: var(--text-muted); }
 .dayName { font-size: 12px; font-weight: 600; color: var(--text-body); }
-.dayValue { font-size: 12px; font-weight: 700; white-space: nowrap; color: var(--text-muted); }
+.dayValue { font-size: 13px; font-weight: 700; white-space: nowrap; text-align: right; color: var(--text-muted); }
 .dayValue[data-tone="up"] { color: var(--up); }
 .dayValue[data-tone="down"] { color: var(--down); }
-.dayValue[data-loudest] { font-weight: 700; }
-.volume { display: inline-flex; align-items: center; gap: 3px; font-size: 12px; font-weight: 700; color: var(--brass-ink); white-space: nowrap; }
-.days > li:has(.volume) { top: -2px; }
-.legend { display: flex; justify-content: flex-end; gap: 12px; margin: 0; padding: 0; list-style: none; font-size: 12px; font-weight: 700; color: var(--text-muted); }
-.legend li { display: inline-flex; align-items: center; gap: 5px; }
-.legend li::before { content: ""; width: 14px; border-top: 2px solid var(--text-strong); }
-.legend li[data-tone="up"]::before { border-top-color: var(--up); }
-.legend li[data-tone="down"]::before { border-top-color: var(--down); }
-.legend li[data-series="market"]::before { border-top: 1.5px dashed var(--text-muted); }
-.legend li[data-series="stock"] { font-family: var(--font-mono); color: var(--text-strong); }
-.days:has(.volume) { height: 46px; }
-@container (max-width: 359px) { .days > li { width: 46px; margin-left: -23px; } .dayValue, .dayName { font-size: 12px; } }
+.volume { display: inline-flex; align-items: center; justify-content: flex-end; gap: 3px; font-size: 12px; font-weight: 700; color: var(--brass-ink); white-space: nowrap; }
+.legend { display: flex; align-items: center; justify-content: flex-end; gap: 6px; margin: 0; font-size: 12px; font-weight: 600; color: var(--text-muted); }
+.legend i { width: 2px; height: 12px; border-radius: 1px; background: var(--text-muted); }
+@container (max-width: 359px) { .days > li { grid-template-columns: 2.2rem minmax(48px, 1fr) 3.4rem 2.9rem; column-gap: 8px; } }
 
 /* Not: özet her zaman açık, etkenler katlı. Yer, notun ölçülmüş boyunda
    ayrılıyor (25 Ekim, 45 kelimelik özet + katlı satır + künye): 1024 ve
@@ -122,14 +92,9 @@
    çizim 600–700, kademe 30–60 ms (stock.module.css → "KAPAĞIN AÇILIŞI"). */
 @keyframes wm-rise { from { opacity: 0; } }
 @keyframes wm-glint { 0%, 100% { opacity: .45; } 50% { opacity: 1; } }
-@keyframes wm-reveal { from { clip-path: inset(-10% 100% -10% 0); } to { clip-path: inset(-10% 0 -10% 0); } }
-/* GÖRÜNÜRLÜK KAPISI (10 Kasım): çizim yüklemede oynuyordu, kart ise 1440'ta
-   ekranın altında (y≈1050): okuyucu inene dek bitmişti (ölçüldü). Şimdi
-   `PlayOnView` görünce bir kez oynatıyor; kart ilk ekrandaysa bitmiş çizim. */
-@media (prefers-reduced-motion: no-preference) {
-  .figure[data-armed] .svg { animation: wm-reveal .7s var(--ease-brand) both; }
-  .figure[data-armed]:not([data-play]) .svg { animation-play-state: paused; }
-}
+/* Çizim hareketi ortak kapıda: şeritler `bar-fill` + `data-draw`
+   (components/motion/DrawGate.tsx), ekrana girince bir kez dolar. Modülde
+   çizim keyframes'i yok (14 Kasım: `wm-reveal` çizgiyle birlikte kalktı). */
 @media (prefers-reduced-motion: reduce) {
   .summary, .loadingIcon { animation: none !important; }
   .plus { transition: none; }

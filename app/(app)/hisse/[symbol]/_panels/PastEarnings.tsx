@@ -1,4 +1,5 @@
-import { EmptyState, EmptyValue } from "@/components/ui/primitives";
+import { EmptyValue, Panel, PanelHeader } from "@/components/ui/primitives";
+import page from "../stock.module.css";
 import { getEarningsForSymbol, type AnalysisIndexRow } from "@/lib/data";
 import { fiscalLabel, fiscalOf } from "@/lib/fiscal";
 import { EpsTrack } from "@/components/stock/EpsTrack";
@@ -81,9 +82,13 @@ export async function PastEarnings({
       });
   }
 
-  if (rows.length === 0) {
-    return <EmptyState title={t.common.noData} />;
-  }
+  /* VERİ YOKSA PANEL DE YOK (14 Kasım 2026, görsel tur). Panel ve başlığı
+     sayfadaydı, gövde buradan geliyordu: bilanço geçmişi olmayan şirkette
+     (yeni halka arz, küçük şirket) tam genişlikte bir kutu + ortada "Veri
+     Yok" kalıyordu (1320×159 piksel, sahte veriyle ölçüldü). Kabuk artık
+     bu bileşenin içinde; satır yoksa hiçbir şey basılmaz. Sayfadaki yedek
+     aynı kabuğu çiziyor (akış gelince kayma yok). */
+  if (rows.length === 0) return null;
   const shown = rows.slice(0, 8);
 
   /* Ay satırı çeyreğin bittiği ayı söyler; mali yıl etiketi (NVDA'nın
@@ -103,6 +108,19 @@ export async function PastEarnings({
   const hasRevenue =
     shown.filter((row) => row.revenueActual !== null || row.revenueEstimate !== null).length >= 2 ||
     shown.some((row) => row.revenueActual !== null && row.revenueEstimate !== null);
+  /* SÜTUN ANCAK ÇOĞU SATIRI DOLUYSA AÇILIR (14 Kasım 2026, görsel tur).
+     Canlı NVDA'da dört çeyreğin ikisinde rapor tarihi ve gelir yoktu (eski
+     çeyrekler takvimde tutulmuyor): "Rapor Tarihi" ve "Gelir · Gerçekleşen"
+     sütunlarının yarısı tireydi, satırlar iki satırlık gelir hücresi
+     yüzünden 58–76 piksel tutuyordu (1440, ölçüldü: tablo 291 piksel,
+     sekiz tire). Kural: sütun, satırların en az dörtte üçü doluysa kendi
+     yerinde; değilse değer dönemin ALTINA sessiz satır olarak iner
+     (telefon düzeninin her genişliğe yayılması) ve boş satırda hiçbir şey
+     basılmaz. Üstteki sütun grafiği aynı çeyreklerin EPS'ini zaten çiziyor;
+     tablo onun sayısal dökümü, tire duvarı değil. */
+  const mostly = (count: number) => count >= Math.ceil(shown.length * 0.75);
+  const dateColumn = mostly(shown.filter((row) => row.reportDate).length);
+  const revenueColumn = hasRevenue && mostly(shown.filter((row) => row.revenueActual !== null).length);
   /* BEKLENTİ SÜTUNU EN AZ İKİ DEĞERLE (10 Kasım 2026). Yukarıdaki kural iki
      gelir sütununu BİRLİKTE açıyor; NVDA'da gelir beklentisi dört çeyreğin
      yalnız birinde vardı ve "Gelir · Beklenti" sütunu üç tire, bir sayı
@@ -110,7 +128,7 @@ export async function PastEarnings({
      değerden azsa açılmıyor, eldeki tek beklenti gerçekleşenin ALTINDA
      küçük bir satır olarak duruyor ("Beklenti 94,0 Mr $") — karşılaştırma
      kaybolmuyor, tablo bir sütun daralıyor. */
-  const revenueEstimateColumn = hasRevenue && shown.filter((row) => row.revenueEstimate !== null).length >= 2;
+  const revenueEstimateColumn = revenueColumn && shown.filter((row) => row.revenueEstimate !== null).length >= 2;
   /* TİRE SESSİZ (aynı tur). Eksik değer hücresi gövde metninin tonunda bir
      tire basıyordu ve dolu hücreyle aynı ağırlıkta okunuyordu; artık kıl
      çizgi tonunda — "veri yok" bir değer değil, bir yokluk. Ekran okuyucu
@@ -121,7 +139,8 @@ export async function PastEarnings({
   const quiet = "text-muted";
 
   return (
-    <div>
+    <Panel className={page.earningsPanel}>
+      <PanelHeader title={t.stock.pastEarnings} />
       <EpsTrack rows={shown} locale={locale} currency={paraOpt} t={t} />
       {/* 10 Kasım 2026: tablo artık hiçbir kırılımda kaymıyor (aşağıdaki
           yorum); kap yalnız uç savunması olarak duruyor. Eski not:
@@ -159,9 +178,11 @@ export async function PastEarnings({
             </th>
             {/* Tablo tam genişlikte olduğu için rapor tarihi kendi kolonunda
                 durur; dar ekranda dönem hücresinin altına iner. */}
-            <th className="hidden px-3 py-2.5 font-medium md:table-cell">
-              {t.earnings.reportDate}
-            </th>
+            {dateColumn && (
+              <th className="hidden px-3 py-2.5 font-medium md:table-cell">
+                {t.earnings.reportDate}
+              </th>
+            )}
             {/* SAPMA EPS SÜTUNLARININ ÖNÜNDE. Tablo bir aritmetik defteri
                 değil, bir karne: okuyucunun aradığı cevap "tutturdu mu",
                 girdi sayıları değil. Sapma en sağdayken göz her satırda dört
@@ -185,7 +206,7 @@ export async function PastEarnings({
             <th className="px-2 py-2.5 text-center font-medium sm:px-3">
               EPS · {t.calendar.actual}
             </th>
-            {hasRevenue && (
+            {revenueColumn && (
               <>
                 {/* Gelir beklentisi EPS kadar önemli: piyasa çoğu zaman kârı
                     tutturup geliri ıskalayan şirketi de satar. Beklenen ve
@@ -212,32 +233,41 @@ export async function PastEarnings({
                   <span className="numeral block whitespace-nowrap text-sm font-semibold text-strong">
                     {row.label ?? <EmptyValue label={t.common.noData} />}
                   </span>
-                  {row.quarterEnd && (
+                  {row.quarterEnd && (dateColumn || !row.reportDate) && (
                     <span className="numeral hidden text-tiny text-muted md:block">
                       {periodLabel.format(new Date(`${row.quarterEnd}T12:00:00Z`))}
                     </span>
                   )}
                   {/* Rapor günü bilinmiyorsa dar ekranda alt satır HİÇ yok:
                       eskiden yerine dönem sonu basılıyordu. */}
+                  {/* Alt satır TEK satır (14 Kasım 2026): tarih ve gelir yan
+                      yana, noktayla; alt alta iki künye satırı 76 piksel
+                      tutuyordu (1440). Telefonda dar hücrede kendiliğinden
+                      kırılır. */}
+                  <span className="flex flex-wrap gap-x-1.5 text-tiny text-muted">
                   {row.reportDate && (
-                    <span className="numeral block text-tiny text-muted md:hidden">
+                    <span className={cn("numeral whitespace-nowrap", dateColumn && "md:hidden")}>
                       {formatEtDateMedium(row.reportDate, locale)}
                     </span>
                   )}
                   {/* Telefonda gelir sütunu yok; gerçekleşen gelir burada. */}
                   {hasRevenue && row.revenueActual !== null && (
-                    <span className="numeral block whitespace-nowrap text-tiny text-muted sm:hidden">
+                    <span className={cn("numeral whitespace-nowrap", revenueColumn && "sm:hidden")}>
+                      {row.reportDate && <span aria-hidden className={cn(dateColumn && "md:hidden")}>· </span>}
                       {t.earnings.revenueShort} {formatMoneyCompact(row.revenueActual, locale, paraKoduOf(paraOpt))}
                     </span>
                   )}
+                  </span>
                 </td>
-                <td className="numeral hidden px-3 py-2.5 text-sm text-body md:table-cell">
-                  {row.reportDate ? (
-                    formatEtDateMedium(row.reportDate, locale)
-                  ) : (
-                    <EmptyValue label={t.common.noData} className={quiet} />
-                  )}
-                </td>
+                {dateColumn && (
+                  <td className="numeral hidden px-3 py-2.5 text-sm text-body md:table-cell">
+                    {row.reportDate ? (
+                      formatEtDateMedium(row.reportDate, locale)
+                    ) : (
+                      <EmptyValue label={t.common.noData} className={quiet} />
+                    )}
+                  </td>
+                )}
                 <td className="px-2 py-2.5 text-center sm:px-3">
                   {surprise ? (
                     <SurprisePill
@@ -267,7 +297,7 @@ export async function PastEarnings({
                     </span>
                   )}
                 </td>
-                {hasRevenue && (
+                {revenueColumn && (
                   <>
                     {revenueEstimateColumn && (
                       <td className="numeral hidden px-2 py-2.5 text-center text-muted sm:px-3 lg:table-cell">
@@ -314,7 +344,7 @@ export async function PastEarnings({
       <p className="border-t border-line-soft px-4 py-2.5 text-tiny text-muted sm:px-5">
         {t.earnings.epsFull}
       </p>
-    </div>
+    </Panel>
   );
 }
 

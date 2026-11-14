@@ -1,6 +1,6 @@
 import { TrendDown, TrendUp } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { LogoTile, Panel, PanelLink } from "@/components/ui/primitives";
+import { LogoTile, PanelLink } from "@/components/ui/primitives";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { cn, directionOf, directionText, formatPercent } from "@/lib/utils";
 import { approxPoints, type Row } from "./index-shared";
@@ -33,7 +33,9 @@ export function MoverPanel({
   if (rows.length === 0) return null;
 
   return (
-    <Panel className={styles.mover}>
+    /* Panel DEĞİL bölüm (14 Kasım 2026): iki liste tek panelin iki yarısı;
+       kabı ve ortak ölçek notu sayfada (page.tsx → "TEK PANEL, İKİ YARI"). */
+    <section className={styles.mover} aria-label={title}>
       {/* KARŞILAŞTIRMAYA GİDEN YOL. Ekran gezinmede görünmüyor ve siteye
           girenin çoğu varlığını bilmiyordu; oysa "günün en çok artan beşi"
           listesi, karşılaştırmanın en doğal başlangıcı. Liste sabit değil,
@@ -60,7 +62,7 @@ export function MoverPanel({
              sıralama yönü, satırın rengi ise bir olgu. */
           const satirTon = directionOf(row.quote?.changePct);
           return (
-            <li key={row.member.symbol}>
+            <li key={row.member.symbol} data-draw>
               {/* prefetch={false}: bu bağlantı bir LİSTE SATIRINDA ve satır
                   sayısı altmışa çıkıyor. Next varsayılanı, görünür alana
                   giren her bağlantıyı önden ısıtıyor — altmış satır altmış
@@ -100,20 +102,21 @@ export function MoverPanel({
                 </div>
 
                 {/* Both panels use the same maximum absolute percentage. */}
+                {/* KALIN ÇUBUK (14 Kasım 2026, görsel tur). Şerit kulvarla aynı
+                    5 piksel ve %70 saydamdı: beş kartın altında ince bir
+                    çizgi gibi kalıyor, sayıya eşlik etmiyordu. Sitenin ortak
+                    değer çubuğu: 5 piksellik kulvar üstünde 8 piksellik OPAK
+                    dolgu (globals.css → "DEĞER ÇUBUĞU"); çizim kapısı
+                    satırda (`data-draw`). Ölçek aynı (iki listenin ortak en
+                    büyük mutlak yüzdesi), not panelin künye bandında. */}
                 <div className={styles.moverTrack}>
-                  <span
-                    aria-hidden
-                    data-motion-draw="line"
-                    className={cn(
-                      "bar-fill h-[5px] rounded-full",
-                      satirTon === "up"
-                        ? "bg-up/70"
-                        : satirTon === "down"
-                          ? "bg-down/70"
-                          : "bg-flat/50",
-                    )}
-                    style={{ width: `${width}%` }}
-                  />
+                  <span className={cn("value-lane", styles.moverLane)} aria-hidden>
+                    <i
+                      className="value-bar bar-fill"
+                      data-tone={satirTon}
+                      style={{ left: 0, width: `${Math.min(100, width).toFixed(2)}%` }}
+                    />
+                  </span>
                   {showContribution && row.contribution !== null && (
                     <span className="numeral shrink-0 text-nano text-muted">
                       {contributionLabel} {approxPoints(row.contribution, locale)}
@@ -125,6 +128,6 @@ export function MoverPanel({
           );
         })}
       </ul>
-    </Panel>
+    </section>
   );
 }

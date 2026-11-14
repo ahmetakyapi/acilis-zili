@@ -64,12 +64,12 @@ import { aliasSymbols } from "@/db/seed/aliases";
 export const generateMetadata = pageMetadata({
   path: "/sirketler",
   tr: {
-    title: "Şirketler",
+    title: "ABD Hisseleri Listesi: Sektöre Göre Şirketler",
     description:
       "ABD borsalarında işlem gören şirketler — sektör, fiyat ve piyasa değeriyle.",
   },
   en: {
-    title: "Companies",
+    title: "US Stocks List: Companies by Sector",
     description:
       "Companies listed on US exchanges — with sector, price and market cap.",
   },
@@ -686,7 +686,8 @@ async function CompaniesTable({
             gecesinden beri Endeks Bileşenleri'yle aynı yaprakla (`RowTap`):
             düz sol tık satırdaki GERÇEK bağlantıya aynı değiştirici tuşlarla
             iletilir; metin seçimi ve iç içe etkileşimli öğe hariç.
-            `LinkedRows` /tarama'da yaşamaya devam ediyor. */}
+            `LinkedRows` /tarama'da da `RowTap`a geçti; kullanılmayan dosya
+            14 Kasım'da silindi. */}
         <RowTap scope="company-table" />
         {/* Şirket kartı — görünen satırlar, sayfanın paketiyle. */}
         <CompanyCards

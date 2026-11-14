@@ -600,3 +600,35 @@
    ExpectedMovePanel.tsx). Kalan: satırların üstündeki okuma cümlesi. */
 .emReadout { margin-top:4px; color:var(--text-muted); font-size:12.5px; line-height:1.55; }
 .emReadout > b { color:var(--text-strong); font-weight:600; }
+
+/* ŞİRKET ÖZETİ KUTUSUZ (14 Kasım 2026, görsel tur "Zil Defteri" → üç kat).
+   Özet beş künye hücresi: destekleyici içerik, bir veri aracı değil. Kapak
+   (grafik + profil) ile Sor/Hafta paneli arasında üçüncü bir beyaz kart
+   olarak duruyor ve ilk üç ekranda her şey eşit ağırlıkta görünüyordu.
+   Artık açık bölüm: üstte kıl çizgi, başlık ve hücreler doğrudan sayfa
+   zemininde. Panel sınıfı duruyor (başlık yükselişi ona bakıyor); yalnız
+   yüzeyi kalktı. */
+.summaryPanel.summaryPanel { border:0; border-top:1px solid var(--line); border-radius:0; background:none; box-shadow:none; }
+.summaryPanel.summaryPanel::before, .summaryPanel.summaryPanel::after { content:none; }
+.summaryPanel > .body { padding-inline:0; padding-bottom:4px; }
+.summaryPanel > :first-child { padding-inline:0; }
+
+/* DERİNLİK IZGARASINDA SATIRLAR ESNER (14 Kasım 2026). 1100+ ızgara iki
+   paneli aynı boya geriyor (28 Eylül kararı, yukarıda); kısa kalanın dibinde
+   boş zemin kalıyordu: canlı NVDA'da Skor Kartı komşusundan ~70 piksel kısa,
+   analist çizimi inceldikten sonra tersine Analist paneli 93 piksel kısa
+   (1440, ölçüldü). Hangi panelin kısa kalacağı hisseye göre değişiyor
+   (skor kartı 3-5 eksen), bu yüzden İKİ panelde de artan yer satırlara
+   eşit dağılıyor: skor kartında eksen satırları, analist panelinde kova
+   listesi. Aralık ve punto değişmiyor; tek sütunda (< 1100) paneller kendi
+   boyunda, esneme yok. */
+@media (min-width:1100px) {
+  .grid > .panel { display:flex; flex-direction:column; }
+  .grid > .panel > .body { flex:1 1 auto; }
+  .scorePanel .axisList { display:grid; flex:1 1 auto; grid-auto-rows:1fr; }
+  .scorePanel .axisRow { align-content:center; }
+}
+/* Kutusuz özetin sağ ucundaki logo sayfa kenarına dayanıyor; 44'lük
+   görünmez dokunma alanı panel kutusunun dışına 9 piksel taşar ve
+   `.panel`in kırpması onu 26 piksele indiriyordu (390, ölçüldü). */
+.summaryPanel.summaryPanel { overflow:visible; }

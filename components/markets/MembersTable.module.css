@@ -256,3 +256,33 @@
    - JS'siz (sunucunun bastığı tablo): thead gizli, kap 0, satır 60,
      menüde 5 gerçek bağlantı.
    -------------------------------------------------------------------------- */
+
+/* --------------------------------------------------------------------------
+   14 Kasım 2026 — görsel tur, "Zil Defteri". Karar kayıtları
+   MembersTable.tsx → "HAFTALIK ÖLÇEK GÖVDEYE GÖRE", "PAY YALNIZ PİYASA
+   DEĞERİNE GÖRE SIRALIYKEN"; page.tsx → "DAMGA PANELİN İÇİNDE".
+   -------------------------------------------------------------------------- */
+/* Pay: basıldığı tek sıralamada (piyasa değeri) gövde mürekkebi, 13 piksel
+   (önce 11–12, soluk). */
+.cap[data-share] > :nth-child(2) { color:var(--text-body); font-size:13px; font-weight:600; }
+.shareHead { font-size:12px; }
+/* Damga panelin dibinde, künyelerle aynı bant dolgusunda. */
+.stamp { padding:10px 16px 12px; border-top:1px solid var(--line-soft); }
+@media(min-width:640px) { .stamp { padding-inline:20px; } }
+/* Haftalık kulvar genişler: pay sütunu çoğu sıralamada basılmadığı için
+   açılan yer haftalık çubuğa (1440 kapalı: 88 → 112; seans içi 64 → 80;
+   1280: 56 → 72). Çubuk kolu = kulvarın yarısı. */
+@media(min-width:1280px) {
+  .panel:not([data-share]) .table { --week-lane:72px; }
+  .panel:not([data-share]):not([data-range]) .table { --week-lane:88px; }
+}
+@media(min-width:1440px) {
+  .panel:not([data-share]) .table { --week-lane:80px; }
+  .panel:not([data-share]):not([data-range]) .table { --week-lane:112px; }
+}
+/* ÖLÇÜM — 14 Kasım 2026 (sahte sağlayıcı, Nasdaq 100, 60 satır). Haftalık
+   çubuk kolu: canlıda ±%15 ölçekte 3–10 piksel (1440, kapalı; kulvar 88).
+   Sonra ölçek ±%8 (75. yüzdelik), kulvar 112: ilk on altı satırda 3–35
+   piksel (medyan 13); seans içinde kulvar 80, 3–25; 1280'de 72–88. 768'de
+   kulvar hâlâ 32 (3–10 piksel): o genişlikte sütuna yer yok, açık kusur.
+   Yerleşim değişmedi: satır 62 / 60, kap = içerik (0 taşma, altı genişlik). */

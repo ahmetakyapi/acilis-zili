@@ -28,8 +28,23 @@
   .withLead .list { align-content:start; }
   .withLead .leadItem { display:flex; flex-direction:column; }
   .withLead .lead { flex:1 1 auto; }
-  .withLead .leadText .leadHeadline,
-  .withLead .lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadHeadline { margin-top:auto; }
+  /* 14 KASIM (görsel tur): FARK BAŞLIĞIN ÜSTÜNE DEĞİL KÜNYENİN ÜSTÜNE.
+     `margin-top:auto` başlıktaydı: logo ve künye tepede, başlık ve özet
+     dipte kalıyor, aralarında kartın ortasında ölü bir bant açılıyordu
+     (canlı, 1440 açık tema: künye dibi 456, başlık tepesi 548 — 92 piksel;
+     özet ise dört satırda "…" ile kesiliyordu). Kart artık yukarıdan
+     aşağı okunur: logo → başlık → özet, künye kartın DİBİNDE hairline
+     ile ayrık bir alt satır (kaynak, saat, ok). Fark önce özete yazılır
+     (dört yerine yedi satıra kadar açılır: kesilen metin boşluğu
+     doldurur), kalanı özet ile alt satır arasında kalır — kartın alt
+     satırı dibe yaslı, ortada bant yok.
+     ÖLÇÜM (gerçek sayfa + sahte sağlayıcı, 1440, iki tema): logo/künye ile
+     başlık arası ölü bant 92 → 0 (başlık logonun 14 piksel altında);
+     özet dibi ile alt satır arası 31 piksel (hairline + dolgu dahil);
+     manşet dibi = son satır dibi (fark 0, değişmedi). 390'da kart 370
+     piksel, sıra aynı. */
+  .withLead .leadText .leadMeta,
+  .withLead .lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadMeta { margin-top:auto; }
   .three { grid-template-columns:repeat(3,minmax(0,1fr)); column-gap:28px; }
 }
 
@@ -82,12 +97,19 @@
    başlıyor. */
 /* METİN MANŞETİ (9 Ekim) — gerekçe TopNews.tsx. Görsel yokken kartı yüzey
    ve tipografi taşıyor: kıl kenarlı premium yüzey (gölge ve ışıma yok,
-   derinlik tondan), başlık bir kademe büyük ve dört satır, özet dört satır.
+   derinlik tondan), başlık bir kademe büyük ve dört satır, özet yedi satıra
+   kadar (14 Kasım: dörtte kesiliyordu, kartın boşluğu metinle dolar).
    Logo varsa kartın tepesinde 56'lık karo — haberin şirketi. */
 .leadText { gap:14px; padding:26px 28px 28px; border:1px solid var(--line); background:var(--premium-surface); transition:border-color 180ms var(--ease-brand); }
 .leadText .leadHeadline { -webkit-line-clamp:4; font-size:clamp(24px,2.4vw,34px); line-height:1.16; }
-.leadText .leadSummary { -webkit-line-clamp:4; font-size:15.5px; line-height:1.65; }
-.leadText .leadMeta { margin-top:0; }
+.leadText .leadSummary { -webkit-line-clamp:7; font-size:15.5px; line-height:1.65; }
+/* Künye metin manşetinde ALT SATIR (14 Kasım; gerekçe yukarıda, "FARK
+   BAŞLIĞIN ÜSTÜNE DEĞİL"): DOM sırasında, özetten sonra; üstünde hairline,
+   sağ ucunda ok. Fotoğraflı manşette künye görselin altında kalır. */
+.leadText .leadMeta { order:0; margin-top:4px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.leadGo { display:none; margin-left:auto; color:var(--primary-ink); transition:translate 200ms var(--ease-brand); }
+.leadText .leadGo { display:inline-flex; }
+@media (hover:hover) and (pointer:fine) { .leadText:hover .leadGo { translate:3px 0; } }
 .leadMark { order:-2; }
 @media (hover:hover) and (pointer:fine) { .leadText:hover { border-color:var(--primary-faint); } }
 @media (max-width:639px) { .leadText { padding:20px 20px 22px; } .leadText .leadHeadline { font-size:23px; } }
@@ -106,8 +128,9 @@
    381 → 0 piksel, manşet kartı 271 piksel; 390'da 272. Yatay taşma 0. */
 .lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) { gap:14px; padding:26px 28px 28px; border:1px solid var(--line); background:var(--premium-surface); transition:border-color 180ms var(--ease-brand); }
 .lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadHeadline { -webkit-line-clamp:4; font-size:clamp(24px,2.4vw,34px); line-height:1.16; }
-.lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadSummary { -webkit-line-clamp:4; font-size:15.5px; line-height:1.65; }
-.lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadMeta { margin-top:0; }
+.lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadSummary { -webkit-line-clamp:7; font-size:15.5px; line-height:1.65; }
+.lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadMeta { order:0; margin-top:4px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.lead:not(.leadText):not(:has(.leadImage :global(img.object-cover))) .leadGo { display:inline-flex; }
 .leadImage:not(:has(:global(img))) { display:none; }
 .leadImage:has(:global(img.object-contain)) { width:56px; height:56px; aspect-ratio:auto; border-radius:var(--radius-md); }
 @media (max-width:639px) {

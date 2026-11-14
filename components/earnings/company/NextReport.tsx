@@ -53,6 +53,16 @@ import css from "./CompanyEarnings.module.css";
  * sütun 444–788, sağ sütun 444–790 (dip farkı 2), sayı ile çubuklar arası
  * 8 piksel; 1280'de 441–785 / 441–787.
  *
+ * TEK KAHRAMAN YÜZEY (14 Kasım, görsel tur). Panel sayfanın kahramanı
+ * (`--radius-feature`). İki sorun kalmıştı (canlı, 1440): sağdaki iki
+ * beklenti hücresi gri kutulardı ("kutu içinde kutu"), sol yarının altında
+ * paragraf, "Takvime Ekle" düğmesi ve kaynak künyesi üç ayrı blok hâlinde
+ * üç ayrı dipte duruyordu. Şimdi: beklenti hücreleri KUTUSUZ (sağ sütun
+ * saç teliyle ayrılır, iki hücre arasında saç teli); sol sütun yaprak +
+ * geri sayım, çeyrek çizgisi ve açıklama paragrafıyla biter; düğme ile
+ * kaynak künyesi panelin dibinde TEK satır (künye solda, düğme sağda;
+ * sayfa basar, `CompanyEarnings.module.css` → `.heroFoot`). Ölçüm orada.
+ *
  * Beklenti çubukları artık hücrenin kendi kulvarında, SOLDAN (ScaleBar sağa
  * yaslı ve 128 piksel tavanlıydı: tablo sütunu için doğru, burada sayıyla
  * etiket arasında kısa bir çizgi kalıyordu). İki çubuk aynı ölçekte
@@ -142,7 +152,7 @@ export function NextReport({
   const plain = !(eps?.last || revenue?.last);
 
   return (
-    <div className={css.next} data-plain={plain || undefined}>
+    <div className={css.next} data-plain={plain || undefined} data-solo={!(eps || revenue) || undefined}>
       <div className={css.when}>
         <div className={css.whenTop}>
           <div className={css.leafCol}>
@@ -204,43 +214,14 @@ export function NextReport({
         )}
 
         {cycle !== null && previousDate && (
-          <div
-            className={css.cycle}
-            role="img"
-            aria-label={labels.cycleAria
-              .replace("{elapsed}", String(Math.max(0, elapsed)))
-              .replace("{left}", String(Math.max(0, daysLeft)))}
-          >
-            {/* ÇİZİM YÜKLEMEDE OYNAR (10 Kasım, tutarlılık denetimi). Bu öğeler
-                `data-motion-draw` taşıyordu; `PremiumMotion.module.css`in
-                `.experience [data-motion-draw] { animation:none }` kuralı
-                modülün çizimini eziyor, panel ilk ekranda olduğu için JS de
-                oynatmıyordu: canlıda çeyrek çizgisi ve beklenti şeritleri
-                HİÇ çizilmiyordu (`getAnimations()` 0). Öznitelik kalktı;
-                dolgu ortak `.bar-fill` (globals.css, hareket kataloğu),
-                kopya `ce-draw` silindi. Nokta modülde kaldı: ortak
-                `.spark-dot` `.experience` içinde koşulsuz kapalı
-                (PremiumMotion.module.css; ölçüldü, `animation-name: none`). */}
-            <span className={css.cycleLane}>
-              <span
-                className={cn(css.cycleFill, "bar-fill")}
-                style={{ width: `${cycle * 100}%`, transformOrigin: "left center" }}
-              />
-              <span className={css.cycleStart} />
-              <span className={css.cycleNow} style={{ "--at": cycle } as CSSProperties} />
-              <span className={css.cycleEnd} data-estimated={estimated || undefined} />
-            </span>
-            <span className={css.cycleEnds}>
-              <span>
-                <span className={css.cycleEndLabel}>{labels.lastReport}</span>
-                <span className="figure">{formatEtDateCompact(previousDate, locale)}</span>
-              </span>
-              <span>
-                <span className={css.cycleEndLabel}>{labels.reportDay}</span>
-                <span className="figure">{formatEtDateCompact(date, locale)}</span>
-              </span>
-            </span>
-          </div>
+          <CycleLine
+            previousDate={previousDate}
+            date={date}
+            today={today}
+            estimated={estimated}
+            locale={locale}
+            labels={labels}
+          />
         )}
 
         {children}
@@ -248,33 +229,127 @@ export function NextReport({
 
       {(eps || revenue) && (
         <dl className={css.expect}>
-          {eps && <ExpectCell title={labels.epsEstimate} figure={eps} tone="signal" labels={labels} locale={locale} />}
-          {revenue && <ExpectCell title={labels.revenueEstimate} figure={revenue} tone="neutral" labels={labels} locale={locale} />}
+          {[
+            eps ? { key: "eps", title: labels.epsEstimate, figure: eps, tone: "signal" as const } : null,
+            revenue ? { key: "revenue", title: labels.revenueEstimate, figure: revenue, tone: "neutral" as const } : null,
+          ].map(
+            (cell) =>
+              cell && (
+                <ExpectCell
+                  key={cell.key}
+                  title={cell.title}
+                  primary={cell.figure.estimate}
+                  compare={cell.figure.last}
+                  rowLabels={{ primary: labels.estimateLabel, compare: labels.lastQuarter }}
+                  changeLabel={labels.vsLastQuarter}
+                  tone={cell.tone}
+                  locale={locale}
+                />
+              ),
+          )}
         </dl>
       )}
     </div>
   );
 }
 
-function ExpectCell({
-  title,
-  figure,
-  tone,
+/**
+ * ÇEYREK ÇİZGİSİ — son rapordan sıradakine geçen yol (gerekçe dosya
+ * başında). Ayrı bileşen (14 Kasım): yeni açıklanmış raporun yüzeyi de
+ * (`LastReport`) aynı çizgiyi çizer; orada nokta çizginin başındadır.
+ */
+export function CycleLine({
+  previousDate,
+  date,
+  today,
+  estimated,
+  locale,
   labels,
+}: {
+  previousDate: string;
+  date: string;
+  today: string;
+  estimated: boolean;
+  locale: string;
+  labels: Pick<NextReportLabels, "lastReport" | "reportDay" | "cycleAria">;
+}) {
+  const span = daysBetweenEt(previousDate, date);
+  const elapsed = daysBetweenEt(previousDate, today);
+  const daysLeft = daysBetweenEt(today, date);
+  const cycle = span > 0 ? Math.min(1, Math.max(0, elapsed / span)) : 0;
+  return (
+    <div
+      className={css.cycle}
+      role="img"
+      aria-label={labels.cycleAria
+        .replace("{elapsed}", String(Math.max(0, elapsed)))
+        .replace("{left}", String(Math.max(0, daysLeft)))}
+    >
+      {/* ÇİZİM YÜKLEMEDE OYNAR (10 Kasım, tutarlılık denetimi). Bu öğeler
+          `data-motion-draw` taşıyordu; `PremiumMotion.module.css`in
+          `.experience [data-motion-draw] { animation:none }` kuralı
+          modülün çizimini eziyor, panel ilk ekranda olduğu için JS de
+          oynatmıyordu: canlıda çeyrek çizgisi ve beklenti şeritleri
+          HİÇ çizilmiyordu (`getAnimations()` 0). Öznitelik kalktı;
+          dolgu ortak `.bar-fill` (globals.css, hareket kataloğu),
+          kopya `ce-draw` silindi. Nokta modülde kaldı: ortak
+          `.spark-dot` `.experience` içinde koşulsuz kapalı
+          (PremiumMotion.module.css; ölçüldü, `animation-name: none`). */}
+      <span className={css.cycleLane}>
+        <span
+          className={cn(css.cycleFill, "bar-fill")}
+          style={{ width: `${cycle * 100}%`, transformOrigin: "left center" }}
+        />
+        <span className={css.cycleStart} />
+        <span className={css.cycleNow} style={{ "--at": cycle } as CSSProperties} />
+        <span className={css.cycleEnd} data-estimated={estimated || undefined} />
+      </span>
+      <span className={css.cycleEnds}>
+        <span>
+          <span className={css.cycleEndLabel}>{labels.lastReport}</span>
+          <span className="figure">{formatEtDateCompact(previousDate, locale)}</span>
+        </span>
+        <span>
+          <span className={css.cycleEndLabel}>{labels.reportDay}</span>
+          <span className="figure">{formatEtDateCompact(date, locale)}</span>
+        </span>
+      </span>
+    </div>
+  );
+}
+
+/**
+ * Ölçü hücresi: büyük sayı + kıyasıyla yan yana iki şerit. İki kullanım:
+ * sıradaki rapor (beklenti · son çeyrek) ve açıklanmış rapor (gerçekleşen ·
+ * beklenti; `LastReport.tsx`, 14 Kasım). Etiketleri çağıran verir.
+ */
+export function ExpectCell({
+  title,
+  primary,
+  compare,
+  rowLabels,
+  changeLabel,
+  tone,
   locale,
 }: {
   title: string;
-  figure: Figure;
+  /** Hücrenin büyük sayısı ve üstteki şerit. */
+  primary: { text: string; value: number };
+  /** Kıyas; yoksa şerit basılmaz, yalnız sayı. */
+  compare: { text: string; value: number } | null;
+  rowLabels: { primary: string; compare: string };
+  /** Farkın künyesi: "Son Çeyreğe Göre", "Beklentiye Göre". */
+  changeLabel: string;
   tone: "signal" | "neutral";
-  labels: NextReportLabels;
   locale: string;
 }) {
-  const { estimate, last } = figure;
+  const estimate = primary;
+  const last = compare;
   const scale = last ? Math.max(Math.abs(estimate.value), Math.abs(last.value)) || 1 : 1;
   /* İşaretli ray yalnız iki değer sıfırın iki yanındaysa (zarardan kâra);
      ikisi de eksideyse uzunluk büyüklük, renk işaretten. */
   const signed = last !== null && Math.sign(estimate.value) * Math.sign(last.value) < 0;
-  /* Beklentinin son çeyreğe göre farkı — gerekçe dosya başında. */
+  /* Büyük sayının kıyasa göre farkı — gerekçe dosya başında. */
   const change =
     last !== null && !signed && last.value !== 0 ? ((estimate.value - last.value) / Math.abs(last.value)) * 100 : null;
   const row = (label: string, item: { text: string; value: number }, strong: boolean) => {
@@ -308,7 +383,7 @@ function ExpectCell({
         <span>{title}</span>
         {change !== null && Math.abs(change) >= 0.05 && (
           <span className={css.expectChange} data-dir={change > 0 ? "up" : "down"}>
-            <span className={css.expectChangeLabel}>{labels.vsLastQuarter}</span>
+            <span className={css.expectChangeLabel}>{changeLabel}</span>
             <b className="figure">
               {change > 0 ? "▲" : "▼"} {formatPercentPlain(Math.abs(change), locale as "tr" | "en", 1)}
             </b>
@@ -318,8 +393,8 @@ function ExpectCell({
       <dd className={cn("figure", css.expectValue)}>{estimate.text}</dd>
       {last && (
         <dd className={css.expectBars}>
-          {row(labels.estimateLabel, estimate, true)}
-          {row(labels.lastQuarter, last, false)}
+          {row(rowLabels.primary, estimate, true)}
+          {row(rowLabels.compare, last, false)}
         </dd>
       )}
     </div>
