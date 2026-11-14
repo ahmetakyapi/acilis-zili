@@ -47,7 +47,7 @@ export const EN_PIYASA: GlossaryTexts<"piyasa"> = {
   "kapanis-sonrasi": {
     term: "After-Hours Trading",
     definition:
-      "After-hours trading is buying and selling after the regular session closes at 4:00 p.m. New York time, typically until 8:00 p.m. Many companies report earnings in exactly this window, so sharp moves are common. As in the pre-market, liquidity is thin, spreads are wide, and prices do not reliably predict the next day's open.",
+      "After-hours trading is buying and selling after the regular session closes at 4:00 p.m., New York time, and typically runs until 8:00 p.m. Many companies report earnings in exactly this window, so sharp moves are common. As in the pre-market, liquidity is thin, spreads are wide, and prices do not reliably predict the next day's open.",
     match: ["after-hours trading", "after-hours session"],
   },
   "devre-kesici": {
