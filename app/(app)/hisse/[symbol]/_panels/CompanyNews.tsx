@@ -2,7 +2,7 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { inArray } from "drizzle-orm";
 import styles from "../stock.module.css";
 import { NewsImage } from "@/components/news/NewsImage";
-import { EmptyState } from "@/components/ui/primitives";
+import { EmptyState, Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
 import { db } from "@/lib/db";
 import { news } from "@/lib/schema";
 import { getGenericImageUrls, getSymbolNames } from "@/lib/data";
@@ -28,13 +28,24 @@ export async function CompanyNews({
   /* Sağlayıcı hatası "haber yok" DEĞİLDİR — ikisi aynı daldaydı ve uç
      düştüğünde ekranda "Şu an gösterilecek haber yok." yazıyordu. Aynı
      düzeltmenin emsali components/markets/IpoCalendar.tsx'te. */
+  /* KABUK BURADA (14 Kasım 2026, görsel tur): panel ve başlığı sayfadaydı,
+     haberi olmayan şirkette tam genişlikte kutu + "Şu an gösterilecek haber
+     yok." kalıyordu (1320×159, sahte veriyle ölçüldü). Haber yoksa panel
+     basılmaz; sağlayıcı HATASI ise görünür kalır (aşağıdaki ayrım sürüyor).
+     SEMBOL SÜZGECİNE KÖPRÜ (sayfadan taşındı): `/haberler?sembol=XXX`
+     çalışıyor ama sitede hiçbir yerden bağlantı verilmiyordu; panel son
+     sekiz haberi gösteriyor, süzgeç altmışını. */
+  const frame = (body: React.ReactNode) => (
+    <Panel className={styles.newsPanel}>
+      <PanelHeader title={t.stock.companyNews} action={<PanelLink href={`/haberler?sembol=${symbol}`}>{t.common.showAll}</PanelLink>} />
+      {body}
+    </Panel>
+  );
   if (!result.ok) {
-    return <EmptyState title={t.common.noData} hint={t.common.noDataHint} />;
+    return frame(<EmptyState title={t.common.noData} hint={t.common.noDataHint} />);
   }
 
-  if (result.data.length === 0) {
-    return <EmptyState title={t.news.empty} />;
-  }
+  if (result.data.length === 0) return null;
 
   /* KONUDAKİ HABER ÖNCE (24 Eylül). Şirketin beslemesi ara ara genel piyasa
      yazıları da döndürüyor ve bunlar yalnızca tarihleri yeni diye listenin
@@ -148,7 +159,7 @@ export async function CompanyNews({
      Sayım yukarıda, tablo okumasıyla aynı turda başladı. */
   const genericImages = await genericImagesP;
 
-  return (
+  return frame(
     <ul className={styles.newsGrid}>
       {shown.map((item) => {
         const newsId = idByProvider.get(item.providerId);
@@ -212,6 +223,6 @@ export async function CompanyNews({
           </li>
         );
       })}
-    </ul>
+    </ul>,
   );
 }

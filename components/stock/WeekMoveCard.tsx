@@ -1,14 +1,13 @@
 "use client";
 
-import { PlayOnView } from "@/components/motion/PlayOnView";
-import { useEffect, useId, useRef, useState, type CSSProperties } from "react";
+import { useEffect, useId, useRef, useState } from "react";
 import { ArrowUpRight, ChartBar, Sparkle } from "@phosphor-icons/react";
 import { Skeleton } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import type { InsightText, MoveInsight } from "@/lib/stock-insights";
 import { cn, formatPercent } from "@/lib/utils";
-import { cumulativePath, loudestSession, type WeekMove } from "./week-move";
+import { loudestSession, type WeekMove } from "./week-move";
 import styles from "./WeekMove.module.css";
 
 /**
@@ -21,29 +20,23 @@ import styles from "./WeekMove.module.css";
  * 390'da 824 piksel tutuyordu ve SAYILARI da Claude notuyla birlikte
  * istemciden geliyordu: not yoksa kart yalnız "hazırlanamadı" diyordu.
  * Şimdi sayılar sunucudan (`WeekMove`, components/stock/week-move.ts):
- * büyük değişim, S&P 500 farkı ve beş seansın birikimli çizgisi ilk karede
- * basılı. Not eskisi gibi İSTEMCİDEN ve panel görüş alanına yaklaşınca
+ * büyük değişim, S&P 500 farkı ve beş seansın gün gün şeritleri ilk karede
+ * basılı (14 Kasım 2026'ya dek birikimli çizgiydi; gerekçe aşağıda). Not eskisi gibi İSTEMCİDEN ve panel görüş alanına yaklaşınca
  * isteniyor (botlar ve aşağı inmeyen okur Claude çağrısı tetiklemesin; uç
  * da botu geri çeviriyor — app/api/ai/hisse-notu). Notun metni ancak
  * penceresi sunucununkiyle aynıysa basılıyor; değilse yazılamamış sayılır.
  *
  * Maddeler katlı (`details`): özet cümlesi kartın boyunu belirliyor, üç
- * etken isteyene açılıyor. Renk yalnız yönden (up/down); çizgi ince, alan
- * düz ton, degrade yok (CLAUDE.md "grafik dili ince").
+ * etken isteyene açılıyor. Renk yalnız yönden (up/down); şerit ortak
+ * `value-lane`/`value-bar` (kulvar 5, satırın kahramanı olduğu için dolgu 12).
  */
 
 type Labels = Dictionary["stockInsight"];
 type WeekLabels = Dictionary["stockWeek"];
 
-const X0 = 4;
-const X1 = 96;
-const xAt = (i: number, n: number) => X0 + (i / Math.max(1, n - 1)) * (X1 - X0);
 const tone = (value: number) => (value > 0 ? "up" : value < 0 ? "down" : "flat");
 /** Hacmi 20 seans ortalamasının bu katını aşan seans işaretli (notla aynı eşik). */
 const LOUD_VOLUME = 1.5;
-/** Çizginin üst ve altında bırakılan pay, aralığın oranı. */
-const PAD_RATIO = 0.14;
-const MIN_PAD = 0.2;
 /** Notun istendiği uzaklık: görüş alanına bu kadar kala. */
 const PREFETCH_MARGIN = "400px 0px";
 
@@ -123,19 +116,19 @@ export function WeekMoveCard({
     return () => observer.disconnect();
   }, [symbol, noteEnabled, state.status, week.to, locale]);
 
-  const stock = cumulativePath(week.sessions);
-  const market = week.marketSessions?.length === week.sessions.length ? cumulativePath(week.marketSessions) : null;
-  const all = [...stock, ...(market ?? []), 0];
-  const hi = Math.max(...all);
-  const lo = Math.min(...all);
-  const pad = Math.max((hi - lo) * PAD_RATIO, MIN_PAD);
-  const top = hi + pad;
-  const bottom = lo - pad;
-  const yAt = (v: number) => ((top - v) / (top - bottom)) * 100;
-  const n = stock.length;
-  const path = (values: number[]) => values.map((v, i) => `${i ? "L" : "M"}${xAt(i, n).toFixed(2)} ${yAt(v).toFixed(2)}`).join(" ");
-  const zeroY = yAt(0);
-  const area = `${path(stock)} L${xAt(n - 1, n).toFixed(2)} ${zeroY.toFixed(2)} L${xAt(0, n).toFixed(2)} ${zeroY.toFixed(2)} Z`;
+  /* GÜN GÜN KALIN ŞERİT (14 Kasım 2026, görsel tur). Figür "sayı solda,
+     birikimli çizgi sağda" idi; çizginin x ekseni kutunun sağ yarısına
+     sıkışıyor, sol yarıda ~300×180 piksel boş gri zemin kalıyor, büyük sayı
+     o boşlukta asılı duruyordu (canlı NVDA, 1440). Beş noktalı bir çizgi
+     zaten beş sayıdan fazlasını söylemiyordu. Şimdi her seans bir satır:
+     gün, sıfırdan değişime uzanan 12 piksellik şerit (yönü renginde),
+     yüzde ve gürültülü seansta hacim katı. Ölçek haftanın en sert seansı;
+     S&P 500'ün aynı günkü değişimi şeridin üstünde çentik. Satırlar kutunun
+     tam genişliğini kullanır; not yokken de kart sayılarıyla doludur. */
+  const market = week.marketSessions?.length === week.sessions.length ? week.marketSessions : null;
+  const peak = Math.max(...week.sessions.map((s) => Math.abs(s.changePct)), ...(market ?? []).map((s) => Math.abs(s.changePct)), 0.5);
+  /* Sıfır kulvarın ortasında; yarım kulvar = haftanın en sert seansı. */
+  const half = (value: number) => (Math.abs(value) / peak) * 50;
   const stockTone = tone(week.changePct);
   const loudest = loudestSession(week.sessions);
   const gap = week.marketPct !== null ? week.changePct - week.marketPct : null;
@@ -163,7 +156,7 @@ export function WeekMoveCard({
       </div>
       <p className={styles.window}>{labels.window.replace("{range}", rangeLabel(week.from, week.to, locale))}</p>
 
-      <PlayOnView className={styles.figure}>
+      <div className={styles.figure}>
         <div className={styles.lead}>
           <p className={styles.caption}>{labels.compare}</p>
           <p className={cn("numeral", styles.big)} data-tone={stockTone}>
@@ -186,62 +179,64 @@ export function WeekMoveCard({
           )}
         </div>
 
-        {/* Mini çizgi: beş seansın birikimli yolu, S&P kesik nötr çizgi.
-            Sayılar HTML'de (altta gün gün), SVG yalnız çizim. */}
-        <figure className={styles.spark} aria-label={labels.pathTitle}>
-          <div className={styles.plot}>
-            <svg className={styles.svg} viewBox="0 0 100 100" preserveAspectRatio="none" aria-hidden>
-              <line x1="0" x2="100" y1={zeroY} y2={zeroY} className={styles.zero} vectorEffect="non-scaling-stroke" />
-              <path d={area} className={styles.area} data-tone={stockTone} />
-              {market && <path d={path(market)} className={styles.marketLine} vectorEffect="non-scaling-stroke" />}
-              <path d={path(stock)} className={styles.stockLine} data-tone={stockTone} vectorEffect="non-scaling-stroke" />
-            </svg>
-            <span
-              className={styles.endDot}
-              data-tone={stockTone}
-              style={{ left: `${xAt(n - 1, n)}%`, top: `${yAt(stock[n - 1]!)}%` } as CSSProperties}
-              aria-hidden
-            />
-          </div>
+        <figure className={styles.daily} aria-label={labels.pathTitle}>
           <ol className={styles.days}>
-            {week.sessions.map((session, i) => (
-              <li
-                key={session.date}
-                style={{ left: `${xAt(i + 1, n)}%` } as CSSProperties}
-                title={
-                  (session.volumeRatio ?? 0) >= LOUD_VOLUME
-                    ? `${labels.volumeTimes.replace("{x}", nf(locale, 1).format(session.volumeRatio!))} · ${labels.highVolume}`
-                    : undefined
-                }
-              >
-                <span className={styles.dayName}>{weekday(session.date, locale)}</span>
-                <span className={cn("numeral", styles.dayValue)} data-tone={tone(session.changePct)} data-loudest={i === loudest || undefined}>
-                  {formatPercent(session.changePct, locale, 1)}
-                </span>
-                {/* HACİM KISA YAZILIR (10 Kasım 2026). "Hacim 3,0×" 10,5 puntoda
-                    56–58 piksel; günler ise kap genişliğine göre 44–60 piksel
-                    arayla diziliyor. Üç gürültülü seans yan yana gelince
-                    etiketler birbirine yapışıp ("Hacim 3,0×Hacim 1,8×Hacim
-                    4,6×") son etiket kutudan taşıyordu (canlı NVDA, 1440,
-                    ekran görüntüsü). Görünen metin artık simge + "3,0×" (34–35 piksel,
-                    390 ve 1440'ta çakışma ve taşma 0); tam cümle ekran
-                    okuyucuda ve üzerine gelince. */}
-                {(session.volumeRatio ?? 0) >= LOUD_VOLUME && (
-                  <span className={styles.volume}>
-                    <ChartBar size={10} weight="fill" aria-hidden />
-                    <span aria-hidden>{`${nf(locale, 1).format(session.volumeRatio!)}×`}</span>
-                    <span className="sr-only">{labels.volumeTimes.replace("{x}", nf(locale, 1).format(session.volumeRatio!))}</span>
+            {week.sessions.map((session, i) => {
+              const dayTone = tone(session.changePct);
+              const loud = (session.volumeRatio ?? 0) >= LOUD_VOLUME;
+              const marketDay = market?.[i]?.changePct;
+              return (
+                <li key={session.date} data-loudest={i === loudest || undefined}>
+                  <span className={styles.dayName}>{weekday(session.date, locale)}</span>
+                  <span className={cn("value-lane", styles.lane)} data-draw="" aria-hidden>
+                    {dayTone !== "flat" && (
+                      <i
+                        className="value-bar bar-fill"
+                        data-tone={dayTone}
+                        data-end={dayTone === "up" ? "end" : "start"}
+                        style={
+                          dayTone === "up"
+                            ? { left: "50%", width: `${half(session.changePct)}%` }
+                            : { right: "50%", width: `${half(session.changePct)}%` }
+                        }
+                      />
+                    )}
+                    <i className="value-notch" data-quiet="" style={{ left: "50%" }} />
+                    {marketDay !== undefined && (
+                      <i className={cn("value-notch", styles.marketNotch)} style={{ left: `${50 + Math.sign(marketDay) * half(marketDay)}%` }} />
+                    )}
                   </span>
-                )}
-              </li>
-            ))}
+                  <span className={cn("numeral", styles.dayValue)} data-tone={dayTone}>
+                    {formatPercent(session.changePct, locale, 1)}
+                  </span>
+                  {/* HACİM KISA YAZILIR (10 Kasım 2026): görünen metin simge +
+                      "3,0×"; tam cümle ekran okuyucuda ve üzerine gelince.
+                      14 Kasım: satırın sonunda kendi sütununda, sessiz seansta
+                      sütun boş kalır (hiza bozulmaz). */}
+                  <span
+                    className={styles.volume}
+                    title={loud ? `${labels.volumeTimes.replace("{x}", nf(locale, 1).format(session.volumeRatio!))} · ${labels.highVolume}` : undefined}
+                  >
+                    {loud && (
+                      <>
+                        <ChartBar size={12} weight="fill" aria-hidden />
+                        <span aria-hidden>{`${nf(locale, 1).format(session.volumeRatio!)}×`}</span>
+                        <span className="sr-only">{labels.volumeTimes.replace("{x}", nf(locale, 1).format(session.volumeRatio!))}</span>
+                      </>
+                    )}
+                  </span>
+                </li>
+              );
+            })}
           </ol>
-          <ul className={styles.legend} aria-hidden>
-            <li data-series="stock" data-tone={stockTone}>{symbol}</li>
-            {market && <li data-series="market">S&amp;P 500</li>}
-          </ul>
+          {market && (
+            <p className={styles.legend} aria-hidden>
+              <i />
+              S&amp;P 500
+            </p>
+          )}
         </figure>
-      </PlayOnView>
+      </div>
 
       {noteEnabled && (
         <div className={styles.note} data-state={state.status} aria-live="polite">

@@ -360,9 +360,14 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
  .chapter .eventKicker svg { width:16px; height:16px; }
  .chapter .earningsDate { grid-column:1; grid-row:2; margin-top:6px; font-size:22px; }
  .chapter .upcomingPanel > p:nth-of-type(2) { grid-column:1; grid-row:3; }
- .chapter .upcomingPanel > dl { grid-column:2; grid-row:1/4; margin:0; padding:8px 0 8px 24px; border-top:0; border-left:1px solid var(--primary-faint); align-content:center; }
- .chapter .upcomingPanel > div:last-child:not(.eventKicker) { grid-column:3; grid-row:1/4; margin:0; padding:8px 0 8px 24px; border-top:0; border-left:1px solid var(--primary-faint); }
+ /* 14 Kasım 2026: eylemler sol sütunun dördüncü satırı; iki yan sütun
+    dört satırın tamamını kaplar ve içeriği ortalanır (kartın dibindeki 69
+    piksellik boşluk 0; gerekçe UpcomingEarnings.tsx). */
+ .chapter .upcomingPanel > dl { grid-column:2; grid-row:1/5; margin:0; padding:8px 0 8px 24px; border-top:0; border-left:1px solid var(--primary-faint); align-content:center; }
+ .chapter .upcomingPanel > div:last-child:not(.eventKicker) { grid-column:3; grid-row:1/5; margin:0; padding:8px 0 8px 24px; border-top:0; border-left:1px solid var(--primary-faint); align-self:stretch; display:flex; flex-direction:column; justify-content:center; }
+ .chapter .upcomingActions { grid-column:1; grid-row:4; }
 }
+.upcomingActions { display:flex; flex-wrap:wrap; align-items:center; gap:4px 16px; margin-top:12px; }
 
 /* Fundamentals: four independent readings, two compact editorial rows.
    Previous three-column layout stretched every card to the analyst panel
@@ -1495,6 +1500,30 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 @media(min-width:1400px) {
   .companyOverview .priceBlockWithBand { grid-template-columns:minmax(0,max-content) minmax(240px,1fr); }
 }
+/* BANT FİYATLA AYNI ÜÇ HATTA (14 Kasım 2026, görsel tur). Fiyat bloğu üç
+   satır okunuyor (değişim hapı / fiyat + önceki kapanış / damga), bant da üç
+   satır (başlık / uçlar + eksen / uzaklıklar); ama yalnız DİPLERİ hizalıydı.
+   Taban çizgileri (NVDA, ölçüldü): 1440'ta fiyat 304,2, önceki kapanış
+   305,0, bandın uçları 312,5 (8 piksel aşağıda), bant başlığı 285,5, değişim
+   hapı 274,4; 1280'de önceki kapanış 325,7, uçlar 331,2, fiyat 296,4, bant
+   başlığı 304,2. Bant alt kenardan yukarı doğru kuruluyor (`align-self:end`),
+   bu yüzden yalnız iki iç aralık açıldı: satır arası 3 → 9/11, başlık altı
+   7 → 9/10. Sonra: 1440'ta uçlar 304,5 (fark 0,3), başlık 274,5 (0,1);
+   1280'de uçlar 325,2 (0,5), başlık 296,2 (0,2). Uzaklık satırı damgayla
+   aynı hatta kalıyor (333,8 / 352,5).
+   1100–1199'da bant dar (uzaklıklar alt alta, dört satır): dokunulmadı.
+   1440'ta bant iki ızgara satırından 2 piksel uzun kalıyor; satırı
+   büyütmesin diye üstten 2 piksel eksi pay (üstündeki 14 piksellik boşluğa
+   taşar, hiçbir şeye değmez). */
+@media(min-width:1200px) {
+  .companyOverview .headerBand .bandBody { margin-top:9px; }
+  .companyOverview .headerBand .bandBody[data-drawn] { row-gap:9px; }
+}
+@media(min-width:1400px) {
+  .companyOverview .headerBand { margin-top:-2px; }
+  .companyOverview .headerBand .bandBody { margin-top:10px; }
+  .companyOverview .headerBand .bandBody[data-drawn] { row-gap:11px; }
+}
 
 /* ==========================================================================
    KAPAĞIN AÇILIŞI — TEK MERDİVEN (10 Kasım). `.claude/rules/hareket.md`:
@@ -1583,4 +1612,42 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
 @media(min-width:1100px) {
   .companyOverview .capFigures[data-has-rank] { grid-template-columns:minmax(0,1fr) minmax(0,1fr); }
   .companyOverview .factTile { padding-inline:10px; }
+}
+
+/* BÖLÜM BAŞLIĞI: ÜÇ BASAMAĞIN ORTASI (14 Kasım 2026, görsel tur "Zil
+   Defteri"). Ortak ölçü (arayuz.md → Ortak ölçüler): bölüm başlığı
+   `clamp(25px,2.8vw,36px)`/600; ölçü globals.css → `.chapter-heading`te
+   (aynı gün ortak kurala terfi etti), burada yalnız kıl çizgi.
+   BÖLÜM BİR KIL ÇİZGİYLE AÇILIR: sekme şeridinin dört durağı sayfada dört
+   kesit; Değerleme, Bilançolar ve Gündem başlıkları öncekinin son
+   panelinden yalnız boşlukla ayrılıyordu ve başlık "bir panel daha" gibi
+   okunuyordu. Çizgi `--line`, başlığın 22 piksel üstünde; sekme şeridinin
+   hemen altındaki ilk bölümde çizgi yok (şeridin kendisi ayraç). */
+.chapter > :global(.chapter-heading) { padding-top:22px; border-top:1px solid var(--line); }
+.chapterNav + .chapter > :global(.chapter-heading) { padding-top:0; border-top:0; }
+
+/* KİMLİK ARAÇLARI 44'LÜK ADIMDA (14 Kasım 2026). 10 Kasım kuralı (yukarıda,
+   "aralık 14: 30 + 14 = 44") kapakta işlemiyordu: `.companyOverview`
+   altındaki daha özgül kurallar aralığı 10'a indiriyor, görünmez 44'lük
+   alanlar ikişer piksel kesişiyor ve her daireye 42 piksel kalıyordu (390,
+   `elementFromPoint` ile ölçüldü). Aynı sayı, yeterli özgüllükle: 30 + 14.
+   Şerit 12 piksel daralıyor; yanındaki çipler zaten kayan şerit. */
+@media(max-width:639px) { .companyOverview .identityTools .identityMeta { gap:14px; } }
+
+/* SEYREK ÖLÇÜDE KATILIM SOLA GEÇER (14 Kasım 2026, görsel tur). Boş ölçüler
+   artık hücre açmıyor (MetricsCard); kârı, temettüsü ve analisti olmayan
+   küçük şirkette sol kolon iki-dört hücrelik tek karta iniyor ve ızgara onu
+   sağ kolonun boyuna (ortalamalar + katılım, ~700 piksel) geriyordu: içinde
+   iki sayı olan 452 piksellik boş kutu (sahte küçük şirket, 1440, ölçüldü).
+   Dört ve altı hücrede kolonlar çözülür (`display:contents`): ölçüler tek
+   satır şerit, altında (varsa analist ve) katılım taraması; ortalamalar
+   sağda bu kartların toplam boyunda. `:has()` kökte değil ızgaranın
+   kendisinde (arayuz.md → "Kökte `:has()` yok"). */
+@media(min-width:1024px) {
+  .fundamentalsGrid:has(.metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"])) > .fundamentalsCol { display:contents; }
+  .fundamentalsGrid:has(.metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"])) > .fundamentalsCol > * { grid-column:1; }
+  .fundamentalsGrid:has(.metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"])) > .fundamentalsCol > .averagesPanel { grid-column:2; grid-row:1 / span 2; }
+  .fundamentalsGrid:has(.metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"])):has(.analystPanel) > .fundamentalsCol > .averagesPanel { grid-row:1 / span 3; }
+  .fundamentalsGrid .metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"]) { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .fundamentalsGrid .metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"]) > div { grid-column:auto; }
 }

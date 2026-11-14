@@ -33,7 +33,10 @@ export async function AnalystCard({
     getConsensusTarget(symbol),
     getStatus(),
   ]);
-  if (!result.ok) return bos;
+  /* "empty" bir hata değil yokluk (izleyen analist yok): kart basılmaz;
+     gerekçe aşağıda, `total === 0` dalında. Öteki nedenler (kota, ağ)
+     görünür kalır. */
+  if (!result.ok) return result.reason === "empty" ? null : bos;
   /* GÜNCEL ORTALAMA ÖNCE (2 Ekim). Günlük rutinin kaynaklı yazdığı ortalama
      (en çok on günlük, `lib/analyst-target-data.ts`) varsa o; yoksa son
      bilanço analizinin hedefi, analizin tarihiyle. İkisi aynı satırda
@@ -50,9 +53,15 @@ export async function AnalystCard({
   const upside = shown && price && price > 0 ? ((shown.price - price) / price) * 100 : null;
 
   const latest = result.data[0];
-  const total =
-    latest.strongBuy + latest.buy + latest.hold + latest.sell + latest.strongSell;
-  if (total === 0) return bos;
+  const total = latest
+    ? latest.strongBuy + latest.buy + latest.hold + latest.sell + latest.strongSell
+    : 0;
+  /* ANALİST YOKSA KART DA YOK (14 Kasım 2026, görsel tur). İzleyen analisti
+     olmayan küçük şirkette kart başlık + "Veri Yok" + 130 piksel boş zemin
+     basıyordu (1440, sahte veriyle ölçüldü). Bu bir hata değil bir yokluk;
+     kart basılmaz, kolonda Temel Göstergeler tek başına kalır. Sağlayıcı
+     hatası (yukarıda `!result.ok`) görünür kalıyor. */
+  if (!latest || total === 0) return null;
 
   const kotasyon = latest.symbol?.toUpperCase();
   const alimTarafi = latest.strongBuy + latest.buy;

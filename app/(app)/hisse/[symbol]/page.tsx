@@ -758,12 +758,18 @@ export default async function StockPage(
       <SymbolAnalyses rows={analysisRows} locale={locale} t={t} />
 
       {/* Bilanço tablosu tam genişlikte — kolonlar sıkışmadan okunur */}
-      <Panel className={styles.earningsPanel}>
-        <PanelHeader title={t.stock.pastEarnings} />
-        <Suspense fallback={<ListSkeleton rows={6} />}>
-          <PastEarnings symbol={symbol} locale={locale} t={t} analyses={analysisRows} />
-        </Suspense>
-      </Panel>
+      {/* Kabuk bileşenin içinde (14 Kasım 2026): veri yoksa panel basılmaz;
+          gerekçe _panels/PastEarnings.tsx. Yedek aynı kabuk. */}
+      <Suspense
+        fallback={
+          <Panel className={styles.earningsPanel}>
+            <PanelHeader title={t.stock.pastEarnings} />
+            <ListSkeleton rows={6} />
+          </Panel>
+        }
+      >
+        <PastEarnings symbol={symbol} locale={locale} t={t} analyses={analysisRows} />
+      </Suspense>
 
       {/* TEMETTÜ BİLANÇOLARIN ALTINDA (28 Eylül, sahibinin isteği). Değerleme
           ızgarasında skor kartı ile analist değişiminin yanındaydı; oysa
@@ -849,25 +855,18 @@ export default async function StockPage(
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak.
           `Reveal` sarmalı kalktı (yukarıdaki kararla aynı). */}
-      <Panel className={styles.newsPanel}>
-        {/* SEMBOL SÜZGECİNE KÖPRÜ. `/haberler?sembol=XXX` çalışıyor ve bir
-            hata düzeltmesiyle sağlamlaştırılmış (60 haberlik pencere,
-            `getNewsForSymbol`) ama SİTEDE HİÇBİR YERDEN bağlantı verilmiyordu:
-            yalnızca adresi elle yazan bulabiliyordu. Bu panel şirketin son
-            sekiz haberini gösteriyor, süzgeç altmışını; okuyucunun "devamı
-            var mı" sorusunun cevabı buradaydı ve gösterilmiyordu. */}
-        <PanelHeader
-          title={t.stock.companyNews}
-          action={
-            <PanelLink href={`/haberler?sembol=${symbol}`}>
-              {t.common.showAll}
-            </PanelLink>
-          }
-        />
-        <Suspense fallback={<ListSkeleton rows={4} />}>
-          <CompanyNews symbol={symbol} locale={locale} t={t} />
-        </Suspense>
-      </Panel>
+      {/* Kabuk ve "Tümünü Gör" köprüsü bileşenin içinde (14 Kasım 2026):
+          haber yoksa panel basılmaz; gerekçe _panels/CompanyNews.tsx. */}
+      <Suspense
+        fallback={
+          <Panel className={styles.newsPanel}>
+            <PanelHeader title={t.stock.companyNews} />
+            <ListSkeleton rows={4} />
+          </Panel>
+        }
+      >
+        <CompanyNews symbol={symbol} locale={locale} t={t} />
+      </Suspense>
       {/* SAYFA REHBERLE KAPANIYOR — öteki ekranların sırası (CLAUDE.md
           "Ekran düzeni" 7). Tablonun altındaki EPS açıklama paragrafının
           yerini de bu şerit alıyor: kısaltma orada tek satırlık künye,

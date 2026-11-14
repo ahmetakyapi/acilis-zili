@@ -129,7 +129,19 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
 
   const cells: { key: string; icon: ReactNode; label: string; value: ReactNode; meta?: ReactNode }[] = [];
   if (facts.indices.length > 0) {
-    cells.push({ key: "index", icon: <Stack size={16} weight="duotone" />, label: d.sumFactIndex, value: facts.indices.join(" · ") });
+    /* İLK ENDEKS DEĞER, ÖTEKİLER KÜNYE (14 Kasım 2026). Üç endeksli
+       şirkette "S&P 500 · Nasdaq 100 · Dow Jones" 1440'ta iki satıra
+       kırılıyor, komşu hücreler tek satır kalıyordu (canlı NVDA: değer 42,
+       komşular 21 piksel). Bilanço ve alt sektör hücreleri zaten "değer +
+       künye" kalıbında; endeks de ona uydu: beş hücrenin değeri aynı
+       satırda. */
+    cells.push({
+      key: "index",
+      icon: <Stack size={16} weight="duotone" />,
+      label: d.sumFactIndex,
+      value: facts.indices[0],
+      meta: facts.indices.length > 1 ? facts.indices.slice(1).join(" · ") : undefined,
+    });
   }
   if (facts.sector) {
     cells.push({ key: "sector", icon: <Buildings size={16} weight="duotone" />, label: d.sumFactSector, value: facts.sector });

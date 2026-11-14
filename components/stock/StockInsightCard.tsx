@@ -330,6 +330,17 @@ export function StockInsightCard({
   const insight = state.insight;
   const text: InsightText | undefined = insight ? insight.text[locale] : undefined;
 
+  /* NOT YOKSA PANEL DE YOK (14 Kasım 2026, görsel tur). Yazılamayan not tam
+     genişlikte bir panel + tek satır "Not şu an hazırlanamadı; birazdan
+     yeniden dene." bırakıyordu (canlı NVDA, 1440: 1320×114 piksellik kutu,
+     içinde 20 kelime); okur için kırık bir boş durum, yeniden deneme yolu
+     da yok. Bu kartın altında aynı olayı SAYIYLA anlatan paneller zaten
+     duruyor (Yaklaşan Bilanço, Beklenen Hareket, Geçmiş Bilançolar); not
+     gelmezse eksilen yalnız yorum. Kart yüklenirken yerini ayırıyor,
+     düşerse kapanıyor: 114 piksellik bir kez yukarı kayma, kalıcı boş
+     kutudan iyi. */
+  if (state.status === "failed") return null;
+
   return (
     <Panel ref={ref} className={styles.card} aria-busy={state.status === "loading" || state.status === "idle"}>
       <PanelHeader
@@ -406,8 +417,6 @@ export function StockInsightCard({
           )}
           <p className={styles.disclosure}>{labels.disclosure}</p>
         </div>
-      ) : state.status === "failed" ? (
-        <p className={styles.failed}>{labels.unavailable}</p>
       ) : (
         <div className={styles.loading} data-kind={kind}>
           {kind === "move" ? (

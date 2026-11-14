@@ -1150,11 +1150,13 @@
     flex-direction: column;
     gap: 8px;
   }
+  /* Ortak bölüm başlığı ölçüsü (arayuz.md → Ortak Ölçüler; 14 Kasım görsel
+     turu): 2.3vw / 650 / −0,04em idi, yani ara ağırlık ve kuralın dışında. */
   .chapter-heading > h2 {
-    font-size: clamp(var(--text-heading), 2.3vw, var(--text-display));
-    font-weight: 650;
+    font-size: clamp(25px, 2.8vw, 36px);
+    font-weight: 600;
     line-height: 1.14;
-    letter-spacing: -0.04em;
+    letter-spacing: -0.03em;
   }
   .chapter-heading > p {
     max-width: 64ch;
