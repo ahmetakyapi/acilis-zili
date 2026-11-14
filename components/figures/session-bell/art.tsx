@@ -78,12 +78,20 @@ export function SessionBellArt({
           <Solid paths={paths} tone="mid" crease="none" />
         </g>
       ))}
-      <FaceText transform={dial.label} size={3.6} tone="lo" anchor="middle">
+      {/* KADRAN YAZILARI OKUNACAK BOYDA YA DA HİÇ (14 Kasım 2026). Rakamlar
+          3,4 ve künye 3,6 birimdi: ekranda 1440'ta 6,2 / 6,6, 1024'te 4,4,
+          390'da 3,1 piksel (`olc.mjs` "svg<12"); hiçbir genişlikte
+          okunmuyordu. Şimdi 6,8 / 7 birim: sahne 630 piksel ve üstündeyken
+          (1440: 12,4 piksel; 768: 12,9) okunur; daha dar sahnede yazı HİÇ
+          basılmaz (bell.css → "KADRAN YAZILARI", kap sorgusu). Saatler o
+          zaman figürün altındaki seans çiplerinde ve sahnenin
+          `aria-label`inde; kadran çentik ve renkli dilimle kalır. */}
+      <FaceText transform={dial.label} size={7} tone="lo" anchor="middle">
         {stamp}
       </FaceText>
       {/* Dört ana saat — gerekçe geometry.ts → `hours`. */}
       {dial.hours.map((hour) => (
-        <FaceText key={hour.text} transform={hour.transform} size={3.4} tone="mid" anchor="middle">
+        <FaceText key={hour.text} transform={hour.transform} size={6.8} tone="mid" anchor="middle">
           {hour.text}
         </FaceText>
       ))}

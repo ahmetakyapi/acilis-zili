@@ -1,11 +1,11 @@
 "use client";
 
-import { Fragment, type CSSProperties, type ReactNode } from "react";
+import { Fragment, useLayoutEffect, useRef, type CSSProperties, type ReactNode } from "react";
 import { ArrowDown, ArrowUp, Buildings, CaretDown, ChartLineUp, Check, Equals } from "@phosphor-icons/react";
 import { LogoTile } from "@/components/ui/primitives";
 import type { Dictionary } from "@/lib/i18n";
 import { displayFlowStatus, type FlowEvent } from "@/lib/day-flow";
-import { axisBands, axisHours, axisShare, bandOf, layoutFlags, minutesOfClock, type AxisDomain } from "@/lib/flow-axis";
+import { axisBands, axisHours, axisShare, bandOf, capTier, layoutFlags, leadMember, minutesOfClock, type AxisDomain } from "@/lib/flow-axis";
 import { clockOf } from "@/lib/session-clock";
 import styles from "./FlowAxis.module.css";
 
@@ -41,6 +41,9 @@ export type FlowAxisProps = {
   detailId?: (id: string) => string;
   /** Her bayrağın adına eklenen eylem cümlesi (önizlemede "günü aç"). */
   pickHint?: string;
+  /** Açık olay kendiliğinden değişiyor (otomatik tur): ayrıntı kartının boyu
+      o ana dek görülen en uzun karta sabitlenir (aşağıda "KARTIN TABANI"). */
+  steady?: boolean;
 };
 
 /** Olayın bayrakta ve satırda yazılan sonucu — tek yerde, iki düzen okur. */
@@ -103,7 +106,42 @@ const DirIcon = ({ dir, size }: { dir: "above" | "below" | "inline"; size: numbe
  * Kırılım KABIN eninden (`@container`), ekranınkinden değil: panel dar bir
  * kolona girerse kendiliğinden şeride döner (FlowAxis.module.css).
  */
-export function FlowAxis({ events, domain, offsets, tags, labels, railLabels, nowMs, nowMinutes, elapsedMinutes, openId = null, leadId = null, onPick, renderDetail, detailId, pickHint }: FlowAxisProps) {
+export function FlowAxis({ events, domain, offsets, tags, labels, railLabels, nowMs, nowMinutes, elapsedMinutes, openId = null, leadId = null, onPick, renderDetail, detailId, pickHint, steady = false }: FlowAxisProps) {
+  /* KARTIN TABANI (14 Kasım 2026, ikinci tur). Otomatik tur açık olayı sekiz
+     saniyede bir değiştirir; kartın boyu içeriğe göre oynadığı için (sonucu
+     beklenen veri: iki satır; bilanço: şirket satırları) panelin dibi ve
+     altındaki bütün sayfa her adımda zıplıyordu (ölçüm modül CSS'inin
+     sonunda). Tur sürerken kart, o ana dek görülen EN UZUN kartın boyunu
+     taban alır: boy yalnız büyüyebilir, ilk turdan sonra hiç oynamaz. Okur
+     bir olayı eliyle seçtiği an tur biter (`steady` düşer) ve taban kalkar:
+     kendi seçtiği kart içeriği kadar yer tutar.
+     Ölçüm DOM'dan, boyamadan önce (`useLayoutEffect`); taban eksenin
+     `--detail-floor` değişkenine yazılır (durum değil: fazladan çizim yok)
+     ve onu yalnız GENİŞ düzenin kartı okur (FlowAxis.module.css). Dar
+     düzende kart satırın altında açılır, satırlar zaten yer değiştirir;
+     orada taban kısa olayın altında yüzlerce piksellik boş kutu bırakırdı.
+     Kap eni değişince taban sıfırlanır. */
+  const axisRef = useRef<HTMLDivElement>(null);
+  const floor = useRef({ px: 0, width: 0 });
+  useLayoutEffect(() => {
+    const axis = axisRef.current;
+    if (!axis) return;
+    const measure = () => {
+      const card = axis.querySelector<HTMLElement>("[data-flow-detail]");
+      axis.style.removeProperty("--detail-floor");
+      if (!steady || !card) { floor.current.px = 0; return; }
+      const width = axis.clientWidth;
+      if (floor.current.width !== width) floor.current = { px: 0, width };
+      floor.current.px = Math.max(floor.current.px, card.offsetHeight);
+      axis.style.setProperty("--detail-floor", `${floor.current.px}px`);
+    };
+    measure();
+    if (!steady) return;
+    const onResize = () => { if (axis.clientWidth !== floor.current.width) measure(); };
+    window.addEventListener("resize", onResize);
+    return () => window.removeEventListener("resize", onResize);
+  }, [openId, steady, events]);
+
   const primary = (minutes: number) => clockOf(minutes + offsets.primary);
   const secondary = (minutes: number) => clockOf(minutes + offsets.secondary);
   const pct = (share: number) => `${(share * 100).toFixed(3)}%`;
@@ -160,6 +198,7 @@ export function FlowAxis({ events, domain, offsets, tags, labels, railLabels, no
   return (
     <div className={styles.gauge} data-density={density}>
       <div
+        ref={axisRef}
         className={styles.axis}
         data-density={density}
         data-draw
@@ -242,6 +281,9 @@ export function FlowAxis({ events, domain, offsets, tags, labels, railLabels, no
             const time = minutes !== null ? `${event.approx ? "~" : ""}${primary(minutes)}` : null;
             const kind = event.detail ?? (event.kind === "earnings" ? labels.earnings : labels.economic);
             const logos = event.kind === "earnings" ? event.members ?? [] : [];
+            /* İmdeki logo pencerenin EN BÜYÜK şirketi, boyu piyasa değerinin
+               kademesinden (`leadMember`, `capTier`; lib/flow-axis.ts). */
+            const face = leadMember(logos);
             return (
               <Fragment key={event.id}>
                 {flag === undefined && layout.loose[0] === event.id && (
@@ -269,9 +311,9 @@ export function FlowAxis({ events, domain, offsets, tags, labels, railLabels, no
                     aria-controls={renderDetail && open && detailId ? detailId(event.id) : undefined}
                     title={event.title}
                   >
-                    <span className={styles.marker} data-imp={event.importance} data-logo={logos.length > 0 || undefined} aria-hidden="true">
-                      {logos.length > 0
-                        ? <LogoTile symbol={logos[0]!.symbol} logoUrl={logos[0]!.logoUrl} size="sm" className={styles.markerLogo} />
+                    <span className={styles.marker} data-imp={event.importance} data-logo={face ? true : undefined} data-cap={face ? capTier(face.marketCap) : undefined} aria-hidden="true">
+                      {face
+                        ? <LogoTile symbol={face.symbol} logoUrl={face.logoUrl} size="sm" className={styles.markerLogo} />
                         : event.kind === "earnings" ? <Buildings size={15} /> : <ChartLineUp size={15} weight={event.importance === "high" ? "bold" : "regular"} />}
                       {logos.length > 1 && <small className="numeral">+{logos.length - 1}</small>}
                       {done && (
@@ -312,7 +354,7 @@ export function FlowAxis({ events, domain, offsets, tags, labels, railLabels, no
                     {renderDetail && <CaretDown size={15} weight="bold" aria-hidden className={styles.caret} />}
                   </button>
                   {renderDetail && open && (
-                    <div id={detailId?.(event.id)} className={styles.detail} data-dir={done ? result.dir ?? "done" : status === "scheduled" ? undefined : "due"}>
+                    <div id={detailId?.(event.id)} className={styles.detail} data-flow-detail="" data-dir={done ? result.dir ?? "done" : status === "scheduled" ? undefined : "due"}>
                       {/* Kartın başlığı: geniş düzende bayrak başlığı kırpabilir,
                           tam adı burada; iki saat (okurun ve öteki), önem ve
                           durum sözle. Dar düzende ad satırda zaten tam. */}

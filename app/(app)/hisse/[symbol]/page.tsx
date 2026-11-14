@@ -182,7 +182,24 @@ export default async function StockPage(
   const { locale, t } = await getI18n();
 
   /* Geçersiz sembol 404 DÖNER — ekran `not-found.tsx` dosyasında. Kota
-     dolduğunda gösterilen alttaki ekran 200 kalır: adres geçerli, veri yok. */
+     dolduğunda gösterilen alttaki ekran 200 kalır: adres geçerli, veri yok.
+
+     NEDEN 429 DEĞİL (14 Kasım 2026, belgeye bakıldı). Next 16'da sayfa
+     bileşeni durum kodunu seçemez: kod, akış başlarken yazılır
+     (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/loading.md`
+     → "Starting the stream sends the headers and fixes the status code")
+     ve sayfadan yalnız dört yol onu değiştirir: `notFound()` 404,
+     `redirect()` 3xx, deneysel `forbidden()` 403 ve `unauthorized()` 401
+     (ikisi `experimental.authInterrupts` ister). 404 yanlış olurdu (adres
+     geçerli, bir dakika sonra dolu), 403 de öyle (yetki sorunu değil).
+     Gerçek 429 ancak sayfadan ÖNCE verilebilir: `proxy.ts` ya da bir rota
+     işleyicisi; kapının (`allowStockRender`) oraya taşınması sembol
+     tablosu okumasını her isteğin önüne koyar, ayrı bir iş.
+     Seçilen yol: kod 200 kalır, ekran `noindex` taşır (aşağıda). Tanınmayan
+     sembol künyede zaten dizin dışı (`generateMetadata`); açık kalan tek
+     durum fonlardı: adları elde tutulan künyeden geldiği için dizine açık,
+     ama `symbols` tablosunda olmadıkları için kapıya takılabiliyorlar ve
+     "Biraz Yavaşla" ekranı o adresin içeriği diye dizine girebilirdi. */
   if (!isValidSymbol(symbol)) notFound();
 
   /* Sağlayıcı kotasının en pahalı yüzeyi burası: tanınmayan bir sembolün tam
@@ -208,6 +225,11 @@ export default async function StockPage(
      bağlantı sayfayı yeniden çizdiriyor — sınır dakikalık olduğu için
      bekleyen okuyucunun ihtiyacı tam olarak bu. */
   const throttled = (
+    <>
+    {/* React 19 `<meta>`yı belgenin başına taşır; künye (`generateMetadata`)
+        kapının sonucunu bilmeden yazıldığı için karar burada verilir. Arama
+        motoru birden çok `robots` iminden en kısıtlayıcısını uygular. */}
+    <meta name="robots" content="noindex" />
     <EmptyState
       title={t.stock.throttled}
       hint={t.stock.throttledHint}
@@ -220,6 +242,7 @@ export default async function StockPage(
         </Link>
       }
     />
+    </>
   );
 
   /* Fon sayfası ayrı kurgudur: metrikler, analist tavsiyeleri, katılım taraması

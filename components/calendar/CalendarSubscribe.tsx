@@ -78,7 +78,12 @@ export function CalendarSubscribe({
 
   return (
     <div className={cn("flex flex-col gap-2", className)} data-calendar-subscribe>
-      <div className="flex flex-wrap items-center gap-2">
+      {/* Dikey aralık 8 → 14 (14 Kasım 2026): 360'ta iki buton alt alta
+          sarıyor; 32 piksellik butonların 44'lük görünmez alanları (`tap-44`)
+          8 piksel arayla 4 piksel kesişiyordu ("Takvime Abone Ol" 151×32,
+          dikeyde < 44; `olc.mjs`). 32 + 14 = 46: tam 44 adımda sınırdaki yarım
+          piksel alttaki butona düşüyor. */}
+      <div className="flex flex-wrap items-center gap-x-2 gap-y-3.5">
         <a href={webcal} rel="nofollow" className={buttonClass({ variant: "ghost", size: "sm" })}>
           <CalendarPlus aria-hidden size={14} weight="duotone" />
           {labels.subscribe}

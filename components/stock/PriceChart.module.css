@@ -150,4 +150,20 @@
      ile ray sekize bölünür: 390'da 38×44, 360'ta 34×44 (ölçüldü), ölü boşluk 2
      piksel. 44'e ancak bir aralığı atarak çıkılır; atılmadı. */
   .root[data-compact="true"] .controls > .segment:first-child > .segmentButton { flex:1 1 0; min-width:0; padding-inline:0; }
+  /* SEKİZ ARALIK İKİ SATIR, DÖRDER (14 Kasım 2026, ikinci tur). Tek satırda
+     buton 390'da 38×44, 360'ta 34×44 kalıyordu: 322 piksellik ray sekize
+     bölününce 44 çıkmaz (yukarıdaki not: "ancak bir aralığı atarak").
+     Üç yol tartıldı. (1) Şeridi kaydırmak: PriceChart.tsx'teki karara
+     aykırı (devamı görünmüyor, iOS'ta çubuk yok). (2) İki aralığı "Daha"
+     menüsüne almak: 360'ta 44 için İKİ aralık gitmeli (292 / 7 = 41,7) ve
+     5Y ya da YBB bir dokunuş arkaya saklanır; grafiğin bütün pencereleri
+     tek bakışta görünmez. (3) Rayı 4 × 2 ızgaraya bölmek: sekizi de
+     görünür, sıra okuma yönünde (üstte kısa vadeler 1G-3A, altta uzunlar
+     6A-5Y). Seçilen bu. Bedeli 46 piksel yükseklik; iskeletin ayırdığı yer
+     birlikte büyüdü (`--price-chart-controls` 108 → 154, `chartSkeleton`
+     +187 → +233, stock.module.css), yani düzen kayması yok.
+     Ölçüm (NVDA, 390 ve 360): buton 38×44 / 34×44 → 78×44 / 71×44;
+     denetim bloğu 117 → 163; CLS 0,0003 / 0,0000 → 0,0000 / 0,0000;
+     aralık rayı 390×844'te hâlâ ilk ekranda. */
+  .root[data-compact="true"] .controls > .segment:first-child { display:grid; grid-template-columns:repeat(4,minmax(0,1fr)); overflow:visible; }
 }

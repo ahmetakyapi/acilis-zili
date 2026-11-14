@@ -103,7 +103,12 @@ export function ScenarioRail({
      adın altında kendi satırında, yüzde ve ATR ayrı `nowrap` gruplar —
      satır yalnız iki grubun ARASINDAN kırılabilir. */
   const atr = (value: number | null) =>
-    value === null ? null : <span className={styles.railGroup}>{` · ${formatPrice(value, locale, { digits: 1 })} ATR`}</span>;
+    value === null ? null : (
+      <span className={ai.axisAtr}>
+        <i aria-hidden> · </i>
+        {`${formatPrice(value, locale, { digits: 1 })} ATR`}
+      </span>
+    );
   const bullName = up.source === "text" ? v.railBullTrigger : v.railNearestResistance;
   const bearName = down.source === "text" ? v.railBearTrigger : v.railNearestSupport;
   /* Para birimi zincirin yalnız sonunda (`formatRange` ile aynı karar). */
@@ -179,7 +184,7 @@ export function ScenarioRail({
           <dl className={ai.axisMath}>
             <div>
               <dt>{bearName} <b className="figure">{money(down.trigger)}</b></dt>
-              <dd className="figure" data-tone="down"><span className={styles.railGroup}>{formatPercent(math.downPct, locale, 1)}</span>{atr(math.downAtr)}</dd>
+              <dd className="figure" data-tone="down"><span className={ai.axisPct}>{formatPercent(math.downPct, locale, 1)}</span>{atr(math.downAtr)}</dd>
             </div>
             <div>
               <dt>{v.railRatio}</dt>
@@ -187,7 +192,7 @@ export function ScenarioRail({
             </div>
             <div>
               <dt>{bullName} <b className="figure">{money(up.trigger)}</b></dt>
-              <dd className="figure" data-tone="up"><span className={styles.railGroup}>{formatPercent(math.upPct, locale, 1)}</span>{atr(math.upAtr)}</dd>
+              <dd className="figure" data-tone="up"><span className={ai.axisPct}>{formatPercent(math.upPct, locale, 1)}</span>{atr(math.upAtr)}</dd>
             </div>
           </dl>
         )}

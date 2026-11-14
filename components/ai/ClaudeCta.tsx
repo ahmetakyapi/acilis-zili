@@ -4,6 +4,7 @@ import { hasAnalysisAccess } from "@/lib/ai-analysis-access";
 import { listSymbolReports, type ReportSummary } from "@/lib/ai-analysis-reports";
 import { FOCUS_OF, type AnalysisFocus } from "@/lib/ai-analysis-core";
 import { ScoreRing } from "@/components/earnings/ScoreRing";
+import { VerdictPill } from "@/components/ui/VerdictPill";
 import { AvatarTile } from "@/components/brand/AvatarIcon";
 import { ButtonLink, Panel, PanelHeader } from "@/components/ui/primitives";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -54,14 +55,19 @@ export async function editionNote(symbol: string, locale: "tr" | "en") {
  * (görüş, plan ya da kural kontrolü), hemen ardından Claude — üstte ama
  * okumanın önünde değil.
  *
- * Her odak bir satır: son raporun puanı ve kararı, zamanı, oluşturanı;
- * sağda eylemler. Panel misafire de basılır; misafir "Claude ile Analiz
- * Et"e basınca Claude sayfası girişi ister. Hakkı olmayan oturumlu
- * okuyucuya rapor yoksa panel çizilmez.
+ * Panel misafire de basılır; misafir "Claude ile Analiz Et"e basınca
+ * Claude sayfası girişi ister. Hakkı olmayan oturumlu okuyucuya rapor
+ * yoksa panel çizilmez.
  *
  * Teknik odakta, sitenin yazılı teknik analizi olan hissede panel
  * sıradaki yayını söyler (günde üç kez, `nextEdition`): okuyucu yeni bir
  * Claude raporu istemek yerine onu bekleyebilir (sahibinin isteği).
+ *
+ * Veri ve yetki burada, çizim `ClaudeCtaView`de: görünüm sahte veriyle
+ * önizlenebilir (olcum skill'i). Yetki, kota ve kilit mantığına bu dosya
+ * dokunmaz; band yalnız "rapor var mı, okur isteyebilir mi" bilir. Üretimi
+ * süren rapor ve dolan kota Claude sayfasının kendi ekranındadır
+ * (`ClaudeWorkbench`); band onlar için sorgu yapmaz.
  */
 export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; locale: "tr" | "en"; focus: AnalysisFocus | "both" }) {
   const { canGenerate, signedIn, latestOf } = await claudeState(symbol);
@@ -69,45 +75,91 @@ export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; loc
   // Misafire de: düğme Claude sayfasına, o sayfa girişi ister. Hakkı olmayan oturumlu okuyucuya boş vitrin yok.
   const canAsk = canGenerate || !signedIn;
   if (!canAsk && focuses.every(f => !latestOf(f))) return null;
-  const t = getDictionary(locale).aiAnalysis;
   const edition = focuses.includes("technical") ? await editionNote(symbol, locale) : null;
+  return <ClaudeCtaView symbol={symbol} locale={locale} focus={focus} canAsk={canAsk} edition={edition}
+    reports={focuses.flatMap(f => { const latest = latestOf(f); return latest ? [{ focus: f, latest }] : []; })} />;
+}
+
+/**
+ * BANDIN ÇİZİMİ — sade hâli (14 Kasım 2026, ikinci tur).
+ *
+ * ÖNCE: her odak çukur zeminli bir kart satırıydı ve HER satırda iki buton
+ * vardı ("Raporu Aç" + "Yeni Analiz Oluştur"); iki odaklı şirket sayfasında
+ * dört buton, ikisi aynı işi yapan birincil buton. Rapor yoksa iki ayrı
+ * "Bu odakta henüz rapor yok." bandı ve iki "Claude ile Analiz Et"
+ * diziliyordu. Karar 20 piksel / 800 ağırlıkta, haftalar önceki raporun
+ * tarihi hemen altında 13 pikseldi: bandın en büyük puntosu eski bir görüşe
+ * gidiyordu (Veri Dürüstlüğü 2).
+ *
+ * ŞİMDİ:
+ * - Raporu olan odak başına TEK düz satır (kutu değil, kıl çizgi): puan
+ *   halkası · görüş hapı (`VerdictPill`, sitenin her yerindeki AL/TUT/SAT)
+ *   · künye tonunda odak, tarih ve oluşturan · "Raporu Aç". Satırda tek
+ *   bağlantı var (karar ayrıca bağlantı değil).
+ * - "Yeni Analiz Oluştur" panel başlığının sağında TEK buton. Odak seçimi
+ *   butonun açtığı akışta duruyor: Claude sayfasının "Yeni Analiz" sekmesi
+ *   odağı kendisi sorar (`app/(app)/claude/[symbol]/page.tsx` → "ODAK
+ *   SEÇENEKLERİ", `?odak=`); band sayfanın odağını (iki odaklıda teknik)
+ *   ön seçili gönderir. Raporu olmayan odak için ayrı satır basılmaz.
+ * - Rapor hiç yoksa tek cümle + tek buton; alttaki açıklama cümlesi o
+ *   durumda yinelenmez (cümlenin kendisi o).
+ * - Halka 48 → 40, karar 20/800 → hap (12/700), tarih 13 → 12 piksel.
+ *
+ * Ölçüm modül CSS'inde (`Claude.module.css` → "Claude paneli").
+ */
+export function ClaudeCtaView({ symbol, locale, focus, reports, canAsk, edition }: {
+  symbol: string; locale: "tr" | "en"; focus: AnalysisFocus | "both";
+  /** Raporu olan odaklar, basılacak sırayla. */
+  reports: { focus: AnalysisFocus; latest: ReportSummary }[];
+  canAsk: boolean;
+  edition: string | null;
+}) {
+  const t = getDictionary(locale).aiAnalysis;
   const date = (iso: string) => new Date(iso).toLocaleString(locale === "tr" ? "tr-TR" : "en-GB", { timeZone: "Europe/Istanbul", dateStyle: "medium", timeStyle: "short" });
+  const askFocus: AnalysisFocus = focus === "both" ? "technical" : focus;
+  const empty = reports.length === 0;
 
   return <Panel className={styles.ctaPanel}>
-    <PanelHeader title={t.cta.title} meta={focus === "both" ? t.cta.tool : `${focus === "technical" ? t.focus.technical : t.focus.selection} · ${t.cta.tool}`} />
-    <ul className={styles.ctaRows}>
-      {focuses.map(f => {
-        const latest = latestOf(f);
-        if (!latest && !canAsk) return null;
-        return <li key={f} className={styles.ctaRow} data-verdict={latest?.verdict}>
-          {latest && latest.score !== null
-            ? <ScoreRing score={latest.score} verdict={latest.verdict === "insufficient" ? "hold" : latest.verdict} size={48} />
-            : <span className={styles.ctaRing} aria-hidden />}
-          <div className={styles.ctaBody}>
-            {focus === "both" && <span className={styles.ctaFocus}>{f === "technical" ? t.focus.technical : t.focus.selection}</span>}
-            {latest ? <>
-              <Link href={claudeHref(symbol, f, "rapor")} rel="nofollow" className={styles.ctaVerdict}>{t.verdicts[latest.verdict]}</Link>
-              <span className={styles.ctaMeta}>
-                <span>{date(latest.generatedAt)} · TR</span>
-                {latest.author && <span className={styles.ctaAuthor}>
-                  <AvatarTile icon={latest.author.icon} color={latest.author.color} initials={initialsOf(latest.author.name, locale)} className={styles.tlAvatar} />
-                  <span className="sr-only">{t.claude.timeline.author}: </span>{latest.author.name}
-                </span>}
-              </span>
-            </> : <span className={styles.ctaNone}>{t.cta.none}</span>}
-          </div>
-          <div className={styles.ctaActions}>
-            {latest && <ButtonLink href={claudeHref(symbol, f, "rapor")} rel="nofollow" variant="ghost" size="sm">{t.cta.open}</ButtonLink>}
-            {canAsk && <ButtonLink href={claudeHref(symbol, f, "yeni")} rel="nofollow" variant="primary" size="sm">{latest ? t.cta.newAnalysis : t.cta.create}</ButtonLink>}
-          </div>
-        </li>;
-      })}
-    </ul>
-    {edition && <p className={styles.ctaEdition}>
-      <svg viewBox="0 0 24 24" aria-hidden><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>
-      <EditionText text={t.cta.editions} time={edition} />
-    </p>}
-    <p className={styles.ctaHint}>{t.cta.hint}</p>
+    <PanelHeader
+      title={t.cta.title}
+      meta={<span className={styles.ctaTool}>{t.cta.tool}</span>}
+      action={canAsk && !empty
+        ? <ButtonLink href={claudeHref(symbol, askFocus, "yeni")} rel="nofollow" variant="primary" size="sm">{t.cta.newAnalysis}</ButtonLink>
+        : undefined}
+    />
+    {empty ? <div className={styles.ctaEmpty}>
+      <p>{focus === "both" ? t.cta.companyHint : t.cta.hint}</p>
+      <ButtonLink href={claudeHref(symbol, askFocus, "yeni")} rel="nofollow" variant="primary" size="sm">{t.cta.create}</ButtonLink>
+    </div> : <ul className={styles.ctaRows}>
+      {reports.map(({ focus: f, latest }) => <li key={f} className={styles.ctaRow}>
+        {latest.score !== null
+          ? <ScoreRing score={latest.score} verdict={latest.verdict === "insufficient" ? "hold" : latest.verdict} size={40} />
+          : <span className={styles.ctaRingEmpty} aria-hidden />}
+        <div className={styles.ctaLine}>
+          <span className={styles.ctaHead}>
+            {latest.verdict === "insufficient"
+              ? <strong className={styles.ctaPlain}>{t.verdicts.insufficient}</strong>
+              : <VerdictPill verdict={latest.verdict} label={t.verdicts[latest.verdict]} size="sm" />}
+            <b>{f === "technical" ? t.focus.technical : t.focus.selection}</b>
+          </span>
+          <span className={styles.ctaStamp}>
+            <span className="numeral">{date(latest.generatedAt)} · TR</span>
+            {latest.author && <span className={styles.ctaAuthor}>
+              <AvatarTile icon={latest.author.icon} color={latest.author.color} initials={initialsOf(latest.author.name, locale)} className={styles.ctaAvatar} />
+              <span className="sr-only">{t.claude.timeline.author}: </span>{latest.author.name}
+            </span>}
+          </span>
+        </div>
+        <ButtonLink href={claudeHref(symbol, f, "rapor")} rel="nofollow" variant="ghost" size="sm">{t.cta.open}</ButtonLink>
+      </li>)}
+    </ul>}
+    {(edition || !empty) && <div className={styles.ctaNotes}>
+      {edition && <p className={styles.ctaEdition}>
+        <svg viewBox="0 0 24 24" aria-hidden><circle cx="12" cy="12" r="8.5" /><path d="M12 7.5V12l3 2" /></svg>
+        <EditionText text={t.cta.editions} time={edition} />
+      </p>}
+      {!empty && <p className={styles.ctaHint}>{t.cta.hint}</p>}
+    </div>}
   </Panel>;
 }
 

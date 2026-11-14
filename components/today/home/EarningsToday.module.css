@@ -60,11 +60,16 @@
 }
 .cap, .capEmpty { display: none; }
 @container earnings (min-width: 700px) {
-  .list { grid-template-columns: auto fit-content(16rem) minmax(7rem, 1fr) max-content max-content max-content; }
+  /* Piyasa değeri sütununun tabanı 7 → 8,5rem (14 Kasım 2026): 768'de sütun
+     114 piksele iniyor, "52,0 Mr $" + "Piyasa Değeri" 132 istiyordu; künye
+     12-18 piksel taşıp "Piyasa Değ" diye kesiliyordu (`olc.mjs`, beş satır;
+     hafta sonu görünümü). Taban en uzun olağan değeri taşır; daha uzunu
+     için başlık sarar (`.capHead`). Ölçüm: taşan künye 5 → 0 (768). */
+  .list { grid-template-columns: auto fit-content(16rem) minmax(8.5rem, 1fr) max-content max-content max-content; }
   .cap { display: grid; gap: 7px; align-content: center; min-width: 0; }
   .capEmpty { display: block; }
 }
-.capHead { display: flex; align-items: baseline; gap: 6px; min-width: 0; }
+.capHead { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0 6px; min-width: 0; }
 .capValue { font-size: var(--text-tiny); font-weight: 600; line-height: 1.25; color: var(--text-body); white-space: nowrap; }
 
 /* AKIŞA BAĞLAYAN KÜNYE (11 Kasım) — gerekçe EarningsToday.tsx. Panelin

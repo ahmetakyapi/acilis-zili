@@ -48,11 +48,12 @@ export function ScenarioAxis({ result, t, locale }: { result: SavedAnalysis; t: 
     {(() => {
       const m = triggerMath(price, bullLevel, bearLevel, result.snapshot.atr14);
       if (!m) return null;
-      const atr = (v: number | null) => v === null ? "" : ` · ${formatPrice(v, locale, { digits: 1 })} ATR`;
+      /* Yüzde ve ATR ayrı bölünmez gruplar; dar kapta ATR alt satıra iner (gerekçe ve ölçüm AnalysisVisuals.module.css → `.axisMath`). */
+      const atr = (v: number | null) => v === null ? null : <span className={styles.axisAtr}><i aria-hidden> · </i>{`${formatPrice(v, locale, { digits: 1 })} ATR`}</span>;
       return <dl className={styles.axisMath}>
-        <div><dt>{t.toBear}</dt><dd className="figure" data-tone="down">{formatPercent(m.downPct, locale, 1)}{atr(m.downAtr)}</dd></div>
+        <div><dt>{t.toBear}</dt><dd className="figure" data-tone="down"><span className={styles.axisPct}>{formatPercent(m.downPct, locale, 1)}</span>{atr(m.downAtr)}</dd></div>
         <div><dt>{t.ratioTitle}</dt><dd className="figure">{m.ratio === null ? "—" : formatPrice(m.ratio, locale, { digits: 2 })}</dd></div>
-        <div><dt>{t.toBull}</dt><dd className="figure" data-tone="up">{formatPercent(m.upPct, locale, 1)}{atr(m.upAtr)}</dd></div>
+        <div><dt>{t.toBull}</dt><dd className="figure" data-tone="up"><span className={styles.axisPct}>{formatPercent(m.upPct, locale, 1)}</span>{atr(m.upAtr)}</dd></div>
       </dl>;
     })()}
     <div className={styles.axisEnds} aria-hidden>

@@ -225,6 +225,7 @@ const en: typeof tr = {
     emptyDayTitle: "No Scheduled Releases This Day",
     emptyDayHint: "Use the arrows to move to earlier or later days.",
     previewLead: "Next trading day is {day}: {n} events on the flow.",
+    previewLeadOne: "Next trading day is {day}: 1 event on the flow.",
     previewRuler: "Time axis of the next trading day",
     previewHidden: "{count} more earnings below the threshold.",
     previewMore: "+{n} More Events",

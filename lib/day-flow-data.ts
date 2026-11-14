@@ -212,6 +212,8 @@ export async function loadDayFlow(locale: Locale, userId?: string, requestedDate
       : undefined;
     const member: FlowMember = {
       symbol: row.symbol, logoUrl: info?.logoUrl ?? null, watched: watchedSet.has(row.symbol),
+      /* Zaten yüklü künyeden (`meta`); yeni sorgu yok. */
+      marketCap: info?.marketCap ?? null,
       /* Bildirim yatırıldıysa sonuç açıklanmıştır — rakam henüz gelmemiş olsa da. */
       status: earningsStatus(eps, revenue, !!analysis) === "scheduled" && filings.get(row.symbol) ? "released" : earningsStatus(eps, revenue, !!analysis),
       href: withLocale(analysis ? analysisHref(row.symbol, analysis.period) : `/hisse/${row.symbol}`, locale),

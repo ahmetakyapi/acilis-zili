@@ -106,6 +106,14 @@
 .heroFigures dt { font-size:12px; font-weight:600; line-height:1.3; color:var(--text-muted); }
 .heroFigures dd { align-self:last baseline; margin:0; font-size:17px; font-weight:700; letter-spacing:-.02em; line-height:1.1; color:var(--text-strong); white-space:nowrap; }
 .heroFigures [data-lead] dd { font-size:22px; letter-spacing:-.03em; }
+/* 360: sütunlar içerik kadar (14 Kasım 2026). Üç eşit sütun 85 piksele
+   iniyor; öndeki 22 piksellik "25,4 Mr $" 94 istiyor ve komşu sütuna 9
+   piksel taşıyordu (`olc.mjs`, `/bilancolar` 360, hafta sonu görünümü, 8
+   öğe). Sütun değerin eni kadar, aradaki boşluk eşit dağılır; etiket
+   gerekirse sarar. Ölçüm: taşan 8 → 0. */
+@media(max-width:379px) {
+  .heroFigures { grid-template-columns:repeat(3,auto); justify-content:space-between; column-gap:10px; }
+}
 .heroCard > .voteRow { grid-column:1 / -1; }
 @media(min-width:640px) {
   .heroCard { grid-template-columns:minmax(0,1fr) max-content; gap:16px 24px; align-items:center; }

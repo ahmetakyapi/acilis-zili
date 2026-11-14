@@ -93,6 +93,14 @@
 .marker[data-imp="high"] { --m:32px; border-color:var(--text-strong); background:var(--text-strong); color:var(--premium-surface); }
 .marker[data-imp="low"] { --m:24px; border-color:var(--line-strong); background:var(--premium-surface); color:var(--text-body); }
 .marker[data-logo] { --m:28px; border:0; border-radius:8px; background:var(--premium-surface); }
+/* LOGONUN BOYU PİYASA DEĞERİNİN KADEMESİNDEN (14 Kasım 2026, ikinci tur;
+   eşikler `capTier`, lib/flow-axis.ts): 50 milyar doların altı / 50-500 /
+   500 ve üstü. Dar düzende 24 / 28 / 32, geniş düzende 26 / 30 / 34, sıkı
+   yoğunlukta 18 / 20 / 22 piksel; im sütunu en büyük kademenin eninde
+   (omurga 44, bayrak sütunu 34), kademe değişince metin kaymaz. Önce her
+   logo tek boydu (28 / 32 / 22). */
+.marker[data-logo][data-cap="sm"] { --m:24px; }
+.marker[data-logo][data-cap="lg"] { --m:32px; }
 .markerLogo { width:var(--m); height:var(--m); border-radius:8px; }
 .marker > small { position:absolute; top:-7px; right:-10px; min-width:18px; padding:0 4px; border-radius:999px; background:var(--text-strong); color:var(--premium-surface); font-size:12px; font-weight:700; line-height:16px; text-align:center; }
 .badge { position:absolute; right:-5px; bottom:-5px; display:grid; place-items:center; width:15px; height:15px; border:2px solid var(--premium-surface); border-radius:50%; background:var(--flat); color:var(--on-primary); }
@@ -215,7 +223,9 @@
   .marker { --m:30px; grid-column:1; grid-row:1 / span 2; align-self:center; justify-self:center; margin-top:0; }
   .marker[data-imp="high"] { --m:34px; }
   .marker[data-imp="low"] { --m:24px; }
-  .marker[data-logo] { --m:32px; }
+  .marker[data-logo] { --m:30px; }
+  .marker[data-logo][data-cap="sm"] { --m:26px; }
+  .marker[data-logo][data-cap="lg"] { --m:34px; }
   /* İmler boyları farklı da olsa aynı düşey hatta: sütun en büyük imin eni. */
   .axis:not([data-density="compact"]) .flag { grid-template-columns:34px minmax(0,1fr); }
   .when { grid-column:2; grid-row:1; padding-left:0; min-width:0; }
@@ -235,7 +245,9 @@
   .axis[data-density="compact"] .marker { --m:20px; grid-row:1; }
   .axis[data-density="compact"] .marker[data-imp="high"] { --m:22px; }
   .axis[data-density="compact"] .marker[data-imp="low"] { --m:18px; }
-  .axis[data-density="compact"] .marker[data-logo] { --m:22px; border-radius:6px; }
+  .axis[data-density="compact"] .marker[data-logo] { --m:20px; border-radius:6px; }
+  .axis[data-density="compact"] .marker[data-logo][data-cap="sm"] { --m:18px; }
+  .axis[data-density="compact"] .marker[data-logo][data-cap="lg"] { --m:22px; }
   .axis[data-density="compact"] .markerLogo { border-radius:6px; }
   .axis[data-density="compact"] .marker > svg { width:12px; height:12px; }
   .axis[data-density="compact"] .marker > small { display:none; }
@@ -261,6 +273,13 @@
      durumu söyler (yerleşik dil): sonucun yönü, sonucu beklenen mavi,
      planlı nötr. */
   .detail { order:3; flex:1 1 100%; margin-top:4px; padding:14px 18px 14px; border-top:3px solid var(--line-strong); border-radius:4px 4px 16px 16px; background:var(--surface-sunken); }
+  /* KARTIN TABANI: otomatik turda boy, o ana dek görülen en uzun kartınki
+     (`--detail-floor`, FlowAxis.tsx → "KARTIN TABANI"). Kısa kartta künye
+     satırı (kaynak · bağlantı) dibe iner: kart aynı çerçevede kalır, boşluk
+     içerikle künye arasında durur. Tur yokken değişken yok, kart içeriği
+     kadar. */
+  .detail { display:flex; flex-direction:column; min-height:var(--detail-floor, 0px); }
+  .detail > :last-child { margin-top:auto; }
   .detail[data-dir="above"] { border-top-color:var(--up); }
   .detail[data-dir="below"] { border-top-color:var(--down); }
   .detail[data-dir="due"] { border-top-color:var(--primary); }
@@ -301,4 +320,15 @@
      sonsuz döngü 0; `reducedMotion: "reduce"` altında animasyon 0.
    - panel boyu, dört olaylı gün: 1440'ta ~450 (satır listesi) → 614;
      390'da ~700 → 858–1046 (açık olaya göre). Boş gün 1440'ta 208 → 276
-     (eksenle), hafta sonu önizlemesi 480 → 489. */
+     (eksenle), hafta sonu önizlemesi 480 → 489.
+
+   İKİNCİ TUR (14 Kasım 2026; sahte verili önizleme, 1440 / 1024 / 390, iki
+   tema; akşam seansına üç olay + kapanış bilançosu, tek saate küme, iki
+   olaylı gün):
+   - sola açılan bayraklar (ayna basamak, lib/flow-axis.ts): başlığı kırpılan
+     bayrak 1440'ta 3 → 0, 1024'te 3 → 1 (sağa açılan komşu, ilk direğe dek);
+     bayrak kutuları arasında kesişim 0, bayrağın içinden geçen direk 0;
+   - otomatik turda panelin dibi (iki olay: sonucu beklenen veri ile altı
+     şirketli bilanço, 1440): tur adımında 145 piksel oynuyordu (kart 120 ↔
+     265, panel 496 ↔ 641) → 0 (kart 265, panel 641 sabit; dört adım, 27 sn);
+   - logo kademeleri: geniş 26 / 30 / 34, dar 24 / 28 / 32, sıkı 18 / 20 / 22. */

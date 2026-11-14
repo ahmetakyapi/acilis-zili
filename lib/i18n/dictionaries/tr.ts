@@ -266,6 +266,8 @@ const tr = {
     /* SIRADAKİ GÜNE BAKIŞ (31 Ekim): bugün boşken akış sıradaki işlem gününün
        planlı olaylarını önizler (DayFlow → DayPreview). */
     previewLead: "Sıradaki işlem günü {day}: akışta {n} olay planlı.",
+    /* Tek olay: Türkçede cümle aynı kalır, İngilizcede tekil ("1 event"). */
+    previewLeadOne: "Sıradaki işlem günü {day}: akışta 1 olay planlı.",
     previewRuler: "Sıradaki işlem gününün saat ekseni",
     previewHidden: "Eşiğin altında {count} bilanço daha var.",
     previewMore: "+{n} Olay Daha",
