@@ -362,14 +362,20 @@ export default async function TodayPage() {
             255, 390'da 339, 320'de 366 piksel ölçüldü. İskelet artık başlık +
             iki satır kartı — en sık görülen günün şekli. Olay sayısı üçü
             geçen günde liste + sonuç paneli daha uzun ve ölçü tutmuyor;
-            takas bilinçli, amaç eski 600 piksellik sıçramayı kapatmak. */}
+            takas bilinçli, amaç eski 600 piksellik sıçramayı kapatmak.
+            14 KASIM: akış günün eksenine döndü (DayFlow → "GÜNÜN EKSENİ").
+            Dört olaylı gün 1440'ta 614, hafta sonu önizlemesi 489, boş gün 276;
+            390'da 860–1050 piksel (sahte veriyle ölçüldü). İskelet yeni
+            şekli taşıyor: başlık cümlesi, eksen, ayrıntı kartı (1440'ta
+            ~490, 390'da ~650 piksel). */}
         <Suspense
           fallback={
             <>
               <div className={styles.flowHeader}>{flowHeading}</div>
               <div aria-hidden className={cn("grid gap-3 pt-3.5", styles.flowSkeleton)}>
-                <Skeleton className="h-20 w-full" />
-                <Skeleton className="h-20 w-full" />
+                <Skeleton className="h-12 w-64 max-w-full" />
+                <Skeleton className="h-64 w-full sm:h-48" />
+                <Skeleton className="h-56 w-full sm:h-28" />
               </div>
             </>
           }

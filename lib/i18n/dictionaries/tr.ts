@@ -298,6 +298,18 @@ const tr = {
     closed: "Seans Kapalı",
     updatedAnnouncement: "Günün akışı güncellendi.",
     sourceDelayed: "Kaynak Güncellemesi Bekleniyor",
+    /* GÜNÜN EKSENİ (14 Kasım; components/today/flow/FlowAxis.tsx). */
+    axis: {
+      bands: { pre: "Ön Seans", regular: "Seans", after: "Akşam Seansı" },
+      closedDay: "Piyasa Kapalı",
+      importance: { high: "Yüksek Önem", medium: "Orta Önem", low: "Düşük Önem" },
+      /* Başlık cümlesinin künyesi: sıradaki olay, süren toplantı, sonucu
+         beklenen, başka günün ilk olayı, biten günün son olayı. */
+      lead: { next: "Sıradaki", live: "Sürüyor", awaiting: "Sonuç Bekleniyor", first: "İlk Olay", last: "Günün Son Olayı" },
+      remaining: "Kaldı",
+      units: { day: "g", hour: "sa", minute: "dk" },
+      openDay: "Bu günü aç.",
+    },
 
     /* AÇIKLAMA CÜMLELERİ — "bu da ne?" sorusunun cevabı.
        Başlıklar olayın ADINI söylüyor ama adı bilmeyene bir şey anlatmıyor:

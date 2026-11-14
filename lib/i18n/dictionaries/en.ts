@@ -253,6 +253,15 @@ const en: typeof tr = {
     closed: "Session Closed",
     updatedAnnouncement: "Today's flow has been updated.",
     sourceDelayed: "Waiting for Source Update",
+    axis: {
+      bands: { pre: "Pre-Market", regular: "Session", after: "After-Hours" },
+      closedDay: "Market Closed",
+      importance: { high: "High Impact", medium: "Medium Impact", low: "Low Impact" },
+      lead: { next: "Up Next", live: "Under Way", awaiting: "Awaiting Result", first: "First Event", last: "Last Event of the Day" },
+      remaining: "To Go",
+      units: { day: "d", hour: "h", minute: "m" },
+      openDay: "Open this day.",
+    },
 
     notes: {
       "fomc-rate": "The outcome of the meeting where the Fed, the US central bank, sets its policy rate. It lands eight times a year and moves borrowing costs directly, which is why markets watch nothing more closely.",
