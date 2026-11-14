@@ -63,6 +63,9 @@ jobs:
           if [[ -n "${VPS_HOST_KEY:-}" ]]; then
             printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
             strict=yes
+          elif [[ -s deploy/known_hosts ]]; then
+            cp deploy/known_hosts ~/.ssh/known_hosts
+            strict=yes
           fi
           umask 077
           key=$(mktemp); trap 'rm -f "$key"' EXIT
