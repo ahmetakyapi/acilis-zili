@@ -29,6 +29,7 @@ import { getPortfolioPositions } from "@/lib/portfolio-data";
 import { planLevels, scanRows, type ScanHoldingInput, type ScanRow } from "@/lib/portfolio-scan-model";
 import { getChartBars } from "@/lib/providers";
 import { earningsAnalyses, earningsCalendar } from "@/lib/schema";
+import { GROUNDING, NO_ADVICE, NUMBERS, OWNER_VIEW, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, completedDailyBars, expectedLastSession, insightsConfigured } from "@/lib/stock-insights";
 import { getTechnicalBoard } from "@/lib/technical-data";
 import { formatMoneyCompact, formatPercentText, formatPrice } from "@/lib/utils";
@@ -88,9 +89,11 @@ const SYSTEM = {
 HUKUKİ ÇİZGİ (kesin): Türkiye'de kişiye özel al/sat önerisi SPK lisanslı yatırım danışmanlığıdır ve bu site lisanslı değildir. Hiçbir hisseyi almayı, satmayı, eklemeyi, azaltmayı, tutmayı ÖNERME; "almalısın", "satmalısın", "eklemelisin", "azaltmalısın", "öneririm", "tavsiye ederim", "düşünebilirsin", "değerlendirebilirsin", "dikkatli olmalısın" gibi kalıplar YASAK; emir kipi yok. Gözlem yaz.
 
 Kurallar:
-- YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, olay, rehberlik ya da sebep yazma; hesap yapma. Sayıyı verilen biçimde aynen yaz. null olan değer bilinmiyor; biliniyormuş gibi anma.
+- ${GROUNDING.tr} Şirketin öngörüsü, marjı ya da segment sayısı girdide yoksa yazılmaz.
+- ${NUMBERS.tr}
+- ${NO_ADVICE.tr}
 - Şirketin beklentiyi aşıp aşmayacağını ya da hissenin nasıl tepki vereceğini TAHMİN ETME.
-- Sakin, günlük Türkçe; "sen" diye hitap edebilirsin. Ünlem, emoji, madde işareti yok.`,
+- ${VOICE.tr} "Sen" diye hitap edebilirsin. Madde işareti yok.`,
   en: `You write the "Earnings Desk" notes on Açılış Zili for the earnings of stocks in the reader's OWN PORTFOLIO. Each card is one position, in one of two phases:
 - phase "upcoming": reports in the coming sessions. Note: when (day and window: before the open / after the close; the bell time if given), the estimates (EPS and revenue), the record of beating or missing in recent quarters and the first reactions, the position's weight and its last 5/21 sessions.
 - phase "reported": has reported. Note: actual vs estimate (EPS and revenue, with surprises), the first reaction (if given; if "pending", say the reaction has not formed yet), the position's weight.
@@ -102,9 +105,11 @@ Output:
 LEGAL LINE (strict): in Türkiye, personalised buy/sell advice is licensed investment advisory and this site is not licensed. Never recommend buying, selling, adding, trimming or holding anything; phrases like "you should", "I recommend", "consider buying/selling", "be careful" are FORBIDDEN; no imperatives. Write observations.
 
 Rules:
-- Use ONLY the data given; no number, date, event, guidance or cause not given; no computation. Copy numbers exactly as formatted. A null value is unknown; never mention it as if known.
+- ${GROUNDING.en} Guidance, margins or segment figures are not written unless they are in the input.
+- ${NUMBERS.en}
+- ${NO_ADVICE.en}
 - Never predict whether the company will beat or miss, or how the stock will react.
-- Calm, plain English; address the reader as "you". No exclamation marks, emoji or bullets.`,
+- ${VOICE.en} Address the reader as "you". No bullets.`,
 } as const;
 
 /* SAHİBİN GÖRÜŞÜ — taramanın PLAN_SYSTEM'i ile aynı sözleşme: hukuki çizgi
@@ -115,15 +120,19 @@ const PLAN_SYSTEM = {
 - Notlarda da görüş bildirebilirsin.
 
 Kurallar:
-- YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, olay ya da sebep yazma; hesap yapma (yüzde, hedef fiyat türetme yok). Sayıyı verilen biçimde aynen yaz.
-- Kesin fiyat tahmini yok; görüşün gerekçesi veriden. Sakin, günlük Türkçe; "sen" diye hitap et. Ünlem, emoji, madde işareti yok.`,
+- ${GROUNDING.tr}
+- ${NUMBERS.tr}
+- ${OWNER_VIEW.tr}
+- ${VOICE.tr} "Sen" diye hitap et. Madde işareti yok.`,
   en: `${SYSTEM.en.split("LEGAL LINE")[0]}PERSONAL VIEW (only the portfolio's owner reads this and explicitly asks for your view around earnings):
 - views: one view per card in the input. action: add, hold, trim (partial profit-taking). For "upcoming" cards, what to do with the position BEFORE the report (weight, recent sessions, surprise record, position vs cost); for "reported" cards, AFTER it. takeProfit and stopLoss are chosen ONLY from that card's allowedLevels, copying "level" exactly; takeProfit ABOVE lastClose, stopLoss BELOW; null if none fits or no allowedLevels. rationale: 2-3 sentences, at most 45 words, clear and direct.
 - You may state views in the notes too.
 
 Rules:
-- Use ONLY the data given; no number, date, event or cause not given; no computation (no derived percentages or targets). Copy numbers exactly as formatted.
-- No certain price predictions; ground every view in the data. Calm, plain English; address the reader as "you". No exclamation marks, emoji or bullets.`,
+- ${GROUNDING.en}
+- ${NUMBERS.en}
+- ${OWNER_VIEW.en}
+- ${VOICE.en} Address the reader as "you". No bullets.`,
 } as const;
 
 const failures = new Map<string, number>();
@@ -357,7 +366,8 @@ export async function getEarningsDesk(userId: string, locale: Locale): Promise<E
   try {
     const result = await unstable_cache(
       () => writeText(cards, rows, session, locale, memberClient(userId), owner),
-      ["earnings-desk-v1", owner ? "plan" : "desk", userId, session, signature, locale],
+      /* v2 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
+      ["earnings-desk-v2", owner ? "plan" : "desk", userId, session, signature, locale],
       { revalidate: 24 * 3600, tags: ["earnings-desk"] },
     )();
     /* Not yazıldığı evreyi taşır: sabah "öncesi" yazılan not, bilanço

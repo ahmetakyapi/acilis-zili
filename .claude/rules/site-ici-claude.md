@@ -55,3 +55,14 @@ Rutinlerden ayrı, sunucunun kendi Claude çağrıları. Anahtar
   `docs/claude-analysis.md`; kullanıcı adı/e-posta/portföy modele gitmez.
 - Model değiştirirken: Sonnet 5.5 ve sonrası `temperature` almaz, `thinking`
   yalnız `adaptive`.
+- **İstemin ortak kuralları tek kaynakta** (14 Kasım): "yalnız verilen veri",
+  sayı yazımı, güvenilmeyen metin, tavsiye çizgisi ve dil
+  `lib/claude-prompt-rules.ts`ten gelir; yeni istem bunları yeniden yazmaz,
+  örneği sayısız tutar. İstemi (ya da o dosyayı) değiştiren, etkilenen her
+  çağrının `unstable_cache` anahtar sürümünü artırır
+  (`tests/claude-prompt-rules.test.ts`).
+- **Hazır soru ancak yanıtlanabilirse basılır**: çip, yanıtı taşıyan veri
+  bloğu girdiye girecekse çıkar; tek şey sorar, küçük sayıyı yazıyla yazar,
+  üyeye tavsiye istemez. Seçim saf modüllerde ve testli:
+  `lib/stock-question-suggest.ts`, `lib/portfolio-question-suggest.ts`.
+  Sözlüğe sabit soru listesi konmaz.

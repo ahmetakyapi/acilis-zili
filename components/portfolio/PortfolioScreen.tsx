@@ -17,7 +17,7 @@ import { PortfolioScanPanel } from "@/components/portfolio/PortfolioScan";
 import { PortfolioAsk } from "@/components/portfolio/PortfolioAsk";
 import { EarningsDesk } from "@/components/portfolio/EarningsDesk";
 import { getAdmin } from "@/lib/admin";
-import { portfolioQuestionQuota } from "@/lib/portfolio-question";
+import { portfolioQuestionQuota, portfolioStarterQuestions } from "@/lib/portfolio-question";
 import { PORTFOLIO_QUESTION_DAILY_LIMIT } from "@/lib/portfolio-question-core";
 import { Money } from "@/components/portfolio/Money";
 import { PrivacyToggle } from "@/components/portfolio/PrivacyToggle";
@@ -343,6 +343,7 @@ async function PortfolioBody({
      okuyucu elle sıra verdiyse o sıra (`orderPositions`, lib/portfolio.ts). */
   const savedOrder = await orderPromise;
   const orderedRows = orderPositions(rows, savedOrder);
+  const askOwner = (await getAdmin())?.userId === userId;
 
   /* Teknik plan için sembol başına tek satır: aynı hissenin lotları
      birleşiyor, maliyet adetle ağırlıklı. Fiyat tablonun fiyatı. */
@@ -454,7 +455,16 @@ async function PortfolioBody({
         labels={t.portfolioAsk}
         remaining={portfolioQuestionQuota.left(userId)}
         limit={PORTFOLIO_QUESTION_DAILY_LIMIT}
-        owner={(await getAdmin())?.userId === userId}
+        owner={askOwner}
+        /* Hazır sorular portföyün bugünkü durumundan (14 Kasım): tek
+           pozisyonda kıyas sorusu, bilançosu yaklaşan yokken bilanço sorusu
+           basılmaz (lib/portfolio-question-suggest.ts). */
+        starters={await portfolioStarterQuestions(
+          views.map((view) => ({ symbol: view.symbol, valueUsd: view.valueUsd })),
+          weights.length,
+          askOwner,
+          t.portfolioAsk.starters,
+        )}
       />
 
       <RealizedPanel data={realized} names={realizedNames} locale={locale} t={t} />

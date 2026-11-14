@@ -46,12 +46,15 @@ export function PortfolioAsk({
   remaining: initialRemaining,
   limit,
   owner = false,
+  starters,
 }: {
   locale: Locale;
   labels: PortfolioAskLabels;
   remaining: number;
   limit: number;
   owner?: boolean;
+  /** Portföyün durumuna göre sunucuda seçilmiş hazır sorular (lib/portfolio-question-suggest.ts); boşsa çip basılmaz. */
+  starters: string[];
 }) {
   const inputId = useId();
   const [text, setText] = useState("");
@@ -140,8 +143,8 @@ export function PortfolioAsk({
           </div>
         </form>
 
-        <ul className={styles.chips} aria-label={labels.examplesLabel}>
-          {labels.examples.map((example) => (
+        <ul className={styles.chips} aria-label={labels.examplesLabel} style={starters.length === 0 ? { display: "none" } : undefined}>
+          {starters.map((example) => (
             <li key={example}>
               <button
                 type="button"

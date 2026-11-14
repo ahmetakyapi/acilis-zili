@@ -6,6 +6,8 @@
 - Para birimi: yerel tutar ilk geçişte parantezde; İngilizce sürümde "₩56.3 trillion" biçimi ilk geçişte kabul edilir.
 - Dönüş cümlesi: her yazıda bir tane, iki kısa cümle ("Piyasa bu tanıtımı bir yazılım haberi olarak okumadı. Bir donanım siparişi olarak okudu."); genellikle Mekanizma bölümünün hemen önüne gelir.
 - Nedensellik uydurma: kaynaklar nedenselliği kurmuyorsa sen de kurma; gerçek katalizörü yaz.
+- Blok başlıkları ve künyeler Title Case, iki dilde de: `:::` satırındaki başlık, tablo başlık satırı ve `::: grafik`in üçüncü alanı (grafiğin künyesi) cümle değil etikettir. "Micron — bugünden geriye üç ay" değil "Micron: Bugünden Geriye Üç Ay"; İngilizcede "Micron: The Last Three Months". Bağlaç ve edat (ve, ile, için, de/da; and, of, the, to, in) başta değilse küçük kalır. Blokların İÇİNDEKİ cümleler normal yazımdır.
+- Kaynak etiketi dilden bağımsız yazılır: `sources` iki dilde birebir aynı gönderildiği için `label` yayının, kurumun ya da belgenin özgün adıdır ("Reuters", "Micron 10-Q", "Federal Register"). Türkçe tarif ekleme ("… haberi", "… bülteni"): aynı etiket İngilizce sayfada da basılır.
 
 ## Aramada ve Yapay Zekâ Cevaplarında Bulunmak
 

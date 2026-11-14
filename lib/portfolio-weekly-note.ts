@@ -7,6 +7,7 @@ import { db } from "@/lib/db";
 import type { Locale } from "@/lib/i18n/config";
 import { checkPortfolioWeekNote, portfolioWeekInput, type PortfolioWeek, type WeeklyLot, type WeeklyMove } from "@/lib/portfolio-weekly";
 import { portfolioPositions, users } from "@/lib/schema";
+import { GROUNDING, NO_ADVICE, NUMBERS, OWNER_VIEW, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, insightsConfigured } from "@/lib/stock-insights";
 import { weeklyMoves, type DigestData } from "@/lib/weekly-digest";
 
@@ -92,15 +93,19 @@ const SYSTEM = {
 HUKUKİ ÇİZGİ (kesin): kişiye özel al/sat önerisi SPK lisanslı yatırım danışmanlığıdır, bu site lisanslı değildir. Hiçbir hisseyi almayı, satmayı, eklemeyi, azaltmayı, tutmayı ÖNERME; "almalısın", "öneririm", "düşünebilirsin", "dikkatli olmalısın" gibi kalıplar ve emir kipi YASAK. Yalnız gözlem yaz.
 
 Kurallar:
-- YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, sebep ya da olay yazma; hesap yapma. Sayıyı verilen biçimde aynen yaz. Tutar, adet, maliyet yazma (verilmedi).
-- Fiyat yönü tahmini yok. Sakin, günlük Türkçe; "sen" diye hitap et. Ünlem, emoji, madde işareti yok.`,
+- ${GROUNDING.tr} Tutar, adet, maliyet yazma (verilmedi).
+- ${NUMBERS.tr}
+- ${NO_ADVICE.tr}
+- ${VOICE.tr} "Sen" diye hitap et. Madde işareti yok.`,
   en: `You read the week of the reader's OWN PORTFOLIO in 2-3 sentences (at most 55 words) for Açılış Zili's Sunday email: how the portfolio closed the week (against the S&P 500 if given), which positions drove it most, and which holdings report earnings next week and on what day, if any.
 
 LEGAL LINE (strict): personalised buy/sell advice is licensed investment advisory and this site is not licensed. Never recommend buying, selling, adding, trimming or holding anything; phrases like "you should", "I recommend", "consider buying" and imperatives are FORBIDDEN. Write observations only.
 
 Rules:
-- Use ONLY the data given; no number, date, cause or event that is not given; no computation. Copy numbers exactly as formatted. No amounts, share counts or costs (none are given).
-- No price predictions. Calm, plain English; address the reader as "you". No exclamation marks, emoji or bullets.`,
+- ${GROUNDING.en} No amounts, share counts or costs (none are given).
+- ${NUMBERS.en}
+- ${NO_ADVICE.en}
+- ${VOICE.en} Address the reader as "you". No bullets.`,
 } as const;
 
 /* Sahibin okuması: aynı veri, açık görüş serbest. Hukuki çizgi bilinçli olarak YOK. */
@@ -108,13 +113,17 @@ const OWNER_SYSTEM = {
   tr: `${SYSTEM.tr.split("HUKUKİ ÇİZGİ")[0]}Bu metni yalnız portföyün sahibi okuyor ve açıkça görüşünü istiyor: haftanın tablosundan çıkardığın görüşü net yaz (ör. hangi pozisyonda kârın bir kısmını almak, hangisinde bilanço öncesi temkinli olmak mantıklı). Fiyat seviyesi uydurma.
 
 Kurallar:
-- YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, sebep ya da olay yazma; hesap yapma. Sayıyı verilen biçimde aynen yaz.
-- Kesin fiyat tahmini yok. Sakin, günlük Türkçe; "sen" diye hitap et. Ünlem, emoji, madde işareti yok.`,
+- ${GROUNDING.tr}
+- ${NUMBERS.tr}
+- ${OWNER_VIEW.tr}
+- ${VOICE.tr} "Sen" diye hitap et. Madde işareti yok.`,
   en: `${SYSTEM.en.split("LEGAL LINE")[0]}Only the portfolio's owner reads this and explicitly asks for your view: state the view you draw from the week clearly (e.g. where taking some profit or caution before earnings makes sense). Never invent price levels.
 
 Rules:
-- Use ONLY the data given; no number, date, cause or event that is not given; no computation. Copy numbers exactly as formatted.
-- No certain price predictions. Calm, plain English; address the reader as "you". No exclamation marks, emoji or bullets.`,
+- ${GROUNDING.en}
+- ${NUMBERS.en}
+- ${OWNER_VIEW.en}
+- ${VOICE.en} Address the reader as "you". No bullets.`,
 } as const;
 
 const Schema = z.object({ text: z.string() });
@@ -138,7 +147,8 @@ export async function portfolioWeekNote(userId: string, locale: Locale, week: Po
         if (!checked.ok) throw new Error(checked.reason);
         return checked.text;
       },
-      ["portfolio-weekly-v1", owner ? "plan" : "read", userId, data.thisMonday, locale, digest],
+      /* v2 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
+      ["portfolio-weekly-v2", owner ? "plan" : "read", userId, data.thisMonday, locale, digest],
       { revalidate: 7 * 24 * 3600, tags: ["portfolio-weekly"] },
     )();
   } catch (error) {

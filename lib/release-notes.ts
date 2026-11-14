@@ -9,6 +9,7 @@ import { eventExplainer } from "@/lib/event-explainers";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { RELEASED_WINDOW_DAYS, compareReleased, pickReleased, releaseNoteKey } from "@/lib/release-notes-core";
 import { economicEvents, type EconomicEventRow } from "@/lib/schema";
+import { BILINGUAL_RULES, ruleList } from "@/lib/claude-prompt-rules";
 import { callClaude, insightsConfigured } from "@/lib/stock-insights";
 import { formatEventValue, SIGN_GAP } from "@/lib/utils";
 
@@ -47,11 +48,14 @@ Return tr / en, each with:
 - context: at most 2 sentences, at most 40 words. What a result like this USUALLY means for markets in general terms (for example how investors tend to read a hotter or cooler inflation print for the Fed's rate path, or a stronger or weaker jobs figure for growth). Phrase it as a general tendency ("genellikle", "usually", "tends to"). Never say what markets, stocks, yields or the dollar did or will do today. If the result is in line with the forecast, say that an in-line figure usually carries little surprise. The "about" field describes the release; you may rely on it.
 
 Rules:
-- Use ONLY the supplied JSON. Never invent figures, dates, revisions, sub-components, quotes, reactions or causes.
-- Numbers: copy them exactly as formatted in the input for that language (the input gives each number as {tr, en}). Do not compute anything new (no differences, percentages of change, sums or averages). Do not write any other number, not even well-known ones such as a central bank target, unless it appears in the input.
-- No predictions of price direction, no buy/sell/hold advice, no "opportunity". Plain, calm newspaper prose; no exclamation marks, emoji or hype.
-- Write "tr" in natural, everyday Turkish financial language as used in Turkish financial media (enflasyon, TÜFE, istihdam, faiz, beklenti, Fed). Percentages as %3,1 (never "yüzde 3,1"). Normal sentences.
-- Write "en" in plain English with the same content.`;
+${ruleList([
+  `${BILINGUAL_RULES.grounding} That includes revisions, sub-components, quotes and market reactions.`,
+  `${BILINGUAL_RULES.numbers} Do not write any other number, not even well-known ones such as a central bank target, unless it appears in the input.`,
+  BILINGUAL_RULES.noAdvice,
+  BILINGUAL_RULES.voice,
+  `${BILINGUAL_RULES.tr} Macro terms: enflasyon, TÜFE, istihdam, faiz, piyasa beklentisi, Fed. There are no titles here; both fields are normal sentences.`,
+  BILINGUAL_RULES.en,
+])}`;
 
 const Lang = z.object({ summary: z.string(), context: z.string() });
 const ReleaseSchema = z.object({ tr: Lang, en: Lang });
@@ -122,7 +126,8 @@ export async function getReleaseNote(id: string, client?: string): Promise<Relea
         if (missing.length) throw new Error("ungrounded");
         return { kind: "release", id: row.id, actual: row.actual!.trim(), text, generatedAt: new Date().toISOString() };
       },
-      ["macro-release-v1", ...releaseNoteKey(row)],
+      /* v2 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
+      ["macro-release-v2", ...releaseNoteKey(row)],
       { revalidate: 30 * 24 * 3600, tags: ["release-insight"] },
     )();
     failures.delete(id);

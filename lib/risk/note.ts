@@ -7,6 +7,7 @@ import { ungroundedNumbers } from "@/lib/ai-grounding";
 import { ClaudeBudgetError, memberClient } from "@/lib/claude-budget";
 import type { Dictionary } from "@/lib/i18n";
 import { sectorLabel } from "@/lib/sectors";
+import { GROUNDING, NO_ADVICE, NUMBERS, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, insightsConfigured } from "@/lib/stock-insights";
 import type { MarketDesk } from "./data";
 import type { Exposure } from "./exposure";
@@ -54,17 +55,23 @@ const SYSTEM = {
 ${LEGAL_TR}
 
 Kurallar:
-- YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, olay ya da sebep yazma, hesap yapma. Sayıları verilen biçimde aynen yaz.
-- Tarihsel istatistiği tahmin gibi anlatma: "geçmişte" de, "olacak" deme. Fiyat yönü tahmini yok.
-- Sakin, günlük Türkçe; "sen" diye hitap edebilirsin. Ünlem, emoji, başlık ve madde işareti yok.`,
+- ${GROUNDING.tr}
+- ${NUMBERS.tr}
+- ${NO_ADVICE.tr}
+- Tarihsel istatistiği tahmin gibi anlatma: "geçmişte" de, "olacak" deme.
+- Her paragrafın ilk cümlesi göstergenin bugün ne dediğini söyler; terimi (vade eğrisi, kredi farkı, genişlik) ilk geçtiği yerde yarım cümleyle açıkla.
+- ${VOICE.tr} "Sen" diye hitap edebilirsin. Başlık ve madde işareti yok.`,
   en: `You explain Açılış Zili's Risk Desk in plain English. Write 3 or 4 short paragraphs (each at most 70 words): today's regime and which inputs scored points; what the volatility gauges (VIX, VXN, term structure, credit spread, breadth) say; how SPY's next 20 sessions were distributed in the same regime in the past and the backtest results of relevant signals; the portfolio exposure and any triggered rules. Skip a topic when its data is missing.
 
 ${LEGAL_EN}
 
 Rules:
-- Use ONLY the data given; no number, date, event or cause that is not given, no computation. Copy numbers exactly as formatted.
-- Do not present historical statistics as a forecast: say "in the past", never "will". No price predictions.
-- Calm, plain English; address the reader as "you". No exclamation marks, emoji, headings or bullet points.`,
+- ${GROUNDING.en}
+- ${NUMBERS.en}
+- ${NO_ADVICE.en}
+- Do not present historical statistics as a forecast: say "in the past", never "will".
+- The first sentence of each paragraph says what the gauge shows today; explain a term (term structure, credit spread, breadth) in half a sentence where it first appears.
+- ${VOICE.en} Address the reader as "you". No headings or bullet points.`,
 } as const;
 
 const Schema = z.object({ paragraphs: z.array(z.string()) });
@@ -186,7 +193,8 @@ export async function getDeskNote(userId: string, input: string | null, session:
   try {
     const note = await unstable_cache(
       () => writeNote(input, locale, memberClient(userId)),
-      ["risk-desk-note-v1", userId, session, digest, locale],
+      /* v2 (14 Kasım): istem ortak kurallara geçti; terim ilk geçtiği yerde açıklanıyor. */
+      ["risk-desk-note-v2", userId, session, digest, locale],
       { revalidate: 24 * 3600, tags: ["risk-desk-note"] },
     )();
     return { ok: true, note };

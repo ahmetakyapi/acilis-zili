@@ -8,6 +8,7 @@ import type { Locale } from "@/lib/i18n/config";
 import type { PortfolioAnalysis } from "@/lib/portfolio-analysis";
 import { getUserAnalysis } from "@/lib/portfolio-analysis";
 import { sectorLabel } from "@/lib/sectors";
+import { GROUNDING, NO_ADVICE, NUMBERS, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, insightsConfigured } from "@/lib/stock-insights";
 import { formatMeasure } from "@/lib/portfolio-risk";
 import { formatPercentPlain, formatPercentText } from "@/lib/utils";
@@ -55,17 +56,23 @@ const SYSTEM = {
 ${LEGAL_TR}
 
 Kurallar:
-- YALNIZ verilen veriyi kullan; verilmeyen sayı, tarih, olay ya da sebep yazma, hesap yapma. Sayıyı verilen biçimde aynen yaz: yuvarlama, aralığa çevirme ("%9 ile %12 arası" değil, "%9,0 ile %12,1").
+- ${GROUNDING.tr}
+- ${NUMBERS.tr}
+- ${NO_ADVICE.tr}
 - Ölçüler "bugünkü ağırlıklarla geçen yıl" hesaplandı; okurun gerçek geçmiş getirisi gibi anlatma.
-- Fiyat yönü tahmini yok. Sakin, günlük Türkçe; "sen" diye hitap edebilirsin. Ünlem, emoji, başlık ve madde işareti yok.`,
+- Her paragrafın ilk cümlesi ölçünün ne dediğini söyler; terimi (beta, korelasyon, etkin pozisyon sayısı) ilk geçtiği yerde yarım cümleyle açıkla.
+- ${VOICE.tr} "Sen" diye hitap edebilirsin. Başlık ve madde işareti yok.`,
   en: `You explain the risk measures of the reader's OWN PORTFOLIO on Açılış Zili in plain English. Write 3 or 4 short paragraphs (each at most 60 words): the risk profile (volatility, beta, maximum drawdown; compare with the S&P 500), concentration risk (largest position, share of the top five, what the effective number of positions means), correlation (why positions that move together weaken diversification), how sectors missing or overweight versus the S&P 500 affect diversification, and the currency effect (dollar return versus lira return; always cover it when given). Skip a topic when its data is missing.
 
 ${LEGAL_EN}
 
 Rules:
-- Use ONLY the data given; no number, date, event or cause that is not given, no computation. Copy numbers exactly as formatted: no rounding, no ranges (not "9% to 12%" but "9.0% and 12.1%").
+- ${GROUNDING.en}
+- ${NUMBERS.en}
+- ${NO_ADVICE.en}
 - The measures apply today's weights to the past year; do not describe them as the reader's actual past return.
-- No price predictions. Calm, plain English; address the reader as "you". No exclamation marks, emoji, headings or bullet points.`,
+- The first sentence of each paragraph says what the measure shows; explain a term (beta, correlation, effective number of positions) in half a sentence where it first appears.
+- ${VOICE.en} Address the reader as "you". No headings or bullet points.`,
 } as const;
 
 const Schema = z.object({ paragraphs: z.array(z.string()) });
@@ -163,7 +170,8 @@ export async function getAnalysisNote(userId: string, locale: Locale): Promise<A
     /* v2 (25 Ekim): girdiye aynı pencerenin S&P 500 getirileri girdi. */
     return await unstable_cache(
       () => writeAnalysisNote(analysis, locale, memberClient(userId)),
-      ["portfolio-analysis-note-v2", userId, analysis.input.session, analysis.fingerprint, locale],
+      /* v3 (14 Kasım): istem ortak kurallara geçti; terim ilk geçtiği yerde açıklanıyor. */
+      ["portfolio-analysis-note-v3", userId, analysis.input.session, analysis.fingerprint, locale],
       { revalidate: 24 * 3600, tags: ["portfolio-analysis-note"] },
     )();
   } catch (error) {

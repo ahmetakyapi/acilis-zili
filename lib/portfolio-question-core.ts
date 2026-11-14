@@ -146,7 +146,7 @@ const toNumber = (raw: string | undefined) => (raw === undefined ? null : Number
 const any = (patterns: readonly RegExp[], text: string) => patterns.some((p) => p.test(text));
 
 /* "En büyük pozisyonum" / "my largest position": hazır soru çipi sembol
-   bilmeden senaryo sorabilsin (sözlük → portfolioAsk.examples). */
+   bilmeden senaryo sorabilsin (sözlük → portfolioAsk.starters.scenarioHalf). */
 const LARGEST = [rx(`${NOT_LETTER_BEFORE}en\\s+büyük\\s+(?:pozisyon|hisse)`), /\b(?:largest|biggest|top)\s+(?:position|holding|stock)\b/i];
 
 /**
