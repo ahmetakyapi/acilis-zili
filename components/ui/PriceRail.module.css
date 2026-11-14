@@ -1,5 +1,5 @@
 /* FİYAT RAYI — gerekçe PriceRail.tsx başında.
-   Ölçüler teknik kartın seviye çizgisiyle AYNI (Technical.module.css →
+   Ölçüler teknik kartın seviye çizgisiyle AYNI (components/technical/TechnicalPlan.module.css →
    "EKSEN İNCE, BACAKLAR KALIN"): ray 24 piksel ve her öğe 12. pikselde
    ortalanıyor — eksen 11+2, bacak 10+4, bant 5+14, çentik 4+16, nokta
    5+14, hayalet 8+8. Aynı fiyat iki ekranda iki farklı çizimle durmasın.
@@ -70,7 +70,7 @@
 .segment[data-tone="down"] { background: var(--down); }
 .segment[data-tone="primary"] { background: var(--primary); }
 /* Opaklık değil karışım: azaltılmış harekette ortak kural opaklığı 1'e
-   eziyor (Technical.module.css `.trackSeg` notu). */
+   eziyor (TechnicalPulse.module.css `.pulseSlice` notu; aynı tuzak). */
 .segment[data-tone="flat"] { background: color-mix(in srgb, var(--text-muted) 55%, transparent); }
 
 .void {

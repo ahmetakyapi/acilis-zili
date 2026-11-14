@@ -20,7 +20,8 @@ import { ScenarioRail } from "@/components/technical/ScenarioRail";
 import { SignalStrip } from "@/components/technical/SignalStrip";
 import { TechnicalCover } from "@/components/technical/TechnicalCover";
 import { STANCE_GUIDE_SLUG, StanceGuide } from "@/components/technical/StanceGuide";
-import styles from "@/components/technical/Technical.module.css";
+import styles from "@/components/technical/TechnicalDetail.module.css";
+import sections from "@/components/technical/TechnicalSections.module.css";
 import grid from "@/components/technical/AnalysisGrid.module.css";
 import { DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, } from "@/lib/analysis";
@@ -345,9 +346,9 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
             da haritanın altına inip ~63), AMD/TUT ve AAPL/AL 98 → 24;
             1024'te 162 / 60. */}
         <div className={grid.left} data-balance="map">
-        <section id="technical-levels" className={cn(styles.block, styles.mapPanel)}>
-          <div className={styles.blockHead}>
-            <h2 className={styles.sectionTitle}>{t.technicalVisuals.levelsTitle}</h2>
+        <section id="technical-levels" className={cn(sections.block, styles.mapPanel)}>
+          <div className={sections.blockHead}>
+            <h2 className={sections.sectionTitle}>{t.technicalVisuals.levelsTitle}</h2>
           </div>
           {/* SEVİYE TABLOSU YERİNE FİYAT MERDİVENİ (31 Ekim, sahibinin
               isteği: "çok daha görsel"). Tablo (`PriceMap
@@ -369,7 +370,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
             locale={locale}
             t={t}
           />
-          <p className={styles.footHint}>{t.technicalVisuals.levelsHint}</p>
+          <p className={sections.footHint}>{t.technicalVisuals.levelsHint}</p>
         {/* SEVİYELERİN DAYANAĞI KENDİ SATIRINDA, İKİ KOLONUN ALTINDA.
             Notlar haritanın panelindeydi ve sol kolonu sağdan 100–270
             piksel uzun yapıyordu; sağ kolon o farkı senaryo kartlarının
@@ -389,8 +390,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
         </div>
 
         <div id="technical-reading" className={grid.right} data-balance="reading">
-          <section className={styles.block}>
-            <h2 className={styles.sectionTitle}>{t.technical.summary}</h2>
+          <section className={sections.block}>
+            <h2 className={sections.sectionTitle}>{t.technical.summary}</h2>
             {/* DEĞERLENDİRME TEK BLOK DEĞİL. Rutin metni tek paragraf olarak
                 yazıyor ve telefonda sonuç on üç satırlık kesintisiz bir
                 duvardı (ölçüldü, 390): okuyucu nerede kaldığını kaybediyor.
@@ -418,8 +419,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
           </section>
         </div>
 
-        <section id="technical-watch" className={cn(styles.block, grid.watch)} data-balance="notes">
-          <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
+        <section id="technical-watch" className={cn(sections.block, grid.watch)} data-balance="notes">
+          <h2 className={sections.sectionTitle}>{t.technical.watch}</h2>
           <ul className={grid.watchList} lang={copyLang}>
             {copy.watch.map((item) => (
               <li key={item}>{tieFigures(item)}</li>
@@ -429,8 +430,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
         <BalanceNotes />
       </div>
 
-      <section id="technical-scenarios" className={styles.block}>
-            <h2 className={styles.sectionTitle}>{t.technical.scenarios}</h2>
+      <section id="technical-scenarios" className={sections.block}>
+            <h2 className={sections.sectionTitle}>{t.technical.scenarios}</h2>
             {/* SENARYOLAR ÖNCE ÇİZGİ, SONRA METİN (25 Ekim). İki kutu metin
                 vardı ve tetik seviyelerinin fiyata uzaklığı okuyucunun
                 kafasında kuruluyordu; ray aynı sayıları fiyat ekseninde
@@ -493,8 +494,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
       {/* ---- Göstergeler ---- */}
       <Reveal>
         <section id="technical-indicators" className="flex flex-col gap-4">
-          <div className={styles.blockHead}>
-            <h2 className={`${styles.sectionTitle} ${styles.sectionLead}`}>{t.technical.indicators}</h2>
+          <div className={sections.blockHead}>
+            <h2 className={`${sections.sectionTitle} ${sections.sectionLead}`}>{t.technical.indicators}</h2>
             {row.snapshot.lastSession && (
               <span className={styles.blockNote}>
                 {(live && quote?.realtime ? t.technical.snapshotNoteRealtime : t.technical.snapshotNote).replace("{date}", formatEtDateCompact(row.snapshot.lastSession, locale))}
@@ -520,8 +521,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
       {/* ---- Görüş geçmişi ---- */}
       {history.length > 1 && (
         <Reveal>
-        <section id="technical-history" className={styles.block}>
-          <h2 className={styles.sectionTitle}>{t.technical.history}</h2>
+        <section id="technical-history" className={sections.block}>
+          <h2 className={sections.sectionTitle}>{t.technical.history}</h2>
           {/* Tablo `PlanHistory`e taşındı (29 Eylül): aynı planın art arda
               yayınları tek satır ve planın seyri ortak ölçekli bir çizgi.
               Gerekçe ve ölçüm bileşenin üzerinde.
@@ -538,7 +539,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
       <MoreSymbols entries={moreEntries} cards={moreCards} locale={locale} t={t} />
       </Reveal>
 
-      <div className={styles.footNote}>
+      <div className={sections.footNote}>
         <p>{t.technical.method}</p>
         <p>{t.technical.disclaimer}</p>
         {/* `tap-44`: iki bağlantı 19 piksel yüksekliğindeydi (390'da ölçüldü)

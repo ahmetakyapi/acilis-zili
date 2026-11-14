@@ -87,6 +87,53 @@ export function periodReturns(bars: readonly Bar[]): PeriodReturns {
  * bar yoksa (seri yıl içinde başlıyorsa) yüzde gibi çizgi de `null`. Aynı
  * hücrede duran sayı ile çizgi böylece aynı iki ucu anlatır.
  */
+/**
+ * Mini çizginin noktalarını ÇİZİM GENİŞLİĞİNE göre seyreltir (14 Kasım 2026,
+ * performans denetimi). `/piyasalar`daki emtia ETF'lerinin YBB çizgisi ~220
+ * günlük kapanış taşıyordu ve 120 birimlik kutuda (ekranda 72–185 piksel)
+ * çiziliyordu: noktalar piksel altıydı, her biri üç kez (çizgi + iki dolgu
+ * poligonu) HTML'e ve RSC'ye yazılıyordu — on beş çizgi 68 KB işaretleme +
+ * 100 KB RSC.
+ *
+ * Kova başına EN DÜŞÜK ve EN YÜKSEK nokta kalır (`width / 2` kova), iki uç
+ * her zaman kalır: tepe ve dip (yılın zirvesi/dibi) asla düşmez, son nokta
+ * başlıktaki YBB yüzdesiyle aynı kapanış olarak kalır. Noktalar özgün
+ * SIRALARIYLA döner: çizimin x ekseni sıraya göre kurulduğu için
+ * (`Sparkline`, `domain` = [0, n − 1]) kalan her nokta eski yerinde durur,
+ * yalnız aralarındaki piksel altı kırıklar düşer. Kısa seri olduğu gibi
+ * döner. Ölçüm (sahte sağlayıcı, 220 nokta, 60 kova → ~122 nokta): kalan
+ * çizginin özgün noktalara uzaklığı ortalama 0,16, en kötü 2,2 piksel
+ * (en geniş çizimde, 185 piksel; 1440'ta 88 piksel).
+ */
+export function thinSeries<T extends { value: number }>(
+  points: readonly T[],
+  width: number,
+): { points: (T & { index: number })[]; domain: [number, number] } {
+  const n = points.length;
+  const buckets = Math.max(1, Math.floor(width / 2));
+  const all = () => points.map((point, index) => ({ ...point, index }));
+  if (n <= buckets * 2 + 2) return { points: all(), domain: [0, Math.max(1, n - 1)] };
+  const keep = new Set([0, n - 1]);
+  const span = (n - 2) / buckets;
+  for (let b = 0; b < buckets; b++) {
+    const lo = 1 + Math.floor(b * span);
+    const hi = Math.min(n - 1, 1 + Math.floor((b + 1) * span));
+    if (hi <= lo) continue;
+    let low = lo;
+    let high = lo;
+    for (let i = lo; i < hi; i++) {
+      if (points[i].value < points[low].value) low = i;
+      if (points[i].value > points[high].value) high = i;
+    }
+    keep.add(low);
+    keep.add(high);
+  }
+  return {
+    points: [...keep].sort((a, b) => a - b).map((index) => ({ ...points[index], index })),
+    domain: [0, n - 1],
+  };
+}
+
 export function ytdSeries(bars: readonly Bar[]): { base: number; points: { time: number; value: number }[] } | null {
   const last = bars.at(-1);
   if (!last) return null;

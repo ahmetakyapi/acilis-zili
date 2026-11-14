@@ -4,7 +4,7 @@ import { useEffect, useMemo, useState, useSyncExternalStore } from "react";
 import { ArrowDown, ArrowRight, ArrowUp, PuzzlePiece } from "@phosphor-icons/react/dist/ssr";
 import { ButtonLink, LogoTile, Panel } from "@/components/ui/primitives";
 import { cn } from "@/lib/utils";
-import type { StockPuzzleLabels } from "@/lib/i18n/dictionaries/stock-puzzle";
+import type { PuzzleTeaserLabels } from "./teaser-labels";
 import type { PuzzleResponse, PuzzleTeaserResponse } from "@/app/api/bulmaca/route";
 import { MAX_GUESSES, TILE_KINDS, currentStreak, dayNumberOf, emptyStats, isJoker, nextPuzzleAt, type GuessRow, type PuzzleState } from "@/lib/stock-puzzle";
 import { GuessDots } from "./GuessDots";
@@ -74,7 +74,7 @@ import styles from "./PuzzleTeaser.module.css";
  */
 type Game = { key: string; state: PuzzleState };
 
-export function PuzzleTeaser({ day, number, labels }: { day: string; number: number; labels: StockPuzzleLabels }) {
+export function PuzzleTeaser({ day, number, labels }: { day: string; number: number; labels: PuzzleTeaserLabels }) {
   const progress = useSyncExternalStore(subscribeStorage, progressSnapshot, () => null);
   const statsValue = useSyncExternalStore(subscribeStorage, statsSnapshot, () => null);
   const today = progress && progress.day === day ? progress : null;
@@ -205,7 +205,7 @@ export function PuzzleTeaser({ day, number, labels }: { day: string; number: num
 }
 
 /** Son tahminin dört karosu — oyundaki renklerle, değersiz minyatür. */
-function LastGuess({ row, labels }: { row: GuessRow; labels: StockPuzzleLabels }) {
+function LastGuess({ row, labels }: { row: GuessRow; labels: PuzzleTeaserLabels }) {
   return (
     <span className={styles.last}>
       <span className={styles.lastHead}>
@@ -252,7 +252,7 @@ function ResultGrid({ rows, count, label }: { rows: GuessRow[] | null; count: nu
   );
 }
 
-function Countdown({ day, labels }: { day: string; labels: StockPuzzleLabels }) {
+function Countdown({ day, labels }: { day: string; labels: PuzzleTeaserLabels }) {
   const now = useNow();
   const target = useMemo(() => nextPuzzleAt(Date.parse(`${day}T12:00:00Z`)).getTime(), [day]);
   return (

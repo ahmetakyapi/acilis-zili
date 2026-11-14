@@ -3,7 +3,9 @@ import { GuideHint } from "@/components/article/GuideHint";
 import { DirectoryHeader } from "@/components/motion/DirectoryHeader";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import directory from "@/components/motion/DirectoryExperience.module.css";
-import styles from "@/components/technical/Technical.module.css";
+import styles from "@/components/technical/TechnicalDirectory.module.css";
+import sections from "@/components/technical/TechnicalSections.module.css";
+import pulseStyles from "@/components/technical/TechnicalPulse.module.css";
 import { EditionTrack } from "@/components/technical/EditionTrack";
 import { PlanAtlas } from "@/components/technical/PlanAtlas";
 import { TechnicalBoard } from "@/components/technical/TechnicalBoard";
@@ -144,7 +146,7 @@ export default async function TechnicalPage() {
       <DirectoryHeader
         shareInTitle
         share={<PageShare compactOnMobile align="right" path="/teknik-analiz" title={t.technical.title} locale={locale} t={t} />}
-        className={styles.directoryHeader}
+        className={pulseStyles.directoryHeader}
         title={t.technical.title}
         description={t.technical.description}
         visual={
@@ -172,7 +174,7 @@ export default async function TechnicalPage() {
             dipnotta, artık her genişlikte (`.footSchedule`): üç saat şeridin
             kendisinde çizili. Gerekçe ve ölçüm `EditionTrack`te. */}
         {latest && (
-          <div className={styles.editionTrack}>
+          <div className={pulseStyles.editionTrack}>
             <EditionTrack edition={latest} next={next} variant="latest" locale={locale} t={t} />
           </div>
         )}
@@ -349,7 +351,7 @@ export default async function TechnicalPage() {
           panonun hemen altında, künyeden önce. */}
       <StanceGuide variant="board" t={t} id="technical-stances" />
 
-      <div className={styles.footNote}>
+      <div className={sections.footNote}>
         {latest && (
           <p className={styles.footSchedule}>
             {t.technical.scheduleLabel}: {scheduleText}

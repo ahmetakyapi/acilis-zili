@@ -46,6 +46,7 @@ import textureStyles from "@/components/today/home/MarketTexture.module.css";
 
 import { pageMetadata } from "@/lib/page-meta";
 import { PuzzleTeaser } from "@/components/puzzle/PuzzleTeaser";
+import { puzzleTeaserLabels } from "@/components/puzzle/teaser-labels";
 import { puzzleDayKey, puzzleNumber } from "@/lib/stock-puzzle";
 
 /* Canonical yalnızca BURADA. Kökte durduğu sürece bütün alt sayfalara miras
@@ -775,7 +776,7 @@ export default async function TodayPage() {
              "daha aşağılara, daha az yer kaplayan kompakt bir yere". Kart
              kapsayıcısına göre iki satıra iniyor; arka planın sonunda.
              Ölçümler `PuzzleTeaser.tsx`. */}
-        <PuzzleTeaser day={puzzleDay} number={puzzleNumber(puzzleDay)} labels={t.stockPuzzle} />
+        <PuzzleTeaser day={puzzleDay} number={puzzleNumber(puzzleDay)} labels={puzzleTeaserLabels(t.stockPuzzle)} />
 
         {/* GİRİŞ YAPMAMIŞ OKUYUCUNUN FAVORİLERİ EN DİPTE (24 Eylül). Panel
             onun için bir davet satırı; günün bilançolarından ve

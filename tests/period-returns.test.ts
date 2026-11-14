@@ -1,7 +1,7 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 
-import { PERIOD_SESSIONS, barDate, periodReturns, ytdSeries } from "../lib/period-returns";
+import { PERIOD_SESSIONS, barDate, periodReturns, thinSeries, ytdSeries } from "../lib/period-returns";
 import type { Bar } from "../lib/providers/types";
 
 /**
@@ -71,4 +71,46 @@ test("YBB çizgisi yüzdeyle aynı tabandan başlar; taban yoksa null", () => {
 
 test("boş seri", () => {
   assert.deepEqual(periodReturns([]), { w1: null, m1: null, m3: null, ytd: null, lastDate: null });
+});
+
+/* Mini çizginin seyreltmesi: uçlar ve tepe/dip kalır, noktalar özgün
+   sırasını taşır, kova başına en çok iki nokta. */
+function wave(n: number): { value: number }[] {
+  // Gürültülü ama tekrarlanabilir seri: iki sinüs + sıraya bağlı kıpırtı.
+  return Array.from({ length: n }, (_, i) => ({ value: 100 + 12 * Math.sin(i / 17) + 4 * Math.sin(i * 1.7) + ((i * 37) % 11) / 5 }));
+}
+
+test("seyreltme: kısa seri olduğu gibi döner", () => {
+  const points = wave(30);
+  const thin = thinSeries(points, 120);
+  assert.equal(thin.points.length, 30);
+  assert.deepEqual(thin.points.map((point) => point.index), [...Array(30).keys()]);
+  assert.deepEqual(thin.domain, [0, 29]);
+});
+
+test("seyreltme: uçlar, tepe ve dip kalır; sıra artan; değerler özgün", () => {
+  const points = wave(220);
+  points[137] = { value: 500 }; // tepe
+  points[61] = { value: -50 }; // dip
+  const thin = thinSeries(points, 120);
+  const idx = thin.points.map((point) => point.index);
+  assert.equal(idx[0], 0);
+  assert.equal(idx.at(-1), 219);
+  assert.ok(idx.includes(137) && idx.includes(61));
+  assert.ok(idx.every((value, at) => at === 0 || value > idx[at - 1]));
+  assert.ok(thin.points.every((point) => point.value === points[point.index].value));
+  assert.ok(thin.points.length <= 60 * 2 + 2, `nokta ${thin.points.length}`);
+  assert.ok(thin.points.length < 220);
+  assert.deepEqual(thin.domain, [0, 219]);
+});
+
+test("seyreltme: uçtaki tepe/dip de kalır, dar çizimde daha az nokta", () => {
+  const points = wave(220);
+  points[0] = { value: 999 };
+  points[219] = { value: -999 };
+  const narrow = thinSeries(points, 40);
+  assert.equal(narrow.points[0].value, 999);
+  assert.equal(narrow.points.at(-1)!.value, -999);
+  assert.ok(narrow.points.length <= 20 * 2 + 2);
+  assert.ok(narrow.points.length < thinSeries(points, 120).points.length);
 });

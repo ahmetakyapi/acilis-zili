@@ -22,7 +22,7 @@ export function useNow(): number | null {
   return now;
 }
 
-export function countdownText(left: number, labels: StockPuzzleLabels): string {
+export function countdownText(left: number, labels: Pick<StockPuzzleLabels, "countdown">): string {
   const total = Math.floor(Math.max(0, left) / 1000);
   const pad = (n: number) => String(n).padStart(2, "0");
   return fill(labels.countdown, {

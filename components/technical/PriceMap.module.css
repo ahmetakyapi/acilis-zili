@@ -1,0 +1,23 @@
+/* TEKNİK ANALİZ — FİYAT HARİTASININ NOTLARI (`PriceMap`; detay sayfası ve
+   Claude analiz raporu). Bölünme gerekçesi `TechnicalParts.module.css`
+   başında. */
+
+/* ---- Fiyat haritası ----
+   Raylı harita (`.map`, `.mapRail`, `.mapRung`…) f68b4d2'de basamak listesine
+   (`PriceLadder`) döndü; kuralları ve karar notları onunla kalktı. Kalanlar:
+   geçilmiş seviye işareti ve haritanın altındaki notlar. Geçilmiş seviye
+   işareti (`.mapCrossed`) de artık hiçbir bileşende basılmıyordu; 14 Kasım'da
+   silindi, yalnız notlar kaldı. */
+/* Seviye notları — haritanın ALTINDA. Gerekçe `PriceMap.tsx` yorumunda:
+   not satırı mutlak konumlu basamağın içindeyken satırları çakıştırıyordu. */
+.mapNotes { display:grid; gap:10px 20px; margin:16px 0 0; padding-top:14px; border-top:1px solid var(--line-soft); }
+
+.mapNotes > div { display:grid; grid-template-columns:minmax(0,1fr); gap:2px; }
+
+.mapNotes dt { font-size:12px; font-weight:700; letter-spacing:.02em; color:var(--text-strong); }
+
+.mapNotes dd { margin:0; font-size:13px; line-height:1.55; color:var(--text-muted); text-wrap:pretty; }
+
+@media (min-width: 640px) {
+  .mapNotes > div { grid-template-columns:132px minmax(0,1fr); gap:4px 14px; align-items:baseline; }
+}

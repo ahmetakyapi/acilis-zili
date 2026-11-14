@@ -222,8 +222,9 @@ export function ReportCover({
                 olanı. Çip artık bağlantı değil ama görüntüsü aynı kalıyor:
                 borsayı söyleyen bir künye ve bloğun tıklanabilir olduğunu
                 anlatan tek görünür işaret. Teknik analiz kapağı da aynı
-                kalıbı taşıyor (`components/technical/Technical.module.css`
-                → `.coverNameLink`). */}
+                kalıbı taşıyordu (eski `Technical.module.css` → `.coverNameLink`;
+                kapak 10 Kasım'da yeniden kuruldu, kural 14 Kasım'da
+                silindi). */}
             <Link
               href={`/hisse/${symbol}`}
               className="group flex min-w-0 items-start gap-3 sm:gap-4"

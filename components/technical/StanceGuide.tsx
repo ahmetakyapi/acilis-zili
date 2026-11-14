@@ -5,7 +5,9 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { verdictLabel, type VerdictKey } from "@/lib/analysis";
 import type { Dictionary } from "@/lib/i18n";
 import { cn } from "@/lib/utils";
-import styles from "./Technical.module.css";
+import styles from "./StanceGuide.module.css";
+import parts from "./TechnicalParts.module.css";
+import sections from "./TechnicalSections.module.css";
 
 const ORDER = ["buy", "hold", "sell"] as const satisfies readonly VerdictKey[];
 const TONE = { buy: "up", hold: "flat", sell: "down" } as const satisfies Record<VerdictKey, string>;
@@ -42,7 +44,7 @@ export function StanceGuide({
 }) {
   const g = t.technical.stanceGuide;
   const guideLink = (
-    <Link href={`/rehber/${STANCE_GUIDE_SLUG}`} className={cn("tap-44", styles.stanceGuideLink)}>
+    <Link href={`/rehber/${STANCE_GUIDE_SLUG}`} className={cn("tap-44", parts.stanceGuideLink)}>
       {g.guideLink}
       <ArrowUpRight size={14} weight="bold" aria-hidden />
     </Link>
@@ -50,16 +52,16 @@ export function StanceGuide({
 
   if (variant === "board") {
     return (
-      <section id={id} className={cn(styles.block, styles.stanceGuide)} aria-labelledby={`${id}-title`}>
-        <div className={styles.blockHead}>
-          <h2 id={`${id}-title`} className={styles.sectionTitle}>{g.boardTitle}</h2>
+      <section id={id} className={cn(sections.block, styles.stanceGuide)} aria-labelledby={`${id}-title`}>
+        <div className={sections.blockHead}>
+          <h2 id={`${id}-title`} className={sections.sectionTitle}>{g.boardTitle}</h2>
           {guideLink}
         </div>
         <p className={styles.stanceLead}>{g.boardLead}</p>
         <div className={styles.stanceColumns} data-motion-stagger>
           {ORDER.map((key) => (
             <article key={key} className={styles.stanceColumn} data-tone={TONE[key]}>
-              <VerdictPill verdict={key} label={verdictLabel(key, t)} size="custom" className={styles.stancePill} />
+              <VerdictPill verdict={key} label={verdictLabel(key, t)} size="custom" className={parts.stancePill} />
               <p className={styles.stanceMeaning}>{g[key].meaning}</p>
               {/* TELEFONDA KATLI (29 Eylül). Üç sütun alt alta 390'da 1.893
                   piksel tutuyordu (sayfanın ~%15'i). Etiket ve anlam her
@@ -92,9 +94,9 @@ export function StanceGuide({
   const copy = g[verdict];
   const label = verdictLabel(verdict, t);
   return (
-    <section id={id} className={cn(styles.block, styles.stanceGuide)} data-tone={TONE[verdict]} aria-labelledby={`${id}-title`}>
-      <div className={styles.blockHead}>
-        <h2 id={`${id}-title`} className={styles.sectionTitle}>{g.detailTitle.replace("{stance}", label)}</h2>
+    <section id={id} className={cn(sections.block, styles.stanceGuide)} data-tone={TONE[verdict]} aria-labelledby={`${id}-title`}>
+      <div className={sections.blockHead}>
+        <h2 id={`${id}-title`} className={sections.sectionTitle}>{g.detailTitle.replace("{stance}", label)}</h2>
         {guideLink}
       </div>
       <p className={styles.stanceLead}>{copy.meaning}</p>
@@ -132,7 +134,7 @@ export function StanceGuide({
           <ul>
             {ORDER.filter((key) => key !== verdict).map((key) => (
               <li key={key}>
-                <VerdictPill verdict={key} label={verdictLabel(key, t)} size="custom" className={styles.stancePill} />
+                <VerdictPill verdict={key} label={verdictLabel(key, t)} size="custom" className={parts.stancePill} />
                 <span>{g[key].short}</span>
               </li>
             ))}

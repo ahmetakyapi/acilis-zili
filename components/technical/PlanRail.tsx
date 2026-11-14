@@ -4,7 +4,7 @@ import { openPlan, riskReward, type OpenSide } from "@/lib/technical";
 import { formatPercentPlain, formatPrice } from "@/lib/utils";
 import { LevelTrack, type TrackSegment } from "./LevelTrack";
 import { openSideKey, openWhyText } from "./open-plan";
-import styles from "./Technical.module.css";
+import styles from "./TechnicalPlan.module.css";
 
 /** `abs`/`pct` null: fiyat seviyede, bacak yalnız adını söylüyor. */
 type Leg = { key: string; name: string; tone: TrackSegment["tone"]; abs: number | null; pct: number | null; side: "start" | "end" };

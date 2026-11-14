@@ -15,9 +15,9 @@ import { editionTime, livePriceLabel, slotLabel, stanceChangeLabel, technicalHre
 import type { TechnicalBoardEntry } from "@/lib/technical-data";
 import { cn, formatEtDateCompact, plural } from "@/lib/utils";
 import { balancedColumns } from "@/lib/technical-visuals";
-import { changeToneClass } from "./TechnicalCard";
+import { changeToneClass } from "./card-text";
 import { PulseBar } from "./PulseBar";
-import styles from "./Technical.module.css";
+import styles from "./TechnicalPulse.module.css";
 
 const VERDICTS: readonly VerdictKey[] = ["buy", "hold", "sell"];
 /** Dağılımın kart anahtarı: görüş hapı ve yayın damgası taşıyan kart,

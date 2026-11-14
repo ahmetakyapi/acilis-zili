@@ -306,7 +306,11 @@ const nextConfig: NextConfig = {
        CSS belirliyordu (`/teknik-analiz`: TTFB 631 → CSS bitti 4.109 → FCP
        4.564 ms). `graph` (yalnız Turbopack) rotanın kullanmadığı modülleri
        ortak parçadan ayırır, karşılığında birkaç istek daha yapar. */
-    cssChunking: "graph",
+    /* `requestCost` 20000 (varsayılan) → 8000 (14 Kasım, ölçüldü): 20
+       rotada CSS toplamı 1.233 → 1.194 kB gzip, hisse sayfası 126 → 108 kB;
+       karşılığında +15 istek (en çok 34, HTTP/2). 50000 tersine 1.346 kB
+       verdi. Ölçüm yöntemi ve tablo: performans turu raporu (14 Kasım). */
+    cssChunking: { type: "graph", requestCost: 8000 },
     /* RSC ÖZET DOĞRULAMASI KAPALI (14 Kasım; canlıda ölçüldü). Next, RSC
        isteğinin `_rsc` özeti tutmayınca "doğru özetli adrese" 307 veriyor
        (CDN önbellek zehirlenmesine karşı). Bu sitede o yönlendirme dil

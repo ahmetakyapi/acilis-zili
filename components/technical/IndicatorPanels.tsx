@@ -13,7 +13,7 @@ import {
   plural,
 } from "@/lib/utils";
 import { displayZone, formatInZone, zoneTag } from "@/lib/session-clock";
-import styles from "./Technical.module.css";
+import styles from "./IndicatorPanels.module.css";
 
 /**
  * Gösterge panelleri — fotoğraftaki sayılar, analiz anındaki hâliyle.

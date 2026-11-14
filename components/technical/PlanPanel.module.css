@@ -14,7 +14,7 @@
    `.signal::before` ile aynı im (28×3); kapaktaki eski yeri etiketin üstüydü. */
 .title::before { content:""; flex:none; width:28px; height:3px; border-radius:999px; background:var(--reading-tone); }
 .reading { max-width:68ch; font-size:15px; line-height:1.6; color:var(--text-strong); text-wrap:pretty; }
-/* `.coverPlan` (Technical.module.css) kapaktayken üst çizgi ve iç pay
+/* `.coverPlan` (TechnicalPlan.module.css) kapaktayken üst çizgi ve iç pay
    taşıyordu; panelde başlık ile cümlenin hemen altında, çizgisiz. */
 .root .strip { margin-top:4px; padding-top:0; border-top:0; }
 .track { display:grid; align-content:center; min-width:0; padding:20px 24px; border-left:1px solid var(--line); }

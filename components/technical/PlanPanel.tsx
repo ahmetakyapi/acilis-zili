@@ -7,8 +7,9 @@ import { EditionTrack } from "./EditionTrack";
 import { OpenRange, openRangeOf } from "./OpenRange";
 import { PlanRail } from "./PlanRail";
 import { PlanStrip } from "./PlanStrip";
-import { planReadingText, planReadingTone } from "./TechnicalCard";
-import styles from "./Technical.module.css";
+import { planReadingText, planReadingTone } from "./card-text";
+import styles from "./TechnicalPlan.module.css";
+import parts from "./TechnicalParts.module.css";
 import panel from "./PlanPanel.module.css";
 
 /**
@@ -57,7 +58,7 @@ export function PlanPanel({
           <h2 id="technical-plan-title" data-ink="plain" className={panel.title}>{t.technical.readingLabel}</h2>
           {/* Plan cümlesi görüşü varsayıyor; anlamını soran okuyucu
               bir tık aşağıda, aynı sayfada cevabı buluyor. */}
-          <a href="#technical-stance" className={cn("tap-44", styles.stanceGuideLink)}>
+          <a href="#technical-stance" className={cn("tap-44", parts.stanceGuideLink)}>
             {t.technical.stanceGuide.detailTitle.replace("{stance}", verdictLabel(verdict, t))}
           </a>
         </div>

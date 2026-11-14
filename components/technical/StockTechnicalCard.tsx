@@ -17,8 +17,9 @@ import {
 } from "@/lib/technical";
 import { getTechnicalDetail } from "@/lib/technical-data";
 import { cn, formatEtDateCompact } from "@/lib/utils";
-import { changeToneClass, planPositionLabel } from "./TechnicalCard";
-import styles from "./Technical.module.css";
+import { changeToneClass, planPositionLabel } from "./card-text";
+import styles from "./StockTechnicalCard.module.css";
+import parts from "./TechnicalParts.module.css";
 
 /**
  * Şirket sayfasının teknik analiz kartı — KISA HÂLİ.
@@ -95,14 +96,14 @@ export async function StockTechnicalCard({
             kartın tamamı — liste kartındaki kalıbın aynısı. */}
         <Link href={technicalHref(symbol)} className={styles.stockCardLink}>
           <span className="sr-only">{t.technical.stanceLabel}: </span>
-          <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} size="custom" className={styles.stancePill} />
+          <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} size="custom" className={parts.stancePill} />
           <span className="sr-only"> · {symbol} {t.technical.title}</span>
         </Link>
         {change && (
-          <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>
+          <span className={cn(parts.change, changeToneClass(verdict))}>{change}</span>
         )}
         {position && (
-          <span className={styles.plan} data-kind={position.kind}>
+          <span className={parts.plan} data-kind={position.kind}>
             {planPositionLabel(position, locale, t)}
           </span>
         )}

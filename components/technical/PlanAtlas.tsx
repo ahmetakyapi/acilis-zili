@@ -5,7 +5,7 @@ import type { TechnicalAnalysisRow } from "@/lib/schema";
 import { formatRange, planPosition, riskReward, technicalHref } from "@/lib/technical";
 import { atlasGeometry, atlasSentence, domainFraction, type AtlasSummary } from "@/lib/technical-visuals";
 import { formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils";
-import { planPositionLabel } from "./TechnicalCard";
+import { planPositionLabel } from "./card-text";
 import { PlanAtlasView, type AtlasGroup, type AtlasRowView } from "./PlanAtlasView";
 
 type PlanAtlasItem = {

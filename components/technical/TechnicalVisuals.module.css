@@ -25,7 +25,7 @@
 
 .legend { display:flex; flex-wrap:wrap; gap:6px 16px; margin-top:2px; font-size:12px; color:var(--text-muted); }
 .legend li { display:inline-flex; align-items:center; gap:6px; }
-/* 10 Kasım (tek çizim ailesi, `Technical.module.css` sonu): bölge burada
+/* 10 Kasım (tek çizim ailesi, `TechnicalPlan.module.css`): bölge burada
    yeşildi (`--up` %30 + %55 kenar); kart rayı, kapak ölçeği ve merdiven 31
    Ekim'den beri mavi — bölge bir alan, yön değil. Dolgu ve kenar onlarla
    aynı reçete. */

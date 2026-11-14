@@ -1,7 +1,8 @@
 import type { VerdictKey } from "@/lib/analysis";
 import type { Dictionary } from "@/lib/i18n";
 import { ladderOf, type TechnicalCopy } from "@/lib/technical";
-import styles from "./Technical.module.css";
+import styles from "./PriceMap.module.css";
+import sections from "./TechnicalSections.module.css";
 
 /*
  * ESKİ FİYAT HARİTASI SİLİNDİ (31 Ekim, sahibinin onayı: "olur silelim").
@@ -29,7 +30,7 @@ export function PriceMapNotes({ copy, verdict, lang, t, ...levels }: {
   })).filter((note): note is { label: string; text: string } => Boolean(note.text));
   if (!notes.length) return null;
   return <section className={styles.planNotes} aria-labelledby="technical-plan-notes">
-    <h2 id="technical-plan-notes" className={styles.sectionTitle}>{t.technical.levelRationale}</h2>
+    <h2 id="technical-plan-notes" className={sections.sectionTitle}>{t.technical.levelRationale}</h2>
     <dl className={styles.mapNotes} lang={lang}>
       {notes.map((note) => <div key={note.label}><dt>{note.label}</dt><dd>{note.text}</dd></div>)}
     </dl>

@@ -235,7 +235,7 @@
   .ctaTool { display:none; }
 }
 /* ---- Şirket sayfası: teknik analizi olmayan hissede Şirket Analizi kartı ----
-   Teknik kartla (Technical.module.css → .stockCard) aynı kap dili: aynı
+   Teknik kartla (technical/StockTechnicalCard.module.css → .stockCard) aynı kap dili: aynı
    kenarlık, yarıçap ve dolgu; aynı yerde onun yerine duruyor. */
 .companyCard { display:grid; gap:14px; padding:18px 20px 20px; border:1px solid var(--line); border-radius:var(--radius-panel, 22px); background:var(--premium-surface); }
 .companyHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }

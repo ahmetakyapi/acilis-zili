@@ -1,0 +1,224 @@
+/* TEKNİK ANALİZ — GÖSTERGE PANELLERİ (`IndicatorPanels`: RSI kadranı,
+   hacim, pivot merdiveni, 52 hafta bandı). Bölünme gerekçesi
+   `TechnicalParts.module.css` başında. */
+
+/* ---- Gösterge panelleri ---- */
+/* SÜTUN SAYISI SABİT, `auto-fill` DEĞİL. Altı panel 1440px'de 4+2
+   diziliyordu ve ikinci satırda iki boş yuva kalıyordu (ölçüldü). Altının
+   bölenleri: dar ekranda 1, orta 2, geniş 3 — her genişlikte satır dolu. */
+.indicators { display:grid; grid-template-columns:minmax(0,1fr); gap:14px; }
+
+@media (min-width: 640px) { .indicators { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+
+@media (min-width: 1100px) { .indicators { grid-template-columns:repeat(3, minmax(0,1fr)); } }
+
+.indicator { display:flex; min-width:0; flex-direction:column; gap:12px; padding:18px; border:1px solid var(--line); border-radius:18px; background:var(--premium-surface); }
+
+.indicatorHead { display:flex; flex-wrap:wrap; align-items:flex-start; justify-content:space-between; gap:6px 12px; }
+
+.indicatorTitle { display:flex; align-items:center; gap:7px; font-size:13px; font-weight:700; letter-spacing:.01em; color:var(--primary-ink); }
+
+.indicatorTitle svg { flex:none; opacity:.8; }
+
+.indicatorTag { margin-left:auto; font-size:12px; font-weight:700; text-align:right; }
+
+.bigFigure { font-size:26px; line-height:1.1; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
+
+/* Sayısal sıkı aralık ATR'nin küçük açıklama etiketine sızmasın: 320px'de
+   "Fiyata Oranı" tek kelime gibi görünüyordu. */
+.bigFigure:has(> span) { display:flex; flex-wrap:wrap; align-items:baseline; gap:5px 8px; }
+
+.bigFigure > span { margin-left:0; letter-spacing:0; line-height:1.4; }
+
+.rows { display:flex; flex-direction:column; }
+
+.row { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:2px 10px; padding:5px 0; border-bottom:1px solid var(--line-soft); font-size:13px; }
+
+.row:last-child { border-bottom:0; }
+
+.row dt { color:var(--text-body); }
+
+.row dd { display:flex; align-items:baseline; gap:8px; font-weight:600; color:var(--text-strong); letter-spacing:-.02em; }
+
+/* GÖSTERGE RAYLARI TEK DİLDE (18 Ekim). Kulvar `--line-soft`, şerit 5
+   piksel, sıfır/eşik çizgisi `--line-strong` — CLAUDE.md'deki grafik dili.
+   Önceden üç ray üç ayrı lehçeydi: ortalama kulvarı `surface-sunken` ve
+   sıfırı %60 soluk gri, hacim 8 piksel ve her oranda mavi, 52 haftalık
+   bant kırmızıdan yeşile DEGRADE (degrade veri panelinde kimlik dışı ve
+   bandın ucu "iyi/kötü" demiyor). */
+/* 10 Kasım (ortak ölçüler): uçlar 3 piksel yarıçaplı ve dolgular %70–85
+   opaktı; şerit ucu 999, dolgu opak. Hacim satırlarının büyüklük şeridi
+   (`.volumeBar`) aynı kulvar; oran grubu (`.volumeRatio`) kartın dibinde. */
+.deviation { position:relative; grid-column:1/-1; height:5px; margin:4px 0 2px; border-radius:999px; background:var(--line-soft); }
+
+.volumeBar { grid-column:1/-1; height:5px; margin:4px 0 2px; border-radius:999px; background:var(--line-soft); }
+
+.volumeBar > span { display:block; height:100%; border-radius:999px; background:var(--text-muted); transform-origin:left center; }
+
+.volumeBar[data-heavy] > span { background:var(--primary); }
+
+.volumeRatio { display:flex; flex-direction:column; gap:9px; margin-top:auto; padding-top:4px; }
+
+.deviation > i { position:absolute; top:-3px; left:50%; width:1px; height:11px; background:var(--line-strong); }
+
+.deviation > span { position:absolute; top:0; bottom:0; border-radius:999px; }
+
+.ratioTrack { position:relative; height:5px; border-radius:999px; background:var(--line-soft); }
+
+.ratioTrack > span { position:absolute; left:0; top:0; bottom:0; border-radius:999px; background:var(--text-muted); transform-origin:left center; }
+
+.ratioTrack[data-heavy] > span { background:var(--primary); }
+
+.ratioTrack > i { position:absolute; top:-3px; width:1px; height:11px; background:var(--line-strong); }
+
+.volumeScale { position:relative; height:12px; margin-top:-5px; color:var(--text-muted); font-size:12px; }
+
+.volumeScale > span { position:absolute; }
+
+.volumeScale > span:nth-child(2) { left:33.333%; transform:translateX(-50%); }
+
+.volumeScale > span:last-child { right:0; }
+
+.band { position:relative; height:5px; border-radius:999px; background:var(--line-soft); }
+
+/* İşaret fiyat: düz mürekkep, mavi değil — bant yön söylemiyor. */
+.band > span { position:absolute; top:-4px; width:3px; height:13px; border-radius:2px; background:var(--text-strong); transform:translateX(-1.5px); box-shadow:0 0 0 2px var(--premium-surface); }
+
+/* KUTUNUN AÇIKLAMASI — başlığın altında, sayıların üstünde.
+   Künyeden (`.indicatorNote`) bir kademe daha okunur: o satır çizimi
+   anlatıyor ve kutunun dibinde duruyor, bu satır ÖLÇÜYÜ anlatıyor ve
+   okuyucunun sayıya bakmadan önce görmesi gerekiyor. `pretty` sarması son
+   satırda tek kelime bırakmıyor. */
+.indicatorLead { margin:-2px 0 2px; font-size:12.5px; line-height:1.55; color:var(--text-body); text-wrap:pretty; }
+
+/* Pivot satırında kısaltma ve adı: kalın kısaltma, yanında sessiz ad. */
+.pivotLabel { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 7px; }
+
+.pivotLabel b { font-weight:700; letter-spacing:.01em; color:var(--text-strong); }
+
+.pivotLabel span { font-size:var(--text-nano); font-weight:600; color:var(--text-muted); }
+
+.indicatorNote { font-size:12px; line-height:1.55; color:var(--text-muted); text-wrap:pretty; }
+
+/* RSI yarım daire: 0-100'lük sınırlı bir okuma, uydurma bir zaman serisi
+   değil. Eşikler ve işaret aynı yayın üstünde. */
+.rsiReading { display:flex; flex:1; align-items:center; gap:14px; }
+
+.rsiDial { position:relative; flex:1; min-width:0; max-width:210px; }
+
+.rsiDial svg { width:100%; overflow:visible; }
+
+.rsiDial path { fill:none; stroke-width:5; }
+
+.dialBase { stroke:var(--line-soft); }
+
+.dialLow { stroke:color-mix(in srgb, var(--up) 55%, var(--premium-surface)); }
+
+.dialHigh { stroke:color-mix(in srgb, var(--down) 55%, var(--premium-surface)); }
+
+.dialTick { stroke:var(--text-muted); stroke-width:1; opacity:.65; }
+
+.dialMarker { fill:var(--text-strong); stroke:var(--premium-surface); stroke-width:3; }
+
+/* Nokta bölgenin rengini alıyor — başlıktaki etiket ve liste kartının
+   RSI noktasıyla aynı kural; nötrde düz mürekkep. Mavi veri değil. */
+.dialMarker[data-zone="overbought"] { fill:var(--down); }
+
+.dialMarker[data-zone="oversold"] { fill:var(--up); }
+
+/* Pivot merdiveni — gerekçe `PivotPanel`. */
+.pivotLadder { display:grid; gap:6px; padding:6px 0 2px; }
+
+.pivotRail { position:relative; height:5px; margin-inline:8px; border-radius:999px; background:var(--line-soft); }
+
+.pivotRail > span { position:absolute; top:0; bottom:0; border-radius:3px; opacity:.85; }
+
+.pivotRail > i { position:absolute; top:-3px; width:1px; height:11px; margin-left:-.5px; background:var(--line-strong); }
+
+.pivotRail > i[data-pivot] { top:-4px; height:13px; width:2px; margin-left:-1px; background:var(--text-muted); }
+
+.pivotRail > b { position:absolute; top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; background:var(--text-strong); box-shadow:0 0 0 2px var(--premium-surface); }
+
+.pivotRail > b[data-out] { background:var(--premium-surface); box-shadow:inset 0 0 0 2px var(--text-strong); }
+
+.pivotTicks { position:relative; height:14px; margin-inline:8px; font-size:12px; font-weight:700; line-height:14px; letter-spacing:.02em; color:var(--text-muted); }
+
+.pivotTicks > span { position:absolute; transform:translateX(-50%); }
+
+.rsiDial text { fill:var(--text-muted); font-size:10px; }
+
+.rsiValue { position:absolute; bottom:8%; left:0; right:0; text-align:center; color:var(--text-strong); font-size:30px; font-weight:600; line-height:1; letter-spacing:-.045em; }
+
+.rsiValue span { display:block; margin-top:5px; font-size:12px; color:var(--text-muted); letter-spacing:0; }
+
+.rsiZones { display:grid; flex:none; gap:12px; font-size:12px; color:var(--text-body); }
+
+.rsiZones > span { display:grid; grid-template-columns:6px auto; align-items:center; column-gap:6px; row-gap:2px; }
+
+.rsiZones i { width:6px; height:6px; border-radius:50%; background:var(--text-muted); }
+
+.rsiZones i[data-zone="low"] { background:var(--up); }
+
+.rsiZones i[data-zone="high"] { background:var(--down); }
+
+.rsiZones b { grid-column:2; color:var(--text-muted); font-size:12px; font-weight:400; }
+
+@media (max-width: 767px) {
+  .rsiReading { min-height:144px; }
+  .rsiValue { font-size:27px; }
+}
+
+/* Başlığın önündeki mavi dikey çubuk 14 Kasım 2026'da kalktı (görsel tur,
+   ortak brif: tek başlık dili, üç basamak; bölüm ve panel başlığı düz
+   mürekkep, önünde çubuk yok). Mavi etkileşimin rengi; başlıkta süstü. */
+.indicatorTitle svg { width:22px; height:22px; padding:3px; border-radius:6px; background:var(--primary-wash); }
+
+.indicatorBody { display:flex; flex-direction:column; gap:12px; min-width:0; }
+
+.indicatorLead { font-size:13px; line-height:1.6; }
+
+.indicatorHead { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
+
+.indicatorBody .indicatorHead { padding-bottom:0; border:0; }
+
+.indicatorBody > .indicatorNote:last-child { margin-top:auto; }
+
+.indicatorBody .rsiReading { margin-block:auto; }
+
+/* Three semantic rows per card: title, explanation, reading. Subgrid aligns
+   the actual charts as well as the outside edges, including long EN labels. */
+@media(min-width:640px) {
+ .indicator { display:grid; grid-template-rows:subgrid; grid-row:span 3; gap:12px; }
+}
+
+/* 52 hafta bandının imi çubuktu (3×13); pivot rayındaki noktayla aynı. */
+.band > span { top:50%; width:11px; height:11px; margin:-5.5px 0 0 -5.5px; border-radius:50%; transform:none; }
+
+.rsiDial path { stroke-width:6; }
+
+.rsiDial .dialTick { stroke-width:1; }
+
+/* GÖSTERGE KARTINDA ORTADA BOŞLUK YOK. Kartlar satırda eşit boyda (alt
+   ızgara); kısa kartın fazlası `margin-block:auto` ve `margin-top:auto` ile
+   çizimin ÜSTÜNE ya da iki öğenin ARASINA açılıyordu: RSI kadranının üstünde
+   60, hacim satırlarıyla oran rayı arasında 56 piksel (1440, ölçüldü). Kural:
+   gövde tepeden akar; yalnız künye satırı dibe yaslanır; fazlalık kartın
+   dibinde tek parça kalır.
+   RSI: kadran kartın genişliğini kullanıyor (en çok 280 piksel; 210'du),
+   bölge anahtarı yanında değil ALTINDA üç sütun — kadran büyüyünce gövde
+   doluyor (1440: üstte 60 → 0, dipte ≤ 12 piksel). */
+.indicatorBody .rsiReading { flex:none; flex-direction:column; align-items:stretch; gap:14px; margin-block:0; }
+
+.rsiDial { flex:none; width:100%; max-width:280px; margin-inline:auto; }
+
+.rsiValue { font-size:36px; font-weight:700; letter-spacing:-.03em; }
+
+.rsiZones { grid-template-columns:repeat(3, minmax(0,1fr)); gap:10px; padding-top:12px; border-top:1px solid var(--line-soft); }
+
+.rsiZones > span { align-content:start; }
+
+.volumeRatio { margin-top:0; padding-top:0; gap:10px; }
+
+.volumeRatio .bigFigure { font-weight:700; letter-spacing:-.03em; }
+
+.volumeRatio + .rows { margin-top:2px; }

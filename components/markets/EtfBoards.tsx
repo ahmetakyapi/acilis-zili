@@ -16,7 +16,7 @@ import {
   loadBoardBars,
   loadBoardQuotes,
 } from "@/lib/market-boards";
-import { periodReturns, ytdSeries, type PeriodReturns } from "@/lib/period-returns";
+import { periodReturns, thinSeries, ytdSeries, type PeriodReturns } from "@/lib/period-returns";
 import type { Quote } from "@/lib/providers/types";
 import {
   cn,
@@ -251,6 +251,42 @@ const LEGEND_STEPS = [
 ] as const;
 
 /** "Nasıl Okunur" katlaması — Piyasa Nabzı'nın kalıbı (`.howTo`). */
+/** YBB çizgisinin kutusu (viewBox birimi); seyreltme de buna göre. */
+const TREND_WIDTH = 120;
+
+/* YBB çizgisi seyreltilmiş noktalarla (gerekçe ve ölçüm `thinSeries`,
+   lib/period-returns.ts). x ekseni noktanın ÖZGÜN SIRASI: `time` alanına
+   sıra, `domain`a [0, n − 1] veriliyor, böylece kalan her nokta seyreltme
+   öncesindeki yerinde çiziliyor (Sparkline sıra ekseninde de aynı formülü
+   kullanıyor). */
+function TrendLine({
+  points,
+  base,
+  title,
+  tone,
+}: {
+  points: readonly { value: number }[];
+  base: number;
+  title: string;
+  tone: "up" | "down" | "flat";
+}) {
+  const thin = thinSeries(points, TREND_WIDTH);
+  return (
+    <Sparkline
+      points={thin.points.map((point) => ({ value: point.value, time: point.index }))}
+      domain={thin.domain}
+      title={title}
+      tone={tone}
+      width={TREND_WIDTH}
+      height={34}
+      strokeWidth={1.6}
+      baseline={base}
+      showLastDot
+      className={styles.trend}
+    />
+  );
+}
+
 function HowTo({ label, children }: { label: string; children: ReactNode }) {
   return (
     <details className={styles.howTo}>
@@ -621,16 +657,11 @@ export function CommodityBoardView({
               işaretinden; taban yoksa çizgi de yok. */}
           <td className={styles.trendCell} data-phone-hide>
             {row.trend ? (
-              <Sparkline
+              <TrendLine
                 points={row.trend.points}
+                base={row.trend.base}
                 title={`${row.symbol} · ${labels.ybb.long}`}
                 tone={directionOf(row.returns.ytd) === "up" ? "up" : directionOf(row.returns.ytd) === "down" ? "down" : "flat"}
-                width={120}
-                height={34}
-                strokeWidth={1.6}
-                baseline={row.trend.base}
-                showLastDot
-                className={styles.trend}
               />
             ) : null}
           </td>
