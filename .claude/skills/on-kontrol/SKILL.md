@@ -64,7 +64,15 @@ skill'lerdeki her dosya yolu var mı, kural `paths:` kalıpları eşleşiyor mu,
 CLAUDE.md ≤200 satır mı (CI da koşar). Kırmızıysa atfı düzelt, testi
 gevşetme.
 
-## 6. Rapor ve Ders
+## 6. Bağımlılık Uyarıları
+
+`npm audit --omit=dev` (kurulu `node_modules` ile, salt okunur). Yüksek ya da
+kritik uyarı varsa önce o: 14 Kasım'da Next 16.3.8'de kimliksiz hizmet
+reddi açığı günlerdir duruyordu ve hiçbir koşu kırmızı değildi. Uyarının
+BU yapılandırmada ulaşılır olup olmadığını yaz (ör. görsel optimizasyonu
+kapalıysa o yol 404), ama yükseltmeyi erteleme.
+
+## 7. Rapor ve Ders
 
 Tek tablo: alan · durum · bulgu · yapılacak. Bu turda yaşanan bir tuzak
 (yanlış varsayım, kırmızı koşu, çakışma) varsa ilgili skill'e TEK SATIR
