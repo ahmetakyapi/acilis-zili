@@ -15,7 +15,8 @@ import {
   signColor,
 } from "@/lib/og";
 import { ogCloseSeries, ogQuoteStamp, seriesChangePct } from "@/lib/og-series";
-import { getStatus, getStoryBySlug, getSymbolNames } from "@/lib/data";
+import { getBriefIssue, getStatus, getStoryBySlug, getSymbolNames } from "@/lib/data";
+import { BRIEF_DATE, briefSummary, type BriefPeriod } from "@/lib/brief";
 import { getChartBars, getQuotes } from "@/lib/providers";
 import { getDictionary, type Locale } from "@/lib/i18n";
 import { parseBlocks } from "@/components/article/parse-blocks";
@@ -194,6 +195,38 @@ export async function storyOgImage(slug: string, locale: Locale) {
               {clip(story.dek, 150)}
             </div>
           )
+        )}
+      </OgFrame>
+    ),
+    { ...OG_SIZE, fonts },
+  );
+}
+
+/**
+ * Bülten sayısının kartı — manşet ve gövdenin ilk cümleleri (14 Kasım:
+ * denetimde `og:image` taşımayan tek yazı türü bültendi; paylaşılan sayı
+ * görselsiz düşüyordu). Sayı yoksa ya da okunamadıysa bölüm kartına düşer:
+ * paylaşım görseli hata sayfası basmaz.
+ */
+export async function briefOgImage(tarih: string, period: BriefPeriod, locale: Locale) {
+  const t = getDictionary(locale);
+  const [rows, fonts] = await Promise.all([
+    BRIEF_DATE.test(tarih) ? getBriefIssue(tarih, period) : Promise.resolve([]),
+    ogFonts(),
+  ]);
+  const brief = rows.find((row) => row.locale === locale) ?? rows[0];
+  const eyebrow = period === "weekly" ? t.brief.weeklyTitle : t.brief.title;
+  const title = brief?.headline ?? eyebrow;
+  const dek = brief ? briefSummary(brief.bodyMd) : period === "weekly" ? t.brief.weeklySubtitle : t.brief.subtitle;
+
+  return new ImageResponse(
+    (
+      <OgFrame eyebrow={eyebrow}>
+        <OgTitle size={title.length > 60 ? 46 : title.length > 36 ? 54 : 64}>{clip(title, 96)}</OgTitle>
+        {dek && (
+          <div style={{ fontSize: 28, lineHeight: 1.34, color: C.body, display: "flex", maxWidth: 980 }}>
+            {clip(dek, 150)}
+          </div>
         )}
       </OgFrame>
     ),

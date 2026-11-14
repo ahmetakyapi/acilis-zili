@@ -95,6 +95,10 @@ const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   { path: "/sozluk", priority: 0.8, frequency: "weekly", stamp: false },
   { path: "/bulmaca", priority: 0.6, frequency: "daily", stamp: false },
   { path: "/bulmaca/arsiv", priority: 0.4, frequency: "daily", stamp: false },
+  /* 14 Kasım denetimi: ikisi de dizine açık (canonical ve hreflang tam) ama
+     haritada yoktu — 9 Ekim'deki `/hisse-secimi` vakasının aynısı. */
+  { path: "/bulmaca/hangisi-buyuk", priority: 0.5, frequency: "daily", stamp: false },
+  { path: "/seans-silueti", priority: 0.6, frequency: "daily" },
   /* 25 Ekim: sitenin değişiklik geçmişi — içerik depoda, yalnız dağıtımla
      değişiyor; değişme anı sayfa için bilinmiyor, damga yok. */
   { path: "/yenilikler", priority: 0.4, frequency: "weekly", stamp: false },

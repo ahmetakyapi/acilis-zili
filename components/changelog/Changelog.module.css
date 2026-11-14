@@ -226,8 +226,12 @@ a.card:hover .cardArrow { translate: 3px 0; color: var(--primary-ink); }
 .week { display: grid; grid-template-columns: minmax(0, 1fr); grid-template-rows: calc(var(--plot-h) + var(--top)) 18px 18px; min-width: 0; }
 .weekLink {
   display: flex; flex-direction: column; justify-content: flex-end; align-items: stretch;
-  min-width: 0; border-radius: 4px; outline-offset: 3px;
+  min-width: 0; border-radius: 4px; outline-offset: 3px; position: relative;
 }
+/* Dokunma alanı sütun aralığına taşar (14 Kasım denetimi: 390'da 15 bağlantı
+   17 × 140 pikseldi, WCAG 2.2'nin 24 piksel tabanının altında). Görünen
+   çubuk aynı kalır; komşu alanlar aralığın ortasında buluşur (~21-23 px). */
+a.weekLink::after { content: ""; position: absolute; inset: 0 calc(clamp(3px, .7vw, 10px) / -2); }
 a.weekLink:focus-visible { outline: 2px solid var(--line-focus); }
 .weekValue {
   min-height: 16px; margin-bottom: 4px; text-align: center; white-space: nowrap;
