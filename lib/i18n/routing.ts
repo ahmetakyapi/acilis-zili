@@ -62,10 +62,21 @@ export function splitLocale(pathname: string): {
  * Dış adresler, çapa ve `mailto:` olduğu gibi bırakılır.
  */
 export function withLocale(href: string, locale: Locale): string {
-  if (!href.startsWith("/")) return href;
-  const { path } = splitLocale(href);
-  if (locale === DEFAULT_LOCALE) return path;
-  return path === "/" ? `/${locale}` : `/${locale}${path}`;
+  /* `//alan.com/x` protokol göreli bir DIŞ adrestir, iç yol değil. */
+  if (!href.startsWith("/") || href.startsWith("//")) return href;
+  /* SORGU VE ÇAPA YOLDAN AYRILIR (14 Kasım, `tests/i18n-routing.test.ts`).
+     Önek ve kök sınaması yolun tamamına bakıyordu: `/en?q=1` önekli
+     sayılmıyor (`/en/en?q=1` çift önek, Türkçeye dönüşte İngilizcede
+     kalma), `/?q=1` kök sayılmıyordu (`/en/?q=1`). Bugün hiçbir çağıran bu
+     girdiyi üretmiyordu; arama paleti ve `useLocaleHref` dışarıdan gelen
+     adresi doğrudan geçirdiği için ilk sorgulu ana sayfa bağlantısı 404
+     olurdu. */
+  const cut = href.search(/[?#]/);
+  const pathname = cut === -1 ? href : href.slice(0, cut);
+  const suffix = cut === -1 ? "" : href.slice(cut);
+  const { path } = splitLocale(pathname);
+  if (locale === DEFAULT_LOCALE) return `${path}${suffix}`;
+  return `${path === "/" ? `/${locale}` : `/${locale}${path}`}${suffix}`;
 }
 
 /** Adresin dilden arınmış hâli — aktif gezinme karşılaştırmaları için. */
@@ -94,7 +105,8 @@ export function languageAlternates(
    */
   locales: readonly Locale[] = LOCALES,
 ): Record<string, string> {
-  const clean = splitLocale(path).path;
+  /* Boş yol köktür; yoksa İngilizce karşılık da "/" çıkıyordu. */
+  const clean = splitLocale(path || "/").path;
   return Object.fromEntries(
     locales.map((locale) => [locale, withLocale(clean, locale) || "/"]),
   );

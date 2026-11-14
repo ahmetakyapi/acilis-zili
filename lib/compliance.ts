@@ -206,6 +206,13 @@ export function screenCompliance(inputs: ComplianceInputs): ComplianceResult {
     }
   }
 
+  /* Sayı olmayan oran bilinmiyor sayılır (14 Kasım, `tests/compliance.test.ts`):
+     NaN bir ölçü `ratiosKnown`ı doğru bırakıp eşik karşılaştırmalarını yanlışa
+     düşürüyor ve hüküm "geçiyor" çıkıyordu. Sağlayıcı bugün NaN göndermiyor;
+     inanç temelli bir kararda sigorta ucuz. */
+  if (debtRatio !== null && !Number.isFinite(debtRatio)) debtRatio = null;
+  if (cashRatio !== null && !Number.isFinite(cashRatio)) cashRatio = null;
+
   const ratiosKnown = debtRatio !== null && cashRatio !== null;
 
   // Faaliyet alanı elenmişse gerisine bakılmaz.
