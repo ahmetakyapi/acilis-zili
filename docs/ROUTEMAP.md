@@ -59,10 +59,12 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
       - **Migration 0045 (`claude_spend`) üretimde uygulandı (14 Kasım):**
         Migrate DB `check` (bekleyen yalnız 0045, eşleşmeyen kayıt yok) →
         `apply`. Claude genel bütçesi artık tabloda sayılıyor.
-      - **`VPS_HOST_KEY` depo değişkeni BOŞ** (14 Kasım Migrate DB günlüğünde
-        görüldü): SSH adımları sunucu anahtarını ilk bağlantıda kabul ediyor.
-        Sahibi sunucunun ED25519 açık anahtarını depo değişkenine yazmalı
-        (`ssh-keyscan -t ed25519 aciliszili.com`).
+      - **Sunucu host anahtarı sabitleniyor (14 Kasım):** `VPS_HOST_KEY` depo
+        değişkeni boştu, SSH adımları anahtarı ilk bağlantıda kabul
+        ediyordu. İş akışları artık depodaki `deploy/known_hosts`i de okuyor
+        (değişken tanımlıysa o önce gelir); dosya, deploy'un günlüğe bastığı
+        anahtarla dolduruluyor. Sunucu yeniden kurulursa deploy durur:
+        yeni anahtarı doğrulayıp dosyayı güncelle.
       - **claude.ai'de yeniden yapıştırma isteyen rutin önerileri:** Mercek
         örneğindeki `::: grafik` künyesi Title Case ("Micron: Bugünden
         Geriye Üç Ay"); Bilanço'da İngilizce kayıt için `sources.label`

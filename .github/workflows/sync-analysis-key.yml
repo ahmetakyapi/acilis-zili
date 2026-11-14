@@ -29,9 +29,12 @@ jobs:
           CLAUDE_ANALYSIS_API_KEY: ${{ secrets.CLAUDE_ANALYSIS_API_KEY }}
         run: |
           # Host anahtarı sabitlemesi — gerekçe deploy.yml (15 Ekim).
+          mkdir -p ~/.ssh
           if [[ -n "${VPS_HOST_KEY:-}" ]]; then
-            mkdir -p ~/.ssh
             printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+            export strict=yes
+          elif [[ -s deploy/known_hosts ]]; then
+            cp deploy/known_hosts ~/.ssh/known_hosts
             export strict=yes
           fi
           bash deploy/sync-analysis-key.sh

@@ -30,6 +30,12 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 8
     steps:
+      # Yalnız sabit host anahtarı için (`deploy/known_hosts`; gerekçe deploy.yml).
+      - uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09 # v5.1.0
+        with:
+          persist-credentials: false
+          sparse-checkout: deploy/known_hosts
+          sparse-checkout-cone-mode: false
       - name: Verify production permissions and optional Claude generation
         env:
           SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
@@ -44,9 +50,12 @@ jobs:
           [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ ]]
           # Host anahtarı sabitlemesi — gerekçe deploy.yml (15 Ekim).
           strict=accept-new
+          mkdir -p ~/.ssh
           if [[ -n "${VPS_HOST_KEY:-}" ]]; then
-            mkdir -p ~/.ssh
             printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
+            strict=yes
+          elif [[ -s deploy/known_hosts ]]; then
+            cp deploy/known_hosts ~/.ssh/known_hosts
             strict=yes
           fi
           # Girdiler uzak komut dizesine giriyor: yalnız bilinen biçim geçer.

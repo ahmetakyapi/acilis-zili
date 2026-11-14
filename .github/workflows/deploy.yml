@@ -105,10 +105,15 @@ jobs:
       # koşumda boş known_hosts ile başladığı için `accept-new` fiilen "her
       # anahtarı kabul et" demek; VPS'e giden yolu kesen biri araya kendi
       # sunucusunu koyup stdin'den akan analiz anahtarını okuyabilirdi.
-      # `VPS_HOST_KEY` repo değişkeni (bir kez `ssh-keyscan <host>` çıktısı)
-      # tanımlıysa bağlantı yalnızca o anahtarı kabul eder; tanımlı değilse
-      # eski davranış sürer ki deploy kilitlenmesin — değişkeni tanımlamak
-      # bu uyarının kapanışı.
+      # Sabit anahtarın İKİ kaynağı var, sıra: `VPS_HOST_KEY` repo değişkeni
+      # (tanımlıysa önceliklidir), yoksa depodaki `deploy/known_hosts`. Açık
+      # anahtar gizli değil (herkes `ssh-keyscan` ile alır); depoda durması
+      # sahibinin GitHub ayarlarına girmeden sabitlemeyi açar (14 Kasım,
+      # sahibinin isteği). İkisi de yoksa eski `accept-new` sürer ki deploy
+      # kilitlenmesin; o durumda aşağıdaki adım sunucunun anahtarını günlüğe
+      # basar, dosyaya yazmak sabitlemenin kapanışıdır. Sunucu yeniden
+      # kurulup anahtarı değişirse deploy "Host key verification failed" ile
+      # DURUR (bilerek): yeni anahtarı doğrulayıp dosyayı güncelle.
       - name: Host anahtarını sabitle
         env:
           VPS_HOST_KEY: ${{ vars.VPS_HOST_KEY }}
@@ -117,9 +122,24 @@ jobs:
           if [[ -n "$VPS_HOST_KEY" ]]; then
             printf '%s\n' "$VPS_HOST_KEY" > ~/.ssh/known_hosts
             echo "strict=yes" >> "$GITHUB_ENV"
+          elif [[ -s deploy/known_hosts ]]; then
+            cp deploy/known_hosts ~/.ssh/known_hosts
+            echo "strict=yes" >> "$GITHUB_ENV"
           else
             echo "strict=accept-new" >> "$GITHUB_ENV"
           fi
+      # Sabitlenmemişken sunucunun anahtarını göster: `deploy/known_hosts`e
+      # yazılacak satır bu. Sabitliyken adım hiçbir şey yapmaz.
+      - name: Sunucu anahtarını göster (sabitlenmemişse)
+        if: env.strict != 'yes'
+        env:
+          HOST: ${{ vars.VPS_HOST }}
+        run: |
+          [[ "$HOST" =~ ^[a-zA-Z0-9.-]+$ ]] || { echo "geçersiz host"; exit 1; }
+          line=$(ssh-keyscan -T 15 -t ed25519 "$HOST" 2>/dev/null | grep -v '^#' || true)
+          echo "known_hosts satırı: $line"
+          [[ -n "$line" ]] && ssh-keygen -lf <(printf '%s\n' "$line") || true
+          { echo "### Sunucu host anahtarı (deploy/known_hosts için)"; echo '```'; echo "$line"; echo '```'; } >> "$GITHUB_STEP_SUMMARY"
       # Servis burada yeniden başlatılmıyor, update.sh birazdan başlatıyor
       # (20 Ekim). Başlatılıyordu ve her push, dakikalar süren derlemeden ÖNCE
       # eski sürümü bir kez daha düşürüyordu — fazladan bir 502 penceresi ve
