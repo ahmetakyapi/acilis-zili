@@ -30,13 +30,16 @@ import { analysisVisualsEn } from "./analysis-visuals";
 import { brokerCardsEn } from "./broker-cards";
 import { feedVisualsEn } from "./feed-visuals";
 import { toolVisualsEn } from "./tool-visuals";
+import { searchPaletteEn } from "./search-palette";
 import { portfolioWeeklyEn } from "./portfolio-weekly";
 import { portfolioAdvisorEn } from "./portfolio-advisor";
 import { portfolioAskEn } from "./portfolio-ask";
 import { claudeBriefEn } from "./claude-brief";
 import { pushPrefsEn } from "./push-prefs";
+import { calendarFeedEn } from "./calendar-feed";
 import { earningsDeskEn } from "./earnings-desk";
 import { homeEarningsEn } from "./home-earnings";
+import { eventPagesEn, marketHolidaysEn, marketHoursEn, quickAnswersEn } from "./market-answers";
 
 const en: typeof tr = {
   brand: {
@@ -250,6 +253,15 @@ const en: typeof tr = {
     closed: "Session Closed",
     updatedAnnouncement: "Today's flow has been updated.",
     sourceDelayed: "Waiting for Source Update",
+    axis: {
+      bands: { pre: "Pre-Market", regular: "Session", after: "After-Hours" },
+      closedDay: "Market Closed",
+      importance: { high: "High Impact", medium: "Medium Impact", low: "Low Impact" },
+      lead: { next: "Up Next", live: "Under Way", awaiting: "Awaiting Result", first: "First Event", last: "Last Event of the Day" },
+      remaining: "To Go",
+      units: { day: "d", hour: "h", minute: "m" },
+      openDay: "Open this day.",
+    },
 
     notes: {
       "fomc-rate": "The outcome of the meeting where the Fed, the US central bank, sets its policy rate. It lands eight times a year and moves borrowing costs directly, which is why markets watch nothing more closely.",
@@ -367,6 +379,9 @@ const en: typeof tr = {
     portfolioRowAria: "{symbol}: {pct} percent of your portfolio",
     watchlistEmpty: "You haven't added any symbols yet.",
     latestAnalyses: "Latest Earnings Analyses",
+    /* Son Bilanço Analizleri satır listesinin sütun başlığı (14 Kasım). */
+    analysesCompany: "Company",
+    analysesVerdict: "Verdict",
     latestStories: "Latest Deep Dives",
     allStories: "All Deep Dives",
     topNews: "Top Stories",
@@ -782,7 +797,7 @@ const en: typeof tr = {
     pivotS1: "Support 1",
     pivotS2: "Support 2",
     levelInZone: "Price Inside the Zone",
-    maNote: "The percentage is the current price's distance from each average; the ladder measures from price to level.",
+    maNote: "The percentage is the current price's distance from each average; the level ledger measures from price to level.",
     pivots: "Pivot Levels",
     scenarios: "Scenarios",
     bullCase: "Bull Case",
@@ -1424,6 +1439,8 @@ const en: typeof tr = {
     asOf: "List Composition",
     distributionCaption: "Daily Move Distribution",
     distributionAria: "Distribution of daily moves across {n} companies; median {median}.",
+    distributionMedian: "Median",
+    distributionTotal: "{n} Companies",
     movementScaleFull: "Full Bar {pct}",
     openTick: "Open",
     capShare: "Share",
@@ -2009,6 +2026,8 @@ const en: typeof tr = {
       "Sources: VIX from Cboe (FRED as fallback), the ICE BofA high-yield spread via FRED, SPY and TLT daily closes and S&P 500 quotes from Alpaca.",
     pulseHowTo: "How to Read It",
     trendColumn: "YTD Trend",
+    barScale: "Full Bar",
+    barOver: "A Cut Tip Exceeds the Scale",
 
     weekEnding: "Week Ending {date}",
     sahmBelow: "Below Threshold",
@@ -4501,6 +4520,21 @@ const en: typeof tr = {
     railRatio: "Up / Down",
     railPath: "Next Stops",
     railNote: "Levels come from the scenario text; only figures that match a recorded level are drawn. Distances are measured from the price above the rail.",
+    /* Cover price chart, level ledger, stance strip (14 Nov visual pass). */
+    chartSell: "Sell {n}",
+    chartZone: "Zone",
+    chartLabel: "Daily closing line from {from} to {to}, with moving averages and the published levels",
+    chartNote: "Last Six Months · Daily Close",
+    chartOffScale: "{n} Far Level in the Ledger",
+    levelsTitle: "Levels",
+    levelsHint: "Distances are measured from the current price; the notch in the middle of the bar marks the price.",
+    stanceStripLabel: "Stance over the last {n} publishing days",
+    stanceStripSince: "{stance} Since {date}",
+    stanceStripSteady: "{stance} on All of the Last {n} Publishing Days",
+    historyDetail: "Plan by Edition",
+    planTitle: "Plan",
+    plansCount: "{n} Entry Plans",
+    macdGap: "Gap to Signal",
   },
   /* Bültenin Kayıt Defteri bandı (25 Ekim görsel zirve) — metin ayrı dosyada. */
   briefLedger: briefLedgerEn,
@@ -4529,6 +4563,8 @@ const en: typeof tr = {
   feedVisuals: feedVisualsEn,
   /* Araç ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
   toolVisuals: toolVisualsEn,
+  /* ⌘K paletinin site içi sonuçları (14 Kasım) — metin ayrı dosyada. */
+  searchPalette: searchPaletteEn,
   /* Risk Masası (25 Ekim) — kişiye özel ekran; metin ayrı dosyada. */
   riskDesk: riskDeskEn,
   /* Topluluk ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
@@ -4542,8 +4578,13 @@ const en: typeof tr = {
   portfolioAsk: portfolioAskEn,
   claudeBrief: claudeBriefEn,
   pushPrefs: pushPrefsEn,
+  calendarFeed: calendarFeedEn,
   earningsDesk: earningsDeskEn,
   homeEarnings: homeEarningsEn,
+  marketHours: marketHoursEn,
+  marketHolidays: marketHolidaysEn,
+  eventPages: eventPagesEn,
+  quickAnswers: quickAnswersEn,
 };
 
 export default en;

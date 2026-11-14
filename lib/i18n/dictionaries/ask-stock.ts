@@ -7,9 +7,11 @@
  * `suggest`: veriye göre seçilen öneri soruları (lib/stock-question-suggest.ts).
  * Soru cümlesi oldukları için cümle düzeninde; `{pct}` mutlak beş seanslık
  * değişim, okurun dilinde biçimli ("%7,4" / "7.4%"). Her soru yanıtın
- * dayanacağı veri bloğuna göre yazıldı: "geçmişte bilançoya nasıl tepki
- * verdi?" sorulmuyor, çünkü girdide bilanço sonrası fiyat tepkisi yok;
- * yerine "son çeyreklerde tuttu mu?" (bilanço geçmişi bloğu).
+ * dayanacağı veri bloğuna göre yazıldı ve TEK şey sorar (14 Kasım; eski
+ * "beklenti ne, son çeyreklerde tuttu mu?" iki soruydu). Hangi sorunun
+ * hangi veri varken çıktığı `rankSuggestions`ta; burada yalnız metin.
+ * Sabit `examples` listesi 14 Kasım'da kalktı (veri yokken basılıyor ve
+ * yanıtlanamayan üç soru sunuyordu).
  */
 
 export const askStockTr = {
@@ -19,8 +21,6 @@ export const askStockTr = {
   send: "Soruyu gönder",
   asking: "Claude sayfanın verisini okuyor…",
   remaining: "{n}/{limit} Soru Hakkı Kaldı",
-  examplesLabel: "Örnek Sorular",
-  examples: ["Son bilançoda beklentiyi aştı mı?", "Analistler bu hisse için ne diyor?", "Temettü ödüyor mu, verimi ne kadar?"],
   startersLabel: "Bugün Sorulabilecekler",
   followUpsLabel: "Sıradaki Sorular",
   threadLabel: "Bu hisse hakkındaki sohbet",
@@ -29,17 +29,25 @@ export const askStockTr = {
   reset: "Sohbeti Temizle",
   retry: "Yeniden Dene",
   suggest: {
-    earningsSoon: "Yaklaşan bilançoda beklenti ne, son çeyreklerde tuttu mu?",
+    earningsOut: "Açıklanan bilanço beklentiyi karşıladı mı?",
+    earningsReaction: "Hisse bilançoya ilk seansta nasıl tepki verdi?",
+    earningsSoon: "Yaklaşan bilançoda piyasa ne bekliyor?",
+    earningsDate: "Sıradaki bilanço ne zaman açıklanacak?",
     moveUp: "Son beş seansta neden {pct} yükseldi?",
     moveDown: "Son beş seansta neden {pct} düştü?",
-    technical: "Teknik görünüm ne diyor, destekler nerede?",
-    target: "Analistlerin ortalama hedefi ne söylüyor?",
-    analysts: "Analistler bu hisse için ne diyor?",
-    sectorValue: "Sektörüne göre pahalı mı, ucuz mu?",
-    valuation: "Değerleme çarpanları ne gösteriyor?",
+    range52High: "52 haftalık zirvesine ne kadar yakın?",
+    range52Low: "52 haftalık dibine ne kadar yakın?",
+    technical: "Teknik analizde destek ve direnç seviyeleri nerede?",
+    target: "Analistlerin ortalama hedef fiyatı son kapanışın neresinde?",
+    analysts: "Analistlerin görüşü nasıl dağılıyor?",
+    sectorValue: "Sektöründeki şirketlere göre pahalı mı?",
+    valuation: "F/K oranı kaç?",
     lastEarnings: "Son bilançoda beklentiyi aştı mı?",
-    dividend: "Temettü ödüyor mu, verimi ne kadar?",
-    session: "Son seans nasıl geçti, piyasaya göre nerede?",
+    news: "Son haberlerde öne çıkan ne var?",
+    volatility: "Piyasaya göre ne kadar oynak?",
+    dividendYield: "Temettü verimi ne kadar?",
+    dividendLast: "Hisse başına ne kadar temettü ödüyor?",
+    session: "Son seansı nasıl kapattı?",
   },
   advice: "Tavsiye Değil",
   unanswerable: "Bu soruyu sayfadaki veriyle cevaplayamıyorum. Fiyat, değerleme, bilanço, analistler, temettü ya da haberlerle ilgili bir soru deneyebilirsin.",
@@ -82,8 +90,6 @@ export const askStockEn: typeof askStockTr = {
   send: "Send question",
   asking: "Claude is reading the page data…",
   remaining: "{n}/{limit} Questions Left Today",
-  examplesLabel: "Example Questions",
-  examples: ["Did it beat estimates last quarter?", "What do analysts say about this stock?", "Does it pay a dividend, and what is the yield?"],
   startersLabel: "Worth Asking Today",
   followUpsLabel: "Ask Next",
   threadLabel: "Conversation about this stock",
@@ -92,17 +98,25 @@ export const askStockEn: typeof askStockTr = {
   reset: "Clear Conversation",
   retry: "Try Again",
   suggest: {
-    earningsSoon: "What's expected from the upcoming earnings, and has it been beating?",
+    earningsOut: "Did the latest earnings meet expectations?",
+    earningsReaction: "How did the stock react in the first session after earnings?",
+    earningsSoon: "What does the market expect from the upcoming earnings?",
+    earningsDate: "When is the next earnings report?",
     moveUp: "Why is it up {pct} over the last five sessions?",
     moveDown: "Why is it down {pct} over the last five sessions?",
-    technical: "What does the technical picture say, where is support?",
-    target: "What does the average analyst target say?",
-    analysts: "What do analysts say about this stock?",
-    sectorValue: "Is it expensive or cheap versus its sector?",
-    valuation: "What do the valuation multiples show?",
+    range52High: "How close is it to its 52-week high?",
+    range52Low: "How close is it to its 52-week low?",
+    technical: "Where are the support and resistance levels?",
+    target: "Where is the average analyst target versus the last close?",
+    analysts: "How are the analyst ratings split?",
+    sectorValue: "Is it expensive compared with its sector peers?",
+    valuation: "What is its P/E ratio?",
     lastEarnings: "Did it beat estimates last quarter?",
-    dividend: "Does it pay a dividend, and what is the yield?",
-    session: "How did the last session go versus the market?",
+    news: "What stands out in the recent news?",
+    volatility: "How volatile is it compared with the market?",
+    dividendYield: "What is the dividend yield?",
+    dividendLast: "How much does it pay in dividends per share?",
+    session: "How did it close the last session?",
   },
   advice: "Not Advice",
   unanswerable: "I can't answer this question with the data on this page. Try asking about the price, valuation, earnings, analysts, dividends or the news.",

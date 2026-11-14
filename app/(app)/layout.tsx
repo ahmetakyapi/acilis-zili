@@ -141,10 +141,10 @@ export default async function AppLayout({
         locale={locale}
         searchTrigger={
           <SearchCommand
-            placeholder={t.nav.searchPlaceholder}
+            placeholder={t.searchPalette.placeholder}
             placeholderShort={t.nav.searchTrigger}
             label={t.nav.search}
-            emptyLabel={t.stock.notFound}
+            emptyLabel={t.searchPalette.empty}
             rateLimitedLabel={t.nav.searchRateLimited}
             failedLabel={t.nav.searchFailed}
             popularLabel={t.nav.searchPopular}

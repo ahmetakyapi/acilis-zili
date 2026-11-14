@@ -46,7 +46,8 @@ export const portfolioAdvisorTr = {
     },
     defaults: [
       "Bu önerilerden hangisini önce yapmalıyım?",
-      "En büyük pozisyonumu %25'e indirsem yoğunlaşma ne olur?",
+      /* Ağırlıktan bağımsız kalıp (14 Kasım): "%25'e indirsem" en büyük pozisyon %25'in altındayken ARTIRMA senaryosu hesaplatıyordu. */
+      "En büyük pozisyonumun yarısını satsam yoğunlaşma nasıl değişir?",
       "Hangi pozisyon portföyümü en çok riske atıyor?",
     ],
   },
@@ -98,7 +99,7 @@ export const portfolioAdvisorEn: typeof portfolioAdvisorTr = {
     },
     defaults: [
       "Which of these steps should I take first?",
-      "What if I cut my largest position to 25%?",
+      "What if I sell half of my largest position?",
       "Which position puts my portfolio most at risk?",
     ],
   },

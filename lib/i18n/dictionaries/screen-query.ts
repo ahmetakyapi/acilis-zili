@@ -14,7 +14,8 @@ export const screenQueryTr = {
     "F/K'sı 15'in altında olan finans hisseleri",
     "Geliri %20'den hızlı büyüyen yazılım şirketleri",
     "Net marjı yüksek, 100 milyar dolardan büyük sağlık şirketleri",
-    "Temettü veren, borcu az, son çeyrekte geliri büyüyen yarı iletkenler",
+    /* Her örnek tarayıcının GERÇEKTEN süzebildiği ölçülerden (14 Kasım): eski beşinci örnek ("temettü veren… son çeyrekte…") basılınca "Şunu süzemiyorum" uyarısı çıkıyordu. */
+    "Kârı hızlı büyüyen, neredeyse borçsuz enerji şirketleri",
   ],
   pending: "Cümle süzgeçlere çevriliyor…",
   translated: "Claude cümleyi aşağıdaki süzgeçlere çevirdi; hangi hissenin geçtiğini tarayıcının kendisi buluyor.",
@@ -54,7 +55,7 @@ export const screenQueryEn: typeof screenQueryTr = {
     "Financial stocks with a P/E below 15",
     "Software companies growing revenue faster than 20%",
     "Health care companies above $100 billion with high net margins",
-    "Dividend-paying chipmakers with low debt and revenue growth last quarter",
+    "Energy companies with fast-growing earnings and almost no debt",
   ],
   pending: "Turning your sentence into filters…",
   translated: "Claude turned the sentence into the filters below; the screener itself finds which stocks pass.",

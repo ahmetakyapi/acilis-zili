@@ -1,9 +1,9 @@
 import { and, eq } from "drizzle-orm";
 import { db } from "@/lib/db";
 import { earningsCalendar, economicEvents, symbols } from "@/lib/schema";
-import { etDateTimeToUtc } from "@/lib/market-hours";
+import { earningsIcsEvent, economicIcsEvent, impactLabel } from "@/lib/calendar-feed";
+import { buildIcs } from "@/lib/ics";
 import { getDictionary, getLocale } from "@/lib/i18n";
-import { SITE_URL } from "@/lib/site";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { isIsoDate } from "@/lib/fx";
 
@@ -33,128 +33,14 @@ import { isIsoDate } from "@/lib/fx";
  * `?tip=olay&slug=cpi-2026-08-12`
  */
 
-/** Takvim uygulamaları CRLF bekler; LF ile bazı istemciler dosyayı reddediyor. */
-const CRLF = "\r\n";
-
-/** Bilanço penceresi → başlıkta okunan ad. */
-const WINDOW_LABEL: Record<string, { tr: string; en: string }> = {
-  bmo: { tr: "açılış öncesi", en: "before the open" },
-  amc: { tr: "kapanış sonrası", en: "after the close" },
-  dmh: { tr: "seans içinde", en: "during the session" },
-};
-
-/* YALNIZ CR DE SATIR SONU (20 Ekim). `\r?\n` tek başına duran CR'yi
-   geçiriyordu; Outlook gibi hoşgörülü okuyucular onu satır sonu sayıyor ve
-   sağlayıcıdan gelen bir şirket adındaki CR, DESCRIPTION'ı bölüp dosyaya
-   yeni bir özellik (URL, DTSTART…) sokabiliyordu. Öteki C0 denetim
-   karakterleri RFC 5545'te TEXT değerinde yasak; atılıyor. */
-function escapeText(value: string): string {
-  return value
-    .replace(/[\u0000-\u0008\u000B\u000C\u000E-\u001F\u007F]/g, "")
-    .replace(/\\/g, "\\\\")
-    .replace(/;/g, "\\;")
-    .replace(/,/g, "\\,")
-    .replace(/\r\n|\r|\n/g, "\\n");
-}
-
-/** UTC damgası: 20260827T203000Z */
-function stampUtc(date: Date): string {
-  return `${date.toISOString().replace(/[-:]/g, "").split(".")[0]}Z`;
-}
-
-/** Tüm gün etkinliği için tarih damgası: 20260827 */
-function stampDate(isoDate: string): string {
-  return isoDate.replace(/-/g, "");
-}
-
-/** Ertesi gün — tüm gün etkinliğinin DTEND'i dışlayıcıdır. */
-function nextDay(isoDate: string): string {
-  const d = new Date(`${isoDate}T00:00:00Z`);
-  d.setUTCDate(d.getUTCDate() + 1);
-  return stampDate(d.toISOString().slice(0, 10));
-}
-
-/**
- * 75 oktetlik satır sınırı (RFC 5545 § 3.1). Uzun bir SUMMARY tek satırda
- * gönderilince bazı istemciler (özellikle Outlook) dosyayı bozuk sayıyor.
- *
- * OKTET SAYILIYOR, KARAKTER DEĞİL — ve bu fark bu depoda teoriden ibaret
- * değil. Fonksiyon `line.length` ile UTF-16 kod birimi sayıyordu; Türkçe
- * metinde ç, ğ, ı, ö, ş, ü harflerinin her biri UTF-8'de İKİ oktet.
- * Ölçüldü: gerçek bir bilanço açıklaması ("…çeyrek sonuçlarını açıklıyor.
- * Sağlayıcı kesin saat vermiyor; açıklama kapanış sonrası bekleniyor.")
- * 74 karakterlik satırlara katlanıyor ama o satırlar 80 ve 83 oktet
- * tutuyordu. Yani sınırı aşmayı önlemek için yazılmış fonksiyon, Türkçe
- * üreten HER satırda sınırı aşıyordu.
- *
- * `for..of` kod NOKTASI geziyor: vekil çift (emoji gibi) ortadan bölünmez.
- * Devam satırı bir boşlukla başlıyor ve o boşluk da bütçeden düşüyor.
- */
-const FOLD_LIMIT = 75;
-
-function fold(line: string): string {
-  if (Buffer.byteLength(line, "utf8") <= FOLD_LIMIT) return line;
-
-  const parts: string[] = [];
-  let current = "";
-  let budget = FOLD_LIMIT;
-
-  for (const ch of line) {
-    if (Buffer.byteLength(current + ch, "utf8") > budget) {
-      parts.push(current);
-      current = " ";
-      budget = FOLD_LIMIT;
-    }
-    current += ch;
-  }
-  if (current) parts.push(current);
-  return parts.join(CRLF);
-}
-
-function buildIcs(event: {
-  uid: string;
-  summary: string;
-  description: string;
-  url: string;
-  /** Zamanlı etkinlik; yoksa `date` ile tüm gün yazılır. */
-  start?: Date;
-  date?: string;
-  durationMinutes?: number;
-}): string {
-  const now = stampUtc(new Date());
-  const lines = [
-    "BEGIN:VCALENDAR",
-    "VERSION:2.0",
-    "PRODID:-//Acilis Zili//TR//EN",
-    "CALSCALE:GREGORIAN",
-    "METHOD:PUBLISH",
-    "BEGIN:VEVENT",
-    `UID:${event.uid}`,
-    `DTSTAMP:${now}`,
-  ];
-
-  if (event.start) {
-    const end = new Date(
-      event.start.getTime() + (event.durationMinutes ?? 30) * 60_000,
-    );
-    lines.push(`DTSTART:${stampUtc(event.start)}`, `DTEND:${stampUtc(end)}`);
-  } else if (event.date) {
-    lines.push(
-      `DTSTART;VALUE=DATE:${stampDate(event.date)}`,
-      `DTEND;VALUE=DATE:${nextDay(event.date)}`,
-    );
-  }
-
-  lines.push(
-    fold(`SUMMARY:${escapeText(event.summary)}`),
-    fold(`DESCRIPTION:${escapeText(event.description)}`),
-    fold(`URL:${event.url}`),
-    "END:VEVENT",
-    "END:VCALENDAR",
-  );
-
-  return lines.join(CRLF) + CRLF;
-}
+/* ÜRETİCİ ARTIK `lib/ics.ts`TE (14 Kasım 2026). Kaçış (yalnız CR de satır
+   sonu), 75 OKTETLİK katlama ve tüm gün damgası buradaydı; takvim aboneliği
+   (`./akis/route.ts`) aynı kuralları çok olayla istediği için karar
+   yorumlarıyla birlikte oraya taşındı. Olayın kimliği ve metni de ortak
+   (`lib/calendar-feed.ts`, sözlükte `calendarFeed`): tek tek eklenen
+   etkinlik ile abonelikten gelen aynı UID'yi ve aynı cümleyi taşır.
+   DTSTAMP burada dosyanın üretildiği an (indirilen tek dosya); akışta
+   kaydın `updated_at`i. */
 
 function icsResponse(body: string, filename: string): Response {
   return new Response(body, {
@@ -164,17 +50,6 @@ function icsResponse(body: string, filename: string): Response {
       "Cache-Control": "no-store",
     },
   });
-}
-
-/** Ham `importance` değeri sözlükteki karşılığına çevrilir. */
-function impactLabel(
-  importance: string | null,
-  t: ReturnType<typeof getDictionary>,
-): string {
-  if (importance === "high") return t.calendar.impactHigh;
-  if (importance === "medium") return t.calendar.impactMedium;
-  if (importance === "low") return t.calendar.impactLow;
-  return importance ?? "-";
 }
 
 /* Uç YETKİSİZ ve her istek en az iki veritabanı sorgusu koşuyor (kayıt +
@@ -198,7 +73,6 @@ export async function GET(request: Request) {
   const tip = params.get("tip");
   const locale = await getLocale();
   const t = getDictionary(locale);
-  const tr = locale === "tr";
 
   if (tip === "bilanco") {
     const symbol = (params.get("sembol") ?? "").toUpperCase().slice(0, 12);
@@ -240,34 +114,11 @@ export async function GET(request: Request) {
     const [[row], [meta]] = found;
     if (!row) return new Response("not-found", { status: 404 });
 
-    const company = meta?.name ?? symbol;
-    const win = row.hour ? WINDOW_LABEL[row.hour] : undefined;
-    const window = win ? (tr ? win.tr : win.en) : null;
-
-    const summary = tr
-      ? `${symbol} bilanço${window ? ` · ${window}` : ""}`
-      : `${symbol} earnings${window ? ` · ${window}` : ""}`;
-    const description = tr
-      ? `${company} ${date} tarihinde çeyrek sonuçlarını açıklıyor.${
-          window
-            ? ` Sağlayıcı kesin saat vermiyor; açıklama ${window} bekleniyor.`
-            : " Sağlayıcı açıklama saatini vermiyor."
-        }`
-      : `${company} reports quarterly results on ${date}.${
-          window
-            ? ` No exact time is published; the release is expected ${window}.`
-            : " No release time is published."
-        }`;
-
     return icsResponse(
-      buildIcs({
-        uid: `bilanco-${symbol}-${date}@acilis-zili`,
-        summary,
-        description,
-        url: `${SITE_URL}/hisse/${symbol}`,
-        // Saat yok: tüm gün. Gerekçe dosyanın başındaki notta.
-        date,
-      }),
+      buildIcs(
+        [earningsIcsEvent({ symbol, reportDate: date, hour: row.hour }, meta?.name ?? null, locale, t.calendarFeed)],
+        { now: new Date() },
+      ),
       `${symbol.toLowerCase()}-${date}`,
     );
   }
@@ -297,27 +148,16 @@ export async function GET(request: Request) {
     const [row] = found;
     if (!row) return new Response("not-found", { status: 404 });
 
-    const title = tr ? row.titleTr : row.titleEn;
-    /* Saat ET olarak duruyor; UTC'ye çevrimi tek yerden geçiyor
-       (`lib/market-hours.ts`) — burada elle aritmetik yapılmıyor. */
-    const start = row.eventTimeEt
-      ? etDateTimeToUtc(row.eventDate, row.eventTimeEt)
-      : null;
-
+    /* ÖNEM DEĞERİ ÇEVRİLİYOR. Ham veritabanı değeri basılıyordu:
+       Türkçe kayıtta "Önem: high" çıkıyor, üstelik bu, kullanıcının
+       takvim uygulamasında — sitenin DIŞINDA — gördüğü tek metin.
+       Sözlükte karşılığı zaten vardı. Saatin ET → UTC çevrimi ortak
+       kurucuda, o da tek yerden geçiyor (`lib/market-hours.ts`). */
     return icsResponse(
-      buildIcs({
-        uid: `olay-${slug}@acilis-zili`,
-        summary: title,
-        /* ÖNEM DEĞERİ ÇEVRİLİYOR. Ham veritabanı değeri basılıyordu:
-           Türkçe kayıtta "Önem: high" çıkıyor, üstelik bu, kullanıcının
-           takvim uygulamasında — sitenin DIŞINDA — gördüğü tek metin.
-           Sözlükte karşılığı zaten vardı. */
-        description: tr
-          ? `Ekonomik veri açıklaması. Önem: ${impactLabel(row.importance, t)}.`
-          : `Economic data release. Importance: ${impactLabel(row.importance, t)}.`,
-        url: `${SITE_URL}/takvim`,
-        ...(start ? { start } : { date: row.eventDate }),
-      }),
+      buildIcs(
+        [economicIcsEvent({ ...row, slug }, impactLabel(row.importance, t.calendar), locale, t.calendarFeed)],
+        { now: new Date() },
+      ),
       slug,
     );
   }

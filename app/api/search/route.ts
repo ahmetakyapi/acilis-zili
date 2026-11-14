@@ -15,10 +15,16 @@ import { searchSymbols } from "@/lib/providers/finnhub";
 import { aliasSymbols } from "@/db/seed/aliases";
 import { allFunds } from "@/db/seed/symbols";
 import { guideArticles } from "@/content/guide";
-import { getLocale } from "@/lib/i18n";
+import { getDictionary, getLocale } from "@/lib/i18n";
 import { clientKey, rateLimit } from "@/lib/rate-limit";
 import { isTechnicalSymbol } from "@/lib/technical";
 import { logoSrc } from "@/lib/logos";
+import { auth } from "@/auth";
+import { hasRiskMenu } from "@/lib/risk/store";
+import { SITE_MIN_QUERY, searchSite, type SiteEntry, type SiteGroup } from "@/lib/search-catalog";
+import { siteIndex } from "@/lib/search-site";
+
+export type { SiteGroup, SiteHit, SiteKind } from "@/lib/search-catalog";
 
 export type SearchHit = {
   symbol: string;
@@ -50,6 +56,28 @@ export type WritingHit = {
 export type SearchResponse = {
   hits: SearchHit[];
   writings: WritingHit[];
+  /**
+   * Site içi sonuçlar, türüne göre gruplu: araç ve sayfalar, sözlük
+   * terimleri, temalar, ünlü yatırımcılar (14 Kasım).
+   *
+   * Palet yalnız sembol ve yazı buluyordu; "stopaj", "takvim" ya da
+   * "buffett" yazan okur "sonuç yok" görüyor, oysa üçünün de sayfası var.
+   * Katalog durağan ve depoda (`lib/search-site.ts`): sorgu yok, sağlayıcı
+   * yok, eşleşme bellekte (`lib/search-catalog.ts`).
+   *
+   * GRUP BAŞLIĞI YANITTA GELİR (`label`), paletin prop'unda değil: dili uç
+   * biliyor, grupların sırası da sorguya göre değişiyor (en iyi eşleşen tür
+   * önde). İsteğe bağlı alan: eski yanıtı önbelleğinde tutan sekme kırılmaz.
+   */
+  site?: SiteGroup[];
+  /**
+   * Site sonuçları sembollerin ÖNÜNDE mi. Varsayılan sıra sembol → site →
+   * yazı ("NVDA" yazan ilk satırda NVDA görmeli). Sorgu bir sayfanın,
+   * terimin ya da kişinin adının KENDİSİYSE ve birebir bir sembol değilse
+   * sıra döner: "takvim" yazan okur Takvim'i, adında o dizi geçen bir
+   * şirketin altında aramasın. Ölçüt `SiteResult.exact`.
+   */
+  siteFirst?: boolean;
   error?: string;
   /** Yanıt eksik: uzak genişletme gerekiyordu ama yapılamadı (kapı ya da
       sağlayıcı), ya da yerel sorgulardan biri (sembol tablosu, mercek)
@@ -155,6 +183,46 @@ function markRemoteWarm(query: string, fetchedAt: Date, now: number): void {
     const oldest = remoteWarm.keys().next().value;
     if (oldest !== undefined) remoteWarm.delete(oldest);
   }
+}
+
+/**
+ * Site içi katalog yarısı — eşleşme bellekte, tek istisna kapılı ekran.
+ *
+ * Risk Masası kişiye özel: gezinmede yalnız erişimi olana basılıyor
+ * (`gatedVisible`, components/layout/nav-items.ts — "ekranın varlığı
+ * sızmasın"). Arama aynı kapıyı tutar. Oturum ve erişim YALNIZ kapılı kayıt
+ * sorguyla eşleştiğinde okunur: her tuş vuruşunda `auth()` çağırmak aramayı
+ * oturum çözümüne bağlardı; "risk" yazmayan okur için bedel sıfır. Erişim
+ * yoksa arama kapılı kayıtlar hiç yokmuş gibi yeniden yapılır (tavandan
+ * düşen sıradaki sonuç gelsin, "tam eşleşme" de kapalı kayda dayanmasın).
+ */
+async function siteAra(
+  query: string,
+  locale: Awaited<ReturnType<typeof getLocale>>,
+): Promise<{ groups: SiteGroup[]; exact: boolean }> {
+  if (query.length < SITE_MIN_QUERY) return { groups: [], exact: false };
+  const index = siteIndex(locale);
+  let result = searchSite(index, query);
+  if (result.groups.some((group) => group.hits.some((hit) => hit.gate))) {
+    let open = false;
+    try {
+      const session = await auth();
+      open = session?.user?.id ? await hasRiskMenu(session.user.id, session.user.role) : false;
+    } catch {
+      // Oturum okunamadıysa kapı kapalı kalır.
+    }
+    if (!open) result = searchSite(index, query, { allow: (entry: SiteEntry) => !entry.gate });
+  }
+  const labels = getDictionary(locale).searchPalette.groups;
+  return {
+    groups: result.groups.map((group) => ({
+      kind: group.kind,
+      label: labels[group.kind],
+      /* Yalnız görünen dört alan gider; eşanlamlılar ve kapı sunucuda kalır. */
+      hits: group.hits.map(({ kind, href, title, detail }) => ({ kind, href, title, detail })),
+    })),
+    exact: result.exact,
+  };
 }
 
 /** Sağlayıcıya giden en uzun sorgu — daha uzunu anlamlı sonuç üretmiyor. */
@@ -264,6 +332,10 @@ export async function GET(request: Request) {
     query.length >= 2 && writings.length < MAX_WRITINGS
       ? mercekAra(needle, locale, MAX_WRITINGS - writings.length)
       : Promise.resolve([]);
+
+  /* Site içi katalog (14 Kasım) — mercekle aynı gerekçeyle burada başlıyor,
+     yanıttan önce bekleniyor; çoğu sorguda zaten eşzamanlı (`siteAra`). */
+  const siteSonuc = siteAra(query, locale);
 
   const hits: SearchHit[] = [];
   const seen = new Set<string>();
@@ -418,9 +490,16 @@ export async function GET(request: Request) {
      palete `lib/technical`i taşımak istemci demetine gösterge kodunu da
      çekerdi. */
   const flagged = hits.map((hit) => (isTechnicalSymbol(hit.symbol) ? { ...hit, technical: true } : hit));
+  const site = await siteSonuc;
+  /* Birebir sembol her zaman önde: "ARM" yazan okur şirketi arıyor, aynı
+     adlı bir terim olsa bile. Fon künyesi birebir eşleşmeyi başa alıyor,
+     yerel sıra da öyle; ilk satıra bakmak yetiyor. */
+  const exactSymbol = flagged[0]?.symbol.toUpperCase() === query.toUpperCase();
   return NextResponse.json({
     hits: flagged,
     writings,
+    ...(site.groups.length > 0 ? { site: site.groups } : {}),
+    ...(site.exact && !exactSymbol ? { siteFirst: true } : {}),
     ...(partial ? { partial: true } : {}),
   } satisfies SearchResponse);
 }

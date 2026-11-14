@@ -29,13 +29,16 @@ import { analysisVisualsTr } from "./analysis-visuals";
 import { brokerCardsTr } from "./broker-cards";
 import { feedVisualsTr } from "./feed-visuals";
 import { toolVisualsTr } from "./tool-visuals";
+import { searchPaletteTr } from "./search-palette";
 import { portfolioWeeklyTr } from "./portfolio-weekly";
 import { portfolioAdvisorTr } from "./portfolio-advisor";
 import { portfolioAskTr } from "./portfolio-ask";
 import { claudeBriefTr } from "./claude-brief";
 import { pushPrefsTr } from "./push-prefs";
+import { calendarFeedTr } from "./calendar-feed";
 import { earningsDeskTr } from "./earnings-desk";
 import { homeEarningsTr } from "./home-earnings";
+import { eventPagesTr, marketHolidaysTr, marketHoursTr, quickAnswersTr } from "./market-answers";
 
 const tr = {
   brand: {
@@ -295,6 +298,18 @@ const tr = {
     closed: "Seans Kapalı",
     updatedAnnouncement: "Günün akışı güncellendi.",
     sourceDelayed: "Kaynak Güncellemesi Bekleniyor",
+    /* GÜNÜN EKSENİ (14 Kasım; components/today/flow/FlowAxis.tsx). */
+    axis: {
+      bands: { pre: "Ön Seans", regular: "Seans", after: "Akşam Seansı" },
+      closedDay: "Piyasa Kapalı",
+      importance: { high: "Yüksek Önem", medium: "Orta Önem", low: "Düşük Önem" },
+      /* Başlık cümlesinin künyesi: sıradaki olay, süren toplantı, sonucu
+         beklenen, başka günün ilk olayı, biten günün son olayı. */
+      lead: { next: "Sıradaki", live: "Sürüyor", awaiting: "Sonuç Bekleniyor", first: "İlk Olay", last: "Günün Son Olayı" },
+      remaining: "Kaldı",
+      units: { day: "g", hour: "sa", minute: "dk" },
+      openDay: "Bu günü aç.",
+    },
 
     /* AÇIKLAMA CÜMLELERİ — "bu da ne?" sorusunun cevabı.
        Başlıklar olayın ADINI söylüyor ama adı bilmeyene bir şey anlatmıyor:
@@ -475,6 +490,9 @@ const tr = {
        yanında mercek yazıları ve haberler duruyor, üçü de birer
        "analiz" sayılabilir. Başlık artık türü adıyla söylüyor. */
     latestAnalyses: "Son Bilanço Analizleri",
+    /* Son Bilanço Analizleri satır listesinin sütun başlığı (14 Kasım). */
+    analysesCompany: "Şirket",
+    analysesVerdict: "Görüş",
     latestStories: "Son Mercek Yazıları",
     allStories: "Tüm Mercek Yazıları",
     topNews: "Öne Çıkan Haberler",
@@ -1048,7 +1066,7 @@ const tr = {
     pivotS1: "1. Destek",
     pivotS2: "2. Destek",
     levelInZone: "Fiyat Bölgenin İçinde",
-    maNote: "Yüzde, güncel fiyatın ortalamaya göre farkı; merdivendeki uzaklık ise fiyattan seviyeye.",
+    maNote: "Yüzde, güncel fiyatın ortalamaya göre farkı; seviye defterindeki uzaklık ise fiyattan seviyeye.",
     pivots: "Pivot Seviyeleri",
     scenarios: "Senaryolar",
     bullCase: "Yükseliş Senaryosu",
@@ -1830,6 +1848,9 @@ const tr = {
     /* 10 Kasım, görsel tur: dağılım çizimi, hareket ölçeği, açılış imi. */
     distributionCaption: "Günlük Değişim Dağılımı",
     distributionAria: "{n} şirketin günlük değişim dağılımı; medyan {median}.",
+    /* 14 Kasım, görsel tur: dağılım kahraman boyda (IndexSelection.tsx). */
+    distributionMedian: "Medyan",
+    distributionTotal: "{n} Şirket",
     movementScaleFull: "Tam Şerit {pct}",
     openTick: "Açılış",
     /* 10 Kasım, bileşen tablosu: haftalık sütun, piyasa değeri payı, künye. */
@@ -2515,6 +2536,9 @@ const tr = {
     /* 10 Kasım: yöntem metinleri katlamada; emtia panosunda YBB çizgisi. */
     pulseHowTo: "Nasıl Okunur",
     trendColumn: "YBB Seyri",
+    /* 14 Kasım, görsel tur: emtia çubuklarının yazılı ölçeği (EtfBoards.tsx). */
+    barScale: "Tam Çubuk",
+    barOver: "Ucu Kesik Çubuk Ölçeği Aşar",
 
     /* ---- Makro ikinci halka ---- */
     weekEnding: "{date} ile Biten Hafta",
@@ -5123,6 +5147,21 @@ const tr = {
     railRatio: "Yukarı / Aşağı",
     railPath: "Sonraki Duraklar",
     railNote: "Seviyeler senaryo metninden; yalnız kayıttaki bir seviyeyle eşleşen sayılar çizilir. Uzaklıklar rayın üstündeki fiyattan ölçülür.",
+    /* Kapağın fiyat grafiği, seviye defteri, görüş şeridi (14 Kasım görsel turu). */
+    chartSell: "Satış {n}",
+    chartZone: "Bölge",
+    chartLabel: "{from} ile {to} arasında günlük kapanış çizgisi, hareketli ortalamalar ve yayındaki seviyeler",
+    chartNote: "Son Altı Ay · Günlük Kapanış",
+    chartOffScale: "{n} Uzak Seviye Defterde",
+    levelsTitle: "Seviyeler",
+    levelsHint: "Uzaklıklar şu anki fiyattan ölçülür; çubuğun ortasındaki çentik fiyatın yeridir.",
+    stanceStripLabel: "Son {n} yayın gününde görüş",
+    stanceStripSince: "{date} Tarihinden Beri {stance}",
+    stanceStripSteady: "Son {n} Yayın Gününde Hep {stance}",
+    historyDetail: "Yayın Yayın Plan",
+    planTitle: "Plan",
+    plansCount: "{n} Alım Planı",
+    macdGap: "Sinyale Fark",
   },
   /* Bültenin Kayıt Defteri bandı (25 Ekim görsel zirve) — metin ayrı dosyada. */
   briefLedger: briefLedgerTr,
@@ -5152,6 +5191,8 @@ const tr = {
   feedVisuals: feedVisualsTr,
   /* Araç ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
   toolVisuals: toolVisualsTr,
+  /* ⌘K paletinin site içi sonuçları (14 Kasım) — metin ayrı dosyada. */
+  searchPalette: searchPaletteTr,
   /* Risk Masası (25 Ekim) — kişiye özel ekran; metin ayrı dosyada. */
   riskDesk: riskDeskTr,
   /* Topluluk ekranlarının görsel turu (25 Ekim) — metin ayrı dosyada. */
@@ -5165,8 +5206,15 @@ const tr = {
   portfolioAsk: portfolioAskTr,
   claudeBrief: claudeBriefTr,
   pushPrefs: pushPrefsTr,
+  calendarFeed: calendarFeedTr,
   earningsDesk: earningsDeskTr,
   homeEarnings: homeEarningsTr,
+  /* Soru sayfaları (14 Kasım): borsa saatleri, tatil günleri, takvim olay
+     sayfaları ve aralarındaki bağlantı şeridi. */
+  marketHours: marketHoursTr,
+  marketHolidays: marketHolidaysTr,
+  eventPages: eventPagesTr,
+  quickAnswers: quickAnswersTr,
 };
 
 export default tr;
