@@ -1,0 +1,613 @@
+/* TEKNİK ANALİZ — LİSTE SAYFASI (`/teknik-analiz`: araç çubuğu, süzgeç,
+   kart ızgarası) ve plan kartı (`TechnicalCard`). Bölünme gerekçesi
+   `TechnicalParts.module.css` başında. */
+
+/* Çapraz atıf: aşağıdaki sınıflar başka bir modülün seçicisinde de geçiyor; o kural orada yaşıyor, sınıf adı composes ile ikisini birden taşıyor. */
+.cardPlan { composes: cardPlan from "./TechnicalPlan.module.css"; }
+.card { composes: card from "./TechnicalPlan.module.css"; }
+.quoteGrid { composes: quoteGrid from "./TechnicalParts.module.css"; }
+
+/* ---- Görüş süzgeci ----
+   JavaScript YOK: dört radyo düğmesi ve `:has()`. Adres değişmiyor; sığ
+   adres güncellemesinin uçuştaki gezinmeyi öldürdüğü tuzağa (CLAUDE.md,
+   "İstemci ile sunucu sınırı") hiç girilmiyor. Başlıktaki görüş satırları
+   da aynı radyolara `for` ile bağlı etiketler: satıra basmak süzüyor. */
+.board { display:flex; flex-direction:column; gap:18px; min-width:0; }
+
+/* ---- Araç çubuğu: başlık, pano künyesi, süzgeç ----
+   YAPIŞKAN (23 Eylül). Süzgeç yalnızca panonun başındaydı ve sayfa 1440'ta
+   4.071, 390'da 10.855 piksel (ölçüldü): görüş değiştirmek için on iki
+   ekran yukarı dönmek gerekiyordu. Masaüstünde çubuğun tamamı uygulama
+   çubuğunun altına yapışıyor; telefonda yalnızca süzgeç (aşağıda, 767).
+   Zemin opak sayfa zemini — cam yok, kartlar altından geçerken görünmüyor.
+
+   YAPIŞINCA TAM GENİŞLİK BANT, TAŞMASIZ. Detay sayfasının bölüm çubuğu
+   (`PremiumMotion` → `.sectionNav::before`) bandı 100vw genişliğinde mutlak
+   bir kutuyla çiziyor ve sol ofseti betikle ölçüyor. Burada iki "mürekkep
+   taşması" kullanılıyor: `border-image` dolgusu kutunun yüksekliğinde
+   ekranın iki ucuna uzanıyor, `box-shadow` altına tek piksellik kenar
+   çiziyor. İkisi de kaydırılabilir taşma SAYILMIYOR (yatay kaydırma
+   açmıyor) ve ölçülecek bir ofset yok. `--chrome` iki temada da sayfa
+   zeminiyle aynı renk; dinlenme hâlinde bant görünmez, fark yalnızca
+   çizgide: içerik genişliğinde kıl çizgi → ekran genişliğinde kenar. */
+.boardToolbar { position:sticky; top:var(--app-bar-h); z-index:15; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:12px 20px; padding-block:12px; border-bottom:1px solid var(--line); background:var(--page-bg); }
+
+.boardToolbar[data-stuck], .filterBar[data-stuck] { border-bottom-color:transparent; border-image:linear-gradient(var(--chrome) 0 0) fill 0 // 0 100vmax; box-shadow:0 1px 0 100vmax var(--chrome-border); clip-path:inset(0 -100vmax -1px); }
+
+.boardHeading { display:flex; min-width:0; flex-direction:column; gap:4px; }
+
+/* BAŞLIK KARTLARIN BAŞLIĞINDAN BÜYÜK. 18 pikseldi (telefonda 17), yani
+   tanıttığı kartların sembolünden (h3, 19 piksel) küçüktü: bölümün en zayıf
+   başlığı oydu ve göz onu atlayıp "MU"ya iniyordu. Merdiven artık h1 (~40) >
+   h2 (22-28) > h3 (19) > gövde (14). Ton `main h2`nin marka mürekkebi
+   (globals.css) — kısa başlık, belgeli istisna.
+   10 Kasım (ortak ölçüler): bölüm başlığı sitede tek ölçü,
+   `clamp(25px,2.8vw,36px)` / 600 (ana sayfa, şirket ve bilanço sayfasıyla
+   aynı); burada 22–28 / 650 idi. Merdiven korunuyor: h1 > h2 (25–36) > h3. */
+.boardTitle { font-size:clamp(25px,2.8vw,36px); line-height:1.1; font-weight:600; letter-spacing:-.035em; }
+
+/* PANO KÜNYESİ — üç sayı, kıl çizgiyle ayrık (hesabı ve gerekçesi
+   page.tsx'te). Nokta ayracı değil çizgi: bu sayfada nokta künye
+   ayracı ve bir satırda birden fazlası yasak (tasarım kuralı). Renk yalnızca
+   sayı sıfırdan büyükken — "0 bölgede" yeşil yazılırsa olmayan bir fırsatı
+   varmış gibi gösterir. */
+.headStats { display:flex; align-items:stretch; margin:16px 0 0; padding-top:14px; border-top:1px solid var(--line-soft); }
+
+.headStats > div { display:flex; min-width:0; flex-direction:column-reverse; justify-content:flex-end; gap:3px; padding-inline:20px; border-left:1px solid var(--line-soft); }
+
+.headStats > div:first-child { padding-left:0; border-left:0; }
+
+.headStats dt { font-size:12px; line-height:1.3; font-weight:600; color:var(--text-muted); }
+
+/* 10 Kasım: künye başlık kartına çıktı ve ölçü oldu. Sayı display ölçüsünde
+   (700, −0,03em — ortak ölçüler); etiket altında 12/600. Kural aynı: renk
+   yalnız sayı sıfırdan büyükken. Telefonda eski tek satırlık künye
+   (aşağıda, 767): orada üç ölçü kartı 70 piksel uzatırdı. */
+.headStats dd { margin:0; font-size:28px; line-height:1; font-weight:700; letter-spacing:-.03em; color:var(--text-strong); }
+
+.headStats [data-tone="up"] dd { color:var(--up); }
+
+.headStats [data-tone="down"] dd { color:var(--down); }
+
+@media (min-width:1100px) {
+  .boardHeading { flex-direction:row; align-items:center; gap:24px; }
+}
+
+.filterBar { min-width:0; }
+
+/* EŞİT BÖLMELİ SÜZGEÇ, KAYAN BAŞPARMAK (23 Eylül). Bölmeler içerik
+   genişliğinde yüzüyordu: 390'da `space-between` aralarına 26 piksellik
+   delikler açıyordu, 320'de dört etiket 284 piksellik kaba sığmayıp "SAT"
+   tek başına ikinci satıra düşüyordu (fieldset 91 piksel, ölçüldü). Artık
+   eşit sütunlu bir ızgara; seçimi gösteren kutu tek bir `::before` ve
+   radyonun sırasını (`data-i`) `:has()` ile okuyup kayıyor. JavaScript
+   yok, hidrasyondan önce de çalışıyor.
+   Köşe yarıçapları iç içe: dış `--radius-lg`, iç ondan dolgu (4) kadar
+   küçük — aynı merkezli iki eğri. */
+.filter { --i:0; position:relative; display:grid; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); gap:3px; margin:0; padding:4px; border:0; border-radius:var(--radius-lg); background:var(--surface-sunken); }
+
+.filter::before { content:""; position:absolute; top:4px; bottom:4px; left:4px; width:calc((100% - 8px - (var(--n, 4) - 1) * 3px) / var(--n, 4)); border:1px solid var(--primary-faint); border-radius:calc(var(--radius-lg) - 4px); background:var(--premium-surface); transform:translateX(calc(var(--i) * (100% + 3px))); transition:transform 240ms var(--ease-brand); }
+
+.filter:has(input[data-i="1"]:checked) { --i:1; }
+
+.filter:has(input[data-i="2"]:checked) { --i:2; }
+
+.filter:has(input[data-i="3"]:checked) { --i:3; }
+
+.filter legend { position:absolute; width:1px; height:1px; overflow:hidden; clip:rect(0 0 0 0); white-space:nowrap; }
+
+.filter input { position:absolute; opacity:0; pointer-events:none; }
+
+.filter label { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:7px 12px; border-radius:calc(var(--radius-lg) - 4px); font-size:13px; font-weight:600; white-space:nowrap; color:var(--text-body); cursor:pointer; transition:color 180ms var(--ease-brand); }
+
+.filter label b { font-weight:600; letter-spacing:-.02em; color:var(--text-muted); }
+
+.filter label:hover { color:var(--text-strong); }
+
+.filter input:checked + label { color:var(--primary-ink); }
+
+/* SEÇİLİ SAYI AĞIRLIKLA AYRILIYOR, SAYDAMLIKLA DEĞİL. `opacity:.7` ile
+   `--primary-ink` beyaz başparmak üstünde #5596c8'e iniyordu: 13 piksellik
+   metinde 3,19:1, AA'nın altı (koyu temada 4,50, sınırda; ölçüldü). Tam
+   ton ve bir kademe ince ağırlık: etiketten ayrışıyor, kontrast düşmüyor. */
+.filter input:checked + label b { color:var(--primary-ink); font-weight:600; }
+
+.filter input:focus-visible + label { outline:2px solid var(--line-focus); outline-offset:2px; }
+
+@media (prefers-reduced-motion: reduce) {
+  .filter::before { transition:none; }
+}
+
+/* TELEFONDA YALNIZCA SÜZGEÇ YAPIŞIYOR. Başlık, künye ve süzgeç birlikte
+   yapışsa 390'da ekranın 150 pikseli giderdi; çubuk `display:contents` ile
+   çözülüyor, üç çocuk panonun akışına iniyor ve yapışan yalnızca süzgeç
+   bandı (dolgusuyla 64, dokunmatikte 68 piksel). `position:static` ayrıca yazılı: kutusu olmayan
+   bir öğe hesaplanmış konumunu yine `sticky` söyler ve `TechnicalBoard`
+   onu yapışmış sanardı. Negatif pay + dolgu bandın yerleşimi oynatmadan
+   süzgecin üstünde ve altında sekiz piksel örtmesi için.
+   KÜNYE TELEFONDA DA TEK SATIR (23 Eylül). Üç sütundu (sayı üstte, ad
+   altta) çünkü satır hâlinde 320'de 293 piksel istiyordu, kap 284. Sütun
+   düzeni 39 piksel tutuyordu ve başlıkla birlikte panoya 45 piksel
+   ekliyordu — ilk kartı telefonun ilk ekranından iten bloklardan biri.
+   Ayrım dolgusu 12'den 10'a, etiket 12,5'ten 12'ye inince satır TR'de 277,
+   EN'de 249 piksel: tek satır, 18 piksel. Sığmazsa üçüncü öğe kıl çizgisiyle
+   alt satıra sarıyor, hiçbir şey kesilmiyor.
+   Pano aralığı 18'den 14'e: bandın dolgusu ile eksi payı birbirini
+   götürüyor, yani süzgeçle künye ve ilk kart arasında görünen boşluk da
+   14. Başlık kartın sembolünden (19) büyük kalıyor. */
+@media (max-width: 767px) {
+  .board { gap:14px; }
+  /* 10 Kasım: telefonda 21 pikseldi; bölüm başlığının tabanı 25 (ortak ölçü). */
+  .boardTitle { font-size:25px; }
+  .boardToolbar { position:static; display:contents; }
+  .filterBar { position:sticky; top:var(--app-bar-h); z-index:15; margin-block:-8px; padding-block:8px; background:var(--page-bg); }
+  .filter label { min-height:40px; padding:8px; gap:5px; }
+  .headStats { flex-wrap:wrap; align-items:baseline; row-gap:4px; margin-top:12px; padding-top:10px; }
+  .headStats > div { flex-direction:row; align-items:baseline; gap:6px; padding-inline:10px; border-left-color:var(--line); }
+  .headStats dd { font-size:15px; line-height:1.2; font-weight:600; letter-spacing:-.02em; }
+}
+
+/* DOKUNMATİKTE BÖLME 44 PİKSEL — parmak hedefinin alt sınırı; 40 bir
+   kademe altındaydı. Süzgeç 52, yapışık bant dolgusuyla 68 piksel (390,
+   ölçüldü) — masaüstünde yapışan bütün çubuk 69. */
+@media (pointer: coarse) {
+  .filter label { min-height:44px; }
+}
+
+.board:has(input[value="buy"]:checked) .cell:not([data-verdict="buy"]),
+.board:has(input[value="hold"]:checked) .cell:not([data-verdict="hold"]),
+.board:has(input[value="sell"]:checked) .cell:not([data-verdict="sell"]) { display:none; }
+
+/* SÜZGEÇ DEĞİŞİNCE KARTLAR YERİNE OTURUYOR. Seçimle birlikte kartların
+   yarısı yok olup kalanlar bir karede yeni yerlerine sıçrıyordu; göz hangi
+   kartın nereye gittiğini kaybediyordu. Her süzgeç değerinin KENDİ
+   animasyon adı var (içerikleri aynı): ad değişince tarayıcı animasyonu
+   baştan başlatıyor, yani her seçimde görünür kartlar birlikte yükselip
+   tonuna oturuyor. JavaScript yok, süzgecin kendisi gibi.
+
+   Kademe YOK, bilinçli: süzgeçten sonra görünen kartların sırası atlamalı
+   (2., 5., 9.) ve dizi sırasına bağlı bir gecikme düzensiz dalgalanırdı.
+   İlk çizimde "Tümü" seçili olduğu için ilk sıra da BOYAMADAN İTİBAREN bir
+   kez yükseliyor — sayfa başlığının imzasıyla aynı kural: içerik önce tam
+   görünüp sonra sönmüyor. Ekranın altındaki kartları kaydırma girişi
+   (MotionExperience) yönetiyor; onun duraklatılmış animasyonu bunun
+   önünde.
+
+   10 Kasım (hareket kuralı: panel ve metin kayarak girmez): kartlar 10
+   piksel aşağıdan yükseliyordu; artık yalnız TON oturuyor (opaklık
+   0,4 → 1, 250 ms — panel kenarı süresi). Ad değiştirme düzeni aynı. */
+.board:has(input[value="all"]:checked) .cell { animation:board-settle-a 250ms var(--ease-brand) backwards; }
+
+.board:has(input[value="buy"]:checked) .cell { animation:board-settle-b 250ms var(--ease-brand) backwards; }
+
+.board:has(input[value="hold"]:checked) .cell { animation:board-settle-c 250ms var(--ease-brand) backwards; }
+
+.board:has(input[value="sell"]:checked) .cell { animation:board-settle-d 250ms var(--ease-brand) backwards; }
+
+@keyframes board-settle-a { from { opacity:.4; } }
+
+@keyframes board-settle-b { from { opacity:.4; } }
+
+@keyframes board-settle-c { from { opacity:.4; } }
+
+@keyframes board-settle-d { from { opacity:.4; } }
+
+@media (prefers-reduced-motion: reduce) { .board .cell { animation:none !important; } }
+
+/* ---- Kart ızgarası ----
+   Kart tabanı 340px, 300 değil: dört sütunda (1440'ta 300'lük kartlar)
+   14 puntoluk başlık üç satıra sığmıyor, plan satırlarında üç hedef
+   fiyatın yanında kırılıyordu. 1440'ta üç sütun, 1024'te iki, telefonda
+   bir; kart 1440'ta 548, 390'da 542-587 piksel (23 Eylül, ölçüldü). */
+/* KART BÖLÜMLERİ KOMŞU KARTLARLA AYNI SATIRDA.
+   Kartın içinde altı bölüm var (kimlik, fiyat, plan, cümle, ölçüler, ayak)
+   ve her biri kendi boyundaydı: SAT görüşlü kartın plan kutusunda iki satır
+   varken (tepkide satış + en yakın destek) AL kartında üç satır oluyor ve o
+   kartın altındaki her şey 28 piksel yukarı kayıyordu (ölçüldü, 1440).
+   Sonuç, yan yana üç kartın manşetlerinin, çiplerinin ve ayak satırlarının
+   farklı hatlarda durmasıydı.
+   `subgrid` zinciri (ızgara → hücre → kart) altı satırı ortaklaştırıyor:
+   plan kutusu iki satırlıksa fazlası boşluk olarak kalıyor, bölümler
+   hizasını koruyor. Satır aralığı kart İÇİNDE de geçerli olduğu için
+   ızgaranın satır aralığı 14'e indi ve kartlar arasındaki 18 piksel
+   hücrenin alt kenarından tamamlanıyor. */
+/* IZGARA HER SAYIDA DOLU BİTER (10 Kasım). `auto-fill` ile 16 kart üç
+   sütunda 3-3-3-3-3-1 diziliyor, son kartın yanında 892×449 piksel boş
+   kalıyordu (1440, ölçüldü); süzgeçte de aynısı (SAT 10 → 3-3-3-1, AL 1 →
+   tek kart + 892 piksel boşluk). Sembol sayısı ve görüş dağılımı her
+   yayında değişiyor; kart sırası ise sabit (karar: page.tsx). Çözüm
+   Mercek ızgarasındaki: ARTAN KARTLAR SATIRI PAYLAŞIR. Sütun sayısı artık
+   açık (auto-fill'in eşikleriyle aynı yerde: ızgara 1056'yı geçince üç,
+   698'i geçince iki) ve üç sütun altı izde kuruluyor: artan iki kart
+   üçer iz (satırı ikiye böler), artan tek kart satırın tamamı ve içi yatay
+   (`cellWide` kuralları aşağıda). "Artan"ı CSS sayıyor — görünen kartlar
+   arasında sıra `:nth-child(… of …)` ile, süzgecin kendisi gibi
+   JavaScript'siz. Ölçüm (1440/1280/1024/768, 13–16 sembol, dört süzgeç):
+   son satırın sağında boşluk 0. */
+.grid { display:grid; grid-template-columns:minmax(0,1fr); column-gap:18px; row-gap:14px; }
+
+@media (min-width:760px) { .grid { grid-template-columns:repeat(2, minmax(0,1fr)); } }
+
+@media (min-width:1100px) {
+  .grid { grid-template-columns:repeat(6, minmax(0,1fr)); }
+  .cell { grid-column:span 2; }
+}
+
+/* BEŞ SATIR (29 Eylül): baş, fiyat, plan, gerekçe, ölçüler. Altıncı satır
+   "Analizi Oku" ayağıydı; kalkış gerekçesi TechnicalCard'da. */
+/* DÖRT SATIR (14 Kasım 2026): baş, fiyat, ray, cümle. Ölçü şeridi karttan
+   kalktı (gerekçe TechnicalCard); tek artan kartın yatay düzeni de üç
+   kolona indi: kimlik + fiyat | ray | cümle (`"head plan thesis"`). */
+.cell { display:grid; grid-template-rows:subgrid; grid-row:span 4; min-width:0; margin-bottom:4px; }
+
+/* Kartın TAMAMI tek bağlantı değil. Öyleydi ve bağlantının erişilebilir adı
+   kartın bütün metniydi (sembol, fiyat, 280 karaktere kadar başlık, lejant,
+   çipler); ekran okuyucuda hisseler arasında başlıkla da gezinilemiyordu.
+   Bağlantı artık sembol başlığının içinde; `::after` kartı kaplıyor, yani
+   tıklama alanı aynı kalıyor. */
+/* BÜYÜK KARTIN HOVER'I YALNIZCA TON (22 Eylül, ortak kural — analizler
+   ekranının öne çıkan kartıyla aynı). Kart 2 piksel kalkıp gölgesini
+   büyütüyordu; ızgarada on beş kart yan yana dururken imlecin geçtiği her
+   kart zıplıyor, sayfa kıpırdıyordu. Artık yalnızca kenarlık birincil
+   tonun soluğuna dönüyor ve "Analizi Oku" oku dürtülüyor: kartın
+   tıklanabilir olduğu hâlâ söyleniyor, yerinden oynamadan. */
+/* DÜZ YÜZEY (23 Eylül). 22 Eylül'de karta köşeden inen mavi bir parıltı
+   (150°, `--primary-tint` → saydam %28) ve yumuşak bir gölge eklenmişti;
+   koyu temada on beş kartın hepsinin sol üstünde aynı mavi ışık duruyordu
+   ve tema dosyası "ışıma yok, derinlik tonla" diyor. Kart artık düz:
+   sayfadan ayrılması yüzey tonuyla ve kıl kenarlıkla, gölgesiz.
+
+   GÖRÜŞ RENGİNDE ÜST KENAR DENENDİ VE REDDEDİLDİ (23 Eylül). Üç piksellik
+   bir iç kenar AL'da yükseliş, TUT'ta birincil, SAT'ta düşüş tonundaydı.
+   Aynı bilgiyi üçüncü kez söylüyordu — kartın görüş hapı ve başlıktaki
+   dağılım (8/6/1) zaten veriyor, süzgeç de istenen alt kümeyi ayırıyor —
+   her kartın tepesinde renkli şerit kalıplaşmış bir kart süsü ve TUT'u
+   maviye bağlayınca "mavi etkileşimdir" kuralını (tema dosyası) bozuyordu.
+   Yarıçap panel tokenı. */
+.card { position:relative; isolation:isolate; display:grid; grid-template-rows:subgrid; grid-row:span 4; min-width:0; padding:20px 20px 18px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); box-shadow:none; transition:border-color var(--default-transition-duration) var(--ease-brand); }
+
+/* Kart bir bağlantı (başlıktaki `::after` kaplaması), hover'ı bu yüzden
+   var — ve yalnızca kenarlık tonu. */
+.card:hover { border-color:var(--primary-faint); }
+
+/* ---- Artan kartlar (10 Kasım; gerekçe `.grid`) ----
+   TEK ARTAN KART YATAY: satırın tamamını alıyor ve beş bölümü üç kolona
+   diziliyor — solda kimlik ve fiyat, ortada plan (kartın tek geometrisi,
+   en geniş kolon), sağda üç ölçü ve gerekçe cümlesi. Ortak alt ızgaradan
+   çıkıyor (yanında hizalanacak komşu yok). Ölçüler sağ üstte, cümle
+   altında: ölçü şeridi baş satırıyla aynı boyda (≈50/57 piksel), cümle
+   fiyatla — tersinde üç satırlık cümle baş satırını uzatıp kimlik ile
+   fiyat arasına boşluk açıyordu.
+   İKİ ARTAN KART: üçer iz, yani satırı ikiye bölüyorlar; iç düzen aynı.
+   İki sütunlu düzende (760–1099) artan yalnız tek kart olabilir. */
+@media (min-width:1100px) {
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(2 of [data-verdict]),
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(2 of [data-verdict="buy"]),
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(2 of [data-verdict="hold"]),
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(2 of [data-verdict="sell"]),
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+2 of [data-verdict]):nth-last-child(1 of [data-verdict]),
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+2 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]),
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+2 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]),
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+2 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) { grid-column:span 3; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]),
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]),
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]),
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) { grid-column:1 / -1; grid-row:auto; display:block; margin-bottom:4px; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card { grid-row:auto; grid-template-rows:auto 1fr; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr); grid-template-areas:"head plan thesis" "quote plan thesis"; column-gap:32px; row-gap:14px; align-items:start; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardHead,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardHead,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardHead,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardHead { grid-area:head; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardQuote,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardQuote,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardQuote,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardQuote { grid-area:quote; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardPlan,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardPlan,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardPlan,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardPlan { grid-area:plan; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardThesis,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardThesis,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardThesis,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardThesis { grid-area:thesis; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card .cardHeadline,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card .cardHeadline,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card .cardHeadline,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card .cardHeadline { -webkit-line-clamp:5; }
+}
+
+@media (min-width:760px) and (max-width:1099px) {
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]),
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]),
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]),
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) { grid-column:1 / -1; grid-row:auto; display:block; margin-bottom:4px; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card { grid-row:auto; grid-template-rows:auto 1fr; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr); grid-template-areas:"head plan thesis" "quote plan thesis"; column-gap:32px; row-gap:14px; align-items:start; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardHead,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardHead,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardHead,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardHead { grid-area:head; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardQuote,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardQuote,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardQuote,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardQuote { grid-area:quote; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardPlan,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardPlan,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardPlan,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardPlan { grid-area:plan; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardThesis,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardThesis,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardThesis,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card > .cardThesis { grid-area:thesis; }
+  .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card .cardHeadline,
+  .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card .cardHeadline,
+  .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card .cardHeadline,
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card .cardHeadline { -webkit-line-clamp:5; }
+}
+
+/* TELEFONDA KATLAMA (9 Ekim) — gerekçe TechnicalCard. Dar ekranda kartlar
+   tek sütun, komşu hizası (subgrid) anlamsız: kart düz bir sütuna dönüyor,
+   böylece gizlenen bölümler boş satır ve aralık bırakmıyor. Ölçüm: kart
+   390'da 516 → 324 piksel, sayfa 11.944 → ~8.900. Katlama düğmesi
+   (`.cardFold`) sonradan karttan kalktı, kuralları 14 Kasım'da silindi;
+   tek sütun düzeni kaldı. */
+@media (max-width:639px) {
+  .cell { display:block; }
+  .card { display:flex; flex-direction:column; gap:14px; }
+}
+
+.card:has(.cardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
+
+.cardLink { color:inherit; }
+
+.cardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }
+
+.cardLink:focus-visible { outline:none; }
+
+.cardHead { display:flex; align-items:center; gap:12px; min-width:0; padding-bottom:12px; border-bottom:1px solid var(--line-soft); }
+
+/* AD SÜTUNUNUN TABANI VAR. 320 pikselde görüş rozetinin yanına değişim
+   etiketi de gelince ("HOLD" + "Turned Hold") rozet grubu 153 piksele
+   çıkıyor ve `min-width:0` olan ad sütunu 41 piksele eziliyordu: dört
+   harfli semboller (INTC 47, RKLB 49 piksel) son harfini kaybediyordu.
+   Sembol kartın KİMLİĞİ, kısalacak olan şirket adıdır — o da zaten üç
+   noktayla kısalıyor. Taban beş harfli sembole (GOOGL) yetiyor; rozet
+   grubu karşılığında kendi içinde sarıyor. */
+.cardName { display:flex; min-width:60px; flex:1; flex-direction:column; gap:1px; }
+
+/* SEMBOL KIRPILMAZ. 320 pikselde İngilizce görüş rozeti ("HOLD"/"SELL")
+   Türkçesinden geniş ve ad sütununu sıkıştırıyordu: dört harfli semboller
+   (INTC, RKLB) 41 piksellik kutuda 47-49 piksel istiyor, yani son harf
+   kesiliyordu. Sembol kartın KİMLİĞİ — kısalacak olan şirket adıdır, o da
+   zaten üç nokta ile kısalıyor. */
+.cardSymbol { white-space:nowrap; font-size:19px; line-height:1.2; font-weight:700; letter-spacing:-.025em; color:var(--text-strong); }
+
+.cardCompany { overflow:hidden; text-overflow:ellipsis; white-space:nowrap; font-size:12px; color:var(--text-muted); }
+
+/* ROZETLER YAN YANA — başlıklar eşit yükseklikte kalsın diye.
+   Sütundu ve değişim rozeti olan kartın başlığı 54, olmayanınki 32 piksel
+   oluyordu: ızgaranın her satırında fiyat, plan kutusu ve altındaki her şey
+   22 piksel kayık duruyordu (ölçüldü, 768 ve 1440'ta altı satırın beşinde).
+   Kartlar aynı yüksekliğe gerildiği için ayak hizalıydı ama İÇERİDE hiçbir
+   şey hizalanmıyordu; on iki kartlık bir ızgarada göz satırı tarayamıyor.
+   `wrap` duruyor: sembolü uzun bir kartta rozet yine alta iner, ama o zaman
+   hizasızlık kuralın kendisi değil istisnası olur. */
+.badges { display:flex; min-width:0; flex-wrap:wrap; align-items:center; justify-content:flex-end; gap:6px; }
+
+/* Kartın cevabı da görüş. 12 pikseldi: sembolün (19) ve fiyatın (25-27)
+   altında, kartın EN KÜÇÜK öğesi — oysa on iki kart taranırken gözün
+   aradığı şey o. 15 piksel kapaktaki sıralamanın aynısını kuruyor (sembol,
+   fiyat, sonra görüş) ve kart yoğunluğunu bozmuyor; kapaktaki 19-22 burada
+   satırı şişirirdi. Yalnızca `TechnicalCard` kullanıyor, nabız şeridinin
+   kendi sınıfı var.
+   22 EYLÜL: 14 PİKSEL, KÖŞELİ. Hap 15 piksel ve tam yuvarlaktı; kartın
+   başlığına bir alt çizgi gelince hap satırın en yüksek öğesi oldu ve
+   kart içindeki öteki etiketlerin (plan rozeti, künyeler) köşeli diliyle
+   ayrı düşüyordu. Bu kural dosyanın sonunda ikinci bir blokta kayıtsız
+   eziliyordu; 23 Eylül'de buraya katlandı. Yarıçap tokenlı: `--radius-sm`
+   (hap, değişim rozeti, plan rozeti aynı ölçekte). Görüşü kartta taşıyan
+   tek işaret yine bu hap — renkli üst kenar reddedildi (bkz. `.card`). */
+.stance { display:inline-flex; align-items:center; padding:6px 12px; border-radius:999px; font-size:14px; font-weight:700; letter-spacing:.06em; line-height:1.15; }
+
+/* Fiyat satırı: etiket ve plana göre yer aynı satırda, sayı altında büyük. */
+.cardQuote { container:tquote / inline-size; min-width:0; }
+
+.quoteGrid { display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"label label" "price plan"; align-items:center; gap:4px 10px; }
+
+.quoteGrid > .cardQuoteLabel { grid-area:label; }
+
+.quoteGrid > .cardPrice { grid-area:price; }
+
+/* Fiyat, değişim ve rozet tek satırda ~370 piksel istiyor; kartın içi
+   ancak kart 410'u geçince o kadar (390'da kart 358, 320'de 288). Daha
+   dar kartta rozet etiketin satırına çıkıyor. Kap fiyat bloğu, ızgara
+   onun içindeki sarmal: kap sorguladığı öğenin atası olmak zorunda.
+   KART KAP OLAMAZ — kap düzen sınırlaması getiriyor ve bu kartın alt
+   ızgara (subgrid) olmasını iptal ediyor; denendi, komşu kartlarla satır
+   hizası ve bölüm aralıkları kayboldu. İç eşik 370 (kart 410). */
+@container tquote (max-width: 369px) {
+  .quoteGrid { grid-template-areas:"label plan" "price price"; }
+}
+
+.cardQuoteLabel { color:var(--text-muted); font-size:12px; font-weight:400; }
+
+.cardPrice { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
+
+.cardPrice strong { font-size:27px; line-height:1.1; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
+
+/* 10 → 16: risk çubuğu geldikten sonra kartta ALT ALTA İKİ YATAY ÇİZİM
+   oluşuyor — risk şeridinin oranı ve seviye çizgisinin fiyat ekseni. İkisi de
+   tam genişlikte ve aynı x'ten başlıyor; 10 pikselde tek bir bileşik çizim
+   gibi okunuyordu. Aradaki bacak satırı zaten ayırıyor, boşluk onu
+   tamamlıyor.
+   16 → 14 (23 Eylül): iki çizim tek raya indi (`PlanRail`), ayrılacak ikinci
+   bir çizim kalmadı; aralık ızgaranın satır ritmine döndü.
+   14 → 12, AYNI GÜN: plan satırı 1440'ta 212 pikseldi ve rayla birleşince
+   yalnızca 199'a inmişti; ray ile kutunun kendi boşlukları sıkılınca 174
+   (kutu dolgusu 12 → 10, satır arası 9 → 8, sayının satır yüksekliği
+   1,35 → 1,25, rayın iç aralığı 6 → 4, ray 28 → 24; ölçüldü). 320'de
+   261'den 217'ye — çapa künyesi dar rayda tek satıra indi (`.riskAnchorValue`).
+
+   ÜSTTEN DİZİLİ (`align-content:start`). Satır komşu kartlarla paylaşılıyor
+   ve boyunu en uzun plan belirliyor; ızgara örtük satırlarını GERİYORDU:
+   SAT kartında (iki hücre, risk şeridi yok) plan kutusu 74 pikselden 120'ye
+   uzuyor, altında 46 piksellik boş gri bir alan, rayın altında 47 piksel
+   daha kalıyordu (1440, ONDS, ölçüldü). Kutu artık doğal boyunda; fark
+   varsa tek parça olarak satırın dibinde, bir sonraki bölümün üstünde. */
+.cardPlan { display:grid; gap:12px; align-content:start; }
+
+/* CÜMLE VE ANI. Künye cümlenin başında (gerekçe TechnicalCard'da). */
+.cardThesis { display:flex; min-width:0; flex-direction:column; gap:5px; }
+
+.thesisStamp { display:flex; flex-wrap:wrap; justify-content:space-between; gap:2px 12px; font-size:12px; line-height:1.35; font-weight:400; color:var(--text-muted); }
+
+.thesisStamp b { font-weight:600; color:var(--text-body); }
+
+.cardHeadline { display:-webkit-box; -webkit-box-orient:vertical; -webkit-line-clamp:3; overflow:hidden; color:var(--text-body); font-size:14px; line-height:1.6; text-wrap:pretty; }
+
+/* KIRPMA GENİŞLİĞE GÖRE (23 Eylül). Üç satır her genişlikte geçerliydi ve
+   kartın tek "neden" cümlesi dar düzende sonundan kesiliyordu — MU 390'da
+   "bekleme bölgesi 1.062,07–1.080,19'a…" diye, yani sonucu kesilerek.
+   Ölçülen: TR 390'da 9/15, EN 390'da 15/15, TR 320'de 15/15, 768'de 10/15
+   kart kırpılıyordu. Tek sütunda alt ızgara kartları hizalamıyor, kırpma
+   kart başına ancak ~23 piksel kazandırıyordu. Telefonda beş satır (320'de
+   ölçülen en uzun cümle), iki sütunda dört (satırı iki kart birlikte bir
+   kez büyütüyor), 1100 ve üstünde üç (orada TR'de hiçbiri kırpılmıyor). */
+@media (max-width: 767px) { .cardHeadline { -webkit-line-clamp:5; } }
+
+@media (min-width: 768px) and (max-width: 1099px) { .cardHeadline { -webkit-line-clamp:4; } }
+
+/* Eski yayından gelen kart: adını ve tarihini taşıyan bir etiket alıyor.
+   Yön rengi değil ton — bayatlık bir yön değil (gerekçe TechnicalCard'da).
+   AYAK 29 EYLÜL'DE KALKTI: etiket ayaktan cümlenin künyesine çıktı,
+   "Analizi Oku" işareti sembolün yanındaki oka döndü (`.cardGo`). Ayağın
+   kıl çizgisi ve iç payı kartın 46 pikseliydi (1440, ölçüldü). */
+.staleTag { display:inline-flex; padding:1px 7px; border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-strong); font-weight:600; }
+
+.cardSymbol .cardLink { display:inline-flex; align-items:center; gap:3px; }
+
+.cardGo { flex:none; color:var(--primary-ink); transition:transform var(--default-transition-duration) var(--ease-brand); }
+
+.card:hover .cardGo { transform:translate(2px,-2px); }
+
+/* SATIR UZUNLUĞU SINIRLI. Dipnot sayfanın tam genişliğine yayılıyordu ve
+   1440'ta satır başına 220 karakter düşüyordu (ölçüldü, 1320 piksel) — göz
+   satır sonundan bir sonraki satır başına dönerken yerini kaybediyor. Ölçü
+   `ch` cinsinden, yani punto değişirse kendiliğinden uyum sağlıyor; aynı
+   yaklaşım kapak manşetinde de var (`.coverHeadline`, 58ch). 78 burada
+   biraz cömert ama metin 12 piksel ve yasal nitelikte: okunacak değil,
+   bakılacak bir blok. */
+/* Program cümlesi dipnotta. 8 Kasım'a dek yalnız telefonda buradaydı
+   (geniş ekranda başlığın künyesindeydi); künye şeride dönünce üç saat
+   şeridin kendisinde çizili, cümle her genişlikte burada. */
+.footSchedule { display:block; }
+
+/* Bekleyen semboller künyesi — ızgaranın altında, hairline ile ayrı.
+   Yeni kutu açmıyor: deponun eksik veri künyesi kalıbı. */
+.pendingNote { margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:var(--text-small); line-height:1.65; color:var(--text-muted); }
+
+@media (max-width: 767px) {
+  .card { padding:18px 16px 14px; }
+  .cardPrice strong { font-size:25px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .card,
+.cardGo { transition:none; }
+  .card:hover .cardGo { transform:none; }
+}
+
+/* Logolar üzerine gelince kalkıyor; hangi logoya gelindiği balondan önce
+   hareketle okunuyor. */
+/* KALKMA KALDIRILDI (10 Kasım, ekranlar arası denetim: "Hover'da kaldırma
+   yok"). Geri bildirim iç kenar çizgisi (yukarıda, `:hover`). */
+/* ---- PREMIUM KART (26 Eylül) ----
+   "Daha görsel, daha okunur, logolar bir tık büyük" (sahibinin isteği,
+   ekran görüntüsüyle). Dosyanın üst kısmındaki kurallar karar kaydı olarak
+   yerinde; bu blok onları kartın kapsamıyla eziyor.
+
+   AKSAN ŞERİDİ: kartın tepesinde görüşün renginde 3 piksellik bir şerit
+   (AL yeşil, TUT mavi, SAT kırmızı); kart görünüme girince soldan
+   çiziliyor. Renk YÖN söylüyor ve bu kartta görüş zaten bir yön — sitenin
+   renk kuralı içinde. Gölge yok; derinlik tonla ve bir kalkışla. */
+/* Köşelere değmiyor: düz bir çizgi yuvarlak köşeden taşıp iki uçta çıkıntı
+   yapıyordu (ölçüldü, 1440). Kenarın içinde, altı yuvarlatılmış bir sekme
+   işareti gibi duruyor. */
+/* 25 Ekim: şerit görüş üçlüsünün yumuşak tonunda; TUT pirinç, mavi değil (pano başı gerekçe). */
+.card::before { content:""; position:absolute; z-index:1; top:-1px; left:28px; right:28px; height:3px; border-radius:0 0 3px 3px; background:var(--verdict-hold); transform-origin:left center; animation:card-accent var(--draw) var(--ease-brand) both; }
+
+.card[data-verdict="buy"]::before { background:var(--verdict-buy); }
+
+.card[data-verdict="sell"]::before { background:var(--verdict-sell); }
+
+@keyframes card-accent { from { transform:scaleX(0); } }
+
+/* 10 Kasım: şerit yüklemede oynuyordu; on altı kartın on üçü ilk ekranın
+   altında (1440×900) ve çizim görülmeden bitiyordu. Kart `data-draw`
+   taşıyor (TechnicalCard.tsx). Genel kapı kuralı (`[data-draw][data-armed] *`)
+   sözde öğeye ulaşmadığı için şeridin bekleme hâli burada yazılı. */
+.card[data-draw][data-armed]::before { animation-name:none; }
+
+/* 10 Kasım (hover'da kaldırma/büyüme yok, `.panel-hover` "zıplamaz"):
+   kart 3 piksel kalkıyor, logosu 1,06 büyüyordu. Geri bildirim artık
+   yalnız kenar tonu (`.card:hover`, 250 ms); hareket yalnız bağlantı okunda (`.cardGo`,
+   (2,−2)). Basışta çökme 0,992 (ortak ölçü). */
+.card { transition:border-color 250ms var(--ease-brand), scale 180ms var(--ease-brand); }
+
+.card:active { scale:.992; }
+
+/* Okunurluk: 10–11,5 piksellik künyeler 12'ye, soluk tonlar gövde tonuna. */
+.card .cardSymbol { font-size:20px; }
+
+.card .cardCompany { font-size:13px; color:var(--text-body); }
+
+.card .cardQuoteLabel { font-size:12.5px; font-weight:600; color:var(--text-body); }
+
+.card .cardPrice strong { font-size:28px; }
+
+.card .thesisStamp { font-size:12px; font-weight:600; color:var(--text-body); }
+
+@media(prefers-reduced-motion:reduce) {
+ .card::before { animation:none; }
+ .card { transition:none; }
+ .card:active { scale:none; }
+}
+
+/* Dokunmatikte basış izi KARTIN tamamında (14 Ekim): global kural basılan
+   bağlantıyı %60 opaklığa indiriyor ama buradaki bağlantı başlıktaki küçük
+   `<a>` — yalnız sembol yazısı sönüyordu. İz, kartı kaplayan ::after
+   katmanına veriliyor; token üzerinden karışım, yerleşim oynamaz. */
+@media (hover:none) {
+  .cardLink:active::after { background:color-mix(in srgb, var(--text-strong) 7%, transparent); }
+}
+
+/* ==========================================================================
+   BÖLGESİZ TUT: DURUM, EKSEN, KOŞUL (31 Ekim, sahibinin isteği)
+   Gerekçe components/technical/OpenRange.tsx. Ton nötr: eksen ve şeritler
+   gri mürekkep, durum etiketi pirinç (TUT'un rengi, "bekleme"). Yeşil yok —
+   alım bölgesi yok; mavi yok — mavi etkileşim ve alım bandı. Yön rengi
+   yalnız GEÇİLMİŞ seviyenin şeridinde (destek kırıldı aşağı, direnç
+   geçildi yukarı): bir olgu, bir öneri değil.
+   ========================================================================== */
+/* Kartta plan satırını DOLDURUYOR (`align-content:stretch`). Satır komşu
+   bölgeli kartlarla paylaşılıyor (şerit + ray); kutu satırın dibine kadar
+   iniyor ve koşul cümlesi dibe yaslanıyor, yani komşu kartın ray dibiyle
+   aynı hatta bitiyor. */
+.cardPlan[data-open-range] { align-content:stretch; }
+
+/* Pano künyesinin şeridi (liste başlık kartı; gerekçe teknik-analiz/page.tsx).
+   Şerit üç sayının üstünde, sayıların kendi üst çizgisi kalkıyor. */
+.headGauge { display:grid; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line-soft); }
+
+.headGaugeLabel { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; font-size:12px; line-height:1.3; color:var(--text-muted); }
+
+.headGaugeLabel b { font-size:13px; font-weight:700; color:var(--text-strong); }
+
+.headGauge + .headStats { margin-top:12px; padding-top:0; border-top:0; }
+
+.boardTitle { color:var(--text-strong); }

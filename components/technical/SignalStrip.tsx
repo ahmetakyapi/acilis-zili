@@ -4,7 +4,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { distancePct, indicatorSignals, type TechnicalSnapshot } from "@/lib/technical";
 import { cn, formatPercentPlain, formatPrice } from "@/lib/utils";
 import { RsiGauge, TrendGauge, VolumeGauge } from "./SignalGauges";
-import styles from "./Technical.module.css";
+import styles from "./SignalStrip.module.css";
 
 type Tile = {
   key: string;

@@ -12,6 +12,7 @@ import type { EarningsWeek } from "@/lib/earnings-week-data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { zoneTag } from "@/lib/session-clock";
 import { etDateParts, formatMoneyCompact, formatPrice } from "@/lib/utils";
+import { listLogoSrc } from "@/lib/logos";
 import { HorizonGrid, type HorizonDay, type HorizonLane, type HorizonTile } from "./HorizonGrid";
 import styles from "./EarningsHorizon.module.css";
 
@@ -130,7 +131,9 @@ export function EarningsHorizon({
     return {
       symbol: row.symbol,
       name: row.name ?? row.symbol,
-      logoUrl: row.logoUrl,
+      /* Liste yuvası: yalnız depodaki logo, yoksa harf karosu (gerekçe
+         `listLogoSrc`, lib/logos.ts). */
+      logoUrl: listLogoSrc(row.symbol),
       scale: tileScale(row.marketCap, weekMax),
       tier: tileTierOf(tileScale(row.marketCap, weekMax)),
       capText: row.marketCap !== null ? formatMoneyCompact(row.marketCap, locale) : null,

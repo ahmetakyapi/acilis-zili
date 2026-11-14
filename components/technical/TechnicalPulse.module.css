@@ -1,0 +1,606 @@
+/* TEKNİK ANALİZ — NABIZ: liste sayfasının kapağındaki dağılım halkası,
+   lejant ve logo kümeleri (`TechnicalPulse`, `PulseBar`) ile kapağın
+   künye şeridi. Bölünme gerekçesi `TechnicalParts.module.css` başında. */
+
+/* Teknik analiz — liste kartları, plan şeridi, seviye çizgisi, fiyat
+   haritası, gösterge özeti ve gösterge panelleri. Renk yalnızca
+   belirteçlerden; yön rengi (--up/--down) yönü, accent (--primary) fiyatın
+   kendisini anlatıyor.
+
+   SAYILARDA TABULAR FİGÜR YOK. İlk hâlde vardı ve telefonda lejant
+   "209 , 61 $" diye çıkıyordu: Schibsted Grotesk'te `tnum` virgülü de rakam
+   genişliğine çekiyor (gerekçenin tamamı globals.css → "Sayısal okumalar").
+   Sayılar sitenin geri kalanı gibi yalnızca sıkı aralık alıyor.
+
+   PUNTO TABANI 13-14, 11 DEĞİL. İlk sürümde kartın gövdesi 11-13 punto
+   arasında dolaşıyordu (lejant 10-11, başlık 13, çipler 11) ve okuyucunun
+   ilk geri bildirimi "yazılar net okunmuyor"du. Şerit etiketleri ve künyeler
+   dışında hiçbir metin 12'nin altına inmiyor; sayı ne kadar önemliyse o
+   kadar büyük (kartta fiyat 26, kapakta 40). */
+/* ---- Yayın künyesi (başlığın içinde) ----
+   Ayrı bir şerit kutusu olarak duruyordu: başlık kutusu, şerit kutusu ve
+   kartlar üç ayrı çerçeve olunca sayfa üst üste yığılmış paneller gibi
+   okunuyordu. Künye başlığın metin sütununda, açıklamanın altında.
+   8 Kasım: düz künye satırları (`.edition*`) yerini çizili bir şeride
+   bıraktı (`EditionTrack`, kendi modülü); tarih/saatin bölünmezliği ve
+   telefonda programın dipnotta olması dahil kayıtları orada ve page.tsx'te.
+   Bu sınıf yalnız şeridin kapaktaki yeri: hairline ile açıklamadan ayrı. */
+.editionTrack { margin-top:18px; padding-top:16px; border-top:1px solid var(--line-soft); }
+
+/* ---- Görüş dağılımı (başlığın görseli) ----
+   Oran çubuğu bütünü, satırlar kimin nerede olduğunu gösteriyor. Çubukta
+   yazı yok: sayı satırda bir kez yazılıyor, iki yerde aynı sayı durmuyor. */
+.pulse { display:grid; gap:14px; min-width:0; }
+
+/* DİLİM BİR DÜĞME (30 Eylül, `PulseBar`). Görünür şerit yine 10 piksel;
+   düğme dikeyde 13'er piksel dolgu alıp aynı kadar dışa taşıyor, yani
+   dokunma alanı 36 piksel ama düzende hiçbir şey kımıldamıyor. Kaptaki
+   `overflow:hidden` bu yüzden kalktı (dokunma alanını kırpıyordu); köşeler
+   zaten her dilimin kendi yarıçapında. */
+/* `position` + `z-index`: balon çubuğun üstündeki başlık satırına biniyor;
+   katman verilmezse başlığın metni balonun ÜSTÜNE basılıyordu (390'da
+   ekran görüntüsüyle görüldü). */
+.pulseBar { position:relative; z-index:3; display:flex; gap:3px; height:10px; }
+
+.pulseSlice { position:relative; display:flex; min-width:10px; padding:17px 0; margin:-17px 0; border:0; background:none; cursor:pointer; -webkit-tap-highlight-color:transparent; }
+
+.pulseSlice > span[data-motion-draw] { flex:1; border-radius:999px; transform-origin:left center; transition:filter 180ms var(--ease-brand); }
+
+.pulseSlice:focus-visible { outline:none; }
+
+.pulseSlice:focus-visible > span[data-motion-draw] { outline:2px solid var(--line-focus); outline-offset:2px; }
+
+.pulseSlice[data-open] > span[data-motion-draw] { filter:brightness(1.12) saturate(1.1); box-shadow:0 0 0 2px var(--surface), 0 0 0 3px currentColor; }
+
+/* GÖRÜŞ ÜÇLÜSÜ (25 Ekim, site geneli renk kararı): AL yumuşak yeşil, TUT
+   PİRİNÇ, SAT yumuşak kırmızı — her ekranda aynı (`VERDICT_INK`,
+   lib/analysis.ts). TUT maviydi; mavi sitede etkileşim. Yön renginin
+   kendisi değil kart zeminiyle karışmış tonu: yanındaki "+%2,1" doygun. */
+.pulseSlice[data-verdict="buy"] { color:var(--verdict-buy); }
+
+.pulseSlice[data-verdict="hold"] { color:var(--verdict-hold); }
+
+.pulseSlice[data-verdict="sell"] { color:var(--verdict-sell); }
+
+.pulseSlice[data-verdict="pending"] { color:var(--line-strong); }
+
+/* BALON dilimin ortasında, çubuğun üstünde; ilk ve son dilimde kenara
+   yaslanıyor ki dar ekranda kabın dışına taşmasın. Girişi kısa bir solma
+   (14 Ekim): koşullu render olduğu için keyframe her açılışta kendiliğinden
+   oynar; YALNIZ opaklık — konum `translate` ile veriliyor ve kenar
+   varyantları `translate:none` kullanıyor, transform'a dokunma. */
+.pulseTip { animation:pulse-tip-in 160ms var(--ease-brand) both; position:absolute; bottom:calc(100% - 4px); left:50%; z-index:5; display:inline-flex; align-items:baseline; gap:8px; padding:6px 10px; border:1px solid var(--line); border-radius:10px; background:var(--panel-fixed); box-shadow:0 6px 18px -8px color-mix(in srgb, var(--text-strong) 35%, transparent); font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; translate:-50% 0; pointer-events:none; }
+
+.pulseTip b { font-size:12.5px; font-weight:700; letter-spacing:.03em; color:var(--text-muted); }
+
+.pulseSlice[data-verdict="buy"] .pulseTip b { color:var(--up); }
+
+.pulseSlice[data-verdict="hold"] .pulseTip b { color:var(--brass-ink); }
+
+.pulseSlice[data-verdict="sell"] .pulseTip b { color:var(--down); }
+
+.pulseTip > span:first-of-type { color:var(--text-strong); }
+
+.pulseSlice[data-edge="start"] .pulseTip { left:0; translate:none; }
+
+.pulseSlice[data-edge="end"] .pulseTip { left:auto; right:0; translate:none; }
+
+.pulseBar > .pulseSlice[data-verdict="buy"] > span[data-motion-draw] { background:var(--verdict-buy); }
+
+/* Opaklık DEĞİL karışım: dilim bir hareket kancası ve azaltılmış harekette
+   ortak kural opaklığı !important ile 1'e eziyor, TUT tam doygun kalıyordu. */
+.pulseBar > .pulseSlice[data-verdict="hold"] > span[data-motion-draw] { background:var(--verdict-hold); }
+
+.pulseBar > .pulseSlice[data-verdict="sell"] > span[data-motion-draw] { background:var(--verdict-sell); }
+
+/* BEKLEYEN DİLİM RENKSİZ. Bir görüş değil, henüz olmayan bir görüş —
+   yeşil/mavi/kırmızının yanında dördüncü bir renk, olmayan bir kararı
+   varmış gibi gösterirdi. */
+.pulseBar > .pulseSlice[data-verdict="pending"] > span[data-motion-draw] { background:var(--line-strong); }
+
+/* ETİKET SÜTUNU EN UZUN ETİKETE GÖRE, PİKSELLE DEĞİL. Sütun sabit 78
+   pikseldi; üç görüş etiketi ("AL", "TUT", "SAT") oraya rahat sığıyordu
+   ama dördüncü satır gelince ("Bekliyor" 76 piksel) sayının ardındaki
+   boşluk yenip logolara dayanıyordu. Sabit sayıyı büyütmek de bedava
+   değil: 390 pikselde on piksel, altı logoluk satırı ikiye bölüyordu
+   (ölçüldü). Alt ızgara sütunu içeriğin kendisine ölçtürüyor — etiket ne
+   kadar uzunsa o kadar, logolara kalan da tam kalan kadar. */
+.pulseRows { display:grid; grid-template-columns:auto minmax(0,1fr); gap:4px; }
+
+/* SATIR BİR BAĞLANTI DEĞİL, HOVER'I YOK. Satırın üstüne gelince zemin
+   `--surface`e dönüyordu; panelde köşe yarıçapı sıfır olduğu için bu kenardan
+   kenara gri bir bant olarak basılıyor ve açık balonun altında başıboş bir
+   çubuk gibi duruyordu (ölçüldü, ana sayfa 1440). Tıklanan şey logo ve
+   görüş etiketi; tepkiyi de onlar veriyor. */
+.pulseRow { display:grid; grid-column:span 2; grid-template-columns:subgrid; align-items:center; column-gap:12px; padding:8px 10px; border-radius:14px; }
+
+.pulseStance { display:flex; align-items:baseline; gap:8px; font-size:13px; font-weight:700; letter-spacing:.03em; cursor:pointer; }
+
+.pulseStance b { font-size:22px; font-weight:600; letter-spacing:-.04em; color:var(--text-strong); }
+
+.pulseStanceStatic { cursor:default; }
+
+/* Tıklanabilir etiket hover'da cevap verir (14 Ekim): dilim hover'ıyla
+   aynı dil (parlaklık), hareket yok. Statik etiketler dışarıda. */
+@media (hover:hover) and (pointer:fine) {
+  .pulseStance:not(.pulseStanceStatic):hover { filter:brightness(1.08); }
+}
+
+.pulseStancePending { color:var(--text-muted); font-weight:600; }
+
+.pulseStancePending b { color:var(--text-muted); }
+
+/* Logosu soluk: sembol takipte ama henüz söyleyecek bir şeyi yok. */
+.pulseLogoPending { opacity:.5; filter:grayscale(1); }
+
+.pulseLogoPending:is(:hover, [data-card-open]) { opacity:1; filter:none; }
+
+.pulseLogos { display:flex; flex-wrap:wrap; gap:6px; min-width:0; }
+
+.pulseLogo { display:inline-flex; border-radius:10px; transition-property:background-color, box-shadow, opacity, filter; transition-duration:var(--default-transition-duration); transition-timing-function:var(--ease-brand); }
+
+/* MOBİLDE DOKUNMA ALANI 40. Künye 26×26 çiziliyor ve parmakla ıskalanıyordu.
+   Kutu büyümüyor: bağlantı 7 piksel dolgu alıp aynı kadar dışa taşıyor, yani
+   logolar aynı yerde duruyor. Aralık 6'dan 14'e çıkıyor ki iki komşunun
+   alanı tam bitişik olsun, üst üste binmesin (adım 26+14=40). Sekiz logo
+   bir satırda 306 piksel — 390'da sığıyor. */
+/* Genişliğe DEĞİL işaretçiye de bağlı: yatay telefonda ve dokunmatik
+   tablette (852×393, ölçüldü) logolar 32×32 ve 38 piksel adımla kalıyordu. */
+@media (max-width:767px), (pointer:coarse) {
+  .pulseLogos { gap:14px; }
+  .pulseLogo { padding:7px; margin:-7px; }
+}
+
+/* LOGO HOVER'I HER YERDE TON, HAREKET DEĞİL (23 Eylül). Taban kural logoyu
+   iki piksel kaldırıyordu; dizin varyantı onu zaten eziyordu (aşağıda) ama
+   ana sayfa paneli kendi kuralıyla yine kaldırıyordu. Hover yalnızca
+   ton: dizinde zemin, panelde kenar (kuralları varyant bloklarında). */
+.pulseLogo:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+
+/* BALONUN SAHİBİ İŞARETLİ. Balon ekran kenarına kırpıldığında logonun tam
+   üstünde durmayabiliyor; açık balonun logosu yıkanmış bir zemin ve iki
+   piksellik soluk bir halka alıyor, hangi logoya ait olduğu okunuyor. */
+.pulseLogo[data-card-open] { background:var(--primary-wash); box-shadow:0 0 0 2px var(--primary-faint); }
+
+.pulseChanges { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; padding-top:12px; border-top:1px solid var(--line-soft); font-size:12px; color:var(--text-muted); }
+
+.pulseChange { display:inline-flex; align-items:center; gap:6px; padding:3px 9px 3px 4px; border:1px solid var(--line); border-radius:999px; font-size:12px; font-weight:600; color:var(--text-strong); }
+
+.pulseChange:hover { border-color:var(--primary-faint); }
+
+/* Dokunma hedefi 42-44 piksele kaplama katmanıyla çıkar (14 Ekim): çip
+   ~28 pikseldi ve dosyanın kendi 40/44 standardının altındaydı. Görünen
+   çip aynı; dikey aralık 14, komşu alanlar binişmez. */
+@media (max-width:767px), (pointer:coarse) {
+  .pulseChange { position:relative; }
+  .pulseChange::after { content:""; position:absolute; inset:-7px -2px; }
+  .pulseChanges { gap:14px 8px; }
+}
+
+@media (max-width: 767px) {
+  /* Dar ekranda etiket ile logolar arası 8 piksel: sütun artık içeriğine
+     göre ölçüldüğü için kazanılan dört piksel doğrudan logolara gidiyor
+     ve altı logoluk satır tek satırda kalıyor. */
+  .pulseRow { column-gap:8px; padding:6px 4px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .pulseLogo { transition:none; }
+}
+
+/* 21 September, after the publication/alignment fixes: the directory cover
+   was 316/608px and MU's detail cover 503/1045px at 1440/390. Keep the
+   established subgrid and readable type; move the indicator summary to its
+   section and give the plan its own full-width band instead of shrinking text. */
+.pulse[data-variant="directory"] { position:relative; grid-template-columns:128px minmax(0,1fr); column-gap:18px; row-gap:12px; align-items:center; }
+
+.pulse[data-variant="directory"] > div:first-child { grid-column:1/-1; }
+
+.pulseDial { position:relative; width:128px; grid-column:1; grid-row:2; }
+
+.pulseDial svg { width:100%; stroke-width:7; }
+
+.pulseDial path { stroke:var(--verdict-hold); stroke-dasharray:1; stroke-linecap:round; }
+
+.pulseDial path[data-verdict="buy"] { stroke:var(--verdict-buy); }
+
+.pulseDial path[data-verdict="sell"] { stroke:var(--verdict-sell); }
+
+.pulseDial path[data-verdict="pending"] { stroke:var(--line-strong); }
+
+.pulseDialGuide { stroke:var(--line-soft); stroke-width:1; }
+
+.pulseDialCore { fill:var(--primary-tint); stroke:var(--primary-faint); stroke-width:.5; }
+
+.pulseDial > span { position:absolute; inset:0; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1px; }
+
+.pulseDial strong { font-size:32px; font-weight:600; line-height:1; letter-spacing:-.055em; color:var(--text-strong); }
+
+.pulseDial small { font-size:12px; color:var(--text-muted); }
+
+.pulse[data-variant="directory"] > .pulseBar { display:none; }
+
+.pulse[data-variant="directory"] > :is(.pulseRows, .distLegend) { grid-column:2; grid-row:2; }
+
+.pulse[data-variant="directory"] > .pulseChanges { grid-column:1/-1; }
+
+.pulse[data-variant="directory"] .pulseRow { padding:7px 0; border-radius:0; border-bottom:1px solid var(--line-soft); }
+
+.pulse[data-variant="directory"] .pulseRow:last-child { border-bottom:0; }
+
+.pulse[data-variant="directory"] .pulseStance b { font-size:19px; }
+
+/* LOGO HOVER'I TON, DÖNÜŞ DEĞİL (23 Eylül). Logo üç piksel kalkıp dört
+   derece dönüyordu: on beş logoluk bir satırda imlecin geçtiği her karo
+   sallanıyor ve dağılımın kendisinden çok süs okunuyordu. Logo balonu
+   açan bir düğme; tepkisi açık hâlinin (`[data-open]`) bir kademe
+   soluğu — yerinden oynamadan. */
+.pulse[data-variant="directory"] .pulseLogo:hover { background:var(--primary-tint); }
+
+/* The ring and the list encode the same counts. Below 1100 the linear
+   version leaves room for 40px touch areas, even with 15 identical views. */
+@media(max-width:1099px) {
+ .pulse[data-variant="directory"] { grid-template-columns:minmax(0,1fr); }
+ .pulse[data-variant="directory"] > .pulseDial { display:none; }
+ .pulse[data-variant="directory"] > .pulseBar { display:flex; }
+ .pulse[data-variant="directory"] > :is(.pulseRows, .distLegend) { grid-column:1; grid-row:auto; }
+}
+
+@media(max-width:767px) {
+ .editionTrack { margin-top:14px; padding-top:12px; }
+}
+
+/* Directory audit, 1440px: copy ended at 329px and distribution at 288px.
+   Both columns now share their natural row height; logos and the actual
+   distribution use the remaining area, without a fixed cover height. */
+@media(min-width:768px) {
+ .directoryHeader.directoryHeader:global(.page-frame) { align-items:stretch; }
+ .directoryHeader > :global(.page-heading-copy) { align-self:stretch; display:flex; flex-direction:column; }
+ /* KÜNYE AÇIKLAMANIN ALTINA OTURUYOR. `margin-top:auto` iki kolon
+    arasındaki yükseklik farkının tamamını açıklama ile yayın künyesi
+    ARASINA yığıyordu: sağdaki dağılım halkası ve "Görüşü Değişenler"
+    şeridi soldaki üç satırdan uzun, fark da kapağın ortasında boş bir
+    bant olarak duruyordu. Aynı kalıbı bu turda iki yerde daha söktük
+    (kapak görüş rozeti, harita künyesi) ve gerekçe hep aynı: fark yok
+    olmuyor, YER DEĞİŞTİRİYOR — okunacak iki şeyin arasına düştüğünde
+    zarar veriyor, kolonun dibinde kaldığında görünmüyor bile. */
+ .directoryHeader > :global(.page-heading-copy) > p:last-of-type { margin-bottom:18px; }
+ /* BAŞLIK İLE AÇIKLAMA ARASI (8 Kasım, sahibinin ekranı: "başlık ile
+    açıklama arasında büyük boş alan"). Display başlığın kutusu 73 piksel
+    (imler için üstten/alttan açılıyor, globals.css "ÜSTTEKİ İMLER") ve
+    altına satırın 13 + açıklamanın 10 pikseli ekleniyordu: 1440'ta
+    görünür boşluk ~40 piksel. Burada 4 + 0: açıklama başlığın hemen
+    altında (ölçüm rapor: açıklamanın üstü 214 → 195). */
+ .directoryHeader > :global(.page-heading-copy) > [data-title-share] { margin-bottom:4px; }
+ .directoryHeader > :global(.page-heading-copy) > [data-title-share] + p { margin-top:0; }
+ /* Açıklamanın 18 piksellik alt payı (yukarıda) şeridin üst payıyla
+    toplanıp hairline'ın üstünde 36 piksel bırakıyordu; şerit kendi payını
+    almıyor. */
+ .directoryHeader > :global(.page-heading-copy) > .editionTrack { margin-top:0; }
+ .directoryHeader > :last-child { display:flex; }
+ .directoryHeader .pulse[data-variant="directory"] { flex:1; align-content:stretch; }
+ .directoryHeader .pulse[data-variant="directory"] > .pulseRows { align-self:stretch; }
+ .directoryHeader .pulse[data-variant="directory"] > .pulseChanges { align-self:end; }
+}
+
+@media(min-width:1100px) {
+ .directoryHeader .pulse[data-variant="directory"] { grid-template-columns:148px minmax(0,1fr); }
+ .directoryHeader .pulseDial { width:148px; }
+}
+
+/* TELEFONDA LOGO SATIRLARI YOK (23 Eylül). 390×844'te başlık ve dağılım
+   607 piksel tutuyordu (dağılımın kendisi 294, logo satırları 188) ve
+   ilk kartın ilk fiyatı 968. pikselde, 764'teki sekme çubuğunun ARKASINDA
+   kalıyordu: ilk ekranda tek bir fiyat, plan ya da görüş yoktu (ölçüldü).
+   Logolar hemen aşağıda her kartın başında yeniden duruyor — `TechnicalPulse`
+   balonu karttan tam bu gerekçeyle almıştı. Renkli oran çubuğu ve "15
+   Hisse" künyesi kalıyor, sayılar da hemen altındaki süzgeçte AYNI
+   `counts` nesnesinden. Bekleyen sayısı başlık künyesine iniyor
+   (`.pulsePendingCount`), "Görüşü Değişenler" haber olduğu için kalıyor.
+   Balonlu logolar 768 ve üstünde.
+   İLK EKRANIN SON PİKSELLERİ (23 Eylül). Logolar gittikten sonra 390'da
+   ilk fiyat 759'da, sekme çubuğunun beş piksel üstündeydi; 320×640'ta ilk
+   kart 619'da, çubuk 560'ta — telefonun küçüğünde ilk ekranda yine plan
+   yoktu. Program cümlesi dipnota indi (page.tsx), künye tek satır oldu
+   (`.proximity`) ve başlık kartının iç aralıkları telefonda bir kademe
+   sıkı: kart aralığı 20 → 16, dağılımın üst dolgusu 16 → 14, oran
+   çubuğuyla başlığı arası 12 → 10. */
+.pulsePendingCount { display:none; }
+
+@media (max-width: 767px) {
+  .directoryHeader .pulse[data-variant="directory"] > .pulseRows { display:none; }
+  /* 8 Kasım: bekleyen sayısı telefonda da görüş satırlarında ("Bekliyor n"),
+     başlık künyesine inmiyor. */
+  .directoryHeader.directoryHeader:global(.page-frame) { gap:16px; }
+  .directoryHeader > :last-child { padding-top:14px; }
+  .directoryHeader .pulse[data-variant="directory"] { row-gap:10px; }
+}
+
+.pulse[data-variant="directory"] .pulseLogo > :first-child { width:32px; height:32px; border-radius:9px; }
+
+@media(max-width:767px), (pointer:coarse) { .pulse[data-variant="directory"] .pulseLogo { padding:6px; margin:-6px; } }
+
+/* Kimlik balonu kartlardan dağılım logolarına taşındı (22 Eylül); 28
+   Eylül'den beri sitenin ortak şirket kartı, kuralları
+   `components/ui/CompanyCard.module.css`te. */
+/* ---- Ana sayfa paneli: dağılım ----
+   Panelde logolar birer karo: 28 piksellik logo, 4 piksellik dolgu ve
+   birincil tonun soluğu — 36 piksellik bir hedef. Satırlar kenardan kenara
+   bir çizgiyle ayrılıyor; köşe yarıçapı sıfır, çünkü panel zaten kutu. */
+.pulse[data-variant="panel"] { gap:10px; }
+
+.pulse[data-variant="panel"] .pulseBar { height:5px; gap:3px; }
+
+.pulse[data-variant="panel"] .pulseRows { row-gap:0; }
+
+.pulse[data-variant="panel"] .pulseRow { padding:11px 0; border-radius:0; border-bottom:1px solid var(--line-soft); align-items:start; }
+
+.pulse[data-variant="panel"] .pulseRow:last-child { border-bottom:0; padding-bottom:0; }
+
+.pulse[data-variant="panel"] .pulseStance { min-height:36px; align-items:center; gap:8px; }
+
+.pulse[data-variant="panel"] .pulseLogos { gap:8px; }
+
+/* DIŞ BOŞLUK SIFIR, AÇIKÇA. Dar ekranın genel kuralı (`padding:7px;
+   margin:-7px`, logo ayrı karo değilken dokunma alanını büyütmek için)
+   buraya da iniyordu: panelde dolgu ezilip eksi yedi piksel kalınca
+   44 piksellik karolar 36 piksel adımla diziliyor, komşu karolar sekiz
+   piksel üst üste biniyor ve tonları tek bir şerit gibi birleşiyordu
+   (ölçüldü, 390 ve 320, dokunmatik). */
+.pulse[data-variant="panel"] .pulseLogo { position:relative; margin:0; padding:4px; border-radius:var(--radius-sm); background:var(--primary-tint); }
+
+.pulse[data-variant="panel"] .pulseLogo > :first-child { width:28px; height:28px; border-radius:calc(var(--radius-sm) - 2px); }
+
+/* HOVER KENAR TONU, KALKIŞ YOK (23 Eylül). Karo iki piksel kalkıyordu;
+   panelde hiçbir şey imleç altında yerinden oynamıyor. Tepki bir piksellik
+   iç kenar: açık hâlin (`[data-open]`, yıkanmış zemin + dış halka) bir
+   kademe altı, karonun ölçüsü değişmiyor. */
+.pulse[data-variant="panel"] .pulseLogo:hover { box-shadow:inset 0 0 0 1px var(--primary-faint); }
+
+.pulse[data-variant="panel"] .pulseLogo[data-card-open] { background:var(--primary-wash); box-shadow:0 0 0 2px var(--primary-faint); }
+
+/* DOKUNMA ALANI KARODAN BÜYÜK, KARO BÜYÜMEDEN. Görünen karo 36 piksel
+   kalıyor; telefonda ve dokunmatikte görünmez bir kat dört piksel dışa
+   taşıyor ve hedef 44 piksele çıkıyor. Bir dönem üç piksel (42) idi ve
+   sitenin 44 piksellik standardının altında kalıyordu (24 Eylül kapısı).
+   Aralık 6'dan 8'e çıktı ki iki komşunun alanı yine tam bitişik olsun,
+   üst üste binmesin (36 + 2×4 = 44 = 36 + 8). 390'da bir satıra altı
+   karo (6×44−8 = 256 ≤ 263). Genişliğe de bağlı: başsız ölçümde ve dar
+   pencerede `pointer:coarse` yok, hedef yine de telefon ölçüsünde. */
+@media(max-width:767px), (pointer:coarse) { .pulse[data-variant="panel"] .pulseLogo::after { content:""; position:absolute; inset:-4px; border-radius:var(--radius-sm); } }
+
+@media(prefers-reduced-motion:reduce) { .pulse .pulseLogo { transition:none; } }
+
+/* ---- Ana sayfa paneli: halka + lejant (26 Eylül) ----
+   Halka solda (104), lejant sağda; logo satırları altta tam genişlikte.
+   Düz oran çubuğu panelde kalkıyor: halka aynı oranı dilim dilim veriyor
+   ve her dilim bir hisse (dizindeki kurgunun aynısı). */
+.pulse[data-variant="panel"] { grid-template-columns:104px minmax(0,1fr); column-gap:18px; align-items:center; }
+
+.pulse[data-variant="panel"] > .pulseDial { width:104px; grid-column:1; grid-row:1; }
+
+.pulse[data-variant="panel"] .pulseDial strong { font-size:26px; }
+
+.pulse[data-variant="panel"] > .pulseBar { display:none; }
+
+.pulse[data-variant="panel"] > .pulseRows, .pulse[data-variant="panel"] > .pulseChanges { grid-column:1/-1; }
+
+.pulse[data-variant="panel"] .pulseStance b { display:none; }
+
+.pulse[data-variant="panel"] .pulseRow { padding:8px 0; border-radius:0; border-top:1px solid var(--line-soft); }
+
+.pulseLegend { display:grid; gap:2px; grid-column:2; grid-row:1; }
+
+.pulseLegend li { display:grid; grid-template-columns:minmax(0,1fr) auto 44px; align-items:baseline; gap:10px; padding:6px 0; border-bottom:1px solid var(--line-soft); font-size:13px; font-weight:700; letter-spacing:.03em; }
+
+.pulseLegend li:last-child { border-bottom:0; }
+
+.pulseLegend li > span { display:flex; align-items:center; gap:8px; }
+
+/* Lejant noktası halkadaki dilimin rengi — göz ikisini eşleştiriyor. */
+.pulseLegend li > span::before { content:""; width:8px; height:8px; flex-shrink:0; border-radius:999px; background:var(--verdict-hold); }
+
+.pulseLegend li[data-verdict="buy"] > span::before { background:var(--verdict-buy); }
+
+.pulseLegend li[data-verdict="sell"] > span::before { background:var(--verdict-sell); }
+
+.pulseLegend li[data-verdict="pending"] > span::before { background:var(--line-strong); }
+
+.pulseLegend b { font-size:22px; font-weight:600; line-height:1; letter-spacing:-.04em; color:var(--text-strong); }
+
+.pulseLegend small { text-align:right; font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); }
+
+/* Telefonda halka + lejant yerine cümle, sayı satır etiketinde (gerekçe
+   TechnicalPulse.tsx). */
+.pulseNote { display:none; }
+
+@media(max-width:767px) {
+  .pulse[data-variant="panel"] { grid-template-columns:minmax(0,1fr); }
+  .pulse[data-variant="panel"] > :is(.pulseDial, .pulseLegend) { display:none; }
+  .pulse[data-variant="panel"] > .pulseNote { display:block; margin:0; font-size:13px; line-height:1.45; color:var(--text-muted); }
+  .pulse[data-variant="panel"] .pulseStance b { display:inline; }
+}
+
+/* ANA SAYFA PANELİNDE LOGOLAR ORTAK IZGARADA (1 Ekim, sahibinin isteği:
+   "logolar alanı daha güzel doldursun"). 30 Eylül'de sararak alt satırda
+   yalnız kalan logo, karoları üst üste bindirerek tek satıra alınmıştı;
+   sonuç sıkışık bir yığındı ve satırın sağı yine boş kalıyordu (AL 7
+   satırın üçte ikisinde, TUT 8 biraz ötede bitiyordu — iki satır iki ayrı
+   uzunlukta). Şimdi iki satır da AYNI sekiz sütunlu ızgara: karolar satırı
+   kenardan kenara dolduruyor, kare kalıyor, bindirme yok ve AL ile TUT'un
+   logoları aynı sütunlarda alt alta duruyor. Sekizden fazlası bir alt
+   satıra aynı sütunlarla iniyor. Karo hücrenin genişliğinde: 390'da ~31,
+   430'da ~35 piksel (taban 36'ydı); dokunma hedefi hücrenin tamamı. */
+/* 10 Kasım (telefon turu) — SEKİZ SÜTUN → ALTI. Sekiz sütunda karo 28
+   piksel, adım 33 pikseldi: on altı logonun on altısı da 44'ün altında bir
+   hedefti (ölçüldü 390, `elementFromPoint`: alan 34×34) ve logolar bu
+   ekranın en küçük şirket işaretiydi. Altı sütunda karo ~40, adım ~44
+   (360'ta 36 / 40): ortak ızgara, kenardan kenara dolgu ve alt alta hiza
+   aynı; SAT 10 yine iki satır, TUT 6 tam bir satır. Görünmez taşma 4 → 3
+   piksel (adım artık kendisi 44; komşular üst üste binmesin). */
+/* RAYDA DA ALTI SÜTUN (10 Kasım, ana sayfa denetimi). ≥768'de logolar
+   serbest sarmadaydı (36 piksel karo + 8 aralık): 350 piksellik rayda
+   satıra beş sığıyor, TUT ve SAT kümelerinin altıncısı tek başına alt
+   satıra düşüyordu — 1440/1280'de [5, 1, 5, 1, 4], canlıda [6, 1, 6, 3]
+   (ölçüldü). Izgara altı sütun, hücre en çok 44: karo hücreye göre
+   küçülüyor (rayda ~36), satırlar eşit doluyor; tablet tam genişlikte
+   karo 36'da kalıyor (sütun tavanı 44, dolgu 4). */
+@media (min-width:768px) {
+  .pulse[data-variant="panel"] .pulseLogos { display:grid; grid-template-columns:repeat(6,minmax(0,44px)); gap:6px; }
+  .pulse[data-variant="panel"] .pulseLogo { width:100%; aspect-ratio:1; }
+  .pulse[data-variant="panel"] .pulseLogo > :first-child { width:100%; height:100%; }
+}
+
+@media (max-width:767px) {
+  .pulse[data-variant="panel"] .pulseLogos { display:grid; grid-template-columns:repeat(6,minmax(0,1fr)); gap:4px; }
+  .pulse[data-variant="panel"] .pulseLogo { width:100%; aspect-ratio:1; padding:3px; }
+  .pulse[data-variant="panel"] .pulseLogo::after { inset:-3px; }
+  .pulse[data-variant="panel"] .pulseLogo > :first-child { width:100%; height:100%; }
+}
+
+/* 380'in altında beş sütun: altı sütunda karo 34, adım 38 pikseldi (ölçüldü
+   360); beşte karo ~40, adım ~44. */
+@media (max-width:379px) {
+  .pulse[data-variant="panel"] .pulseLogos { grid-template-columns:repeat(5,minmax(0,1fr)); }
+}
+
+/* GENİŞ KAPTA İKİ KOLON (11 Kasım, tablet denetimi). 768–1279'da panel
+   tam genişlikte (gerekçe TodayExperience.module.css → "PANO: TABLET
+   DÜZENİ 1279'A KADAR") ve iç ızgara rayın düzenini geriyordu: 1024'te
+   halka solda, lejant 812 piksel ("TUT ··· 6 %38" arasında 701 piksel),
+   logo kümeleri 867 piksellik kutunun 294'ünü kullanıyordu; 768'de 445
+   piksel ve 611'in 294'ü (gerçek sayfa + sahte sağlayıcı, iki tema aynı).
+   Şimdi solda okuma (halka + lejant), sağda kümeler, aralarında kıl çizgi:
+     · kap ≥ 600 (768'de 678): halka lejantın ÜSTÜNDE, sol kolon 180;
+     · kap ≥ 860 (1024'te 934): halka ile lejant yan yana, lejant 220.
+   Logo ızgarası yine ALTI sütun (yukarıdaki "RAYDA DA ALTI SÜTUN" kararı),
+   hücre tavanı 44 → 52: geniş kolonda kümeler kenara sıkışmıyor, karo
+   44 piksellik logo taşıyor. Kap `TechnicalPanel`in gövdesi
+   (`.pulseScope`); rayda (≥1280, kap 308) bu bloklar hiç çalışmıyor —
+   önce/sonra ölçümü aşağıda. 768'in altında halka ve lejant gizli
+   (telefon kuralı), kap sorgusu o yüzden ≥768 medyasının içinde.
+   Ölçüm (gerçek sayfa + sahte sağlayıcı, reduced-motion, iki tema aynı):
+     lejantta etiket → sayı   1024: 701 → 109 · 768: 445 → 69 piksel
+     logo kutusu kullanımı    1024: 294/867 → 352/460 · 768: 294/611 → 352/374
+     karo 44 → 52; panel boyu 1024: 435 → 327 · 768: 435 → 366
+   Yatay taşma 0, taşan/kırpılan öğe 0 (768/820/940/960/1024/1279);
+   ≥1280 ve 390'da panelin 106 / 74 kutusu birebir aynı. */
+@media (min-width:768px) {
+  @container tech-pulse (min-width:600px) {
+    .pulse[data-variant="panel"] { grid-template-columns:180px minmax(0,1fr); grid-template-rows:auto auto; column-gap:28px; row-gap:14px; }
+    .pulse[data-variant="panel"] > .pulseDial { grid-column:1; grid-row:1; justify-self:center; align-self:end; }
+    .pulse[data-variant="panel"] > .pulseLegend { grid-column:1; grid-row:2; align-self:start; }
+    .pulse[data-variant="panel"] > .pulseRows { grid-column:2; grid-row:1 / span 2; align-self:stretch; align-content:center; padding-left:28px; border-left:1px solid var(--line-soft); }
+    .pulse[data-variant="panel"] > .pulseChanges { grid-column:1 / -1; }
+    .pulse[data-variant="panel"] .pulseRow:first-child { padding-top:0; border-top:0; }
+    .pulse[data-variant="panel"] .pulseLogos { grid-template-columns:repeat(6,minmax(0,52px)); gap:8px; }
+    /* Etiket ilk logo satırının ortasında: karo 52, etiket kutusu da 52. */
+    .pulse[data-variant="panel"] .pulseStance { min-height:52px; }
+  }
+  @container tech-pulse (min-width:860px) {
+    .pulse[data-variant="panel"] { grid-template-columns:104px 220px minmax(0,1fr); grid-template-rows:auto; column-gap:22px; }
+    .pulse[data-variant="panel"] > .pulseDial { grid-row:1; align-self:center; }
+    .pulse[data-variant="panel"] > .pulseLegend { grid-column:2; grid-row:1; align-self:center; }
+    .pulse[data-variant="panel"] > .pulseRows { grid-column:3; grid-row:1; margin-left:10px; }
+  }
+}
+
+/* 360'ın altında etiket ("AL 7") logoların ÜSTÜNDE: yan yana dururken
+   sekiz sütuna 193 piksel kalıyor ve karo 20 piksele iniyordu (320,
+   ölçüldü). Izgara satırın tam genişliğini alınca karo ~28. */
+@media (max-width:359px) {
+  .pulse[data-variant="panel"] .pulseRows { grid-template-columns:minmax(0,1fr); }
+  .pulse[data-variant="panel"] .pulseRow { grid-column:auto; grid-template-columns:minmax(0,1fr); row-gap:8px; }
+}
+
+@keyframes pulse-tip-in { from { opacity:0; } }
+
+@media (prefers-reduced-motion:reduce) {
+  .pulseTip { animation:none; }
+}
+
+/* ---- Görüş dağılımının satırları (8 Kasım) ----
+   Gerekçe `TechnicalPulse` → "GÖRÜŞ SATIRLARI". Satır: hap + sayı + pay,
+   sağında kulvar üstünde 5 piksellik oran şeridi; altında dengeli logo
+   ızgarası. Hap sütunu `max-content` (hap sabit genişlikli sütuna konmaz,
+   CLAUDE.md) ve satırlar alt ızgarayı paylaşıyor: üç satırın şeritleri
+   aynı x'te başlıyor. */
+.distLegend { display:grid; grid-template-columns:max-content minmax(0,1fr); align-content:start; gap:14px 14px; min-width:0; margin:0; padding:0; list-style:none; }
+
+.distRow { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; align-items:center; row-gap:9px; min-width:0; }
+
+.distHead { display:inline-flex; align-items:center; gap:8px; min-width:0; }
+
+label.distHead { cursor:pointer; }
+
+.distCount { min-width:1.4ch; font-size:19px; font-weight:700; line-height:1; letter-spacing:-.035em; color:var(--text-strong); }
+
+.distShare { font-size:12px; font-weight:600; color:var(--text-muted); }
+
+.distPending { display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:999px; background:var(--surface-sunken); font-size:12px; font-weight:700; color:var(--text-muted); }
+
+.distTrack { position:relative; height:5px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
+
+.distTrack i { position:absolute; inset:0 auto 0 0; border-radius:inherit; background:var(--verdict-hold); transform-origin:left center; }
+
+.distRow[data-verdict="buy"] .distTrack i { background:var(--verdict-buy); }
+
+.distRow[data-verdict="sell"] .distTrack i { background:var(--verdict-sell); }
+
+.distRow[data-verdict="pending"] .distTrack i { background:var(--line-strong); }
+
+/* Boş görüş soluk ama okunur: hap ve sayı yerinde, şeridin yerinde cümle. */
+.distRow[data-empty] .distHead { opacity:.5; }
+
+.distNone { margin:0; font-size:12.5px; line-height:1.35; color:var(--text-muted); }
+
+/* Hücre en çok 44 piksel, karo hücreye göre küçülüyor (sütun sayısı
+   `balancedColumns`). Dokunmatikteki dolgu/negatif pay hilesi (yukarıda,
+   `.pulseLogo`) burada gerekmiyor: karo zaten 40 pikselden büyük. */
+.distLogos { display:grid; grid-column:1 / -1; grid-template-columns:repeat(var(--cols, 8), minmax(0, 44px)); gap:8px; }
+
+.distLogos .distLogo { display:block; width:100%; padding:0; margin:0; border-radius:12px; }
+
+.distLogos .distLogo > :global(*) { width:100%; height:auto; aspect-ratio:1 / 1; border-radius:11px; }
+
+/* `.pulseLogo`un ölçü kuralları (32 piksel kutu, dokunmatik payı) burada
+   istenmediği için sınıf ayrı; hover/odak/açık balon dili aynı: ton. */
+.distLogos .distLogo { transition:outline-color 180ms var(--ease-brand); outline:2px solid transparent; outline-offset:2px; }
+
+.distLogos .distLogo:hover { outline-color:var(--primary-faint); }
+
+.distLogos .distLogo:focus-visible { outline-color:var(--line-focus); }
+
+.distLogos .distLogo[data-card-open] { outline-color:var(--primary); }
+
+/* Şerit soldan kendi payına uzar, bir kez; hareketi azaltana son kare. */
+.distTrack i { animation:dist-grow var(--draw) var(--ease-brand) both; }
+
+.distRow:nth-child(2) .distTrack i { animation-delay:calc(var(--step) * 2); }
+
+.distRow:nth-child(3) .distTrack i { animation-delay:calc(var(--step) * 4); }
+
+.distRow:nth-child(4) .distTrack i { animation-delay:calc(var(--step) * 6); }
+
+@keyframes dist-grow { from { transform:scaleX(0); } }
+
+@media (prefers-reduced-motion: reduce) { .distTrack i { animation:none; } }
+
+/* Telefonda logolar yok (gerekçe "TELEFONDA LOGO SATIRLARI YOK", yukarıda);
+   satırlar — hap, sayı, pay, şerit — kalıyor, eski renk anahtarının yerine. */
+@media (max-width: 767px) {
+  .distLegend { row-gap:10px; }
+  .distLogos { display:none; }
+}
+
+/* 10 Kasım: telefonda dağılım satırının süzgeç etiketi 125 × 28 pikseldi
+   (dokunma hedefi < 44). Görünür ölçü aynı; hedef yukarı ve aşağı 8 piksel
+   büyür (satır aralığı 10, komşu satırla en çok 6 piksel örtüşür). */
+@media (max-width: 767px) {
+  label.distHead { position:relative; }
+  label.distHead::after { content:""; position:absolute; inset:-8px 0; }
+}
+
+/* Halka 6 piksel: dağılım halkası 160'lık görünüm kutusunda 128 piksel
+   (ölçek 0,8 → 7,5 birim), RSI kadranı 200'lük kutuda ~200 piksel. */
+.pulse[data-variant="directory"] .pulseDial svg { stroke-width:7.5; }

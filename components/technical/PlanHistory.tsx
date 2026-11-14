@@ -10,8 +10,9 @@ import {
   type PlanHistoryEntry,
 } from "@/lib/technical";
 import { cn, formatEtDateCompact, formatPrice, NO_VALUE } from "@/lib/utils";
-import { changeToneClass } from "./TechnicalCard";
-import styles from "./Technical.module.css";
+import { changeToneClass } from "./card-text";
+import styles from "./PlanHistory.module.css";
+import sections from "./TechnicalSections.module.css";
 import visuals from "./TechnicalVisuals.module.css";
 
 /* Çok dar bir bölge (tek fiyat ya da ölçeğin binde biri) çizgide kaybolmasın. */
@@ -150,7 +151,7 @@ export function PlanHistory({
           </tbody>
         </table>
       </div>
-      {scale && <p className={styles.footHint}>{t.technical.historyNote}</p>}
+      {scale && <p className={sections.footHint}>{t.technical.historyNote}</p>}
     </>
   );
 }

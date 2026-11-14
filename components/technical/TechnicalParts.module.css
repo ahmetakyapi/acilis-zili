@@ -1,0 +1,57 @@
+/* TEKNİK ANALİZ — ORTAK KÜÇÜK PARÇALAR (plan rozeti, değişim çipi, görüş
+   hapı, "Görüş Ne Demek" bağlantısı). Teknik kart, kapak, plan paneli, hisse
+   sayfasının teknik kartı ve portföy bu dosyayı içe aktarır.
+
+   MODÜL BÖLÜNDÜ (14 Kasım 2026, performans denetimi). Kurallar tek
+   `Technical.module.css`teydi (189 kB kaynak, derlenmiş 98 kB): hisse
+   sayfası yalnız `StockTechnicalCard` için bütün dosyayı indiriyordu
+   (kapsama %2). CSS gruplama (`cssChunking`) TEK modülü bölemez; dosya
+   bileşen ailesine göre ayrıldı, her bileşen yalnız kendi ailesini içe
+   aktarır. Kural metinleri ve karar yorumları AYNEN taşındı; hiçbir
+   tüketicide kullanılmayan kurallar (eski kapak, gösterge çipleri, katlama,
+   "öteki şirketler" kartları, eski okuma ızgarası…) silindi.
+   ÇAPRAZ ATIF: iki ailenin sınıfını birlikte seçen kural (`.a .b`) iki
+   ucuyla AYNI modülde, her zaman sıradaki daha temel modülde yaşar (sıra:
+   Parts → Sections → Plan → …); öteki modüldeki sınıf `composes` ile o
+   modülün sınıfını da taşır. Sınıf adları modül kapsamlı olduğu için başka
+   türlü kural eşleşmez. Bölünmenin ölçümü: `StockTechnicalCard.module.css`
+   başında. */
+
+.change { display:inline-flex; align-items:center; gap:4px; padding:2px 8px; border:1px solid currentColor; border-radius:var(--radius-sm); font-size:12px; font-weight:700; white-space:nowrap; }
+
+.quoteGrid > .plan { grid-area:plan; align-self:center; }
+
+/* Plan konumu: fiyatın alım planına göre yeri, tek kısa etiket. Ton
+   anlamdan: bölgede yükseliş, stop altında düşüş, dışında nötr. */
+.plan { display:inline-flex; align-self:flex-start; align-items:center; gap:6px; padding:3px 10px; border-radius:var(--radius-sm); font-size:12px; font-weight:700; letter-spacing:.01em; }
+
+/* Konum rozeti (25 Ekim): "Bölgenin %2,3 Üstünde" bir uzaklık; zemini
+   markanın yumuşak mavisi, yazısı mürekkep — doygun etkileşim mavisi sayı
+   metninde yok (rozet düğme gibi okunuyordu). Bölgede olmak alım bölgesinin
+   yeşilinde (bölge her ekranda aynı yeşil), stopun altı yön kırmızısında. */
+.plan[data-kind="inZone"] { background:var(--up-wash); color:var(--up); }
+
+.plan[data-kind="above"], .plan[data-kind="below"] { background:var(--primary-wash); color:var(--text-strong); }
+
+.plan[data-kind="belowStop"] { background:var(--down-wash); color:var(--down); }
+
+.quoteGrid > .plan { padding:3px 8px; font-size:12px; }
+
+.stancePill { display:inline-flex; align-items:center; padding:9px 22px; border-radius:999px; font-size:clamp(19px,1.7vw,22px); font-weight:700; letter-spacing:.07em; line-height:1.1; }
+
+/* Çip liste kartındakiyle aynı ölçüde: kapaktaki 19-22 punto burada satırı
+   şişirir, kartın kendisi zaten kısa. */
+.stockCard .stancePill { padding:5px 16px; font-size:16px; letter-spacing:.06em; }
+
+/* 14 Kasım 2026 (görsel tur): görüşün rengi sol kenarda 3 piksellik iç
+   gölgeydi; sitenin ton şeridi ise her yerde TEPEDE 3 piksel (kapak, liste
+   kartı, bilanço ve risk kartları). Yan kenar tek tutarsız yerdi; bölüm de
+   artık kutusuz (aşağıda "AÇIK BÖLÜM"), tonu başlığın önündeki kısa şerit
+   taşıyor (`.stanceGuide[data-tone] .sectionTitle::before`). */
+.stanceGuideLink { display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:600; color:var(--primary); }
+
+.stanceGuideLink:hover { color:var(--primary-hover); }
+
+.stancePill { display:inline-flex; width:max-content; align-items:center; padding:2px 10px; border-radius:999px; font-size:12px; font-weight:700; letter-spacing:.04em; }
+
+.stanceOthers li .stancePill { justify-content:center; width:100%; }

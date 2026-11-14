@@ -4,7 +4,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { distancePct, formatRange, openPlan, riskReward, type OpenSide } from "@/lib/technical";
 import { cn, directionOf, directionText, formatPercent, formatPercentPlain, formatPrice } from "@/lib/utils";
 import { openSideLabel, openWhyText } from "./open-plan";
-import styles from "./Technical.module.css";
+import styles from "./TechnicalPlan.module.css";
 
 type Cell = { kind: "entry" | "target" | "stop" | "sellLevel" | "support" | "resistance"; label: string; value: string | null };
 

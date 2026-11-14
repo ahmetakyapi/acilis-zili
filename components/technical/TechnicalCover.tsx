@@ -14,8 +14,9 @@ import type { Bar } from "@/lib/providers/types";
 import { LevelScale } from "./LevelScale";
 import { openRangeOf } from "./OpenRange";
 import { PriceChart } from "./PriceChart";
-import { changeToneClass, planPositionLabel } from "./TechnicalCard";
-import styles from "./Technical.module.css";
+import { changeToneClass, planPositionLabel } from "./card-text";
+import styles from "./TechnicalDetail.module.css";
+import parts from "./TechnicalParts.module.css";
 import cover from "./TechnicalCover.module.css";
 
 /**
@@ -39,9 +40,9 @@ import cover from "./TechnicalCover.module.css";
  * gerekçenin gri kutusu kalktı). Şirket sayfasının başlığıyla aynı kurgu:
  * kimlik satırı, altında display fiyat. Görüş rengi kartlardaki gibi
  * tepedeki 3 piksellik şeritte. Yerleşim `TechnicalCover.module.css`te;
- * `Technical.module.css`teki `.coverMain` / `.coverSide` / `.coverIdentity`
- * / `.coverThesis` / `.coverTrack` kuralları artık kullanılmıyor (kayıtları
- * tarihçe). Ölçüm (1440×900, NVDA/AMD/AAPL): kapak 729/724/724 → 787
+ * eski `Technical.module.css`teki `.coverMain` / `.coverSide` /
+ * `.coverIdentity` / `.coverThesis` / `.coverTrack` kuralları modül 14
+ * Kasım'da bölünürken silindi (kayıtları git tarihçesinde). Ölçüm (1440×900, NVDA/AMD/AAPL): kapak 729/724/724 → 787
  * piksel — 58 piksel uzadı ama ilk ekrana artık kimlik, fiyat, gerekçe,
  * okuma ve PLANIN TAMAMI sığıyor (plan bandı y=745'te bitiyor; eskiden
  * seviye kartları ekranın alt kenarında kesiliyordu), künye satırı katın
@@ -172,7 +173,7 @@ export function TechnicalCover({
             {/* Etiket yalnızca ekran okuyucuya: gerekçe `.stancePill` yorumunda. */}
             <span className="sr-only">{t.technical.stanceLabel}</span>
             <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} size="custom" className={cover.pill} />
-            {change && <span className={cn(styles.change, changeToneClass(verdict))}>{change}</span>}
+            {change && <span className={cn(parts.change, changeToneClass(verdict))}>{change}</span>}
           </div>
         </div>
 
@@ -201,7 +202,7 @@ export function TechnicalCover({
           {(position || (row.snapshot.price !== null && price !== null && Math.abs(row.snapshot.price - price) >= 0.005)) && (
             <div className={cover.priceContext}>
               {position && (
-                <span className={styles.plan} data-kind={position.kind}>
+                <span className={parts.plan} data-kind={position.kind}>
                   {planPositionLabel(position, locale, t)}
                 </span>
               )}

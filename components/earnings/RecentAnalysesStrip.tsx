@@ -10,6 +10,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { MetricStrip } from "@/components/earnings/MetricStrip";
 import { robustScale } from "@/lib/analysis-visuals";
 import { cn, formatPercentPlain } from "@/lib/utils";
+import { listLogoSrc } from "@/lib/logos";
 import { LogoTile } from "@/components/ui/primitives";
 import { ScrollEdges } from "@/components/ui/ScrollEdges";
 import styles from "./RecentAnalysesStrip.module.css";
@@ -35,12 +36,13 @@ import styles from "./RecentAnalysesStrip.module.css";
  */
 export function RecentAnalysesStrip({
   rows,
-  meta,
   t,
   locale,
 }: {
   rows: AnalysisIndexRow[];
-  meta: Record<string, SymbolMeta>;
+  /** Şeridin logosu artık yalnız depodan (`listLogoSrc`); alan çağıranın
+   *  sözleşmesi için duruyor, okunmuyor. */
+  meta?: Record<string, SymbolMeta>;
   t: Dictionary;
   locale: Locale;
 }) {
@@ -115,7 +117,8 @@ export function RecentAnalysesStrip({
       <ScrollEdges as="ul" className={`no-scrollbar ${styles.list}`}>
         {rows.map((row) => {
           const verdict = verdictOf(row.verdict);
-          const logoUrl = meta[row.symbol]?.logoUrl;
+          /* Liste yuvası: yalnız depodaki logo (gerekçe `listLogoSrc`). */
+          const logoUrl = listLogoSrc(row.symbol);
           return (
             <li key={`${row.symbol}-${row.period}`} className={styles.item}>
               <Link

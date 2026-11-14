@@ -1,7 +1,8 @@
 /* Detay sayfasının okuma ızgarası (14 Kasım 2026, görsel tur). Kurgu ve
    ölçüm `app/(app)/teknik-analiz/[symbol]/page.tsx` → "OKUMA IZGARASI".
-   Eski kurallar `Technical.module.css`te (`.analysisGrid`, `.analysisLeft`,
-   `.notesPanel`, `.watchPanel`): artık kullanılmıyor, kayıtları tarihçe.
+   Eski kurallar (`.analysisGrid`, `.analysisLeft`, `.notesPanel`,
+   `.watchPanel`) `Technical.module.css` 14 Kasım'da bölünürken silindi;
+   kayıtları git tarihçesinde.
 
    İKİ KOLON + GEZEN BLOK. Sol: seviyeler (dayanağı panelin künyesi).
    Sağ: değerlendirme. "Dikkat Edilecekler" üç yerden birine oturur

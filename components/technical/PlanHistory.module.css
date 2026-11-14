@@ -1,0 +1,117 @@
+/* TEKNİK ANALİZ — PLAN GEÇMİŞİ TABLOSU (`PlanHistory`). Bölünme gerekçesi
+   `TechnicalParts.module.css` başında. */
+
+/* Çapraz atıf: aşağıdaki sınıflar başka bir modülün seçicisinde de geçiyor; o kural orada yaşıyor, sınıf adı composes ile ikisini birden taşıyor. */
+.historyTable { composes: historyTable from "./TechnicalSections.module.css"; }
+.tableWrap { composes: tableWrap from "./TechnicalSections.module.css"; }
+
+/* ---- Liste ve tablo ---- */
+.tableWrap { overflow-x:auto; overflow-y:hidden; overscroll-behavior-x:none; }
+
+.table { width:100%; border-collapse:collapse; font-size:13px; }
+
+.table th { padding:8px 12px; border-bottom:1px solid var(--line); font-size:12px; font-weight:700; letter-spacing:.03em; text-align:left; color:var(--text-muted); white-space:nowrap; }
+
+.table td { padding:10px 12px; border-bottom:1px solid var(--line-soft); color:var(--text-body); letter-spacing:-.01em; white-space:nowrap; }
+
+.table tr:last-child td { border-bottom:0; }
+
+.table th:first-child, .table td:first-child { padding-left:0; }
+
+@media (max-width: 767px) {
+
+  /* GÖRÜŞ GEÇMİŞİ MOBİLDE TABLO DEĞİL, SATIR YIĞINI.
+     Beş sütun 390 pikselde sığmıyordu: kutu 176 piksel yatay kayıyordu
+     (ölçüldü) ve "Alım Bölgesi" ile "Stop" ekranın dışında kalıyordu —
+     yani tablodaki beş sütunun ikisi hiç görünmüyordu. Yatay kaydırma
+     burada bir çözüm değil: okuyucu kaydırılacak bir şey olduğunu bilmiyor
+     ve tablo başlığı kayınca hangi sayının ne olduğu da kayboluyor.
+     Her kayıt artık iki satır: üstte tarih, yayın ve görüş; altta seviyeler
+     kendi adlarıyla (`data-label`). Başlık satırı gizleniyor çünkü adlar
+     hücrenin yanına indi. */
+  /* 10 Kasım 2026: `overflow-x:visible` tek başına `overflow-y:hidden`ın
+     yanında `auto`ya dönüyor (CSS kuralı) ve kap yine kaydırma kabıydı:
+     390'da 320/325, 360'ta 290/294 (ölçüldü, canlı). İki eksen birlikte
+     görünür; satır yığınında taşan bir şey yok. */
+  .tableWrap { overflow:visible; }
+  .table, .table tbody, .table tr, .table td { display:block; }
+  .table thead { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+  .table tr { display:grid; grid-template-columns:auto auto 1fr; align-items:center; gap:2px 10px; padding:12px 0; border-bottom:1px solid var(--line-soft); }
+  .table tr:last-child { border-bottom:0; }
+  .table td { padding:0; border-bottom:0; white-space:normal; }
+  .table td[data-cell="stance"] { justify-self:end; }
+  /* Seviyeler ikinci satırda, adlarıyla: "Alım Bölgesi 906,08 – 926,44 $". */
+  .table td[data-cell="entry"], .table td[data-cell="stop"] { grid-column:1/-1; display:flex; gap:6px; margin-top:2px; font-size:12px; color:var(--text-muted); }
+  .table td[data-cell="entry"]::before, .table td[data-cell="stop"]::before { content:attr(data-label) ":"; flex:none; font-weight:600; color:var(--text-muted); }
+  .table td[data-cell="date"] { font-weight:700; color:var(--text-strong); }
+}
+
+.table tbody tr { transition:background 180ms var(--ease-brand); }
+
+.table tbody tr:hover { background:var(--primary-tint); }
+
+@media(prefers-reduced-motion:reduce) {
+ .table tbody tr { transition:none; }
+}
+
+/* ---- Görüş geçmişi: planın seyri (29 Eylül) ----
+   Gerekçe `PlanHistory` üzerinde. Çizgi ince bir ray: bölge görüşün
+   renginde bir kapsül (AL yükseliş, TUT birincil, SAT düşüş), stop kırmızı
+   bir çentik. Ölçek başlıkta yazılı (en düşük – en yüksek), satırlar aynı
+   ölçeği paylaşıyor. Satırlar 42 pikseldi, 34'e indi: tablo on iki yayını
+   taşırken bile ekranın sayısı değil seyri okutması gerekiyor. */
+.historyTable td { padding-block:7px; }
+
+.historyTable th[data-cell="track"], .historyTable td[data-cell="track"] { width:34%; min-width:180px; padding-right:0; }
+
+.historyScale { display:flex; justify-content:space-between; gap:12px; }
+
+.historyCount { margin-left:8px; font-size:12px; font-weight:600; color:var(--text-muted); }
+
+/* Plansız yayının tek hücresi (gerekçe PlanHistory.tsx). */
+.historyTable td.historyPlanless { font-size:12.5px; color:var(--text-muted); }
+
+/* Planın Seyri Tek Harita'nın dilinde (25 Ekim): 5 piksellik kulvar, alım
+   bölgesi Tek Harita'daki bantla AYNI sınıf (`TechnicalVisuals.module.css`
+   → `.zoneBand`, alım planının yumuşak yeşili), stop kırmızı çentik. Bant
+   görüşe göre yeşil/mavi/kırmızı boyanıyordu: aynı bölge iki ekranda iki
+   renkti. */
+.historyTrack { position:relative; display:block; height:14px; }
+
+.historyTrack::before { content:""; position:absolute; left:0; right:0; top:50%; height:var(--lane-h, 5px); translate:0 -50%; border-radius:999px; background:var(--line-soft); }
+
+.historyTrack b { position:absolute; top:1px; height:12px; }
+
+.historyTrack i { position:absolute; top:0; width:2px; height:14px; margin-left:-1px; border-radius:1px; background:var(--down); }
+
+@media (max-width: 767px) {
+  /* TELEFONDA ÜÇ SATIR, İKİ DEĞİL DÖRT DEĞİL: üstte tarih, yayın, görüş;
+     ortada bölge solda, stop sağda (ikisi ayrı satırdaydı); altta ray. */
+  .historyTable tr { grid-template-columns:auto minmax(0,1fr) auto; padding:9px 0; row-gap:4px; }
+  .historyTable td { padding-block:0; }
+  .historyTable td[data-cell="edition"] { font-size:12.5px; line-height:1.35; }
+  .historyTable td[data-cell="entry"] { grid-column:1 / 3; }
+  .historyTable td[data-cell="stop"] { grid-column:3; justify-self:end; }
+  .historyTable td[data-cell="track"] { grid-column:1 / -1; width:auto; min-width:0; margin-top:2px; }
+  .historyTable td[data-cell="planless"] { grid-column:1 / -1; }
+  .historyCount { margin-left:6px; }
+  /* Aralık tek parça (10 Kasım 2026): 360'ta "196,20 –" / "199,34 $" iki
+     satıra kırılıyordu (ölçüldü). 380'in altında stop kendi satırına iner. */
+  .historyTable td[data-cell="entry"] { white-space:nowrap; }
+}
+
+@media (max-width: 379px) {
+  .historyTable td[data-cell="stop"] { grid-column:1 / -1; justify-self:start; }
+}
+
+/* 768–1023 SIĞAN SÜTUNLARLA (10 Kasım 2026, sahibinin sözü: "tablolar sağa
+   sola kaymasın"). Satır yığını 767'de bitiyor ve altı sütunlu tablo 768'de
+   670 piksellik kaba 843 piksel basıyordu (ölçüldü, canlı NVDA). Bu bantta
+   "Yayın" sütunu düşüyor (aynı günün dilimi; tarih zaten satırı söylüyor)
+   ve planın seyri 180 yerine 140 piksel tabanla kalan yeri alıyor. */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .historyTable :is(th, td)[data-cell="edition"],
+  .historyTable thead th:nth-child(2) { display:none; }
+  .historyTable th[data-cell="track"], .historyTable td[data-cell="track"] { min-width:140px; }
+  .historyTable th, .historyTable td { padding-inline:10px; }
+}

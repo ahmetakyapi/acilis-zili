@@ -1,7 +1,8 @@
 /* Teknik analiz detay kapağı — DÖRT SATIRLIK DEFTER (10 Kasım 2026).
    Kurgu ve gerekçe `TechnicalCover.tsx` başında. Bu dosya yalnız kapağın
    YERLEŞİMİ; hap, plan rozeti, ölçek, plan kartları ve gösterge bakışı kendi
-   modüllerinde (`Technical.module.css`, `LevelScale.module.css`).
+   modüllerinde (`TechnicalParts`, `TechnicalPlan`, `TechnicalDetail`,
+   `LevelScale.module.css`).
 
    ORTAK ÖLÇÜLER (.claude/rules/arayuz.md): öne çıkan tek yüzey
    `--radius-feature`; display sayı 700 / −0,03em; ağırlıklar 400/600/700;

@@ -2,7 +2,7 @@ import type { CSSProperties } from "react";
 import type { VerdictKey } from "@/lib/analysis";
 import { spreadLabels } from "@/lib/technical-visuals";
 import { cn } from "@/lib/utils";
-import styles from "./Technical.module.css";
+import styles from "./TechnicalPlan.module.css";
 
 /* Halka ile nokta arasındaki en küçük mesafe. MU'da fiyat analizden beri
    %0,45 yol almıştı ve bu 380 piksellik rayda 7 piksel ediyordu: 8
@@ -104,7 +104,7 @@ export type TrackSegment = { from: number; to: number; tone: "up" | "down" | "fl
  *     (`data-motion-draw="line"`); halka (analiz anı) yerinde duruyor.
  *
  * `size="lg"` PROP'U DA KALKTI: CSS'teki `lg` ölçüsü detay kapağından
- * çizgi çıkarılırken silinmişti (Technical.module.css → "`lg` ÖLÇÜSÜ
+ * çizgi çıkarılırken silinmişti (TechnicalPlan.module.css → "`lg` ÖLÇÜSÜ
  * KALKTI"), prop hiçbir şeye bağlı değildi.
  */
 export function LevelTrack({

@@ -1,0 +1,89 @@
+/* TEKNİK ANALİZ — HİSSE SAYFASININ TEKNİK KARTI (`StockTechnicalCard`).
+   Bölünme gerekçesi `TechnicalParts.module.css` başında. Ölçüm (14 Kasım,
+   `next build` + `next start`, sahte sağlayıcı): hisse sayfası önce bütün
+   teknik modülü (derlenmiş 98 kB) indiriyordu; şimdi bu dosya ile
+   `TechnicalParts` (ayrıntı rapor: performans denetimi kalem 1). */
+
+/* Çapraz atıf: aşağıdaki sınıflar başka bir modülün seçicisinde de geçiyor; o kural orada yaşıyor, sınıf adı composes ile ikisini birden taşıyor. */
+.stockCard { composes: stockCard from "./TechnicalParts.module.css"; }
+
+/* ---- Şirket sayfasının teknik analiz kartı ----
+   Kısa hâl: görüş, konum, bir cümle ve künye. Gerekçesi bileşende
+   (`StockTechnicalCard`). Ölçüler profil kartıyla aynı aileden — aynı
+   yüzey, aynı yarıçap, gölgesiz (`--premium-shadow` 23 Eylül'de sıfırlandı) — çünkü
+   sağ kolonda yan yana duruyorlar ve iki ayrı tasarım dili gibi
+   okunmamalılar. */
+.stockCard {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  display: flex;
+  min-width: 0;
+  flex-direction: column;
+  gap: 12px;
+  padding: 18px 20px 16px;
+  border: 1px solid var(--line);
+  border-radius: 22px;
+  background: var(--premium-surface);
+  transition: border-color 250ms var(--ease-brand);
+}
+
+/* HOVER YALNIZCA KENARLIK TONU (23 Eylül) — liste kartıyla aynı karar
+   (`.card`): kart iki piksel kalkıp gölgesini büyütüyordu. */
+.stockCard:hover { border-color:var(--primary-faint); }
+
+.stockCard:has(.stockCardLink:focus-visible) { outline:2px solid var(--line-focus); outline-offset:3px; }
+
+/* GÖRÜŞ IŞIMASI KALKTI (23 Eylül). Kartın zemininde görüş renginde
+   18rem'lik radyal bir ışıma duruyordu — kapaktaki (`.cover::after`)
+   kalıbın küçültülmüşü; ikisi de sahibinin "ışıma yok, derinlik tonla"
+   kuralına aykırıydı ve kapaktaki kalktı. Görüşün rengi hapta. */
+.stockCardHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 12px; }
+
+.stockCardMeta { font-size:var(--text-nano); font-weight:600; letter-spacing:.03em; color:var(--text-muted); white-space:nowrap; }
+
+.stockCardStance { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; }
+
+.stockCardLink { display:inline-flex; color:inherit; }
+
+.stockCardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }
+
+.stockCardLink:focus-visible { outline:none; }
+
+.stockCardHeadline {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 3;
+  overflow: hidden;
+  color: var(--text-body);
+  font-size: 14px;
+  line-height: 1.6;
+  text-wrap: pretty;
+}
+
+.stockCardFoot { display:inline-flex; align-items:center; gap:4px; color:var(--primary-ink); font-size:12px; font-weight:600; }
+
+.stockCardFoot svg { transition:transform .2s var(--ease-brand); }
+
+.stockCard:hover .stockCardFoot svg { transform:translate(2px,-2px); }
+
+@media (prefers-reduced-motion: reduce) {
+  .stockCard, .stockCardFoot svg { transition:none; }
+}
+
+/* Kartın ayak satırı: solda "Analizi Oku", sağda sıradaki yayın. Dar
+   kapta alt alta düşüyor — kart 354 pikselde de duruyor. */
+.stockCardFootRow { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; }
+
+.stockCardNext { font-size:var(--text-nano); font-weight:600; letter-spacing:.02em; color:var(--text-muted); white-space:nowrap; }
+
+/* Kartın dibindeki Claude düğmesi (StockTechnicalCard): ayırıcı çizginin altında. */
+.stockCardClaude { padding-top:14px; border-top:1px solid var(--line-soft); }
+
+/* Dokunmatikte basış izi KARTIN tamamında (14 Ekim): global kural basılan
+   bağlantıyı %60 opaklığa indiriyor ama buradaki bağlantı başlıktaki küçük
+   `<a>` — yalnız sembol yazısı sönüyordu. İz, kartı kaplayan ::after
+   katmanına veriliyor; token üzerinden karışım, yerleşim oynamaz. */
+@media (hover:none) {
+  .stockCardLink:active::after { background:color-mix(in srgb, var(--text-strong) 7%, transparent); }
+}

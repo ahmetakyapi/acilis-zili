@@ -76,12 +76,14 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
         bekliyor?", bilanço ertesinde tepki sorusu, ≥ %4 hareketli hissede
         "neden %X düştü", Portföyüne Sor'da "yarısını satsam" senaryosu;
         sunucu günlüğünde `ungrounded` / `advice-pattern` sıklığı.
-      - **Performans, sonraki tur:** `Technical.module.css` (129 kB, ana
-        sayfada %4 kullanılıyor) bileşen ailesine göre bölünmeli; `motion`
-        paketi `LazyMotion` ile kritik yoldan çıkmalı (22 dosya);
-        `/bilancolar`da manifest dışı logolar 1000×1000 PNG (435 kB); ana
-        sayfa HTML'i 1,15 MB. `cssChunking: "graph"` sayfa başına CSS'i
-        yarıya indirdi ama dosya sayısı 12–31 oldu: canlıda FCP ölçülmeli.
+      - **Performans (14 Kasım ikinci tur yapıldı):** teknik CSS 13 aile
+        modülüne bölündü (182 ölü kural silindi), `cssChunking` `requestCost:
+        8000`, bilanço liste karolarında uzak logo yerine harf karosu (canlıda
+        −423 kB), `/piyasalar` kıvılcımları seyreltildi. Kalan: `motion`
+        paketi `LazyMotion` ile yalnız −14,7 kB gzip verdi (eşik 20), geri
+        alındı; `PremiumMotion` (`useScroll`, `useSpring`) motoru ilk yükte
+        tutuyor, asıl kazanç onu CSS kaydırma zaman çizelgesine taşımakta.
+        Seans zili SVG'si (94 kB) ve siluetin dört düzeni karar gereği yerinde.
       - **Güvenlik, bilinçli bırakılan:** Claude günlük bütçesi ve hız
         sayaçları süreç belleğinde (her deploy'da sıfırlanır; kalıcı sayaç
         kendi tablosunu ister); hesap silinince Claude notları sunucudaki

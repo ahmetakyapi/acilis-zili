@@ -23,6 +23,7 @@ import { clockOf, timePair, zoneTag } from "@/lib/session-clock";
 import { epsSurprise } from "@/lib/earnings-week";
 import { isSpotlight } from "@/lib/spotlight";
 import { cn, formatMoneyCompact, formatEtDateLong, formatPrice, plural } from "@/lib/utils";
+import { listLogoSrc } from "@/lib/logos";
 import type { EarningsRow } from "@/lib/schema";
 
 /**
@@ -584,7 +585,7 @@ function DaySection({
                 {/* Logo 56 piksel yalnız günün devlerinde; az şirketli günün
                     satır düzeninde (`rowMode`) orta kartın logosu (44):
                     katman farkı ölçüyle de konuşuyor. */}
-                <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} size={heroSet.has(row.symbol) ? "xl" : "lg"} />
+                <LogoTile symbol={row.symbol} logoUrl={listLogoSrc(row.symbol)} size={heroSet.has(row.symbol) ? "xl" : "lg"} />
                 <div className="min-w-0 flex-1">
                   <p className={styles.heroSymbol}>
                     {watchSet.has(row.symbol) && (
@@ -769,7 +770,8 @@ function DaySection({
                       geniş ekranda 225-340; 32 piksellik karo o kutuda
                       küçük kalıyordu. Hero satırı 56'da kaldığı için iki
                       katman arasındaki ölçü farkı sürüyor. */}
-                  <LogoTile symbol={row.symbol} logoUrl={m?.logoUrl} size="lg" />
+                  {/* Liste yuvası: yalnız depodaki logo (gerekçe `listLogoSrc`). */}
+                  <LogoTile symbol={row.symbol} logoUrl={listLogoSrc(row.symbol)} size="lg" />
                   <div className="min-w-0 flex-1">
                     <p className="text-read font-bold tracking-[-0.01em] text-strong">
                       {watchSet.has(row.symbol) && (

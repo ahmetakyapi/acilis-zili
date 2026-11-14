@@ -1,0 +1,109 @@
+/* TEKNİK ANALİZ — DETAY SAYFASI (`/teknik-analiz/[symbol]`: bölüm
+   gezgini, okuma metni, senaryolar) ve kapağın fiyat künyesi
+   (`TechnicalCover`). Bölünme gerekçesi `TechnicalParts.module.css`
+   başında. */
+
+/* Çapraz atıf: aşağıdaki sınıflar başka bir modülün seçicisinde de geçiyor; o kural orada yaşıyor, sınıf adı composes ile ikisini birden taşıyor. */
+.mapPanel { composes: mapPanel from "./TechnicalSections.module.css"; }
+
+.priceNote { font-size:12px; color:var(--text-muted); }
+
+/* Bölüm gezinmesi — şirket sayfasındaki `chapterNav` ile aynı dil (gölge
+   23 Eylül'de kalktı, aşağıda).
+
+   GENİŞ EKRANDA İÇERİĞİ KADAR GENİŞ. Paylaşılan bileşende sekmeler
+   `flex:1` taşıyor: çubuk sayfanın tamamını kaplayınca dört sekme 1320
+   pikseli dörde bölüyor ve her biri 330 piksellik bir kutunun ortasında
+   duran 12 puntoluk bir kelimeye dönüşüyordu (ölçüldü — sekme merkezleri
+   155, 378, 600 ve 822). `flex:1` şirket sayfasında doğru, orada sekiz
+   bölüm var ve çubuğu dolduruyorlar; burada dört bölüm var.
+   `width:fit-content` çubuğu içeriğine indiriyor, sekmeler kendi
+   genişliklerini alıyor ve çubuk sola yaslı yüzen bir denetim gibi
+   okunuyor. Telefonda kural yok: orada çubuk zaten tam genişlik ve
+   sekmeler yatay kayıyor. */
+/* Mavi tonlu gölge (`0 6px 24px --primary-tint`) kalktı — derinlik tonla
+   (bkz. "DETAY SAYFASINDA DA DERİNLİK TONLA"). */
+.sectionNav { box-shadow:none; border-color:var(--line); }
+
+@media (min-width: 768px) {
+  .sectionNav { width:fit-content; max-width:100%; }
+}
+
+.blockNote { font-size:12px; color:var(--text-muted); }
+
+/* ---- Okuma metni ----
+   Paragraf yığını: rutin metni tek blok yazıyor, sayfa cümle
+   sınırlarından bölüp ayrı paragraflar basıyor (gerekçe `proseParagraphs`).
+   İlk paragraf bir kademe büyük ve koyu — okuyucu metne oradan giriyor;
+   gerisi gövde ritminde. Aralık 12 piksel: paragraflar ayrı okunuyor ama
+   blok dağılmıyor. */
+.proseStack { display:flex; flex-direction:column; gap:12px; }
+
+.prose { color:var(--text-body); font-size:15px; line-height:1.75; text-wrap:pretty; }
+
+.proseLede { color:var(--text-strong); font-size:16.5px; line-height:1.65; font-weight:400; letter-spacing:-.005em; text-wrap:pretty; }
+
+/* ---- Senaryolar ---- */
+.scenario { position:relative; display:flex; flex-direction:column; gap:8px; padding:16px 16px 14px; border:1px solid var(--line); border-radius:12px; background:var(--surface-solid); --scenario-tone:var(--line-strong); }
+
+.scenario::before { content:""; position:absolute; top:-1px; left:16px; right:16px; height:3px; border-radius:0 0 3px 3px; background:var(--scenario-tone); }
+
+.scenario[data-tone="up"] { --scenario-tone:var(--up); }
+
+.scenario[data-tone="down"] { --scenario-tone:var(--down); }
+
+.scenario h3 { display:flex; align-items:center; gap:6px; font-size:13.5px; font-weight:700; letter-spacing:.01em; }
+
+.scenario h3 svg { flex:none; }
+
+.scenario[data-tone="up"] h3 { color:var(--up); }
+
+.scenario[data-tone="down"] h3 { color:var(--down); }
+
+.scenario p { color:var(--text-body); font-size:14.5px; line-height:1.7; text-wrap:pretty; }
+
+@media (max-width: 767px) {
+  /* TELEFONDA PUNTO DÜŞMÜYOR. Okuma metni 14'e iniyordu; aynı ekranda
+     gösterge açıklamaları 12,5, künyeler 12 punto ve hepsi birbirine
+     yaklaşınca sayfa tek tonda griye dönüyordu. Ana metin 15'te kalıyor,
+     giriş paragrafı 16 — hiyerarşi telefonda da duruyor. */
+  .prose { font-size:15px; line-height:1.7; }
+  .proseLede { font-size:16px; line-height:1.6; }
+}
+
+/* DETAY SAYFASINDA DA DERİNLİK TONLA (23 Eylül). Liste kartındaki mavi
+   parıltının (bkz. `.card`) aynıları burada da vardı: gösterge özeti,
+   gösterge kutuları, izleme paneli ve öteki şirketler kartları köşeden
+   inen `--primary-tint` degradeleri; bloklar ve bölüm çubuğu mavi tonlu
+   gölge taşıyordu. Hepsi düz yüzeye döndü, bloklar gölgesiz. Kalan
+   degradeler yön taşıyanlar: senaryo ve seviye kutularındaki
+   yükseliş/düşüş yıkamaları. Bölüm başlığının çubuğu düz birincil. */
+.indicatorSummary { border:1px solid var(--line); border-radius:var(--radius-panel); padding:18px; background:var(--premium-surface); }
+
+/* Cam (yarı saydam zemin + bulanıklık) kalktı: proje cam kullanmıyor ve
+   yapışan çubuğun arkasında artık opak bir bant var (PremiumMotion →
+   `.sectionNav::before`). Dinlenme hâlinde zemin sayfanın kendisi. */
+.sectionNav { border-radius:12px; background:var(--page-bg); }
+
+@media(max-width:767px) {
+ .indicatorSummary { padding:14px; }
+}
+
+.mapPanel { grid-area:map; }
+
+.volumeContext { display:flex; flex-direction:column; gap:8px; margin-top:2px; padding:14px 0 0; border-top:1px solid var(--line-soft); }
+
+.volumeContext h3 { display:flex; align-items:center; gap:8px; color:var(--primary-ink); font-size:13px; font-weight:700; }
+
+.volumeContext .prose { font-size:14px; line-height:1.65; }
+
+/* Fiyatın adı ve gecikme rozeti. Rozet bir UYARI değil bir künye: kutu
+   yok, ton var — ince kenarlı, soluk bir kapsül. Haritadaki güncel fiyat
+   satırında aynı rozet satırın mavisini alıyor. */
+.priceHead { display:flex; flex-wrap:wrap; align-items:center; gap:6px 8px; }
+
+.priceLabel { font-size:12px; font-weight:700; letter-spacing:.02em; color:var(--text-muted); }
+
+.delayBadge { display:inline-flex; align-items:center; gap:5px; padding:2px 8px; border:1px solid var(--line); border-radius:999px; background:var(--surface-elevated); font-size:12px; font-weight:600; line-height:1.45; letter-spacing:.01em; color:var(--text-muted); white-space:nowrap; }
+
+.delayBadge::before { content:""; width:5px; height:5px; border-radius:50%; background:currentColor; opacity:.55; }

@@ -1,0 +1,72 @@
+/* TEKNİK ANALİZ — BLOK VE BÖLÜM BAŞLIKLARI (detay sayfası, liste sayfası,
+   görüş rehberi, fiyat haritası, plan geçmişi). Bölünme gerekçesi
+   `TechnicalParts.module.css` başında. */
+
+/* ---- Bölüm başlığı ---- */
+/* 10 Kasım (ortak ölçüler): panel h2 19 pikseldi; `PanelHeader` ölçüsü
+   16/700 (aynı sayfadaki "Şirket Analizi" paneli zaten 16 idi, altındaki
+   paneller 19). Panelin DIŞINDA duran bölüm başlığı ("Göstergeler")
+   bölüm ölçüsünü alır: `.sectionLead`. */
+.sectionTitle { font-size:16px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
+
+.sectionTitle.sectionLead { font-size:clamp(25px,2.8vw,36px); line-height:1.1; font-weight:600; letter-spacing:-.035em; }
+
+.block { display:flex; min-width:0; flex-direction:column; gap:14px; padding:22px 24px; border:1px solid var(--line); border-color:var(--edge-top) var(--edge-side) var(--edge-bottom); border-radius:20px; background:var(--premium-surface); box-shadow:var(--premium-shadow); }
+
+.blockHead { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:4px 14px; }
+
+.footHint { font-size:12px; line-height:1.55; color:var(--text-muted); }
+
+.footNote { display:flex; flex-direction:column; gap:6px; max-width:78ch; padding-top:14px; border-top:1px solid var(--line); font-size:12px; line-height:1.6; color:var(--text-muted); }
+
+@media (max-width: 767px) {
+  .block { padding:18px 16px; }
+}
+
+.block { border-radius:var(--radius-panel); box-shadow:none; }
+
+.block > .sectionTitle,.blockHead { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
+
+.blockHead .sectionTitle { display:flex; align-items:center; gap:9px; }
+
+/* KÜNYE HARİTANIN ALTINA OTURUYOR. `margin-top:auto` gerilmiş bir flex
+   kolonda iki kolon arasındaki yükseklik farkının TAMAMINI haritanın dibi
+   ile künyesi arasına yığıyordu: ölçüldü (altı sembol × 1024/1280/1440 =
+   18 yerleşim), panelin boyu 18/18'inde değerlendirme kolonunun boyuna eşit
+   ve aradaki delik 1024'te 268 piksele kadar çıkıyor. Künye ile damgaladığı
+   görselin arası, ÖTEKİ kolonun boyuna bağlanmış oluyordu — deponun kendi
+   kuralının yasakladığı şey. Fark artık panelin dibinde kalıyor. */
+.mapPanel .footHint { padding-top:8px; border-top:1px solid var(--line-soft); }
+
+.historyTable + .footHint, .tableWrap + .footHint { margin-top:10px; }
+
+/* ÖLÇÜM (10 Kasım 2026, gece; /teknik-analiz, 16 kart, iki tema): ray 316 (390) ve
+   382 (1440) piksel; çubuk 8, çentik 2 × 14; adlar arasında çakışma 0, rayın
+   dışına taşan ad 0; sayfada yatay taşma 0. Kart, ad satırı kadar uzadı:
+   sayfa 1440'ta 5.659 → 5.767, 390'da 10.955 → 11.243. */
+/* ============================================================================
+   "ZİL DEFTERİ" (14 Kasım 2026, görsel tur) — başlık basamakları ve açık bölüm.
+   Bu blok dosyanın SONUNDA: yukarıdaki katmanlı `.block` / `.sectionTitle`
+   kurallarının üstüne yazıyor, onları silmiyor (kayıtları tarihçe).
+
+   BAŞLIK: üç basamak, ölçüyle. Sayfa başlığı display; BÖLÜM başlığı
+   clamp(25px,2.8vw,36px)/600; PANEL h2 16/700. Hepsi sitenin başlık
+   mürekkebinde (degrade): düz mürekkep denendi ve aynı gün geri alındı,
+   sahibinin 24 Eylül kararı (globals.css → "KART VE PANEL BAŞLIKLARI DA").
+
+   AÇIK BÖLÜM: destekleyici içerik (görüşün anlamı) kutusuz; üstte kıl
+   çizgi, başlık, içerik sayfa zemininde. Önce beş-altı eşit ağırlıkta beyaz
+   kart alt alta diziliydi. */
+.block.stanceGuide { padding:22px 0 0; border:0; border-top:1px solid var(--line); border-radius:0; background:none; }
+
+.stanceGuide .blockHead { padding-bottom:0; border-bottom:0; }
+
+.stanceGuide .sectionTitle { font-size:clamp(25px,2.8vw,36px); line-height:1.1; font-weight:600; letter-spacing:-.035em; }
+
+.stanceGuide[data-tone] .sectionTitle { display:flex; align-items:center; gap:12px; }
+
+.stanceGuide[data-tone] .sectionTitle::before { content:""; flex:none; width:28px; height:3px; border-radius:999px; background:var(--verdict-hold); }
+
+.stanceGuide[data-tone="up"] .sectionTitle::before { background:var(--verdict-buy); }
+
+.stanceGuide[data-tone="down"] .sectionTitle::before { background:var(--verdict-sell); }

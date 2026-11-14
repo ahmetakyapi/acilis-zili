@@ -1,0 +1,109 @@
+/* TEKNİK ANALİZ — SİNYAL ŞERİDİ (`SignalStrip`). Bölünme gerekçesi
+   `TechnicalParts.module.css` başında. */
+
+/* ---- Gösterge özeti: dört kelime ---- */
+/* DÖRT KÜNYE AYNI ÜÇ SATIRI PAYLAŞIYOR.
+   Her künye kendi içinde etiket + kelime + ölçüydü ve satırlar bağımsızdı:
+   "52 Haftalık Yer"in kelimesi ("Tepenin %25,9 Altında") iki satıra sarınca
+   altındaki ölçü komşusundan 21 piksel aşağı düşüyordu (ölçüldü, 390).
+   `subgrid` üçünü de ana ızgaranın satırlarına bağlıyor.
+   Satır arası (`row-gap`) künyenin İÇİNDEKİ aralık; künyeler alt alta
+   düştüğünde araya giren boşluk `margin-bottom`dan geliyor. Kenar boşluğu
+   HER künyede aynı olduğu için alt ızgaranın hizası bozulmuyor; şeridin
+   kendi dibindeki fazlalık negatif kenarla geri alınıyor. */
+.signals { display:grid; grid-template-columns:repeat(4, minmax(0,1fr)); grid-template-rows:auto auto auto; column-gap:20px; row-gap:5px; margin:0 0 -8px; }
+
+.signal { position:relative; display:grid; grid-template-rows:subgrid; grid-row:span 3; min-width:0; margin-bottom:8px; padding-top:10px; --signal-tone:var(--line); }
+
+/* Gösterge hücresinin tonu tepede kısa bir çizgi (31 Ekim): sol kenar
+   çizgisi kutu vurgusu gibi okunuyordu; şerit kartların diliyle aynı. */
+.signal::before { content:""; position:absolute; top:0; left:0; width:28px; height:3px; border-radius:3px; background:var(--signal-tone); }
+
+.signal[data-tone="up"] { --signal-tone:var(--up); }
+
+.signal[data-tone="down"] { --signal-tone:var(--down); }
+
+.signal[data-tone="primary"] { --signal-tone:var(--primary); }
+
+.signal dt { font-size:12px; font-weight:700; letter-spacing:0; color:var(--text-muted); }
+
+.signal dd { margin:0; }
+
+.signalValue { align-self:start; }
+
+/* Çizimli değer: kelime solda, çizim sağ uçta, aynı satırda (5 Kasım 2026). */
+.signalValue[data-art] { display:flex; flex-direction:row-reverse; justify-content:space-between; align-items:center; gap:10px; }
+
+.signalDetail { align-self:start; text-wrap:pretty; font-size:12px; line-height:1.45; color:var(--text-muted); }
+
+.signal strong { display:block; font-size:19px; line-height:1.15; font-weight:700; letter-spacing:-.03em; color:var(--text-strong); }
+
+/* ---- Kırılımlar ---- */
+@media (max-width: 1023px) {
+  /* SATIR ARASI TELEFONDA DA 5 PİKSEL. Kural `gap:14px 16px` idi ve alt
+     ızgara ana ızgaranın satır aralığını devraldığı için künyenin İÇİNDEKİ
+     üç satır (etiket, kelime, ölçü) da 14 piksel açılıyordu: masaüstünde
+     sıkı duran künye telefonda seyrek ve uzun bir sütuna dönüyor, sol
+     çizgi de onunla uzuyordu. Yalnızca sütun arası büyüyor; künyeler arası
+     boşluk `margin-bottom` ile (masaüstündeki 8 yerine 18) veriliyor. */
+  .signals { grid-template-columns:repeat(2, minmax(0,1fr)); column-gap:16px; margin-bottom:-18px; }
+  .signal { margin-bottom:18px; }
+}
+
+/* The passed badge previously widened the distance column and displaced
+   the price. Status now belongs to the level label; all prices end at one
+   fixed distance gutter, including the current quote and entry range. */
+.signalsCompact { grid-template-columns:repeat(3,minmax(0,1fr)); gap:4px 12px; margin:0; padding-top:12px; border-top:1px solid var(--line-soft); }
+
+.signalsCompact .signal { margin:0; padding-left:9px; }
+
+/* PUNTO TABANA BIRAKILIYOR. Üstteki plan şeridi kararı (bkz. "ETİKET 11
+   PİKSEL, 10 DEĞİL") etiket dilini `.signal dt`in 11 puntosuna bağlamıştı
+   ve gerekçesini "kapakta iki etiket ailesi değil tek bir etiket dili var"
+   diye yazmıştı. Bu satır 10'a indirerek tam o iki aileyi geri getiriyordu:
+   ikisi de KAPAKTA, yan yana. Yalnızca harf aralığı sıkışıyor — üç sütunun
+   dar olduğu yer burası. */
+.signalsCompact .signal dt { letter-spacing:.02em; }
+
+.signalsCompact .signal strong { font-size:15px; line-height:1.3; }
+
+.signalsCompact .signalDetail { font-size:12px; line-height:1.5; }
+
+/* ÖLÇEK SATIRI (8 Kasım): kelimenin üstünde kendi çizimi (`SignalGauges`).
+   Dört satırlık alt ızgara — etiket, çizim, kelime, künye — ve çizim
+   hücresi dibe yaslı: yay (≈48 piksel) ile iki şerit (32) farklı boyda
+   ama üç kelime aynı hatta başlıyor. */
+.signalsCompact { grid-template-rows:auto auto auto auto; }
+
+.signalsCompact .signal { grid-row:span 4; }
+
+.signalsCompact .signalVisual { display:flex; align-items:flex-end; min-width:0; min-height:50px; margin:4px 0 2px; padding-right:4px; }
+
+.signalsCompact .signalVisual > * { flex:1; }
+
+.signalsCompact .signalVisual > svg { flex:none; }
+
+@media(max-width:639px) {
+ .signalsCompact { gap:4px 9px; }
+ .signalsCompact .signal { padding-left:7px; }
+ .signalsCompact .signal strong { font-size:14px; }
+ /* Rozet kelime taşıyor ("Geçildi"/"Kırıldı", PriceMap.tsx), yani ölçeğin
+    metin tabanı `--text-nano`da kalır; `--text-micro` (8) yalnızca metin
+    OLMAYAN yer için ayrıldı. Dar ekranda yeri dolgu veriyor, punto değil. */
+}
+
+/* ---- Fiyat haritası: satır payı (29 Eylül, ölçüldü) ----
+   Satırlar 58 piksel tabanla ve 12 piksel iç payla 63 piksel tutuyordu
+   (1440): dokuz satırlık harita 845 piksel, satırın içeriği (etiket, fiyat,
+   uzaklık ve çubuğu) 34 piksel. Taban 44'e, iç pay 8'e indi; renkli
+   satırların (fiyat, bölge, stop) yıkaması yine satırın tamamını boyuyor. */
+/* ---- Kapaktaki gösterge bakışı telefonda tek kelime (29 Eylül) ----
+   390'da üç sütunun künyesi ("50 ve 200 Günlüğün Üstünde") üç satıra
+   sarıyor ve kapağı ~60 piksel uzatıyordu (ölçüldü). Kapaktaki şerit bir
+   BAKIŞ (kayıt `teknik/[symbol]/page.tsx`te); künyenin aynısı iki bölüm
+   aşağıda, Göstergeler'in geniş şeridinde duruyor. Telefonda kapakta ad ve
+   değer kalıyor, künye yalnızca bölümde. */
+@media (max-width: 639px) {
+  .signalsCompact .signalDetail { display:none; }
+  .signalsCompact { row-gap:0; }
+}

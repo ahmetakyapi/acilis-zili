@@ -1,0 +1,485 @@
+/* TEKNİK ANALİZ — PLAN AİLESİ: plan şeridi (`PlanStrip`), plan rayı
+   (`PlanRail`), seviye çizgisi (`LevelTrack`), kapaktaki plan paneli
+   (`PlanPanel`). Bölünme gerekçesi `TechnicalParts.module.css` başında. */
+
+/* ---- Plan şeridi: NEREDEN ALINIR · NEREDE SATILIR · NEREDE VAZGEÇİLİR ----
+   Kartta SATIR düzeni: soru solda, sayı sağda. Üç sütun 340px'lik kartta
+   ölçüldü — "Nerede Vazgeçilir" iki satıra, üç hedef üç satıra kırılıyordu.
+   Satırda fiyat bölünmüyor (sığmazsa bütün olarak alt satıra iniyor —
+   aşağıdaki 23 Eylül kaydı), hedef listesi ayırıcıdan kırılıyor. Kapakta
+   (lg, ≥640px) üç sütun: orada yer var ve sayı 19 punto. */
+.planStrip { display:grid; gap:8px; }
+
+/* DÜZ GÖMÜLÜ KUTU (23 Eylül). 22 Eylül bloğu kutuya 115°'lik bir mavi
+   degrade, SAT'ta kırmızı bir degrade ve bir kenarlık vermişti — tema
+   dosyasının "ton, ışıma değil" kuralının dışında ve yarıçapı ölçekte
+   olmayan 10 piksel. Kutu düz `--surface-sunken`, SAT'ta düşüş yıkamasıyla
+   karışık ama yine düz; yarıçap `--radius-lg`. */
+.planCells { display:flex; flex-direction:column; gap:8px; margin:0; padding:10px 14px; border-radius:var(--radius-lg); background:var(--surface-sunken); }
+
+.cardPlan[data-verdict="sell"] .planCells { background:color-mix(in srgb, var(--down-wash) 45%, var(--surface-sunken)); }
+
+/* SAYI SATIRIN EN YÜKSEK SESİ, ARADA KILAVUZ ÇİZGİ (23 Eylül). Etiket
+   12/700, sayı 14/600 idi — neredeyse eşit ağırlık, üç satır bir form gibi
+   okunuyordu. 1024'te "Nerede Vazgeçilir" ile "1.012,57 $" arasında ~200,
+   1440'ta ~150 piksel boş ton vardı ve göz satırı tahminle atlıyordu (fiyat
+   haritası aynı sorunu genişliği sınırlayarak çözmüştü). Artık etiket
+   12,5/600, sayı 15/650 ve aradaki boşluğu noktalı bir kılavuz dolduruyor:
+   etiketten sayıya giden yol çizili. Satır araları çizgisiz — kılavuz
+   zaten satırı taşıyor, her satıra bir de kıl çizgi eklemek aynı şeyi
+   ikinci kez söylerdi. */
+.planCell { display:flex; min-width:0; flex-wrap:wrap; align-items:baseline; gap:2px 0; }
+
+.planCell dt { display:flex; flex:none; align-items:center; gap:7px; font-size:12.5px; font-weight:600; letter-spacing:.01em; color:var(--text-muted); }
+
+/* Kılavuz 24 Eylül'de bir kademe söndü (`--line-strong` → `--line`):
+   kutunun üç satırı üç noktalı çizgiyle bir form gibi duruyordu. Yol hâlâ
+   çizili, ama sayıdan önce görülmüyor. */
+.planCell::after { content:""; order:1; flex:1 1 8px; min-width:8px; margin-inline:8px; border-bottom:1px dotted var(--line); position:relative; top:-4px; }
+
+.planCell dd { order:2; min-width:0; margin-left:auto; font-size:15px; line-height:1.25; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); text-align:right; }
+
+.planCell dd > span { white-space:nowrap; }
+
+.planItem { white-space:nowrap; }
+
+.planSep { color:var(--text-muted); font-weight:400; }
+
+/* SATIŞ SEVİYELERİ RENKLİ VE KOYU. Üç hedef, öteki iki hücreyle aynı gri
+   ağırlıkta "265,10 · 274,35 · 287,30 $" diye duruyordu ve planın en çok
+   sayı taşıyan hücresi en az göze çarpanıydı. Sayılar artık hedefin kendi
+   rengini (lejant noktasıyla aynı `--up`) ve bir kademe koyu ağırlığı
+   taşıyor; ayraç nokta değil ok — "sonra bir sonraki seviye" diye
+   okunuyor, ne üç ayrı künye ne bir aralık (gerekçe PlanStrip.tsx).
+   OK SOLUK AMA OKUNUR (23 Eylül): `.55` saydamlıkta ok gömülü kutunun
+   zemininde 2,34:1'di (açık tema, ölçüldü) — sıralamayı taşıyan işaret
+   grafik nesne eşiğinin (3:1) altında kalıyordu. `.75` ile sayılardan
+   yine bir kademe geride, eşiğin üstünde. */
+.planCell[data-kind="target"] dd { color:var(--up); font-weight:700; }
+
+.planCell[data-kind="target"] .planSep { color:var(--up); opacity:.75; }
+
+/* ÜÇ HEDEF TEK SATIRDA (24 Eylül). SNDK'da "1.945,41 → 2.003,77 →
+   2.354,39 $" etiketin yanına sığmıyor ve bütün liste alt satıra
+   iniyordu: üç satırlık kutunun ortası iki satır, etiket tek başına
+   üstte. Liste kartında ara hedefler bir kademe küçük ve ince, son hedef
+   (para birimini taşıyan) tam ölçüde; ok dar. Sıralama yine okunuyor —
+   son hedef listenin ucu ve en koyusu. */
+.planStrip:not(.planStripLg) .planCell[data-kind="target"] dd { font-size:14px; }
+
+.planStrip:not(.planStripLg) .planCell[data-kind="target"] .planItem:not(:last-child) { font-weight:600; opacity:.85; }
+
+.planStrip:not(.planStripLg) .planCell[data-kind="target"] .planSep { margin-right:3px; font-size:12px; }
+
+/* SIĞMAYAN SAYI BÜTÜN OLARAK ALT SATIRA (23 Eylül). "Satırda fiyat hiç
+   kırılmıyor" kaydı 320'de tutmuyordu: on beş kartın on ikisinde bir plan
+   satırı sarıyordu ve alım aralığı tirenin ARKASINDAN kırılıp "1.062,07 –"
+   / "1.080,19 $" diye asılı bir tire bırakıyordu (ölçüldü). Aralık artık
+   bölünmüyor (`nowrap`) ve satır `flex-wrap`: sayı etiketin yanına
+   sığmazsa bütün olarak alt satıra iniyor, sağa yaslı kalıyor; kılavuz
+   üst satırda etiketin ardını doldurup gözü ona indiriyor. Yalnızca
+   sığmayan satır sarıyor (320'de genellikle alım aralığı).
+   Etiketi üstte, sayıyı altta dizen dikine düzen de denendi ve geri
+   alındı: 320'de her kartı 60 piksel uzatıyordu (üç satırın üçü de iki
+   satıra çıkıyor, ölçüldü) ve sayılar sağ kenardaki hizasını kaybediyordu. */
+.planCell[data-kind="entry"] dd { white-space:nowrap; }
+
+.planEmpty { font-weight:400; color:var(--text-muted); }
+
+/* ---- Plan rayı: künye, ray, bacaklar ----
+   Üç satır, tek çizim (gerekçe PlanRail.tsx içinde). Bacak adları ton
+   rengini, ham tutar `--text-strong`u taşıyor: renk bacağı raydaki parçaya
+   bağlar, ağırlık okumayı sayıya çeker. Ray kendi kabı: çapa künyesinin
+   sağa yapışma kararı rayın genişliğine bakıyor. */
+.rail { container-type:inline-size; display:grid; gap:4px; padding:0 2px; font-size:12px; line-height:1.35; color:var(--text-muted); }
+
+.riskHead { display:flex; flex-wrap:wrap; align-items:center; gap:2px 8px; }
+
+/* Oran küçük bir etiket kutusunda (24 Eylül): künye satırının dört
+   parçası (ad, oran, çapa adı, çapa sayısı) aynı ağırlıkta yan yana
+   diziliyordu ve oran — satırın tek cevabı — aralarında kayboluyordu. */
+.riskHead b { padding:1px 7px; border-radius:var(--radius-xs); background:var(--surface-sunken); font-size:13px; line-height:1.35; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
+
+/* Çapa künyesi sağa yapışır; sığmadığında alt satıra düşer (360'ta düşüyor).
+   TABULAR-NUMS DENENDİ VE GERİ ALINDI: bu ailede virgül de tabular genişliğe
+   çekiliyor ve "916,84" ekranda "916 , 84" diye okunuyordu. Künye bir sütunda
+   hizalanmıyor zaten — sabit genişliğe ihtiyacı yok. */
+/* ÇAPA KÜNYESİ YALNIZCA SIĞDIĞI YERDE SAĞA YAPIŞIYOR. `margin-left:auto`
+   koşulsuzdu: 390 pikselde künye alt satıra düşüyor ve orada TEK BAŞINA
+   sağa yapışıyordu — "Risk / Getiri 1 : 0,4" solda, altında sağa dayalı
+   "Bölgenin Tepesinden · 204,43 $". İki parça aynı cümlenin parçası, ayrı
+   hizalarda duran iki satır değil. Alt satıra düştüğünde oranın altına,
+   aynı hizaya iniyor; tek satıra sığdığında (kapakta, ≥480px) sağ uca
+   gidiyor ve orada bir künye gibi okunuyor. */
+.riskAnchor { letter-spacing:-.01em; }
+
+/* Eşik 480 → 300 (24 Eylül): künye tek satıra sığan her rayda çapa sağ
+   uca gidiyor — liste kartında da (ray 316–433). Oran solda, çapa sağda:
+   iki uç, iki bilgi. 300'ün altında çapa sayısı zaten düşüyor ve künye
+   tek satırda solda kalıyor. */
+@container (min-width: 300px) {
+  .riskAnchor { margin-left:auto; }
+}
+
+/* DAR RAYDA ÇAPANIN SAYISI DÜŞÜYOR (23 Eylül). 320'de künye oran +
+   çapa = 289 piksel istiyordu, rayın içi 246: her kartta ikinci bir satır
+   (ölçüldü, on beş kartın on beşi). Sayı bir satır yukarıda alım
+   aralığının üst ucu; ad kalınca künye tek satıra iniyor (TR 225, EN 222
+   piksel). Kapsayıcı sorusu, pencere değil — gerekçesi aşağıdaki bacak
+   kuralında. */
+@container (max-width: 299px) {
+  .riskAnchorValue { display:none; }
+}
+
+/* Bacak çubuğu (`.riskBar`) KALKTI: bacaklar artık rayın ekseninde
+   (`.trackSeg`, gerekçe LevelTrack.tsx'te). Çubuğun kapak ve `lg`
+   ölçüleri (`.planStripLg .riskBar`, `.coverPlan .riskBar`) de onunla
+   gitti; ikisi de artık var olmayan bir öğeyi boyuyordu. */
+.riskLegs { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 14px; }
+
+.riskLegs > span { display:flex; align-items:baseline; gap:4px; white-space:nowrap; }
+
+/* Bitiş bacağı sağ uca yapışıyor — raydaki parçası da o uçta. */
+.riskLegs > span[data-side="end"] { margin-left:auto; }
+
+/* Dar rayda iki bacak tek satıra sığmıyor ve ikincisi alt satırda TEK
+   BAŞINA sağa yapışıyordu (320, ölçüldü: blok 99 piksel). İki satır da
+   sola, aynı hizada — çapa künyesiyle aynı karar. */
+@container (max-width: 299px) {
+  .riskLegs > span[data-side="end"] { margin-left:0; }
+}
+
+.riskName { font-weight:700; letter-spacing:.02em; color:var(--text-body); }
+
+.riskLegs [data-tone="down"] .riskName { color:var(--down); }
+
+.riskLegs [data-tone="up"] .riskName { color:var(--up); }
+
+.riskLegs b { font-size:13px; line-height:1.25; font-weight:700; color:var(--text-strong); }
+
+/* ÜÇ SÜTUN KARARI KAPSAYICIYA BAKIYOR, PENCEREYE DEĞİL.
+   Kural `@media (min-width: 640px)` idi ve bu, "kapak geniştir" demenin
+   dolaylı yoluydu — pencere genişse kapak da geniştir varsayımı. Yan
+   çevrilmiş telefonda varsayım çöküyor: pencere 844 ama kapak iki kolona
+   bölündüğü için şeride 420 piksel kalıyor ve üç hücre 130'ar piksele
+   sıkışıp "Nereden Alınır" iki satıra sarıyor. `@container` tam olarak
+   doğru soruyu soruyor: şeridin KENDİ genişliği 480'i geçiyor mu.
+   Ölçülen genişlikler — 1440 masaüstü 590, 768 dikey tablet 670 (ikisi de
+   üç sütun), 844 yatay 420 ve 390 telefon 330 (ikisi de alt alta). */
+.planStrip { container-type: inline-size; }
+
+.legendDot { display:inline-block; flex:none; width:7px; height:7px; border-radius:2px; }
+
+.legendDot[data-kind="stop"] { background:var(--down); }
+
+.legendDot[data-kind="entry"] { background:var(--up-wash); box-shadow:inset 0 0 0 1px var(--up); }
+
+.legendDot[data-kind="target"] { background:var(--up); }
+
+.legendDot[data-kind="sellLevel"] { background:var(--down); opacity:.55; }
+
+.legendDot[data-kind="support"], .legendDot[data-kind="resistance"] { background:var(--text-muted); opacity:.55; }
+
+/* ---- Seviye çizgisi (yatay) ----
+   Kartta ve kapakta aynı çizim: stop, alım bölgesi, hedefler ve fiyat tek
+   eksende. Çizim yalnızca görsel (aria-hidden); sayılar plan şeridinde.
+
+   İŞARET HALKASI KENARLIKLA DEĞİL GÖLGEYLE. Halka `--surface-solid`
+   kenarlığıydı ve o token koyu temada saydam (beyaz %8,5): halka noktanın
+   kendi renginin açık bir tonuna dönüşüyor, noktayı raydan ayıran boşluk
+   kayboluyordu. Kart ve kapak `--premium-surface` üzerinde, halka onun
+   rengiyle çiziliyor. */
+/* EKSEN İNCE, BACAKLAR KALIN (23 Eylül). Eksen 2 piksel `--rail-track`
+   (Gün Şeridi'nin oluğu, tema dosyası §5); risk ve getiri bacakları aynı
+   hatta 4 piksel ve yön renginde. Her öğe 12. pikselde ortalanıyor: eksen
+   11+2, bacak 10+4, bant 5+14, çentik 4+16, nokta 5+14, halka 8+8.
+   Ray 28 pikseldi, 24'e indi: en büyük öğe halkalı fiyat noktası (14 +
+   2×4 = 22) ve üstte, altta birer piksel payla sığıyor; fazlası kartın
+   plan satırında boşluktu. */
+.track { position:relative; height:24px; }
+
+.trackLine { position:absolute; left:0; right:0; top:11px; height:2px; border-radius:1px; background:var(--rail-track); }
+
+/* Stopun solu hâlâ işaretli ama NOKTALI DEĞİL (24 Eylül): kesik kırmızı
+   çizgi rayın en gürültülü öğesiydi — planın geçersiz olduğu bölge, planın
+   kendisinden (bant, bacaklar) daha dikkat çekiyordu. Düz, eksenle aynı
+   kalınlıkta, soluk düşüş tonu. */
+.trackVoid { position:absolute; left:0; top:11px; height:2px; border-radius:1px 0 0 1px; background:var(--down); opacity:.28; }
+
+/* Bant bacakların ALTINDA ve opak: yıkama tonu kartın yüzeyinin üstüne
+   seriliyor, eksen çizgisi bandın içinde görünmüyor (gerekçe LevelTrack). */
+/* Bant KENARSIZ (24 Eylül): yeşil kenarlı kapsül, üstünden geçen kırmızı
+   risk bacağıyla birleşince pembe bir kutu gibi okunuyordu. Bant yalnızca
+   yıkama tonu; sınırlarını üstündeki bacaklar ve çentikler zaten çiziyor. */
+.trackBand { position:absolute; top:6px; height:12px; border-radius:4px; background:linear-gradient(var(--up-wash), var(--up-wash)), var(--premium-surface); }
+
+/* `lg` ÖLÇÜSÜ KALKTI. Çizgi yalnızca liste kartında kullanılıyor; detay
+   kapağındaki büyük hâli fiyat haritasıyla aynı planı üçüncü kez çiziyordu
+   (gerekçe `teknik/[symbol]/page.tsx` içinde, çağrının yerinde). */
+
+/* Analiz anındaki fiyat: içi boş halka. Zemini kartın yüzeyi, altından
+   geçen bacak halkanın içinde görünmesin. */
+.trackThen { position:absolute; top:8px; width:8px; height:8px; margin-left:-4px; border-radius:50%; background:var(--premium-surface); box-shadow:inset 0 0 0 1.5px var(--text-muted); }
+
+/* Halka noktadan en az 17 piksel uzakta durabildiği rayda çiziliyor
+   (eşikler ve ölçüm LevelTrack.tsx'te). Kap `.rail`. */
+@container (max-width: 299px) {
+  .trackThen[data-fit="300"], .trackThen[data-fit="380"] { display:none; }
+}
+
+@container (max-width: 379px) {
+  .trackThen[data-fit="380"] { display:none; }
+}
+
+@media (max-width: 767px) {
+  .planCells { padding:12px; }
+}
+
+.coverPlan { display:grid; gap:18px; grid-column:1/-1; border-top:1px solid var(--line); padding-top:18px; }
+
+/* 8 Kasım: bandın tepesinde yatay fiyat ölçeği (`LevelScale`), altında kartlar. */
+.coverPlan .planCells { background:transparent; }
+
+@media(max-width:767px) {
+ .coverPlan { padding-top:14px; }
+ .coverPlan .planCells { padding:0; border-radius:0; }
+ .coverPlan .planCell { padding-block:4px; border-bottom:1px solid var(--line-soft); }
+ .coverPlan .planStrip { gap:12px; }
+}
+
+.planOverview { display:grid; grid-template-columns:minmax(0,1fr) 240px; gap:24px; align-items:stretch; }
+
+.planOverview[data-has-risk="false"] { grid-template-columns:minmax(0,1fr); }
+
+/* PLAN KARTLARI ÜSTTEN HİZALI, SÜTUNLAR İÇERİĞE GÖRE (24 Eylül).
+   Kartlar eşit genişlikteydi ve içeriği dikeyde ORTALIYORDU: üç hedefli
+   "Hedefler" 1440'ta eşit payına sığmayıp iki satıra çıkınca kart uzuyor,
+   komşu kartların başlıkları ve sayıları kendi kutularının ortasına
+   kayıyordu — "Alım Bölgesi" ile "Hedefler" başlıkları farklı yükseklikte.
+   Artık içerik kartın tepesinden başlıyor (başlıklar ve sayılar her
+   durumda aynı hatta) ve sütunlar içeriğe göre paylaşılıyor
+   (`minmax(0,auto)`, kapaktaki plan şeridiyle aynı kural): hedefler
+   ihtiyacı kadar yer alıp tek satırda kalıyor, artan pay eşit bölünüyor.
+   Yer yine yetmezse (1024) hedefler kırılıyor ama hizalar bozulmuyor. */
+.overviewCells { display:grid; grid-template-columns:repeat(var(--cells,3),minmax(0,auto)); gap:12px; min-width:0; }
+
+/* RENKLİ BLOK DEĞİL, TON + İNCE ŞERİT (18 Ekim). Hücreler yeşil/kırmızı
+   wash ile dolu 127 piksellik bloklardı (1280); kapakta en ağır üç öğe, hem de
+   içerikleri en hafif olanlar. Dolu ağır blok grafik dilinin dışında
+   ("tablo programı", 10 Ekim). Derinlik artık tonla (`surface-sunken`),
+   anlam hücrenin tepesindeki 5 piksellik şeritte — rengini yalnız
+   seviyenin türü veriyor, lejant noktasıyla aynı sözlük. Sayı düz
+   mürekkep: hedefin yeşili şeritte ve noktada zaten var. */
+.overviewCell { position:relative; display:flex; min-width:0; flex-direction:column; justify-content:flex-start; gap:10px; padding:18px 16px 14px; border-radius:12px; background:var(--surface-sunken); overflow:hidden; }
+
+.overviewCell::before { content:""; position:absolute; inset:0 0 auto; height:5px; background:var(--line-strong); }
+
+.overviewCell[data-kind="stop"]::before, .overviewCell[data-kind="sellLevel"]::before { background:var(--down); }
+
+.overviewCell[data-kind="target"]::before { background:var(--up); }
+
+.overviewCell[data-kind="entry"]::before { background:color-mix(in srgb, var(--up) 45%, var(--surface-sunken)); }
+
+/* Fiyata uzaklık künyesi hücrenin DİBİNDE, hairline ile: üç hücrede aynı
+   hatta biter (ızgara satırı hücreleri eşit gerer, künye `margin-top:auto`). */
+.overviewCell .overviewAway { margin-top:auto; line-height:1.4; letter-spacing:0; padding-top:10px; border-top:1px solid var(--line-soft); font-size:12px; font-weight:600; color:var(--text-muted); }
+
+.overviewCell .overviewAway b { margin-left:2px; font-weight:700; }
+
+.overviewCell dt { display:flex; align-items:center; gap:7px; font-size:12px; color:var(--text-muted); font-weight:600; }
+
+.overviewCell dd { font-size:clamp(17px,1.4vw,21px); font-weight:600; line-height:1.55; color:var(--text-strong); letter-spacing:-.025em; }
+
+.riskComparison { min-width:0; padding-left:20px; border-left:1px solid var(--line-soft); }
+
+.riskComparison > p { display:flex; justify-content:space-between; align-items:baseline; gap:10px; font-size:12px; color:var(--text-muted); }
+
+.riskComparison > p strong { font-size:21px; color:var(--text-strong); font-weight:600; }
+
+.riskComparison dl { display:grid; gap:9px; margin-top:9px; }
+
+.riskComparison dl > div { display:grid; grid-template-columns:1fr auto; gap:4px 10px; font-size:12px; color:var(--text-muted); }
+
+.riskComparison dd { display:flex; gap:7px; align-items:baseline; }
+
+.riskComparison dd b { font-size:12px; font-weight:600; color:var(--text-strong); }
+
+.riskComparisonTrack { grid-column:1/-1; height:var(--lane-h, 5px); border-radius:999px; background:var(--rail-track); overflow:hidden; }
+
+.riskComparisonTrack i { display:block; height:100%; border-radius:inherit; background:var(--up); }
+
+.riskComparison [data-leg="risk"] .riskComparisonTrack i { background:var(--down); }
+
+.riskComparison small { display:block; margin-top:9px; font-size:12px; line-height:1.4; color:var(--text-muted); }
+
+@media(max-width:1199px) { .planOverview { grid-template-columns:minmax(0,1fr) 210px; gap:16px; } .overviewCell { padding:12px; } }
+
+@media(max-width:1023px) { .planOverview { grid-template-columns:minmax(0,1fr); } .riskComparison { padding:12px 0 0; border-left:0; border-top:1px solid var(--line-soft); } .riskComparison dl { grid-template-columns:1fr 1fr; gap:16px; } }
+
+@media(max-width:639px) {
+ .overviewCells { grid-template-columns:minmax(0,1fr); gap:6px; }
+ .overviewCell { flex-direction:row; align-items:baseline; justify-content:space-between; gap:10px; padding:10px 12px; }
+ .overviewCell dt { flex:0 0 90px; font-size:12px; }
+ .overviewCell dd { text-align:right; font-size:15px; }
+ /* Telefonda künye yok: hücre tek satır ve hemen altında fiyat haritası
+    aynı uzaklığı sütun olarak veriyor; üç satır daha kapağı 60 piksel uzatırdı. */
+ .overviewCell .overviewAway { display:none; }
+ .overviewCell { padding-top:13px; }
+ /* TELEFONDA DA TEK SATIR (24 Eylül, ölçüldü). Ad kendi satırındaydı,
+    fiyat ve uzaklık altında: her satır 74 piksel, on bir satırlık harita
+    iki ekran boyu. Ad, fiyat ve uzaklık artık tek satırda — 390'da en geniş
+    satır (Alım Bölgesi + aralık) 305 piksellik içeriğe sığıyor; aralık
+    yine de `wbr`den kırılabiliyor, 320'de o satır iki kat oluyor. */
+}
+
+/* PLAN DEĞERİ DARALMAZ, ALT SATIRA GEÇER (24 Eylül, 390'da ölçüldü).
+   Telefonda plan hücresi tek satır: solda 90 piksellik ad, sağda değer.
+   Hedefler üç fiyatı okla dizdiği için değer adın yanına sığmıyor ve kendi
+   içinde kırılıyordu: "1.089,29 → 1.121,79 →" üstte, son hedef
+   "1.255,00 $" tek başına altta. Değerin esas boyu artık kendi içeriği:
+   sığmazsa BÜTÜNÜYLE adın altına iniyor (sağa yaslı); kabın tamamına da
+   sığmazsa (320) içeriden kırılıyor — taşma yok. */
+@media(max-width:639px) {
+ .overviewCell { flex-wrap:wrap; row-gap:4px; }
+ .overviewCell dd { flex:1 0 max-content; max-width:100%; }
+}
+
+/* ==========================================================================
+   PLANSIZ GÖRÜŞ VE FİYAT MERDİVENİ (31 Ekim, sahibinin isteği)
+   Gerekçeler: lib/technical.ts → openPlan / priceLadderLayout,
+   components/technical/PriceLadder.tsx.
+   ========================================================================== */
+/* Niteleme sayının önünde, küçük ve sönük: cevap yine sayı. "Bölge Yok"
+   bir eksiklik değil bir bilgi; tonu gövde metninin bir kademe altı.
+   Geçilmiş seviye yön renginde (direnç geçildi yukarı, destek kırıldı
+   aşağı), seviyede durmak pirinç — TUT'un kendi rengi, "karar anı". */
+.planQual { font-size:12px; font-weight:600; letter-spacing:0; color:var(--text-muted); white-space:nowrap; }
+
+.planQual[data-tone="up"] { color:var(--up); }
+
+.planQual[data-tone="down"] { color:var(--down); }
+
+.planQual[data-tone="at"] { color:var(--brass-ink); }
+
+.planCell[data-open] dd { font-size:14.5px; }
+
+/* Neden cümlesi kutunun içinde: kutu alttan açılıyor, cümle kıl çizgiyle
+   ayrılıp aynı zemini paylaşıyor (yeni kutu açılmıyor). */
+.planStrip[data-open] .planCells { border-end-start-radius:0; border-end-end-radius:0; }
+
+.planWhy { margin:-8px 0 0; padding:8px 14px 10px; border-top:1px solid var(--line-soft); border-end-start-radius:var(--radius-lg); border-end-end-radius:var(--radius-lg); background:var(--surface-sunken); font-size:12.5px; line-height:1.45; color:var(--text-body); }
+
+.cardPlan[data-verdict="sell"] .planWhy { background:color-mix(in srgb, var(--down-wash) 45%, var(--surface-sunken)); }
+
+.overviewQual { font-size:12.5px; line-height:1.3; }
+
+/* Telefonda açık hücre iki satır: üstte soru ve sayı (öteki hücrelerle
+   aynı hat), altta niteleme. Üçü tek satırdayken 390'da "Nereden Alınır"
+   90 piksellik ad sütununda iki satıra sarıp kesiliyordu (INTC, ölçüldü). */
+@media (max-width:639px) {
+  .overviewCell[data-open] dt { flex:1 0 auto; }
+  .overviewCell[data-open] dd:not(.overviewQual) { flex:0 0 auto; }
+  .overviewCell[data-open] .overviewQual { order:3; flex:1 0 100%; text-align:left; }
+}
+
+.overviewCell[data-open] { gap:6px; }
+
+.overviewCell[data-kind="support"]::before, .overviewCell[data-kind="resistance"]::before { background:var(--line-strong); }
+
+/* Alım bölgesi MAVİ (31 Ekim): bölge bir alan, yön değil — yeşil "hedef",
+   kırmızı "stop" yön renkleriyle karışmasın. Lejant, kapak şeridi ve kart
+   rayı aynı dilde. */
+.legendDot[data-kind="entry"] { background:var(--primary-wash); box-shadow:inset 0 0 0 1px var(--primary); }
+
+.overviewCell[data-kind="entry"]::before { background:var(--primary); }
+
+/* ---- Kart rayı merdivenin dilinde ----
+   Eksen 2 piksellik oluk yerine 5 piksellik KULVAR (`--line-soft` üstünde
+   sitenin grafik dili, MarketTexture); bacaklar aynı kalınlıkta şerit.
+   Bant mavi, fiyat noktası koyu mürekkep (mavi bant içinde mavi nokta
+   kayboluyordu), destek ve direnç çentikleri `--line-strong` — sönük ama
+   soluk değil. */
+.trackLine { top:9.5px; height:5px; border-radius:999px; background:var(--line-soft); }
+
+.trackVoid { top:9.5px; height:5px; border-radius:999px 0 0 999px; opacity:.22; }
+
+.trackBand { top:5px; height:14px; border-radius:5px; background:linear-gradient(var(--primary-wash), var(--primary-wash)), var(--premium-surface); box-shadow:inset 0 0 0 1px var(--primary-faint); }
+
+/* ---- Fiyat merdiveni: KALKTI (14 Kasım 2026, görsel tur) ----
+   `PriceLadder` ve `.ladder*` kuralları silindi: seviyeler artık kapaktaki
+   fiyat grafiğinin ekseninde (`PriceChart`), sayılar seviye defterinde
+   (`LevelList`). Merdivenin kayıtları (sabit etiket kolonu, x=14 kulvarı,
+   stop altı yıkaması, S eğrili bağlar) geçmişte: bu tarihten önceki
+   `PriceLadder.tsx` ve bu blok. Düzen hesabı `priceLadderLayout`
+   (lib/technical.ts) yerinde, testleriyle. */
+/* Rayın künyesi plansız kartta bir cümle: gövde tonu, künyeden bir kademe
+   koyu — "Fiyata Uzaklık" bir etiketti, bu bir okuma. */
+.railWhy { font-size:12.5px; line-height:1.45; color:var(--text-body); }
+
+/* ---- TEK ÇİZİM AİLESİ (10 Kasım 2026) ----
+   Aynı beş sayı (bölge, stop, hedefler, seviyeler, şimdiki fiyat) altı ayrı
+   çizimde duruyor: kart rayı, atlas satırı, kapak ölçeği, fiyat merdiveni,
+   pivot rayı, 52 hafta bandı. Ölçüldü (1440): bölge bandı 12/13/14 piksel ve
+   üç ayrı dolgu (atlasta yeşil, ötekilerde mavi; 31 Ekim kararı mavi), büyük
+   çentik 12/14/15 piksel, fiyat imi dört biçim (14'lük nokta, 11'lik nokta,
+   3×28 imleç, 3×13 çubuk), halka 5/5,6 piksel. Aile artık tek:
+     kulvar      5 piksel, uçlar 999, `--line-soft`
+     bacak       5 piksel, opak yön rengi
+     bölge       14 piksel, yarıçap 5, `--primary-wash` + 1 piksel
+                 `--primary-faint` iç kenar (alan, yön değil)
+     çentik      2×14 (stop, hedef, satış seviyesi); 2×10 `--line-strong`
+                 (destek/direnç)
+     fiyat       koyu mürekkep NOKTA, zemin renginde hale (yoğun satırda 11,
+                 kartta ve kapakta 14) — şirket sayfasındaki 52 hafta
+                 ekseniyle aynı im
+     halka       6 piksel
+   Renk yalnız anlamdan: kırmızı stop/satış, yeşil hedef, mavi bölge,
+   mürekkep fiyat. Atlasın ve kapak ölçeğinin karşılıkları kendi
+   modüllerinde (`TechnicalVisuals.module.css`, `LevelScale.module.css`). */
+.overviewCell::before { height:3px; }
+
+/* Kapakta telefon rayı — gerekçe `TechnicalCover`. */
+.coverRail { display:none; }
+
+@media (max-width:767px) {
+  .coverRail { display:block; }
+  .coverPlan:has(.coverRail) .riskComparison { display:none; }
+  /* SAT'ta rayın başı tek cümlelik neden ("Görüş SAT: alım planı yok…");
+     kapakta hemen üstünde "Planın Okuması" aynı şeyi söylüyor. */
+  .coverRail .riskHead:has(.railWhy) { display:none; }
+}
+
+/* ---- Kart rayı ATLAS DİLİNDE (10 Kasım 2026, gece) ----
+   Gerekçe LevelTrack.tsx → "ATLAS DİLİ". Kulvar, çubuk ve çentik ortak
+   sınıflarda (`value-lane`, `value-bar`, `value-notch`; globals.css →
+   "DEĞER ÇUBUĞU"): kulvar 5, tabandan fiyata dolu çubuk 8 (`--bar-soft`;
+   stopun altında düşüş tonu), çentik 2 × 14 koyu mürekkep (sessiz çentik
+   `--line-strong`). Yukarıdaki `.trackSeg`, `.trackTick`, `.trackPrice`
+   kuralları artık kullanılmıyor (yön renkli bacak, renkli çentik, fiyat
+   noktası kalktı); tarihçe olarak duruyor. Ray 24 piksel; her öğe 12.
+   pikselde ortalı: kulvar 9,5 + 5, çubuk 8 + 8, bant 5 + 14, çentik 5 + 14,
+   "şimdi" 1 + 22, halka 8 + 8. Adlar rayın altında tek satır (ray 24 +
+   4 + 14 = 42 piksel yer tutar). */
+.track { --notch-out:-5px; }
+
+.track > .trackLine { position:absolute; left:0; right:0; top:9.5px; }
+
+.track[data-named] { margin-bottom:18px; }
+
+/* "Şimdi": çubuğun ucunda 4 × 22 koyu dik im (çentik 2 × 14; ayrışsın), kart zemininden 2 piksellik
+   hale (ortak tablonun gün aralığı imiyle aynı: BoardTable `.rangeNow`). */
+.trackNow { position:absolute; top:1px; width:4px; height:22px; margin-left:-2px; border-radius:2px; background:var(--text-strong); box-shadow:0 0 0 2px var(--premium-surface); }
+
+.trackName { position:absolute; top:28px; font-size:12px; font-weight:600; line-height:14px; color:var(--text-body); white-space:nowrap; translate:calc(-50% + var(--shift, 0cqw)) 0; }
+
+.trackName[data-kind="stop"], .trackName[data-kind="sellLevel"] { color:var(--down); }
+
+.trackName[data-kind="target"] { color:var(--up); }
+
+.trackName[data-kind="zone"] { color:var(--primary-ink); }
+
+/* Telefonda SAT kartının genel cümlesi ("Görüş SAT: alım planı yok…")
+   basılmıyor: yedi kartta aynı satır, anlamı panonun altındaki "AL, TUT,
+   SAT Ne Demek?" bölümünde; kapak rayındaki aynı kural (`.coverRail`).
+   Ölçüm (390, SAT kartı; önce canlı): 379 → 340 piksel. */
+@media (max-width:639px) { .card .riskHead:has(.railWhy) { display:none; } }

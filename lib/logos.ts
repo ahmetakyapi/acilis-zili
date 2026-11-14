@@ -34,3 +34,23 @@ export function logoSrc(
   }
   return remote ?? null;
 }
+
+/**
+ * Liste yuvasının logosu — YALNIZ DEPODAN; manifestte yoksa `null` ve
+ * `LogoTile` harf karosunu basar.
+ *
+ * NEDEN (14 Kasım 2026, performans denetimi): yukarıdaki "tek bir sembol
+ * için kabul edilebilir bedel" bilanço takviminde tek sembol değil. Takvim
+ * her hafta manifestte olmayan onlarca küçük şirket getiriyor ve kaynak
+ * logolar 1000×1000 PNG (30–58 KB, `no-store`): canlıda `/bilancolar`
+ * açılışında 13 uzak logo 435 KB tutuyordu — sayfanın baytlarının %40'ı,
+ * 44 piksellik karolar için ve her tekrar ziyarette yeniden. Liste
+ * yuvalarında (bilanço ufku, günün kartları, son analizler şeridi) bu
+ * semboller harf karosuyla duruyor; şirketin kendi sayfası (bilanço
+ * ayrıntısı, hisse sayfası, şirket kartı) gerçek logoyu `logoSrc` ile
+ * göstermeye devam ediyor. `npm run build:logos` sembolü manifeste alınca
+ * listede de logo kendiliğinden geliyor.
+ */
+export function listLogoSrc(symbol: string): string | null {
+  return logoSrc(symbol, null);
+}

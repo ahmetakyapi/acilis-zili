@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import styles from "./Technical.module.css";
+import styles from "./TechnicalPulse.module.css";
 
 type PulseSlice = {
   key: string;
@@ -19,7 +19,7 @@ type PulseSlice = {
  * dokununca) balonda o görüşün adı, hisse sayısı ve payı (30 Eylül,
  * sahibinin isteği).
  *
- * NEDEN: telefonda logo satırları gizli (gerekçe Technical.module.css →
+ * NEDEN: telefonda logo satırları gizli (gerekçe TechnicalPulse.module.css →
  * "TELEFONDA LOGO SATIRLARI YOK") ve dağılımdan geriye yalnızca renkli bir
  * çubuk kalıyordu. Rengin hangi görüş olduğu ve kaç hisse tuttuğu hiçbir
  * yerde yazmıyordu; çubuk bir oran gösteriyor ama okunamıyordu. İlk ekran

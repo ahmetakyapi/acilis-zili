@@ -11,7 +11,7 @@ import {
 } from "@/lib/technical";
 import { cn, formatPercentPlain, formatPrice } from "@/lib/utils";
 import { openSideLabel, openWatchText } from "./open-plan";
-import styles from "./Technical.module.css";
+import styles from "./OpenRange.module.css";
 
 /* Şeridin üstündeki yüzde ancak şerit yeterince uzunsa eksende: kartta
    ray ~300–520 piksel ve "▾ %13,3" etiketi ~50 piksel, yani payın %18'i
