@@ -160,6 +160,18 @@ export async function proxy(request: NextRequest) {
      * kendisi yazar. Var olması bu isteğin plumbing olduğunu, bir kullanıcı
      * gezinmesi olmadığını kanıtlar; aşağıdaki çerez yönlendirmesini es geç. */
     if (request.headers.has(LOCALE_HEADER)) {
+      /* Tema başlığı burada da YENİDEN HESAPLANIR (14 Kasım güvenlik
+         denetimi). Bu dal dokunmadan geçiriyordu ve "başlığı yalnız bu
+         fonksiyon yazar" sözleşmesi (`withEmbedTheme`) deliniyordu: öneksiz
+         bir yola `x-az-locale` + `x-az-embed-theme` ile gelen istemci temayı
+         başlıkla seçebiliyordu. Gerçek iç çağrıda sonuç değişmez: adres
+         (dolayısıyla `?tema=`) aynen taşınır, başlık aynı değere yeniden
+         yazılır; yol parça ya da önizleme değilse silinir. */
+      if (preview || isEmbedPath(path) || request.headers.has(EMBED_THEME_HEADER)) {
+        return NextResponse.next({
+          request: { headers: withEmbedTheme(request, path, new Headers(request.headers), preview) },
+        });
+      }
       return NextResponse.next();
     }
 

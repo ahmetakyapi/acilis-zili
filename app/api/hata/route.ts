@@ -39,12 +39,22 @@ const BODY = z.object({
  */
 const LIMIT = 20;
 const WINDOW_MS = 10 * 60 * 1000;
+/** Bütün istemcilerin bir günde yazabileceği kayıt; gerçek bir arıza günü bile bunun altında kalır. */
+const GLOBAL_DAILY_LIMIT = 500;
 
 const NO_CONTENT = () => new NextResponse(null, { status: 204 });
 
 export async function POST(request: Request) {
   if (!sameSite(request)) return NO_CONTENT();
+  /* `sameSite` başlıksız isteği geçirir (ölçüm ucu için bilinçli karar);
+     burada yetmez (14 Kasım güvenlik denetimi): başlıksız bir betik IP başına
+     günde ~2.880 satırı yönetimin hata tablosuna yazıp `/api/health`teki
+     `errors24h` sayacını şişirebiliyordu. Hata sınırını çalıştıran her
+     tarayıcı `Sec-Fetch-Site` gönderir; göndermeyen istek okur değildir. */
+  if (request.headers.get("sec-fetch-site") !== "same-origin") return NO_CONTENT();
   if (!rateLimit(clientKey(request, "hata"), LIMIT, WINDOW_MS).allowed) return NO_CONTENT();
+  /* Genel günlük tavan: çok IP'li gürültü de tabloyu dolduramasın. */
+  if (!rateLimit("hata:global", GLOBAL_DAILY_LIMIT, 24 * 60 * 60 * 1000).allowed) return NO_CONTENT();
   /* Geliştirmede kayıt yok — gerekçe instrumentation.ts'te. */
   if (process.env.NODE_ENV !== "production") return NO_CONTENT();
 
