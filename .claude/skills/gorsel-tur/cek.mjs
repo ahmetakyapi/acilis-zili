@@ -45,7 +45,11 @@ for (const [width, height] of SIZES) {
     const page = await context.newPage();
     for (const [name, route] of routes) {
       try {
-        const response = await page.goto(base + route, { waitUntil: "networkidle", timeout: 60_000 });
+        /* `networkidle` ayrı ve süreli beklenir (14 Kasım): yoklayan ya da
+           akışla gelen istemci bileşeni ağı hiç susturmaz ve çekim 60
+           saniyede zaman aşımına düşüyordu. */
+        const response = await page.goto(base + route, { waitUntil: "load", timeout: 60_000 });
+        await page.waitForLoadState("networkidle", { timeout: 8000 }).catch(() => {});
         await page.evaluate((t) => { document.documentElement.dataset.theme = t; }, theme);
         // Tembel görseller: sayfayı bir kez baştan sona gez, başa dön.
         await page.evaluate(async () => {
@@ -55,7 +59,7 @@ for (const [width, height] of SIZES) {
           }
           scrollTo({ top: 0, behavior: "instant" });
         });
-        await page.waitForLoadState("networkidle").catch(() => {});
+        await page.waitForLoadState("networkidle", { timeout: 4000 }).catch(() => {});
         const { total, overflow } = await page.evaluate(() => ({
           total: document.documentElement.scrollHeight,
           overflow: document.documentElement.scrollWidth - innerWidth,
@@ -68,8 +72,12 @@ for (const [width, height] of SIZES) {
             clip: { x: 0, y, width, height: Math.min(SLICE, total - y) },
           });
         }
-        console.log(`${name} ${width} ${theme} http=${response?.status()} boy=${total} yatayTasma=${overflow} dilim=${index}`);
-        if (overflow > 0) failed++;
+        /* 200 dışı kod HATA (14 Kasım): 500 dönen sayfa "boy=1095" diye temiz
+           satır basıyor, hata sayfasının görüntüsü "sonra" hâli sanılıyordu.
+           Sayısal ölçüm: `.claude/skills/olcum/olc.mjs`. */
+        const status = response?.status() ?? 0;
+        console.log(`${name} ${width} ${theme} ${status === 200 ? "http=200" : `HATA http=${status} (görüntü hata sayfasıdır)`} boy=${total} yatayTasma=${overflow} dilim=${index}`);
+        if (overflow > 0 || status !== 200) failed++;
       } catch (error) {
         failed++;
         console.log(`${name} ${width} ${theme} HATA ${String(error).slice(0, 140)}`);

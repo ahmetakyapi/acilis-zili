@@ -118,8 +118,8 @@ gelirse ortak bileşene sen terfi ettirirsin (birleştirmeden sonra).
   kimlik yönü yazmadan önce o yönün dokunduğu token/kuralın karar yorumunu
   OKU (`grep -n "sahibinin" app/globals.css`); § 2'deki "tur kararı geri
   almaz" brifi yazan ana oturum için de geçerli.
-- 14 Kasım: sahte sağlayıcının teknik analiz satırları `swingHighs` taşımıyor;
-  birleşik hâlde `/teknik-analiz/NVDA` yerelde 500 döndü (canlı satırlarda
-  alan var). Ajan kendi yamalı kopyasıyla ölçmüştü. Ajanın sahte veri eki
-  scratchpad'de kalmasın: birleştirmede `.claude/skills/olcum/sahte-saglayici.cjs`e
-  taşı, yoksa birleşik ölçüm o ekranı göremez.
+- 14 Kasım: sahte sağlayıcının teknik satırları eksikti; birleşik hâlde
+  `/teknik-analiz/NVDA` yerelde 500 döndü, ajan kendi yamalı kopyasıyla
+  ölçmüştü. Aynı gün ortak dosya genişletildi (`olcum` → senaryo tablosu,
+  `MOCK_NOW`, `olc.mjs`). Kural duruyor: ajan sahte veriye eki scratchpad'de
+  bırakmaz, yamayı ortak dosya için verir; birleşik ölçüm `olc.mjs` ile.
