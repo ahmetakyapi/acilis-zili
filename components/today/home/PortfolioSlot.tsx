@@ -1,7 +1,7 @@
 import type { CSSProperties } from "react";
 import { ArrowRight, CaretRight, Plus } from "@phosphor-icons/react/dist/ssr";
 import { auth } from "@/auth";
-import { SentimentPulse } from "@/components/markets/SentimentPulse";
+import { HomePulse } from "@/components/today/home/HomePulse";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Money } from "@/components/portfolio/Money";
 import { ClaudeBrief } from "@/components/portfolio/ClaudeBrief";
@@ -48,14 +48,14 @@ const REST_TOKEN = "var(--share-rest)";
 export async function PortfolioSlot({ locale, t }: { locale: Locale; t: Dictionary }) {
   const session = await auth();
   const userId = session?.user?.id;
-  if (!userId) return <SentimentPulse locale={locale} t={t} variant="compact" />;
+  if (!userId) return <HomePulse locale={locale} t={t} />;
   const [snapshot, privacy] = await Promise.all([loadPortfolioSnapshot(userId), getPrivacy()]);
   /* Site sahibinde kartın altında danışmanın günlük özeti (11 Kasım). */
   const owner = snapshot ? (await getAdmin())?.userId === userId : false;
   if (snapshot) return <PortfolioSummary snapshot={snapshot} privacy={privacy} locale={locale} t={t} owner={owner} />;
   /* `loadPortfolio` istek içinde önbellekli: ikinci soru ücretsiz. */
   const data = await loadPortfolio(userId);
-  if (!data.ok) return <SentimentPulse locale={locale} t={t} variant="compact" />;
+  if (!data.ok) return <HomePulse locale={locale} t={t} />;
   return <PortfolioInvite t={t} />;
 }
 

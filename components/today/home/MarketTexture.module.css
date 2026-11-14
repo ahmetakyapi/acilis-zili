@@ -94,7 +94,11 @@
    çizgisi metinden değil İLK öğeden, yani içi boş imden geliyordu: künye
    imin dibine hizalanıp metnin 8–10 piksel altına düşüyordu (ölçüldü). */
 .partHead h3 { color:var(--text-strong); font-size:var(--head); font-weight:700; letter-spacing:-.02em; line-height:1.2; }
-.partHead h3::before { content:""; display:inline-block; width:3px; height:.84em; margin-right:9px; border-radius:2px; vertical-align:-.06em; background:var(--primary); }
+/* MAVİ DİKEY İM KALKTI (14 Kasım, görsel tur). Başlığın önünde 3 piksellik
+   mavi bir çubuk vardı (9 Ekim); sayfada başka hiçbir başlık taşımıyordu ve
+   başlık dilinin dördüncü deyimiydi (display degrade, panel başlığı, plaka,
+   çubuklu). Mavi etkileşimin rengi; başlık kendi puntosu ve ağırlığıyla
+   ayrışıyor (19/700, 9 Ekim'in ölçüsü yerinde). */
 .partMeta { grid-column:1 / -1; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 12px; margin:0; color:var(--text-muted); font-size:12px; line-height:1.5; }
 .partLink { justify-self:end; }
 .breadth { color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }

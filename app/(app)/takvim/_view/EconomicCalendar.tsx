@@ -3,6 +3,8 @@ import { QueryTransition } from "@/components/layout/QueryTransition";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/calendar/CalendarExperience.module.css";
 import { CalendarStrip } from "@/components/calendar/CalendarStrip";
+import { CalendarSubscribe } from "@/components/calendar/CalendarSubscribe";
+import { feedUrls } from "@/lib/calendar-feed";
 import { DayPicker } from "@/components/calendar/DayPicker";
 import { NextRelease } from "@/components/calendar/NextRelease";
 import { MonthReleases, type MonthItem } from "@/components/calendar/MonthReleases";
@@ -912,6 +914,26 @@ export async function EconomicCalendar({
                   </p>
                   <p>{t.calendar.impactNote}</p>
                   <p>{t.calendar.timesNote}</p>
+                  {/* TAKVİM ABONELİĞİ KÜNYEDE (14 Kasım 2026). "Takvime
+                      Ekle" yalnız yüksek etkili satırlarda ve tek olay
+                      indiriyor; abonelik bütün takvimi okurun Google/Apple
+                      Takvim'ine taşır. Yeri panelin künyesi (ekran düzeni
+                      6): listeyi okuyan kişinin son satırda bulduğu küçük
+                      bir eylem, kapağa ya da başlığa üçüncü bir denetim
+                      değil. Bağlantı ekrandaki önem süzgecini taşır
+                      ("Yüksek" seçiliyken yalnız yüksek etkililer); ipucu
+                      cümlesi bunu söyler. Yalnız okuma başarılıyken
+                      basılıyor: veritabanı düşükken akış da 503 verir. */}
+                  <CalendarSubscribe
+                    {...feedUrls({ kind: "makro", locale, impact })}
+                    labels={{ subscribe: t.calendarFeed.subscribe, copy: t.calendarFeed.copy, copied: t.calendarFeed.copied }}
+                    hint={
+                      impact
+                        ? t.calendarFeed.macroHintFiltered.replace("{impact}", impactLabel[impact])
+                        : t.calendarFeed.macroHint
+                    }
+                    className="pt-2"
+                  />
                 </div>
               </>
             )}

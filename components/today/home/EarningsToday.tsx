@@ -3,7 +3,6 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { AnalysisBadge } from "@/components/earnings/AnalysisBadge";
 import {
   DataError,
-  EmptyState,
   Panel,
   PanelHeader,
   PanelLink,
@@ -85,12 +84,17 @@ export async function EarningsToday({ locale, t }: { locale: Locale; t: Dictiona
   if (rows.length === 0) {
     return (
       <Panel>
+        {/* BOŞ GÜN TEK SATIR (14 Kasım, görsel tur). Başlığın altında
+            ortalanmış tek cümleyle 127 piksellik bir kutuydu (1440; kolonun
+            946 pikseli boş). Bilgi yerinde (gerekçe aşağıda, "PANEL
+            BOŞALIRSA"), kutu küçüldü: cümle başlığın künyesi, panel 52
+            piksel. */}
         <PanelHeader
           title={title}
           tone="title"
+          meta={t.earnings.empty}
           action={<PanelLink href="/bilancolar">{t.common.showAll}</PanelLink>}
         />
-        <EmptyState compact title={t.earnings.empty} />
       </Panel>
     );
   }

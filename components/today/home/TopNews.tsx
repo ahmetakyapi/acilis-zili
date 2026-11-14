@@ -1,3 +1,4 @@
+import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { NewsImage } from "@/components/news/NewsImage";
 import { NewsFill } from "@/components/today/NewsFill";
@@ -391,9 +392,11 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
             farkı seçiyor ve fotoğraf çerçevesini o kadar uzatıp kısaltıyor
             (en çok −%20 / +%25; `object-cover`, kırpılan yalnız kenar).
             Metin ve satır aralıkları hiç değişmiyor.
-         3. Metin manşeti (kutulu) liste boyuna gerilir; başlık ve özet
-            kutunun dibine yaslanır, logo ve künye tepede kalır — kutunun
-            içindeki boşluk satır aralarına dağılmıyor. Liste manşetten
+         3. Metin manşeti (kutulu) liste boyuna gerilir. 14 KASIM: başlık
+            ve özet artık dibe yaslanmıyor (logo/künye ile başlık arasında
+            92 piksellik ölü bant açıyordu); kart yukarıdan okunur, künye
+            dipte alt satır, fark özetin açılan satırlarına ve alt satırın
+            üstüne iner (TopNews.module.css → "FARK BAŞLIĞIN ÜSTÜNE DEĞİL"). Liste manşetten
             kısaysa önce bir yedek daha açılıyor ki kutu gerilecek hedefi
             bulsun. Liste kabı `align-content:start`: satırlar gerilmez.
        JS kapalıyken 3 CSS ile çalışıyor; 1–2 açılmıyor, taban liste kalıyor.
@@ -434,6 +437,9 @@ export async function TopNews({ locale, t }: { locale: Locale; t: Dictionary }) 
               </span>
               <span aria-hidden>·</span>
               <span className="numeral">{whenOf(lead)}</span>
+              {/* Metin manşetinde künye kartın alt satırı; ucundaki ok
+                  kartın bir bağlantı olduğunu söyler (CSS, `.leadGo`). */}
+              <ArrowRight size={16} weight="bold" aria-hidden className={styles.leadGo} />
             </span>
             {textLead ? (
               /* Metin manşetinin işareti: haberin şirketinin logosu, varsa.

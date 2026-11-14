@@ -356,9 +356,39 @@
 /* ---- Mercek ---- */
 /* Öne çıkan Mercek düz yüzeyde; ayrımı mavi kenarlık taşıyor, köşe
    yıkaması değil (gerekçe UtilityExperience.module.css başındaki not). */
-.storySpotlight { overflow:hidden; border:1px solid var(--primary-faint); border-radius:var(--radius-panel); background:var(--premium-surface); }
+/* ÜÇ KAT (14 Kasım, görsel tur "Zil Defteri"). Ana kolonda bülten, siluet,
+   Mercek, bilanço açıklayanlar ve analizler aynı ağırlıkta beş kutuydu
+   (1440: beşi de 946 piksel, 18 yarıçap, aynı kenar). Şimdi:
+     1. KAHRAMAN: geri sayım + endeksler (`--radius-feature`), tek.
+     2. KUTULU PANEL = VERİ ARACI: akış, sektör/tema bandı, günün özeti
+        (endeks şeritli bülten), siluet, bugün açıklayanlar tablosu ve sağ
+        rayın ölçüleri.
+     3. KUTUSUZ AÇIK BÖLÜM = OKUMA: Mercek yazıları, son bilanço analizleri,
+        haberler (28 Eylül'den beri) ve rayda Haftaya Bakış. Üstte hairline
+        (`--line`), başlık, içerik sayfa zemininde (`.open`). Kolon içindeki
+        bölümde başlık panel başlığı ölçüsünde (16/700); tam genişlik haber
+        bandında bölüm başlığı basamağında (`.sectionTitle`, 25–36/600).
+   NEDEN BU ÜÇÜ: Mercek ve analizler sitenin YAZDIĞI metinlerin listesi
+   (okunacak içerik, ölçü değil) ve haber bandıyla aynı türden; üçü aynı
+   deyimi konuşunca sol kolon "kutu, kutu, kutu" yerine "veri kutusu →
+   okuma bölümü → veri kutusu → okuma bölümü" ritmine giriyor. Haftaya
+   Bakış üç satırlık kısa bir liste: kutu, içeriğinden ağırdı.
+   Mercek'in mavi kenarlı yüzeyi (bir dönem degrade) kalktı; bloğu ayıran
+   artık manşetin boyu ve rakam karoları. */
+.storySpotlight { min-width:0; border-top:1px solid var(--line); }
 .storySpotlight h3 { color:var(--text-strong); font-size:clamp(26px, 2.3vw, 33px); font-weight:600; line-height:1.13; }
-.storySpotlight > a { padding:26px; }
+/* Manşet bağlantısı zeminde: eksi kenar boşluğu + 12 dolgu, hover tonu
+   yuvarlak köşeli bir yüzey olarak okunur; içerik bölümün hattında. */
+.storySpotlight > a { margin-inline:-12px; padding:8px 12px 22px; border-radius:var(--radius-panel); }
+/* Açık bölümün başlık satırı (turun ortak deyimi): ÜSTTE hairline, başlık
+   solda, bağlantı sağda, içerik doğrudan zeminde. Haber bandında çizgi
+   başlığın ALTINDAYDI (28 Eylül); üç açık bölüm aynı kalıba geçti: çizgi
+   bölümü bir önceki panelden ayırır, başlık kendi içeriğine yapışık. */
+.sectionHead { display:flex; align-items:center; justify-content:space-between; gap:12px; padding:22px 0 2px; border-top:1px solid var(--line); }
+.sectionTitle { color:var(--text-strong); font-size:clamp(25px,2.8vw,36px); font-weight:600; letter-spacing:-.035em; line-height:1.1; }
+/* Kolon içi kutusuz bölüm (Mercek, analizler, Haftaya Bakış): üstte
+   hairline, `PanelHeader` (yan dolgusuz), içerik zeminde. */
+.open { --week-pad:0px; min-width:0; border-top:1px solid var(--line); }
 /* Mobile Mercek measured 1050px at 390px: treat the archive as a numbered
    reading list and let the lead keep its full headline and actual figure. */
 .storyLead { position:relative; }
@@ -387,10 +417,12 @@
    piksellik bir işaretti. Dolgu 22'ye, logo 40'a çıktı; başlık bir kademe
    büyüdü. Üzerine gelince satırın solunda mavi bir hat açılıyor ve logo
    kalkıyor. */
-.storyRow { position:relative; display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:start; gap:14px 22px; padding:22px 26px; border-left:2px solid transparent; transition:background 180ms var(--ease-brand); }
-.storyRow::before { content:""; position:absolute; left:0; top:14px; bottom:14px; width:3px; border-radius:0 3px 3px 0; background:var(--primary); transform:scaleY(0); transition:transform .28s var(--ease-brand); }
-.storyRow:hover::before { transform:scaleY(1); }
-.storyRow:hover { background:var(--primary-tint); border-left-color:var(--primary-faint); }
+/* 14 KASIM: satır sayfa zemininde. Kutunun kenarına yaslı 3 piksellik mavi
+   hat ve sol kenarlık kalktı (kutu yok, hat havada kalırdı); hover dili
+   haber satırlarıyla aynı: yuvarlak köşeli ton. Dolgu 12, eksi kenar
+   boşluğuyla içerik bölümün hattında kalır (logo x'i başlıkla aynı). */
+.storyRow { position:relative; display:grid; grid-template-columns:40px minmax(0,1fr) auto; align-items:start; gap:14px 22px; margin-inline:-12px; padding:20px 12px; border-radius:12px; transition:background 180ms var(--ease-brand); }
+.storyRow:hover { background:var(--primary-tint); }
 .storyRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
 /* Numara logo karosuyla aynı kutuda (8 Kasım): gömük zemin, mono dizin,
    mürekkep rengi — mavi yalnız etkileşimde (CLAUDE.md, renk anlam taşır).
@@ -406,9 +438,9 @@
 .storyCast { display:flex; min-width:0; align-items:center; gap:12px; }
 .storyCastFund { display:grid; place-items:center; width:44px; height:44px; flex-shrink:0; border-radius:var(--radius-lg); background:var(--primary-wash); color:var(--primary-ink); }
 .storyCastLogos { display:flex; align-items:center; flex-shrink:0; }
-.storyCastTile { box-shadow:0 0 0 3px var(--premium-surface); }
+.storyCastTile { box-shadow:0 0 0 3px var(--page-bg); }
 .storyCastLogos > * + * { margin-left:-12px; }
-.storyCastMore { display:grid; place-items:center; width:44px; height:44px; margin-left:-12px; border-radius:var(--radius-lg); background:var(--primary-wash); color:var(--primary-ink); font-size:var(--text-tiny); font-weight:700; box-shadow:0 0 0 3px var(--premium-surface); }
+.storyCastMore { display:grid; place-items:center; width:44px; height:44px; margin-left:-12px; border-radius:var(--radius-lg); background:var(--primary-wash); color:var(--primary-ink); font-size:var(--text-tiny); font-weight:700; box-shadow:0 0 0 3px var(--page-bg); }
 @media(hover:hover) and (pointer:fine) {
   /* Karolar ARALANMIYOR da (ekranlar arası denetim): aralanma `margin`
      geçişiydi — yerleşimi canlandırıyor (yalnız kompozitör kuralı) ve
@@ -442,12 +474,15 @@
    taşımıyor (mavi etkileşimin rengi, `.claude/rules/arayuz.md`). Sitenin
    kendi yazdığı içeriğin işareti özet ve mercekte neyse burada da o:
    `--primary-faint` kenar. Tepe şeridi yalnız görüşe kaldı. */
-.analyses :global(.panel) { border-color:var(--primary-faint); }
-.analysisLeadLink { display:block; margin:0 18px 16px; }
+/* 14 KASIM: analizler kutusuz bölüm (gerekçe yukarıda, "ÜÇ KAT"). Panel
+   ve mavi kenarı kalktı; öne çıkan kart bölümün tek yüzeyi, sayfa
+   zemininde düz `--premium-surface` (panelin içindeyken mavi tonluydu:
+   beyazın üstünde ayrışmak için). */
+.analysisLeadLink { display:block; margin:4px 0 6px; }
 /* Öne çıkan analiz kartı (31 Ekim): kimlik · görüş (halka + adı) ·
    manşet · üç ölçü şeridi · tek eylem. Tepede görüşün 3 piksellik şeridi
    (bilanço ve risk kartlarının dili). */
-.analysisLead { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"identity score" "excerpt excerpt" "figures figures" "footer footer"; align-items:center; gap:14px 20px; padding:20px; border:1px solid var(--primary-faint); border-radius:12px; background:var(--primary-tint); }
+.analysisLead { position:relative; display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"identity score" "excerpt excerpt" "figures figures" "footer footer"; align-items:center; gap:14px 20px; padding:22px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); }
 .analysisLead::before { position:absolute; top:-1px; inset-inline:22px; height:3px; border-radius:0 0 3px 3px; background:var(--verdict-hold); content:""; }
 .analysisLeadLink[data-verdict="buy"] .analysisLead::before { background:var(--verdict-buy); }
 .analysisLeadLink[data-verdict="sell"] .analysisLead::before { background:var(--verdict-sell); }
@@ -457,7 +492,7 @@
 .analysisVerdict > b[data-verdict="buy"] { color:var(--up); }
 .analysisVerdict > b[data-verdict="sell"] { color:var(--down); }
 .analysisFigures { grid-area:figures; display:grid; grid-template-columns:repeat(3,minmax(0,1fr)); gap:10px; margin:0; }
-.analysisFigures > div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:6px 8px; padding:10px 12px; border-radius:10px; background:var(--surface-solid); }
+.analysisFigures > div { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:6px 8px; padding:10px 12px; border-radius:10px; background:var(--surface-sunken); }
 .analysisFigures dt { font-size:var(--text-nano); font-weight:600; color:var(--text-muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
 .analysisFigures dd { margin:0; font-size:var(--text-small); font-weight:700; white-space:nowrap; }
 .analysisFigures > div > span { grid-column:1 / -1; }
@@ -479,15 +514,15 @@
 
 /* ---- Haber bandı ---- */
 .texture { scroll-margin-top:150px; }
-.news { padding-top:18px; scroll-margin-top:150px; }
+.news { scroll-margin-top:150px; }
 /* BÖLÜM BAŞLIKLARI TEK BASAMAKTA (10 Kasım, görsel tur). Sayfanın kutusuz
    iki bölüm başlığı iki ayrı ölçekteydi: "Bugünün Akışı" 25 piksel / 600,
    "Öne Çıkan Haberler" 1440'ta 28 piksel / 650 (clamp 22–28). Merdiven
    artık üç basamak: bant başlığı (display, 26–40), bölüm başlığı (25;
    telefonda 23), panel başlığı (`PanelHeader`, 19). Haber başlığı akışın
    ölçüsüne indi; ağırlık ve harf aralığı da aynı. */
-.newsHeading { color:var(--text-strong); font-size:clamp(25px,2.8vw,36px); font-weight:600; letter-spacing:-.035em; line-height:1.1; }
-.news > div:first-child { padding-bottom:20px; }
+/* 14 Kasım: `.newsHeading` → `.sectionTitle` (yukarıda, "ÜÇ KAT"); üç
+   açık bölüm (Mercek, analizler, haberler) tek kuralı paylaşıyor. */
 
 @media (hover:hover) and (pointer:fine) {
   /* Dilin İKİ yarısı da (14 Ekim): `.panel-hover` kenarla birlikte zemini
@@ -802,25 +837,25 @@
   .dashboard > [data-col] { gap:20px; }
   /* 16 (11 Kasım): kart telefonda ~8 piksel kısalır, satırlar 8 piksel genişler (özet kartının telefon boyu turu, BriefBody). */
   .brief > section { padding:16px; }
-  .storySpotlight { border-radius:18px; }
-  .storySpotlight > .storyLead { padding:18px; }
+  .storySpotlight > .storyLead { padding:6px 12px 18px; }
+  .sectionHead { padding:18px 0 0; }
   .storyLead > div { gap:18px; }
   .storySpotlight h3 { font-size:25px; line-height:1.2; text-wrap:pretty; }
   .storyLead h3 + p { margin-top:10px; font-size:var(--text-read); line-height:1.65; }
   .storyLead .storyFigure:not([data-kind="stats"]) { border-radius:12px; padding:14px; gap:10px; }
   .storyLeadFoot { margin-top:18px; }
-  .storyRow { grid-template-columns:36px minmax(0,1fr); padding:18px; }
+  .storyRow { grid-template-columns:36px minmax(0,1fr); padding:16px 12px; }
   .storyRowLogo { width:36px; }
   .storyRowTile, .storyNumber { width:36px !important; height:36px !important; }
   .storyRowCopy p { -webkit-line-clamp:2; font-size:var(--text-base); line-height:1.55; }
   .storyRowMeta { grid-column:2; flex-wrap:wrap; gap:9px; padding-top:0; }
   .storyArchive > li:nth-child(n+3) { display:none; }
-  .storyAllLink { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border-top:1px solid var(--line-soft); background:var(--surface-solid); color:var(--primary-ink); font-size:var(--text-small); font-weight:600; }
+  .storyAllLink { display:flex; align-items:center; justify-content:center; gap:6px; min-height:44px; border-top:1px solid var(--line-soft); color:var(--primary-ink); font-size:var(--text-small); font-weight:600; }
   .storyAllLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:-3px; }
   .storyRowMeta svg { margin-left:auto; }
   .analysisLead { grid-template-areas:"identity identity" "score score" "excerpt excerpt" "figures figures" "footer footer"; padding:16px; gap:12px 14px; }
   .analysisScore { justify-self:start; }
-  .analysisLeadLink { margin:0 12px 12px; }
+  .analysisLeadLink { margin:2px 0 6px; }
   .analysisExcerpt { max-width:none; -webkit-line-clamp:4; font-size:var(--text-read); line-height:1.6; }
   .news > div:first-child { align-items:flex-start; }
 }
@@ -861,7 +896,6 @@
   .storyRow,.storyRowMeta svg,.storyLeadAction,.storyLeadAction svg { transition:none; }
   .storyLead:hover .storyLeadAction svg { translate:none; }
   .storyRow:hover .storyRowMeta svg { transform:none; }
-  .storyRow::before { transition:none; }
 }
 
 /* ---- GENİŞ EKRAN (25 Ekim) ----

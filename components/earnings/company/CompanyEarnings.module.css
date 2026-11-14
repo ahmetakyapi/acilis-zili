@@ -108,7 +108,7 @@
    ızgarası"); ton farkıyla ayrılmış hücre, kenarlık yok. Altında
    beklenti ve son çeyrek iki çubuk: ScaleBar (CompareScale dili). */
 .expect { display:grid; grid-template-columns:repeat(auto-fit,minmax(15rem,1fr)); gap:10px; margin:0; }
-.expectCell { display:grid; grid-template-rows:subgrid; grid-row:span 3; row-gap:6px; padding:14px 16px 16px; border-radius:var(--radius-md); background:var(--surface-sunken); }
+.expectCell { display:grid; grid-template-rows:subgrid; grid-row:span 3; row-gap:6px; padding:14px 0 0; border-top:1px solid var(--line-soft); }
 .expectCell dt { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; font-size:12px; font-weight:600; color:var(--text-muted); }
 /* Beklentinin son çeyreğe göre farkı: yön renkte VE glifte (▲ ▼). */
 .expectChange { display:inline-flex; align-items:baseline; gap:6px; font-weight:500; white-space:nowrap; }
@@ -166,27 +166,12 @@
    kaçırdı `--down`, denk `--line-strong` (yön yok). Gerekçe BeatRecordCard. */
 .karne { display:flex; flex-direction:column; gap:12px; padding:14px 16px 16px; border-radius:var(--radius-md); background:var(--surface-sunken); }
 .karneHead { display:flex; align-items:baseline; justify-content:space-between; gap:12px; }
-.karneSum { display:inline-flex; align-items:center; gap:12px; }
 .karneLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
 .karneValue { font-size:26px; font-weight:700; letter-spacing:-.03em; line-height:1; color:var(--text-strong); }
 .karneValue > span { font-size:16px; font-weight:700; color:var(--text-muted); }
-.karneQuarters { display:grid; grid-template-columns:repeat(auto-fit,minmax(6.5rem,1fr)); gap:6px; }
-.karneQuarter { position:relative; display:flex; flex-direction:column; gap:3px; min-width:0; padding:12px 10px 10px; overflow:hidden; border-radius:var(--radius-sm); background:var(--surface-solid); }
-.karneQuarter::before { content:""; position:absolute; inset:0 0 auto; height:3px; background:var(--line-strong); }
-/* Şeritler görününce soldan sırayla çizilir (`PlayOnView`: taban durum
-   bitmiş karne; yalnız ekranın altındayken kurulur). */
-@media(prefers-reduced-motion:no-preference) {
-  .karnePlay[data-armed] .karneQuarter::before { transform:scaleX(0); transform-origin:left center; }
-  .karnePlay[data-armed][data-play] .karneQuarter::before { transform:none; transition:transform .6s var(--ease-brand); transition-delay:calc(var(--i, 0) * 70ms); }
-}
-.karneQuarter[data-mark="beat"]::before { background:var(--up); }
-.karneQuarter[data-mark="miss"]::before { background:var(--down); }
-.qPeriod { font-size:12px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
-.qOutcome { display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:700; color:var(--text-body); }
-.karneQuarter[data-mark="beat"] .qOutcome { color:var(--up); }
-.karneQuarter[data-mark="miss"] .qOutcome { color:var(--down); }
-.qActual { margin-top:2px; font-size:15px; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
-.qEstimate { font-size:12px; color:var(--text-muted); white-space:nowrap; }
+/* Çeyrek hücreleri (`.karneQuarter…`, 31 Ekim) 14 Kasım'da kalktı: karne
+   `QuarterLedger`da çeyrek defteri oldu. Bu blok artık yalnız eşik
+   hücresini (`VoteThreshold`) taşıyor. */
 .karneNote { font-size:12px; line-height:1.5; color:var(--text-muted); }
 /* EŞİK HÜCRESİ (10 Kasım, ikinci tur; gerekçe `VoteThreshold.tsx`). Tek
    ray, ortasında eşik çentiği (`--line-strong`, sitenin sıfır çizgisi):
@@ -194,7 +179,8 @@
    bir büyüklük DEĞİL, iki yanı adlandıran bir ölçek: dolgu yarı saydam,
    uzunluk iddia etmiyor. ÖNCE (1440, karnesiz): oy kartları x=81–661, sağda
    698 piksel boş. SONRA: sol sütun 81–605, hücre 625–1359. */
-.threshold { display:grid; grid-template-columns:max-content minmax(0,1fr) max-content; align-items:center; gap:12px; padding:14px 12px; border-radius:var(--radius-sm); background:var(--surface-solid); }
+/* 14 Kasım: iç beyaz kutu kalktı ("kutu içinde kutu"); ray hücrenin zemininde. */
+.threshold { display:grid; grid-template-columns:max-content minmax(0,1fr) max-content; align-items:center; gap:12px; padding:10px 0 6px; }
 .thresholdSide { display:inline-flex; align-items:center; gap:4px; font-size:12.5px; font-weight:700; white-space:nowrap; }
 .thresholdSide[data-side="miss"] { color:var(--down); }
 .thresholdSide[data-side="beat"] { color:var(--up); }
@@ -247,7 +233,6 @@
   .leafWeekday { font-size:12px; padding-bottom:9px; }
   .countValue { font-size:40px; }
   .expectRow { grid-template-columns:5.5rem minmax(0,1fr) max-content; }
-  .karneQuarters { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .storyEntry { padding:14px 16px; }
 }
 /* Oy kartları + dört hücreli karne 1024'ün altında yan yana sığmıyor. */
@@ -275,9 +260,101 @@
    Ölçüm (SONRA) NextReport.tsx başındaki notun devamında. */
 @media(min-width:1100px) {
   .next { grid-template-columns:minmax(0,1fr) minmax(0,30rem); gap:20px 40px; align-items:start; }
-  .next .expect { grid-template-columns:minmax(0,1fr); grid-auto-rows:auto; gap:12px; }
-  .next .expectCell { display:flex; flex-direction:column; grid-row:auto; row-gap:8px; padding:18px 18px 20px; }
+  /* 14 Kasım: sağ sütun saç teliyle ayrılır; hücreler kutusuz, aralarında
+     saç teli (ilk hücrenin üstünde yok). */
+  .next .expect { grid-template-columns:minmax(0,1fr); grid-auto-rows:auto; gap:20px; padding-left:40px; border-left:1px solid var(--line-soft); }
+  .next .expectCell { display:flex; flex-direction:column; grid-row:auto; row-gap:8px; padding:20px 0 0; }
+  .next .expectCell:first-child { padding-top:0; border-top:0; }
   .next .expectValue { font-size:32px; }
   .next .expectBars { gap:10px; padding-top:14px; }
 }
 @media(prefers-reduced-motion:reduce) { .storyEntry { transition:none; } }
+
+/* ==========================================================================
+   GÖRSEL TUR (14 Kasım 2026, "Zil Defteri"). Gerekçeler işaretlemenin
+   yanında (`page.tsx`, `NextReport.tsx`, `LastReport.tsx`, `GuideRow.tsx`);
+   burada düzen ve ölçüm.
+   ========================================================================== */
+
+/* ÖLÇÜM (14 Kasım, gerçek sayfa + sahte sağlayıcı, TR/EN, açık/koyu):
+   SIRADAKİ (NVDA, 1440): sol sütunun son öğesi dibi 744, sağ sütun dibi
+   743 (fark 1); dip satır 760–814 tek hatta (önce paragraf, düğme, künye üç
+   ayrı dip: 742 / 792 / 857). 1280'de 741 / 740. 390'da alt alta.
+   YENİ AÇIKLANMIŞ (WMT, sıradaki tarih var): sol 720, sağ 743. Sıradaki
+   tarih yok (HD): yatay düzen, panel 377 piksel, sol sütunda boşluk 0
+   (dikey düzende 110 piksel kalıyordu).
+   BEKLENTİSİZ (PDD) ve TARİHSİZ (TSN): panel 302 / 210 piksel, sağ yarı
+   dolu (önce açıklama solda, sağda ~600 piksel boş).
+   REHBER SATIRI: 1440'ta 60–1380 (tam genişlik; önce 448 piksellik kart).
+   Sayımlar (altı durum, 390 ve 360): yatay taşma 0, < 12 piksel metin 0,
+   < 44 hedef 0, kutudan taşan 0. */
+
+/* KAHRAMAN YÜZEY: sayfanın tek öne çıkan paneli (`--radius-feature`). */
+.hero { border-radius:var(--radius-feature); }
+
+/* DİP SATIR: künye solda, takvim düğmesi sağda, tek hatta. Önce paragraf,
+   düğme ve künye sol sütunun altında üç ayrı bloktu (üç ayrı dip). */
+.heroFoot { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 24px; border-top:1px solid var(--line-soft); padding-top:14px; }
+.heroFoot > p { flex:1 1 20rem; max-width:78ch; font-size:12px; line-height:1.6; color:var(--text-muted); }
+.heroNext { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; }
+.heroNext b { font-size:14px; font-weight:700; color:var(--text-strong); }
+.heroNextTag { display:inline-flex; align-items:center; height:22px; padding:0 8px; border-radius:999px; background:var(--surface-sunken); font-size:12px; font-weight:600; color:var(--text-body); }
+
+/* AÇIKLANMIŞ RAPOR (`LastReport`): yaprak geçmişte, şeridi nötr (mavi dolu
+   şerit "yaklaşan" demek); sonuç hapı yön renginde, ikonlu. */
+.leaf[data-past] .leafBand { background:var(--surface-sunken); color:var(--text-body); }
+.outcomePill { display:inline-flex; align-items:center; gap:5px; height:26px; padding:0 10px; border-radius:999px; background:var(--surface-sunken); font-size:13px; font-weight:700; color:var(--text-body); white-space:nowrap; }
+.outcomePill[data-outcome="beat"] { background:color-mix(in srgb, var(--up) 12%, transparent); color:var(--up); }
+.outcomePill[data-outcome="miss"] { background:color-mix(in srgb, var(--down) 12%, transparent); color:var(--down); }
+.reactionNote { font-size:13px; color:var(--text-muted); white-space:nowrap; }
+.reactionNote b { font-weight:700; color:var(--text-body); }
+.reactionNote b[data-tone="up"] { color:var(--up); }
+.reactionNote b[data-tone="down"] { color:var(--down); }
+
+/* TARİHSİZ DURUM (`NoReportDate`): kesik kenarlı yaprak (yer tutucu) +
+   açıklama, tek satır. */
+.none { display:flex; align-items:center; gap:24px; min-width:0; }
+.none .leaf { flex-shrink:0; }
+.leaf[data-empty] .leafBand { background:var(--surface-sunken); color:var(--text-muted); }
+.leafEmpty { display:grid; place-items:center; height:104px; color:var(--text-muted); }
+.noneText { display:flex; flex-direction:column; gap:12px; min-width:0; }
+.noneLast { display:flex; flex-wrap:wrap; align-items:baseline; gap:4px 10px; font-size:12px; color:var(--text-muted); }
+.noneLast b { font-size:14px; font-weight:700; color:var(--text-strong); }
+
+/* REHBER SATIRI (`GuideRow`): kutusuz açık bölüm. Üstte saç teli, bölüm
+   adı; satırın tamamı bağlantı. */
+.guide { display:flex; flex-direction:column; gap:6px; border-top:1px solid var(--line); padding-top:16px; }
+.guideLabel { font-size:14px; font-weight:700; line-height:1.3; color:var(--text-strong); }
+.guideRow { display:grid; grid-template-columns:auto minmax(0,1fr) auto; align-items:center; gap:14px; min-height:64px; padding:8px 0; border-radius:12px; transition:color .2s var(--ease-brand); }
+.guideRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:4px; }
+.guideText { display:flex; flex-direction:column; gap:2px; min-width:0; }
+.guideTitle { font-size:16px; font-weight:700; line-height:1.3; color:var(--text-strong); transition:color .2s var(--ease-brand); }
+.guideDek { font-size:13px; line-height:1.5; color:var(--text-body); text-wrap:pretty; }
+.guideCta { display:inline-flex; align-items:center; gap:6px; font-size:13px; font-weight:700; color:var(--primary-ink); white-space:nowrap; }
+.guideCta > svg { transition:translate .2s var(--ease-brand); }
+@media(hover:hover) and (pointer:fine) {
+  .guideRow:hover .guideTitle { color:var(--primary-ink); }
+  .guideRow:hover .guideCta > svg { translate:3px 0; }
+}
+@media(max-width:639px) {
+  .none { gap:16px; }
+  .leafEmpty { height:74px; }
+  .guideCta > span { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+}
+@media(prefers-reduced-motion:reduce) { .guideRow,.guideTitle,.guideCta > svg { transition:none; } }
+
+/* BEKLENTİSİZ SIRADAKİ RAPOR (`data-solo`): sağ sütun yok (takvimde EPS ve
+   gelir beklentisi henüz yazılmamış; tahmini tarihli şirketlerde olağan).
+   Yaprak + geri sayım solda kalıyor, açıklama onların altına iniyordu ve
+   panelin sağ yarısı (1440'ta ~600 piksel) boştu. Açıklama sağ sütuna geçer;
+   çizgi varsa ikisinin altında tam genişlik. */
+@media(min-width:1100px) {
+  .next[data-solo],.next[data-wide] { grid-template-columns:minmax(0,1fr); }
+  .next[data-solo] .when,.next[data-wide] .when { display:grid; grid-template-columns:max-content minmax(0,1fr); align-items:center; gap:20px 56px; }
+  .next[data-solo] .when > .lead,.next[data-wide] .when > .lead { grid-column:2; grid-row:1; }
+  .next[data-solo] .cycle { grid-column:1 / -1; }
+  /* `data-wide` (`LastReport`, sıradaki tarih yok): iki ölçü altta yan yana,
+     ikisinin de üstünde saç teli. */
+  .next[data-wide] .expect { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 40px; padding-left:0; border-left:0; }
+  .next[data-wide] .expectCell,.next[data-wide] .expectCell:first-child { padding-top:20px; border-top:1px solid var(--line-soft); }
+}

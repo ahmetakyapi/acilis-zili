@@ -705,7 +705,8 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 | Uç | Ne |
 |---|---|
 | `/api/chart/[symbol]` · `/api/karsilastir` · `/api/endeks` · `/api/day-flow` · `/api/search` | Ekranların istemci tarafı okumaları: bar, toplu bar, endeks paketi, gün akışı, ⌘K arama |
-| `/api/takvim` | Bilanço takvimi `.ics` |
+| `/api/takvim` | Tek olayın `.ics` dosyası ("Takvime Ekle"): `?tip=bilanco&sembol=&tarih=` ya da `?tip=olay&slug=` |
+| `/api/takvim/akis` | Takvim aboneliği, canlı `.ics` akışı (Google/Apple Takvim): `?tur=makro[&onem=high\|medium\|low]` ekonomik takvim, `?tur=bilanco&semboller=NVDA,AAPL` verilen sembollerin (en çok 40) yaklaşan bilançoları; `dil=tr\|en`. Herkese açık, belirteçsiz; saati bilinmeyen bilanço tüm gün etkinliği. Geçersiz girdi 400, okunamayan takvim 503 (boş takvim değil); `ETag` + bir saatlik paylaşılan önbellek (`lib/ics.ts`, `lib/calendar-feed.ts`) |
 | `/api/kur` · `/api/kur/yol` · `/api/kur/endeks` | TCMB günlük kuru (tek ya da toplu gün), iki gün arasındaki USD/TRY yolu (TL ve Reel TL görünümü), EVDS aylık endeksi (Yİ-ÜFE/TÜFE; anahtar yoksa `missing-key`) |
 | `/api/health` | Dış izleyici için sağlık: veritabanı yanıt veriyorsa 200, vermiyorsa 503; geciken rutin gövdede `degraded`; sağlayıcı kotası ve son başarılı çekme `providers.usage`ta (süreç belleği). Önbelleksiz |
 | `/api/hata` | İstemci hata sınırlarının bildirimi; her durumda gövdesiz 204 |

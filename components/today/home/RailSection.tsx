@@ -22,8 +22,17 @@ export async function RailSection({ t, locale, heading, otherHeadings }: { t: Di
      okların açtığı oturumsuz görüntünün aynısı — beş dakikalık ortak not,
      oturumlu okuyucuda takip işaretleri o günü açınca gelir. Hata önizlemeyi
      düşürür, sayfayı değil. */
+  /* 14 KASIM (görsel tur): EŞİĞİN ALTINDA BİLANÇO OLAN BOŞ GÜNDE DE.
+     Koşul `hiddenEarnings === 0` idi; hafta sonu takvimde tek bir küçük
+     bilanço varken (canlı, 14 Kasım Cumartesi: "Bugün 1 şirket bilanço
+     açıklıyor") önizleme hiç yüklenmiyor ve panel display başlığın altında
+     tek satırlık "Büyük Bir Açıklama Yok" ile 208 piksellik, sağ yarısı boş
+     bir kutu kalıyordu (1440). Akış boşsa okurun sorusu aynı: "sıradaki
+     işlem günü ne var"; eşik altı bilanço cümlesi önizlemenin girişinde
+     kalır (DayFlow → DayPreview `hiddenToday`). Aynı beş dakikalık ortak
+     not, yeni sağlayıcı çağrısı yok. */
   const preview =
-    initial && initial.events.length === 0 && initial.hiddenEarnings === 0 && initial.nextDate
+    initial && initial.events.length === 0 && initial.nextDate
       ? await loadSharedOtherDay(locale, initial.nextDate).catch(() => null)
       : null;
   return <DayFlowLoader key={locale} initial={initial} preview={preview} locale={locale} labels={t.dayFlow} railLabels={t.dayRail} lineLabels={t.calendarVisuals.released} heading={heading} otherHeadings={otherHeadings} />;

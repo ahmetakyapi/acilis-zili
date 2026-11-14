@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { ArrowDownRight, ArrowUpRight, CaretDown, CaretUp, Check, CheckCircle, XCircle } from "@phosphor-icons/react";
+import { ArrowDownRight, ArrowRight, ArrowUpRight, CaretDown, CaretUp, Check, CheckCircle, XCircle } from "@phosphor-icons/react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { castEarningsVote, type VoteActionResult } from "@/app/actions/earnings-vote";
 import type { EarningsVoteLabels } from "@/lib/i18n/dictionaries/earnings-season";
@@ -44,6 +44,7 @@ export function EarningsVote({
   lock,
   variant,
   signInHref,
+  signInLabel,
   outcomeLine,
   locale,
 }: {
@@ -55,6 +56,8 @@ export function EarningsVote({
   lock: string;
   variant: "panel" | "card";
   signInHref: string;
+  /** Girişsiz oy kartının sağ ucundaki çağrı ("Giriş Yap"); yoksa seçim halkası. */
+  signInLabel?: string;
   /** Sonuçlanmış oylamada "EPS 1,08 $ · Beklenti 1,00 $". */
   outcomeLine?: string | null;
 }) {
@@ -157,12 +160,17 @@ export function EarningsVote({
           sayfasına bağlantı. Önce yalnız sitenin birincil düğmesi vardı
           ("Giriş Yap ve Oy Ver", 24 Ekim denetimi: ikinci bir düğme dili
           açılmasın); okur neye oy vereceğini görmeden giriş istiyordu.
-          Kartlar oy kartlarının kendisi — yeni bir düğme dili değil. */}
+          Kartlar oy kartlarının kendisi — yeni bir düğme dili değil.
+          14 Kasım (görsel tur): girişsiz kart oy verilebilir kartla AYNI
+          görünüyordu (boş seçim halkası); basınca oy yerine giriş sayfası
+          açılıyor, kart "pasif" okunuyordu. Sağ uçta artık halka değil
+          eylemin kendisi yazıyor ("Giriş Yap →", etkileşim mavisi) ve
+          grubun üstünde tek satır neden giriş gerektiğini söylüyor. */}
       {phase === "open" && !signedIn && !card && (
         <div className={styles.choices}>
           {(["beat", "miss"] as const).map((choice) => (
-            <Link key={choice} href={signInHref} className={styles.option} data-choice={choice}>
-              <OptionBody choice={choice} labels={labels} />
+            <Link key={choice} href={signInHref} className={styles.option} data-choice={choice} data-guest>
+              <OptionBody choice={choice} labels={labels} signInLabel={signInLabel} />
             </Link>
           ))}
         </div>
@@ -234,7 +242,15 @@ export function EarningsVote({
 }
 
 /** Oy kartının içi: yön dairesi, etiket + alt satır, seçim halkası. */
-function OptionBody({ choice, labels }: { choice: VoteChoice; labels: EarningsVoteLabels }) {
+function OptionBody({
+  choice,
+  labels,
+  signInLabel,
+}: {
+  choice: VoteChoice;
+  labels: EarningsVoteLabels;
+  signInLabel?: string;
+}) {
   const Icon = choice === "beat" ? ArrowUpRight : ArrowDownRight;
   return (
     <>
@@ -245,9 +261,16 @@ function OptionBody({ choice, labels }: { choice: VoteChoice; labels: EarningsVo
         <span className={styles.optionLabel}>{choice === "beat" ? labels.beat : labels.miss}</span>
         <span className={styles.optionHint}>{choice === "beat" ? labels.beatHint : labels.missHint}</span>
       </span>
-      <span aria-hidden className={styles.optionCheck}>
-        <Check size={12} weight="bold" />
-      </span>
+      {signInLabel ? (
+        <span className={styles.optionCta}>
+          {signInLabel}
+          <ArrowRight aria-hidden size={13} weight="bold" />
+        </span>
+      ) : (
+        <span aria-hidden className={styles.optionCheck}>
+          <Check size={12} weight="bold" />
+        </span>
+      )}
     </>
   );
 }

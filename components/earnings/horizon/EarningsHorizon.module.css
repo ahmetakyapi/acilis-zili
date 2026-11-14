@@ -1044,3 +1044,36 @@ a.dayCount:focus-visible { outline: 2px solid var(--primary); outline-offset: 2p
    Hareket (`getAnimations()`, 1440, dengeli hafta): ölçer 5 (700 ms), karo
    33 (yalnız opaklık, 180 ms, gecikme ≤ 220 ms), karne şeridi 34 (bütün
    şerit, 520 ms), hafta girişi 1; hareketi azaltanda süren animasyon 0. */
+
+/* ==========================================================================
+   BOŞ PENCERE SESSİZ (14 Kasım 2026, görsel tur). Geniş ekranda gün sütunu
+   tek gri bloktu ve karosu olmayan pencere içinde "–" yazan gri bir
+   hücreydi: canlıda (16–20 Kasım haftası) perşembe ve cuma sütunlarının
+   üçte ikisi "–" işaretli boş griydi, göz dolu hücreyle boş hücreyi aynı
+   ağırlıkta okuyordu. Ton artık sütunun DEĞİL dolu hücrelerin: gün başlığı
+   ve karosu olan pencereler tonlu, boş pencere ZEMİNSİZ (panelin kendi
+   yüzeyi; saç teli çerçeveli "yuva" denendi, beş boş hücre beş beyaz kutu
+   gibi dolu hücrelerden çok göze batıyordu). Tire kalktı; ekran okuyucu "yok" sözcüğünü duymaya devam eder
+   (`.laneEmpty` içindeki `sr-only`). Satır hizası bozulmaz: boş hücre yerini
+   tutar, yalnız konuşmaz. "Bugün" sütununun dış çerçevesi (gölge) aynen.
+   Ölçüm (gerçek sayfa + sahte sağlayıcı, 1440, iki tema): boş hücrede
+   görünür metin 0 (önce "–" × boş pencere sayısı), sütun ve satır
+   hatları değişmedi (piksel farkı 0), yatay taşma 0.
+   ========================================================================== */
+@media (min-width: 1180px) {
+  .day { --day-tone: var(--surface-sunken); }
+  .day[data-state="today"] { --day-tone: var(--primary-tint); }
+  .day:not([data-columns="0"]):not([data-closed]) { background: none; }
+  .day:not([data-columns="0"]):not([data-closed]) > .dayHead,
+  .day:not([data-columns="0"]):not([data-closed]) > .lane:not([data-empty]) { background: var(--day-tone); }
+  /* Tonlu öbeğin köşeleri: başlık üstte, son dolu pencere altta; boş
+     pencereye komşu kenar da yuvarlanır (öbek orada biter). */
+  .day > .dayHead { border-radius: var(--radius-xl, 1rem) var(--radius-xl, 1rem) 0 0; }
+  .day > .dayHead:has(+ .lane[data-empty]) { border-radius: var(--radius-xl, 1rem); }
+  .day > .lane:not([data-empty]):has(+ .lane[data-empty]),
+  .day > .lane:not([data-empty]):last-child { border-bottom-left-radius: var(--radius-xl, 1rem); border-bottom-right-radius: var(--radius-xl, 1rem); }
+  .day > .lane[data-empty] + .lane:not([data-empty]) { border-top-left-radius: var(--radius-xl, 1rem); border-top-right-radius: var(--radius-xl, 1rem); }
+  .day:not([data-columns="0"]):not([data-closed]) > .lane[data-empty],
+  .lane[data-empty] + .lane { border-top-color: transparent; }
+  .laneEmpty > [aria-hidden] { display: none; }
+}

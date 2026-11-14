@@ -331,12 +331,6 @@
    ÇUBUK, DAYANIKLI ÖLÇEK", "YÖNTEM KATLI"). Ölçümler dosyanın sonunda.
    ========================================================================== */
 
-/* ---- Panel başlığı düz mürekkep (ortak brif: "Panel h2: 16/700, düz
-   `text-strong`"; degrade yalnız sayfa başlığında). `PanelHeader` ortak
-   dosyada degrade basıyor; kalıcı çözüm orada (ana oturum), burada yalnız
-   bu ekranın panelleri. Üçlü sınıf: globals'ın `main h2:not([data-ink])`
-   kuralını özgüllükle geçer. ---- */
-.board.board.board h2, .pulseFull.pulseFull.pulseFull h2 { background-image:none; -webkit-text-fill-color:currentColor; color:var(--text-strong); }
 
 /* ---- Nabız (tam sürüm): kadran + beş satır ----
    Önce (1440, canlı): kadran 260, göstergeler 2 sütun; beşinci tek, sağı

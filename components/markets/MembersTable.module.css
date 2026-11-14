@@ -262,8 +262,6 @@
    MembersTable.tsx → "HAFTALIK ÖLÇEK GÖVDEYE GÖRE", "PAY YALNIZ PİYASA
    DEĞERİNE GÖRE SIRALIYKEN"; page.tsx → "DAMGA PANELİN İÇİNDE".
    -------------------------------------------------------------------------- */
-/* Panel başlığı düz mürekkep (ortak brif; gerekçe MarketBoards.module.css). */
-.panel.panel.panel h2 { background-image:none; -webkit-text-fill-color:currentColor; color:var(--text-strong); }
 /* Pay: basıldığı tek sıralamada (piyasa değeri) gövde mürekkebi, 13 piksel
    (önce 11–12, soluk). */
 .cap[data-share] > :nth-child(2) { color:var(--text-body); font-size:13px; font-weight:600; }

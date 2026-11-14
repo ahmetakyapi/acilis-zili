@@ -3,7 +3,7 @@ import styles from "@/components/today/TodayExperience.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ArrowRight, ArrowUpRight, ChartLineUp } from "@phosphor-icons/react/dist/ssr";
 import { GlyphTile } from "@/components/article/GlyphTile";
-import { Panel, PanelLink, Skeleton, LogoTile } from "@/components/ui/primitives";
+import { Panel, PanelHeader, PanelLink, Skeleton, LogoTile } from "@/components/ui/primitives";
 import { getStories, getStoryBySlug, getSymbolNames } from "@/lib/data";
 import { logoSrc } from "@/lib/logos";
 import { type Dictionary, type Locale } from "@/lib/i18n";
@@ -134,17 +134,22 @@ function StoriesSpotlightView({
           Piyasaları" 16 puntoda degradeyken bu blok bir basamak sönük
           kalıyordu. Ölçü ve dolgu artık `PanelHeader` (tone="title") ile
           birebir: 16 punto, sıkı degrade, `py-4`. */}
-      <div className="flex items-center justify-between gap-3 px-4 py-4 sm:px-5">
-        <h2 className="display-ink display-ink-tight w-fit text-lead font-bold tracking-[-0.015em]">
-          {t.today.latestStories}
-        </h2>
-        <PanelLink href="/mercek">{t.common.showAll}</PanelLink>
-      </div>
+      {/* 14 KASIM (görsel tur): Mercek kutusuz açık bölüm (gerekçe
+          TodayExperience.module.css → "ÜÇ KAT"). Başlık yine panel başlığı
+          ölçüsünde (`PanelHeader`, 16/700): yukarıdaki karar geçerli, cesaret
+          manşette. Bölüm başlığı basamağı (36) denendi: 33 puntoluk degrade
+          manşetin hemen üstünde ikinci bir büyük degrade başlık oluyor,
+          hangisinin başlık olduğu seçilmiyordu (1440, ekran görüntüsü). */}
+      <PanelHeader
+        title={t.today.latestStories}
+        className="!px-0"
+        action={<PanelLink href="/mercek">{t.common.showAll}</PanelLink>}
+      />
 
       <Link
         href={withLocale(`/mercek/${lead.slug}`, locale)}
         prefetch={false}
-        className={`${styles.storyLead} group block border-t border-primary-faint px-4 py-5 transition-colors hover:bg-primary-tint sm:px-5`}
+        className={`${styles.storyLead} group block transition-colors hover:bg-primary-tint`}
       >
         {/* MOBİLDE ÖNCE MANŞET, SONRA GÖRSEL.
             Bir süre tersiydi (`flex-col-reverse`): telefonda önce blok
@@ -281,7 +286,7 @@ function StoriesSpotlightView({
            sağlayıcı; sağın yedekleri tükenmişti). Satır `hidden` +
            `data-fill`: geniş ekranda yer varsa doldurucu açıyor, yoksa
            kolon onsuz kısalıyor. JS kapalıyken iki satır, telefonla aynı. */
-        <ul className={`${styles.storyArchive} border-t border-primary-faint bg-surface-solid`} data-motion-stagger>
+        <ul className={`${styles.storyArchive} border-t border-line`} data-motion-stagger>
           {rest.map((story, index) => (
             <li
               key={story.slug}
@@ -398,12 +403,13 @@ function ReadingDoors({ t }: { t: Dictionary }) {
  */
 export function SpotlightSkeleton() {
   return (
-    <section className="overflow-hidden rounded-xl border border-primary-faint bg-(--premium-surface)">
-      <div className="flex items-center justify-between gap-3 px-4 py-3.5 sm:px-5">
-        <Skeleton className="h-3.5 w-40" />
+    /* Yer tutucu da kutusuz (14 Kasım): gerçek blok açık bölüm. */
+    <section className="min-w-0">
+      <div className="flex items-center justify-between gap-3 border-b border-line py-5">
+        <Skeleton className="h-7 w-56" />
         <Skeleton className="h-2.5 w-20" />
       </div>
-      <div className="border-t border-primary-faint px-4 py-5 sm:px-5">
+      <div className="py-5">
         <div className="flex flex-col-reverse gap-5 lg:flex-row lg:items-start lg:gap-7">
           <div className="min-w-0 flex-1">
             <Skeleton className="h-7 w-full" />
@@ -421,12 +427,12 @@ export function SpotlightSkeleton() {
           <Skeleton className="h-3 w-20" />
         </div>
       </div>
-      <div className="border-t border-primary-faint bg-surface-solid">
+      <div className="border-t border-line">
         {[0, 1, 2].map((i) => (
           <div
             key={i}
             /* Telefonda gerçek blokla aynı: iki satır. */
-            className={`flex items-center gap-3 border-t border-line-soft px-4 py-3.5 first:border-t-0 sm:px-5 ${i === 2 ? "max-md:hidden" : ""}`}
+            className={`flex items-center gap-3 border-t border-line-soft py-3.5 first:border-t-0 ${i === 2 ? "max-md:hidden" : ""}`}
           >
             <div className="flex min-w-0 flex-1 flex-col gap-1.5">
               <Skeleton className="h-3 w-4/5" />

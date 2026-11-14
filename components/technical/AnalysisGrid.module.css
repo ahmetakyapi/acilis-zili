@@ -1,0 +1,53 @@
+/* Detay sayfasının okuma ızgarası (14 Kasım 2026, görsel tur). Kurgu ve
+   ölçüm `app/(app)/teknik-analiz/[symbol]/page.tsx` → "OKUMA IZGARASI".
+   Eski kurallar `Technical.module.css`te (`.analysisGrid`, `.analysisLeft`,
+   `.notesPanel`, `.watchPanel`): artık kullanılmıyor, kayıtları tarihçe.
+
+   İKİ KOLON + GEZEN BLOK. Sol: seviyeler (dayanağı panelin künyesi).
+   Sağ: değerlendirme. "Dikkat Edilecekler" üç yerden birine oturur
+   (`data-notes`: tam genişlik / solun altı / sağın altı); yerini
+   `BalanceNotes` iki kolonun dibini ölçerek seçer, sunucu tam genişlik basar. */
+.grid { display:grid; grid-template-columns:minmax(0,1fr) minmax(0,1fr); grid-template-areas:"map reading" "notes notes"; gap:18px; align-items:start; min-width:0; }
+.grid[data-notes="map"] { grid-template-areas:"map reading" "notes reading"; grid-template-rows:auto 1fr; }
+.grid[data-notes="reading"] { grid-template-areas:"map reading" "map notes"; grid-template-rows:auto 1fr; }
+.left { grid-area:map; min-width:0; }
+.right { grid-area:reading; min-width:0; }
+.watch { grid-area:notes; width:100%; min-width:0; container:watch / inline-size; }
+
+/* Seviyelerin dayanağı: panelin İÇİNDE künye (kıl çizgi, küçük başlık);
+   ayrı kutu değil (`arayuz.md` → Ekran Düzeni 6). */
+.rationale { display:grid; gap:10px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.rationale h2 { font-size:14px; line-height:1.3; font-weight:700; letter-spacing:-.01em; color:var(--text-strong); }
+.rationale dl { display:grid; gap:10px; margin:0; padding:0; border:0; }
+.rationale dl > div { display:grid; grid-template-columns:118px minmax(0,1fr); align-items:baseline; gap:2px 14px; }
+.rationale dt { font-size:12px; line-height:1.4; font-weight:600; letter-spacing:0; color:var(--text-muted); }
+.rationale dd { margin:0; font-size:13.5px; line-height:1.6; color:var(--text-body); text-wrap:pretty; }
+
+/* Dikkat edilecekler: numaralı satırlar. Geniş otururken (tam genişlik)
+   satırlar yan yana kolonlara açılır; kolonun altındayken tek sıra. */
+.watchList { display:grid; grid-template-columns:minmax(0,1fr); margin:0; padding:0; list-style:none; counter-reset:watch; color:var(--text-body); font-size:14px; line-height:1.6; }
+.watchList li { position:relative; padding:11px 0 11px 30px; border-top:1px solid var(--line-soft); counter-increment:watch; text-wrap:pretty; }
+.watchList li:first-child { padding-top:2px; border-top:0; }
+.watchList li:last-child { padding-bottom:0; }
+.watchList li::before { content:counter(watch, decimal-leading-zero); position:absolute; top:13px; left:0; font-family:var(--font-mono); font-size:12px; font-weight:600; color:var(--text-muted); }
+.watchList li:first-child::before { top:4px; }
+@container watch (min-width:860px) {
+  .watchList { grid-template-columns:repeat(auto-fit, minmax(260px, 1fr)); column-gap:32px; }
+  .watchList li, .watchList li:first-child { padding:2px 0 0 30px; border-top:0; }
+  .watchList li::before, .watchList li:first-child::before { top:4px; }
+}
+
+/* Senaryolar: tam genişlik; solda fiyat eksenindeki ray, sağda iki metin. */
+.scenarioBody { display:grid; grid-template-columns:minmax(0,1.1fr) minmax(0,1fr); gap:18px 24px; align-items:start; min-width:0; }
+.scenarioTexts { display:grid; gap:12px; min-width:0; }
+
+@media (max-width:1023px) {
+  /* Tek kolon: seviyeler, değerlendirme, dikkat edilecekler. */
+  .grid { display:flex; flex-direction:column; align-items:stretch; gap:14px; }
+  .scenarioBody { grid-template-columns:minmax(0,1fr); }
+}
+@media (max-width:479px) {
+  .rationale dl > div { grid-template-columns:minmax(0,1fr); }
+}
+.rationale:empty { display:none; }
+.rationale > section { display:grid; gap:8px; }

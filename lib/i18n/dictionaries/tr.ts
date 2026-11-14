@@ -34,6 +34,7 @@ import { portfolioAdvisorTr } from "./portfolio-advisor";
 import { portfolioAskTr } from "./portfolio-ask";
 import { claudeBriefTr } from "./claude-brief";
 import { pushPrefsTr } from "./push-prefs";
+import { calendarFeedTr } from "./calendar-feed";
 import { earningsDeskTr } from "./earnings-desk";
 import { homeEarningsTr } from "./home-earnings";
 
@@ -475,6 +476,9 @@ const tr = {
        yanında mercek yazıları ve haberler duruyor, üçü de birer
        "analiz" sayılabilir. Başlık artık türü adıyla söylüyor. */
     latestAnalyses: "Son Bilanço Analizleri",
+    /* Son Bilanço Analizleri satır listesinin sütun başlığı (14 Kasım). */
+    analysesCompany: "Şirket",
+    analysesVerdict: "Görüş",
     latestStories: "Son Mercek Yazıları",
     allStories: "Tüm Mercek Yazıları",
     topNews: "Öne Çıkan Haberler",
@@ -1048,7 +1052,7 @@ const tr = {
     pivotS1: "1. Destek",
     pivotS2: "2. Destek",
     levelInZone: "Fiyat Bölgenin İçinde",
-    maNote: "Yüzde, güncel fiyatın ortalamaya göre farkı; merdivendeki uzaklık ise fiyattan seviyeye.",
+    maNote: "Yüzde, güncel fiyatın ortalamaya göre farkı; seviye defterindeki uzaklık ise fiyattan seviyeye.",
     pivots: "Pivot Seviyeleri",
     scenarios: "Senaryolar",
     bullCase: "Yükseliş Senaryosu",
@@ -5129,6 +5133,21 @@ const tr = {
     railRatio: "Yukarı / Aşağı",
     railPath: "Sonraki Duraklar",
     railNote: "Seviyeler senaryo metninden; yalnız kayıttaki bir seviyeyle eşleşen sayılar çizilir. Uzaklıklar rayın üstündeki fiyattan ölçülür.",
+    /* Kapağın fiyat grafiği, seviye defteri, görüş şeridi (14 Kasım görsel turu). */
+    chartSell: "Satış {n}",
+    chartZone: "Bölge",
+    chartLabel: "{from} ile {to} arasında günlük kapanış çizgisi, hareketli ortalamalar ve yayındaki seviyeler",
+    chartNote: "Son Altı Ay · Günlük Kapanış",
+    chartOffScale: "{n} Uzak Seviye Defterde",
+    levelsTitle: "Seviyeler",
+    levelsHint: "Uzaklıklar şu anki fiyattan ölçülür; çubuğun ortasındaki çentik fiyatın yeridir.",
+    stanceStripLabel: "Son {n} yayın gününde görüş",
+    stanceStripSince: "{date} Tarihinden Beri {stance}",
+    stanceStripSteady: "Son {n} Yayın Gününde Hep {stance}",
+    historyDetail: "Yayın Yayın Plan",
+    planTitle: "Plan",
+    plansCount: "{n} Alım Planı",
+    macdGap: "Sinyale Fark",
   },
   /* Bültenin Kayıt Defteri bandı (25 Ekim görsel zirve) — metin ayrı dosyada. */
   briefLedger: briefLedgerTr,
@@ -5171,6 +5190,7 @@ const tr = {
   portfolioAsk: portfolioAskTr,
   claudeBrief: claudeBriefTr,
   pushPrefs: pushPrefsTr,
+  calendarFeed: calendarFeedTr,
   earningsDesk: earningsDeskTr,
   homeEarnings: homeEarningsTr,
 };

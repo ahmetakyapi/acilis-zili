@@ -1,0 +1,62 @@
+/* ANA SAYFA PİYASA NABZI (14 Kasım, görsel tur) — gerekçe HomePulse.tsx.
+
+   Ölçüm (gerçek sayfa + sahte sağlayıcı, iki tema aynı), önce
+   (`SentimentPulse variant="compact"`) → sonra:
+     · 1440 (ray 350, içerik 1051–1359): okuma bloğu canlıda 1062–1220
+       (158 piksel, sola yaslı; sağında ~140 piksel boş) → 1051–1359
+       (308 / 308: yay 132 + bant adı ve cümlesi).
+     · Panel: dört göstergede 622 → 498, beş göstergede 579 (canlıda eski
+       kalıp beş göstergeyle 692).
+     · Gösterge satırı: açıklama 130 piksellik sütunda 2–4 satır, puan 120
+       piksellik noktalı ray → ad + puan tek satır, çubuk 308 piksel (8 / 5),
+       açıklama tam satırda tek satır.
+     · 390: panel 522 → 498 (dört gösterge); 1024 (tablet): 320, okuma
+       solda 300, göstergeler iki sütun. Yatay taşma 0.
+     · Çizim: çubuklar `bar-fill` 700 ms (`getAnimations()`: gösterge
+       sayısı kadar), hareketi azaltanda 0.
+   Renk yalnız yönden: korku `--down`, iştah `--up`, nötr çizgi tonu. */
+.panel { min-width:0; container:home-pulse / inline-size; }
+.body { display:grid; gap:4px; padding:4px 20px 8px; }
+
+/* ---- Okuma: yay + puan | bant adı + cümle ---- */
+.reading { display:grid; grid-template-columns:132px minmax(0,1fr); align-items:center; gap:20px; padding-bottom:14px; }
+.gauge { position:relative; }
+.gauge svg { display:block; width:100%; height:auto; overflow:visible; }
+.gauge path { stroke:var(--line-strong); opacity:.42; }
+.gauge path[data-active] { opacity:1; }
+.gauge path[data-tone="down"] { stroke:color-mix(in srgb, var(--down) 45%, var(--line-soft)); }
+.gauge path[data-tone="up"] { stroke:color-mix(in srgb, var(--up) 45%, var(--line-soft)); }
+.gauge path[data-band="extremeFear"] { stroke:var(--down); }
+.gauge path[data-band="extremeGreed"] { stroke:var(--up); }
+/* İşaretçi yayın üstünde dolu nokta; çevresindeki kesik panelin yüzeyi
+   (halka değil, ton). */
+.marker { fill:var(--text-strong); stroke:var(--premium-surface); stroke-width:3; }
+/* Puan yayın içinde, tabanında: panelin en büyük puntosu (display sayı
+   700, −0,03em). */
+.gauge strong { position:absolute; inset-inline:0; bottom:-4px; color:var(--text-strong); font-size:38px; font-weight:700; letter-spacing:-.03em; line-height:1; text-align:center; }
+.verdict { display:grid; gap:4px; min-width:0; }
+.verdict b { color:var(--text-strong); font-size:19px; font-weight:700; letter-spacing:-.02em; line-height:1.2; }
+.verdict b[data-tone="down"] { color:var(--down); }
+.verdict b[data-tone="up"] { color:var(--up); }
+.verdict p { color:var(--text-body); font-size:var(--text-base); line-height:1.45; text-wrap:pretty; }
+.verdict small { color:var(--text-muted); font-size:var(--text-small); font-weight:600; }
+
+/* ---- Göstergeler ---- */
+.list { display:grid; margin:0; padding:0; list-style:none; }
+.list > li { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:baseline; gap:8px 12px; padding-block:12px; border-top:1px solid var(--line-soft); }
+.name { color:var(--text-strong); font-size:var(--text-base); font-weight:600; line-height:1.3; }
+.list b { font-size:var(--text-lead); font-weight:700; letter-spacing:-.02em; line-height:1; }
+.list b[data-tone="up"] { color:var(--up); }
+.list b[data-tone="down"] { color:var(--down); }
+.lane { grid-column:1 / -1; }
+.lane > :global(.value-bar) { animation-delay:calc(var(--i, 0) * var(--step, 40ms)); }
+.list small { grid-column:1 / -1; color:var(--text-muted); font-size:var(--text-small); line-height:1.4; }
+
+/* GENİŞ KAP (tablet, panel tam genişlikte): okuma solda sabit sütun,
+   göstergeler sağda iki sütun; rayın kalıbı 700+ pikselde gerilmesin. */
+@container home-pulse (min-width:640px) {
+  .body { grid-template-columns:300px minmax(0,1fr); align-items:start; column-gap:36px; padding-bottom:16px; }
+  .reading { padding-top:10px; }
+  .list { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:28px; }
+  .list > li:nth-child(-n+2) { border-top:0; }
+}

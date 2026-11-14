@@ -320,7 +320,10 @@
 }
 /* BEŞ SATIR (29 Eylül): baş, fiyat, plan, gerekçe, ölçüler. Altıncı satır
    "Analizi Oku" ayağıydı; kalkış gerekçesi TechnicalCard'da. */
-.cell { display:grid; grid-template-rows:subgrid; grid-row:span 5; min-width:0; margin-bottom:4px; }
+/* DÖRT SATIR (14 Kasım 2026): baş, fiyat, ray, cümle. Ölçü şeridi karttan
+   kalktı (gerekçe TechnicalCard); tek artan kartın yatay düzeni de üç
+   kolona indi: kimlik + fiyat | ray | cümle (`"head plan thesis"`). */
+.cell { display:grid; grid-template-rows:subgrid; grid-row:span 4; min-width:0; margin-bottom:4px; }
 /* Kartın TAMAMI tek bağlantı değil. Öyleydi ve bağlantının erişilebilir adı
    kartın bütün metniydi (sembol, fiyat, 280 karaktere kadar başlık, lejant,
    çipler); ekran okuyucuda hisseler arasında başlıkla da gezinilemiyordu.
@@ -345,7 +348,7 @@
    her kartın tepesinde renkli şerit kalıplaşmış bir kart süsü ve TUT'u
    maviye bağlayınca "mavi etkileşimdir" kuralını (tema dosyası) bozuyordu.
    Yarıçap panel tokenı. */
-.card { position:relative; isolation:isolate; display:grid; grid-template-rows:subgrid; grid-row:span 5; min-width:0; padding:20px 20px 18px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); box-shadow:none; transition:border-color var(--default-transition-duration) var(--ease-brand); }
+.card { position:relative; isolation:isolate; display:grid; grid-template-rows:subgrid; grid-row:span 4; min-width:0; padding:20px 20px 18px; border:1px solid var(--line); border-radius:var(--radius-panel); background:var(--premium-surface); box-shadow:none; transition:border-color var(--default-transition-duration) var(--ease-brand); }
 /* Kart bir bağlantı (başlıktaki `::after` kaplaması), hover'ı bu yüzden
    var — ve yalnızca kenarlık tonu. */
 .card:hover { border-color:var(--primary-faint); }
@@ -375,7 +378,7 @@
   .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card,
   .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card,
   .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card,
-  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card { grid-row:auto; grid-template-rows:auto 1fr; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr); grid-template-areas:"head plan gauges" "quote plan thesis"; column-gap:32px; row-gap:14px; align-items:start; }
+  .board:has(input[value="sell"]:checked) .cell:nth-child(3n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card { grid-row:auto; grid-template-rows:auto 1fr; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr); grid-template-areas:"head plan thesis" "quote plan thesis"; column-gap:32px; row-gap:14px; align-items:start; }
   .board:has(input[value="all"]:checked) .cell:nth-child(3n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardHead,
   .board:has(input[value="buy"]:checked) .cell:nth-child(3n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardHead,
   .board:has(input[value="hold"]:checked) .cell:nth-child(3n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardHead,
@@ -409,7 +412,7 @@
   .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card,
   .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card,
   .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card,
-  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card { grid-row:auto; grid-template-rows:auto 1fr; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr); grid-template-areas:"head plan gauges" "quote plan thesis"; column-gap:32px; row-gap:14px; align-items:start; }
+  .board:has(input[value="sell"]:checked) .cell:nth-child(2n+1 of [data-verdict="sell"]):nth-last-child(1 of [data-verdict="sell"]) > .card { grid-row:auto; grid-template-rows:auto 1fr; grid-template-columns:minmax(0,1fr) minmax(0,1.3fr) minmax(0,1fr); grid-template-areas:"head plan thesis" "quote plan thesis"; column-gap:32px; row-gap:14px; align-items:start; }
   .board:has(input[value="all"]:checked) .cell:nth-child(2n+1 of [data-verdict]):nth-last-child(1 of [data-verdict]) > .card > .cardHead,
   .board:has(input[value="buy"]:checked) .cell:nth-child(2n+1 of [data-verdict="buy"]):nth-last-child(1 of [data-verdict="buy"]) > .card > .cardHead,
   .board:has(input[value="hold"]:checked) .cell:nth-child(2n+1 of [data-verdict="hold"]):nth-last-child(1 of [data-verdict="hold"]) > .card > .cardHead,
@@ -1398,7 +1401,9 @@
 .block { border-radius:var(--radius-panel); box-shadow:none; }
 .block > .sectionTitle,.blockHead { padding-bottom:10px; border-bottom:1px solid var(--line-soft); }
 .blockHead .sectionTitle { display:flex; align-items:center; gap:9px; }
-.blockHead .sectionTitle::before { content:""; width:5px; height:.95em; border-radius:999px; background:var(--primary); }
+/* Başlığın önündeki mavi dikey çubuk 14 Kasım 2026'da kalktı (görsel tur,
+   ortak brif: tek başlık dili, üç basamak; bölüm ve panel başlığı düz
+   mürekkep, önünde çubuk yok). Mavi etkileşimin rengi; başlıkta süstü. */
 .indicatorTitle svg { width:22px; height:22px; padding:3px; border-radius:6px; background:var(--primary-wash); }
 .moreCard { background:var(--premium-surface); }
 .table tbody tr { transition:background 180ms var(--ease-brand); }
@@ -1887,9 +1892,11 @@
    ayrı kutu açmıyor (ekranın kuralı: bir açıklama için yeni kutu yok);
    aralarında hairline, başlıkları küçük künye. */
 .stanceGuide { gap:18px; }
-.stanceGuide[data-tone="up"] { box-shadow:inset 3px 0 var(--verdict-buy); }
-.stanceGuide[data-tone="down"] { box-shadow:inset 3px 0 var(--verdict-sell); }
-.stanceGuide[data-tone="flat"] { box-shadow:inset 3px 0 var(--verdict-hold); }
+/* 14 Kasım 2026 (görsel tur): görüşün rengi sol kenarda 3 piksellik iç
+   gölgeydi; sitenin ton şeridi ise her yerde TEPEDE 3 piksel (kapak, liste
+   kartı, bilanço ve risk kartları). Yan kenar tek tutarsız yerdi; bölüm de
+   artık kutusuz (aşağıda "AÇIK BÖLÜM"), tonu başlığın önündeki kısa şerit
+   taşıyor (`.stanceGuide[data-tone] .sectionTitle::before`). */
 .stanceGuideLink { display:inline-flex; align-items:center; gap:4px; font-size:13px; font-weight:600; color:var(--primary); }
 .stanceGuideLink:hover { color:var(--primary-hover); }
 .stanceLead { max-width:72ch; color:var(--text-strong); font-size:16px; line-height:1.65; text-wrap:pretty; }
@@ -2162,70 +2169,13 @@
 .trackTick[data-kind="sellLevel"] { opacity:.75; }
 .trackPrice { background:var(--text-strong); box-shadow:0 0 0 3px var(--premium-surface), 0 0 0 4px var(--text-strong); }
 
-/* ---- Fiyat merdiveni ----
-   Üç katman, mutlak yerleşim: solda çizim (`.ladderPlot`), ortada bağ
-   çizgileri (SVG, `--link-w`), sağda etiketler. Etiket kolonu içerik kadar
-   değil SABİT bir payla: konumları sunucuda hesaplanıyor ve kolon
-   genişliği satırdan satıra değişirse bağ çizgileri farklı yerlerde biterdi. */
-.ladder { --label-w:clamp(168px, 46%, 248px); position:relative; min-width:0; margin-top:4px; }
-.ladderPlot { position:absolute; inset:0 calc(var(--label-w) + var(--link-w)) 0 0; }
-.ladderLinks { position:absolute; top:0; right:var(--label-w); overflow:visible; }
-.ladderLinks path { fill:none; stroke:var(--line-strong); stroke-width:1; }
-.ladderLinks path[data-kind="price"] { stroke:var(--text-strong); stroke-width:1.5; }
-.ladderLinks path[data-kind="entry"] { stroke:var(--primary); }
-.ladderLinks path:is([data-kind="stop"],[data-kind="sellLevel"]) { stroke:var(--down); }
-.ladderLinks path[data-kind="target"] { stroke:var(--up); }
-
-/* Kulvar ve şeritler: x = 14. */
-.ladderLane { position:absolute; top:0; bottom:0; left:12px; width:5px; border-radius:999px; background:var(--line-soft); }
-.ladderSeg { position:absolute; left:12px; width:5px; border-radius:999px; }
-.ladderSeg[data-tone="up"] { background:var(--up); }
-.ladderSeg[data-tone="down"] { background:var(--down); }
-.ladderSeg[data-tone="flat"] { background:color-mix(in srgb, var(--text-muted) 60%, transparent); }
-
-/* Seviye çizgileri: kulvardan bağ alanına kadar ince. Yapı (destek,
-   direnç) nötr ve kesikli — çizilmiş bir sınır değil bir "bölge tavanı";
-   planın kendi seviyeleri (hedef, stop, tepki) düz ve renkli. */
-.ladderLine { position:absolute; left:6px; right:0; height:0; border-top:1px dashed var(--line-strong); }
-.ladderLine[data-kind="target"] { border-top:1.5px solid var(--up); }
-.ladderLine[data-kind="sellLevel"] { border-top:1.5px solid var(--down); }
-.ladderLine[data-kind="stop"] { border-top:2px solid var(--down); }
-
-/* Alım bölgesi: mavi bant, kulvarın solundan bağ alanına. Kulvardaki
-   karşılığı bandın kendi koyu kenarı. */
-.ladderBand { position:absolute; left:0; right:0; border-radius:6px; background:var(--primary-wash); box-shadow:inset 3px 0 0 var(--primary); }
-
-/* Stopun altı: düz düşüş yıkaması (degrade değil — veri paneli), merdivenin
-   tam genişliğinde; künyesi merdivenin altında (`.ladderNote`). */
-.ladderVoid { position:absolute; left:0; right:0; bottom:0; border-top:1px solid color-mix(in srgb, var(--down) 35%, transparent); border-radius:0 0 8px 8px; background:color-mix(in srgb, var(--down-wash) 50%, transparent); }
-.ladderNote { display:flex; align-items:center; gap:8px; margin-top:10px; font-size:12px; font-weight:600; color:var(--down); }
-.ladderNote i { flex:none; width:14px; height:8px; border-radius:2px; border-top:1.5px solid var(--down); background:color-mix(in srgb, var(--down-wash) 70%, transparent); }
-
-/* Güncel fiyat: koyu mürekkep imleç — çizgi ve kulvarda nokta. */
-.ladderNowLine { position:absolute; left:14px; right:0; height:0; border-top:1.5px solid var(--text-strong); }
-.ladderNow { position:absolute; left:14.5px; width:13px; height:13px; margin:-6.5px 0 0 -6.5px; border-radius:50%; background:var(--text-strong); box-shadow:0 0 0 3px var(--premium-surface); }
-
-/* Etiketler: iki satır — ad (ve rozet), sonra fiyat ile uzaklık. */
-.ladderLabels { position:absolute; inset:0 0 0 auto; width:var(--label-w); margin:0; padding:0; list-style:none; }
-/* Bağ çizgisi FİYAT satırına varıyor (ad satırına değil): blok, fiyat
-   satırının ortası `labelY`de olacak kadar yukarı kalkıyor (19 / 2). */
-.ladderLabel { position:absolute; left:0; right:0; display:grid; gap:1px; padding:0 2px 0 8px; translate:0 calc(-100% + 9.5px); }
-.ladderName { display:flex; align-items:center; gap:6px; min-width:0; font-size:12px; line-height:16px; font-weight:600; color:var(--text-muted); white-space:nowrap; }
-.ladderName .mapCrossed { padding:0 6px; line-height:15px; }
-.ladderName .delayBadge { padding:0 6px; font-size:12px; line-height:15px; }
-.ladderValue { display:flex; align-items:baseline; justify-content:space-between; gap:8px; white-space:nowrap; }
-.ladderValue strong { font-size:15px; line-height:19px; font-weight:600; letter-spacing:-.02em; color:var(--text-strong); }
-.ladderAway { font-size:12px; font-weight:600; color:var(--text-muted); }
-.ladderLabel[data-kind="target"] .ladderName { color:var(--up); }
-.ladderLabel:is([data-kind="stop"],[data-kind="sellLevel"]) .ladderName { color:var(--down); }
-.ladderLabel[data-kind="entry"] .ladderName { color:var(--primary-ink); }
-.ladderLabel[data-kind="price"] .ladderName { color:var(--text-strong); font-weight:700; }
-.ladderLabel[data-kind="price"] .ladderValue strong { font-size:16px; font-weight:700; }
-.mapPanel .ladder { max-width:620px; }
-@media (max-width:639px) {
-  .ladder { --label-w:clamp(160px, 56%, 220px); }
-  .ladderValue strong { font-size:14px; }
-}
+/* ---- Fiyat merdiveni: KALKTI (14 Kasım 2026, görsel tur) ----
+   `PriceLadder` ve `.ladder*` kuralları silindi: seviyeler artık kapaktaki
+   fiyat grafiğinin ekseninde (`PriceChart`), sayılar seviye defterinde
+   (`LevelList`). Merdivenin kayıtları (sabit etiket kolonu, x=14 kulvarı,
+   stop altı yıkaması, S eğrili bağlar) geçmişte: bu tarihten önceki
+   `PriceLadder.tsx` ve bu blok. Düzen hesabı `priceLadderLayout`
+   (lib/technical.ts) yerinde, testleriyle. */
 /* Rayın künyesi plansız kartta bir cümle: gövde tonu, künyeden bir kademe
    koyu — "Fiyata Uzaklık" bir etiketti, bu bir okuma. */
 .railWhy { font-size:12.5px; line-height:1.45; color:var(--text-body); }
@@ -2481,3 +2431,37 @@ label.distHead { cursor:pointer; }
    382 (1440) piksel; çubuk 8, çentik 2 × 14; adlar arasında çakışma 0, rayın
    dışına taşan ad 0; sayfada yatay taşma 0. Kart, ad satırı kadar uzadı:
    sayfa 1440'ta 5.659 → 5.767, 390'da 10.955 → 11.243. */
+
+/* ============================================================================
+   "ZİL DEFTERİ" (14 Kasım 2026, görsel tur) — başlık basamakları ve açık bölüm.
+   Bu blok dosyanın SONUNDA: yukarıdaki katmanlı `.block` / `.sectionTitle`
+   kurallarının üstüne yazıyor, onları silmiyor (kayıtları tarihçe).
+
+   BAŞLIK: üç basamak, ölçüyle. Sayfa başlığı display; BÖLÜM başlığı
+   clamp(25px,2.8vw,36px)/600; PANEL h2 16/700. Hepsi sitenin başlık
+   mürekkebinde (degrade): düz mürekkep denendi ve aynı gün geri alındı,
+   sahibinin 24 Eylül kararı (globals.css → "KART VE PANEL BAŞLIKLARI DA").
+
+   AÇIK BÖLÜM: destekleyici içerik (görüşün anlamı) kutusuz; üstte kıl
+   çizgi, başlık, içerik sayfa zemininde. Önce beş-altı eşit ağırlıkta beyaz
+   kart alt alta diziliydi. */
+.block.stanceGuide { padding:22px 0 0; border:0; border-top:1px solid var(--line); border-radius:0; background:none; }
+.stanceGuide .blockHead { padding-bottom:0; border-bottom:0; }
+.stanceGuide .sectionTitle { font-size:clamp(25px,2.8vw,36px); line-height:1.1; font-weight:600; letter-spacing:-.035em; }
+.stanceGuide[data-tone] .sectionTitle { display:flex; align-items:center; gap:12px; }
+.stanceGuide[data-tone] .sectionTitle::before { content:""; flex:none; width:28px; height:3px; border-radius:999px; background:var(--verdict-hold); }
+.stanceGuide[data-tone="up"] .sectionTitle::before { background:var(--verdict-buy); }
+.stanceGuide[data-tone="down"] .sectionTitle::before { background:var(--verdict-sell); }
+
+/* Pano künyesinin şeridi (liste başlık kartı; gerekçe teknik-analiz/page.tsx).
+   Şerit üç sayının üstünde, sayıların kendi üst çizgisi kalkıyor. */
+.headGauge { display:grid; gap:10px; margin-top:16px; padding-top:14px; border-top:1px solid var(--line-soft); }
+.headGaugeLabel { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; font-size:12px; line-height:1.3; color:var(--text-muted); }
+.headGaugeLabel b { font-size:13px; font-weight:700; color:var(--text-strong); }
+.headGauge + .headStats { margin-top:12px; padding-top:0; border-top:0; }
+.boardTitle { color:var(--text-strong); }
+/* Telefonda SAT kartının genel cümlesi ("Görüş SAT: alım planı yok…")
+   basılmıyor: yedi kartta aynı satır, anlamı panonun altındaki "AL, TUT,
+   SAT Ne Demek?" bölümünde; kapak rayındaki aynı kural (`.coverRail`).
+   Ölçüm (390, SAT kartı; önce canlı): 379 → 340 piksel. */
+@media (max-width:639px) { .card .riskHead:has(.railWhy) { display:none; } }

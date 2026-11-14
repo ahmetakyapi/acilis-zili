@@ -18,8 +18,11 @@
    öğeden düşüyor ve 44 piksellik karo 27'ye iniyordu. Aralık üst ızgarada,
    satırın yan dolgusu da ilk izin genişliğine katılı (`--pad`); son iz
    `max-content` olduğu için dolguyu kendiliğinden kapsıyor. */
+/* `--week-pad` (14 Kasım): ana sayfada Haftaya Bakış kutusuz bölüm, satır
+   sayfa zemininde ve yan dolgusuz (`--week-pad:0`, TodayExperience.module.css
+   → `.open`); değişken verilmezse panel dolgusu (16 / 20). */
 .list {
-  --pad: 16px;
+  --pad: var(--week-pad, 16px);
   display: grid;
   grid-template-columns: calc(44px + var(--pad)) max-content minmax(0, 1fr) max-content;
   column-gap: 12px;
@@ -27,7 +30,7 @@
   padding: 0;
   list-style: none;
 }
-@media (min-width: 640px) { .list { --pad: 20px; } }
+@media (min-width: 640px) { .list { --pad: var(--week-pad, 20px); } }
 
 .row {
   position: relative;

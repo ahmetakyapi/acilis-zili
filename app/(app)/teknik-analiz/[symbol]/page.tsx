@@ -11,21 +11,23 @@ import directory from "@/components/motion/DirectoryExperience.module.css";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
 import { IndicatorPanels } from "@/components/technical/IndicatorPanels";
 import { MoreSymbols, type MoreSymbolEntry } from "@/components/technical/MoreSymbols";
-import { PlanHistory } from "@/components/technical/PlanHistory";
+import { StanceHistory } from "@/components/technical/StanceHistory";
 import { BalanceNotes } from "@/components/technical/BalanceNotes";
 import { PriceMapNotes } from "@/components/technical/PriceMap";
-import { PriceLadder } from "@/components/technical/PriceLadder";
+import { LevelList } from "@/components/technical/LevelList";
+import { PlanPanel } from "@/components/technical/PlanPanel";
 import { ScenarioRail } from "@/components/technical/ScenarioRail";
 import { SignalStrip } from "@/components/technical/SignalStrip";
 import { TechnicalCover } from "@/components/technical/TechnicalCover";
 import { STANCE_GUIDE_SLUG, StanceGuide } from "@/components/technical/StanceGuide";
 import styles from "@/components/technical/Technical.module.css";
+import grid from "@/components/technical/AnalysisGrid.module.css";
 import { DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n, type Locale } from "@/lib/i18n";
 import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
-import { getQuotes } from "@/lib/providers";
+import { getChartBars, getQuotes } from "@/lib/providers";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import {
   TECHNICAL_SYMBOLS,
@@ -57,8 +59,19 @@ export async function generateMetadata(
     : null;
   const t = getDictionary(locale);
   const diller: Locale[] = detail?.row.copy.en ? ["tr", "en"] : ["tr"];
+  /* BAŞLIK ŞİRKETİ ADIYLA SÖYLER (14 Kasım SEO denetimi). "nvidia teknik
+     analiz", "nvda hisse yorum" aranıyor; sayfa o yorumu taşıyordu ama
+     başlık yalnız "NVDA Teknik Analiz" diyordu. Ad sayfanın gövdesiyle aynı
+     istek içi önbellekten (`getSymbolNames`, aynı liste = aynı anahtar);
+     tüzel ek ("Corporation", "Inc.") başlıkta yer tutmasın diye kırpılır. */
+  const names = await getSymbolNames([...TECHNICAL_SYMBOLS]);
+  const company = (names.get(upper) ?? "")
+    .replace(/,?\s+(Corporation|Corp\.?|Incorporated|Inc\.?|Holdings?|Technologies|Technology|Group|Company|Co\.?|Ltd\.?|PLC|plc|N\.?V\.?|S\.?A\.?)$/g, "")
+    .replace(/,?\s+(Corporation|Corp\.?|Inc\.?|Holdings?)$/g, "")
+    .trim();
+  const subject = company && company.toUpperCase() !== upper ? `${company} (${upper})` : upper;
   return {
-    title: locale === "en" ? `${upper} Technical Analysis` : `${upper} Teknik Analiz`,
+    title: locale === "en" ? `${subject} Technical Analysis and Outlook` : `${subject} Teknik Analiz ve Hisse Yorumu`,
     /* ANALİZ YOKKEN SAYFA BOŞ BİR KABUK. Açıklaması da yoktu ve arama
        motoruna "başlık var, içerik yok" bir sayfa ilan ediliyordu; o hâlde
        dizine girmiyor, bağlantıları izleniyor. */
@@ -99,7 +112,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
   /* Kotasyon listenin TAMAMIYLA isteniyor, tek sembolle değil: istek içi
      önbellek anahtarı sıralanmış sembol dizesi (bkz. `getQuotes`) ve liste
      sayfasıyla aynı anahtar aynı sayıyı verir. */
-  const [detail, meta, quotes, holidays, board] = await Promise.all([
+  const [detail, meta, quotes, holidays, board, barsResult] = await Promise.all([
     getTechnicalDetail(symbol),
     /* İsim ve logo da LİSTENİN TAMAMI için isteniyor: sayfanın dibindeki
        çıkış kartları on bir şirketi daha basıyor ve `getSymbolNames` de
@@ -109,7 +122,19 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
     getQuotes([...TECHNICAL_SYMBOLS], status),
     getHolidays(),
     getTechnicalBoard(),
+    /* KAPAĞIN GRAFİĞİ (14 Kasım). Hisse sayfasının "Hareketli Ortalamalar"
+       ve "Teknik Fotoğraf" panellerinin çağırdığı AYNI istek ("1Y" günlük
+       barlar; 200 günlük ortalamaya yeter): yeni sağlayıcı çağrısı yok,
+       `fetch` önbelleği ortak. */
+    getChartBars(symbol, "1Y", status),
   ]);
+  /* BAYAT SERİ ÇİZİLMEZ. Sağlayıcı düşünce `getChartBars` veritabanındaki
+     son barlara düşer ve bunu `stale` ile söyler (`cachedBarsUsable`: beş
+     güne kadar eski olabilir). Grafiğin ucu başlıktaki fiyatla aynı sayı
+     olmak zorunda ve seviyeler bugünün yayını; günlerce eski bir çizginin
+     üstünde bugünün desteği yanlış bir resim olurdu. O hâlde grafik yer
+     bırakmaz, kapakta eski etiketli ölçek kalır (`TechnicalCover`). */
+  const bars = barsResult.ok && !barsResult.stale && barsResult.data.length > 0 ? barsResult.data : null;
   const company = meta[symbol]?.name ?? symbol;
 
   /* ÇIKIŞ KARTLARI. Sıra `TECHNICAL_SYMBOLS`in sırası — liste sayfası da
@@ -198,7 +223,8 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
   const priceBadge = live ? (quote?.realtime ? t.technical.nowRealtime : t.technical.now) : null;
   const next = nextEdition(new Date(), holidays);
   const sectionItems = [
-    { id: "technical-levels", label: t.technical.priceMap },
+    { id: "technical-plan", label: t.technicalVisuals.planTitle },
+    { id: "technical-levels", label: t.technicalVisuals.levelsTitle },
     { id: "technical-reading", label: t.technical.summary },
     /* 10 Kasım: "Dikkat Edilecekler" haritanın altına çıktı (aşağıda). */
     { id: "technical-watch", label: t.technical.watch },
@@ -206,6 +232,9 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
     { id: "technical-indicators", label: t.technical.indicators },
     ...(history.length > 1 ? [{ id: "technical-history", label: t.technical.history }] : []),
   ];
+  /* Grafik basılacak mı: kapakla AYNI soru (bar var ve çizmeye yetiyor).
+     Plan paneli telefondaki kart rayını buna göre basıyor. */
+  const hasChart = bars !== null && bars.length >= 30;
   const levelProps = {
     entryLow: row.entryLow,
     entryHigh: row.entryHigh,
@@ -268,22 +297,37 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
         changePct={changePct}
         priceLabel={priceLabel}
         priceBadge={priceBadge}
-        next={next}
+        bars={bars}
         locale={locale}
         t={t}
       />
 
-      {/* ---- Şirket Analizi (Claude) KAPAĞIN HEMEN ALTINDA ----
-          11 Ekim'de önce sayfanın en tepesinden (kırıntının üstü) okumanın
-          sonuna indi; telefonda 10.641 piksellik sayfanın 6.876'sına düştü
-          ve sahibi "çok aşağıda" dedi. Burada: önce sitenin görüşü ve planı
-          (kapak), hemen ardından ikinci görüş ve sıradaki yayın saati. */}
-      <ClaudeCta symbol={symbol} locale={locale} focus="technical" />
+      {/* Planın okuması, plan kartları ve yayın şeridi: kapaktan indi
+          (14 Kasım; gerekçe `TechnicalCover` → "KAHRAMAN", `PlanPanel`). */}
+      <PlanPanel row={row} price={price} priceLabel={priceLabel} next={next} hasChart={hasChart} locale={locale} t={t} />
 
       <SectionNav className={styles.sectionNav} label={t.technical.sectionsLabel} items={sectionItems} trackAtNav />
 
-      {/* ---- Fiyat haritası ve değerlendirme ---- */}
-      <div className={styles.analysisGrid} data-balance-grid data-notes="full">
+      {/* ---- OKUMA IZGARASI (14 Kasım 2026, görsel tur) ----
+          Önce: sol kolon harita + dikkat edilecekler, sağ kolon
+          değerlendirme + senaryolar, altta gezen "Seviyelerin Dayanağı".
+          Merdiven yerini seviye defterine bırakınca sol kolon kısaldı
+          (NVDA 1440: 542 → 457, TSLA'da 337 piksel) ve sağdan 63–334 piksel
+          erken bitiyordu. Yeni kurgu, içerik türüne göre:
+            · SOL: Seviyeler; dayanağı aynı panelin künyesi (ayrı kart değil).
+            · SAĞ: Değerlendirme (metin).
+            · GEZEN BLOK: Dikkat Edilecekler. Her kayıtta var (rutin en az
+              bir madde yazar) ve boyu orta; `BalanceNotes` onu üç yerde
+              ölçüp iki kolonun dibini en yakın hizaya getireni seçer
+              (eskiden gezen blok notlardı: çoğu kayıtta tek satır, kimi
+              kayıtta hiç yok, boşluğu kapatamıyordu).
+            · ALTTA TAM GENİŞLİK: Senaryolar. Ray fiyat ekseninde bir çizim,
+              genişlik istiyor; iki senaryo metni yanında.
+          Ölçüm (1440, iki kolonun dip farkı; "önce" merdiven kalktıktan
+          sonraki eski kurgu): NVDA 63 → 36, AAPL 64 → 13, AMD 64 → 13, TSLA
+          (notsuz, bölgesiz) 334 → 25 (blok tam genişlikte). 1024'te 64 / 19 /
+          19 / 1; 1023 ve altı tek kolon. Yerleşim `AnalysisGrid.module.css`. */}
+      <div className={grid.grid} data-balance-grid data-notes="full">
         {/* SOL KOLON: HARİTA + DİKKAT EDİLECEKLER (10 Kasım). SAT planında
             harita kısa (alım bölgesi ve stop yok, üç-dört seviye) ve sol kolon
             sağdan 286 piksel erken bitiyordu (NVDA, 1440, ölçüldü; TUT'ta
@@ -299,17 +343,23 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
             NVDA/SAT 286 → 127 (notu olmayan kayıtta; tek notlu kayıtta not
             da haritanın altına inip ~63), AMD/TUT ve AAPL/AL 98 → 24;
             1024'te 162 / 60. */}
-        <div className={styles.analysisLeft} data-balance="map">
+        <div className={grid.left} data-balance="map">
         <section id="technical-levels" className={cn(styles.block, styles.mapPanel)}>
           <div className={styles.blockHead}>
-            <h2 className={styles.sectionTitle}>{t.technical.priceMap}</h2>
+            <h2 className={styles.sectionTitle}>{t.technicalVisuals.levelsTitle}</h2>
           </div>
           {/* SEVİYE TABLOSU YERİNE FİYAT MERDİVENİ (31 Ekim, sahibinin
               isteği: "çok daha görsel"). Tablo (`PriceMap
               presentation="levels"`) eşit aralıklı satırlardı; merdivende
               aralık fiyat mesafesinin kendisi, bölge bant, stopun altı alan.
-              Gerekçe `PriceLadder`. */}
-          <PriceLadder
+              Gerekçe `PriceLadder`.
+              14 Kasım: merdivenin yerine SEVİYE DEFTERİ. "Çok daha görsel"
+              isteğinin cevabı artık kapaktaki fiyat grafiği (seviyeler
+              fiyatın geçmişiyle aynı eksende); merdiven aynı geometrinin
+              ikinci çizimiydi ve kıvrımlı bağlarıyla sol rayı okurun
+              çözmesi gereken bir şekildi. Burada sayılar kaldı: ad, fiyat,
+              uzaklık ve uzaklığın kalın çubuğu. Gerekçe `LevelList`. */}
+          <LevelList
             price={price}
             {...levelProps}
             verdict={verdict}
@@ -318,20 +368,26 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
             locale={locale}
             t={t}
           />
-          <p className={styles.footHint}>{t.technical.priceLevelsNote}</p>
-
-        </section>
-        <section id="technical-watch" className={cn(styles.block, styles.watchPanel)}>
-          <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
-          <ul className={styles.watch} lang={copyLang}>
-            {copy.watch.map((item) => (
-              <li key={item}>{tieFigures(item)}</li>
-            ))}
-          </ul>
+          <p className={styles.footHint}>{t.technicalVisuals.levelsHint}</p>
+        {/* SEVİYELERİN DAYANAĞI KENDİ SATIRINDA, İKİ KOLONUN ALTINDA.
+            Notlar haritanın panelindeydi ve sol kolonu sağdan 100–270
+            piksel uzun yapıyordu; sağ kolon o farkı senaryo kartlarının
+            İÇİNE yayıyordu (NVDA'da kart 495 piksel, metni 279 — ölçüldü,
+            23 Eylül). Artık hiçbir kart gerilmiyor: iki kolon kendi
+            içeriği kadar. Notların yeri VERİYE göre: sunucu tam genişlik
+            basıyor, `BalanceNotes` üç yerleşimi ölçüp iki kolonun dibini
+            en yakın hizaya getireni seçiyor.
+            14 Kasım: notlar gezen blok olmaktan çıktı, seviye panelinin
+            künyesine indi (okur seviyeyi gördüğü panelde dayanağını okur);
+            gezen blok artık "Dikkat Edilecekler". Not yoksa künye basılmaz
+            (`PriceMapNotes` null döner, sarmalayıcı `:empty` ile gizli). */}
+          <div className={grid.rationale}>
+            <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />
+          </div>
         </section>
         </div>
 
-        <div id="technical-reading" className={styles.analysisReading} data-balance="reading">
+        <div id="technical-reading" className={grid.right} data-balance="reading">
           <section className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.summary}</h2>
             {/* DEĞERLENDİRME TEK BLOK DEĞİL. Rutin metni tek paragraf olarak
@@ -359,12 +415,26 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
               </div>
             </div>
           </section>
-          <section className={styles.block}>
+        </div>
+
+        <section id="technical-watch" className={cn(styles.block, grid.watch)} data-balance="notes">
+          <h2 className={styles.sectionTitle}>{t.technical.watch}</h2>
+          <ul className={grid.watchList} lang={copyLang}>
+            {copy.watch.map((item) => (
+              <li key={item}>{tieFigures(item)}</li>
+            ))}
+          </ul>
+        </section>
+        <BalanceNotes />
+      </div>
+
+      <section id="technical-scenarios" className={styles.block}>
             <h2 className={styles.sectionTitle}>{t.technical.scenarios}</h2>
             {/* SENARYOLAR ÖNCE ÇİZGİ, SONRA METİN (25 Ekim). İki kutu metin
                 vardı ve tetik seviyelerinin fiyata uzaklığı okuyucunun
                 kafasında kuruluyordu; ray aynı sayıları fiyat ekseninde
                 gösteriyor. Gerekçe ve eşleşme kuralı `ScenarioRail`de. */}
+            <div className={grid.scenarioBody}>
             <ScenarioRail
               bull={copy.bull}
               bear={copy.bear}
@@ -376,7 +446,7 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
               locale={locale}
               t={t}
             />
-            <div className={styles.scenarios} data-motion-stagger>
+            <div className={grid.scenarioTexts} data-motion-stagger>
               {/* Başlıklar düz mürekkep (`data-ink="plain"`): rengi yön
                   taşıyor, degrade onu silerdi (globals.css).
                   Başlığın yanındaki ok senaryonun yönünü RENKTEN BAĞIMSIZ
@@ -391,22 +461,25 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
                 <p lang={copyLang}>{tieFigures(copy.bear)}</p>
               </div>
             </div>
-          </section>
-        </div>
+            </div>
+      </section>
 
-        {/* SEVİYELERİN DAYANAĞI KENDİ SATIRINDA, İKİ KOLONUN ALTINDA.
-            Notlar haritanın panelindeydi ve sol kolonu sağdan 100–270
-            piksel uzun yapıyordu; sağ kolon o farkı senaryo kartlarının
-            İÇİNE yayıyordu (NVDA'da kart 495 piksel, metni 279 — ölçüldü,
-            23 Eylül). Artık hiçbir kart gerilmiyor: iki kolon kendi
-            içeriği kadar. Notların yeri VERİYE göre: sunucu tam genişlik
-            basıyor, `BalanceNotes` üç yerleşimi ölçüp iki kolonun dibini
-            en yakın hizaya getireni seçiyor. */}
-        <div className={cn(styles.block, styles.notesPanel)} data-balance="notes">
-          <PriceMapNotes {...levelProps} copy={copy} verdict={verdict} lang={copyLang} t={t} />
-        </div>
-        <BalanceNotes />
-      </div>
+      {/* ---- Şirket Analizi (Claude): SİTENİN OKUMASINDAN SONRA ----
+          11 Ekim'de önce sayfanın en tepesinden (kırıntının üstü) okumanın
+          sonuna indi; telefonda 10.641 piksellik sayfanın 6.876'sına düştü
+          ve sahibi "çok aşağıda" dedi. Sonra kapağın hemen altına çıktı:
+          önce sitenin görüşü ve planı (kapak), hemen ardından ikinci görüş.
+          14 Kasım (görsel tur): kapak artık grafik; grafiğin hemen altındaki
+          bu satır grafik ile onun okumasının (plan, seviyeler, değerlendirme,
+          senaryolar) ARASINA giriyor ve akışı bölüyordu. Yeri şimdi sitenin
+          kendi okumasının bittiği yer: değerlendirme ve senaryolardan sonra,
+          "ne demek" ve göstergelerden önce. Ölçüm (sahte veri, NVDA): 390'da
+          y=3.511 (sayfa 9.559 piksel; 11 Ekim'deki "çok aşağıda" hâli 6.876 /
+          10.641, kapağın hemen altındayken 1.321), 1440'ta y=2.260 (önce
+          1.000).
+          Hisse sayfasındakiyle AYNI bileşen (`components/ai/ClaudeCta`),
+          yalnız `focus="technical"`. */}
+      <ClaudeCta symbol={symbol} locale={locale} focus="technical" />
 
       {/* ---- Görüşün anlamı ----
           Planın hemen altında: okuyucu seviyeleri ve gerekçeyi okudu,
@@ -450,8 +523,10 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
           <h2 className={styles.sectionTitle}>{t.technical.history}</h2>
           {/* Tablo `PlanHistory`e taşındı (29 Eylül): aynı planın art arda
               yayınları tek satır ve planın seyri ortak ölçekli bir çizgi.
-              Gerekçe ve ölçüm bileşenin üzerinde. */}
-          <PlanHistory history={history} locale={locale} t={t} />
+              Gerekçe ve ölçüm bileşenin üzerinde.
+              14 Kasım: önce GÖRÜŞ ŞERİDİ (gün başına dilim), tablo katlı
+              ayrıntıda; gerekçe `StanceHistory`. */}
+          <StanceHistory history={history} locale={locale} t={t} />
         </section>
         </Reveal>
       )}

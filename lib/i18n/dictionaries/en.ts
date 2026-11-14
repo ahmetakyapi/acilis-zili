@@ -35,6 +35,7 @@ import { portfolioAdvisorEn } from "./portfolio-advisor";
 import { portfolioAskEn } from "./portfolio-ask";
 import { claudeBriefEn } from "./claude-brief";
 import { pushPrefsEn } from "./push-prefs";
+import { calendarFeedEn } from "./calendar-feed";
 import { earningsDeskEn } from "./earnings-desk";
 import { homeEarningsEn } from "./home-earnings";
 
@@ -367,6 +368,9 @@ const en: typeof tr = {
     portfolioRowAria: "{symbol}: {pct} percent of your portfolio",
     watchlistEmpty: "You haven't added any symbols yet.",
     latestAnalyses: "Latest Earnings Analyses",
+    /* Son Bilanço Analizleri satır listesinin sütun başlığı (14 Kasım). */
+    analysesCompany: "Company",
+    analysesVerdict: "Verdict",
     latestStories: "Latest Deep Dives",
     allStories: "All Deep Dives",
     topNews: "Top Stories",
@@ -782,7 +786,7 @@ const en: typeof tr = {
     pivotS1: "Support 1",
     pivotS2: "Support 2",
     levelInZone: "Price Inside the Zone",
-    maNote: "The percentage is the current price's distance from each average; the ladder measures from price to level.",
+    maNote: "The percentage is the current price's distance from each average; the level ledger measures from price to level.",
     pivots: "Pivot Levels",
     scenarios: "Scenarios",
     bullCase: "Bull Case",
@@ -4505,6 +4509,21 @@ const en: typeof tr = {
     railRatio: "Up / Down",
     railPath: "Next Stops",
     railNote: "Levels come from the scenario text; only figures that match a recorded level are drawn. Distances are measured from the price above the rail.",
+    /* Cover price chart, level ledger, stance strip (14 Nov visual pass). */
+    chartSell: "Sell {n}",
+    chartZone: "Zone",
+    chartLabel: "Daily closing line from {from} to {to}, with moving averages and the published levels",
+    chartNote: "Last Six Months · Daily Close",
+    chartOffScale: "{n} Far Level in the Ledger",
+    levelsTitle: "Levels",
+    levelsHint: "Distances are measured from the current price; the notch in the middle of the bar marks the price.",
+    stanceStripLabel: "Stance over the last {n} publishing days",
+    stanceStripSince: "{stance} Since {date}",
+    stanceStripSteady: "{stance} on All of the Last {n} Publishing Days",
+    historyDetail: "Plan by Edition",
+    planTitle: "Plan",
+    plansCount: "{n} Entry Plans",
+    macdGap: "Gap to Signal",
   },
   /* Bültenin Kayıt Defteri bandı (25 Ekim görsel zirve) — metin ayrı dosyada. */
   briefLedger: briefLedgerEn,
@@ -4546,6 +4565,7 @@ const en: typeof tr = {
   portfolioAsk: portfolioAskEn,
   claudeBrief: claudeBriefEn,
   pushPrefs: pushPrefsEn,
+  calendarFeed: calendarFeedEn,
   earningsDesk: earningsDeskEn,
   homeEarnings: homeEarningsEn,
 };

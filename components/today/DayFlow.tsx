@@ -742,12 +742,15 @@ function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, 
         })}
         {dividerAt === events.length && nowMark}
       </ol>
-    </> : shown.hiddenEarnings > 0 ? (
+    </> : viewingToday && preview && preview.events.length > 0 ? (
+      /* Bugün boş (ya da yalnız eşik altı bilanço var): sıradaki işlem
+         gününün önizlemesi. Eşik altı bilanço cümlesi önizlemenin girişinde
+         (14 Kasım; gerekçe RailSection). */
+      <DayPreview preview={preview} hiddenToday={shown.hiddenEarnings} locale={locale} labels={labels} onOpen={() => goTo(preview.dateEt)} />
+    ) : shown.hiddenEarnings > 0 ? (
       /* Akış boş ama gün boş DEĞİL: eşiğin altındaki bilançolar var. "Açıklama
          yok" demek aynı sayfadaki bilanço paneliyle çelişirdi. */
       <div className={styles.empty}><span><CalendarBlank size={22} weight="duotone" /></span><div><h3>{labels.emptyMajorTitle}</h3><p>{(viewingToday ? labels.emptyMajorHint : labels.emptyMajorDayHint).replace("{count}", String(shown.hiddenEarnings))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link></p></div></div>
-    ) : viewingToday && preview && preview.events.length > 0 ? (
-      <DayPreview preview={preview} locale={locale} labels={labels} onOpen={() => goTo(preview.dateEt)} />
     ) : <div className={styles.empty}><span><CalendarBlank size={22} weight="duotone" /></span><div><h3>{viewingToday ? labels.emptyTitle : labels.emptyDayTitle}</h3><p>{viewingToday ? labels.emptyHint : labels.emptyDayHint}</p></div></div>}
     </div>
     {viewingToday && snapshot.sourceDelayed && <p className={styles.sourceDelay}>{labels.sourceDelayed}</p>}
@@ -778,7 +781,7 @@ const REGULAR_OPEN_MINUTES = 9 * 60 + 30;
    Uydurma yok: o günün kaydı yoksa eski boş durum basılıyor. Hareket bir
    kez: cetvel soldan çizilir, noktalar ve satırlar sırayla belirir; hareketi
    azaltana son kare (DayFlow.module.css → "SIRADAKİ GÜNE BAKIŞ"). */
-function DayPreview({ preview, locale, labels, onOpen }: { preview: DayFlowSnapshot; locale: Locale; labels: Props["labels"]; onOpen: () => void }) {
+function DayPreview({ preview, hiddenToday = 0, locale, labels, onOpen }: { preview: DayFlowSnapshot; hiddenToday?: number; locale: Locale; labels: Props["labels"]; onOpen: () => void }) {
   const events = preview.events;
   const rows = events.slice(0, PREVIEW_ROWS);
   const primary = (minutes: number) => clockOf(minutes + preview.offsets.primary);
@@ -794,8 +797,14 @@ function DayPreview({ preview, locale, labels, onOpen }: { preview: DayFlowSnaps
       <div className={styles.previewHead}>
         <span className={styles.previewIcon} aria-hidden="true"><CalendarBlank size={22} weight="duotone" /></span>
         <div>
-          <h3>{labels.emptyTitle}</h3>
-          <p>{labels.previewLead.replace("{day}", day).replace("{n}", String(events.length))}</p>
+          {/* Bugün eşiğin altında bilanço varsa "açıklama yok" denmez
+              (aynı sayfadaki bilanço paneliyle çelişirdi): başlık "Büyük Bir
+              Açıklama Yok", cümle kaç şirketin açıkladığını ve takvimi verir. */}
+          <h3>{hiddenToday > 0 ? labels.emptyMajorTitle : labels.emptyTitle}</h3>
+          <p>
+            {hiddenToday > 0 && <>{labels.emptyMajorHint.replace("{count}", String(hiddenToday))}{" "}<Link href={withLocale("/bilancolar", locale)} prefetch={false} className={styles.emptyLink}>{labels.emptyMajorLink}<ArrowUpRight size={12} weight="bold" aria-hidden /></Link>{" "}</>}
+            {labels.previewLead.replace("{day}", day).replace("{n}", String(events.length))}
+          </p>
         </div>
       </div>
       {/* Cetvel bir resim; olaylar ekran okuyucuya listeden okunur. */}
