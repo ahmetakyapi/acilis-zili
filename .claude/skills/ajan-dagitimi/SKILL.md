@@ -64,3 +64,14 @@ et. Raporda "kapsam dışı bıraktım" denen tek satırlık bağlantıları
 (ör. sayfanın yeni prop'u geçirmesi) sen tamamla.
 
 Ardından `yayin` skill'i.
+
+## 5. Ders
+
+- 14 Kasım: sekiz ajan aynı anda `npm ci && npm run build` koşunca 15 GB
+  bellek doldu (çekirdek süreç öldürdü, ana oturumun typecheck'i 300 saniyeyi
+  aştı). Derleyen ajan sayısı aynı anda EN ÇOK DÖRT; salt okunur denetim
+  ajanları (derleme yok) bu sayıya girmez. Fazlası sıraya: ilk dalga bitince
+  ikinci dalga.
+- 14 Kasım: worktree `origin/main`den açılır; güncel iş daldaysa brife
+  "ilk komut `git fetch origin <dal> && git merge --ff-only origin/<dal>`"
+  yaz (dal itilmiş olmalı).
