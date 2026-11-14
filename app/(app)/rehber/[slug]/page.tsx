@@ -35,6 +35,7 @@ import { getI18n, type Dictionary } from "@/lib/i18n";
 import { articleOpenGraph, metaDescription } from "@/lib/page-meta";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import { ArticleJsonLd, BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import { ogImageUrl } from "@/lib/og-image";
 
 /**
  * Rehber yazısı.
@@ -151,6 +152,8 @@ export default async function GuideArticlePage(
         description={article.dek}
         path={`/rehber/${article.slug}`}
         locale={locale}
+        /* Tarih YOK (yazı depoda, yayın anı tutulmuyor); görsel var. */
+        image={ogImageUrl("/(app)/rehber/[slug]", `/rehber/${article.slug}`)}
       />
       <BreadcrumbJsonLd
         locale={locale}

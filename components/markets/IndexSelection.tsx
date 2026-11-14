@@ -7,6 +7,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { changeHistogram, histogramShare, HISTOGRAM_LIMIT } from "@/lib/market-scales";
 import type { ThemePhase } from "@/lib/theme-stats";
 import { cn, directionOf, directionText, formatPercent, formatPercentPlain } from "@/lib/utils";
+import { indexPagePath } from "@/lib/index-pages";
 import { INDEX_TABS, type TabKey } from "./index-shared";
 import styles from "./MarketExperience.module.css";
 
@@ -47,7 +48,10 @@ export function IndexTabs({ tab, aside, identity }: { tab: TabKey; locale: Local
             return (
               <Link
                 key={entry.key}
-                href={`/piyasalar?endeks=${entry.key}`}
+                /* 14 Kasım: çip endeksin KENDİ adresine gider
+                   (`/piyasalar/sp-500`); eski `?endeks=` adresi 308 ile aynı
+                   yere iner (lib/index-pages.ts). */
+                href={indexPagePath(entry.key)}
                 aria-current={activeTab ? "page" : undefined}
                 scroll={false}
                 className={cn(

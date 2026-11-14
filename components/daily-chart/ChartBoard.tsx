@@ -56,6 +56,7 @@ export function ChartBoard({
   locale,
   labels,
   headingId,
+  headingLevel = 2,
   action,
   footer,
   logos,
@@ -66,6 +67,8 @@ export function ChartBoard({
   locale: Locale;
   labels: DailyChartLabels;
   headingId: string;
+  /** Ana kart başlığının düzeyi: günün kendi sayfasında 1 (sayfanın `h1`i), dizinde 2. */
+  headingLevel?: 1 | 2;
   /** Ana kartın başlık satırının sağı (dizinde "Grafiğe Git"). */
   action?: ReactNode;
   /** Metin kartının sonu: künyeler ya da bağlantı. */
@@ -73,6 +76,8 @@ export function ChartBoard({
   /** Sembol → logo adresi (`getChartLogos`): kalem kartları ve künye. */
   logos?: Record<string, string | null>;
 }) {
+  /* 14 Kasım: günün kendi sayfasında rutinin başlığı sayfanın `h1`i. */
+  const MainHeading = headingLevel === 1 ? "h1" : "h2";
   const check = checkChartBlock(row.chartMd, row.locale);
   const label = check.ok && check.block.label ? check.block.label : labels.chartHeading;
   const keys = check.ok ? boardKeys(check.block, row.locale) : [];
@@ -130,9 +135,9 @@ export function ChartBoard({
       <section className={cn("panel", styles.main)} aria-labelledby={headingId} data-m="main">
         <div className={styles.mainHead}>
           <div className="min-w-0">
-            <h2 id={headingId} className={styles.mainTitle} lang={row.locale}>
+            <MainHeading id={headingId} className={styles.mainTitle} lang={row.locale}>
               {row.title}
-            </h2>
+            </MainHeading>
             <p className={styles.caption} lang={row.locale}>{label}</p>
           </div>
           {action}

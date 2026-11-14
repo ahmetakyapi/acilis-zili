@@ -12,7 +12,9 @@ import styles from "./EditorialExperience.module.css";
  * kolona iner ve denetim yine başlığın altına geçer.
  */
 export function SectionMasthead({ title, description, aside, share, embedded = false }: {
-  title: string; description: string; aside?: ReactNode; share?: ReactNode; embedded?: boolean;
+  /* `description` düğüm de olabilir (14 Kasım): endeks sayfasının ilk
+     cümlesi kotasyonları bekleyen, kendi Suspense sınırındaki özet. */
+  title: string; description: ReactNode; aside?: ReactNode; share?: ReactNode; embedded?: boolean;
 }) {
   return <header className={`${styles.masthead} page-masthead`} data-embedded={embedded} data-has-aside={!!aside}>
     {/* Sağ yarıda veri varken yay YOK (10 Ekim): /tema'da sıralamanın

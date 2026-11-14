@@ -1,0 +1,46 @@
+/* `PageHeader` h1'inin ölçüleri, sınıfla (gerekçe SectionLabelHeader.tsx).
+   Kaynak kurallar globals.css'te etiket seçicisiyle yazılı:
+   `.page-heading-copy.page-heading-copy h1` (punto, satır, aralık, ağırlık),
+   `main h1` (fit-content) ve display başlıkların 0,12em'lik im payı
+   ("ÜSTTEKİ İMLER"). Üçlü sınıf: aynı kapaktaki
+   `.page-heading-copy.page-heading-copy > p` (0,3,1) açıklama kuralı bu
+   öğeye uymuyor (iç `div`in çocuğu), ama Tailwind yardımcılarını geçmek
+   için özgüllük o düzeyde tutuldu. Degrade ve renk `display-ink` sınıfından
+   (burada `color` yazılmaz: sınıfın `transparent`ını ezerdi).
+
+   ÖLÇÜM (14 Kasım, `next start` + sahte sağlayıcı, açık tema): `/bulten`in
+   `h1`i ile `/bulten/2026-11-12`nin bu künyesi — 1440'ta kutu 343,4 × 72,8
+   (x 85, y 111,3), kapak 155,9; 390'da 208,5 × 44,2 (x 37, y 99,9), kapak
+   198,4. İkisi de aynı; hesaplanan stilde fark yok. */
+.label.label.label {
+  width: fit-content;
+  max-width: none;
+  margin: 0;
+  padding-top: 0.12em;
+  translate: 0 -0.12em;
+  font-size: var(--heading-page);
+  font-weight: 600;
+  line-height: 1.12;
+  letter-spacing: -0.045em;
+  text-wrap: balance;
+}
+
+/* Giriş: sayfa başlığının dizgiden çıkışı. Anahtar kare adı modülde yerel
+   (globals'taki `title-rise`a modülden ulaşılmaz — hareket.md → Tuzaklar);
+   değerler ve süre onunla aynı. */
+@media (prefers-reduced-motion: no-preference) {
+  .label.label.label {
+    animation: label-rise 480ms var(--ease-brand) 60ms backwards;
+  }
+}
+
+@keyframes label-rise {
+  from {
+    clip-path: inset(0 0 100% 0);
+    transform: translate3d(0, 35%, 0);
+  }
+  to {
+    clip-path: inset(0 0 -0.3em 0);
+    transform: none;
+  }
+}

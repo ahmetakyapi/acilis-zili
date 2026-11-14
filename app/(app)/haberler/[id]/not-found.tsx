@@ -2,6 +2,9 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { EmptyState } from "@/components/ui/primitives";
 import { getI18n } from "@/lib/i18n";
 
+/* 404'te tek robots etiketi ve doğru başlık — gerekçe lib/page-meta.ts. */
+export { notFoundMetadata as generateMetadata } from "@/lib/page-meta";
+
 /**
  * Olmayan haber — 200 DEĞİL, 404.
  *

@@ -26,7 +26,9 @@ import { DataStamp, EmptyState, Panel } from "@/components/ui/primitives";
 import { verdictLabel, verdictOf, } from "@/lib/analysis";
 import { getHolidays, getStatus, getSymbolNames } from "@/lib/data";
 import { getDictionary, getI18n, type Locale } from "@/lib/i18n";
-import { articleOpenGraph, metaDescription, missingMetadata } from "@/lib/page-meta";
+import { articleOpenGraph, fittedTitle, metaDescription, missingMetadata } from "@/lib/page-meta";
+import { technicalHeading, technicalTitles } from "@/lib/seo-titles";
+import { ogImageUrl } from "@/lib/og-image";
 import { getChartBars, getQuotes } from "@/lib/providers";
 import { absoluteUrl, pageAlternates } from "@/lib/site";
 import {
@@ -65,13 +67,10 @@ export async function generateMetadata(
      istek içi önbellekten (`getSymbolNames`, aynı liste = aynı anahtar);
      tüzel ek ("Corporation", "Inc.") başlıkta yer tutmasın diye kırpılır. */
   const names = await getSymbolNames([...TECHNICAL_SYMBOLS]);
-  const company = (names[upper]?.name ?? "")
-    .replace(/,?\s+(Corporation|Corp\.?|Incorporated|Inc\.?|Holdings?|Technologies|Technology|Group|Company|Co\.?|Ltd\.?|PLC|plc|N\.?V\.?|S\.?A\.?)$/g, "")
-    .replace(/,?\s+(Corporation|Corp\.?|Inc\.?|Holdings?)$/g, "")
-    .trim();
-  const subject = company && company.toUpperCase() !== upper ? `${company} (${upper})` : upper;
+  /* 14 Kasım (ikinci tur): kırpma `lib/seo-titles.ts` → `shortCompanyName`e
+     çıktı; `h1` (TechnicalCover) ve JSON-LD başlığı aynı kaynağı okur. */
   return {
-    title: locale === "en" ? `${subject} Technical Analysis and Outlook` : `${subject} Teknik Analiz ve Hisse Yorumu`,
+    title: fittedTitle(technicalTitles(names[upper]?.name, upper, locale), locale),
     /* ANALİZ YOKKEN SAYFA BOŞ BİR KABUK. Açıklaması da yoktu ve arama
        motoruna "başlık var, içerik yok" bir sayfa ilan ediliyordu; o hâlde
        dizine girmiyor, bağlantıları izleniyor. */
@@ -253,8 +252,10 @@ export default async function TechnicalDetailPage(props: PageProps<"/teknik-anal
           İngilizce metni olmayan analizde canonical Türkçe adrese gidiyor
           (`pageAlternates` yukarıda), künye de aynı adresi ve dili söylüyor. */}
       <ArticleJsonLd
-        headline={copyLang === "en" ? `${symbol} Technical Analysis` : `${symbol} Teknik Analiz`}
+        /* `h1` ile aynı metin, aynı yardımcı: "Nvidia (NVDA) Teknik Analiz". */
+        headline={technicalHeading(meta[symbol]?.name, symbol, copyLang)}
         description={copy.headline}
+        image={ogImageUrl("/(app)/teknik-analiz/[symbol]", technicalHref(symbol))}
         path={technicalHref(symbol)}
         locale={copyLang}
         published={row.publishedAt}

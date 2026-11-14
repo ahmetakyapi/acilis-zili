@@ -12,6 +12,7 @@ import type { AnalysisIndexRow, SymbolMeta } from "@/lib/data";
 import type { Quote } from "@/lib/providers/types";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { analysisHref, type VerdictKey } from "@/lib/analysis";
+import { analysisHeading } from "@/lib/seo-titles";
 import type { EarningsAnalysisRow } from "@/lib/schema";
 import {
   cn,
@@ -254,6 +255,11 @@ export function ReportCover({
                     data-long={row.company.length > LONG_NAME_CHARS || undefined}
                   >
                     {row.company}
+                    {/* `h1` = aranan başlık (14 Kasım): "NVIDIA 1Ç FY2027
+                        Bilanço Analizi". Görünen kısım yine şirket adı;
+                        dönem hemen yanındaki çipte yazılı, burada yalnız
+                        başlığın METNİNE giriyor (kapak ölçüleri aynı). */}
+                    <span className="sr-only">{analysisHeading(row.company, row.periodLabel, locale).slice(row.company.length)}</span>
                   </h1>
                   <span className="rounded-md border border-primary-faint bg-primary-wash px-2 py-[3px] text-tiny font-bold text-primary-ink transition-colors group-hover:bg-primary-tint">
                     {symbol}

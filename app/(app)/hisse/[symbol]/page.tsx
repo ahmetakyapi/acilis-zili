@@ -19,7 +19,7 @@ import { rateLimit, requestKey } from "@/lib/rate-limit";
 import { getI18n } from "@/lib/i18n";
 import type { Metadata } from "next";
 import { stockTitle } from "@/lib/seo-titles";
-import { missingMetadata } from "@/lib/page-meta";
+import { fittedTitle, missingMetadata } from "@/lib/page-meta";
 import { pageAlternates } from "@/lib/site";
 import { industryLabel } from "@/lib/sectors";
 import { fundMetaOf } from "@/db/seed/symbols";
@@ -64,6 +64,7 @@ import { AskStockChip, ClaudeEntryChip } from "@/components/stock/ClaudeEntryChi
 import { ChipStrip } from "@/components/ui/ChipStrip";
 import depth from "./_panels/depth.module.css";
 import { BreadcrumbJsonLd } from "@/components/seo/JsonLd";
+import { PairLinks } from "@/components/markets/PairFaceOff";
 import { EXPECTED_MOVE_HORIZON_DAYS } from "@/lib/expected-move";
 import { daysBetweenEt } from "@/lib/market-hours";
 import { indexMemberOf } from "@/db/seed/indices";
@@ -153,7 +154,7 @@ export async function generateMetadata(
   return {
     /* "… Hissesi: Fiyat, Grafik ve Bilanço" / "… Stock: …" (25 Ekim);
        fonda "ETF: Fiyat ve Grafik". Gerekçe `lib/seo-titles.ts`. */
-    title: name ? stockTitle(name, symbol, locale, { fund: Boolean(fund) }) : symbol,
+    title: name ? fittedTitle(stockTitle(name, symbol, locale, { fund: Boolean(fund) }), locale) : symbol,
     description,
     /* CANONICAL VE HREFLANG. Dinamik sayfalar künyelerini elden yazıyor ve
        `alternates` bloğunu hiç vermiyorlardı: sitenin en kalabalık
@@ -181,7 +182,24 @@ export default async function StockPage(
   const { locale, t } = await getI18n();
 
   /* Geçersiz sembol 404 DÖNER — ekran `not-found.tsx` dosyasında. Kota
-     dolduğunda gösterilen alttaki ekran 200 kalır: adres geçerli, veri yok. */
+     dolduğunda gösterilen alttaki ekran 200 kalır: adres geçerli, veri yok.
+
+     NEDEN 429 DEĞİL (14 Kasım 2026, belgeye bakıldı). Next 16'da sayfa
+     bileşeni durum kodunu seçemez: kod, akış başlarken yazılır
+     (`node_modules/next/dist/docs/01-app/03-api-reference/03-file-conventions/loading.md`
+     → "Starting the stream sends the headers and fixes the status code")
+     ve sayfadan yalnız dört yol onu değiştirir: `notFound()` 404,
+     `redirect()` 3xx, deneysel `forbidden()` 403 ve `unauthorized()` 401
+     (ikisi `experimental.authInterrupts` ister). 404 yanlış olurdu (adres
+     geçerli, bir dakika sonra dolu), 403 de öyle (yetki sorunu değil).
+     Gerçek 429 ancak sayfadan ÖNCE verilebilir: `proxy.ts` ya da bir rota
+     işleyicisi; kapının (`allowStockRender`) oraya taşınması sembol
+     tablosu okumasını her isteğin önüne koyar, ayrı bir iş.
+     Seçilen yol: kod 200 kalır, ekran `noindex` taşır (aşağıda). Tanınmayan
+     sembol künyede zaten dizin dışı (`generateMetadata`); açık kalan tek
+     durum fonlardı: adları elde tutulan künyeden geldiği için dizine açık,
+     ama `symbols` tablosunda olmadıkları için kapıya takılabiliyorlar ve
+     "Biraz Yavaşla" ekranı o adresin içeriği diye dizine girebilirdi. */
   if (!isValidSymbol(symbol)) notFound();
 
   /* Sağlayıcı kotasının en pahalı yüzeyi burası: tanınmayan bir sembolün tam
@@ -207,6 +225,11 @@ export default async function StockPage(
      bağlantı sayfayı yeniden çizdiriyor — sınır dakikalık olduğu için
      bekleyen okuyucunun ihtiyacı tam olarak bu. */
   const throttled = (
+    <>
+    {/* React 19 `<meta>`yı belgenin başına taşır; künye (`generateMetadata`)
+        kapının sonucunu bilmeden yazıldığı için karar burada verilir. Arama
+        motoru birden çok `robots` iminden en kısıtlayıcısını uygular. */}
+    <meta name="robots" content="noindex" />
     <EmptyState
       title={t.stock.throttled}
       hint={t.stock.throttledHint}
@@ -219,6 +242,7 @@ export default async function StockPage(
         </Link>
       }
     />
+    </>
   );
 
   /* Fon sayfası ayrı kurgudur: metrikler, analist tavsiyeleri, katılım taraması
@@ -231,6 +255,8 @@ export default async function StockPage(
     return (
       <MotionExperience className={styles.page}>
         <ScrollProgress />
+        {/* Fon dalında kırıntı künyesi yoktu (14 Kasım SEO denetimi). */}
+        <BreadcrumbJsonLd locale={locale} items={[{ name: t.nav.companies, path: "/sirketler" }, { name: `${fund.name} (${symbol})`, path: `/hisse/${symbol}` }]} />
         {/* FON KÜNYESİ KENDİ ADIYLA: "Şirket Dosyası" bir sepetin adı değil. */}
         <StockBreadcrumb symbol={symbol} t={t}>
           <span className={styles.pageLabel}>{t.stock.fundEyebrow}</span>
@@ -295,6 +321,7 @@ export default async function StockPage(
             <FundHoldings symbol={symbol} locale={locale} t={t} />
           </Suspense>
         )}
+        <PairLinks symbol={symbol} t={t} />
       </MotionExperience>
     );
   }
@@ -851,6 +878,8 @@ export default async function StockPage(
       <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-xl)" />}>
         <PeersCard symbol={symbol} locale={locale} t={t} />
       </Suspense>
+      {/* Küratörlü çiftin üyesiyse çift sayfasına bağlantı (14 Kasım). */}
+      <PairLinks symbol={symbol} t={t} />
 
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak.

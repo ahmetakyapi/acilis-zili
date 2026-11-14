@@ -7,6 +7,7 @@ import { VerdictPill } from "@/components/ui/VerdictPill";
 import { verdictLabel, verdictOf, type VerdictKey } from "@/lib/analysis";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { planPosition, stanceChangeLabel } from "@/lib/technical";
+import { technicalHeadingParts } from "@/lib/seo-titles";
 import type { TechnicalAnalysisRow } from "@/lib/schema";
 import { cn, directionOf, directionText, formatPercent, formatPrice, tieFigures } from "@/lib/utils";
 import type { Bar } from "@/lib/providers/types";
@@ -149,7 +150,7 @@ export function TechnicalCover({
               <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl} size="2xl" />
             </MorphTarget>
             <div className={cover.nameText}>
-              <h1>{symbol}</h1>
+              <h1><span className="sr-only">{technicalHeadingParts(company, symbol, locale)[0]}</span>{symbol}<span className="sr-only">{technicalHeadingParts(company, symbol, locale)[1]}</span></h1>
               {/* ŞİRKET ADI KENDİ SATIRINDA. Dört parça tek künyeye dizilince
                   ("Micron Technology Inc · Seans İçi · 16 Eylül Çarşamba ·
                   19:45 TR") telefonda sarıp son parçayı tek başına alta

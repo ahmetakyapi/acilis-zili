@@ -22,6 +22,7 @@ import {
   type TechnicalSnapshot,
 } from "@/lib/technical";
 import { verdictOf, type VerdictKey } from "@/lib/analysis";
+import { firstEditionSymbols, indexNowUrls, notifyIndexNow } from "@/lib/indexnow";
 
 /**
  * Teknik analizin veri katmanı — fotoğraf, yazma ve okuma.
@@ -465,6 +466,16 @@ export async function saveTechnicalBatch(body: unknown): Promise<BatchOutcome> {
   }
 
   if (rows.length > 0) {
+    /* INDEXNOW (14 Kasım): sembol başına GÜNDE EN ÇOK BİR bildirim. Bu
+       seans gününde zaten yayını olan semboller yazmadan ÖNCE okunur;
+       okunamazsa bildirim atlanır (yazma etkilenmez). İngilizce adres
+       yalnız İngilizce metin varsa. Gerekçe lib/indexnow.ts. */
+    const published = await db
+      .selectDistinct({ symbol: technicalAnalyses.symbol })
+      .from(technicalAnalyses)
+      .where(and(eq(technicalAnalyses.sessionDate, sessionDate), inArray(technicalAnalyses.symbol, rows.map((row) => row.symbol))))
+      .then((found) => new Set(found.map((row) => row.symbol)))
+      .catch(() => null);
     /* TEK UPSERT. On iki satır tek gidiş-dönüşte; `excluded` yeni satırın
        değerleri. `published_at` güncellenmiyor — ilk yayın anı korunuyor,
        düzeltme yalnızca `updated_at`i ilerletiyor. */
@@ -491,6 +502,14 @@ export async function saveTechnicalBatch(body: unknown): Promise<BatchOutcome> {
           updatedAt: new Date(),
         },
       });
+    if (published) {
+      const fresh = new Set(firstEditionSymbols(rows.map((row) => row.symbol), published));
+      notifyIndexNow(
+        rows
+          .filter((row) => fresh.has(row.symbol))
+          .flatMap((row) => indexNowUrls([technicalHref(row.symbol)], row.copy.en ? ["tr", "en"] : ["tr"])),
+      );
+    }
   }
 
   return {

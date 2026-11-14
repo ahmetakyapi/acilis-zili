@@ -37,7 +37,6 @@ import styles from "./MembersTable.module.css";
    kuruldu (görsel tur). Gerekçe ve ölçümler aşağıda "YOĞUNLUK VE IZGARA". */
 
 function sortHref(
-  tab: TabKey,
   key: SortKey,
   sort: SortKey,
   dir: SortDir,
@@ -48,7 +47,8 @@ function sortHref(
   // Derinlik korunur: 180 satıra inmiş biri sütun başlığına basınca ilk 60'a
   // geri fırlatılmamalı.
   const depth = limit > PAGE_STEP ? `&adet=${limit}` : "";
-  return `${base}?endeks=${tab}&sirala=${key}&yon=${nextDir}${depth}`;
+  /* 14 Kasım: sekme yolda (`/piyasalar/sp-500`), sorguda değil; kök `base`. */
+  return `${base}?sirala=${key}&yon=${nextDir}${depth}`;
 }
 
 /* SIRALAMA BAŞLIĞI ve KULVAR ortak parçada (10 Kasım, gece):
@@ -227,7 +227,7 @@ export function MembersTable({
   // Dilim SIRALAMADAN SONRA — bkz. PAGE_STEP.
   const sorted = ordered.slice(0, limit);
   const hasMore = ordered.length > sorted.length;
-  const moreHref = `${basePath}?endeks=${tab}&sirala=${sort}&yon=${dir}&adet=${limit + PAGE_STEP}`;
+  const moreHref = `${basePath}?sirala=${sort}&yon=${dir}&adet=${limit + PAGE_STEP}`;
 
   /* Künyenin "kesik uç" cümlesi yalnız GÖRÜNEN satırlarda taşan varsa. */
   const anyOver = sorted.some(
@@ -257,7 +257,7 @@ export function MembersTable({
   const sortItems = (["degisim", "fiyat", ...(showWeek ? ["hafta"] : []), "cap", ...(showContribution ? ["katki"] : []), "ad"] as SortKey[]).map((key) => ({
     key,
     label: slotLabel[key].replace(" ($)", ""),
-    href: sortHref(tab, key, sort, dir, limit, basePath),
+    href: sortHref(key, sort, dir, limit, basePath),
     active: sort === key,
   }));
   const shownShare = (sorted.length / ordered.length) * 100;
@@ -418,7 +418,7 @@ export function MembersTable({
               <th scope="col" className={board.rankHead}>#</th>
               <BoardSortHead
                 label={t.companies.company}
-                href={sortHref(tab, "ad", sort, dir, limit, basePath)}
+                href={sortHref("ad", sort, dir, limit, basePath)}
                 active={sort === "ad"}
                 dir={dir}
                 className={board.companyHead}
@@ -435,14 +435,14 @@ export function MembersTable({
               {/* Değişim fiyattan önce — bkz. /sirketler tablosu. */}
               <BoardSortHead
                 label={t.companies.change}
-                href={sortHref(tab, "degisim", sort, dir, limit, basePath)}
+                href={sortHref("degisim", sort, dir, limit, basePath)}
                 active={sort === "degisim"}
                 dir={dir}
                 className={styles.changeHead}
               />
               <BoardSortHead
                 label={`${t.companies.price} ($)`}
-                href={sortHref(tab, "fiyat", sort, dir, limit, basePath)}
+                href={sortHref("fiyat", sort, dir, limit, basePath)}
                 active={sort === "fiyat"}
                 dir={dir}
                 className={styles.priceHead}
@@ -450,7 +450,7 @@ export function MembersTable({
               {showWeek && (
                 <BoardSortHead
                   label={t.companies.weekChange}
-                  href={sortHref(tab, "hafta", sort, dir, limit, basePath)}
+                  href={sortHref("hafta", sort, dir, limit, basePath)}
                   active={sort === "hafta"}
                   dir={dir}
                   className={styles.weekHead}
@@ -461,7 +461,7 @@ export function MembersTable({
               )}
               <BoardSortHead
                 label={t.market.marketCap}
-                href={sortHref(tab, "cap", sort, dir, limit, basePath)}
+                href={sortHref("cap", sort, dir, limit, basePath)}
                 active={sort === "cap"}
                 dir={dir}
                 className={cn(styles.capHead, shareOf && styles.capShared)}
@@ -471,7 +471,7 @@ export function MembersTable({
               {showContribution && (
                 <BoardSortHead
                   label={t.markets.contribution}
-                  href={sortHref(tab, "katki", sort, dir, limit, basePath)}
+                  href={sortHref("katki", sort, dir, limit, basePath)}
                   active={sort === "katki"}
                   dir={dir}
                   className={styles.contributionHead}

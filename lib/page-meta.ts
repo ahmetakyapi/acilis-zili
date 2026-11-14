@@ -1,6 +1,7 @@
 import type { Metadata } from "next";
 import { getDictionary, getLocale, INTL_LOCALE, type Locale } from "./i18n";
 import { LOCALES } from "./i18n/config";
+import { fitTitle } from "./seo-titles";
 import { pageAlternates } from "./site";
 
 /**
@@ -113,12 +114,26 @@ export function pageMetadata({
       /* Kök şablon her başlığa "· Marka" ekliyor. Ana sayfanın başlığı zaten
          markayla başladığı için sonuç "Açılış Zili — … · Açılış Zili"
          oluyordu; `absolute` şablonu atlıyor. */
-      title: absoluteTitle ? { absolute: copy.title } : copy.title,
+      title: absoluteTitle ? { absolute: copy.title } : fittedTitle(copy.title, locale),
       description: copy.description,
       alternates: pageAlternates(path, locale),
       ...(robots ? { robots } : {}),
     };
   };
+}
+
+/**
+ * `<title>` değeri: başlık + marka eki 65 karakteri aşıyorsa ek düşer
+ * (`{ absolute }`), aşmıyorsa kök şablon ekler. Kural ve aday sırası
+ * `lib/seo-titles.ts` → `fitTitle` (saf, testli); sayfalar başlığı elden
+ * `title: …` yazmak yerine buradan geçirir.
+ */
+export function fittedTitle(
+  candidates: string | readonly string[],
+  locale: Locale,
+): NonNullable<Metadata["title"]> {
+  const { text, branded } = fitTitle(candidates, locale);
+  return branded ? text : { absolute: text };
 }
 
 /**
@@ -135,12 +150,41 @@ export function pageMetadata({
  * GİRMESİ. Haber satırları 90 günde budanıyor (cron), yani bu adresler
  * düzenli olarak ölüyor. `noindex` o zararı doğrudan kesiyor: Google boş
  * sayfayı ne dizine alır ne de "yumuşak 404" diye siteye yazar.
+ *
+ * `noindex` TEK KAYNAKTAN: NEXT'TEN (14 Kasım 2026, SEO ikinci tur). 404
+ * yanıtına Next kendi `<meta name="robots" content="noindex">` etiketini
+ * koşulsuz basıyor (node_modules/next/dist/server/app-render/app-render.js);
+ * bu künye de "noindex, nofollow" yazınca HTML'de İKİ robots etiketi
+ * çıkıyordu (ölçüldü: `/olmayan-sayfa`, `/piyasalar/russell`). Kendi
+ * etiketimiz kalktı. `robots: null` ŞART: alan hiç verilmezse kökteki
+ * "index, follow" miras alınır ve 404'te "noindex" ile ÇELİŞEN ikinci
+ * etiket çıkar; `null` mirası keser, etiket basılmaz.
+ *
+ * SÖZLEŞME: bu künyeyi döndüren sayfa AYNI koşulda `notFound()` çağırır;
+ * çağırmazsa sayfa 200 ve etiketsiz, yani dizine açık kalır. Kuralı
+ * `tests/page-meta.test.ts` dosya dosya denetler.
  */
 export function missingMetadata(locale: string): Metadata {
   return {
     title: locale === "en" ? "Not Found" : "Bulunamadı",
-    robots: { index: false, follow: false },
+    robots: null,
   };
+}
+
+/**
+ * Segmentin kendi `not-found.tsx` dosyasının künyesi.
+ *
+ * Ölçüldü (14 Kasım): kendi 404 ekranı olan dört segmentte (`/hisse`,
+ * `/mercek`, `/haberler`, `/teknik-analiz`) `notFound()` çağrılınca Next
+ * SAYFANIN `generateMetadata`ını değil o dosyanın künyesini kullanıyor;
+ * dosyalar künyesizdi, yani 404 yanıtı kökten miras "Açılış Zili · ABD
+ * Piyasa Takibi" başlığını ve "index, follow" etiketini taşıyordu —
+ * Next'in "noindex"iyle yan yana, ÇELİŞEN iki robots etiketi. Dosyalar bu
+ * fonksiyonu `generateMetadata` adıyla dışa aktarır: başlık "Bulunamadı",
+ * robots etiketi yalnız Next'inki.
+ */
+export async function notFoundMetadata(): Promise<Metadata> {
+  return missingMetadata(await getLocale());
 }
 
 /**

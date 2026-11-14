@@ -11,6 +11,11 @@ import { INDEXABLE, SITE_URL } from "@/lib/site";
  *
  * Yazma yolunda (`lib/content-write.ts`) yeni ya da DEĞİŞEN mercek, bülten
  * ve Günün Grafiği adresi Bing/Yandex/Seznam'ın ortak ucuna bildirilir.
+ * 14 Kasım 2026: bilanço analizi (`app/api/analiz/route.ts`, yeni ya da
+ * metni değişen kayıt — `analysisChanged`) ve teknik analiz
+ * (`lib/technical-data.ts`; sembol başına GÜNDE EN ÇOK BİR bildirim —
+ * `firstEditionSymbols`) da kapsamda. Bildirim var olan yazma yollarının
+ * İÇİNDEN çağrılır; yeni yazma yolu açılmadı.
  * Google IndexNow kullanmıyor; onun için site haritası (`app/sitemap.ts`)
  * ve gerçek `lastModified` yeterli.
  *
@@ -39,6 +44,36 @@ export function indexNowBody(urls: readonly string[]) {
     keyLocation: `${SITE_URL}/${INDEXNOW_KEY}.txt`,
     urlList: [...urls],
   };
+}
+
+/** Bilanço analizinin arama sonucunu değiştiren alanları. */
+type AnalysisText = { headline: string; summary: unknown; analysis: unknown; verdict: string; score: number };
+
+/**
+ * Analiz yeni mi, ya da METNİ değişti mi. Rutin aynı gövdeyi yeniden
+ * gönderebiliyor (eklerin yazılamadığı koşu); o gönderim bildirim üretmez —
+ * mercekteki kuralın aynısı (`saveStory` → `degisti`).
+ */
+export function analysisChanged(existing: AnalysisText | null | undefined, next: AnalysisText): boolean {
+  if (!existing) return true;
+  return (
+    existing.headline !== next.headline ||
+    /* Özet ve değerlendirme yapılı (dizi); içerik karşılaştırılır. */
+    JSON.stringify(existing.summary) !== JSON.stringify(next.summary) ||
+    JSON.stringify(existing.analysis) !== JSON.stringify(next.analysis) ||
+    existing.verdict !== next.verdict ||
+    existing.score !== next.score
+  );
+}
+
+/**
+ * Teknik analiz günde üç nöbet yazıyor ve sayfanın adresi sembol başına
+ * TEK (`/teknik-analiz/nvda`): her nöbette bildirmek aynı adresi günde üç
+ * kez göndermek olurdu. Yalnız o seans gününde İLK kez yazılan semboller
+ * bildirilir; `published` o gün zaten yayını olan semboller.
+ */
+export function firstEditionSymbols(written: readonly string[], published: ReadonlySet<string>): string[] {
+  return [...new Set(written)].filter((symbol) => !published.has(symbol));
 }
 
 async function send(urls: readonly string[]): Promise<void> {

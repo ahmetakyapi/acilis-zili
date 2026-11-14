@@ -18,7 +18,8 @@ import { ArkTrades } from "@/components/investors/ArkTrades";
 import { getI18n, type Dictionary, type Locale } from "@/lib/i18n";
 import { getInvestorDetail, type FundDetail } from "@/lib/investor-data";
 import { INVESTOR_SLUGS, investorBySlug, investorFirm, investorPortrait, type Investor } from "@/lib/investors";
-import { metaDescription, missingMetadata } from "@/lib/page-meta";
+import { fittedTitle, metaDescription, missingMetadata } from "@/lib/page-meta";
+import { investorTitles } from "@/lib/seo-titles";
 import { pageAlternates } from "@/lib/site";
 import { formatMoneyCompact } from "@/lib/utils";
 
@@ -50,14 +51,9 @@ export async function generateMetadata(props: PageProps<"/yatirimcilar/[slug]">)
     /* Kongre üyesinin "portföyü" ve "kurumu" yok: başlık "Nancy Pelosi
        Portfolio: U.S. House of Representatives Holdings" (93 karakter)
        çıkıyordu. Bildirilen işlemler (25 Ekim). */
-    title:
-      investor.kind === "congress"
-        ? locale === "en"
-          ? `${investor.name} Stock Trades: Disclosed Buys and Sells`
-          : `${investor.name} Hisse İşlemleri: Bildirilen Alım ve Satışlar`
-        : locale === "en"
-          ? `${investor.name} Portfolio: ${firm} Holdings, Buys and Sells`
-          : `${investor.name} Portföyü: ${firm} Hisseleri, Alım ve Satışlar`,
+    /* 14 Kasım: kalıp `lib/seo-titles.ts` → `investorTitles`e çıktı; uzun
+       kurum adında (ölçülen 85) sırayla kısalır, 65'i aşan marka ekini atar. */
+    title: fittedTitle(investorTitles(investor.name, firm, investor.kind, locale), locale),
     /* İLK CÜMLE SAYFANIN NE OLDUĞU (25 Ekim). Sorgular "warren buffett
        portfolio", "li lu portfolio", "carl icahn portfolio" (EN, sıra
        55-80); açıklama yalnız yatırımcının tanıtım cümlesiydi. Veri
