@@ -10,6 +10,7 @@ import { portfolioPositions, users } from "@/lib/schema";
 import { GROUNDING, NO_ADVICE, NUMBERS, OWNER_VIEW, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, insightsConfigured } from "@/lib/stock-insights";
 import { weeklyMoves, type DigestData } from "@/lib/weekly-digest";
+import { logReason, userCacheTag, userLogId } from "@/lib/user-tag";
 
 /**
  * Haftalık portföy karnesinin okuması ve Claude notu (11 Kasım). Hesap
@@ -54,7 +55,7 @@ export async function portfolioLots(userIds: readonly string[]): Promise<Map<str
     }
     return out;
   } catch (error) {
-    console.error("[portföy karnesi] pozisyonlar okunamadı", error);
+    console.error(`[portföy karnesi] pozisyonlar okunamadı: ${logReason(error)}`);
     return null;
   }
 }
@@ -149,10 +150,10 @@ export async function portfolioWeekNote(userId: string, locale: Locale, week: Po
       },
       /* v2 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
       ["portfolio-weekly-v2", owner ? "plan" : "read", userId, data.thisMonday, locale, digest],
-      { revalidate: 7 * 24 * 3600, tags: ["portfolio-weekly"] },
+      { revalidate: 7 * 24 * 3600, tags: ["portfolio-weekly", userCacheTag(userId)] },
     )();
   } catch (error) {
-    console.error(`[portföy karnesi] ${userId}: ${error instanceof Error ? error.message : "?"}`);
+    console.error(`[portföy karnesi] ${userLogId(userId)}: ${logReason(error)}`);
     return null;
   }
 }

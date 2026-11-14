@@ -18,6 +18,7 @@ import { getPortfolioScan } from "@/lib/portfolio-scan";
 import type { ScanRow } from "@/lib/portfolio-scan-model";
 import { GROUNDING, NUMBERS, OWNER_VIEW, VOICE } from "@/lib/claude-prompt-rules";
 import { callClaude, completedDailyBars, insightsConfigured } from "@/lib/stock-insights";
+import { logReason, userCacheTag, userLogId } from "@/lib/user-tag";
 
 /**
  * PORTFÖY DANIŞMANI — sunucu (11 Kasım). Gerekçe ve hukuki çizgi
@@ -122,11 +123,11 @@ export async function getAdvisorReport(userId: string, horizon: AdvisorHorizon, 
       /* v2 (11 Kasım): takip soruları; sahibin bütçe kimliği. */
       /* v3 (14 Kasım): istem ortak kurallara geçti; takip soruları hesaplanabilir kalıpta. */
       ["portfolio-advisor-v3", horizon, userId, period, fingerprint, locale],
-      { revalidate: horizon === "daily" ? 24 * 3600 : 31 * 24 * 3600, tags: ["portfolio-advisor"] },
+      { revalidate: horizon === "daily" ? 24 * 3600 : 31 * 24 * 3600, tags: ["portfolio-advisor", userCacheTag(userId)] },
     )();
   } catch (error) {
     failures.set(failKey, Date.now());
-    console.error(`[portföy danışmanı] ${horizon} ${userId}: ${error instanceof Error ? error.message : "?"}`);
+    console.error(`[portföy danışmanı] ${horizon} ${userLogId(userId)}: ${logReason(error)}`);
     return null;
   }
 }

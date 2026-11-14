@@ -30,6 +30,7 @@ import { portfolioStarters, type PortfolioStarterCopy } from "@/lib/portfolio-qu
 import { callClaude, expectedLastSession, upcomingEarnings } from "@/lib/stock-insights";
 import { createQuestionQuota, questionKey, type QuotaStore } from "@/lib/stock-question-core";
 import { formatPercentPlain, formatPercentText } from "@/lib/utils";
+import { logReason, userCacheTag, userLogId } from "@/lib/user-tag";
 
 /**
  * PORTFÖYÜNE SOR (11 Kasım, sahibinin isteği) — okurun kendi portföyü
@@ -347,20 +348,20 @@ export async function askPortfolio(userId: string, question: string, locale: Loc
       /* v2 (11 Kasım): takip soruları ve sohbet bağlamı; bağlamın özeti anahtarda. */
       /* v4 (14 Kasım): istem yeniden yazıldı (cevap ilk cümlede, girdi şeması, takip sorusu kuralları); girdiye `benchmark` girdi. */
       ["portfolio-question-v4", userId, owner ? "owner" : "member", locale, session, fingerprint, questionKey(question, locale), scenarioKey(parsed), turnsKey],
-      { revalidate: ANSWER_TTL_S, tags: ["portfolio-question"] },
+      { revalidate: ANSWER_TTL_S, tags: ["portfolio-question", userCacheTag(userId)] },
     )();
     if (wrote) quota.charge(userId);
     return { ok: true, answer, remaining: remaining() };
   } catch (error) {
     if (error instanceof RejectedAnswer) {
       quota.miss(userId);
-      console.error(`[portföyüne sor] ${error.reason} (${error.missing.join(" ")})`);
+      console.error(`[portföyüne sor] ${userLogId(userId)}: ${error.reason} (${error.missing.length} sayı)`);
       return { ok: false, reason: "unverified", remaining: remaining() };
     }
     if (error instanceof ClaudeBudgetError) return { ok: false, reason: "budget", remaining: remaining() };
     /* Claude'a gidildi ama çıktı gelmedi: çağrı ödendi, boşa giden deneme. */
     if (wrote) quota.miss(userId);
-    console.error(`[portföyüne sor] ${error instanceof Error ? error.message : "?"}`);
+    console.error(`[portföyüne sor] ${userLogId(userId)}: ${logReason(error)}`);
     return { ok: false, reason: "error", remaining: remaining() };
   } finally {
     inflight.delete(userId);

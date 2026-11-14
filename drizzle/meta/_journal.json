@@ -316,6 +316,13 @@
       "when": 1794389716803,
       "tag": "0044_push_preferences",
       "breakpoints": true
+    },
+    {
+      "idx": 45,
+      "version": "7",
+      "when": 1794665354109,
+      "tag": "0045_claude_spend",
+      "breakpoints": true
     }
   ]
 }

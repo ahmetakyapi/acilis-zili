@@ -1756,6 +1756,28 @@ export const appErrors = pgTable(
   ],
 );
 
+/**
+ * CLAUDE GÜNLÜK HARCAMA SAYACI (14 Kasım güvenlik denetimi) — site içi
+ * Claude çağrılarının GENEL günlük tavanı (`lib/claude-budget.ts`).
+ *
+ * Sayaç süreç belleğindeydi: her deploy ve her yeniden başlatma sıfırlıyor,
+ * "günlük tavan" fiilen "süreç ömrü başına tavan" oluyordu (günde birkaç
+ * deploy tavanı katlar; mavi-yeşil geçişte iki süreç ayrı ayrı sayar).
+ * Gün başına TEK satır; artış tek deyimde ve koşullu
+ * (`lib/claude-spend-store.ts`), yani iki süreç birlikte de tavanı aşamaz.
+ * `day` UTC günü (bellekteki pencereyle aynı: `toISOString().slice(0, 10)`).
+ *
+ * Kimlik başına sayaçlar (istemci, üye, sahip) burada DEĞİL, bellekte
+ * kalır: kişisel veri tutmamak ve her çağrıda ikinci yazmayı önlemek için.
+ * Kullanıcıya bağlı olmadığından yabancı anahtarı yok. Tablo yokken
+ * (migration uygulanmadan yayına inen kod) bütçe sessizce bellek sayacına
+ * düşer. Eski günlerin satırı kalır: yılda 365 satır, harcama geçmişi.
+ */
+export const claudeSpend = pgTable("claude_spend", {
+  day: date("day").primaryKey(),
+  n: integer("n").notNull().default(0),
+});
+
 /* ==========================================================================
    Çıkarsanan tipler
    ========================================================================== */

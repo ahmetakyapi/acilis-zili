@@ -23,7 +23,7 @@ import {
  * (`remembered`); düşen çeviri süreçte 20 dakika hatırlanır, her denemede
  * yeniden Claude'a gidilmez.
  *
- * BÜTÇE: önbellek ıskası `callClaude` içinde `takeCall`la günlük tavandan
+ * BÜTÇE: önbellek ıskası `callClaude` içinde `reserveCall`la günlük tavandan
  * düşer (lib/claude-budget.ts) — anonim okur anonim paydan, üye kendi
  * sayacından. Pay dolunca null döner; sayfa elle süzgeçlerle çalışmaya
  * devam eder.

@@ -14,6 +14,18 @@ import { getUsdTryAt, istanbulToday } from "@/lib/providers/fx-history";
 import { rateLimit } from "@/lib/rate-limit";
 import { portfolioOrder, portfolioPositions, portfolioSales } from "@/lib/schema";
 import { planFifoSale, planSaleUndo } from "@/lib/portfolio-sales";
+import {
+  insertOutcome,
+  insertPositionsSql,
+  isSaleGuardError,
+  positionCountSql,
+  positionLockSql,
+  rowsOf,
+  saleStatements,
+  saleSteps,
+  type InsertOutcome,
+  type PositionValues,
+} from "@/lib/portfolio-write";
 import { isValidSymbol } from "@/lib/utils";
 
 /**
@@ -144,6 +156,27 @@ const toRow = (userId: string, input: PositionFields) => ({
   note: input.note ? input.note : null,
 });
 
+/**
+ * Satır tavanına ATOMİK uyan ekleme (14 Kasım güvenlik denetimi). "Say,
+ * sonra ekle" iki istek arasında yarışıyordu: ikisi de 199 okuyup ekliyor,
+ * hesap tavanı (`MAX_POSITIONS`) aşıyordu. Üç deyim tek işlemde: hesabın
+ * kilidi, sayım, koşullu ekleme — gerekçe `lib/portfolio-write.ts` → "Satır
+ * tavanı". Satırlar ya hep ya hiç yazılır.
+ */
+async function insertWithinCap(userId: string, rows: PositionValues[]): Promise<InsertOutcome> {
+  const [, counted, inserted] = await db.batch([
+    db.execute(positionLockSql(userId)),
+    db.execute(positionCountSql(userId)),
+    db.execute(insertPositionsSql(userId, rows, MAX_POSITIONS)),
+  ]);
+  return insertOutcome(
+    rowsOf(inserted).map((row) => String(row.id)),
+    Number(rowsOf(counted)[0]?.total ?? 0),
+    rows.length,
+    MAX_POSITIONS,
+  );
+}
+
 /* --------------------------------------------------------------------------
    Tek pozisyon: ekle, düzelt
    -------------------------------------------------------------------------- */
@@ -164,12 +197,9 @@ export async function addPositionAction(
 
   let id: string;
   try {
-    if ((await countPositions(userId)) >= MAX_POSITIONS) return { status: "error", error: "limit" };
-    const [row] = await db
-      .insert(portfolioPositions)
-      .values(toRow(userId, parsed.data))
-      .returning({ id: portfolioPositions.id });
-    id = row.id;
+    const outcome = await insertWithinCap(userId, [toRow(userId, parsed.data)]);
+    if (outcome.kind !== "saved") return { status: "error", error: outcome.kind === "limit" ? "limit" : "failed" };
+    id = outcome.ids[0]!;
   } catch {
     return { status: "error", error: "failed" };
   }
@@ -257,13 +287,11 @@ export async function restorePositionAction(position: {
   if (!parsed.ok) return parsed.state;
 
   try {
-    if ((await countPositions(userId)) >= MAX_POSITIONS) return { status: "error", error: "limit" };
     /* Kimlik başka bir hesabın satırıyla çakışamaz (uuid birincil anahtar,
-       silinmiş satırın kimliği); çakışırsa yazma düşer ve hiçbir şey olmaz. */
-    await db
-      .insert(portfolioPositions)
-      .values({ ...toRow(userId, parsed.data), id: position.id })
-      .onConflictDoNothing();
+       silinmiş satırın kimliği); çakışırsa yazma düşer ve hiçbir şey olmaz
+       (`conflict`: önceki davranışla aynı, eylem yine "saved" döner). */
+    const outcome = await insertWithinCap(userId, [{ ...toRow(userId, parsed.data), id: position.id }]);
+    if (outcome.kind === "limit") return { status: "error", error: "limit" };
   } catch {
     return { status: "error", error: "failed" };
   }
@@ -305,12 +333,12 @@ export async function importPositionsAction(
 
   let ids: string[];
   try {
-    if ((await countPositions(userId)) + rows.length > MAX_POSITIONS) return { status: "error", error: "limit" };
-    const inserted = await db
-      .insert(portfolioPositions)
-      .values(rows.map((row) => toRow(userId, row)))
-      .returning({ id: portfolioPositions.id });
-    ids = inserted.map((row) => row.id);
+    const outcome = await insertWithinCap(
+      userId,
+      rows.map((row) => toRow(userId, row)),
+    );
+    if (outcome.kind !== "saved") return { status: "error", error: outcome.kind === "limit" ? "limit" : "failed" };
+    ids = outcome.ids;
   } catch {
     return { status: "error", error: "failed" };
   }
@@ -458,6 +486,14 @@ export async function savePortfolioOrderAction(ids: string[] | null): Promise<Po
    maliyetiyle `portfolio_sales`e yazılıyor. Hepsi TEK `batch`te: Neon'un
    HTTP sürücüsünde bu bir işlem (transaction); yarısı yazılmış bir satış —
    partisi silinmiş ama kaydı olmayan — mümkün değil.
+
+   EŞZAMANLI SATIŞ ADEDİ EKSİYE DÜŞÜREMEZ (14 Kasım güvenlik denetimi). Plan
+   okunan adetle kurulur ama KARAR yazım anında verilir: her düşüm (ve
+   tükenen partinin silinmesi) adede koşullu, satış parçası o deyimin
+   döndürdüğü satırdan yazılır ve batch'in bekçisi eksik parçada işlemi
+   geri sarar
+   (`lib/portfolio-write.ts` → "Satış"). İkinci sekme "adet fazla" hatasını
+   elde kalan adetle alır; satış kaydı yazılmaz.
    -------------------------------------------------------------------------- */
 
 const SaleInput = z.object({
@@ -497,22 +533,22 @@ export async function sellPositionAction(
 
   const saleId = crypto.randomUUID();
   try {
-    const lots = await db
-      .select()
-      .from(portfolioPositions)
-      .where(and(eq(portfolioPositions.userId, userId), eq(portfolioPositions.symbol, input.symbol)))
-      .orderBy(portfolioPositions.boughtAt, portfolioPositions.createdAt);
-    const plan = planFifoSale(
-      lots.map((row) => ({
+    const readRows = () =>
+      db
+        .select()
+        .from(portfolioPositions)
+        .where(and(eq(portfolioPositions.userId, userId), eq(portfolioPositions.symbol, input.symbol)))
+        .orderBy(portfolioPositions.boughtAt, portfolioPositions.createdAt);
+    const lots = await readRows();
+    const asLots = (rows: typeof lots) =>
+      rows.map((row) => ({
         id: row.id,
         quantity: Number(row.quantity),
         costUsd: Number(row.costUsd),
         boughtAt: row.boughtAt,
         note: row.note,
-      })),
-      input.quantity,
-      input.soldAt,
-    );
+      }));
+    const plan = planFifoSale(asLots(lots), input.quantity, input.soldAt);
     if (!plan.ok) {
       return {
         status: "error",
@@ -522,34 +558,29 @@ export async function sellPositionAction(
       };
     }
 
-    const [first, ...rest] = plan.steps.flatMap((step) => [
-      step.exhausted
-        ? db
-            .delete(portfolioPositions)
-            .where(and(eq(portfolioPositions.id, step.lot.id), eq(portfolioPositions.userId, userId)))
-        : /* Düşüm göreli (20 Ekim; geri almayla simetrik): iki sekmeden
-             aynı partiye düşen iki satışın ikisi de adetten iner — mutlak
-             "okunan − satılan" ikincisini kayıtlı ama adetten düşülmemiş
-             bırakıyordu. Elde olandan fazlasını satan yarışı bu da
-             durdurmaz (etkileşimli işlem ister); adet o zaman sessizce
-             fazla kalmak yerine eksiye iner, görünür olur. */
-          db
-            .update(portfolioPositions)
-            .set({ quantity: sql`${portfolioPositions.quantity} - ${String(step.take)}::numeric` })
-            .where(and(eq(portfolioPositions.id, step.lot.id), eq(portfolioPositions.userId, userId))),
-      db.insert(portfolioSales).values({
-        userId,
-        saleId,
-        symbol: input.symbol,
-        quantity: String(step.take),
-        priceUsd: String(input.priceUsd),
-        soldAt: input.soldAt,
-        costUsd: String(step.lot.costUsd),
-        boughtAt: step.lot.boughtAt,
-        note: step.lot.note,
-      }),
-    ]);
-    await db.batch([first, ...rest]);
+    const context = { userId, saleId, symbol: input.symbol, priceUsd: String(input.priceUsd), soldAt: input.soldAt };
+    const steps = saleSteps(
+      plan.steps.map((step) => ({ lotId: step.lot.id, take: step.take, exhausted: step.exhausted })),
+      new Map(lots.map((row) => [row.id, row.quantity])),
+    );
+    const [first, ...rest] = saleStatements(context, steps).map((statement) => db.execute(statement));
+    try {
+      await db.batch([first!, ...rest]);
+    } catch (error) {
+      if (!isSaleGuardError(error)) throw error;
+      /* Bekçi durdurdu: plan kurulduktan sonra parti başka bir sekmeden
+         satılmış ya da düzenlenmiş. Hiçbir şey yazılmadı; okura elde kalan
+         adet söylenir. Adet yine yetiyorsa (parti yalnız düzenlendi) plan
+         bayattı: okur yeniden dener. */
+      const again = planFifoSale(asLots(await readRows()), input.quantity, input.soldAt);
+      if (again.ok) return { status: "error", error: "failed" };
+      return {
+        status: "error",
+        error: "invalid",
+        field: again.reason === "noLots" ? "soldAt" : "quantity",
+        available: again.available,
+      };
+    }
   } catch {
     return { status: "error", error: "failed" };
   }

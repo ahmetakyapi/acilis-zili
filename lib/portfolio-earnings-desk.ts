@@ -33,6 +33,7 @@ import { GROUNDING, NO_ADVICE, NUMBERS, OWNER_VIEW, VOICE } from "@/lib/claude-p
 import { callClaude, completedDailyBars, expectedLastSession, insightsConfigured } from "@/lib/stock-insights";
 import { getTechnicalBoard } from "@/lib/technical-data";
 import { formatMoneyCompact, formatPercentText, formatPrice } from "@/lib/utils";
+import { logReason, userCacheTag, userLogId } from "@/lib/user-tag";
 
 /**
  * BİLANÇO MASASI — sunucu tarafı (11 Kasım, sahibinin isteği). Saf hesap ve
@@ -368,7 +369,7 @@ export async function getEarningsDesk(userId: string, locale: Locale): Promise<E
       () => writeText(cards, rows, session, locale, memberClient(userId), owner),
       /* v2 (14 Kasım): istem ortak kurallara geçti (lib/claude-prompt-rules.ts). */
       ["earnings-desk-v2", owner ? "plan" : "desk", userId, session, signature, locale],
-      { revalidate: 24 * 3600, tags: ["earnings-desk"] },
+      { revalidate: 24 * 3600, tags: ["earnings-desk", userCacheTag(userId)] },
     )();
     /* Not yazıldığı evreyi taşır: sabah "öncesi" yazılan not, bilanço
        düştükten sonra basılmaz (gerekçe dosya başında). Görüş de aynı. */
@@ -385,7 +386,7 @@ export async function getEarningsDesk(userId: string, locale: Locale): Promise<E
     };
   } catch (error) {
     failures.set(failKey, Date.now());
-    console.error(`[bilanço masası] ${userId}: ${error instanceof Error ? error.message : "?"}`);
+    console.error(`[bilanço masası] ${userLogId(userId)}: ${logReason(error)}`);
     return base;
   }
 }
