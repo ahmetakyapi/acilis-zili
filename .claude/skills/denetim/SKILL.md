@@ -62,3 +62,8 @@ bırakılan (nedeniyle) · senin teyit etmen gereken. Kalan işler
   bakan bir tur koş.
 - 14 Kasım: denetimin "yanlış" saydığı bir şey bilinçli karardı (Vercel
   Analytics içe aktarımı; yorumunda gerekçesi var). Silmeden önce yorumu oku.
+- 14 Kasım: `/en` yönlendirme döngüsü "Next yükseltmesiyle kapandı" diye
+  raporlandı; yerelde `next start` (localhost) ile ölçülmüştü, canlıda sürdü.
+  Vekil arkasındaki davranış `next start -H 127.0.0.1` ve
+  `X-Forwarded-Proto: https` başlığıyla yeniden üretilir; yayından sonra
+  AYNI ölçüm canlıda yinelenmeden "kapandı" denmez.
