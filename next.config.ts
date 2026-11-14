@@ -307,6 +307,21 @@ const nextConfig: NextConfig = {
        4.564 ms). `graph` (yalnız Turbopack) rotanın kullanmadığı modülleri
        ortak parçadan ayırır, karşılığında birkaç istek daha yapar. */
     cssChunking: "graph",
+    /* RSC ÖZET DOĞRULAMASI KAPALI (14 Kasım; canlıda ölçüldü). Next, RSC
+       isteğinin `_rsc` özeti tutmayınca "doğru özetli adrese" 307 veriyor
+       (CDN önbellek zehirlenmesine karşı). Bu sitede o yönlendirme dil
+       önekini DÜŞÜRÜYOR: `proxy.ts` `/en/x`i öneksiz yola gerçek bir iç
+       HTTP isteğiyle yeniden yazıyor ve iç sunucu yalnız öneksiz adresi
+       biliyor. `/en/giris` → `/giris?_rsc` → (dil çerezi) `/en/giris` →
+       … İngilizce sayfalarda oturum isteyen her bağlantı (ön yükleme
+       dahil) 14+ tur atıp ERR_TOO_MANY_REDIRECTS veriyordu. Proxy bu
+       turu kıramaz: çerçeve RSC başlıklarını ve `_rsc`yi proxy'ye
+       göstermeden önce siliyor (`next/dist/server/web/adapter.js`).
+       Korumanın hedefi olan ortak önbellek burada yok: HTML ve RSC
+       `no-store`, önde CDN yok (Caddy doğrudan). ÖNE CDN KONURSA bu satır
+       yeniden düşünülmeli. Yeniden üretme: `next start -H 127.0.0.1` +
+       `curl -H "RSC: 1" -H "Cookie: az-locale=en" /en/favoriler -L`. */
+    validateRSCRequestHeaders: false,
     /* Yirmi yedi dosya ikonları `@phosphor-icons/react/dist/ssr` barrel'ından
        çekiyor ve o giriş noktası binden fazla ikonu tek tek yeniden dışa
        aktarıyor. Üretim demeti ağaç sarsmayla temizleniyor (paket
