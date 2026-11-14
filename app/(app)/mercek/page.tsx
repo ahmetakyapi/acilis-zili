@@ -43,14 +43,14 @@ import { ScrollEdges } from "@/components/ui/ScrollEdges";
 export const generateMetadata = pageMetadata({
   path: "/mercek",
   tr: {
-    title: "Mercek",
+    title: "Mercek: ABD Borsasında Olayların Arka Planı",
     description:
-      "Piyasada yaşananların uzun anlatımı — olayın arkasındaki mekanizma.",
+      "ABD borsasında günün olayının arkasındaki mekanizma: neden düştü, neden yükseldi, ne anlama geliyor. Rakam ve grafiklerle, Türkçe.",
   },
   en: {
-    title: "Close-Up",
+    title: "Close-Up: The Mechanism Behind US Market Moves",
     description:
-      "The long read on what happened — the mechanism behind the event.",
+      "The mechanism behind the day's US market story: why it fell, why it rose and what it means, with the numbers and charts.",
   },
 });
 

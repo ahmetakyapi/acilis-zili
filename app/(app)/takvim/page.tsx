@@ -29,14 +29,14 @@ import {
 export const generateMetadata = pageMetadata({
   path: "/takvim",
   tr: {
-    title: "Ekonomik Takvim",
+    title: "ABD Ekonomik Takvimi: Fed, TÜFE, İstihdam",
     description:
-      "ABD makro veri açıklamaları ve Fed toplantıları, saatleriyle.",
+      "Fed (FOMC) toplantısı ve ABD enflasyon verisi ne zaman? TÜFE, istihdam ve PCE açıklamaları Türkiye saatiyle; beklenti ve gerçekleşen değerleriyle.",
   },
   en: {
-    title: "Economic Calendar",
+    title: "US Economic Calendar: Fed, CPI and Jobs Dates",
     description:
-      "US macro releases and Fed meetings, with the times.",
+      "When is the next Fed (FOMC) meeting and US CPI release? Inflation, jobs and PCE dates with times, forecasts and actuals.",
   },
 });
 

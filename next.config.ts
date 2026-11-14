@@ -121,6 +121,9 @@ const NOINDEX_SOURCES = NOINDEX_PATHS.flatMap((path) => [
 ]);
 
 const nextConfig: NextConfig = {
+  /* `x-powered-by: Next.js` başlığı basılmaz (14 Kasım): çerçeve sürümünü
+     meraklısına ilan etmenin okura faydası yok. */
+  poweredByHeader: false,
   /* Kongre bildirimlerinin PDF'i sunucuda okunuyor (lib/providers/
      house-ptr.ts). pdf.js Node'da çalışanını kendi dosyasından dinamik
      içe aktarıyor; sunucu paketine girerse o yol kırılıyor. Paket

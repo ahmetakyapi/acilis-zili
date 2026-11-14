@@ -19,12 +19,12 @@ export const generateMetadata = pageMetadata({
   tr: {
     title: "Aracı Kurum Karşılaştırması: ABD Hissesi Ücretleri",
     description:
-      "Midas, İş Yatırım, Garanti BBVA Yatırım, Yapı Kredi Yatırım, QNB Invest, Gedik, İnfo Yatırım ve Interactive Brokers: ABD hissesi komisyonu, asgari ücret, saklama, kesirli hisse, veri ve lisans. Her hücre kurumun resmî tarifesinden, kaynağıyla.",
+      "Midas, İş Yatırım, Garanti BBVA, Yapı Kredi, QNB Invest, Gedik, İnfo ve Interactive Brokers: ABD hissesi komisyonu, asgari ücret ve saklama, resmî tarifeden.",
   },
   en: {
     title: "Broker Comparison: US Stock Fees From Türkiye",
     description:
-      "US stock commission, minimum fee, custody, fractional shares, data and licence at eight brokers serving Turkish residents. Every cell from the broker's official fee schedule, with its source.",
+      "US stock commission, minimum fee, custody and fractional shares at eight brokers serving Turkish residents, each from the official fee schedule.",
   },
 });
 

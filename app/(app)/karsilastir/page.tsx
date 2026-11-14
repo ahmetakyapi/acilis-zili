@@ -115,14 +115,14 @@ const PRESETS: readonly ComparePreset[] = [
 export const generateMetadata = pageMetadata({
   path: "/karsilastir",
   tr: {
-    title: "Karşılaştır",
+    title: "ABD Hisse Karşılaştırma Aracı",
     description:
-      "İki ya da daha fazla hisseyi aynı grafikte, aynı ölçekte karşılaştır.",
+      "İki ya da daha fazla ABD hissesini aynı grafikte, aynı ölçekte karşılaştır: getiri, değerleme, büyüme ve kârlılık yan yana.",
   },
   en: {
-    title: "Compare",
+    title: "US Stock Comparison Tool",
     description:
-      "Put two or more stocks on the same chart, at the same scale.",
+      "Put two or more US stocks on the same chart, at the same scale: returns, valuation, growth and profitability side by side.",
   },
 });
 

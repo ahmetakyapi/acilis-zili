@@ -117,7 +117,13 @@ export function pageAlternates(
         ? { "x-default": stripLocale(path) || "/" }
         : {}),
     },
-    types: { "application/rss+xml": "/feed.xml" },
+    /* Besleme dilin kendi beslemesi (14 Kasım SEO denetimi): `/en/*`
+       sayfaları Türkçe `/feed.xml`i ilan ediyordu; `/en/feed.xml` ayrı ve
+       çalışıyor. İçerik yalnız öteki dilde varsa o dilin beslemesi. */
+    types: {
+      "application/rss+xml":
+        (mevcut.includes(locale) ? locale : mevcut[0]) === "en" ? "/en/feed.xml" : "/feed.xml",
+    },
   } as const;
 }
 

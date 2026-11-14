@@ -64,12 +64,12 @@ import { aliasSymbols } from "@/db/seed/aliases";
 export const generateMetadata = pageMetadata({
   path: "/sirketler",
   tr: {
-    title: "Şirketler",
+    title: "ABD Hisseleri Listesi: Sektöre Göre Şirketler",
     description:
       "ABD borsalarında işlem gören şirketler — sektör, fiyat ve piyasa değeriyle.",
   },
   en: {
-    title: "Companies",
+    title: "US Stocks List: Companies by Sector",
     description:
       "Companies listed on US exchanges — with sector, price and market cap.",
   },
