@@ -39,6 +39,7 @@ import { pushPrefsEn } from "./push-prefs";
 import { calendarFeedEn } from "./calendar-feed";
 import { earningsDeskEn } from "./earnings-desk";
 import { homeEarningsEn } from "./home-earnings";
+import { eventPagesEn, marketHolidaysEn, marketHoursEn, quickAnswersEn } from "./market-answers";
 
 const en: typeof tr = {
   brand: {
@@ -4571,6 +4572,10 @@ const en: typeof tr = {
   calendarFeed: calendarFeedEn,
   earningsDesk: earningsDeskEn,
   homeEarnings: homeEarningsEn,
+  marketHours: marketHoursEn,
+  marketHolidays: marketHolidaysEn,
+  eventPages: eventPagesEn,
+  quickAnswers: quickAnswersEn,
 };
 
 export default en;

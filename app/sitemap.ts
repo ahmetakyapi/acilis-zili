@@ -18,6 +18,7 @@ import { getTechnicalBoard } from "@/lib/technical-data";
 import { allFunds } from "@/db/seed/symbols";
 import { getDailyChartArchive } from "@/lib/daily-chart-data";
 import { dailyChartHref } from "@/lib/daily-chart";
+import { EVENT_PAGE_SLUGS } from "@/lib/event-pages";
 
 type Locale = (typeof LOCALES)[number];
 type SitemapItem = { path: string; locale: Locale; modified: Date };
@@ -116,6 +117,19 @@ const FEATURE_STATIC_ROUTES: StaticRoute[] = [
   { path: "/gunun-grafigi", priority: 0.7, frequency: "daily" },
   /* Olasılıklar (25 Ekim): günde bir yenilenen anlık görüntü. */
   { path: "/olasiliklar", priority: 0.7, frequency: "daily" },
+  /* Soru sayfaları (14 Kasım, SEO denetimi). Saatler sayfası günün durum
+     cümlesini taşıyor, her gün değişir. Tatil sayfası yalnız "sıradaki
+     tatil" cümlesinde, olay sayfaları yeni tarih ya da gerçekleşen değer
+     geldikçe değişir; değişme anı bilinmediği için damga yok. Olay listesi
+     `lib/event-pages.ts` → `EVENT_PAGES` ile aynı evren. */
+  { path: "/abd-borsasi-saatleri", priority: 0.8, frequency: "daily" },
+  { path: "/abd-borsasi-tatil-gunleri", priority: 0.7, frequency: "weekly", stamp: false },
+  ...EVENT_PAGE_SLUGS.map((slug) => ({
+    path: `/takvim/${slug}`,
+    priority: 0.7,
+    frequency: "weekly" as const,
+    stamp: false,
+  })),
 ];
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {

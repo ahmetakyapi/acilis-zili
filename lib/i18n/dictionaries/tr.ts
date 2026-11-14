@@ -38,6 +38,7 @@ import { pushPrefsTr } from "./push-prefs";
 import { calendarFeedTr } from "./calendar-feed";
 import { earningsDeskTr } from "./earnings-desk";
 import { homeEarningsTr } from "./home-earnings";
+import { eventPagesTr, marketHolidaysTr, marketHoursTr, quickAnswersTr } from "./market-answers";
 
 const tr = {
   brand: {
@@ -5196,6 +5197,12 @@ const tr = {
   calendarFeed: calendarFeedTr,
   earningsDesk: earningsDeskTr,
   homeEarnings: homeEarningsTr,
+  /* Soru sayfaları (14 Kasım): borsa saatleri, tatil günleri, takvim olay
+     sayfaları ve aralarındaki bağlantı şeridi. */
+  marketHours: marketHoursTr,
+  marketHolidays: marketHolidaysTr,
+  eventPages: eventPagesTr,
+  quickAnswers: quickAnswersTr,
 };
 
 export default tr;

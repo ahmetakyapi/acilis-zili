@@ -3,6 +3,7 @@ import { Suspense } from "react";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/calendar/CalendarExperience.module.css";
 import { GuideHint } from "@/components/article/GuideHint";
+import { AnswerLinks } from "@/components/answers/AnswerLinks";
 import {
   DividendCalendar,
   DividendCalendarSkeleton,
@@ -26,7 +27,7 @@ import {
 /* Paylaşım künyesi. Sayfa kendi başlığını vermediğinde Next kökteki
    varsayılanı miras alıyor ve her bölüm linki aynı metinle
    paylaşılıyordu. Metin, bölümün OG kartındaki cümleyle aynı. */
-export const generateMetadata = pageMetadata({
+const economicMetadata = pageMetadata({
   path: "/takvim",
   tr: {
     title: "ABD Ekonomik Takvimi: Fed, TÜFE, İstihdam",
@@ -39,6 +40,40 @@ export const generateMetadata = pageMetadata({
       "When is the next Fed (FOMC) meeting and US CPI release? Inflation, jobs and PCE dates with times, forecasts and actuals.",
   },
 });
+
+/* TEMETTÜ GÖRÜNÜMÜNÜN KENDİ KÜNYESİ (14 Kasım 2026, SEO denetimi).
+   `/takvim?tur=temettu` makro takvimin başlığını ve açıklamasını taşıyordu
+   ("Ekonomik Takvim", "…Fed toplantıları, saatleriyle"): sekmede, arama
+   sonucunda ve paylaşım kartında temettü listesi makro takvim diye
+   görünüyordu.
+
+   CANONICAL KENDİSİ, SORGUSUYLA. Aşağıdaki 28 Eylül kararı duruyor: temettü
+   ayrı bir ROTA değil, bu sayfanın bir görünümü. Ama içeriği ekonomik
+   görünümle hiç örtüşmüyor (başka başlık, başka veri) ve paylaş düğmesi de
+   bu adresi veriyor (`share("/takvim?tur=temettu", …)`). Canonical çıplak
+   `/takvim`i gösterseydi arama motoru temettü listesini makro takvimin
+   kopyası sayıp dizinden düşürür, ayrı künye de boşa giderdi. `g` ve `onem`
+   canonical'a girmez: onlar aynı içeriğin süzgeci.
+
+   Açıklamada sayı yok: liste her gün değişir, künye sabit kalır. */
+const dividendMetadata = pageMetadata({
+  path: "/takvim?tur=temettu",
+  tr: {
+    title: "Temettü Takvimi: ABD Hisselerinde Hak Kesim Günleri",
+    description:
+      "ABD endeks şirketlerinin yaklaşan hak kesim günleri, hisse başına temettü tutarları ve temettüyü almak için son alım günü; hafta hafta, tarih sırasıyla.",
+  },
+  en: {
+    title: "Dividend Calendar: US Stock Ex-Dividend Dates",
+    description:
+      "Upcoming ex-dividend dates for US index companies, the dividend per share and the last day to buy to receive it, week by week in date order.",
+  },
+});
+
+export async function generateMetadata(props: PageProps<"/takvim">) {
+  const search = await props.searchParams;
+  return search.tur === "temettu" ? dividendMetadata() : economicMetadata();
+}
 
 /**
  * Takvim türleri — ekonomik (varsayılan) ve temettü (`?tur=temettu`).
@@ -140,6 +175,7 @@ export default async function CalendarPage(
         <Suspense fallback={<DividendCalendarSkeleton t={t} />}>
           <DividendCalendar locale={locale} t={t} />
         </Suspense>
+        <AnswerLinks t={t} />
         <GuideHint
           label={t.guide.contextLabel}
           locale={locale}
@@ -158,6 +194,9 @@ export default async function CalendarPage(
       t={t}
       share={share}
       tabs={<KindTabs kind={kind} labels={kindLabels} />}
+      /* Olay sayfalarına (FOMC, TÜFE, istihdam, PCE), borsa saatlerine ve
+         tatil günlerine iç bağlantı (14 Kasım): takvim onların üst sayfası. */
+      links={<AnswerLinks t={t} />}
     />
   );
 }

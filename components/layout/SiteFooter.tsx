@@ -33,6 +33,9 @@ export async function SiteFooter() {
           { href: "/bilancolar", label: t.nav.earnings },
           { href: "/teknik-analiz", label: t.technical.title },
           { href: "/takvim", label: t.nav.calendar },
+          /* 14 Kasım SEO denetimi: iki cevap sayfası her sayfadan bir tık. */
+          { href: "/abd-borsasi-saatleri", label: t.quickAnswers.hours },
+          { href: "/abd-borsasi-tatil-gunleri", label: t.quickAnswers.holidays },
           { href: "/karsilastir", label: t.compare.title },
           { href: "/temalar", label: t.themes.eyebrow },
           { href: "/yatirimcilar", label: t.investors.eyebrow },
