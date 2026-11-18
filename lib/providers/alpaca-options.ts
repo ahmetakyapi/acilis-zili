@@ -2,6 +2,8 @@ import { canonicalSymbol } from "../symbols";
 import { etParts } from "../market-hours";
 import { fail, ok, responseDate, type ProviderResult } from "./types";
 import { withBody } from "./timeout";
+import { retryOnRateLimit } from "./rate-limit";
+import { noteProviderResponse } from "./usage";
 import { parseOcc, type DailyClose, type OptionQuote } from "@/lib/expected-move";
 
 /**
@@ -30,8 +32,10 @@ async function get<T>(path: string, params: Record<string, string>, revalidate: 
   const creds = credentials();
   if (!creds) return fail("alpaca", "missing-key", "ALPACA_API_KEY_ID / ALPACA_API_SECRET_KEY tanımlı değil");
   try {
-    /* Süre sınırı gövdeyi de kapsıyor (`withBody`, lib/providers/timeout.ts). */
-    const { res, body } = await withBody(
+    /* Süre sınırı gövdeyi de kapsıyor (`withBody`, lib/providers/timeout.ts).
+       Kota `alpacaFetch` ile ORTAK (dakikada 200): yanıt sağlık izine
+       bildiriliyor, 429'da kısa bekleyip yeniden deneniyor (rate-limit.ts). */
+    const { res, body } = await retryOnRateLimit(() => withBody(
       fetch(`${DATA}${path}?${new URLSearchParams(params).toString()}`, {
         headers: {
           "APCA-API-KEY-ID": creds.key,
@@ -40,8 +44,11 @@ async function get<T>(path: string, params: Record<string, string>, revalidate: 
         },
         next: { revalidate, tags: [tag] },
       }),
-      (r) => (r.ok ? r.json() : null),
-    );
+      (r) => {
+        noteProviderResponse("alpaca", r);
+        return r.ok ? r.json() : null;
+      },
+    ));
     if (res.status === 429) return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");
     if (res.status === 404) return fail("alpaca", "not-found", "Sembol bulunamadı");
     if (!res.ok) return fail("alpaca", "upstream-error", `Alpaca ${res.status}`);

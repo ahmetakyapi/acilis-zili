@@ -2,6 +2,8 @@ import { cache } from "react";
 import { canonicalSymbol } from "@/lib/symbols";
 import { fail, ok, responseDate, type ProviderResult } from "./types";
 import { withBody } from "./timeout";
+import { retryOnRateLimit } from "./rate-limit";
+import { noteProviderResponse } from "./usage";
 
 /**
  * Alpaca kurumsal işlemler — nakit temettüler.
@@ -77,8 +79,10 @@ async function fetchPage(
 ): Promise<ProviderResult<RawPage>> {
   const url = `${BASE}?${new URLSearchParams(params).toString()}`;
   try {
-    /* Süre sınırı gövdeyi de kapsıyor (`withBody`, lib/providers/timeout.ts). */
-    const { res, body } = await withBody(
+    /* Süre sınırı gövdeyi de kapsıyor (`withBody`, lib/providers/timeout.ts).
+       Kota `alpacaFetch` ile ORTAK (dakikada 200): yanıt sağlık izine
+       bildiriliyor, 429'da kısa bekleyip yeniden deneniyor (rate-limit.ts). */
+    const { res, body } = await retryOnRateLimit(() => withBody(
       fetch(url, {
         headers: {
           "APCA-API-KEY-ID": creds.key,
@@ -87,8 +91,11 @@ async function fetchPage(
         },
         next: { revalidate: DIVIDEND_REVALIDATE_SECONDS, tags: ["dividends"] },
       }),
-      (r) => (r.ok ? r.json() : null),
-    );
+      (r) => {
+        noteProviderResponse("alpaca", r);
+        return r.ok ? r.json() : null;
+      },
+    ));
     if (res.status === 429) return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");
     if (!res.ok) return fail("alpaca", "upstream-error", `Alpaca kurumsal işlemler ${res.status}`);
     return ok(body as RawPage, "alpaca", { fetchedAt: responseDate(res) });

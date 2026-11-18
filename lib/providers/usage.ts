@@ -6,7 +6,8 @@ import { responseDate } from "./types";
  * NEDEN BELLEKTE. Sağlık ucu sağlayıcıyı YOKLAMIYOR (gerekçe `lib/health.ts`:
  * dakikada bir soran izleyici Finnhub'ın 60/dk kotasını yerdi). Kotanın
  * durumu zaten her yanıtta geçiyor; üç sağlayıcının tek fetch kapısı
- * (`finnhubFetch`, `alpacaFetch`, `fredFetch`) yanıtı buraya bildiriyor.
+ * (`finnhubFetch`, `alpacaFetch`, `fredFetch`; Alpaca opsiyon ve kurumsal
+ * işlem kapıları da, kota ortak) yanıtı buraya bildiriyor.
  * Sunucu tek süreç (VPS, systemd), yani bellek bütün trafiği görüyor;
  * yeniden başlatmada sıfırlanıyor ve rapor `since` ile bunu söylüyor.
  *

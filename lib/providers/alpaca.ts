@@ -10,6 +10,7 @@ import {
   responseDate,
 } from "./types";
 import { withBody } from "./timeout";
+import { retryOnRateLimit } from "./rate-limit";
 import { noteProviderResponse } from "./usage";
 
 /**
@@ -107,8 +108,9 @@ async function alpacaFetch<T>(
   try {
     /* Süre sınırı gövdeyi de kapsıyor — gerekçe lib/providers/timeout.ts'te
        (`withBody`). Hata gövdesi de yarışın içinde okunuyor; yanıt kaydı
-       gövdeden önce, başlıklar gelir gelmez. */
-    const { res, body } = await withBody(
+       gövdeden önce, başlıklar gelir gelmez. 429'da kısa bekleyip yeniden
+       deniyor — dakikalık pencere, gerekçe lib/providers/rate-limit.ts. */
+    const { res, body } = await retryOnRateLimit(() => withBody(
       fetch(url, {
         headers: {
           "APCA-API-KEY-ID": creds.key,
@@ -123,7 +125,7 @@ async function alpacaFetch<T>(
         noteProviderResponse("alpaca", r);
         return r.ok ? r.json() : safeText(r);
       },
-    );
+    ));
 
     if (res.status === 429) {
       return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");
@@ -160,8 +162,8 @@ async function safeText(res: Response): Promise<string> {
 }
 
 /** A single rejected identifier must not erase the other 199 symbols.
- * Only remove an explicitly named member of this request; network/429 errors
- * are never retried here. The retry budget prevents malformed lists flooding
+ * Only remove an explicitly named member of this request; network errors are
+ * never retried here (429 is retried once inside `alpacaFetch`, rate-limit.ts). The retry budget prevents malformed lists flooding
  * the provider. Known share-class aliases are normalized before this point.
  */
 async function symbolBatchRequest<T>(

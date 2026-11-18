@@ -4,7 +4,8 @@ import { z } from "zod";
 import { db } from "@/lib/db";
 import { getStatus } from "@/lib/data";
 import { addEtDays, todayEt, type MarketStatus } from "@/lib/market-hours";
-import { getChartBarsMulti, getQuotes } from "@/lib/providers";
+import { getChartBarsMulti, getLiveQuotes, getQuotes } from "@/lib/providers";
+import type { Bar, ProviderResult, Quote } from "@/lib/providers/types";
 import { technicalAnalyses, type TechnicalAnalysisRow } from "@/lib/schema";
 import {
   SLOT_RANK,
@@ -57,6 +58,72 @@ type SnapshotBatch = {
  * Barı hiç gelmeyen sembol `null` — göstergesi olmayan bir analiz
  * yazılmıyor.
  */
+type SnapshotInputs = {
+  bars: Record<string, Bar[]>;
+  quotes: ProviderResult<Record<string, Quote>>;
+};
+
+/** İkinci denemeden önce bekleme — dakikalık kota penceresine nefes (aşağıda). */
+export const SNAPSHOT_RETRY_DELAY_MS = 3_000;
+
+/**
+ * Fotoğrafın ham girdisi: 1 yıllık barlar ve kotasyon — EKSİK KALANA BİR
+ * KEZ DAHA (18 Kasım 2026).
+ *
+ * On altı hissenin barları TEK toplu çağrıyla geliyor; o çağrı düşünce
+ * (Alpaca 429, zaman aşımı) sembollerin hepsi `data_ok: false` oluyor ve
+ * Teknik Analist o anda bağlam çekerse her hisseyi atlıyor, nöbet boş
+ * geçiyor. 18 Kasım 10:06 ET'de böyle oldu: açılışın dakikalık 200'lük
+ * Alpaca payı doldu, beş isteğin beşi 429 aldı, bir dakika sonra normaldi.
+ * `alpacaFetch` artık 429'da kendisi bekleyip deniyor (rate-limit.ts); bu
+ * katman zaman aşımı ve ağ hatası gibi geri kalanı için: kısa bir aradan
+ * sonra yalnız EKSİK semboller, önbelleksiz, bir kez.
+ *
+ * VERİTABANINDAKİ ESKİ BARLARA DÜŞÜLMEZ — `allowCache: false` ikinci
+ * denemede de duruyor (gerekçe aşağıda, getTechnicalSnapshots). Kotasyonun
+ * ikinci denemesi `getLiveQuotes` (önbelleksiz): `getQuotes` React
+ * `cache()`li, aynı istekte aynı (düşmüş) sonucu geri verirdi.
+ */
+export async function loadSnapshotInputs(
+  list: readonly string[],
+  status: MarketStatus,
+  deps: {
+    bars: typeof getChartBarsMulti;
+    quotes: typeof getQuotes;
+    liveQuotes: typeof getLiveQuotes;
+    sleep: (ms: number) => Promise<void>;
+  } = {
+    bars: getChartBarsMulti,
+    quotes: getQuotes,
+    liveQuotes: getLiveQuotes,
+    sleep: (ms) => new Promise((resolve) => setTimeout(resolve, ms)),
+  },
+): Promise<SnapshotInputs> {
+  const symbols = [...list];
+  const [first, firstQuotes] = await Promise.all([
+    deps.bars(symbols, "1Y", status, { allowCache: false }),
+    deps.quotes(symbols, status),
+  ]);
+  const bars = { ...first };
+  let quotes = firstQuotes;
+  const missing = symbols.filter((symbol) => !(bars[symbol]?.length));
+  const quotesBad = !quotes.ok || quotes.stale === true;
+  if (missing.length === 0 && !quotesBad) return { bars, quotes };
+
+  await deps.sleep(SNAPSHOT_RETRY_DELAY_MS);
+  const [again, againQuotes] = await Promise.all([
+    missing.length > 0
+      ? deps.bars(missing, "1Y", status, { allowCache: false, fresh: true })
+      : Promise.resolve({} as Record<string, Bar[]>),
+    quotesBad ? deps.liveQuotes(symbols, status) : Promise.resolve(null),
+  ]);
+  for (const symbol of missing) {
+    if (again[symbol]?.length) bars[symbol] = again[symbol];
+  }
+  if (againQuotes && againQuotes.ok && !againQuotes.stale) quotes = againQuotes;
+  return { bars, quotes };
+}
+
 export async function getTechnicalSnapshots(
   symbols: readonly string[],
   status: MarketStatus,
@@ -70,10 +137,7 @@ export async function getTechnicalSnapshots(
      yazılıyor. Eski barlardan hesaplanmış bir RSI, kaydın içinde "analiz
      anındaki gösterge" diye sonsuza kadar duracaktı. Yedek kapalı: bar
      gelmezse sembol atlanıyor. */
-  const [bars, quotes] = await Promise.all([
-    getChartBarsMulti(list, "1Y", status, { allowCache: false }),
-    getQuotes(list, status),
-  ]);
+  const { bars, quotes } = await loadSnapshotInputs(list, status);
   /* BAYAT KOTASYON FOTOĞRAFA GİRMEZ. Sağlayıcı düşünce kotasyon veritabanı
      önbelleğinden geliyor (`stale: true`) ve saatler önceki bir fiyat
      işaretsiz olarak "analiz anındaki fiyat" oluyordu. Bayatsa hiç

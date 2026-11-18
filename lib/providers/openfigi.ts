@@ -1,5 +1,6 @@
 import { fail, ok, type ProviderResult } from "./types";
 import { BACKGROUND_TIMEOUT_MS, withTimeout } from "./timeout";
+import { retryOnRateLimit } from "./rate-limit";
 
 /**
  * OpenFIGI — CUSIP'ten borsa sembolüne (28 Eylül).
@@ -87,7 +88,9 @@ export async function mapCusips(cusips: readonly string[]): Promise<ProviderResu
   if (cusips.length === 0) return ok([], "openfigi");
   const key = openFigiKey();
   try {
-    const res = await withTimeout(
+    /* 429'da kısa bekleyip yeniden deniyor (lib/providers/rate-limit.ts):
+       anahtarsız OpenFIGI'nin dakikalık sınırı düşük, 13F eşlemesi arka arkaya soruyor. */
+    const { res } = await retryOnRateLimit(async () => ({ res: await withTimeout(
       fetch(ENDPOINT, {
         method: "POST",
         headers: {
@@ -98,7 +101,7 @@ export async function mapCusips(cusips: readonly string[]): Promise<ProviderResu
         cache: "no-store",
       }),
       BACKGROUND_TIMEOUT_MS,
-    );
+    ) }));
     if (res.status === 429) return fail("openfigi", "rate-limited", "OpenFIGI 429");
     if (!res.ok) return fail("openfigi", "upstream-error", `OpenFIGI ${res.status}`);
     return ok(parseFigiResponse(cusips, (await res.json()) as FigiResponse), "openfigi");

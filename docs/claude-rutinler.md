@@ -2460,6 +2460,8 @@ D'nin kaydında `locales` hem "tr" hem "en" içermeli. Eksik dil varsa ya da kay
 
 Sitenin veri akışı yalnızca bülten değildir. New York tarihine göre DÜN = D için (yalnızca BİLDİR; hiçbir şey yazma, yeniden çalıştırma):
 
+ARALIKLI ÇAĞIR. Bu görev 10:05 NY'de, açılıştan hemen sonra koşuyor: sitenin Alpaca kotası (dakikada 200 istek) o dakika fiyat güncellemesi ve okur trafiğiyle zaten dolu. Aşağıdaki context uçlarını (a, b, d) arka arkaya değil, her çağrı arasında `sleep 10` bırakarak çağır; aynı dakikada art arda çağrılan uçlar 18 Kasım'da kotayı doldurup beş isteğin beşini 429'a düşürdü.
+
 a) MERCEK. `curl -s --max-time 60 -H @/tmp/.azh https://aciliszili.com/api/mercek/context` → `existing_stories` içinde event_date'i D olan kayıt sayısı; Mercek'in iki koşusunu `created_at` (ilk yazılış, ISO UTC) ile ayır. D hafta içiyse ve 0 ise bildir ("<D> hiç Mercek yazısı çıkmadı"). Hafta sonunda 0 normaldir. `locales` alanı varsa yalnız tek dilde olan kaydı da bildir.
 
 b) BİLANÇO. `curl -s --max-time 60 -H @/tmp/.azh https://aciliszili.com/api/analiz/context` → `candidates` içinde report_date < today_et olup existing_analyses'te aynı symbol için kaydı olmayan (ya da `already_analyzed` false olan) her şirket "yazılmamış analiz"dir; sembol ve report_date ile bildir. Bilanço'nun 12:30 NY öğlen nöbeti bunları alır; yalnızca öğlen nöbeti de düşmüşse sorun büyür. Ayrıca existing_analyses'te report_date D ya da daha eski olup `locales` yalnız ["tr"] olan kayıtları bildir.
@@ -2471,7 +2473,7 @@ curl -s --max-time 60 -o /dev/null -w "%{http_code}\n" -H @/tmp/.azh "https://ac
 200 dışı dönerse bildir ("<D> 14:45 teknik nöbeti yayında değil"). Tatil günlerinde (piyasa kapalı) 404 normaldir; NYSE takviminden emin değilsen yalnızca not et.
 
 d) VERİ BOŞLUKLARI. `curl
- -s --max-time 60 -H @/tmp/.azh https://aciliszili.com/api/teknik/context` → `symbols[]` içinde data_ok false olan semboller varsa listele. Aynı sembol art arda iki gün data_ok false ise bu bir veri sağlayıcı sorunudur; bildirime ekle.
+ -s --max-time 60 -H @/tmp/.azh https://aciliszili.com/api/teknik/context` → `symbols[]` içinde data_ok false olan semboller varsa `sleep 60` sonra aynı ucu BİR KEZ daha çek; yalnız ikincide de data_ok false kalanları listele (ilk okumada hepsi birden false ise bu genelde dakikalık kota anıdır, ikinci okuma geçer). Aynı sembol art arda iki gün data_ok false ise bu bir veri sağlayıcı sorunudur; bildirime ekle.
 
 e) SİTE SAĞLIĞI. `curl -s --max-time 60 -w "\n%{http_code}\n" https://aciliszili.com/api/health` (anahtarsız). HTTP 503 = veritabanı düştü → bildir. Gövdede `status: "degraded"` = geciken rutin ya da kaçan senkron → hangi alan olduğunu bildir. `providers.usage.{finnhub,alpaca,fred}`: `lastOkAt` 24 saatten eskiyse, `rateLimitedLastHour` 0'dan büyükse ya da `remaining` sıfıra yakınsa bildir. `usage.since` sunucunun başladığı andır; ondan önceki bilgi yoktur.
 

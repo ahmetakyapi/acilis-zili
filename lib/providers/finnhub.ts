@@ -12,6 +12,7 @@ import {
   responseDate,
 } from "./types";
 import { withBody } from "./timeout";
+import { retryOnRateLimit } from "./rate-limit";
 import { saglayiciMetni } from "@/lib/text";
 import { noteProviderResponse } from "./usage";
 
@@ -51,8 +52,9 @@ export async function finnhubFetch<T>(
   try {
     /* Süre sınırı: sağlayıcı yanıt vermeyi bırakırsa sayfa kilitlenmesin.
        Gerekçesi ve iptal edilmemesinin sebebi lib/providers/timeout.ts'te;
-       sınır gövde okumasını da kapsıyor (`withBody`, 20 Ekim). */
-    const { res, body } = await withBody(
+       sınır gövde okumasını da kapsıyor (`withBody`, 20 Ekim). 429'da kısa
+       bekleyip yeniden deniyor (60/dk pencere; lib/providers/rate-limit.ts). */
+    const { res, body } = await retryOnRateLimit(() => withBody(
       fetch(url, {
         headers: { "X-Finnhub-Token": key, accept: "application/json" },
         next: { revalidate: opts.revalidate, tags: opts.tags },
@@ -61,7 +63,7 @@ export async function finnhubFetch<T>(
         noteProviderResponse("finnhub", r);
         return r.ok ? r.json() : null;
       },
-    );
+    ));
 
     if (res.status === 429) {
       return fail("finnhub", "rate-limited", "Finnhub istek limiti aşıldı");

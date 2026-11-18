@@ -9,6 +9,7 @@ import {
   responseDate,
 } from "./types";
 import { withBody } from "./timeout";
+import { retryOnRateLimit } from "./rate-limit";
 import { noteProviderResponse } from "./usage";
 
 /**
@@ -192,8 +193,8 @@ async function fredFetch<T>(
 
   try {
     /* Süre sınırı gövdeyi de kapsıyor — gerekçe lib/providers/timeout.ts'te
-       (`withBody`). */
-    const { res, body } = await withBody(
+       (`withBody`). 429'da kısa bekleyip yeniden deniyor (lib/providers/rate-limit.ts). */
+    const { res, body } = await retryOnRateLimit(() => withBody(
       fetch(url, {
         headers: { accept: "application/json" },
         ...(opts.forceRefresh
@@ -204,7 +205,7 @@ async function fredFetch<T>(
         noteProviderResponse("fred", r);
         return r.ok ? r.json() : null;
       },
-    );
+    ));
 
     if (res.status === 429) {
       return fail("fred", "rate-limited", "FRED istek limiti aşıldı");

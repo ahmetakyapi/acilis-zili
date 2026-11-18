@@ -56,11 +56,15 @@ test("a newly rejected identifier does not poison the remaining quote batch", as
   });
 });
 
-test("rate limits and unknown provider errors are not retried or guessed", async () => {
-  for (const status of [429, 503, 400]) {
-    let calls = 0;
-    await withProvider(async () => { calls++; return Response.json({ message: "invalid symbol: NOT-REQUESTED" }, { status }); }, async () => {
-      assert.equal((await getSnapshots(["AAPL"], 0)).ok, false); assert.equal(calls, 1);
+/* 429 artık `alpacaFetch` içinde kısa bekleyip AYNI istekle yeniden deneniyor
+   (18 Kasım, lib/providers/rate-limit.ts); sembol yine tahminle düşürülmüyor. */
+test("unknown provider errors are not retried or guessed; 429 retries the same request", async () => {
+  for (const [status, expected] of [[429, 3], [503, 1], [400, 1]] as const) {
+    const requests: string[] = [];
+    await withProvider(async (input) => { requests.push(new URL(String(input)).searchParams.get("symbols")!); return Response.json({ message: "invalid symbol: NOT-REQUESTED" }, { status }); }, async () => {
+      assert.equal((await getSnapshots(["AAPL"], 0)).ok, false);
+      assert.equal(requests.length, expected, String(status));
+      assert.ok(requests.every((symbols) => symbols === "AAPL"));
     });
   }
 });

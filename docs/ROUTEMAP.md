@@ -69,6 +69,11 @@ Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
         Bilanço, Teknik Analist ve Günün Grafiği bloklarına dil bütünlüğü ve
         Title Case satırları `docs/claude-rutinler.md`'ye işlendi; canlı
         rutinlere yapıştırılınca bu madde kapanır.
+      - **claude.ai'de yeniden yapıştırılacak (18 Kasım):** Görev Kontrolü
+        (§ 8 → 4B) context uçlarını `sleep 10` arayla çağırıyor, teknik
+        bağlamda data_ok false görünce 60 sn sonra bir kez daha okuyor
+        (açılış dakikasında Alpaca'nın 200/dk payı dolmuştu). Canlı göreve
+        yapıştırılınca bu madde kapanır.
       - **Canlıda bakılacak (yeni istemler gerçek modelle denenmedi):**
         bilanço haftasındaki hissede "Yaklaşan bilançoda piyasa ne
         bekliyor?", bilanço ertesinde tepki sorusu, ≥ %4 hareketli hissede
