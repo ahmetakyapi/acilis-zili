@@ -45,6 +45,11 @@ LINES=(
 	# deyip döner, okur başına hafta anahtarı tekrarı engeller.
 	"7 5,7 * * 2-6 /bin/bash $APP_ROOT/current/deploy/cron-portfoy-ozeti.sh"
 	"37 18 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-portfoy-ozeti.sh"
+	# Portföyde hisse bölünmesi düzeltmesi (24 Kasım — gerekçe
+	# deploy/cron-bolunme.sh). Ex günü açılıştan sonra (14:45 UTC her
+	# mevsimde ≥ 09:30 ET) ve her sabah telafi; uç idempotent.
+	"45 14 * * 1-5 /bin/bash $APP_ROOT/current/deploy/cron-bolunme.sh"
+	"20 11 * * * /bin/bash $APP_ROOT/current/deploy/cron-bolunme.sh"
 	# Ortak veri önbelleğinin budaması (20 Ekim — gerekçe update.sh). Next
 	# diskteki kaydı hiç silmiyor; sürüm dizinleri budanırken önbellek de
 	# gidiyordu, ortak dizinde biriken tarihli adresler (gün başlangıçlı

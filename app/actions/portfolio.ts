@@ -2,6 +2,7 @@
 
 import { and, eq, exists, inArray, sql } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { markSplitsReflected } from "@/lib/portfolio-split-apply";
 import { z } from "zod";
 import { auth } from "@/auth";
 import { getStatus } from "@/lib/data";
@@ -234,6 +235,9 @@ export async function updatePositionAction(
   } catch {
     return { status: "error", error: "failed" };
   }
+  /* Elle düzeltilen parti kurumun bugünkü rakamı sayılır: bugüne kadarki
+     hisse bölünmeleri bir daha uygulanmaz (lib/portfolio-splits.ts). */
+  await markSplitsReflected(id);
 
   revalidatePath("/portfoy");
   return { status: "saved", id };

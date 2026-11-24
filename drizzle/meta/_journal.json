@@ -330,6 +330,13 @@
       "when": 1794685794470,
       "tag": "0046_portfolio_quantity_check",
       "breakpoints": true
+    },
+    {
+      "idx": 47,
+      "version": "7",
+      "when": 1795552177102,
+      "tag": "0047_portfolio_split_marks",
+      "breakpoints": true
     }
   ]
 }

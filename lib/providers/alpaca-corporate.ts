@@ -198,3 +198,75 @@ export async function getCashDividends(
   const unique = [...new Set(symbols.map(canonicalSymbol))].sort();
   return dividendsForKey(unique.join(","), start, end);
 }
+
+/* ------------------------------------------------------------------------
+   HİSSE BÖLÜNMELERİ (24 Kasım) — portföy partilerinin düzeltmesi için
+   (lib/portfolio-splits.ts, lib/portfolio-split-apply.ts). Aynı uç,
+   `forward_split` (8'e 1 bölünme: old_rate 1, new_rate 8) ve
+   `reverse_split` (50'de 1 birleşme: old_rate 50, new_rate 1). Önbelleksiz:
+   yalnız günde birkaç kez koşan düzeltme işi soruyor ve yazdığı adet kalıcı
+   (yazma katmanı bayat veri kullanmaz). Hata yine DEĞER: bir paket düşerse
+   sonucun tamamı hata, eksik listeyle "bölünme yok" denmez.
+   ------------------------------------------------------------------------ */
+
+export type StockSplitRecord = { symbol: string; exDate: string; oldRate: number; newRate: number };
+
+type RawSplit = { symbol?: string; ex_date?: string; old_rate?: number; new_rate?: number };
+type RawSplitPage = {
+  corporate_actions?: { forward_splits?: RawSplit[]; reverse_splits?: RawSplit[] };
+  next_page_token?: string | null;
+};
+
+async function fetchSplitPage(params: Record<string, string>, creds: { key: string; secret: string }): Promise<ProviderResult<RawSplitPage>> {
+  const url = `${BASE}?${new URLSearchParams(params).toString()}`;
+  try {
+    const { res, body } = await retryOnRateLimit(() => withBody(
+      fetch(url, {
+        headers: { "APCA-API-KEY-ID": creds.key, "APCA-API-SECRET-KEY": creds.secret, accept: "application/json" },
+        cache: "no-store",
+      }),
+      (r) => {
+        noteProviderResponse("alpaca", r);
+        return r.ok ? r.json() : null;
+      },
+    ));
+    if (res.status === 429) return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");
+    if (!res.ok) return fail("alpaca", "upstream-error", `Alpaca kurumsal işlemler ${res.status}`);
+    return ok(body as RawSplitPage, "alpaca", { fetchedAt: responseDate(res) });
+  } catch (error) {
+    return fail("alpaca", "network", error instanceof Error ? error.message : "Alpaca'ya ulaşılamadı");
+  }
+}
+
+function parseSplit(raw: RawSplit): StockSplitRecord | null {
+  const { symbol, ex_date: exDate, old_rate: oldRate, new_rate: newRate } = raw;
+  if (!symbol || !exDate || typeof oldRate !== "number" || typeof newRate !== "number") return null;
+  if (!(oldRate > 0) || !(newRate > 0) || !Number.isFinite(oldRate) || !Number.isFinite(newRate)) return null;
+  return { symbol: canonicalSymbol(symbol), exDate, oldRate, newRate };
+}
+
+/** Verilen sembollerin `start`–`end` penceresindeki bölünme ve birleşmeleri. */
+export async function getStockSplits(symbols: readonly string[], start: string, end: string): Promise<ProviderResult<StockSplitRecord[]>> {
+  const creds = credentials();
+  if (!creds) return fail("alpaca", "missing-key", "ALPACA_API_KEY_ID / ALPACA_API_SECRET_KEY tanımlı değil");
+  const unique = [...new Set(symbols.map(canonicalSymbol))].sort();
+  const out: StockSplitRecord[] = [];
+  for (let index = 0; index < unique.length; index += SYMBOLS_PER_REQUEST) {
+    const base = { symbols: unique.slice(index, index + SYMBOLS_PER_REQUEST).join(","), types: "forward_split,reverse_split", start, end, limit: String(PAGE_LIMIT) };
+    let token: string | null = null;
+    let page = 0;
+    for (; page < MAX_PAGES; page++) {
+      const result = await fetchSplitPage(token ? { ...base, page_token: token } : base, creds);
+      if (!result.ok) return result;
+      const actions = result.data.corporate_actions;
+      for (const raw of [...(actions?.forward_splits ?? []), ...(actions?.reverse_splits ?? [])]) {
+        const parsed = parseSplit(raw);
+        if (parsed) out.push(parsed);
+      }
+      token = result.data.next_page_token ?? null;
+      if (!token) break;
+    }
+    if (page === MAX_PAGES) return fail("alpaca", "upstream-error", "Bölünme listesi sayfa tavanını aştı");
+  }
+  return ok(out, "alpaca");
+}

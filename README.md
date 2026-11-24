@@ -408,6 +408,7 @@ ritmine bağlı.
 | `page_views` | Çerezsiz sayfa ölçümü | İstemci beacon |
 | `symbol_metrics` | Finnhub `/stock/metric` fotoğrafı + GICS sektörü; skor kartının sektör yüzdelikleri buradan | Cron (koşum başına 15 sembol) + sayfa isteği |
 | `portfolio_positions` | Portföy pozisyonu: adet, USD maliyet, alış günü, not | Kullanıcı eylemi (Portföy) |
+| `portfolio_split_marks` | Partinin hangi güne kadarki hisse bölünmelerini yansıttığı (bölünme uygulanınca ya da parti elle düzeltilince); tablo yokken düzeltme işi boş döner | `/api/cron/bolunme` + kullanıcı eylemi (Portföy) |
 | `earnings_analysis_extras` | Bilanço analizinin ekleri: "30 Saniyede" özeti, segmentler ve kaynağı, KPI'lar | claude.ai rutini (`/api/analiz` ile aynı gövde) |
 | `investor_filings` · `investor_holdings` | Ünlü yatırımcıların 13F dosyaları (asıl bildirim ve düzeltmeler ayrı satır) ve dosya başına CUSIP × pozisyon türü toplanmış satırlar; değer her zaman dolar (bin dolar yazan dosya çevrilir) | Cron (0b adımı, bütçeli) + `scripts/sync-investors.ts` |
 | `cusip_tickers` | CUSIP → sembol eşlemesi (OpenFIGI); çözülemeyen `null` ve yeniden deneme zamanı | Cron + betik |
@@ -739,6 +740,7 @@ ve yazma uçları ayrıca oturum, admin tarafından atanmış erişim ve günlü
 | `/api/e-posta/ayril` | Tek tıkla çıkış (RFC 8058, `List-Unsubscribe-Post`): yalnız POST, girişsiz, IP başına sınırlı |
 | `/api/cron/bilanco` | "Bilanço yarın" hatırlatması: günde bir, tercihi açan hesaplara takip listelerindeki yarınki bilançoları tek bildirimde gönderir (`CRON_SECRET`) |
 | `/api/cron/portfoy-ozeti` | Cuma portföy özeti push'u: 05:07 ve 07:07 UTC (salı–cumartesi) ile 18:37 UTC (hafta içi) çağrılır; haftanın son işlem gününün barı kesinleşince (tatil/yarım gün dahil), Türkiye'de gece değilse (23:00–08:00 TR sabaha kayar) tercihi açık ve portföyü olan okura haftalık yüzde + en çok etkileyen pozisyon, tutar yok; tekrarı `push_sends` önler, Claude yok (`lib/portfolio-week-push.ts`, `CRON_SECRET`) |
+| `/api/cron/bolunme` | Portföyde hisse bölünmesi düzeltmesi: hafta içi 14:45 UTC (ex günü açılıştan sonra) ve her sabah 11:20 UTC; Alpaca bölünme/birleşme kayıtlarıyla bölünmeden önce girilmiş partinin adedini çarpar, maliyetini böler (toplam aynı), `portfolio_split_marks` tekrarı önler, Claude yok (`lib/portfolio-splits.ts`, `CRON_SECRET`) |
 | `/api/cron/risk` | Risk Masası kuralları: 21:40 UTC (kapanıştan sonra) ve 11:15 UTC (FRED gelince) aynı tamamlanmış seansı değerlendirir; kural yalnız tetiklendiği gün Web Push gönderir, e-posta yok (`CRON_SECRET`) |
 | `/api/cron/olasiliklar` | Olasılıkların günlük anlık görüntüsü: saatte bir çağrılır (`deploy/cron-olasiliklar.sh`), günde bir yazar; seçim gecesi ve Fed saatinde sıklaşır. `KALSHI_API_BASE` isteğe bağlı (`CRON_SECRET`) |
 

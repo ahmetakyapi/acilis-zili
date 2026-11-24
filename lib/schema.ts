@@ -690,6 +690,27 @@ export const portfolioOrder = pgTable("portfolio_order", {
 });
 
 /**
+ * BÖLÜNME İŞARET DEFTERİ (24 Kasım, 0047) — partinin hangi güne kadarki
+ * hisse bölünmelerini zaten yansıttığı. Kural ve gerekçe
+ * lib/portfolio-splits.ts; yazan lib/portfolio-split-apply.ts (bölünme
+ * uygulanınca) ve app/actions/portfolio.ts → `updatePosition` (okur partiyi
+ * elle düzeltince: rakamları kurumun bugünkü hâli sayılır).
+ *
+ * KENDİ TABLOSU, `portfolio_positions`a sütun DEĞİL: migration deploy'da
+ * uygulanmıyor, o tabloya eklenen sütun migration inene kadar portföyün
+ * her okumasını kırardı (aynı gerekçe `portfolioOrder`). Tablo yokken
+ * düzeltme işi hiçbir şey yazmadan döner.
+ */
+export const portfolioSplitMarks = pgTable("portfolio_split_marks", {
+  positionId: uuid("position_id")
+    .primaryKey()
+    .references(() => portfolioPositions.id, { onDelete: "cascade" }),
+  /** ET günü: bu güne kadar (dahil) ex günü olan bölünmeler partide yansımış. */
+  through: date("through").notNull(),
+  updatedAt: timestamp("updated_at", { withTimezone: true }).notNull().defaultNow(),
+});
+
+/**
  * KULLANICI YAZILARI (15 Ekim) — topluluk katmanı: /yazilarim (editör),
  * /topluluk (yayın akışı), /admin/moderasyon (kuyruk).
  *
