@@ -14,34 +14,65 @@
    metnin altında kıl çizgiyle ayrık düz satırlar (arayuz.md → ekran
    sırası 6: "uyarı için yeni kutu açılmaz"). Ölçüm AskStock.tsx başında. */
 
-.ask { display: flex; min-width: 0; flex-direction: column; gap: 12px; scroll-margin-top: 140px; }
-.head { display: flex; align-items: center; justify-content: space-between; gap: 10px; min-height: 28px; }
+.ask { display: flex; min-width: 0; min-height: 0; flex-direction: column; gap: 12px; scroll-margin-top: 140px; }
+.head { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 6px 10px; min-height: 28px; }
 /* 10 Kasım: 13/750 → 14/700. Panel başlığı (`PanelHeader`) 16/700; panelin
    içindeki küçük kart başlığı tek ikinci basamak: 14/700 (ekranlar arası
    tutarlılık denetimi). Satır yüksekliği aynı (28). */
 .title { display: inline-flex; align-items: center; gap: 7px; margin: 0; font-size: var(--text-read); font-weight: 700; letter-spacing: -.01em; color: var(--text-strong); }
 .quota { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
 .quota[data-empty] { color: var(--down); }
-.intro { margin: -6px 0 0; font-size: var(--text-small); line-height: 1.5; color: var(--text-body); text-wrap: pretty; }
 
-/* Öneri hapları sarar; uzun soru hapın içinde iki satıra iner, kesilmez.
-   Telefonda dördüncü öneri gizli: dört uzun hap dört satır (≈200 piksel)
-   tutuyor ve giriş kutusunu ilk bakışın dışına itiyordu; üçü yetiyor,
-   dördüncüsü takip sorusu olarak sonra gelir. */
-.starters > li { max-width: 100%; }
-.starters a, .starters button { max-width: 100%; }
+/* SOHBET PENCERESİ (24 Kasım, sahibinin isteği: "tam AI sohbeti gibi
+   çalışsın; sol taraf çok uzuyor, scrollu olsun; en baştaki alttaki boşluk
+   düzelsin"). Kolon üç kat: başlık, ORTA SAHNE (boşken karşılama + açılış
+   kartları, sohbette kendi kutusunda kayan liste), dipte giriş kutusu ve
+   künye. Eskiden liste sayfayı uzatıyordu: iki turda kolon 1.130 piksele
+   çıkıp sağdaki hafta kartını aynı boya geriyordu (gün satırları 160
+   piksel aralıklı). Kolon boyu panelde (askmove.module.css), burada
+   yalnız iç düzen. */
+.headSide { display: flex; align-items: center; gap: 12px; }
+.newChat {
+  display: inline-flex; align-items: center; gap: 5px; min-height: 28px; padding: 0 10px;
+  border: 1px solid var(--line); border-radius: 999px; background: var(--surface-solid);
+  font: inherit; font-size: var(--text-small); font-weight: 600; color: var(--text-body); cursor: pointer; white-space: nowrap;
+  transition: border-color .18s var(--ease-brand), background-color .18s var(--ease-brand), color .18s var(--ease-brand);
+}
+.newChat:hover { border-color: var(--primary-faint); background: var(--primary-tint); color: var(--primary-ink); }
+.newChat:active { scale: .97; }
+.newChat:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+@media (pointer: coarse) { .newChat { min-height: 36px; } }
+/* Telefonda başlık, kalan hak ve buton tek satıra sığmıyordu (390'da buton
+   panelden 60 piksel taşıyordu): buton yalnız ikon, ad ekran okuyucuda. */
+.title { white-space: nowrap; }
+@media (max-width: 639px) {
+  .newChat { width: 36px; padding: 0; justify-content: center; }
+  .newChatText { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); white-space: nowrap; }
+}
+
+/* Boş sohbetin sahnesi: karşılama ve kartlar dikeyde ORTADA. Yan kolon
+   uzunsa fark sahnenin iki yanına bölünür, kartlar ile giriş kutusu
+   arasında tek parça boşluk kalmaz (eski kusur: kutu üstte, altında 130
+   piksel ölü zemin). */
+.stage { display: flex; flex: 1 1 auto; flex-direction: column; justify-content: center; gap: 14px; min-height: 0; }
+.welcome { display: grid; grid-template-columns: auto minmax(0, 1fr); column-gap: 12px; row-gap: 2px; align-items: center; }
+.welcomeMark {
+  display: grid; grid-row: span 2; place-items: center; width: 40px; height: 40px; border-radius: 13px;
+  background: var(--brass-wash); color: var(--brass-ink);
+}
+.welcomeTitle { margin: 0; font-size: var(--text-lead); font-weight: 700; letter-spacing: -.01em; line-height: 1.3; color: var(--text-strong); text-wrap: balance; }
+.welcomeText { margin: 0; font-size: var(--text-small); line-height: 1.45; color: var(--text-muted); text-wrap: pretty; }
+
+/* Telefonda dördüncü kart gizli: dört kart giriş kutusunu ilk bakışın
+   dışına itiyordu; dördüncüsü takip sorusu olarak sonra gelir. */
 @media (max-width: 639px) { .starters > li:nth-child(n + 4) { display: none; } }
 
-.thread { padding-top: 2px; }
+/* Sohbet listesi kendi kutusunda kayar (`ChatThread contained`). İki
+   kolonlu masaüstünde kutunun boyu kolondan gelir (esner); tek kolonda
+   ve telefonda tavan ekranın üçte ikisi, en çok 620. */
+.thread { flex: 1 1 auto; max-height: min(68vh, 620px); }
 
-.composer { margin-top: 2px; }
-.reset {
-  margin-left: auto; padding: 0; border: 0; background: none; cursor: pointer;
-  font: inherit; font-weight: 600; color: var(--text-muted);
-  transition: color .18s var(--ease-brand);
-}
-.reset:hover { color: var(--primary-ink); }
-.reset:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 4px; }
+.composer { margin-top: 2px; flex: none; }
 
 .signIn { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 14px; }
 .memberQuota { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }

@@ -9,6 +9,16 @@
 @media (min-width: 1024px) {
   .panel:not(.single) { grid-template-columns: minmax(0, 1fr) minmax(0, 1.08fr); }
   .panel:not(.single) .col + .col { border-top: 0; border-left: 1px solid var(--line-soft); }
+  /* SOHBET BAŞLAYINCA KOLON SABİT BOYDA (24 Kasım, sahibinin isteği: "sol
+     taraf çok uzuyor, scrollu olsun; panel biraz uzayabilir duruma göre").
+     Sohbet kolonu satıra kendi tavanını verir (ekranın %72'si, 560–720);
+     sağ kolon uzunsa `min-height:100%` ile ona gerilir. Liste kolonun
+     içinde kayar (AskStock.module.css → `.thread`), sağdaki hafta kartı
+     artık sohbetin boyuna gerilmez. Boş sohbette kolon doğal boyunda,
+     sahne fark kadar ortalanır. `:has()` kökte değil, tek kolonda ve
+     yalnız sohbet durumu değişince yeniden hesaplanır. */
+  .panel:not(.single) .col:first-child:has(> [data-chat-active]) { height: clamp(560px, 72vh, 720px); min-height: 100%; }
+  .panel:not(.single) .col:first-child:has(> [data-chat-active]) [role="log"] { max-height: none; }
 }
 /* Yedek ölçülmüş boyda (25 Ekim; JS kapalı sayfada gerçek panel, not
    istenmeden önceki hâl; NVDA ve JPM, iki dil): 1920'de 286, 1280–1440

@@ -79,6 +79,17 @@ export function WeekMoveCard({
   const [state, setState] = useState<{ status: "idle" | "loading" | "done" | "failed"; text?: InsightText; explained?: MoveInsight["explained"] }>({
     status: noteEnabled ? "idle" : "failed",
   });
+  const points = useRef<HTMLDetailsElement>(null);
+  /* ETKENLER MASAÜSTÜNDE AÇIK GELİR (24 Kasım, sahibinin isteği: "sağdaki
+     panel de iyileşsin, biraz uzayabilir duruma göre"). İki kolonlu
+     panelde sağ kolon sohbetin yanında kısa kalıyor, özetin altı boş
+     duruyordu; etkenler haftanın asıl açıklaması. Telefonda katlı kalır
+     (kart tek kolonda, açık hâli sayfayı ~200 piksel iter). Okur kapatırsa
+     yeniden açılmaz: yalnız not ilk geldiğinde bir kez. */
+  const done = state.status === "done";
+  useEffect(() => {
+    if (done && points.current && window.matchMedia("(min-width: 1024px)").matches) points.current.open = true;
+  }, [done]);
 
   useEffect(() => {
     const el = ref.current;
@@ -244,7 +255,7 @@ export function WeekMoveCard({
             <>
               <p className={styles.summary}>{text.summary}</p>
               {text.points.length > 0 && (
-                <details className={styles.points}>
+                <details ref={points} className={styles.points}>
                   <summary>
                     {copy.points.replace("{n}", String(text.points.length))}
                     <span aria-hidden className={styles.plus}>+</span>

@@ -1,4 +1,6 @@
 import { auth } from "@/auth";
+import { getSymbolNames } from "@/lib/data";
+import { shortCompanyName } from "@/lib/seo-titles";
 import { AskStock } from "@/components/stock/AskStock";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { insightsConfigured } from "@/lib/stock-insights";
@@ -22,14 +24,17 @@ import type { Suggestion } from "@/lib/stock-question-suggest";
  */
 export async function AskStockPanel({ symbol, locale, t }: { symbol: string; locale: Locale; t: Dictionary }) {
   if (!insightsConfigured()) return null;
-  const [session, suggestions] = await Promise.all([
+  const [session, suggestions, names] = await Promise.all([
     auth(),
     stockSuggestions(symbol, locale, t.askStock.suggest).catch((): Suggestion[] => []),
+    /* Karşılamadaki ad ("Micron Hakkında…"); öneriler de aynı önbellekli okumayı yapıyor. */
+    getSymbolNames([symbol]).catch(() => ({}) as Awaited<ReturnType<typeof getSymbolNames>>),
   ]);
   const userId = session?.user?.id ?? null;
   return (
     <AskStock
       symbol={symbol}
+      name={shortCompanyName(names[symbol]?.name) || symbol}
       locale={locale}
       labels={t.askStock}
       signedIn={userId !== null}

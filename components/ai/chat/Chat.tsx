@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useId, useRef, useState, type FormEvent, type KeyboardEvent, type ReactNode } from "react";
-import { ArrowUp, Sparkle } from "@phosphor-icons/react";
+import { ArrowRight, ArrowUp, Sparkle } from "@phosphor-icons/react";
 import { LoadingMark } from "@/components/ui/LoadingState";
 import { cn } from "@/lib/utils";
 import styles from "./Chat.module.css";
@@ -30,6 +30,7 @@ export function ChatThread({
   label,
   youLabel,
   assistantLabel,
+  contained = false,
   className,
 }: {
   messages: readonly ChatMessage[];
@@ -38,22 +39,44 @@ export function ChatThread({
   label: string;
   youLabel: string;
   assistantLabel: string;
+  /** Liste kendi kutusunda kayar (24 Kasım, Bu Hisseye Sor: "sol taraf çok
+      uzuyor, scrollu olsun"). Yükseklik sınırı çağıranın CSS'inde; burada
+      yalnız kaydırma kabı ve kendi içinde kaydırma. */
+  contained?: boolean;
   className?: string;
 }) {
+  const box = useRef<HTMLDivElement>(null);
   const end = useRef<HTMLDivElement>(null);
   const count = messages.length;
   useEffect(() => {
+    if (count === 0) return;
+    if (contained) {
+      /* Kutunun içinde kayar, sayfa yerinde kalır. Beklerken dibe (soru ve
+         bekleme imi görünsün); yanıt gelince SON SORUNUN başına: yanıt
+         baştan okunur, dibine atlanmaz (sohbet uygulamalarının davranışı). */
+      const el = box.current;
+      if (!el) return;
+      const behavior: ScrollBehavior = window.matchMedia("(prefers-reduced-motion: reduce)").matches ? "auto" : "smooth";
+      if (thinking) {
+        el.scrollTo({ top: el.scrollHeight, behavior });
+        return;
+      }
+      const asked = el.querySelectorAll<HTMLElement>("[data-chat-user]");
+      const last = asked[asked.length - 1];
+      el.scrollTo({ top: last ? Math.max(0, last.offsetTop - 4) : el.scrollHeight, behavior });
+      return;
+    }
     const el = end.current;
-    if (!el || count === 0) return;
+    if (!el) return;
     const rect = el.getBoundingClientRect();
     /* Yalnız son mesaj görünür alanın hemen altına düşüyorsa kaydır. */
     if (rect.top > window.innerHeight - 40 && rect.top < window.innerHeight + 600) el.scrollIntoView({ block: "nearest", behavior: "smooth" });
-  }, [count, thinking]);
+  }, [count, thinking, contained]);
   return (
-    <div className={cn(styles.thread, className)} role="log" aria-label={label} aria-busy={thinking || undefined}>
+    <div ref={box} className={cn(styles.thread, contained && styles.contained, className)} role="log" aria-label={label} aria-busy={thinking || undefined}>
       {messages.map((m) =>
         m.role === "user" ? (
-          <div key={m.id} className={styles.user}>
+          <div key={m.id} className={styles.user} data-chat-user="">
             <div className={styles.userBubble}>
               <span className="sr-only">{youLabel}: </span>
               {m.content}
@@ -86,15 +109,42 @@ export function SuggestionChips({
   onPick,
   disabled,
   label,
+  variant = "pill",
+  kickers,
   className,
 }: {
   items: readonly string[];
   onPick: (text: string) => void;
   disabled?: boolean;
   label: string;
+  /** "card": boş sohbetin açılış kartları — konu künyesi + soru + ok, tam
+      genişlik satır (24 Kasım). "pill": yanıt altındaki takip hapları. */
+  variant?: "pill" | "card";
+  /** Kart başına konu künyesi (Title Case), `items` ile aynı sırada. */
+  kickers?: readonly (string | undefined)[];
   className?: string;
 }) {
   if (items.length === 0) return null;
+  if (variant === "card") {
+    return (
+      <ul className={cn(styles.cards, className)} aria-label={label}>
+        {items.map((item, index) => (
+          <li key={item}>
+            <button type="button" className={styles.card} onClick={() => onPick(item)} disabled={disabled}>
+              <span className={styles.cardIcon} aria-hidden>
+                <Sparkle size={14} weight="fill" />
+              </span>
+              <span className={styles.cardText}>
+                {kickers?.[index] && <span className={styles.cardKicker}>{kickers[index]}</span>}
+                <span className={styles.cardQuestion}>{item}</span>
+              </span>
+              <ArrowRight size={15} weight="bold" className={styles.cardArrow} aria-hidden />
+            </button>
+          </li>
+        ))}
+      </ul>
+    );
+  }
   return (
     <ul className={cn(styles.suggestions, className)} aria-label={label}>
       {items.map((item) => (

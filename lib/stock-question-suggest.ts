@@ -60,6 +60,7 @@ export const SUGGEST_TOPICS = [
   "earningsReaction",
   "earningsSoon",
   "earningsDate",
+  "dayMove",
   "move",
   "range52",
   "technical",
@@ -89,6 +90,8 @@ export type SuggestFacts = {
   hasEarningsReaction: boolean;
   /** Son beş tamamlanmış seansın toplam değişimi (%), yoksa null. */
   movePct: number | null;
+  /** Son tamamlanmış seansın tek günlük değişimi (%), yoksa null. */
+  dayMovePct: number | null;
   /** Hareketi açıklayabilecek haber başlığı ya da hazır not girdide var. */
   hasMoveEvidence: boolean;
   /** Son kapanış 52 hafta bandının hangi ucuna yakın; bant yoksa ya da ortadaysa null. */
@@ -122,6 +125,8 @@ export type SuggestCopy = {
   earningsReaction: string;
   earningsSoon: string;
   earningsDate: string;
+  dayMoveUp: string;
+  dayMoveDown: string;
   moveUp: string;
   moveDown: string;
   range52High: string;
@@ -154,6 +159,15 @@ export const EARNINGS_FRESH_DAYS = 5;
  * %0,8 yükseldi?" sorusunun yanıtı yok.
  */
 export const MOVE_MIN_PCT = 4;
+/**
+ * "Son seansta neden sert hareket etti" eşiği: tek seansta mutlak %5
+ * (24 Kasım, sahibinin isteği: "hisseye özel, mantıklı ön sorular"; okur
+ * MU'da %19'luk günün ertesinde "bugün neden düşüyor" diye sordu). Büyük
+ * hisse için %5 tek günde haber boyudur. Hapta SAYI YOK: girdinin
+ * `sessionChange`i iki ondalıklı, hap tek ondalık yazsa model sorudaki
+ * sayıyı tekrar edince sayı denetimi düşürürdü; "sert" yeter.
+ */
+export const DAY_MOVE_MIN_PCT = 5;
 /** Hareket yüzdesinin ondalığı — hapta ve girdinin `last5Sessions` alanında AYNI. */
 export const MOVE_PCT_DIGITS = 1;
 /** 52 hafta bandının ucuna "yakın" sayılan uzaklık (uç değerin yüzdesi). */
@@ -177,6 +191,7 @@ const ANGLE: Record<SuggestTopic, Angle> = {
   earningsReaction: "event",
   earningsSoon: "event",
   earningsDate: "event",
+  dayMove: "event",
   move: "event",
   news: "event",
   range52: "levels",
@@ -220,6 +235,10 @@ export function rankSuggestions(facts: SuggestFacts, copy: SuggestCopy, formatPc
   if (reacted) add("earningsReaction", copy.earningsReaction);
   /* Beklenti sayısı yoksa "ne bekleniyor"un yanıtı yok; tarih yine sorulur. */
   if (soon) add(facts.hasConsensus ? "earningsSoon" : "earningsDate", facts.hasConsensus ? copy.earningsSoon : copy.earningsDate);
+  /* Tek seansın sert hareketi beş seanslık toplamdan önce gelir: okurun
+     aklındaki soru dünkü gün. Bilanço tepkisi varsa o zaten bu soru. */
+  const dayMove = !reacted && facts.hasMoveEvidence && facts.dayMovePct !== null && Number.isFinite(facts.dayMovePct) && Math.abs(facts.dayMovePct) >= DAY_MOVE_MIN_PCT;
+  if (dayMove) add("dayMove", facts.dayMovePct! > 0 ? copy.dayMoveUp : copy.dayMoveDown);
   /* Bilanço tepkisi sorulmuşken "neden hareket etti" aynı soruyu ikinci kez
      sorardı; nedeni anlatacak haber ya da not yoksa soru hiç çıkmaz. */
   if (!reacted && facts.hasMoveEvidence && facts.movePct !== null && Number.isFinite(facts.movePct) && Math.abs(facts.movePct) >= MOVE_MIN_PCT) {
@@ -250,6 +269,7 @@ const RELATED: Record<SuggestTopic, SuggestTopic[]> = {
   earningsReaction: ["earningsOut", "technical", "range52", "target", "news"],
   earningsSoon: ["lastEarnings", "target", "move", "analysts"],
   earningsDate: ["lastEarnings", "target", "analysts"],
+  dayMove: ["news", "move", "technical", "range52"],
   move: ["news", "technical", "earningsSoon", "range52", "session"],
   range52: ["technical", "move", "target", "sectorValue"],
   technical: ["range52", "move", "target", "session"],
@@ -266,7 +286,7 @@ const RELATED: Record<SuggestTopic, SuggestTopic[]> = {
 
 /** Okurun kendi yazdığı sorunun konusu, yanıtın dayandığı bloklardan. */
 const SOURCE_TOPICS: Record<AskSource, SuggestTopic[]> = {
-  session: ["session", "move"],
+  session: ["session", "dayMove", "move"],
   technical: ["technical"],
   valuation: ["valuation", "sectorValue"],
   scorecard: ["sectorValue"],

@@ -26,6 +26,8 @@ const COPY: SuggestCopy = {
   earningsReaction: "earningsReaction",
   earningsSoon: "earningsSoon",
   earningsDate: "earningsDate",
+  dayMoveUp: "day up",
+  dayMoveDown: "day down",
   moveUp: "up {pct}",
   moveDown: "down {pct}",
   range52High: "near high",
@@ -48,6 +50,7 @@ const NONE: SuggestFacts = {
   hasConsensus: false,
   reportedDaysAgo: null,
   hasEarningsReaction: false,
+  dayMovePct: null,
   movePct: null,
   hasMoveEvidence: false,
   near52: null,
@@ -185,6 +188,19 @@ test("sözlük: her dilde bütün sorular dolu, tek soru işaretli ve tavsiye ka
       assert.equal(text.includes("{pct}"), key === "moveUp" || key === "moveDown", `${locale}.${key}: {pct}`);
     }
   }
+});
+
+test("son seansın sert hareketi beş seanslık sorudan önce, kanıt ve eşik şartıyla", () => {
+  /* MU, 24 Kasım: tek seansta +%19, beş seansta −%1,6. */
+  assert.deepEqual(starters({ dayMovePct: 19.04, movePct: -1.6, hasMoveEvidence: true, hasTarget: true }), ["dayMove", "target"]);
+  assert.equal(rank({ dayMovePct: -7.2, hasMoveEvidence: true })[0]!.text, "day down");
+  /* Nedeni anlatacak haber yoksa ya da hareket eşiğin altındaysa soru yok. */
+  assert.deepEqual(topics({ dayMovePct: 19, hasMoveEvidence: false }), []);
+  assert.deepEqual(topics({ dayMovePct: 4.9, hasMoveEvidence: true }), []);
+  /* Bilanço tepkisi zaten bu soru. */
+  assert.ok(!topics({ dayMovePct: 12, hasMoveEvidence: true, reportedDaysAgo: 1, hasEarningsReaction: true }).includes("dayMove"));
+  /* Beş seans da büyükse ikisi birden, gün önde. */
+  assert.deepEqual(topics({ dayMovePct: -9, movePct: -12.7, hasMoveEvidence: true }), ["dayMove", "move"]);
 });
 
 const POOL = rankSuggestions(

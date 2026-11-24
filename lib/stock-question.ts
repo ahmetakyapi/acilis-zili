@@ -627,6 +627,8 @@ export async function stockSuggestions(symbol: string, locale: Locale, copy: Sug
       hasEarningsReaction: Boolean(reported[0] && firstReactionOf(bars, reported[0])),
       /* `buildContext` → `last5Sessions` ile aynı pencere (beş adım, altı kapanış). */
       movePct: base > 0 && close !== null ? ((close - base) / base) * 100 : null,
+      /* `buildContext` → `sessionChange` ile aynı ölçü (son iki kapanış). */
+      dayMovePct: closes.length > 1 && closes[closes.length - 2]! > 0 && close !== null ? ((close - closes[closes.length - 2]!) / closes[closes.length - 2]!) * 100 : null,
       /* Nedeni anlatacak tek kaynak haber başlıkları; hazır not da onlardan yazılıyor. */
       hasMoveEvidence: hasNews,
       near52: band ? nearRangeEdge(close, band.low, band.high) : null,

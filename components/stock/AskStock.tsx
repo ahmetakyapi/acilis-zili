@@ -2,7 +2,7 @@
 
 import { useId, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
-import { ArrowCounterClockwise, ArrowUpRight, Sparkle, WarningCircle } from "@phosphor-icons/react";
+import { ArrowCounterClockwise, ArrowRight, ArrowUpRight, NotePencil, Sparkle, WarningCircle } from "@phosphor-icons/react";
 import { ChatComposer, ChatThread, SuggestionChips, type ChatMessage } from "@/components/ai/chat/Chat";
 import chat from "@/components/ai/chat/Chat.module.css";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -73,6 +73,21 @@ import styles from "./AskStock.module.css";
  * 316, panel 358 → 354), bekliyor 386 / 443, iki tur yanıt + takip 954 /
  * 1326, hata 340 / 418, yanıtlanamadı 558 / 672. Çalışan animasyon yalnız
  * beklerken 1 (`LoadingMark`); yanıt gelince 0.
+ *
+ * SOHBET PENCERESİ (24 Kasım, sahibinin isteği: "tam AI sohbeti gibi
+ * çalışsın; sol taraf çok uzuyor, scrollu olsun; en baştaki alttaki boşluk
+ * düzelsin"). Liste sayfayı uzatmıyor, kendi kutusunda kayıyor
+ * (`ChatThread contained`): beklerken dibe, yanıt gelince son sorunun
+ * başına kayar. Kolon sohbette panelin tavanını verir (askmove.module.css),
+ * yan kolon artık sohbetin boyuna gerilmiyor. Boşken karşılama (şirketin
+ * adıyla) ve konu künyeli açılış kartları; "Sohbeti Temizle" başlığa
+ * "Yeni Sohbet" olarak çıktı (telefonda yalnız ikon).
+ * Ölçüm (geçici önizleme + `page.route` sahte yanıtı, açık tema,
+ * `reducedMotion: reduce`; MU, iki not etkeni): yatay taşma her durumda 0.
+ * Panel boş 1440 / 1280 / 1024 = 581 / 675 / 718, iki tur sonra 650 / 675 /
+ * 718 (önce iki turda sol kolon ~1.130'a uzuyor, sağdaki gün satırları 160
+ * piksel aralıklıydı; şimdi 34). Telefonda (390) iki tur sonra kolon 879,
+ * liste kutusu en çok 620. Boşken başlık–sahne ve giriş–künye aralığı 12.
  */
 
 /* "Yanıtın Dayanabileceği Veri" künyesi (25 Ekim, iki kolonlu düzende yan
@@ -97,6 +112,7 @@ const RETRYABLE = new Set<ErrorKey>(["error", "busy", "rate", "budget"]);
 
 export function AskStock({
   symbol,
+  name,
   locale,
   labels,
   signedIn,
@@ -105,6 +121,8 @@ export function AskStock({
   suggestions,
 }: {
   symbol: string;
+  /** Karşılamadaki kısa şirket adı ("Micron Technology"); yoksa sembol. */
+  name: string;
   locale: Locale;
   labels: AskStockLabels;
   signedIn: boolean;
@@ -236,33 +254,61 @@ export function AskStock({
     });
   }
 
+  const chatting = messages.length > 0;
+  const kickers = starters.map((item) => labels.topics[item.topic]);
+  const welcome = (
+    <div className={styles.welcome}>
+      <span className={styles.welcomeMark} aria-hidden>
+        <Sparkle size={18} weight="duotone" />
+      </span>
+      <p className={styles.welcomeTitle}>{labels.welcomeTitle.replace("{name}", name)}</p>
+      <p className={styles.welcomeText}>{signedIn ? labels.welcome : labels.signedOut}</p>
+    </div>
+  );
+
   return (
-    <section id={ANCHOR} className={styles.ask} aria-labelledby={titleId}>
+    <section id={ANCHOR} className={styles.ask} aria-labelledby={titleId} data-chat-active={chatting || undefined}>
       <div className={styles.head}>
         <h2 id={titleId} className={styles.title}>
           <Sparkle className={base.icon} size={17} weight="duotone" aria-hidden />
           {labels.title}
         </h2>
-        {signedIn && <span className={cn("numeral", styles.quota)} data-empty={outOfQuota || undefined}>{quota}</span>}
+        <div className={styles.headSide}>
+          {signedIn && <span className={cn("numeral", styles.quota)} data-empty={outOfQuota || undefined}>{quota}</span>}
+          {signedIn && turns.length > 0 && !pending && (
+            <button type="button" className={styles.newChat} onClick={reset} title={labels.newChat}>
+              <NotePencil size={14} weight="bold" aria-hidden />
+              <span className={styles.newChatText}>{labels.newChat}</span>
+            </button>
+          )}
+        </div>
       </div>
       {!signedIn ? (
         <>
-          <p className={styles.intro}>{labels.signedOut}</p>
-          {/* Oturumsuz öneriler giriş bağlantısı; görünüm ortak öneri hapı
-              (Chat.module.css → `.suggestion`), bileşen düğme bastığı için
-              sınıfıyla. */}
-          {starters.length > 0 && (
-            <ul className={cn(chat.suggestions, styles.starters)} aria-label={labels.startersLabel}>
-              {starters.map((item) => (
-                <li key={item.text}>
-                  <Link href={signInHref(symbol, item.text)} className={chat.suggestion} rel="nofollow">
-                    <Sparkle size={13} weight="fill" aria-hidden />
-                    {item.text}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          )}
+          <div className={styles.stage}>
+            {welcome}
+            {/* Oturumsuz öneriler giriş bağlantısı; görünüm ortak açılış
+                kartı (Chat.module.css → `.card`), bileşen düğme bastığı için
+                sınıfıyla. */}
+            {starters.length > 0 && (
+              <ul className={cn(chat.cards, styles.starters)} aria-label={labels.startersLabel}>
+                {starters.map((item, index) => (
+                  <li key={item.text}>
+                    <Link href={signInHref(symbol, item.text)} className={chat.card} rel="nofollow">
+                      <span className={chat.cardIcon} aria-hidden>
+                        <Sparkle size={14} weight="fill" />
+                      </span>
+                      <span className={chat.cardText}>
+                        <span className={chat.cardKicker}>{kickers[index]}</span>
+                        <span className={chat.cardQuestion}>{item.text}</span>
+                      </span>
+                      <ArrowRight size={15} weight="bold" className={chat.cardArrow} aria-hidden />
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            )}
+          </div>
           <div className={styles.signIn}>
             <ButtonLink href={signInHref(symbol)} variant="primary" rel="nofollow">
               {labels.signIn}
@@ -272,16 +318,7 @@ export function AskStock({
         </>
       ) : (
         <>
-          {idle && (
-            <SuggestionChips
-              items={starters.map((item) => item.text)}
-              label={labels.startersLabel}
-              disabled={outOfQuota}
-              className={styles.starters}
-              onPick={(text) => void ask(text, starters.find((item) => item.text === text)?.topic ?? null)}
-            />
-          )}
-          {messages.length > 0 && (
+          {chatting ? (
             <ChatThread
               messages={messages}
               thinking={pending !== null}
@@ -289,8 +326,22 @@ export function AskStock({
               label={labels.threadLabel}
               youLabel={labels.you}
               assistantLabel={labels.claude}
+              contained
               className={styles.thread}
             />
+          ) : (
+            <div className={styles.stage}>
+              {welcome}
+              <SuggestionChips
+                items={starters.map((item) => item.text)}
+                kickers={kickers}
+                variant="card"
+                label={labels.startersLabel}
+                disabled={outOfQuota}
+                className={styles.starters}
+                onPick={(text) => void ask(text, starters.find((item) => item.text === text)?.topic ?? null)}
+              />
+            </div>
           )}
           {failure && !failure.question && (
             <p className={styles.formError} role="alert">
@@ -309,13 +360,6 @@ export function AskStock({
             maxLength={MAX_CHARS}
             defaultValue={composerKey === 0 ? prefill : ""}
             className={styles.composer}
-            foot={
-              turns.length > 0 && !pending ? (
-                <button type="button" className={styles.reset} onClick={reset}>
-                  {labels.reset}
-                </button>
-              ) : undefined
-            }
           />
         </>
       )}

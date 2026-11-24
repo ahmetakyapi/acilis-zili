@@ -10,6 +10,16 @@
    metni balonsuz gövde metni. */
 
 .thread { display:flex; flex-direction:column; gap:18px; }
+/* Kendi kutusunda kayan liste (`contained`). `position:relative` iletinin
+   `offsetTop`unu kutuya göre verir (son soruya kaydırma). Kaydırma çubuğu
+   ince, yer tutmaz; üst ve altta 14 piksellik soluklaşma kesik metni
+   kenarda yumuşatır (maske, renk değil: iki temada aynı). */
+.contained {
+  position:relative; min-height:0; overflow-y:auto; overscroll-behavior:contain;
+  scrollbar-width:thin; scrollbar-color:var(--line-strong) transparent;
+  padding:6px 4px 10px 0;
+  mask-image:linear-gradient(to bottom, transparent 0, #000 14px, #000 calc(100% - 14px), transparent 100%);
+}
 .user { display:flex; justify-content:flex-end; }
 .userBubble {
   max-width:85%; padding:10px 14px; border-radius:14px 14px 4px 14px;
@@ -41,6 +51,32 @@
 .suggestion:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
 .suggestion svg { flex:none; color:var(--primary); }
 .suggestion:disabled { opacity:.5; cursor:not-allowed; }
+
+/* Açılış kartları (`variant="card"`, 24 Kasım): boş sohbette soru
+   satırları. Konu künyesi küçük ve soluk, soru 14/600; sağda iç bağlantı
+   oku (üzerine gelince 3 piksel). Ton yüzey, gölge yok; üzerine gelince
+   mavi ton ve kenar. */
+.cards { display:grid; gap:8px; margin:0; padding:0; list-style:none; }
+.card {
+  display:flex; align-items:center; gap:12px; width:100%; min-height:52px; padding:9px 14px 9px 10px;
+  border:1px solid var(--line-soft); border-radius:14px; background:var(--surface-sunken);
+  color:var(--text-strong); text-align:left; cursor:pointer;
+  transition:border-color 180ms var(--ease-brand), background-color 180ms var(--ease-brand);
+}
+.card:hover:not(:disabled) { border-color:var(--primary-faint); background:var(--primary-tint); }
+.card:active:not(:disabled) { scale:.992; }
+.card:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.card:disabled { opacity:.5; cursor:not-allowed; }
+.cardIcon {
+  display:grid; flex:none; place-items:center; width:30px; height:30px; border-radius:10px;
+  background:var(--surface-solid); color:var(--primary);
+}
+.cardText { display:flex; min-width:0; flex:1; flex-direction:column; gap:1px; }
+.cardKicker { font-size:var(--text-nano); font-weight:600; color:var(--text-muted); }
+.cardQuestion { font-size:var(--text-read); font-weight:600; line-height:1.35; text-wrap:pretty; }
+.cardArrow { flex:none; color:var(--text-muted); transition:transform 200ms var(--ease-brand), color 180ms var(--ease-brand); }
+.card:hover:not(:disabled) .cardArrow { transform:translateX(3px); color:var(--primary); }
+@media (prefers-reduced-motion:reduce) { .cardArrow { transition:none; } }
 
 /* Giriş kutusu */
 .composer {

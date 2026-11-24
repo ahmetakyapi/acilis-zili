@@ -38,12 +38,15 @@
 .gap[data-tone="down"] { background: var(--down-wash); color: var(--down); }
 
 /* GÜN GÜN ŞERİTLER (14 Kasım 2026; gerekçe WeekMoveCard.tsx). Satır:
-   gün | kulvar (sıfır ortada) | yüzde | hacim. Kutu kolonun artan yerini
-   alır (10 Kasım kararı sürüyor: not yokken kolonun dibinde boş zemin
-   kalmasın); artan yer satırlara eşit dağılır, şerit 12 pikselde kalır. */
-.figure { flex: 1 1 auto; }
+   gün | kulvar (sıfır ortada) | yüzde | hacim.
+   24 Kasım: kutu kolonun artan yerini ARTIK ALMIYOR. Sohbet kolonu
+   uzayınca artan yer beş satıra eşit dağılıyor, satırlar 160 piksel
+   aralıklı bir merdivene dönüyordu (sahibinin ekran görüntüsü). Satır
+   sabit 34 piksel; artan yer notun altında, künyenin üstünde kalır ve
+   etkenler açık başladığı için çoğu durumda dolar (WeekMoveCard.tsx). */
+.figure { flex: none; }
 .daily { display: flex; min-width: 0; flex-direction: column; align-self: stretch; gap: 4px; margin: 0; }
-.days { display: grid; flex: 1 1 auto; grid-auto-rows: minmax(28px, 1fr); margin: 0; padding: 0; list-style: none; }
+.days { display: grid; grid-auto-rows: 34px; margin: 0; padding: 0; list-style: none; }
 .days > li { display: grid; grid-template-columns: 2.4rem minmax(64px, 1fr) 3.6rem 3.2rem; align-items: center; column-gap: 10px; min-width: 0; }
 .days > li + li { border-top: 1px solid var(--line-soft); }
 .lane { --bar-h: 12px; --notch-out: 5px; min-width: 0; }
@@ -62,7 +65,7 @@
    üstünde 170, tablette 155, telefonda 255 piksel. 104'lük ilk ayrım
    telefonda not gelince alttaki her şeyi 153 piksel itiyordu (CLS 0,05).
    Not yazılamazsa (`failed`) tek cümle kalır, yer ayrılmaz. */
-.note { display: flex; min-height: 170px; flex-direction: column; gap: 8px; }
+.note { display: flex; flex: 1 1 auto; min-height: 170px; flex-direction: column; gap: 8px; }
 @media (max-width: 1023px) { .note { min-height: 155px; } }
 @media (max-width: 639px) { .note { min-height: 255px; } }
 .note[data-state="failed"] { min-height: 0; }
