@@ -10,7 +10,7 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { displayFlowStatus, flowResultSignature, preserveConfirmedResults, type DayFlowSnapshot, type FlowEvent, type FlowMember } from "@/lib/day-flow";
 import { axisDomain, flowLead, minutesOfClock, remainingParts } from "@/lib/flow-axis";
 import { clockOf, displayZone } from "@/lib/session-clock";
-import { NO_VALUE } from "@/lib/utils";
+import { cn, NO_VALUE } from "@/lib/utils";
 import { withLocale } from "@/lib/i18n/routing";
 import { onFlowSelect, publishFlow } from "./day-flow-store";
 import { FlowFigures } from "./FlowFigures";
@@ -102,6 +102,9 @@ function FilingLink({ filing }: { filing: NonNullable<FlowMember["filing"]> }) {
    yerde açılır" — kaydırma/rotasyonla saklanmaz, sayısı yazılıdır).
    Tek tek dönen kart denendi ve İSTENMEDİ ("6 şirket tek tek gözükmesin");
    dönen şey olayların kendisi (DayFlow → "OTOMATİK TUR"). */
+/** Başlıktaki "Sıradaki" satırında logosu ve adıyla gösterilen şirket sayısı; fazlası "+N". */
+const LEAD_MEMBERS = 3;
+
 function MemberList({ members, scheduledAt, nowMs, labels, openEventId, onEngage, source, href }: {
   members: FlowMember[];
   scheduledAt: FlowEvent["scheduledAt"];
@@ -549,7 +552,38 @@ function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, 
         <button type="button" className={styles.lead} data-kind={lead.kind} onClick={() => setSelection({ kind: "picked", id: leadEvent.id, tour: false })}>
           <span className={styles.leadText}>
             <span className={styles.leadLabel}>{labels.axis.lead[lead.kind === "next" || lead.kind === "live" || lead.kind === "awaiting" || lead.kind === "first" ? lead.kind : "last"]}</span>
-            <strong>{leadEvent.title}</strong>
+            {/* ŞİRKETLER LOGOSU VE ADIYLA (24 Kasım, sahibinin isteği:
+                "Sıradaki kısmını daha görsel yapalım, logosunu adını
+                kullanabiliriz, orası boş hissettiriyor"). "DELL · ADSK"
+                yalnız semboldü ve başlığın sağı 1440'ta ~900 piksel boş
+                kalıyordu. Bilançoda ilk üç şirket karo + ad + sembol,
+                fazlası "+N"; veri olayında başlık ve altında "bu da ne?"
+                cümlesi. Başlık metni ekran okuyucuda aynen kalır. */}
+            {leadEvent.members && leadEvent.members.length > 0 ? (
+              <>
+                <strong className="sr-only">{leadEvent.title}</strong>
+                <span className={styles.leadMembers} aria-hidden="true">
+                  {leadEvent.members.slice(0, LEAD_MEMBERS).map((member) => (
+                    <span key={member.symbol} className={styles.leadMember}>
+                      <LogoTile symbol={member.symbol} logoUrl={member.logoUrl} size="lg" />
+                      <span className={styles.leadMemberText}>
+                        <b>{member.name ?? member.symbol}</b>
+                        <small className="numeral">{member.symbol}</small>
+                      </span>
+                    </span>
+                  ))}
+                  {leadEvent.members.length > LEAD_MEMBERS && (
+                    <span className={cn("numeral", styles.leadMore)}>+{leadEvent.members.length - LEAD_MEMBERS}</span>
+                  )}
+                </span>
+                {leadEvent.detail && <span className={styles.leadNote}>{leadEvent.detail}</span>}
+              </>
+            ) : (
+              <>
+                <strong>{leadEvent.title}</strong>
+                {(leadEvent.note ?? leadEvent.detail) && <span className={styles.leadNote}>{leadEvent.note ?? leadEvent.detail}</span>}
+              </>
+            )}
           </span>
           {/* EN BÜYÜK PUNTO KALAN SÜREYE; sıradaki yoksa olayın saatine.
               Sunucu yükleme anının dakikasını basar, istemci on beş saniyede

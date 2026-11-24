@@ -10,6 +10,7 @@ import { withTimeout } from "./providers/timeout";
 import { getDictionary, type Locale } from "./i18n";
 import { withLocale } from "./i18n/routing";
 import { analysisHref } from "./analysis";
+import { shortCompanyName } from "./seo-titles";
 import { formatEventValue, formatMoneyCompact, formatPercent, formatPrice } from "./utils";
 import { epsSurprise, revenueSurprise, type Surprise } from "./earnings-week";
 import { flowDeviation } from "./release-deviation";
@@ -212,6 +213,7 @@ export async function loadDayFlow(locale: Locale, userId?: string, requestedDate
       : undefined;
     const member: FlowMember = {
       symbol: row.symbol, logoUrl: info?.logoUrl ?? null, watched: watchedSet.has(row.symbol),
+      name: shortCompanyName(info?.name) || undefined,
       /* Zaten yüklü künyeden (`meta`); yeni sorgu yok. */
       marketCap: info?.marketCap ?? null,
       /* Bildirim yatırıldıysa sonuç açıklanmıştır — rakam henüz gelmemiş olsa da. */

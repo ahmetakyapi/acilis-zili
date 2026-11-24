@@ -9,6 +9,9 @@ export type FlowSurprise = {
 export type FlowMember = {
   symbol: string;
   logoUrl: string | null;
+  /** Kısa şirket adı ("Dell Technologies"); başlıktaki "Sıradaki" kartları
+      okur (24 Kasım). Bilinmiyorsa ya da eski önbellekte yok: sembol yeter. */
+  name?: string;
   watched: boolean;
   /** Piyasa değeri, USD (`symbols.market_cap`); bilinmiyorsa `null`. Eksen
       imindeki logonun boyu ve çok şirketli pencerede imde duran şirket
