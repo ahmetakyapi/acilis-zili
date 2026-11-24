@@ -3,6 +3,8 @@
 .sessionSummary { display:none; }
 .root[data-compact="true"] .sessionSummary { display:flex; align-items:center; justify-content:space-between; gap:12px; min-height:36px; color:var(--text-muted); font-size:12px; font-weight:600; cursor:pointer; list-style:none; }
 .sessionSummary::-webkit-details-marker { display:none; }
+/* Dokunmatikte 44 (24 Kasım, telefon denetimi: "Seans Saatleri" 36'ydı). */
+@media (pointer:coarse) { .root[data-compact="true"] .sessionSummary { min-height:44px; } }
 .sessionSummary > span { font-size:18px; color:var(--primary-ink); transition:transform .18s var(--ease-brand); }
 .sessions[open] .sessionSummary > span { transform:rotate(45deg); }
 .root[data-compact="true"] .sessions { margin-top:8px; border-top:1px solid var(--line-soft); }

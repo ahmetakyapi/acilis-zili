@@ -84,7 +84,11 @@ export function AnalysisBadge({
            Ölçü TimingChip'le aynı (sm'de h-7): aynı sütunda hat tutuyor.
            Genişlik İÇERİKTEN gelir, sabit sütuna sıkıştırılmaz (gerekçe
            EarningsToday → subgrid; denetim scripts/smoke.mjs "sıkışan"). */
-        "group tap-44 z-10 inline-flex shrink-0 items-stretch overflow-hidden whitespace-nowrap rounded-full text-tiny font-bold ring-1 ring-line ring-inset transition-[box-shadow] hover:ring-line-strong",
+        /* `overflow-hidden` YOK (24 Kasım, telefon denetimi): `tap-44`ün 44
+           piksellik `::after` alanını kesiyordu; hapın 6 piksel üstüne
+           basan parmak satırın kaplı bağlantısına düşüp analiz yerine
+           şirket sayfasına gidiyordu. Köşeleri iç parçalar yuvarlar. */
+        "group tap-44 z-10 inline-flex shrink-0 items-stretch whitespace-nowrap rounded-full text-tiny font-bold ring-1 ring-line ring-inset transition-[box-shadow] hover:ring-line-strong",
         size === "sm" ? "h-8 sm:h-7" : "h-8",
         className,
       )}
@@ -93,7 +97,7 @@ export function AnalysisBadge({
         className={cn(
           /* `flex-1`: hap sütuna gerildiğinde (EarningsToday) fazlayı yargı
              parçası alır, bağlantı parçası sabit kalır. */
-          "inline-flex flex-1 items-center justify-center gap-1.5",
+          "inline-flex flex-1 items-center justify-center gap-1.5 rounded-l-full",
           size === "sm" ? "pr-2.5 pl-1.5" : "pr-3 pl-2",
           verdictPillClass(verdict),
         )}
@@ -104,7 +108,7 @@ export function AnalysisBadge({
       </span>
       <span
         className={cn(
-          "inline-flex items-center gap-0.5 border-l border-line bg-surface font-semibold text-primary-ink transition-colors group-hover:bg-primary-tint",
+          "inline-flex items-center gap-0.5 rounded-r-full border-l border-line bg-surface font-semibold text-primary-ink transition-colors group-hover:bg-primary-tint",
           compact ? "px-1.5" : size === "sm" ? "pr-2 pl-2.5" : "pr-2.5 pl-3",
         )}
       >

@@ -13,7 +13,12 @@
      · Çizim: şerit dilimleri `bar-fill` 700 ms (`getAnimations()`: 3),
        hareketi azaltanda 0.
    Panel bir KAP: hücre düzeni panelin enine göre (rayda `--cols`, tablette
-   `auto-fill`). */
+   `auto-fill`).
+   24 Kasım (bugünkü durum): sembolün altında yayın anının yüzdesi, altta
+   en çok dört satırlık "Bugün Öne Çıkanlar". Sahte sağlayıcı (AL 5, TUT
+   5, SAT 4, 2 bekleyen; iki tema aynı): 1440 / 390 = 828, 1024 = 788;
+   hücre 73; yatay taşma, kırpılan öğe 0. Her hisseye satır denendi:
+   1.086 (yan kolon için fazla), geri alındı. */
 .body { display:flex; flex-direction:column; gap:14px; padding:2px 20px 16px; container:technical-home / inline-size; }
 
 /* ---- Üç sayı + kalın şerit ---- */
@@ -47,17 +52,41 @@
 /* Hücre en az 50 piksel en (rayda satır başına 6: altışar hisselik küme
    tek satır, sarkan tek logo yok): "GOOGL" (mono 12/600 ≈ 36) ve iki
    satırlık "Sata Döndü" sığar. Kenarlara −6: hücrenin dolgusu logoyu panelin içerik
-   hattına oturtur. */
+   hattına oturtur. 24 Kasım: sembolün altında bugünün yüzdesi (12/700,
+   yön renginde); hücre 56 → 72. */
 .cells { display:grid; grid-template-columns:repeat(var(--cols,6),minmax(0,1fr)); gap:2px; margin:0 -6px; padding:0; list-style:none; }
-.cell { display:flex; flex-direction:column; align-items:center; gap:5px; min-height:56px; padding:7px 2px 6px; border-radius:10px; text-align:center; transition:background-color 180ms var(--ease-brand); }
-.cell b { color:var(--text-strong); font-family:var(--font-mono); font-size:var(--text-small); font-weight:600; line-height:1.1; transition:color 180ms var(--ease-brand); }
+.cell { display:flex; flex-direction:column; align-items:center; gap:3px; min-height:56px; padding:7px 2px 6px; border-radius:10px; text-align:center; transition:background-color 180ms var(--ease-brand); }
+.cell b { margin-top:2px; color:var(--text-strong); font-family:var(--font-mono); font-size:var(--text-small); font-weight:600; line-height:1.1; transition:color 180ms var(--ease-brand); }
 .cell small { color:var(--text-muted); font-size:var(--text-small); font-weight:600; line-height:1.15; text-wrap:balance; }
+.cellChange { color:var(--text-muted); font-size:var(--text-small); font-weight:700; line-height:1.1; letter-spacing:-.01em; white-space:nowrap; }
+.cellChange[data-tone="up"] { color:var(--up); }
+.cellChange[data-tone="down"] { color:var(--down); }
 .cell:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
 .cell:active { scale:.97; }
 @media (hover:hover) and (pointer:fine) {
   .cell:hover { background:var(--primary-tint); }
   .cell:hover b { color:var(--primary-ink); }
 }
+
+/* ---- Öne çıkanlar (24 Kasım; gerekçe TechnicalPanel.tsx) ----
+   Tonlu kutu (`--surface-sunken`, gölge yok): panelin içinde ayrı bir
+   okuma. Satır 36 piksel: logo 22 | sembol | görüş (renk görüşten) |
+   durum (stop uyarısı aşağı yön renginde), sağa yaslı. */
+.highlights { display:grid; gap:4px; padding:10px 12px 8px; border-radius:var(--radius-lg); background:var(--surface-sunken); }
+.highlightsHead { margin:0; color:var(--text-muted); font-size:var(--text-small); font-weight:700; }
+.highlights ul { display:grid; margin:0 -6px; padding:0; list-style:none; }
+.highlight { display:grid; grid-template-columns:auto auto auto minmax(0,1fr); align-items:center; column-gap:8px; min-height:36px; padding:4px 6px; border-radius:8px; font-size:var(--text-small); transition:background-color 180ms var(--ease-brand); }
+.highlight b { color:var(--text-strong); font-family:var(--font-mono); font-weight:700; }
+.highlightVerdict { font-weight:700; color:var(--text-muted); white-space:nowrap; }
+.highlightVerdict[data-verdict="buy"] { color:var(--up); }
+.highlightVerdict[data-verdict="hold"] { color:var(--verdict-hold); }
+.highlightVerdict[data-verdict="sell"] { color:var(--down); }
+.highlightStatus { min-width:0; overflow:hidden; justify-self:end; color:var(--text-body); font-weight:600; text-overflow:ellipsis; white-space:nowrap; }
+.highlightStatus[data-alert] { color:var(--down); }
+.highlight:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+@media (hover:hover) and (pointer:fine) { .highlight:hover { background:var(--primary-tint); } }
+@media (pointer:coarse) { .highlight { min-height:44px; } }
+.note { margin:-6px 0 0; color:var(--text-muted); font-size:var(--text-small); line-height:1.45; }
 
 /* ---- Yayın künyesi ---- */
 .editions { display:grid; gap:4px; margin:0; padding-top:12px; border-top:1px solid var(--line-soft); font-size:var(--text-small); line-height:1.5; }

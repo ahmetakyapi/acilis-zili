@@ -4,6 +4,7 @@ import { todayEt } from "@/lib/market-hours";
 import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile } from "@/components/ui/primitives";
+import { shortCompanyName } from "@/lib/seo-titles";
 import { VerdictPill } from "@/components/ui/VerdictPill";
 import { verdictLabel, verdictOf, type VerdictKey } from "@/lib/analysis";
 import {
@@ -19,7 +20,8 @@ import {
 } from "@/lib/technical";
 import { getTechnicalBoard } from "@/lib/technical-data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
-import { formatEtDateCompact } from "@/lib/utils";
+import { technicalStatus, technicalStatusText } from "@/lib/technical-status";
+import { cn, formatEtDateCompact, formatPercent, formatPercentPlain } from "@/lib/utils";
 import styles from "./TechnicalPanel.module.css";
 
 const VERDICTS: readonly VerdictKey[] = ["buy", "hold", "sell"];
@@ -67,18 +69,44 @@ export async function TechnicalPanel({ locale, t }: { locale: Locale; t: Diction
         verdict,
         items: board
           .filter(({ row }) => verdictOf(row.stance) === verdict)
-          .map(({ row, previousStance }) => ({
-            symbol: row.symbol,
-            name: meta[row.symbol]?.name ?? row.symbol,
-            logoUrl: meta[row.symbol]?.logoUrl ?? null,
-            changed: stanceChangeLabel(verdict, previousStance, t),
-          })),
+          .map(({ row, previousStance }) => {
+            /* BUGÜNKÜ DURUM YAYININ FOTOĞRAFINDAN (24 Kasım; kural
+               lib/technical-status.ts). Yüzde `snapshot.changePct`: yazma
+               ucu onu yalnız kotasyon o seansın işlemiyse yazıyor
+               (`sessionQuote`, lib/technical.ts), açılış öncesi yayında null
+               ve "–" basılır — dünkü hareket bugünün diye görünmez. */
+            const status = technicalStatus({
+              price: row.snapshot.price,
+              entryLow: row.entryLow,
+              entryHigh: row.entryHigh,
+              stop: row.stop,
+              supports: row.supports,
+              resistances: row.resistances,
+              rsi: row.snapshot.rsi14,
+            });
+            return {
+              symbol: row.symbol,
+              name: shortCompanyName(meta[row.symbol]?.name) || row.symbol,
+              logoUrl: meta[row.symbol]?.logoUrl ?? null,
+              changed: stanceChangeLabel(verdict, previousStance, t),
+              changePct: row.snapshot.changePct,
+              status: status ? technicalStatusText(status, t.technical.status, (abs) => formatPercentPlain(abs, locale, 1)) : null,
+              alert: status?.kind === "stopBroken" || status?.kind === "stop",
+              rank: highlightRank(status?.kind ?? null, previousStance !== null && previousStance !== verdict),
+              verdict,
+            };
+          }),
       }))}
       pending={pending.map((symbol) => ({
         symbol,
         name: meta[symbol]?.name ?? symbol,
         logoUrl: meta[symbol]?.logoUrl ?? null,
         changed: null,
+        changePct: null,
+        status: null,
+        alert: false,
+        rank: null,
+        verdict: null,
       }))}
       latest={
         latest
@@ -94,7 +122,38 @@ export async function TechnicalPanel({ locale, t }: { locale: Locale; t: Diction
   );
 }
 
-type PanelItem = { symbol: string; name: string; logoUrl: string | null; changed: string | null };
+type PanelItem = {
+  symbol: string;
+  name: string;
+  logoUrl: string | null;
+  changed: string | null;
+  /** Yayın anındaki günlük değişim; seans işlemi yoksa null. */
+  changePct: number | null;
+  /** "Dirence %1,2" — lib/technical-status.ts; veri yoksa null. */
+  status: string | null;
+  /** Stop yakın ya da kırılmış: künye aşağı yön renginde. */
+  alert: boolean;
+  /** "Öne Çıkanlar" sırası (küçük önce); sıradan durum null. */
+  rank: number | null;
+  verdict: VerdictKey | null;
+};
+
+/** Öne çıkan satırların tavanı: liste paneli uzatmasın (gerekçe `TechnicalPanelView`). */
+const HIGHLIGHTS = 4;
+
+/**
+ * Hangi durum "öne çıkan" sayılır, hangi sırayla: stop kırıldı → stopa
+ * yakın → alım bölgesinde → görüş döndü → RSI uçta. En yakın destek/direnç
+ * her hissede var, sıradan; yalnız erişilebilir etikette ve analizde.
+ */
+function highlightRank(kind: string | null, turned: boolean): number | null {
+  if (kind === "stopBroken") return 0;
+  if (kind === "stop") return 1;
+  if (kind === "zone") return 2;
+  if (turned) return 3;
+  if (kind === "overbought" || kind === "oversold") return 4;
+  return null;
+}
 
 /**
  * Teknik panelin saf görünümü — veri `TechnicalPanel`de (`olcum` skill'i).
@@ -136,11 +195,14 @@ export function TechnicalPanelView({
   const total = groups.reduce((sum, group) => sum + group.items.length, 0) + pending.length;
   const share = new Intl.NumberFormat(locale === "tr" ? "tr-TR" : "en-US", { style: "percent", maximumFractionDigits: 0 });
   const stockCount = (n: number) => (n === 1 ? t.technical.stockCountOne : t.technical.stockCount).replace("{n}", String(n));
+  /* SÜTUN SAYISI SUNUCUDA, SATIRLAR DENGELİ: rayda satıra en çok 6 hücre
+     sığar; 7 hisse 6 + 1 değil 4 + 3, 9 hisse 5 + 4 dizilir (sarkan tek
+     logo yok). Altı ve azı sola yaslı tek satır. Geniş kapta (tablet)
+     ızgara kendi sığdırır (CSS).
+     BUGÜNÜN YÜZDESİ SEMBOLÜN ALTINDA (24 Kasım, sahibinin isteği: "bugünkü
+     durumları yazmak gibi, biraz eksik hissettiriyor"): yayın anındaki
+     günlük değişim, yön renginde, tek ondalık. Seans işlemi yoksa "–". */
   const cells = (items: readonly PanelItem[], label: string) => (
-    /* SÜTUN SAYISI SUNUCUDA, SATIRLAR DENGELİ: rayda satıra en çok 6 hücre
-       sığar; 7 hisse 6 + 1 değil 4 + 3, 9 hisse 5 + 4 dizilir (sarkan tek
-       logo yok). Altı ve azı sola yaslı tek satır. Geniş kapta (tablet)
-       ızgara kendi sığdırır (CSS). */
     <ul className={styles.cells} style={{ "--cols": items.length <= 6 ? 6 : Math.ceil(items.length / Math.ceil(items.length / 6)) } as CSSProperties}>
       {items.map((item) => (
         <li key={item.symbol}>
@@ -148,16 +210,30 @@ export function TechnicalPanelView({
             href={technicalHref(item.symbol)}
             prefetch={false}
             className={styles.cell}
-            aria-label={`${item.symbol} · ${item.name} · ${item.changed ?? label}`}
+            title={item.status ?? undefined}
+            aria-label={`${item.symbol} · ${item.name} · ${[item.changed ?? label, item.status, item.changePct === null ? null : formatPercent(item.changePct, locale)].filter(Boolean).join(" · ")}`}
           >
             <LogoTile symbol={item.symbol} logoUrl={item.logoUrl} size="sm" />
             <b>{item.symbol}</b>
+            <span className={cn("numeral", styles.cellChange)} data-tone={item.changePct === null ? undefined : item.changePct > 0 ? "up" : item.changePct < 0 ? "down" : undefined}>
+              {item.changePct === null ? "–" : formatPercent(item.changePct, locale, 1)}
+            </span>
             {item.changed && <small>{item.changed}</small>}
           </Link>
         </li>
       ))}
     </ul>
   );
+  /* ÖNE ÇIKANLAR (24 Kasım): planın neresinde durduğu dikkat isteyen
+     hisseler, en çok `HIGHLIGHTS` satır — stop kırıldı/yakın, alım
+     bölgesinde, görüş döndü, RSI uçta. Her hissenin satırı denendi ve
+     ölçüldü: 14 satır yan kolonu 494'ten 1.086 piksele uzatıyordu (1440);
+     yalnız öne çıkanlar bilgi taşıyor, gerisi sıradan "Dirence %2". */
+  const highlights = groups
+    .flatMap((group) => group.items)
+    .filter((item) => item.rank !== null && item.status !== null)
+    .sort((a, b) => a.rank! - b.rank!)
+    .slice(0, HIGHLIGHTS);
   return (
     <Panel className="min-w-0">
       <PanelHeader
@@ -198,6 +274,23 @@ export function TechnicalPanelView({
             {cells(group.items, verdictLabel(group.verdict, t))}
           </section>
         ))}
+        {highlights.length > 0 && (
+          <section className={styles.highlights} aria-label={t.technical.highlights}>
+            <p className={styles.highlightsHead}>{t.technical.highlights}</p>
+            <ul>
+              {highlights.map((item) => (
+                <li key={item.symbol}>
+                  <Link href={technicalHref(item.symbol)} prefetch={false} className={styles.highlight}>
+                    <LogoTile symbol={item.symbol} logoUrl={item.logoUrl} size="xs" />
+                    <b>{item.symbol}</b>
+                    {item.verdict && <span className={styles.highlightVerdict} data-verdict={item.verdict}>{item.changed ?? verdictLabel(item.verdict, t)}</span>}
+                    <span className={styles.highlightStatus} data-alert={item.alert || undefined}>{item.status}</span>
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </section>
+        )}
         {/* BEKLEYENLER TEK SATIR: bir görüş değil bir eksik; logo ızgarası
             yerine künye satırı (yayın yok, hücre gidecek analiz bulamaz).
             Dağılım şeridinde nötr dilim olarak sayılı. */}
@@ -228,6 +321,7 @@ export function TechnicalPanelView({
             )}
           </dl>
         )}
+        {groups.some((group) => group.items.length > 0) && <p className={styles.note}>{t.technical.statusNote}</p>}
       </div>
     </Panel>
   );

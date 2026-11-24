@@ -418,6 +418,8 @@
 .how[open] > summary::after { margin-top:3px; transform:rotate(-135deg); }
 .how > summary:hover { color:var(--primary-hover); }
 .how > summary:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; border-radius:6px; }
+/* Dokunmatikte 44 (24 Kasım, telefon denetimi: yedi katlanır başlık 32'ydi). */
+@media (pointer:coarse) { .how > summary { min-height:44px; } }
 /* DOKUNMATİKTE 44 (14 Ekim). "Nasıl Okunur" katlaması 390'da 316×32
    pikseldi (ölçüldü, dört panelde); analist panelinin katlaması aynı
    gerekçeyle zaten 44 (stock.module.css → `.analystExplanation`).
@@ -595,6 +597,9 @@
   ul.tradeGrid > li > a { grid-column:1 / -1; grid-template-columns:subgrid; }
   ul.tradeGrid > li:nth-child(even) { padding-inline-start:30px; }
   ul.tradeGrid > li > a > :nth-child(3) { justify-self:start; }
+  /* Tutar hapın hemen yanında (24 Kasım, denetim: sağa yaslı tutarla hap
+     arasında 1440'ta ~330 piksel ölü boşluk vardı). */
+  ul.tradeGrid > li > a > :nth-child(4) { justify-self:start; }
 }
 
 /* BANT VE GEÇMİŞ RAPORLAR figürü (12 Ekim, `ExpectedMoveFigure`) 10 Kasım

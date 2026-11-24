@@ -98,7 +98,9 @@
 
 .filter input { position:absolute; opacity:0; pointer-events:none; }
 
+/* Dokunmatikte 44 (24 Kasım, telefon denetimi: çip 40'tı). */
 .filter label { position:relative; z-index:1; display:flex; align-items:center; justify-content:center; gap:6px; min-height:36px; padding:7px 12px; border-radius:calc(var(--radius-lg) - 4px); font-size:13px; font-weight:600; white-space:nowrap; color:var(--text-body); cursor:pointer; transition:color 180ms var(--ease-brand); }
+@media (pointer:coarse) { .filter label { min-height:44px; } }
 
 .filter label b { font-weight:600; letter-spacing:-.02em; color:var(--text-muted); }
 

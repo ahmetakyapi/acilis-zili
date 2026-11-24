@@ -964,6 +964,21 @@ const tr = {
     /* Görüş dağılımında boş görüş satırı (8 Kasım): "AL 0" grubunun logo
        alanı boş kalmasın, nedenini söylesin. */
     distributionEmpty: "Bu yayında {stance} görüşü yok.",
+    /* Ana sayfa panelinde hissenin bugünkü durumu (24 Kasım;
+       lib/technical-status.ts). Künye: Title Case; `{pct}` uzaklık. */
+    status: {
+      zone: "Alım Bölgesinde",
+      stopBroken: "Stopun Altında",
+      stop: "Stopa {pct}",
+      overbought: "Aşırı Alım · RSI {rsi}",
+      oversold: "Aşırı Satım · RSI {rsi}",
+      resistance: "Dirence {pct}",
+      support: "Desteğe {pct}",
+      atResistance: "Dirençte",
+      atSupport: "Destekte",
+    },
+    statusNote: "Yüzdeler ve seviyeye uzaklıklar son yayın anının fiyatından.",
+    highlights: "Bugün Öne Çıkanlar",
     /* Kapaktaki gösterge çizimlerinin künyeleri (`SignalGauges`). */
     gauges: {
       avg50: "50G",
