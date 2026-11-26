@@ -54,7 +54,8 @@ const MONTH_BASE_ROWS = 5;
 export function MonthReleases({
   items,
   monthName,
-  highCount,
+  highTotal,
+  highLeft,
   constrained,
   placement = "hero",
   locale,
@@ -62,7 +63,9 @@ export function MonthReleases({
 }: {
   items: MonthItem[];
   monthName: string;
-  highCount: number;
+  /** Ayın bütün yüksek etkili açıklamaları ve henüz açıklanmamış olanlar. */
+  highTotal: number;
+  highLeft: number;
   /** Sağda kart var mı — yoksa kutu gerilmez, içeriği kadar uzar. */
   constrained: boolean;
   /** `hero`: kapağın sol kolonu (768 ve üstü). `board`: telefonda takvim
@@ -179,10 +182,10 @@ export function MonthReleases({
         </h2>
         <span className={styles.keyTag}>
           {monthName}
-          {highCount > 0 && (
+          {highTotal > 0 && (
             <>
               <span aria-hidden> · </span>
-              <span className="numeral">{highCount}</span> {t.calendar.highImpactShort}
+              <span className="numeral">{(highLeft > 0 ? c.highLeft : c.highDone).replace("{n}", String(highLeft > 0 ? highLeft : highTotal))}</span>
             </>
           )}
         </span>

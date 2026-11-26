@@ -135,7 +135,11 @@ export function CalendarStrip({ view, dates, byDay, holidays, today, locale, t }
        değil (gündemdeki karar). Tatil adıyla duruyor, hafta sonu boş. */
     const lane = !weekend && !holiday ? <Lane events={events} order={index} /> : null;
     const note = count ? (
-      <span className={styles.cellCount}>{countLabel(count)}</span>
+      <>
+        <span className={styles.cellCount}>{countLabel(count)}</span>
+        {/* Yarım günün olayları varsa da erken kapanış söylenir (24 Kasım). */}
+        {holidayLabel && !weekend && <span className={styles.cellNote}>{holidayLabel}</span>}
+      </>
     ) : holidayLabel && !weekend ? (
       <span className={styles.cellNote}>{holidayLabel}</span>
     ) : null;

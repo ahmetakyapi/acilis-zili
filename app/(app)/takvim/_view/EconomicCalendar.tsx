@@ -420,6 +420,10 @@ export async function EconomicCalendar({
      kapak "önemli olan"ı söylüyor, tam liste aşağıda. */
   const monthEvents = [...monthPast, ...all].filter((event) => event.eventDate.startsWith(monthKey));
   const monthHigh = monthEvents.filter((event) => event.importance === "high");
+  /* Künyede KALAN yüksek etkili sayısı (24 Kasım, görsel denetim: "5 Yüksek
+     Etkili" yazan başlığın altında 3 satır ve yalnız 1 yüksek vardı; liste
+     sıradakileri öne alıyor, ayın geçmiş yüksekleri gizli satırlarda). */
+  const monthHighLeft = monthHigh.filter((event) => event.eventDate >= today && isAhead(event)).length;
   const monthPicked =
     monthHigh.length >= 6
       ? monthHigh
@@ -791,7 +795,8 @@ export async function EconomicCalendar({
             <MonthReleases
               items={monthItems}
               monthName={monthName}
-              highCount={monthHigh.length}
+              highTotal={monthHigh.length}
+              highLeft={monthHighLeft}
               constrained={next !== undefined}
               locale={locale}
               t={t}
@@ -954,7 +959,8 @@ export async function EconomicCalendar({
           <MonthReleases
             items={monthItems}
             monthName={monthName}
-            highCount={monthHigh.length}
+            highTotal={monthHigh.length}
+              highLeft={monthHighLeft}
             constrained={false}
             placement="board"
             locale={locale}

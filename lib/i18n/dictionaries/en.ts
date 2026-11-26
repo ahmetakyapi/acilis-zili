@@ -497,6 +497,8 @@ const en: typeof tr = {
     more: "More",
     monthView: "Month View",
     listLabel: "This month's high and medium impact releases",
+    highLeft: "{n} High Impact Left",
+    highDone: "{n} High Impact Released",
   },
 
   earnings: {

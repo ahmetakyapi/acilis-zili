@@ -878,8 +878,11 @@ export default async function StockPage(
       <Suspense fallback={<Skeleton className="h-48 w-full rounded-(--radius-xl)" />}>
         <PeersCard symbol={symbol} locale={locale} t={t} />
       </Suspense>
-      {/* Küratörlü çiftin üyesiyse çift sayfasına bağlantı (14 Kasım). */}
-      <PairLinks symbol={symbol} t={t} />
+      {/* Küratörlü çiftin üyesiyse çift sayfasına bağlantı (14 Kasım);
+          kart sayısı sektör eşleriyle üçe tamamlanır (24 Kasım). */}
+      <Suspense fallback={null}>
+        <PairLinks symbol={symbol} t={t} fill />
+      </Suspense>
 
 
       {/* Haberler en altta — mobilde de masaüstünde de son durak.

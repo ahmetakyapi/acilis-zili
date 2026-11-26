@@ -160,8 +160,35 @@ export function EarningsHorizon({
      kalabalık penceresi kadar karo sütunu alır; karosuz gün sütun almaz.
      Hücrenin yuva tavanı o günün sütunu × sıra (`shapeSlots`): sığmayan
      küçükler "+N" çipinde. Kapalı gün (tam tatil) karo taşımaz. */
+  /* SAYI İLE ÇİZİM AYNI ŞEYİ SÖYLER (24 Kasım, görsel denetim: pazartesi
+     "133 Şirket" yazıp 5 logo gösteriyor, Açılış Öncesi satırı bomboş
+     duruyordu; 8 şirketli cuma hiç logosuz). Karolar yine seçilmiş
+     şirketlerden (`week.days`), ama pencerenin "+N"i artık o penceredeki
+     TÜM şirketlerden (`week.schedule`: adla listelenen + kalanlar) sayılır;
+     karosu olmayan pencere de "+N" çipini basar. Seçilmiş şirketi hiç
+     olmayan açık güne piyasa değeri en büyük `FALLBACK_TILES` şirket karo
+     olarak girer. */
+  const FALLBACK_TILES = 2;
+  const scheduleByDate = new Map(week.schedule.map((day) => [day.date, day]));
+  const fullLanes = (date: string): Record<WeekLane, ScheduleRow[]> => {
+    const entry = scheduleByDate.get(date);
+    const lanesOf: Record<WeekLane, ScheduleRow[]> = { bmo: [], amc: [], other: [] };
+    if (!entry) return lanesOf;
+    for (const row of entry.listed) lanesOf[laneOf(row.hour)].push(row);
+    for (const lane of ["bmo", "amc", "other"] as const) lanesOf[lane].push(...entry.rest[lane]);
+    return lanesOf;
+  };
+  const sourceDays = week.days.map((day) => {
+    if (day.closed || day.bmo.length + day.amc.length + day.other.length > 0) return day;
+    const full = fullLanes(day.date);
+    const top = [...full.bmo, ...full.amc, ...full.other]
+      .filter((row) => row.marketCap !== null)
+      .sort((a, b) => (b.marketCap ?? 0) - (a.marketCap ?? 0))
+      .slice(0, FALLBACK_TILES);
+    return { ...day, bmo: top.filter((row) => laneOf(row.hour) === "bmo"), amc: top.filter((row) => laneOf(row.hour) === "amc"), other: top.filter((row) => laneOf(row.hour) === "other") };
+  });
   const shape = horizonShape(
-    week.days.map((day) => (day.closed ? { bmo: 0, amc: 0, other: 0 } : { bmo: day.bmo.length, amc: day.amc.length, other: day.other.length })),
+    sourceDays.map((day) => (day.closed ? { bmo: 0, amc: 0, other: 0 } : { bmo: day.bmo.length, amc: day.amc.length, other: day.other.length })),
   );
   const peakDate = peakDay(week.schedule);
   /* Şerit adları ve saatleri ilk açık günden: ABD saat değişimi pazar günü,
@@ -170,10 +197,14 @@ export function EarningsHorizon({
      hücresi kendi saatini yazar (`amcNote`) — eksendeki saat o gün iki
      saat yanlış olurdu (veri dürüstlüğü 1). */
   const open = week.days.find((day) => !day.closed) ?? week.days[0];
-  const days: HorizonDay[] = week.days.map((day, dayIndex) => {
+  const days: HorizonDay[] = sourceDays.map((day, dayIndex) => {
     const columns = shape.columns[dayIndex];
     const cut = (rows: ScheduleRow[], lane: WeekLane) => capCell(rows, shapeSlots(columns, shape.rows, lane));
     const cap = (rows: ScheduleRow[], lane: WeekLane) => cut(rows, lane).shown.map(tile);
+    const full = day.closed ? null : fullLanes(day.date);
+    /* Pencerenin "+N"i: penceredeki bütün şirketler eksi basılan karolar. */
+    const moreOf = (rows: ScheduleRow[], lane: WeekLane) =>
+      full ? Math.max(cut(rows, lane).more, full[lane].length - cut(rows, lane).shown.length) : cut(rows, lane).more;
     const label = dayLabel(day.date, locale);
     const parts = etDateParts(day.date, locale);
     const total = totals.get(day.date) ?? 0;
@@ -192,7 +223,7 @@ export function EarningsHorizon({
       columns,
       amcNote: !day.closed && day.amcClock.primary !== open.amcClock.primary ? `~${day.amcClock.primary}` : null,
       lanes: { bmo: cap(day.bmo, "bmo"), amc: cap(day.amc, "amc"), other: cap(day.other, "other") },
-      more: { bmo: cut(day.bmo, "bmo").more, amc: cut(day.amc, "amc").more, other: cut(day.other, "other").more },
+      more: { bmo: moreOf(day.bmo, "bmo"), amc: moreOf(day.amc, "amc"), other: moreOf(day.other, "other") },
       /* Liste yalnız bugünden ileriyi kapsıyor; gezilen başka haftanın
          "+N"i Haftalık sekmede AYNI haftaya gider. */
       moreHref:
@@ -208,7 +239,8 @@ export function EarningsHorizon({
     /* Haftada hiç dolmayan pencerenin SATIRI basılmaz (eskiden yalnız
        "saati belirsiz" düşüyordu): yalnız kapanış sonrası açıklanan haftada
        boş bir "Açılış Öncesi" satırı beş hücrelik gri alandı. */
-    .filter((key) => week.days.some((day) => !day.closed && day[key].length > 0))
+    /* 24 Kasım: karosu olmasa da "+N"i olan pencere de satırını alır. */
+    .filter((key) => days.some((day) => !day.closed && (day.lanes[key].length > 0 || day.more[key] > 0)))
     .map((key) => {
       const clock = key === "bmo" ? open.bmoClock : key === "amc" ? open.amcClock : null;
       return {

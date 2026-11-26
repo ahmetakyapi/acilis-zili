@@ -668,6 +668,9 @@ const tr = {
     more: "Veri Daha",
     monthView: "Ay Görünümü",
     listLabel: "Bu ayın yüksek ve orta etkili veri açıklamaları",
+    /* Künye (24 Kasım): sıradakiler öne alındığı için kalan sayılır. */
+    highLeft: "{n} Yüksek Etkili Kaldı",
+    highDone: "{n} Yüksek Etkili Açıklandı",
   },
 
   earnings: {

@@ -386,7 +386,7 @@ export function HorizonGrid({
                 const moreText = labels.more.replace("{count}", String(more));
                 const moreLabel = day.moreLabel.replace("{count}", String(more));
                 return (
-                  <div key={lane.key} className={styles.lane} data-lane={lane.key} data-empty={tiles.length === 0 || undefined}>
+                  <div key={lane.key} className={styles.lane} data-lane={lane.key} data-empty={(tiles.length === 0 && more === 0) || undefined}>
                     <p className={styles.laneHead}>
                       <TimingChip tone={lane.tone} size="sm">
                         {lane.title}
@@ -398,7 +398,9 @@ export function HorizonGrid({
                     {lane.key === "amc" && day.amcNote && tiles.length > 0 && (
                       <span className={`figure ${styles.laneNote}`}>{day.amcNote}</span>
                     )}
-                    {tiles.length > 0 ? (
+                    {/* Karosu olmayan pencere de "+N"ini basar (24 Kasım):
+                        "133 Şirket" yazan günde boş satır kalmasın. */}
+                    {tiles.length > 0 || more > 0 ? (
                       <ul className={styles.tiles}>
                         {tiles.map((tile, index) => (
                           <Tile

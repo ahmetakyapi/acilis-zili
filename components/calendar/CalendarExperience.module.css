@@ -218,6 +218,7 @@
 a.cell { border-color:var(--line); background:var(--surface); }
 .cell[data-weekend] { flex:1 1 0; border-color:transparent; padding-inline:8px; }
 .cell[data-holiday] { border-color:transparent; background:var(--surface-sunken); }
+.cell[data-holiday="closed"] { background-image:repeating-linear-gradient(135deg, var(--line-soft) 0 1px, transparent 1px 7px); }
 .cell[data-today] { border-color:var(--primary-faint); }
 /* OLAYSIZ GÜN KUTUSUZ (23 Eylül) — YALNIZ AY IZGARASINDA. Ay ızgarasında
    22 iş gününün 14'ü boş ve her biri kenarlıklı bir kutuydu: ızgara boş
@@ -255,7 +256,14 @@ a.cell { border-color:var(--line); background:var(--surface); }
   .strip:not(.month) .cell[data-empty][data-weekend] { flex-basis:52px; }
   .strip:not(.month) .cell[data-empty] .cellNum strong { font-size:18px; }
   .strip:not(.month) .cell[data-empty] .cellToday { display:none; }
-  .strip:not(.month) .cell[data-empty] .cellNote { display:none; }
+  .strip:not(.month) .cell[data-empty]:not([data-holiday]) .cellNote { display:none; }
+  /* KAPALI VE YARIM GÜN ŞERİTTE DE SÖYLENİR (24 Kasım, görsel denetim:
+     Şükran Günü ve erken kapanış sıradan boş gün gibi 64 piksellik sırttı;
+     yalnız alttaki liste işaretliyordu). Tatil sırtı adını yazacak kadar
+     geniş (104), tam tatil Bilanço Ufku'nun kapalı günü gibi taramalı;
+     yarım gün tonlu, olaylıysa sayının altında "Erken Kapanış". */
+  .strip:not(.month) .cell[data-empty][data-holiday] { flex-basis:104px; }
+  .strip:not(.month) .cell[data-empty][data-holiday] .cellNote { white-space:normal; text-wrap:balance; }
   .strip:not(.month) .cell:not([data-empty]) { flex:var(--w, 2) 1 0; }
   /* Olay adları her satırda önem şeridini taşıyor; ayrı kulvar tekrar. */
   .strip:not(.month) .cell:not([data-empty]) .lane { display:none; }

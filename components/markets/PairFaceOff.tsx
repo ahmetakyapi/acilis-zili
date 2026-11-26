@@ -3,6 +3,9 @@ import { ArrowRight } from "@phosphor-icons/react/dist/ssr";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import { comparePairsOf, type ComparePair } from "@/content/compare-pairs";
+import { peersOf } from "@/db/seed/indices";
+import { compareHref } from "@/lib/compare";
+import { shortCompanyName } from "@/lib/seo-titles";
 import { seriesColorOf } from "@/lib/chart-series";
 import { getStatus, getSymbolNames, liveMarketCap } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -162,7 +165,8 @@ export function OtherPairs({
   label,
   wide = false,
 }: {
-  pairs: readonly ComparePair[];
+  /** `href` verilen kart küratörlü çift değil, hazır `?semboller=` adresi (24 Kasım). */
+  pairs: readonly (Pick<ComparePair, "slug" | "symbols" | "names"> & { href?: string })[];
   joiner: string;
   t: Dictionary;
   title?: string;
@@ -177,7 +181,7 @@ export function OtherPairs({
         <ul className={styles.otherGrid} data-wide={wide ? "" : undefined}>
           {pairs.map((entry) => (
             <li key={entry.slug}>
-              <Link href={`/karsilastir/${entry.slug}`} prefetch={false} className={styles.other}>
+              <Link href={entry.href ?? `/karsilastir/${entry.slug}`} prefetch={false} className={styles.other}>
                 <span className={styles.otherLogos} aria-hidden>
                   {entry.symbols.slice(0, 2).map((symbol) => (
                     <LogoTile key={symbol} symbol={symbol} size="md" className={styles.otherLogo} />
@@ -194,17 +198,50 @@ export function OtherPairs({
   );
 }
 
+/** Hisse sayfasında panelin kart tavanı: geniş kartta 1440'ta bir satır üç kart. */
+const PAIR_CARDS = 3;
+
 /**
  * Hisse (ve fon) sayfasında: sembol küratörlü bir çiftin üyesiyse o çiftin
  * sayfasına bağlantı (14 Kasım 2026). Üye değilse HİÇBİR ŞEY basılmaz.
- * Saf: çiftler depoda, veri turu yok.
+ *
+ * SEKTÖR EŞLERİYLE DOLAR (24 Kasım, görsel denetim: NVDA'da panel
+ * 1320 × 133 ve içinde tek 421 piksellik kart, %68'i boş). `fill` verilince
+ * kart sayısı `PAIR_CARDS`a, aynı alt sektörün piyasa değeri en büyük
+ * şirketleriyle tamamlanır; bu kartlar hazır `/karsilastir?semboller=`
+ * adresine gider. Eşler Benzer Şirketler panelinin listesi (`peersOf`) ve
+ * künyesi aynı önbellekli okuma. Küratörlü çifti olmayan hissede panel
+ * yine basılmaz: o hissede Benzer Şirketler'in "Karşılaştır" bağlantısı var.
  */
-export function PairLinks({ symbol, t }: { symbol: string; t: Dictionary }) {
+export async function PairLinks({ symbol, t, fill = false }: { symbol: string; t: Dictionary; fill?: boolean }) {
   const pairs = comparePairsOf(symbol);
   if (pairs.length === 0) return null;
+  const cards: (Pick<ComparePair, "slug" | "symbols" | "names"> & { href?: string })[] = [...pairs];
+  if (fill && cards.length < PAIR_CARDS) {
+    const peers = peersOf(symbol);
+    const taken = new Set(pairs.flatMap((pair) => pair.symbols));
+    const meta = peers.length ? await getSymbolNames([symbol, ...peers.map((peer) => peer.symbol)]).catch(() => null) : null;
+    if (meta) {
+      /* Sayfanın şirketi küratörlü kartla AYNI yazımda ("Nvidia", "NVIDIA" değil). */
+      const curated = pairs[0]!.names[pairs[0]!.symbols.indexOf(symbol)];
+      const self = curated ?? (shortCompanyName(meta[symbol]?.name) || symbol);
+      const extra = peers
+        .filter((peer) => !taken.has(peer.symbol) && meta[peer.symbol]?.marketCap)
+        .sort((a, b) => (meta[b.symbol]?.marketCap ?? 0) - (meta[a.symbol]?.marketCap ?? 0))
+        .slice(0, PAIR_CARDS - cards.length);
+      for (const peer of extra) {
+        cards.push({
+          slug: `${symbol}-${peer.symbol}`.toLowerCase(),
+          symbols: [symbol, peer.symbol],
+          names: [self, shortCompanyName(meta[peer.symbol]?.name) || peer.symbol],
+          href: compareHref([symbol, peer.symbol]),
+        });
+      }
+    }
+  }
   return (
     <OtherPairs
-      pairs={pairs}
+      pairs={cards}
       joiner={t.pairs.joiner}
       t={t}
       title={t.pairs.forSymbol}
