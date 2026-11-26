@@ -500,7 +500,10 @@ export function formatPercent(
 ) {
   if (value === null || value === undefined || Number.isNaN(value)) return NO_VALUE;
   const formatted = numberFormat(locale, digits).format(Math.abs(value));
-  const sign = value > 0 ? "+" : value < 0 ? "−" : "";
+  /* SIFIRA YUVARLANAN DEĞER İŞARETSİZ (26 Kasım, görsel tur: gün satırında
+     "−%0,0" basılıyordu). İşaret, yazılan rakamın anlattığı yönü söyler;
+     ekranda sıfır yazıyorsa yön yoktur. */
+  const sign = !/[1-9]/.test(formatted) ? "" : value > 0 ? "+" : value < 0 ? "−" : "";
   return withPercent(formatted, locale, sign);
 }
 

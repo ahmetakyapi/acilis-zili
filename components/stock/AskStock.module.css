@@ -66,6 +66,10 @@
 /* Telefonda dördüncü kart gizli: dört kart giriş kutusunu ilk bakışın
    dışına itiyordu; dördüncüsü takip sorusu olarak sonra gelir. */
 @media (max-width: 639px) { .starters > li:nth-child(n + 4) { display: none; } }
+/* Yedek kartlar (26 Kasım 2026; gerekçe AskStock.tsx → FILL_EXTRA): beşinci
+   ve sonrası kapalı gelir, yan kolonda pay varsa istemci `data-fill-open`
+   ile açar. Telefonda kural yukarıdaki (dördüncüden sonrası hep kapalı). */
+.starters > li:nth-child(n + 5):not([data-fill-open]) { display: none; }
 
 /* Sohbet listesi kendi kutusunda kayar (`ChatThread contained`). İki
    kolonlu masaüstünde kutunun boyu kolondan gelir (esner); tek kolonda

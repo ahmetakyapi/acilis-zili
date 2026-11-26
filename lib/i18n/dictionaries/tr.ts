@@ -967,6 +967,8 @@ const tr = {
     /* Görüş dağılımında boş görüş satırı (8 Kasım): "AL 0" grubunun logo
        alanı boş kalmasın, nedenini söylesin. */
     distributionEmpty: "Bu yayında {stance} görüşü yok.",
+    /* Kapaktaki hücrelerin yüzdesi — kural `TechnicalPulse` → "KAPAĞIN SAĞ KOLONU". */
+    pulseChangeNote: "Yüzdeler günün değişimi: seans sürerken anlık fiyattan, değilse son yayın anından.",
     /* Ana sayfa panelinde hissenin bugünkü durumu (24 Kasım;
        lib/technical-status.ts). Künye: Title Case; `{pct}` uzaklık. */
     status: {
@@ -1013,6 +1015,10 @@ const tr = {
     levelPassed: "Geçildi",
     levelBroken: "Kırıldı",
     levelsNote: "Fiyata Uzaklık",
+    /* Kapak grafiğinin seviye merceği (26 Kasım; `PriceChart`): grafikteki
+       dar bandın sağda büyütülmüş hâli. Büyütme yalnız ≥ 1,5 katta yazılır. */
+    lensTitle: "Seviye Bandı",
+    lensZoom: "{n} Kat Yakın",
     /* STOP ALTI KUŞAĞININ KÜNYESİ. Kuşak sessizdi ve kırmızı bir alan
        tek başına "kötü" diyor, "ne" demiyor. Kısa tutuldu: 390 pikselde
        tek satır kalmalı (ölçüldü). */
@@ -3310,6 +3316,13 @@ const tr = {
     emFigReadoutNone: "Son {n} raporun hepsi bandın içinde kaldı.",
     emAverage: "Ortalama Mutlak Hareket",
     emAverageCount: "Son {n} Rapor",
+    /* Beklenen Hareket: fiyat karşılığı ve ortak ölçekli figür (26 Kasım 2026). */
+    emRange: "Fiyat Karşılığı",
+    emRangeMeta: "{spot} Üzerinden ±{move}",
+    emFigTitle: "Aynı Ölçekte Bant, Ortalama ve Geçmiş",
+    emRowBand: "Fiyatlanan",
+    emRowBandSub: "Opsiyonlar",
+    emRowAverage: "Ortalama",
     emAverageTooFew: "Ortalama için en az {n} ölçülmüş rapor gerekiyor.",
     emHistoryEmpty: "Bu şirket için kayıtlı geçmiş rapor tarihi henüz yok.",
     emColReport: "Rapor",

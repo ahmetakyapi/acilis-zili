@@ -409,6 +409,10 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    hücre tepesinden 31, İleri F/K ve PD/DD 53 piksel (390'da 31/53 ve
    31/39). Hücre artık tepeden diziliyor: etiket, sayı, varsa kulvar; her
    satırda sayı 31 pikselde. Artan yer hücrenin dibinde, kulvarın hizasında. */
+/* 26 Kasım 2026: kulvarsız altı hücre de kıyas şeridi ya da künye taşıyor
+   (MetricGauge). NVDA 1440'ta her hücre 110 piksel ve sayının altındaki boş
+   yer 9 piksel (önce kulvarlıda 23, kulvarsızda 67); kart 443 → 447, iki
+   kolonun dibi yine aynı hatta (2549 / 2549). 390'da hücre 110–127. */
 .metricsList > div { padding:9px 10px 9px 0; gap:4px; justify-content:flex-start; }
 .metricsList > div:nth-child(even) { padding-left:14px; }
 .metricsList dt { font-size:12px; line-height:1.4; }
@@ -1654,11 +1658,28 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
    satır şerit, altında (varsa analist ve) katılım taraması; ortalamalar
    sağda bu kartların toplam boyunda. `:has()` kökte değil ızgaranın
    kendisinde (arayuz.md → "Kökte `:has()` yok"). */
-@media(min-width:1024px) {
+/* 1024 → 768 VE HÜCRELER KARTI PAYLAŞIR (26 Kasım 2026). 768–1023'te iki
+   kolon var ama bu kural yoktu: sahte ZETA'da (yalnız Beta ve Hacim) sol
+   kolonun tek kartı sağ kolonun boyuna gerilip 774 piksel oluyordu, hücreler
+   699 piksel ve içleri 598 piksel boş (768, ölçüldü). Kural iki kolonun
+   başladığı yerden geçerli. Dört sütun da yalnız dört hücrede: iki ve üç
+   hücre dört sütunda kartın yarısını boş bırakıyordu (1440: hücreler 160'ar
+   piksel, sağda 336 piksel zemin); artık hücre sayısı kadar sütun. */
+@media(min-width:768px) {
   .fundamentalsGrid:has(.metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"])) > .fundamentalsCol { display:contents; }
   .fundamentalsGrid:has(.metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"])) > .fundamentalsCol > * { grid-column:1; }
   .fundamentalsGrid:has(.metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"])) > .fundamentalsCol > .averagesPanel { grid-column:2; grid-row:1 / span 2; }
   .fundamentalsGrid:has(.metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"])):has(.analystPanel) > .fundamentalsCol > .averagesPanel { grid-row:1 / span 3; }
   .fundamentalsGrid .metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"]) { grid-template-columns:repeat(4,minmax(0,1fr)); }
+  .fundamentalsGrid .metricsList[data-count="1"] { grid-template-columns:minmax(0,1fr); }
+  .fundamentalsGrid .metricsList[data-count="2"] { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .fundamentalsGrid .metricsList[data-count="3"] { grid-template-columns:repeat(3,minmax(0,1fr)); }
   .fundamentalsGrid .metricsList:is([data-count="1"],[data-count="2"],[data-count="3"],[data-count="4"]) > div { grid-column:auto; }
+}
+/* 768–1099'da sol kolon ~370 piksel: üç-dört sütunda hücre 90 piksele
+   iniyor ve "152.400.000" sığmıyordu. Burada en çok iki sütun; üçüncü
+   hücre satırı kaplar (taban kural). */
+@media(min-width:768px) and (max-width:1099px) {
+  .fundamentalsGrid .metricsList:is([data-count="3"],[data-count="4"]) { grid-template-columns:repeat(2,minmax(0,1fr)); }
+  .fundamentalsGrid .metricsList[data-count="3"] > div:last-child { grid-column:1 / -1; }
 }

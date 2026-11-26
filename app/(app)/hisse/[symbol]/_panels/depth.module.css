@@ -48,10 +48,10 @@
 .reading { display:flex; min-width:0; flex-direction:column; gap:4px; }
 .reading dt { color:var(--text-muted); font-size:12px; font-weight:500; }
 .readingValue { color:var(--text-strong); font-size:clamp(22px,2vw,28px); font-weight:700; line-height:1.15; letter-spacing:-.03em; }
-/* Okuma çubuğu sayının altında, soldan dolar: iki okuma aynı eksende. */
-/* 10 Kasım (gece): dolgu kulvarla aynı 5 pikseldi; değer çubuğu standardı
-   (kulvar 5, dolgu 8 — ortak `value-lane` / `value-bar`). Burada yalnız yer. */
-.readingTrack { width:100%; max-width:200px; margin-top:6px; }
+/* OKUMA ÇUBUĞU KALKTI (26 Kasım 2026). Beklenen Hareket'in iki okumasının
+   altındaki 200 piksellik çubuk (`.readingTrack`, tek kullanıcısı oydu)
+   yerini figürün "Fiyatlanan" ve "Ortalama" satırlarına bıraktı: iki büyüklük
+   artık raporlarla aynı kulvarda (gerekçe ExpectedMovePanel.tsx). */
 .readingMeta { color:var(--text-muted); font-size:var(--text-nano); line-height:1.45; }
 
 /* Tablolar — dar ekranda kendi kabında kayar, etiket sütunu sabit
@@ -443,6 +443,18 @@
   .emReadings { grid-template-columns:minmax(0,1fr); }
   .emReadings > .reading + .reading { padding:10px 0 0; border-left:0; border-top:1px solid var(--line-soft); }
 }
+/* ÜÇ OKUMA (26 Kasım 2026, gerekçe ExpectedMovePanel): bant, fiyat karşılığı,
+   geçmiş ortalama. ≥ 768'de kaç okuma varsa o kadar eşit sütun (fiyat
+   karşılığı bant yoksa basılmıyor, yeri de kalmıyor). Altında iki sütun:
+   bant | ortalama, fiyat karşılığı ikisinin altında tam satır — iki yüzde
+   yan yana kalsın, dolar aralığı sığsın. */
+@media (min-width:768px) {
+  .emReadings { grid-template-columns:none; grid-auto-flow:column; grid-auto-columns:minmax(0,1fr); }
+}
+@media (max-width:767px) {
+  .emReadings > .reading.emRangeReading { order:3; grid-column:1 / -1; padding:10px 0 0; border-left:0; border-top:1px solid var(--line-soft); }
+}
+.emRangeValue { letter-spacing:-.035em; }
 .clampButton { display:none; }
 .insiderNotes { min-width:0; }
 .insiderAside .reading[data-zero] .readingValue { color:var(--text-muted); font-weight:500; }

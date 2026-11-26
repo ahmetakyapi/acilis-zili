@@ -13,7 +13,7 @@ import type { MarketStatus } from "@/lib/market-hours";
 import type { ProviderResult, Quote } from "@/lib/providers/types";
 import { editionTime, livePriceLabel, slotLabel, stanceChangeLabel, technicalHref } from "@/lib/technical";
 import type { TechnicalBoardEntry } from "@/lib/technical-data";
-import { cn, formatEtDateCompact, plural } from "@/lib/utils";
+import { cn, formatEtDateCompact, formatPercent, plural } from "@/lib/utils";
 import { balancedColumns } from "@/lib/technical-visuals";
 import { changeToneClass } from "./card-text";
 import { PulseBar } from "./PulseBar";
@@ -172,6 +172,13 @@ export function TechnicalPulse({
           <h2 id="technical-distribution" className="text-base">{t.technical.distribution}</h2>
           <span className="flex items-center gap-2 text-tiny font-semibold text-muted">
             {plural(total, t.technical.stockCountOne, t.technical.stockCount).replace("{n}", String(total))}
+            {/* BOŞ GÖRÜŞ KÜNYEDE (26 Kasım): kümesi basılmayan görüş burada
+                bir kez, soluk ("· AL 0"); telefonda sayaç zaten söylüyor (CSS). */}
+            {groups.filter((group) => group.rows.length === 0).map((group) => (
+              <span key={group.verdict} className={styles.pulseEmptyStance}>
+                · {verdictLabel(group.verdict, t)} 0
+              </span>
+            ))}
             {/* Telefonda logo satırları gizli (CSS, `.pulseRows`); bekleyen
                 sayısı o satırda yazıyordu ve kaybolmasın diye buraya iniyor.
                 Masaüstünde satır duruyor, künye tekrar etmiyor.
@@ -190,8 +197,10 @@ export function TechnicalPulse({
 
       {/* HAREKET VERİYİ ÇİZİYOR, SÜSLEMİYOR. Dilimler soldan kendi oranlarına
           uzuyor, satırlar ve logolar sırayla iniyor; ortak hareket sisteminin
-          (`MotionExperience`) kancaları, azaltılmış harekette hepsi yerinde. */}
-      {total > 0 && <div className={styles.pulseDial} aria-hidden="true">
+          (`MotionExperience`) kancaları, azaltılmış harekette hepsi yerinde.
+          26 Kasım: halka YALNIZ PANELDE. Dizinde sayaç + kalın şerit aynı
+          payı söylüyor (gerekçe aşağıda, "KAPAĞIN SAĞ KOLONU"). */}
+      {!filterable && total > 0 && <div className={styles.pulseDial} aria-hidden="true">
         <svg viewBox="0 0 160 160" fill="none">
           <circle cx="80" cy="80" r="53" className={styles.pulseDialGuide} />
           {[...groups.map((group) => ({ verdict: group.verdict, count: group.rows.length })), { verdict: "pending", count: pending.length }]
@@ -263,7 +272,9 @@ export function TechnicalPulse({
           çubuk) artık TELEFONDA DA görünüyor; yalnız logoları gizli. Aynı
           ilke, daha doğrudan: her çubuğun adı kendi hapında. */}
 
-      {/* GÖRÜŞ SATIRLARI (8 Kasım, sahibinin isteği: "daha görsel, alanı daha
+      {/* (26 Kasım'da yerini aşağıdaki "KAPAĞIN SAĞ KOLONU" düzenine bıraktı;
+          kayıt olarak duruyor.)
+          GÖRÜŞ SATIRLARI (8 Kasım, sahibinin isteği: "daha görsel, alanı daha
           iyi kullanacak şekilde"). Eski satırlarda etiket düz renkli metindi
           ("TUT 5"), logolar 32 piksel ve serbest sarıyordu: 1440'ta 11 logoluk
           SAT satırı 10 + 1 diye kırılıp ONDAS'ı tek başına alt satıra
@@ -282,61 +293,140 @@ export function TechnicalPulse({
               hap soluk ve şeridin yerinde bir cümle.
           Görüş hapı aşağıdaki süzgecin radyosuna bağlı bir `<label>` (boş
           görüşün radyosu yok, orada düz metin). */}
+      {/* KAPAĞIN SAĞ KOLONU (26 Kasım, sahibinin isteği: "sağdaki görüş
+          analizi kısmı çok kötü olmuş, düzelt, o alanı doğru kullan; sağ-sol
+          dengesine dikkat et"). 8 Kasım düzeninde (yukarıdaki satırlar)
+          kolon soldaki kolonun boyuna geriliyor, içerik ortalanıyordu:
+          canlıda (AL 0, TUT 6, SAT 10) başlık ile ilk satır arasında ~90
+          piksel ölü bant, halka ("16 Takipte") solda tek başına, logolar
+          ADSIZ 44'lük karolar ve kolonun sağ yarısı boştu; "AL 0 · Bu
+          yayında AL görüşü yok" bir satır tutuyordu. Şimdi üç kat, ana
+          sayfa Teknik Analiz panelinin diliyle (`TechnicalPanelView`):
+            1. SAYAÇ: AL / TUT / SAT (+ Bekliyor) — kolonun en büyük puntosu
+               en anlamlı değerde; boş görüş yerinde ama soluk ("AL 0"),
+               ayrı bir satır ve cümle tutmuyor.
+            2. KALIN ŞERİT (12 piksel): halkanın söylediği pay, tek çizgide
+               ve sayaçla aynı sırada. Halka kalktı: sayaç aynı sayıyı
+               söylüyordu ve halka kolonun sol üçte birini boş bırakıyordu.
+            3. KÜMELER: solda görüş hapı (süzgecin radyosuna bağlı
+               `<label>`), sağda logo + SEMBOL + GÜNÜN YÜZDESİ hücreleri;
+               hücre analize gider, üstüne gelince şirket kartı açılır.
+               Boş görüşün kümesi hiç basılmıyor. Bekleyenler tek künye
+               satırı (yayını yok, yüzdesi yok).
+          Yüzde KARTIN KURALIYLA (`cardExtra`): seans sürerken sayfanın
+          paketindeki anlık değişim ("Şu An"), değilse yayının fotoğrafı
+          (`snapshot.changePct`; yazma ucu seans işlemi değilse null yazar →
+          "–"). Böylece kapak ile hemen alttaki şirket kartı aynı hissenin iki
+          ayrı yüzdesini göstermiyor. Ölçüm TechnicalPulse.module.css →
+          "KAPAĞIN SAĞ KOLONU". */}
       {filterable && total > 0 && (
-        <ul className={styles.distLegend} data-motion-stagger>
-          {[
-            ...groups.map((group) => ({ key: group.verdict, rows: group.rows.map(({ row }) => row.symbol) })),
-            ...(pending.length > 0 ? [{ key: "pending" as const, rows: [...pending] }] : []),
-          ].map((group) => {
-            const count = group.rows.length;
-            const label = group.key === "pending" ? t.technical.pendingLabel : verdictLabel(group.key, t);
-            const head = (
-              <>
-                {group.key === "pending" ? (
-                  <span className={styles.distPending}>{label}</span>
-                ) : (
-                  <VerdictPill verdict={group.key} label={label} size="sm" />
-                )}
-                <b className={cn(styles.distCount, "numeral")}>{count}</b>
-                <small className={cn(styles.distShare, "numeral")}>{sharePercent.format(count / total)}</small>
-              </>
-            );
-            return (
-              <li key={group.key} className={styles.distRow} data-verdict={group.key} data-empty={count === 0 || undefined}>
-                {group.key !== "pending" && count > 0 ? (
-                  <label htmlFor={stanceFilterId(group.key)} className={styles.distHead}>{head}</label>
-                ) : (
-                  <span className={styles.distHead}>{head}</span>
-                )}
-                {/* Boş görüşte şeridin yerinde cümle: boş bir kulvar "veri
-                    gelmedi" gibi okunuyordu, cümle "bu yayında yok" diyor. */}
-                {count > 0 ? (
-                  <span className={styles.distTrack} aria-hidden="true">
-                    <i style={{ width: `${(count / total) * 100}%` }} />
-                  </span>
-                ) : (
-                  <p className={styles.distNone}>{t.technical.distributionEmpty.replace("{stance}", label)}</p>
-                )}
-                {count > 0 && (
-                  <div className={styles.distLogos} style={{ "--cols": balancedColumns(count) } as React.CSSProperties}>
-                    {group.rows.map((symbol) => (
+        <>
+          {/* Sayaç YALNIZ TELEFONDA (CSS): orada kümeler gizli ve sayıları
+              o söylüyor. Geniş ekranda sayı kümenin başında, hapın altında;
+              ayrı bir sayaç satırı kolonu 70 piksel uzatıyordu (canlı biçim,
+              1440: sağ 465 / sol 395). */}
+          <dl className={styles.tallyCounts} aria-label={t.technical.distribution}>
+              {[
+                ...groups.map((group) => ({ key: group.verdict, label: verdictLabel(group.verdict, t), count: group.rows.length })),
+                ...(pending.length > 0 ? [{ key: "pending" as const, label: t.technical.pendingLabel, count: pending.length }] : []),
+              ].map((item) => (
+                <div key={item.key} data-verdict={item.key} data-empty={item.count === 0 || undefined}>
+                  <dt>{item.label}</dt>
+                  <dd className="numeral">
+                    {item.count}
+                    {item.count > 0 && <small>{sharePercent.format(item.count / total)}</small>}
+                  </dd>
+                </div>
+              ))}
+          </dl>
+          <span className={styles.tallyStrip} data-draw aria-hidden="true">
+              {[
+                ...groups.map((group) => ({ key: group.verdict as string, count: group.rows.length })),
+                { key: "pending", count: pending.length },
+              ]
+                .filter((slice) => slice.count > 0)
+                .map((slice, index) => (
+                  <i key={slice.key} className="bar-fill" data-verdict={slice.key} style={{ flexGrow: slice.count, "--i": index } as React.CSSProperties} />
+                ))}
+          </span>
+          {/* SÜTUN ENİ KÜMELER ARASINDA ORTAK: her küme kendi sayısıyla
+              dengeli sarar (`--cols`), ama hücre eni en kalabalık kümenin
+              sütun sayısından (`--cols-max`): 1100'de 5'li ve 4'lü küme farklı
+              enlerde diziliyor, sütunlar alt alta düşmüyordu. */}
+          <div
+            className={styles.clusters}
+            style={{
+              "--cols-max": Math.max(1, ...groups.map((group) => balancedColumns(group.rows.length, 7))),
+              "--cols-max-narrow": Math.max(1, ...groups.map((group) => balancedColumns(group.rows.length, 5))),
+            } as React.CSSProperties}
+          >
+            {groups
+              .filter((group) => group.rows.length > 0)
+              .map((group) => {
+                const label = verdictLabel(group.verdict, t);
+                const count = group.rows.length;
+                return (
+                  <section key={group.verdict} className={styles.cluster} data-verdict={group.verdict} aria-label={`${label} · ${plural(count, t.technical.stockCountOne, t.technical.stockCount).replace("{n}", String(count))}`}>
+                    <label htmlFor={stanceFilterId(group.verdict)} className={styles.clusterHead}>
+                      <VerdictPill verdict={group.verdict} label={label} size="sm" />
+                      <span className={styles.clusterCount}>
+                        <b className="numeral">{count}</b>
+                        <small className="numeral">{sharePercent.format(count / total)}</small>
+                      </span>
+                    </label>
+                    {/* Sütun sayısı sunucuda, satırlar dengeli: geniş kolonda
+                        en çok 7 (10 → 5 + 5), dar kapta en çok 5. */}
+                    <ul
+                      className={styles.cells}
+                      style={{ "--cols": balancedColumns(count, 7), "--cols-narrow": balancedColumns(count, 5) } as React.CSSProperties}
+                    >
+                      {group.rows.map(({ row }) => {
+                        const change = cardExtras[row.symbol]?.price?.changePct ?? null;
+                        return (
+                          <li key={row.symbol}>
+                            <Link
+                              href={technicalHref(row.symbol)}
+                              prefetch={false}
+                              className={styles.cell}
+                              aria-label={`${row.symbol} · ${meta[row.symbol]?.name ?? row.symbol} · ${label}${change === null ? "" : ` · ${formatPercent(change, locale)}`}`}
+                              data-cc={cardKey(row.symbol, CARD_SET)}
+                            >
+                              <LogoTile symbol={row.symbol} logoUrl={meta[row.symbol]?.logoUrl ?? null} size="md" />
+                              <b>{row.symbol}</b>
+                              <span className={cn("numeral", styles.cellChange)} data-tone={change === null || change === 0 ? undefined : change > 0 ? "up" : "down"}>
+                                {change === null ? "–" : formatPercent(change, locale, 1)}
+                              </span>
+                            </Link>
+                          </li>
+                        );
+                      })}
+                    </ul>
+                  </section>
+                );
+              })}
+            {pending.length > 0 && (
+              <p className={styles.clusterPending}>
+                <span className={styles.distPending}>{t.technical.pendingLabel}</span>
+                <span className={styles.pendingSymbols}>
+                  {pending.map((symbol, index) => (
+                    <span key={symbol}>
+                      {index > 0 && " · "}
                       <Link
-                        key={symbol}
                         href={technicalHref(symbol)}
                         prefetch={false}
-                        className={cn(styles.distLogo, group.key === "pending" && styles.pulseLogoPending)}
-                        aria-label={`${symbol} · ${meta[symbol]?.name ?? symbol} · ${label}`}
+                        aria-label={`${symbol} · ${meta[symbol]?.name ?? symbol} · ${t.technical.pendingLabel}`}
                         data-cc={cardKey(symbol, CARD_SET)}
                       >
-                        <LogoTile symbol={symbol} logoUrl={meta[symbol]?.logoUrl ?? null} size="lg" />
+                        {symbol}
                       </Link>
-                    ))}
-                  </div>
-                )}
-              </li>
-            );
-          })}
-        </ul>
+                    </span>
+                  ))}
+                </span>
+              </p>
+            )}
+          </div>
+          <p className={styles.cellNote}>{t.technical.pulseChangeNote}</p>
+        </>
       )}
       {!filterable && <div className={styles.pulseRows} data-motion-stagger>
         {groups

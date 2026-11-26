@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import { test } from "node:test";
-import { buildPriceChart, chartLabelSlots, CHART_SESSIONS } from "../components/technical/price-chart";
+import { buildPriceChart, buildPriceLens, CHART_SESSIONS, LENS_PAD, lensLabelSlots } from "../components/technical/price-chart";
 import type { Bar } from "../lib/providers/types";
 import type { Level } from "../lib/technical";
 
@@ -80,14 +80,59 @@ test("ay başları eksende, ilk seans sayılmaz", () => {
 
 test("yakın etiketler ayrılır, sıra korunur, sütunun dışına çıkmaz", () => {
   const ys = [0.5, 0.505, 0.51, 0.9];
-  const slots = chartLabelSlots(ys, 0.08);
+  const slots = lensLabelSlots(ys, 0.08);
   for (let i = 1; i < 3; i++) assert.ok(slots[i]! - slots[i - 1]! >= 0.08 - 1e-9);
   assert.ok(slots.every((slot) => slot >= 0 && slot <= 1));
   assert.equal(slots[3], 0.9);
   /* Sığmayacak kadar çok etikette pay eşit bölünür, üst üste binmez. */
-  const many = chartLabelSlots(Array.from({ length: 21 }, () => 0.5), 0.08);
+  const many = lensLabelSlots(Array.from({ length: 21 }, () => 0.5), 0.08);
   const sorted = [...many].sort((a, b) => a - b);
   for (let i = 1; i < sorted.length; i++) assert.ok(sorted[i]! - sorted[i - 1]! > 0.04);
   assert.ok(sorted[0]! >= 0 && sorted[sorted.length - 1]! <= 1 + 1e-9);
-  assert.deepEqual(chartLabelSlots([], 0.08), []);
+  assert.deepEqual(lensLabelSlots([], 0.08), []);
+});
+
+/* Seviye merceği (26 Kasım 2026): altı ayın tepesi seviyeleri grafiğin alt
+   bandına sıkıştırınca (MU: 591–691 bandı, tepe ~900) sağ sütun kendi
+   ölçeğiyle o bandı büyütür. */
+test("mercek seviyeleri ve fiyatı kendi ölçeğinde açar, grafikteki bandı gösterir", () => {
+  /* Tepesi 900 olan, sonra 615'e inen seri; seviyeler 591–691. */
+  const bars = series(160, (index) => (index < 60 ? 600 + index * 5 : Math.max(600, 900 - (index - 60) * 3)));
+  const levels: Level[] = [
+    { kind: "resistance", price: 691.21 },
+    { kind: "target", price: 660.5, order: 3 },
+    { kind: "target", price: 610.65, order: 1 },
+    { kind: "support", price: 591.51 },
+  ];
+  const model = buildPriceChart(bars, 615.28, levels, true);
+  assert.ok(model);
+  const lens = buildPriceLens(model);
+  assert.ok(lens);
+  /* Grafikte bant dar (alt bölümde), mercekte bütün yüksekliği kaplıyor. */
+  assert.ok(lens.chartBottom - lens.chartTop < 0.5);
+  assert.ok(lens.zoom > 2);
+  const ys = [...lens.levelYs, lens.priceY!];
+  assert.ok(Math.abs(Math.min(...ys) - LENS_PAD) < 1e-9, "en üst seviye payın kenarında");
+  assert.ok(Math.abs(Math.max(...ys) - (1 - LENS_PAD)) < 1e-9, "en alt seviye payın kenarında");
+  /* Sıra korunur: direnç en üstte, destek en altta, fiyat satış 1'in üstünde. */
+  assert.ok(lens.levelYs[0]! < lens.levelYs[1]! && lens.priceY! < lens.levelYs[2]! && lens.levelYs[2]! < lens.levelYs[3]!);
+});
+
+test("seviyesiz grafikte mercek yok; tek yakın seviyede alan en dar hâlinde", () => {
+  const flat = buildPriceChart(series(60, () => 100), 100, [], false)!;
+  assert.equal(buildPriceLens(flat), null);
+  const near = buildPriceChart(series(60, () => 100), 100, [{ kind: "support", price: 99.99 }], false)!;
+  const lens = buildPriceLens(near)!;
+  assert.ok(lens.domain.max - lens.domain.min >= 4 - 1e-9);
+  assert.ok(Math.abs(lens.levelYs[0]! - lens.priceY!) < 0.01);
+  const zone = buildPriceChart(series(60, () => 100), 100, [{ kind: "entry", price: 96, high: 98 }], false)!;
+  const band = buildPriceLens(zone)!.bands[0]!;
+  assert.ok(band.top < band.bottom);
+});
+
+test("mercek satırları pay içinde kalır ve ayrılır", () => {
+  const slots = lensLabelSlots([0.05, 0.06, 0.07, 0.95], 0.1);
+  assert.ok(slots.every((slot) => slot >= LENS_PAD - 1e-9 && slot <= 1 - LENS_PAD + 1e-9));
+  for (let i = 1; i < 3; i++) assert.ok(slots[i]! - slots[i - 1]! >= 0.1 - 1e-9);
+  assert.deepEqual(lensLabelSlots([], 0.1), []);
 });

@@ -34,6 +34,22 @@ const LANE_PAD = 1.15;
  * bekliyor / şirket geçmişte ne yaptı) ama okuyucu onları zaten
  * karşılaştıracak; çubuk bunu basamak saydırmadan yapıyor (CLAUDE.md
  * "Karşılaştırılan her büyüklük bir de çizgi olarak okunur").
+ *
+ * TEK ÖLÇEK, TEK FİGÜR (26 Kasım 2026, görsel tur — sahibinin sözü: "bu da
+ * eksik hissettiriyor, daha güzel daha görsel olarak ele al"). İki okumanın
+ * altında 200 piksellik kısa çubuklar vardı; geçmiş satırları ise BAŞKA bir
+ * ölçekte (sıfır ortada, işaretli) çiziliyordu. Okur "±%9,8 ile %2,0" ve
+ * "+%3,0 ile bant" kıyaslarını iki ayrı eksende yapıyordu, üst satırın sağ
+ * yarısı boştu (NVDA, 1440: okuma çubuğu 200 piksel, panel 1280; sağdaki
+ * okumanın sağında ~440 piksel zemin). Şimdi:
+ *
+ * - Üstte ÜÇ okuma: fiyatlanan bant, onun DOLAR karşılığı (taban fiyat ±
+ *   straddle — `getExpectedMove`in zaten döndürdüğü spot ve straddle; yeni
+ *   sayı yok) ve geçmiş ortalama. Okuma çubukları kalktı.
+ * - Altta tek figür: ilk iki satır "Fiyatlanan" (bandın kendisi, koyu) ve
+ *   "Ortalama" (±ortalama, dolu çubuk); ardından her rapor. Hepsi AYNI
+ *   kulvarda, sıfır ortada — bant, ortalama ve gerçekleşen hareket tek
+ *   bakışta aynı eksende.
  */
 export async function ExpectedMovePanel({
   symbol,
@@ -61,7 +77,13 @@ export async function ExpectedMovePanel({
   /* Geçmiş satırlarının kulvarı: sıfır ortada, uçta pay. */
   const laneMax = Math.max(implied?.pct ?? 0, ...measured.map((row) => Math.abs(row.movePct!))) * LANE_PAD;
   const laneX = (value: number) => 50 + (value / laneMax) * 50;
-  const scaleMax = Math.max(implied?.pct ?? 0, data.average?.avg ?? 0, ...measured.map((row) => Math.abs(row.movePct!)));
+  /* Fiyat karşılığı: straddle zaten dolar (orta fiyatların toplamı) ve
+     yüzde onun spota oranı; bant spot ± straddle. */
+  const range =
+    implied && data.spot !== null && data.spot > 0
+      ? { low: data.spot - implied.straddle, high: data.spot + implied.straddle }
+      : null;
+  const band = (pct: number) => ({ left: `${laneX(-pct)}%`, right: `${100 - laneX(pct)}%` });
   const timingLabel = (hour: string | null) =>
     hour === "bmo" ? t.earnings.beforeOpen : hour === "amc" ? t.earnings.afterClose : d.emTimingUnknown;
 
@@ -105,7 +127,6 @@ export async function ExpectedMovePanel({
                   <span className={cn("numeral", styles.readingValue)}>±{formatPercentPlain(implied.pct, locale, 1)}</span>
                   <span className={styles.emBadge}>{d.emIndicative}</span>
                 </dd>
-                {scaleMax > 0 && <ReadingBar ratio={implied.pct / scaleMax} />}
                 <dd className={cn("numeral", styles.readingMeta)}>
                   {d.emImpliedDetail
                     .replace("{expiry}", formatEtDateCompact(implied.expiry, locale))
@@ -117,12 +138,29 @@ export async function ExpectedMovePanel({
               <dd className="text-small leading-relaxed text-muted">{d.emReason[reason ?? "no-quotes"]}</dd>
             )}
           </div>
+          {/* FİYAT KARŞILIĞI (26 Kasım 2026): yüzdenin doların diliyle okunuşu —
+              "hisse rapor ertesinde nereye kadar gidebilir" sorusunun piyasanın
+              fiyatladığı cevabı. Bant yoksa okuma da yok (yer ayrılmıyor). */}
+          {range && implied && data.spot !== null && (
+            <div className={cn(styles.reading, styles.emRangeReading)}>
+              <dt>{d.emRange}</dt>
+              <dd className={cn("numeral", styles.readingValue, styles.emRangeValue)}>
+                {formatPrice(range.low, locale)}
+                {" – "}
+                <span className="whitespace-nowrap">{formatPrice(range.high, locale, { currency: true })}</span>
+              </dd>
+              <dd className={cn("numeral", styles.readingMeta)}>
+                {d.emRangeMeta
+                  .replace("{spot}", formatPrice(data.spot, locale, { currency: true }))
+                  .replace("{move}", formatPrice(implied.straddle, locale, { currency: true }))}
+              </dd>
+            </div>
+          )}
           <div className={styles.reading}>
             <dt>{d.emAverage}</dt>
             {data.average ? (
               <>
                 <dd className={cn("numeral", styles.readingValue)}>{formatPercentPlain(data.average.avg, locale, 1)}</dd>
-                {scaleMax > 0 && <ReadingBar ratio={data.average.avg / scaleMax} />}
                 <dd className={cn("numeral", styles.readingMeta)}>{d.emAverageCount.replace("{n}", String(data.average.count))}</dd>
               </>
             ) : (
@@ -137,7 +175,7 @@ export async function ExpectedMovePanel({
 
         {data.history.length > 0 && (
           <>
-            <p className="border-t border-line-soft pt-3 text-tiny font-semibold text-strong">{d.emHistory}</p>
+            <p className="border-t border-line-soft pt-3 text-tiny font-semibold text-strong">{d.emFigTitle}</p>
             {implied && (
               <p className={styles.emReadout}>
                 {measured.length >= MIN_READOUT_MOVES && (
@@ -161,7 +199,69 @@ export async function ExpectedMovePanel({
                     <th scope="col">{d.emColMove}</th>
                   </tr>
                 </thead>
+                {/* ÖLÇÜNÜN İKİ SATIRI raporlarla AYNI kulvarda (26 Kasım 2026):
+                    "Fiyatlanan" bandın kendisi (raporların arkasındaki gri
+                    şeridin koyusu — lejant işini de görüyor), "Ortalama"
+                    ±ortalama mutlak hareket, iki yöne dolu çubuk. */}
+                {(implied || data.average) && (
+                  <tbody className={craft.emSummary}>
+                    {implied && (
+                      <tr>
+                        <th scope="row">
+                          <span className="block font-semibold text-strong">{d.emRowBand}</span>
+                          <span className="block text-tiny font-normal text-muted">{d.emRowBandSub}</span>
+                        </th>
+                        <td className={craft.emLaneCell} aria-hidden>
+                          {laneMax > 0 && (
+                            <span className={craft.emLane}>
+                              <i className={cn("value-lane", craft.emLaneTrack)} />
+                              <i className={cn(craft.emLaneBand, craft.emLaneBandStrong)} style={band(implied.pct)} />
+                              <i className={craft.emLaneZero} />
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <span className="numeral font-semibold text-strong">±{formatPercentPlain(implied.pct, locale, 1)}</span>
+                        </td>
+                      </tr>
+                    )}
+                    {data.average && (
+                      <tr>
+                        <th scope="row">
+                          <span className="block font-semibold text-strong">{d.emRowAverage}</span>
+                          <span className="block text-tiny font-normal text-muted">
+                            {d.emAverageCount.replace("{n}", String(data.average.count))}
+                          </span>
+                        </th>
+                        <td className={craft.emLaneCell} aria-hidden>
+                          {laneMax > 0 && (
+                            <span className={craft.emLane}>
+                              <i className={cn("value-lane", craft.emLaneTrack)} />
+                              {implied && <i className={craft.emLaneBand} style={band(implied.pct)} />}
+                              <i className={craft.emLaneZero} />
+                              {/* İki yöne: ortalama MUTLAK hareket, işaretsiz. Sıfırdan
+                                  iki yana açılır (kaynak ortada). */}
+                              <i
+                                className="value-bar"
+                                data-motion-draw="line"
+                                style={{ ...band(data.average.avg), transformOrigin: "center" }}
+                              />
+                            </span>
+                          )}
+                        </td>
+                        <td>
+                          <span className="numeral font-semibold text-strong">{formatPercentPlain(data.average.avg, locale, 1)}</span>
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                )}
                 <tbody>
+                  <tr className={craft.emDivider}>
+                    <th scope="colgroup" colSpan={3}>
+                      {d.emHistory}
+                    </th>
+                  </tr>
                   {data.history.map((row) => (
                     <tr key={row.date}>
                       {/* Zaman tarihin altında: iki kısa bilgi tek hücrede,
@@ -245,19 +345,5 @@ export async function ExpectedMovePanel({
         )}
       </div>
     </Panel>
-  );
-}
-
-/**
- * Okumanın altındaki çizgi — sayı sola yaslı olduğu için çubuk da soldan
- * doluyor (geçmiş satırlarının kulvarı işaretli ve kendi ekseninde).
- * İki okumanın tavanı aynı: ikisinin ve geçmiş satırların en büyüğü.
- */
-function ReadingBar({ ratio }: { ratio: number }) {
-  return (
-    <dd aria-hidden className={cn("value-lane", styles.readingTrack)}>
-      {/* Şerit görünüme girince soldan dolar (ortak sözleşme, `line`). */}
-      <i className="value-bar" data-motion-draw="line" style={{ left: 0, width: `${Math.max(0, Math.min(1, ratio)) * 100}%` }} />
-    </dd>
   );
 }

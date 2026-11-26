@@ -29,6 +29,20 @@ import styles from "./askmove.module.css";
  *
  * Claude anahtarı yoksa soru kolonu yok ve hafta kartı notsuz (yalnız
  * veri); ikisi de yoksa panel hiç basılmaz.
+ *
+ * SAĞ–SOL DENGESİ (26 Kasım 2026, sahibinin sözü: "sağ sol dengesine
+ * dikkat ederek bu tasarımı iyileştirelim"). Önce not gelmeyince sağ kolon
+ * tek cümleye düşüyor, altı ~195–250 piksel boş kalıyordu (canlı MU, 1440).
+ * Şimdi iki yönlü dolgu: notsuz sağ kolonu aynı beş seansın Claude'suz
+ * okuması doldurur (lib/week-digest.ts → WeekMoveCard `WeekDigestView`),
+ * not etkenleriyle gelip sağ uzayınca sol sahne yedek açılış kartlarını
+ * sığdığı kadar açar (AskStock.tsx → FILL_EXTRA). Sohbet başlayınca kolon
+ * tavanı ve kaydırma (24 Kasım kararı, askmove.module.css) aynen.
+ * Ölçüm (geçici önizleme, MU, `page.route` ile not/sohbet; 1440, iki
+ * tema): kolonlardaki en büyük boş bant sol/sağ — oturumlu boş sohbet
+ * notsuz 35/29, not geldi 46/29 (önce sol ~110, karşılamanın üstü ve
+ * kartların altı), not bekliyor 37/53, oturumsuz 36/29, iki tur sohbet
+ * notsuz 49/115 (fark sağ künyenin üstünde). Yatay taşma 0.
  */
 async function getWeekMove(symbol: string): Promise<WeekMove | null> {
   try {

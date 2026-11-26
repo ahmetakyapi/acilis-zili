@@ -55,3 +55,14 @@ table.emWide td.emLaneCell { width:100%; padding-inline:14px; }
 .emLaneZero { position:absolute; inset-block:1px; left:50%; width:1px; background:var(--line-strong); }
 /* 10 Kasım: çubuk 5 → 8 piksel (kulvar 5); sıfıra dayanan uç düz, dış uç yuvarlak. */
 
+/* ---------- Beklenen Hareket: ölçünün iki satırı (26 Kasım 2026) ----------
+   Gerekçe ExpectedMovePanel.tsx → "TEK ÖLÇEK, TEK FİGÜR". "Fiyatlanan"
+   satırında bant raporların arkasındaki gri şeridin iki kat koyusu (aynı
+   şekil; lejant da o), "Ortalama" satırında ±ortalama büyüklük tonunda dolu
+   çubuk (ortak `value-bar`, renk yok: işaretsiz). Bölücü satır figürün iki
+   yarısını ayırıyor; başlığı ekran okuyucuya `colgroup` başlığı. */
+.emLaneBandStrong { background:color-mix(in srgb, var(--text-strong) 15%, transparent); }
+.emSummary tr:first-child > * { border-top:0; }
+table.emWide tr.emDivider > th { padding:14px 0 4px; color:var(--text-muted); font-size:12px; font-weight:600; text-align:left; }
+table.emWide tr.emDivider + tr > * { border-top:0; }
+

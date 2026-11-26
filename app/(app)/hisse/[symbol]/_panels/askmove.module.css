@@ -28,9 +28,15 @@
    11 Kasım: soru kolonu sohbete döndü (AskStock.tsx). 390'da öneriler
    yatay kayan tek şerit değil alt alta üç hap; panel NVDA'da 903 → 993
    (EN 1038). Telefon yedeği 890 → 1000; 1440'ta panel 358 → 354, yedek
-   aynı kaldı. 768/1024 bu turda ölçülmedi. */
-.skeleton { width: 100%; height: 362px; border-radius: 22px; }
-@media (min-width: 1600px) { .skeleton { height: 290px; } }
-@media (max-width: 1279px) { .skeleton { height: 420px; } }
-@media (max-width: 1023px) { .skeleton { height: 668px; } }
-@media (max-width: 639px) { .skeleton { height: 1000px; } }
+   aynı kaldı. 768/1024 bu turda ölçülmedi.
+   26 Kasım 2026: sağ kolon notsuzken Haftanın Okuması'yla doluyor, sol
+   kolon yan kolonun payı kadar yedek açılış kartı açıyor (WeekMoveCard.tsx,
+   AskStock.tsx). Gerçek /hisse/NVDA (sahte sağlayıcı, oturumsuz, not
+   düşünce): 1920 / 1440 / 1280 = 543, 1024 = 742, 768 = 1057, 390 = 1302
+   (önce canlı MU 1440 oturumsuz 515, 390 1006). Not beklerken 1440'ta 552.
+   Yedek bu boylara çekildi (eski 290/362/420/668/1000 her genişlikte
+   gerçeğin 150–300 piksel altındaydı). */
+.skeleton { width: 100%; height: 550px; border-radius: 22px; }
+@media (max-width: 1279px) { .skeleton { height: 745px; } }
+@media (max-width: 1023px) { .skeleton { height: 1060px; } }
+@media (max-width: 639px) { .skeleton { height: 1300px; } }

@@ -66,6 +66,10 @@
    telefonda not gelince alttaki her şeyi 153 piksel itiyordu (CLS 0,05).
    Not yazılamazsa (`failed`) tek cümle kalır, yer ayrılmaz. */
 .note { display: flex; flex: 1 1 auto; min-height: 170px; flex-direction: column; gap: 8px; }
+/* 26 Kasım 2026: iki kolonlu düzende bekleme yeri 170 → 232, notsuz
+   okumanın (Haftanın Okuması + künye) ölçülmüş boyu (1440, MU: 230). Not
+   yazılamazsa satır zıplamaz; not gelirse etkenlerle zaten uzar. */
+@media (min-width: 1024px) { .note { min-height: 232px; } }
 @media (max-width: 1023px) { .note { min-height: 155px; } }
 @media (max-width: 639px) { .note { min-height: 255px; } }
 .note[data-state="failed"] { min-height: 0; }
@@ -85,7 +89,47 @@
 .source { display: inline-flex; align-items: center; gap: 3px; margin-top: 3px; font-size: var(--text-small); font-weight: 600; color: var(--text-muted); transition: color .18s var(--ease-brand); }
 .source:hover { color: var(--primary); }
 .disclosure { margin: auto 0 0; font-size: var(--text-small); line-height: 1.45; color: var(--text-muted); }
-.failed { margin: 0; font-size: var(--text-small); line-height: 1.5; color: var(--text-muted); }
+/* 26 Kasım 2026: notsuz künye kolonun DİBİNDE, kıl çizgiyle (soldaki
+   "Bu Hisseye Sor" künyesiyle aynı hat; arayuz.md → ekran sırası 6). Kısa
+   kolonun farkı künyenin üstünde kalır. */
+.failed { margin: auto 0 0; padding-top: 10px; border-top: 1px solid var(--line-soft); font-size: var(--text-small); line-height: 1.45; color: var(--text-muted); }
+
+/* HAFTANIN OKUMASI (26 Kasım 2026; gerekçe WeekMoveCard.tsx →
+   WeekDigestView). Kutu değil: figürün altında düz bölüm. Önce aralık
+   şeridi (tam genişlik, kalın), altında üç ölçü yan yana; ölçüler AYNI
+   HATTA biter (ızgara satırı, değer satırı sabit 26). Dar kapta satır
+   (aşağıda). */
+.digest { display: flex; flex-direction: column; gap: 12px; padding: 2px 2px 0; }
+.digestTitle { margin: 0; font-size: var(--text-small); font-weight: 700; color: var(--text-muted); }
+.range { display: flex; flex-direction: column; gap: 8px; }
+.rangeHead, .rangeEnds { display: flex; flex-wrap: wrap; align-items: baseline; justify-content: space-between; gap: 2px 12px; margin: 0; font-size: var(--text-small); color: var(--text-muted); }
+.rangeHead > span:first-child { font-weight: 600; color: var(--text-body); }
+.near { font-weight: 700; color: var(--text-body); }
+.near[data-near="low"] { color: var(--down); }
+.near[data-near="high"] { color: var(--up); }
+/* Aralık şeridi ikincil: dolgu 8 (gün satırları kahraman, 12). */
+.rangeLane { --notch-out: 5px; margin: 4px 0; }
+.rangeEnds b { font-weight: 700; color: var(--text-strong); }
+.tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px 20px; margin: 2px 0 0; }
+.tile { display: grid; grid-template-rows: auto 26px auto; align-content: start; row-gap: 2px; min-width: 0; padding-top: 10px; border-top: 1px solid var(--line-soft); }
+.tile dt { font-size: var(--text-small); font-weight: 600; color: var(--text-muted); }
+.tile dd { margin: 0; min-width: 0; }
+.tileValue { display: flex; align-items: baseline; gap: 6px; font-size: 20px; line-height: 26px; font-weight: 700; letter-spacing: -.03em; color: var(--text-strong); white-space: nowrap; }
+.tileValue[data-tone="up"] { color: var(--up); }
+.tileValue[data-tone="down"] { color: var(--down); }
+.tileDay { font-size: var(--text-small); font-weight: 600; letter-spacing: 0; color: var(--text-muted); }
+.tileSub { font-size: var(--text-small); line-height: 1.4; color: var(--text-muted); }
+/* Dar kapta (telefon) ölçüler satır: ad solda, değer sağda, künye altta.
+   İkişerli ızgarada üçüncü ölçü tek başına alt satıra düşüyor, künyesi
+   ikiye bölünüyordu (390, ölçüldü). */
+@container (max-width: 379px) {
+  .tiles { grid-template-columns: minmax(0, 1fr); row-gap: 8px; }
+  .tile { grid-template-columns: minmax(0, 1fr) auto; grid-template-rows: auto auto; column-gap: 12px; align-items: baseline; padding-top: 8px; }
+  .tile dt { grid-column: 1; grid-row: 1; }
+  .tileValue { grid-column: 2; grid-row: 1; font-size: 17px; line-height: 22px; }
+  .tileSub { grid-column: 1 / -1; }
+}
+.pendingPoints { display: grid; gap: 8px; margin-top: 10px; padding-top: 12px; border-top: 1px solid var(--line-soft); }
 .loading { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: var(--text-small); color: var(--text-muted); }
 .loadingIcon { color: var(--brass); animation: wm-glint 1.4s var(--ease-brand) infinite; }
 .line { height: 12px; border-radius: 6px; }

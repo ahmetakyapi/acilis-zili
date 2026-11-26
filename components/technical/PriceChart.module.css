@@ -3,17 +3,30 @@
    çizgisi 2 piksel, metin tabanı 12, ağırlıklar 400/600/700, renk yalnız
    anlamdan (yön, etkileşim mavisi bölgede), gölge ve çerçeve yok.
 
-   ÜÇ SÜTUN: çizim (esnek) | bağ kanalı (16) | etiket sütunu (`--label-w`).
-   Yükseklik sabit: etiket payı (`LABEL_GAP`, 20/260) en kısa çizime göre
-   hesaplandığı için çizim 260'ın altına inmez.
-   Ölçüm (NVDA sekiz, AAPL yedi, TSLA beş etiket; 1440/1024/768/390/360,
-   iki tema): 768 ve üstünde çizim 340 piksel, komşu etiketler arası en az
-   boşluk 8,2 piksel (adım 26); 390 ve 360'ta 260 piksel, boşluk 2 (adım
-   20); çakışan etiket 0, kesilen etiket metni 0. Çizim genişliği 1440'ta
-   1.114, 390'da 188, 360'ta 158 piksel. */
-.chart { --label-w:132px; --plot-h:340px; display:grid; gap:8px; min-width:0; margin:0; }
-.frame { position:relative; display:grid; grid-template-columns:minmax(0,1fr) 16px var(--label-w); height:var(--plot-h); min-width:0; }
-.plot { position:relative; min-width:0; border-radius:10px; background:
+   ÜÇ SÜTUN, SEVİYE MERCEĞİ (26 Kasım 2026): çizim (esnek) | kama
+   (`--wedge-w`) | mercek (`--lens-w`). Önceki hâl: çizim | 16 piksellik bağ
+   kanalı | 132 piksellik etiket sütunu; etiketler grafiğin ölçeğinde
+   duruyordu (14 Kasım ölçümü: komşu etiketler arası en az boşluk 8,2 piksel
+   masaüstünde, 2 piksel telefonda; çizim 390'da 188 piksel genişti).
+   Mercek çizimle aynı boyda ve kendi ölçeğinde; satır 22 piksel, en az
+   adım 26 (`ROW_GAP_*`). Telefonda (< 768) kama yok: mercek grafiğin
+   altında tam genişlikte (`--lens-h`), çizim de tam genişliğe çıkar.
+   Ölçüm (26 Kasım; önce canlı MU, sonra sahte sağlayıcı AMD/MU/NVDA/TSLA/
+   SNDK + MU benzeri önizleme; 1440/1024/768/390/360, iki tema):
+   - Canlı MU (1440): yedi etiket, grafikte 45 piksellik bandın (340'ın
+     %13'ü) etrafına 131 piksele itiliyordu; etiket 12 piksel, sütun 132,
+     komşu boşluk 8,2 (390'da 2). Önizlemede aynı kurgu (tepe ~900, plan
+     591–691): grafikte 106 piksellik bant mercekte 306 piksele açılıyor
+     (2,9 kat), satırlar gerçek yerinde.
+   - Sonra: mercek 300 (1440/1024) / 256 (768) / tam genişlik (390: 316,
+     360: 286); satır 13/12/14 piksel (ad/uzaklık/fiyat); komşu satır
+     boşluğu en az 4 piksel her genişlikte (sahte AMD on seviye + fiyat:
+     telefonda mercek 312 piksele uzuyor); merceğin dışına taşan satır 0,
+     kesilen ad 0, yatay taşma 0. Çizim 1440'ta 1.114 → 914 piksel; 390'da
+     188 → 316 (tam genişlik, boyu 260 → 220). */
+.chart { --lens-w:300px; --wedge-w:48px; --plot-h:340px; --lens-h:232px; --lens-tone:color-mix(in srgb, var(--text-strong) 5%, transparent); display:grid; grid-template-columns:minmax(0,1fr); gap:8px 0; min-width:0; margin:0; }
+.chart[data-lens] { grid-template-columns:minmax(0,1fr) var(--wedge-w) var(--lens-w); }
+.plot { position:relative; grid-column:1; grid-row:1; height:var(--plot-h); min-width:0; border-radius:10px; background:
   linear-gradient(var(--line-soft),var(--line-soft)) 0 0 / 100% 1px no-repeat,
   linear-gradient(var(--line-soft),var(--line-soft)) 0 100% / 100% 1px no-repeat; }
 
@@ -25,13 +38,18 @@
 /* Bölge bir aralık, seviye değil: bant. Mavi sitenin etkileşim mavisi DEĞİL
    burada "alan" tonu (`--primary-wash`); liste kartı rayı ve Tek Harita ile
    aynı bant dili. */
-.band { position:absolute; left:0; right:0; border-block:1px solid color-mix(in srgb, var(--primary) 45%, transparent); background:var(--primary-wash); }
+.band, .lensBand { position:absolute; left:0; right:0; border-block:1px solid color-mix(in srgb, var(--primary) 45%, transparent); background:var(--primary-wash); }
+/* Mercekte bant kenarsız: kenar çizgileri satırın yazısının ortasından
+   geçiyordu (tek fiyatlı bölgede 4 piksellik bant adı üstünü çizdi). */
+.lensBand { border-block:0; }
 /* Stopun altı: çizginin hemen altında 10 piksellik soluk düşüş şeridi.
    İlk hâli stopdan çizimin dibine kadar yıkamaydı; yükselen bir hissede
    (AAPL: altı ay önce 250, stop 344) geçmişin TAMAMI pembeye boyanıyor ve
    grafik "her yer tehlike" diye okunuyordu (14 Kasım, kendi önizlemem).
    Şerit yalnız çizginin hangi yanının "plan geçersiz" olduğunu söylüyor. */
-.void { position:absolute; left:0; right:0; height:10px; background:linear-gradient(color-mix(in srgb, var(--down-wash) 90%, transparent), transparent); }
+.void, .lensVoid { position:absolute; left:0; right:0; height:10px; background:linear-gradient(color-mix(in srgb, var(--down-wash) 90%, transparent), transparent); }
+/* Merceğe giren bant: kama ve mercekle aynı ton, tek yüzey gibi okunur. */
+.focus { position:absolute; left:0; right:0; background:var(--lens-tone); }
 
 /* ---- Çizgiler ---- */
 .svg { position:absolute; inset:0; width:100%; height:100%; overflow:visible; }
@@ -41,33 +59,48 @@
 .svg path[data-window="200"] { stroke-dasharray:1.5 3.5; stroke-width:1.75; }
 .dot { position:absolute; right:-5px; width:10px; height:10px; margin-top:-5px; border:2px solid var(--premium-surface, var(--surface-solid)); border-radius:999px; background:var(--text-strong); box-sizing:border-box; }
 
-/* ---- Bağ kanalı ve etiketler ---- */
-.leaders { width:100%; height:100%; overflow:visible; }
-.leaders line { stroke:var(--line-strong); stroke-width:1; vector-effect:non-scaling-stroke; }
-.leaders line[data-tone="price"] { stroke:var(--text-strong); stroke-width:1.5; }
-.leaders line[data-tone="target"] { stroke:var(--up); }
-.leaders line:is([data-tone="stop"],[data-tone="sellLevel"]) { stroke:var(--down); }
-.leaders line[data-tone="entry"] { stroke:var(--primary); }
-.labels { position:relative; min-width:0; margin:0; padding:0; list-style:none; }
-.labels li { position:absolute; left:0; right:0; display:flex; align-items:baseline; justify-content:space-between; gap:6px; height:16px; margin-top:-8px; padding-left:6px; font-size:12px; line-height:16px; white-space:nowrap; }
-.labels li > span { min-width:0; overflow:hidden; text-overflow:ellipsis; font-weight:600; color:var(--text-muted); }
-.labels li > b { flex:none; font-weight:700; color:var(--text-strong); }
-.labels li[data-tone="target"] > span { color:var(--up); }
-.labels li:is([data-tone="stop"],[data-tone="sellLevel"]) > span { color:var(--down); }
-.labels li[data-tone="entry"] > span { color:var(--primary-ink); }
-/* Fiyat etiketi dolu çip: sütundaki tek "şimdi". Adı (Son Fiyat / Güncel
-   Fiyat) başlıkta büyük puntoyla yazılı; burada yalnız sayı sığar. */
-.labels li[data-tone="price"] { height:20px; margin-top:-10px; padding:0 7px; border-radius:6px; background:var(--text-strong); line-height:20px; }
-/* Çipin yazısı sayfa zemininin tonu (`--page-bg`, iki temada opak).
-   `--surface-solid` koyu temada yarı saydam beyaz: çip beyaz üstüne beyaz
-   basıyordu (14 Kasım, koyu tema önizlemesi). */
-.labels li[data-tone="price"] > span { font-weight:600; color:color-mix(in srgb, var(--page-bg) 78%, transparent); }
-.labels li[data-tone="price"] > b { color:var(--page-bg); }
+/* ---- Kama ---- */
+.wedge { grid-column:2; grid-row:1; width:100%; height:var(--plot-h); overflow:visible; }
+.wedge polygon { fill:var(--lens-tone); }
+/* Büyütme anlamsızsa (< 2 kat, `ZOOM_NOTE_MIN`) bant tonu ve kama yüzeyi
+   çizilmez; yalnız bağlar kalır. */
+.chart:not([data-zoom]) :is(.focus, .wedge polygon, .wedge line[data-edge]) { display:none; }
+.wedge line { stroke:var(--line-strong); stroke-width:1; vector-effect:non-scaling-stroke; }
+.wedge line[data-edge] { stroke:var(--line); }
+.wedge line[data-tone="price"] { stroke:var(--text-strong); stroke-width:1.5; }
+.wedge line[data-tone="target"] { stroke:var(--up); }
+.wedge line:is([data-tone="stop"],[data-tone="sellLevel"]) { stroke:var(--down); }
+.wedge line[data-tone="entry"] { stroke:var(--primary); }
+
+/* ---- Mercek ---- */
+.lens { position:relative; grid-column:3; grid-row:1; height:var(--plot-h); min-width:0; margin:0; padding:0; list-style:none; border-radius:0 10px 10px 0; background:var(--lens-tone); }
+.row { position:absolute; left:0; right:0; top:var(--wide); display:grid; grid-template-columns:minmax(0,1fr) auto auto; align-items:baseline; gap:12px; height:22px; margin-top:-11px; padding:0 14px 0 16px; line-height:22px; white-space:nowrap; }
+/* Kamadaki bağın merceğin içindeki ucu: satırın soluna 8 piksel. */
+.row::before { content:""; position:absolute; top:50%; left:0; width:8px; border-top:1px solid var(--line-strong); }
+.rowName { min-width:0; overflow:hidden; text-overflow:ellipsis; font-size:13px; font-weight:600; color:var(--text-muted); }
+.rowDistance { font-size:12px; font-weight:400; color:var(--text-muted); }
+.rowValue { min-width:0; font-size:14px; font-weight:700; text-align:right; color:var(--text-strong); }
+.row[data-tone="target"] > .rowName { color:var(--up); }
+.row[data-tone="target"]::before { border-color:var(--up); }
+.row:is([data-tone="stop"],[data-tone="sellLevel"]) > .rowName { color:var(--down); }
+.row:is([data-tone="stop"],[data-tone="sellLevel"])::before { border-color:var(--down); }
+.row[data-tone="entry"] > .rowName { color:var(--primary-ink); }
+.row[data-tone="entry"]::before { border-color:var(--primary); }
+/* Fiyat satırı dolu çip: merceğin tek "şimdi"si. Çipin yazısı sayfa zemininin
+   tonu (`--page-bg`, iki temada opak); `--surface-solid` koyu temada yarı
+   saydam beyaz ve çip beyaz üstüne beyaz basıyordu (14 Kasım). */
+.row[data-tone="price"] { left:8px; right:6px; height:26px; margin-top:-13px; padding:0 8px; border-radius:6px; background:var(--text-strong); line-height:26px; }
+.row[data-tone="price"]::before { left:-8px; border-top:1.5px solid var(--text-strong); }
+.row[data-tone="price"] > .rowName { color:color-mix(in srgb, var(--page-bg) 78%, transparent); }
+.row[data-tone="price"] > .rowValue { color:var(--page-bg); }
+.lensHead { grid-column:2 / 4; grid-row:2; display:flex; justify-content:flex-end; align-items:baseline; gap:8px; margin:0; padding-right:14px; font-size:12px; line-height:16px; color:var(--text-muted); }
+.lensHead > span { font-weight:600; }
+.lensHead > b { font-weight:600; color:var(--text-body); }
 
 /* ---- Ay ekseni ve künye ---- */
-.months { position:relative; height:16px; margin-right:calc(var(--label-w) + 16px); font-size:12px; line-height:16px; color:var(--text-muted); }
+.months { position:relative; grid-column:1; grid-row:2; height:16px; font-size:12px; line-height:16px; color:var(--text-muted); }
 .months > span { position:absolute; top:0; padding-left:6px; border-left:1px solid var(--line-strong); white-space:nowrap; }
-.caption { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 16px; padding-top:10px; border-top:1px solid var(--line-soft); font-size:12px; line-height:1.4; color:var(--text-muted); }
+.caption { grid-column:1 / -1; grid-row:3; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 16px; padding-top:10px; border-top:1px solid var(--line-soft); font-size:12px; line-height:1.4; color:var(--text-muted); }
 .legend { display:flex; flex-wrap:wrap; gap:2px 14px; color:var(--text-body); }
 .legend > span { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; }
 .legend > span::before { content:""; width:18px; border-top:1.25px solid var(--text-muted); }
@@ -85,18 +118,29 @@
 .scrubRead[data-side="start"] { left:6px; }
 .scrubRead > b { font-weight:700; color:var(--text-strong); }
 
+/* Orta genişlik: mercek daralır ama bölgenin dört haneli aralığı
+   ("1.255,35–1.271,10", 118 piksel) adın yanına sığar. */
+@media (max-width:1023px) {
+  .chart { --lens-w:256px; --wedge-w:36px; }
+  .row { gap:10px; padding:0 10px 0 14px; }
+}
+/* Telefon: tek sütun — çizim, ay ekseni, merceğin başlığı, mercek, künye. */
 @media (max-width:767px) {
-  .chart { --label-w:112px; --plot-h:260px; }
-  .labels li { padding-left:4px; gap:4px; }
-  /* 112 piksellik sütunda iki etiket sığmıyor (390, ölçüldü): bölgenin
-     aralığı ("353,07-356,22", 78 piksel) adını "B…" diye kesiyordu, dört
-     haneli fiyatta çipin adı da kesiliyordu. Bölge yalnız adıyla (bandı
-     çizimde, sayıları hemen alttaki plan panelinde), çip yalnız sayıyla. */
-  .labels li[data-tone="entry"] > b { display:none; }
-  .labels li[data-tone="price"] { justify-content:flex-end; }
-  .labels li[data-tone="price"] > span { display:none; }
+  .chart { --plot-h:220px; }
+  .chart[data-lens] { grid-template-columns:minmax(0,1fr); }
+  .wedge { display:none; }
+  .months { grid-row:2; }
+  .lensHead { grid-column:1; grid-row:3; justify-content:space-between; margin-top:8px; padding:0 2px; }
+  .lens { grid-column:1; grid-row:4; height:var(--lens-h); border-radius:10px; }
+  .caption { grid-row:5; }
+  .row { top:var(--narrow); }
+  .row::before { display:none; }
+  .row[data-tone="price"] { left:6px; }
+  /* Grafikteki bant telefonda sağ kenarında bir çizgiyle de işaretli:
+     kama yok, merceğin neyi büyüttüğünü bu ton ve kenar söylüyor. */
+  .focus { border-right:3px solid var(--line-strong); }
   .note { flex-basis:100%; }
 }
-/* 360'ta çizim 158 piksel: altı ay etiketi 26'şar piksele düşüp birbirine
-   değiyordu (etiket 28). Dar ekranda iki ayda bir. */
+/* 360'ta altı ay etiketi birbirine değiyordu (etiket 28 piksel). Dar
+   ekranda iki ayda bir. Çizim artık tam genişlikte; yine de 360'ta ölç. */
 @media (max-width:479px) { .months > span:nth-child(even) { display:none; } }

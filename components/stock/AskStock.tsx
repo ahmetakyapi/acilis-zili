@@ -1,6 +1,6 @@
 "use client";
 
-import { useId, useState, type ReactNode } from "react";
+import { useEffect, useId, useRef, useState, type ReactNode } from "react";
 import { useSearchParams } from "next/navigation";
 import { ArrowCounterClockwise, ArrowRight, ArrowUpRight, NotePencil, Sparkle, WarningCircle } from "@phosphor-icons/react";
 import { ChatComposer, ChatThread, SuggestionChips, type ChatMessage } from "@/components/ai/chat/Chat";
@@ -100,6 +100,20 @@ const PREFILL_PARAM = "soru";
 const ANCHOR = "bu-hisseye-sor";
 
 const MAX_CHARS = 300;
+/* AÇILIŞ KARTLARI YAN KOLONU DOLDURUR (26 Kasım 2026, sahibinin sözü: "sağ
+   sol dengesine dikkat ederek bu tasarımı iyileştirelim"). Sunucu dört
+   kartın ardından havuzdaki en çok üç yedek soruyu `display:none` basar
+   (AskStock.module.css → `.starters`); iki kolonlu düzende (≥ 1024) yan
+   kolon uzunsa (Claude notu etkenleriyle geldi) sığan kadarı açılır. Önce
+   1440'ta not gelince sol sahnede karşılamanın üstünde ve kartların altında
+   ~110'ar piksel ölü zemin kalıyordu (geçici önizleme, MU). Kural
+   `.claude/rules/arayuz.md` → "Boşluk esnetilmez, doldurulur";
+   `components/today/FillColumn.tsx` ile aynı yöntem: hepsini kapat, yan
+   kolonun bıraktığı payı ölç, sığanı aç. Yalnız pay içinde açıldığı için
+   satırın boyu değişmez (geri besleme yok). JS kapalıyken dört kart. */
+const FILL_EXTRA = 3;
+/** Açılan karttan sonra sahnede kalması gereken en az boşluk (karşılama–kart aralığı kadar). */
+const FILL_BREATH = 14;
 /** Sunucuya giden önceki tur sayısı ve yanıt kısaltması (core'daki sınırla aynı; sunucu yine keser). */
 const HISTORY_TURNS = 2;
 const HISTORY_ANSWER_CHARS = 320;
@@ -138,7 +152,8 @@ export function AskStock({
      OLMADIĞI anlamına geliyor, üç hap da "cevaplayamıyorum"a çıkıyordu. Veri
      yoksa hap yok; okur kendi sorusunu yazar. */
   const pool: Suggestion[] = suggestions;
-  const starters = pool.slice(0, STARTER_COUNT);
+  const starters = pool.slice(0, STARTER_COUNT + FILL_EXTRA);
+  const stageRef = useRef<HTMLDivElement>(null);
   /* Girişten dönüş: adresteki öneri kutuya yazılır, GÖNDERİLMEZ. Yalnız
      sunucunun bu sayfa için seçtiği öneriler ya da sözlükteki örnekler kabul
      edilir — dışarıdan hazırlanmış bir bağlantı kutuya keyfî metin koyamasın.
@@ -255,6 +270,55 @@ export function AskStock({
   }
 
   const chatting = messages.length > 0;
+
+  useEffect(() => {
+    const stage = stageRef.current;
+    const panel = stage?.closest("[data-askmove]");
+    if (!stage || !panel) return;
+    const wide = window.matchMedia("(min-width: 1024px)");
+    const extras = () => [...stage.querySelectorAll<HTMLElement>(`ul > li:nth-child(n + ${STARTER_COUNT + 1})`)];
+    if (extras().length === 0) return;
+    /* Sahnenin içeriği (karşılama + kartlar) ile kutusu arasındaki pay. */
+    const slack = () => {
+      const kids = [...stage.children] as HTMLElement[];
+      const first = kids[0]?.getBoundingClientRect();
+      const last = kids.at(-1)?.getBoundingClientRect();
+      return first && last ? stage.clientHeight - (last.bottom - first.top) : 0;
+    };
+    let frame = 0;
+    const fit = () => {
+      const rows = extras();
+      rows.forEach((row) => row.removeAttribute("data-fill-open"));
+      if (!wide.matches) return;
+      for (const row of rows) {
+        row.setAttribute("data-fill-open", "");
+        if (slack() < FILL_BREATH) {
+          row.removeAttribute("data-fill-open");
+          break;
+        }
+      }
+    };
+    const schedule = () => {
+      cancelAnimationFrame(frame);
+      frame = requestAnimationFrame(fit);
+    };
+    fit();
+    /* Gözlemci yan kolonun İÇERİĞİNİ izler (not sonradan gelir, etkenler
+       açılıp kapanır); kendi kolonunu izleseydi açtığı kart onu yeniden
+       tetiklerdi. */
+    const observer = new ResizeObserver(schedule);
+    for (const col of panel.children) {
+      if (!col.contains(stage) && col.firstElementChild) observer.observe(col.firstElementChild);
+    }
+    wide.addEventListener("change", schedule);
+    window.addEventListener("resize", schedule);
+    return () => {
+      cancelAnimationFrame(frame);
+      observer.disconnect();
+      wide.removeEventListener("change", schedule);
+      window.removeEventListener("resize", schedule);
+    };
+  }, [chatting, signedIn, starters.length]);
   const kickers = starters.map((item) => labels.topics[item.topic]);
   const welcome = (
     <div className={styles.welcome}>
@@ -285,7 +349,7 @@ export function AskStock({
       </div>
       {!signedIn ? (
         <>
-          <div className={styles.stage}>
+          <div ref={stageRef} className={styles.stage}>
             {welcome}
             {/* Oturumsuz öneriler giriş bağlantısı; görünüm ortak açılış
                 kartı (Chat.module.css → `.card`), bileşen düğme bastığı için
@@ -330,7 +394,7 @@ export function AskStock({
               className={styles.thread}
             />
           ) : (
-            <div className={styles.stage}>
+            <div ref={stageRef} className={styles.stage}>
               {welcome}
               <SuggestionChips
                 items={starters.map((item) => item.text)}

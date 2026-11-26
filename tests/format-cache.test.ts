@@ -44,7 +44,9 @@ test("sayı biçimleri taze Intl ile aynı (dil ve hane karışık sırada)", ()
       for (const digits of [2, 0, 4, 1]) {
         const nf = fresh(locale, digits);
         assert.equal(formatPrice(value, locale, { digits }), nf.format(value));
-        assert.equal(formatPercent(value, locale, digits), percent(nf.format(Math.abs(value)), locale, signOf(value)));
+        /* Sıfıra yuvarlanan değer işaretsiz (lib/utils.ts → formatPercent). */
+        const body = nf.format(Math.abs(value));
+        assert.equal(formatPercent(value, locale, digits), percent(body, locale, /[1-9]/.test(body) ? signOf(value) : ""));
         assert.equal(formatPercentPlain(value, locale, digits), percent(nf.format(Math.abs(value)), locale, ""));
       }
       const two = fresh(locale, 2).format(Math.abs(value));

@@ -2,17 +2,24 @@ import styles from "../stock.module.css";
 import { DataError } from "@/components/ui/primitives";
 import { getStatus } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
-import { getCompanyProfile, getQuote } from "@/lib/providers";
+import { getChartBars, getCompanyProfile, getQuote } from "@/lib/providers";
 import { getKeyMetrics } from "@/lib/providers/finnhub";
+import { etParts } from "@/lib/market-hours";
+import { US_WITHHOLDING } from "@/lib/tax";
 import { peerSpread, type PeerMetric } from "@/lib/peer-spread";
 import { trAblative } from "@/lib/scorecard";
 import { formatPercentPlain, formatPrice, formatVolume, NO_VALUE, bandFiyatiKapsiyorMu, peRatioOf } from "@/lib/utils";
 import { sectorPeerValues } from "./peer-spreads";
 import { PeerStrip } from "./PeerStrip";
+import { MetricGauge } from "./MetricGauge";
 import depth from "./depth.module.css";
 
 /** Kulvar alan ölçü: kartta yazan SAYI (biçimlenmeden önce) ve biçimleyicisi. */
 type PeerCell = { metric: PeerMetric; value: number | null; format: (v: number) => string };
+/** Sektör verisi olmayan hücrenin kıyası (MetricGauge): çizim ya da yalnız künye. */
+type Gauge = { bar?: { value: number; reference: number; max: number }; caption: string; aria: string };
+/** Kıyasla değer arasında bu yüzdeden az fark "aynı" okunur — "%0 Düşük" yazmasın. */
+const SAME_PCT = 3;
 
 export async function MetricsCard({
   symbol,
@@ -24,7 +31,7 @@ export async function MetricsCard({
   t: Dictionary;
 }) {
   const status = await getStatus();
-  const [metricsResult, quoteResult, profileResult, sectorPeers] = await Promise.all([
+  const [metricsResult, quoteResult, profileResult, sectorPeers, barsResult] = await Promise.all([
     getKeyMetrics(symbol),
     getQuote(symbol, status),
     /* PARA BİRİMİ ŞART. Finnhub'ın metrik ucu EPS ve 52 hafta bandını
@@ -38,6 +45,11 @@ export async function MetricsCard({
     /* Sektör kulvarının komşuları — Hisse Skor Kartı'yla aynı satırlar ve
        aynı kotasyon isteği (istek içi önbellek, `peer-spreads.ts`). */
     sectorPeerValues(symbol, status),
+    /* HACMİN KIYASI (26 Kasım 2026): son 20 tamamlanmış seansın ortalaması.
+       Seri Hareketli Ortalamalar'ın (ve Teknik Fotoğraf'ın) zaten çektiği
+       bir yıllık gün barları — aynı istek, aynı önbellek; yeni sağlayıcı
+       turu yok. Gelmezse hacim hücresi yalnız sayı kalır. */
+    getChartBars(symbol, "1Y", status),
   ]);
 
   if (!metricsResult.ok) {
@@ -71,7 +83,88 @@ export async function MetricsCard({
   const fmtRatio = (v: number) => formatPrice(v, locale);
   const signedMargin = (v: number) => `${v < 0 ? "−" : ""}${formatPercentPlain(v, locale, 1)}`;
   const peValue = hisseBasi(homeCurrency ? null : peRatioOf(quote?.price, m.eps));
-  const rows: [string, string, PeerCell?][] = [
+  /* KIYASLAR (26 Kasım 2026, görsel tur) — gerekçe MetricGauge.tsx. Hepsi
+     bu kartın zaten okuduğu alanlardan türüyor; yeni sayı yok. */
+  const v = t.stockVisuals;
+  const fmtPct = (n: number) => String(Math.round(Math.abs(n)));
+  const relCaption = (diffPct: number, above: string, below: string, same: string) =>
+    Math.abs(diffPct) < SAME_PCT ? same : (diffPct > 0 ? above : below).replace("{p}", fmtPct(diffPct));
+  /* F/K kartta yazan sayı (ADR'de sağlayıcının ana borsa oranı). */
+  const peShown = hisseBasi(homeCurrency ? m.peRatio : peValue);
+
+  /* İleri F/K'nın kıyası bugünkü F/K: çentik F/K, çubuk F/K'dan ileri F/K'ya.
+     İkisi de pozitifken (zarar beklentisinde oran anlamsız). */
+  let fwdGauge: Gauge | undefined;
+  if (m.forwardPe && m.forwardPe > 0 && peShown && peShown > 0) {
+    const caption = relCaption(((m.forwardPe - peShown) / peShown) * 100, v.gaugeFwdAbove, v.gaugeFwdBelow, v.gaugeFwdEqual);
+    fwdGauge = {
+      bar: { value: m.forwardPe, reference: peShown, max: Math.max(m.forwardPe, peShown) * 1.25 },
+      caption,
+      aria: v.gaugeFwdAria.replace("{v}", fmtRatio(m.forwardPe)).replace("{r}", fmtRatio(peShown)).replace("{pos}", caption),
+    };
+  }
+  /* PD/DD'nin paydası: hisse başına defter değeri, doların kendisi. ADR'de
+     ana borsanın parasında, sınıf karışıklığında başka hissenin — yazılmaz. */
+  let bookGauge: Gauge | undefined;
+  if (!homeCurrency && olculerTutarli && m.bookValuePerShare && m.bookValuePerShare > 0) {
+    const book = formatPrice(m.bookValuePerShare, locale, { currency: true });
+    bookGauge = { caption: v.gaugeBook.replace("{v}", book), aria: v.gaugeBookAria.replace("{v}", book) };
+  }
+  /* Hisse başına kârın fiyata oranı (kâr getirisi = 1 / F/K): mevduat ya da
+     tahvil faiziyle yan yana konabilen tek değerleme okuması. */
+  let epsGauge: Gauge | undefined;
+  if (!homeCurrency && peShown && peShown > 0) {
+    const y = formatPercentPlain(100 / peShown, locale, 1);
+    epsGauge = { caption: v.gaugeEarningsYield.replace("{v}", y), aria: v.gaugeEarningsYieldAria.replace("{v}", y) };
+  }
+  /* Temettü: Türk bireysel yatırımcının eline geçen, W-8BEN'li %20 stopaj
+     sonrası (tek kaynak lib/tax.ts → US_WITHHOLDING). Sıfır verim "ödemiyor". */
+  let dividendGauge: Gauge | undefined;
+  if (m.dividendYield === 0) {
+    dividendGauge = { caption: v.gaugeNoDividend, aria: v.gaugeNoDividend };
+  } else if (m.dividendYield !== null && m.dividendYield !== undefined && m.dividendYield > 0) {
+    const net = formatPercentPlain(m.dividendYield * (1 - US_WITHHOLDING.w8ben / 100), locale, 2);
+    dividendGauge = {
+      caption: v.gaugeNetDividend.replace("{v}", net),
+      aria: v.gaugeNetDividendAria.replace("{w}", String(US_WITHHOLDING.w8ben)).replace("{v}", net),
+    };
+  }
+  /* Beta'nın kıyası piyasanın kendisi (1). Ölçek en az 0–2: 1,06 ile 1,00
+     arasındaki fark kulvarın ortasında kısa bir çubuk, abartılmış değil. */
+  let betaGauge: Gauge | undefined;
+  if (m.beta && m.beta > 0) {
+    const caption = relCaption((m.beta - 1) * 100, v.gaugeBetaAbove, v.gaugeBetaBelow, v.gaugeBetaEqual);
+    betaGauge = {
+      bar: { value: m.beta, reference: 1, max: Math.max(2, m.beta * 1.25) },
+      caption,
+      aria: v.gaugeBetaAria.replace("{v}", fmtRatio(m.beta)).replace("{pos}", caption),
+    };
+  }
+  /* Hacmin kıyası: anlatılan seanstan ÖNCEKİ son 20 seansın ortalaması
+     (bugünün barı ortalamaya girmez, yoksa kendisiyle kıyaslanır). Seans
+     sürerken hacim henüz birikiyor; bu ekran okuyucu adında ve `title`da
+     söyleniyor. 20 seans yoksa kıyas yok. */
+  let volumeGauge: Gauge | undefined;
+  if (quote?.volume && barsResult.ok) {
+    const prior = barsResult.data
+      .filter((bar) => bar.volume > 0 && etParts(new Date(bar.time * 1000)).dateStr < status.sessionDate)
+      .slice(-20);
+    if (prior.length === 20) {
+      const avg = prior.reduce((sum, bar) => sum + bar.volume, 0) / prior.length;
+      const caption = relCaption(((quote.volume - avg) / avg) * 100, v.gaugeVolAbove, v.gaugeVolBelow, v.gaugeVolEqual);
+      const aria = v.gaugeVolAria
+        .replace("{v}", formatVolume(quote.volume, locale))
+        .replace("{r}", formatVolume(Math.round(avg), locale))
+        .replace("{pos}", caption);
+      volumeGauge = {
+        bar: { value: quote.volume, reference: avg, max: Math.max(quote.volume, avg) * 1.25 },
+        caption,
+        aria: status.session === "regular" ? `${aria} ${v.gaugeVolLive}` : aria,
+      };
+    }
+  }
+
+  const rows: [string, string, PeerCell?, Gauge?][] = [
     /* F/K sağlayıcının hazır alanından değil, sayfanın gösterdiği fiyattan
        kuruluyor — o alan geriden gelen bir fiyatla hesaplanmış oluyor ve
        tablonun hemen üstündeki kotasyonla çelişiyordu. Bkz. `peRatioOf`.
@@ -97,9 +190,11 @@ export async function MetricsCard({
        yüzden ADR'de de, sınıf karışıklığında da doğru okunuyor — mutlak
        tutar değil. ETF'de gelmiyor, o zaman satır hiç yazılmıyor. */
     ...(m.forwardPe
-      ? ([[t.stock.forwardPe, formatPrice(m.forwardPe, locale)]] as [
+      ? ([[t.stock.forwardPe, formatPrice(m.forwardPe, locale), undefined, fwdGauge]] as [
           string,
           string,
+          undefined,
+          Gauge?,
         ][])
       : []),
     /* PD/DD CANLI FİYATTAN (2 Ekim, sahibinin isteği: "F/K, PD/DD daha
@@ -122,12 +217,16 @@ export async function MetricsCard({
         ),
         locale,
       ),
+      undefined,
+      bookGauge,
     ],
     [
       t.stock.eps,
       hisseBasi(m.eps)
         ? formatPrice(m.eps, locale, { currency: currency ?? true })
         : NO_VALUE,
+      undefined,
+      epsGauge,
     ],
     [
       t.stock.dividend,
@@ -139,8 +238,10 @@ export async function MetricsCard({
       m.dividendYield !== null && m.dividendYield !== undefined
         ? formatPercentPlain(m.dividendYield, locale, 2)
         : NO_VALUE,
+      undefined,
+      dividendGauge,
     ],
-    [t.stock.beta, m.beta ? formatPrice(m.beta, locale) : NO_VALUE],
+    [t.stock.beta, m.beta ? formatPrice(m.beta, locale) : NO_VALUE, undefined, betaGauge],
     /* NET KÂR MARJI — kartın tek KÂRLILIK ölçüsü. Sekiz satırın hepsi
        değerleme (F/K, ileri F/K), dağıtım (temettü), oynaklık (beta) ya da
        fiyatın kendi geçmişindeki yeri (52 hafta bandı, hacim) hakkındaydı;
@@ -201,7 +302,9 @@ export async function MetricsCard({
        ölçülük ızgarada tek başına bir tire. Elde olmayan ölçü için yer
        ayrılmıyor; seans açılınca hücre geri geliyor (ızgara sütun sayısını
        `data-count`tan kuruyor, sekiz ölçü dört sütunda iki tam satır). */
-    ...(quote?.volume ? ([[t.market.volume, formatVolume(quote.volume, locale)]] as [string, string][]) : []),
+    ...(quote?.volume
+      ? ([[t.market.volume, formatVolume(quote.volume, locale), undefined, volumeGauge]] as [string, string, undefined, Gauge?][])
+      : []),
   ];
 
   /* 52 HAFTA BANDI BU KARTTA DEĞİL (24 Eylül). "İki satırdan bir bloğa"
@@ -240,10 +343,11 @@ export async function MetricsCard({
      kalan hücreye göre (`data-count`). Hiçbiri yoksa eski liste kalır ki
      kart boş bir kutuya dönmesin. */
   const filled = rows.filter(([, value]) => value !== NO_VALUE);
-  const cells = (filled.length > 0 ? filled : rows).map(([label, value, cell]) => ({
+  const cells = (filled.length > 0 ? filled : rows).map(([label, value, cell, gauge]) => ({
     label,
     value,
     cell,
+    gauge,
     spread: cell && cell.value !== null && sectorPeers ? peerSpread(cell.value, sectorPeers.values[cell.metric]) : null,
   }));
 
@@ -259,12 +363,18 @@ export async function MetricsCard({
       {/* `data-count`: sütun sayısı ölçü sayısına göre (stock.module.css) —
           dokuz ölçü dört sütunda son satırda tek başına kalıyordu. */}
       <dl data-motion-stagger data-count={cells.length} className={styles.metricsList}>
-        {cells.map(({ label, value, cell, spread }) => {
+        {cells.map(({ label, value, cell, spread, gauge }) => {
           return (
             <div key={label}>
               <dt>{label}</dt>
               <dd className="numeral">{value}</dd>
-              {spread && cell && <PeerStripFor label={label} value={value} spread={spread} format={cell.format} locale={locale} t={t} />}
+              {/* Sektör kulvarı varsa o; yoksa hücrenin kendi kıyası
+                  (MetricGauge, 26 Kasım 2026) — ikisi aynı dilde. */}
+              {spread && cell ? (
+                <PeerStripFor label={label} value={value} spread={spread} format={cell.format} locale={locale} t={t} />
+              ) : (
+                gauge && <MetricGauge bar={gauge.bar} caption={gauge.caption} aria={gauge.aria} />
+              )}
             </div>
           );
         })}

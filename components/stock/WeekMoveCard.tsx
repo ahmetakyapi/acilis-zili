@@ -7,6 +7,7 @@ import type { Dictionary } from "@/lib/i18n";
 import type { Locale } from "@/lib/i18n/config";
 import type { InsightText, MoveInsight } from "@/lib/stock-insights";
 import { cn, formatPercent } from "@/lib/utils";
+import { LOUD_VOLUME_RATIO, rangePosition, weekDigest, type RangePoint } from "@/lib/week-digest";
 import { loudestSession, type WeekMove } from "./week-move";
 import styles from "./WeekMove.module.css";
 
@@ -35,8 +36,8 @@ type Labels = Dictionary["stockInsight"];
 type WeekLabels = Dictionary["stockWeek"];
 
 const tone = (value: number) => (value > 0 ? "up" : value < 0 ? "down" : "flat");
-/** Hacmi 20 seans ortalamasının bu katını aşan seans işaretli (notla aynı eşik). */
-const LOUD_VOLUME = 1.5;
+/** Hacmi 20 seans ortalamasının bu katını aşan seans işaretli (notla aynı eşik; tek kaynak lib/week-digest.ts). */
+const LOUD_VOLUME = LOUD_VOLUME_RATIO;
 /** Notun istendiği uzaklık: görüş alanına bu kadar kala. */
 const PREFETCH_MARGIN = "400px 0px";
 
@@ -249,6 +250,12 @@ export function WeekMoveCard({
         </figure>
       </div>
 
+      {/* Claude anahtarı yoksa not alanı yok; kartı haftanın okuması doldurur. */}
+      {!noteEnabled && (
+        <div className={styles.note} data-state="failed">
+          <WeekDigestView week={week} locale={locale} copy={copy.digest} />
+        </div>
+      )}
       {noteEnabled && (
         <div className={styles.note} data-state={state.status} aria-live="polite">
           {state.status === "done" && text ? (
@@ -279,7 +286,10 @@ export function WeekMoveCard({
               <p className={styles.disclosure}>{labels.disclosure}</p>
             </>
           ) : state.status === "failed" ? (
-            <p className={styles.failed}>{copy.dataOnly}</p>
+            <>
+              <WeekDigestView week={week} locale={locale} copy={copy.digest} />
+              <p className={styles.failed}>{copy.dataOnly}</p>
+            </>
           ) : (
             <>
               <p className={styles.loading}>
@@ -289,10 +299,110 @@ export function WeekMoveCard({
               <Skeleton className={cn(styles.line, "w-[94%]")} />
               <Skeleton className={cn(styles.line, "w-[82%]")} />
               <Skeleton className={cn(styles.line, "w-[64%]")} />
+              {/* Etkenlerin yeri (masaüstünde açık gelir): bekleme hâli de
+                  gelecek notun ve notsuz okumanın boyunda (WeekMove.module.css → `.note`). */}
+              <div className={styles.pendingPoints} aria-hidden>
+                <Skeleton className={cn(styles.line, "w-[46%]")} />
+                <Skeleton className={cn(styles.line, "w-[88%]")} />
+                <Skeleton className={cn(styles.line, "w-[40%]")} />
+                <Skeleton className={cn(styles.line, "w-[78%]")} />
+              </div>
             </>
           )}
         </div>
       )}
     </section>
+  );
+}
+
+type DigestLabels = WeekLabels["digest"];
+
+/**
+ * HAFTANIN OKUMASI (26 Kasım 2026, sahibinin sözü: "sağ sol dengesine
+ * dikkat ederek bu tasarımı iyileştirelim"). Not gelmeyince kart tek
+ * cümleye düşüyor, Sor + Hafta panelinde sağ kolonun altı ~250 piksel boş
+ * kalıyordu (canlı MU, 1440). Aynı beş seanstan Claude'suz üç okuma
+ * (lib/week-digest.ts): beş kapanışın aralığı (kalın şerit: dip solda,
+ * zirve sağda, sıfırdan kapanışa dolgu), en sert seans, yüksek hacimli
+ * seans sayısı ve S&P 500'ün önünde kapatılan seans sayısı. Okuma yoksa
+ * kutusu hiç basılmaz. Gün satırları zaten S&P çentiğini taşıyor; buradaki
+ * sayılar o satırların özeti, yeni veri değil.
+ */
+function WeekDigestView({ week, locale, copy }: { week: WeekMove; locale: Locale; copy: DigestLabels }) {
+  const digest = weekDigest(week);
+  const { range, loudest, volume, market } = digest;
+  if (!range && !loudest && !volume && !market) return null;
+  const day = (date: string) => weekday(date, locale);
+  const point = (p: RangePoint) => `${formatPercent(p.pct, locale, 1)} · ${p.date ? day(p.date) : copy.start}`;
+  const sessions = (n: number, total: number) => copy.sessions.replace("{n}", String(n)).replace("{total}", String(total));
+  let lane: { zero: number; from: number; width: number; tone: string } | null = null;
+  if (range) {
+    const zero = rangePosition(0, range.low.pct, range.high.pct);
+    const end = rangePosition(range.close, range.low.pct, range.high.pct);
+    lane = { zero, from: Math.min(zero, end), width: Math.abs(end - zero), tone: tone(range.close) };
+  }
+  return (
+    <div className={styles.digest}>
+      <p className={styles.digestTitle}>{copy.title}</p>
+      {range && lane && (
+        <div className={styles.range}>
+          <p className={styles.rangeHead}>
+            <span>{copy.range}</span>
+            <span className={styles.near} data-near={range.near}>
+              {copy.near[range.near]}
+            </span>
+          </p>
+          <span className={cn("value-lane", styles.rangeLane)} data-draw="" aria-hidden>
+            {lane.tone !== "flat" && lane.width > 0 && (
+              <i
+                className="value-bar bar-fill"
+                data-tone={lane.tone}
+                data-end={lane.tone === "up" ? "end" : "start"}
+                style={{ left: `${lane.from}%`, width: `${lane.width}%` }}
+              />
+            )}
+            <i className="value-notch" data-quiet="" style={{ left: `${lane.zero}%` }} />
+          </span>
+          <p className={styles.rangeEnds}>
+            <span>
+              {copy.low} <b className="numeral">{point(range.low)}</b>
+            </span>
+            <span>
+              {copy.high} <b className="numeral">{point(range.high)}</b>
+            </span>
+          </p>
+        </div>
+      )}
+      <dl className={styles.tiles}>
+        {loudest && (
+          <div className={styles.tile}>
+            <dt>{copy.loudest}</dt>
+            <dd className={cn("numeral", styles.tileValue)} data-tone={tone(loudest.changePct)}>
+              {formatPercent(loudest.changePct, locale, 1)}
+              <span className={styles.tileDay}>{day(loudest.date)}</span>
+            </dd>
+            {loudest.marketPct !== null && <dd className={styles.tileSub}>{copy.loudestMarket.replace("{pct}", formatPercent(loudest.marketPct, locale, 1))}</dd>}
+          </div>
+        )}
+        {volume && (
+          <div className={styles.tile} title={copy.volumeHint}>
+            <dt>{copy.volume}</dt>
+            <dd className={cn("numeral", styles.tileValue)}>{sessions(volume.loud, volume.total)}</dd>
+            <dd className={styles.tileSub}>{copy.volumePeak.replace("{x}", nf(locale, 1).format(volume.peak.ratio)).replace("{day}", day(volume.peak.date))}</dd>
+          </div>
+        )}
+        {market && (
+          <div className={styles.tile}>
+            <dt>{copy.market}</dt>
+            <dd className={cn("numeral", styles.tileValue)}>{sessions(market.ahead, market.total)}</dd>
+            <dd className={styles.tileSub}>
+              {copy.marketWidest
+                .replace("{pts}", `${market.widest.gapPts > 0 ? "+" : market.widest.gapPts < 0 ? "−" : ""}${nf(locale, 1).format(Math.abs(market.widest.gapPts))}`)
+                .replace("{day}", day(market.widest.date))}
+            </dd>
+          </div>
+        )}
+      </dl>
+    </div>
   );
 }

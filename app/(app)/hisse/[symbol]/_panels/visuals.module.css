@@ -59,3 +59,9 @@
 .weightBar { width:72px; margin-top:2px; }
 .weightNote { padding:4px var(--inset) 14px; color:var(--text-muted); font-size:12px; line-height:1.55; }
 @media (min-width:640px) { .weightNote { padding-inline:20px; } }
+
+/* ---------- Temel Göstergeler: kıyas şeridi (MetricGauge, 26 Kasım 2026) ----------
+   Görünüm PeerStrip'in aynısı (yukarıdaki `.peer*` sınıfları). Çizimsiz
+   künyede kulvarın yeri boş bir yuva: 5 piksel + `.peerRail`in 5'er
+   piksellik payı, künyeler satır boyunca aynı hatta. */
+.gaugeSlot { display:block; height:5px; }

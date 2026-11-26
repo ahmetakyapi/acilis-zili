@@ -25,7 +25,12 @@
    666 piksel; ilk ekranda kimlik, görüş, fiyat, gerekçe ve grafiğin TAMAMI
    (grafiğin dibi y=792; plan paneli katın altında başlıyor). 390×844:
    kapak 1.139 → 686 piksel, grafiğin dibi y=808, ilk ekranda. Grafiksiz
-   (ölçekli) kapak 1440'ta 361 piksel. */
+   (ölçekli) kapak 1440'ta 361 piksel.
+   26 Kasım, seviye merceği (`PriceChart`): 1440×900'de kapak 647 (NVDA) /
+   677 (AMD) piksel, grafiğin dibi y=714/744, mercek çizimin yanında; ilk
+   ekran aynı. 390×844'te mercek grafiğin ALTINA indi: kapak 686 → 949
+   (NVDA) / 1.009 (AMD, on seviye) piksel; çizimin dibi y=718, yani grafik
+   yine ilk ekranda, seviyelerin mercekteki okuması katın hemen altında. */
 .top { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:center; gap:16px 32px; min-width:0; padding:26px var(--cover-pad) 0; }
 .cell { min-width:0; }
 .thesis { padding:16px var(--cover-pad) 0; }

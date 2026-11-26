@@ -116,16 +116,82 @@ export function buildPriceChart(
   };
 }
 
+/* ---- Seviye merceği (26 Kasım 2026) ----
+   Grafiğin sağındaki etiket sütunu artık kendi fiyat ölçeği olan bir
+   MERCEK: alanı yalnız seviyeler ve son fiyat kurar, grafikteki bant onun
+   büyütülmüş hâli olarak sağda okunur. Gerekçe `PriceChart.tsx` başında. */
+
+/* Mercek ölçeğinin üst ve alt payı (yüksekliğin oranı): uçtaki satırın yarısı
+   (11 piksel) en kısa mercekte (telefonda 220) kutudan taşmasın. */
+export const LENS_PAD = 0.05;
+/* Mercek alanının en dar hâli, fiyatın oranı. Tek seviye fiyata 1 sent
+   yakınsa mercek sonsuz büyütüp iki satırı uçlara atmasın. */
+const LENS_MIN_SPAN = 0.04;
+
+export type PriceLens = {
+  /** Mercekteki fiyat aralığı; `LENS_PAD` payı dahil (y=0 → max, y=1 → min). */
+  domain: { min: number; max: number };
+  /** Merceğin üst ve alt kenarının GRAFİKTEKİ yeri (0–1, kırpılmış). */
+  chartTop: number;
+  chartBottom: number;
+  /** Büyütme: grafikteki bant yüksekliğine göre kaç kat (≥ 1 gösterilir). */
+  zoom: number;
+  /** Seviyelerin mercekteki gerçek yeri, `model.levels` sırasıyla. */
+  levelYs: number[];
+  /** Bölgenin mercekteki üst/alt kenarı (yalnız bölgede, yoksa null). */
+  bands: ({ top: number; bottom: number } | null)[];
+  priceY: number | null;
+};
+
 /**
- * Sağ sütundaki etiketlerin dikey yeri (0–1). Seviyeler ve fiyat AYNI
- * itmeden geçer: fiyat çoğu gün bir desteğin birkaç sent üstünde durur
- * (NVDA 161,01 / destek 160,71) ve ayrı itilselerdi üst üste binerlerdi.
- * `gap` iki etiket arası en az pay; çizim yüksekliğine göre çağıran verir.
+ * Merceğin alanı: seviyeler + son fiyat. Grafik eksene sığan seviyesi yoksa
+ * mercek yoktur (yalnız fiyat ölçek değildir) ve null döner.
  */
-export function chartLabelSlots(ys: readonly number[], gap: number): number[] {
+export function buildPriceLens(model: PriceChartModel): PriceLens | null {
+  if (model.levels.length === 0) return null;
+  const reference = model.priceY !== null ? model.closes[model.closes.length - 1]! : null;
+  const values = model.levels.flatMap((level) => (level.high !== undefined ? [level.price, level.high] : [level.price]));
+  if (reference !== null) values.push(reference);
+  let lo = Math.min(...values);
+  let hi = Math.max(...values);
+  const floor = (reference ?? (lo + hi) / 2) * LENS_MIN_SPAN;
+  if (hi - lo < floor) {
+    const mid = (lo + hi) / 2;
+    lo = mid - floor / 2;
+    hi = mid + floor / 2;
+  }
+  /* Değerler [PAD, 1−PAD] aralığına otursun diye alan iki yandan açılır. */
+  const pad = ((hi - lo) * LENS_PAD) / (1 - 2 * LENS_PAD);
+  const domain = { min: lo - pad, max: hi + pad };
+  const yOf = (value: number) => (domain.max - value) / (domain.max - domain.min);
+  const chartY = (value: number) => 1 - (value - model.domain.min) / (model.domain.max - model.domain.min);
+  const clamp = (value: number) => Math.min(1, Math.max(0, value));
+  const chartTop = clamp(chartY(domain.max));
+  const chartBottom = clamp(chartY(domain.min));
+  return {
+    domain,
+    chartTop,
+    chartBottom,
+    zoom: 1 / Math.max(1e-6, chartBottom - chartTop),
+    levelYs: model.levels.map((level) => yOf(level.high !== undefined ? (level.price + level.high) / 2 : level.price)),
+    bands: model.levels.map((level) => (level.high !== undefined ? { top: yOf(level.high), bottom: yOf(level.price) } : null)),
+    priceY: reference !== null ? yOf(reference) : null,
+  };
+}
+
+/**
+ * Mercekteki satırların dikey yeri (0–1, `LENS_PAD` içinde). Seviyeler ve
+ * fiyat AYNI itmeden geçer: fiyat çoğu gün bir desteğin birkaç sent üstünde
+ * durur (NVDA 161,01 / destek 160,71) ve ayrı itilselerdi üst üste
+ * binerlerdi. `gap` iki satır arası en az pay; mercek yüksekliğine göre
+ * çağıran verir. (14 Kasım'daki `chartLabelSlots`ın yerine; o grafiğin
+ * kendi ölçeğindeki sütun içindi ve mercekle kalktı.)
+ */
+export function lensLabelSlots(ys: readonly number[], gap: number): number[] {
   if (ys.length === 0) return [];
-  /* Etiket sayısı sütuna sığmıyorsa pay eşit bölünür; üst üste binmektense
+  /* Satır sayısı merceğe sığmıyorsa pay eşit bölünür; üst üste binmektense
      sıkışık ama ayrık dursun. */
-  const fit = Math.min(gap, 1 / Math.max(1, ys.length - 1));
-  return spreadLabels(ys, fit, 0, 1);
+  const room = 1 - 2 * LENS_PAD;
+  const fit = Math.min(gap, room / Math.max(1, ys.length - 1));
+  return spreadLabels(ys, fit, LENS_PAD, 1 - LENS_PAD);
 }

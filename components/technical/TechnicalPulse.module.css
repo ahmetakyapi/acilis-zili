@@ -192,7 +192,8 @@
    was 316/608px and MU's detail cover 503/1045px at 1440/390. Keep the
    established subgrid and readable type; move the indicator summary to its
    section and give the plan its own full-width band instead of shrinking text. */
-.pulse[data-variant="directory"] { position:relative; grid-template-columns:128px minmax(0,1fr); column-gap:18px; row-gap:12px; align-items:center; }
+/* 26 Kasım: halka kalktı, dizin tek sütun (gerekçe aşağıda, "KAPAĞIN SAĞ KOLONU"). */
+.pulse[data-variant="directory"] { position:relative; grid-template-columns:minmax(0,1fr); row-gap:16px; align-content:start; }
 
 .pulse[data-variant="directory"] > div:first-child { grid-column:1/-1; }
 
@@ -220,8 +221,6 @@
 
 .pulse[data-variant="directory"] > .pulseBar { display:none; }
 
-.pulse[data-variant="directory"] > :is(.pulseRows, .distLegend) { grid-column:2; grid-row:2; }
-
 .pulse[data-variant="directory"] > .pulseChanges { grid-column:1/-1; }
 
 .pulse[data-variant="directory"] .pulseRow { padding:7px 0; border-radius:0; border-bottom:1px solid var(--line-soft); }
@@ -237,14 +236,6 @@
    soluğu — yerinden oynamadan. */
 .pulse[data-variant="directory"] .pulseLogo:hover { background:var(--primary-tint); }
 
-/* The ring and the list encode the same counts. Below 1100 the linear
-   version leaves room for 40px touch areas, even with 15 identical views. */
-@media(max-width:1099px) {
- .pulse[data-variant="directory"] { grid-template-columns:minmax(0,1fr); }
- .pulse[data-variant="directory"] > .pulseDial { display:none; }
- .pulse[data-variant="directory"] > .pulseBar { display:flex; }
- .pulse[data-variant="directory"] > :is(.pulseRows, .distLegend) { grid-column:1; grid-row:auto; }
-}
 
 @media(max-width:767px) {
  .editionTrack { margin-top:14px; padding-top:12px; }
@@ -278,15 +269,10 @@
     almıyor. */
  .directoryHeader > :global(.page-heading-copy) > .editionTrack { margin-top:0; }
  .directoryHeader > :last-child { display:flex; }
- .directoryHeader .pulse[data-variant="directory"] { flex:1; align-content:stretch; }
- .directoryHeader .pulse[data-variant="directory"] > .pulseRows { align-self:stretch; }
+ .directoryHeader .pulse[data-variant="directory"] { flex:1; }
  .directoryHeader .pulse[data-variant="directory"] > .pulseChanges { align-self:end; }
 }
 
-@media(min-width:1100px) {
- .directoryHeader .pulse[data-variant="directory"] { grid-template-columns:148px minmax(0,1fr); }
- .directoryHeader .pulseDial { width:148px; }
-}
 
 /* TELEFONDA LOGO SATIRLARI YOK (23 Eylül). 390×844'te başlık ve dağılım
    607 piksel tutuyordu (dağılımın kendisi 294, logo satırları 188) ve
@@ -520,87 +506,145 @@
 }
 
 /* ---- Görüş dağılımının satırları (8 Kasım) ----
-   Gerekçe `TechnicalPulse` → "GÖRÜŞ SATIRLARI". Satır: hap + sayı + pay,
-   sağında kulvar üstünde 5 piksellik oran şeridi; altında dengeli logo
-   ızgarası. Hap sütunu `max-content` (hap sabit genişlikli sütuna konmaz,
-   CLAUDE.md) ve satırlar alt ızgarayı paylaşıyor: üç satırın şeritleri
-   aynı x'te başlıyor. */
-.distLegend { display:grid; grid-template-columns:max-content minmax(0,1fr); align-content:start; gap:14px 14px; min-width:0; margin:0; padding:0; list-style:none; }
+   26 Kasım'da kalktı (`.distLegend`, `.distRow`, `.distTrack`, logo
+   ızgarası); yerini aşağıdaki "KAPAĞIN SAĞ KOLONU" aldı. Bekleyen etiketi
+   (`.distPending`) yeni düzende de kullanılıyor. */
+.distPending { display:inline-flex; align-items:center; flex:none; height:28px; padding:0 10px; border-radius:999px; background:var(--surface-sunken); font-size:12px; font-weight:700; color:var(--text-muted); }
 
-.distRow { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; align-items:center; row-gap:9px; min-width:0; }
 
-.distHead { display:inline-flex; align-items:center; gap:8px; min-width:0; }
+/* ---- KAPAĞIN SAĞ KOLONU (26 Kasım) ----
+   Gerekçe `TechnicalPulse` → "KAPAĞIN SAĞ KOLONU". Sayaç + 12 piksellik
+   şerit + kümeler (solda görüş hapı, sağda logo/sembol/yüzde hücreleri).
+   Dil ana sayfa Teknik Analiz panelinin (`TechnicalPanel.module.css`):
+   aynı punto, aynı şerit, aynı hücre. Kolon `.pulse` bir kap (dar kap
+   kuralları aşağıda).
+   Ölçüm (gerçek sayfa + sahte sağlayıcı, seans içi; AL 5, TUT 5, SAT 4,
+   2 bekleyen; iki tema aynı), sol kolonun dibi / sağ kolonun SON çocuğunun
+   dibi, önce → sonra:
+     1440: 513 / 521 (içerik kolonun ortasında, üstte ölü bant) → 513 / 521
+           (içerik başlığın 16 piksel altından başlıyor, ölü bant yok)
+     1100: 500 / 521 → 500 / 539 · 1024: 496 / 521 → 496 / 511
+     768:  500 / 513 → 500 / 446 · 390: kapak 589 → 510 (ilk ekran kazandı)
+   Canlı biçim (AL 0, TUT 6, SAT 8 + 2 bekleyen; önizleme rotası, kolon
+   552): görsel 388 piksel, soldaki kolon 395 — denge 7 piksel. Ayrı sayaç
+   satırlı ilk deneme 465'ti, sayı kümenin başına taşındı.
+   Hücre 1440'ta 84 × 72 (logo 32 + sembol + yüzde), dar kapta 53–76 × 40.
+   Yatay taşma 0, kutudan taşan/kırpılan öğe 0 (1440/1280/1100/1024/768/
+   390/360); şerit `bar-fill` 4 animasyon, hareketi azaltanda 0. */
+.pulse[data-variant="directory"] { container:tech-cover / inline-size; }
 
-label.distHead { cursor:pointer; }
+/* Sayaç yalnız telefonda (TSX yorumu); geniş ekranda sayı kümenin başında. */
+.tallyCounts { display:none; grid-template-columns:repeat(auto-fit,minmax(0,1fr)); gap:12px; margin:0 0 -6px; }
 
-.distCount { min-width:1.4ch; font-size:19px; font-weight:700; line-height:1; letter-spacing:-.035em; color:var(--text-strong); }
+.tallyCounts > div { display:grid; gap:2px; min-width:0; }
 
-.distShare { font-size:12px; font-weight:600; color:var(--text-muted); }
+.tallyCounts dt { color:var(--text-muted); font-size:var(--text-small); font-weight:700; letter-spacing:.03em; line-height:1.3; }
 
-.distPending { display:inline-flex; align-items:center; height:28px; padding:0 10px; border-radius:999px; background:var(--surface-sunken); font-size:12px; font-weight:700; color:var(--text-muted); }
+.tallyCounts > [data-verdict="buy"] dt { color:var(--up); }
 
-.distTrack { position:relative; height:5px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
+.tallyCounts > [data-verdict="hold"] dt { color:var(--verdict-hold); }
 
-.distTrack i { position:absolute; inset:0 auto 0 0; border-radius:inherit; background:var(--verdict-hold); transform-origin:left center; }
+.tallyCounts > [data-verdict="sell"] dt { color:var(--down); }
 
-.distRow[data-verdict="buy"] .distTrack i { background:var(--verdict-buy); }
+/* Display sayı 700, −0,03em (ortak ölçü): kolonun en büyük puntosu. */
+.tallyCounts dd { display:flex; align-items:baseline; gap:6px; margin:0; color:var(--text-strong); font-size:28px; font-weight:700; letter-spacing:-.03em; line-height:1.05; }
 
-.distRow[data-verdict="sell"] .distTrack i { background:var(--verdict-sell); }
+.tallyCounts dd small { color:var(--text-muted); font-size:var(--text-small); font-weight:600; letter-spacing:0; }
 
-.distRow[data-verdict="pending"] .distTrack i { background:var(--line-strong); }
+/* Boş görüş yerinde durur ama susar: "AL 0" okunur, satır ve cümle tutmaz. */
+.tallyCounts > [data-empty] :is(dt, dd) { color:var(--text-muted); opacity:.6; }
 
-/* Boş görüş soluk ama okunur: hap ve sayı yerinde, şeridin yerinde cümle. */
-.distRow[data-empty] .distHead { opacity:.5; }
+.tallyCounts > [data-verdict="pending"] :is(dt, dd) { color:var(--text-muted); }
 
-.distNone { margin:0; font-size:12.5px; line-height:1.35; color:var(--text-muted); }
+/* Şerit 12 piksel: kolonun kahraman çizimi; dilimler `bar-fill` ile soldan
+   bir kez dolar (TSX'te sınıf, burada yalnız gecikme). */
+.tallyStrip { display:flex; gap:2px; height:12px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
 
-/* Hücre en çok 44 piksel, karo hücreye göre küçülüyor (sütun sayısı
-   `balancedColumns`). Dokunmatikteki dolgu/negatif pay hilesi (yukarıda,
-   `.pulseLogo`) burada gerekmiyor: karo zaten 40 pikselden büyük. */
-.distLogos { display:grid; grid-column:1 / -1; grid-template-columns:repeat(var(--cols, 8), minmax(0, 44px)); gap:8px; }
+.tallyStrip > i { min-width:6px; background:var(--line-strong); transform-origin:left center; animation-delay:calc(var(--i, 0) * var(--step, 40ms)); }
 
-.distLogos .distLogo { display:block; width:100%; padding:0; margin:0; border-radius:12px; }
+.tallyStrip > [data-verdict="buy"] { background:var(--verdict-buy); }
 
-.distLogos .distLogo > :global(*) { width:100%; height:auto; aspect-ratio:1 / 1; border-radius:11px; }
+.tallyStrip > [data-verdict="hold"] { background:var(--verdict-hold); }
 
-/* `.pulseLogo`un ölçü kuralları (32 piksel kutu, dokunmatik payı) burada
-   istenmediği için sınıf ayrı; hover/odak/açık balon dili aynı: ton. */
-.distLogos .distLogo { transition:outline-color 180ms var(--ease-brand); outline:2px solid transparent; outline-offset:2px; }
+.tallyStrip > [data-verdict="sell"] { background:var(--verdict-sell); }
 
-.distLogos .distLogo:hover { outline-color:var(--primary-faint); }
+.clusters { display:grid; grid-template-columns:max-content minmax(0,1fr); column-gap:16px; min-width:0; }
 
-.distLogos .distLogo:focus-visible { outline-color:var(--line-focus); }
+/* Kümeler alt ızgarayı paylaşıyor: üç kümenin hücreleri aynı x'te başlar,
+   hap sütunu `max-content` (hap sabit sütuna konmaz). */
+.cluster { display:grid; grid-column:1 / -1; grid-template-columns:subgrid; align-items:start; padding:8px 0; border-top:1px solid var(--line-soft); }
 
-.distLogos .distLogo[data-card-open] { outline-color:var(--primary); }
+/* Küme başı: hap, altında kümenin sayısı ve payı. Hap ilk hücre
+   satırının logosuyla aynı hatta (hücre dolgusu 5 + logo 32 → orta 21;
+   hap 28 → üstü 7). Sayı kolonun en büyük puntosu (display 700, −0,03em). */
+.clusterHead { display:flex; flex-direction:column; align-items:flex-start; gap:6px; padding-top:7px; cursor:pointer; }
 
-/* Şerit soldan kendi payına uzar, bir kez; hareketi azaltana son kare. */
-.distTrack i { animation:dist-grow var(--draw) var(--ease-brand) both; }
+.clusterCount { display:flex; align-items:baseline; gap:5px; padding-left:2px; }
 
-.distRow:nth-child(2) .distTrack i { animation-delay:calc(var(--step) * 2); }
+.clusterCount b { color:var(--text-strong); font-size:26px; font-weight:700; letter-spacing:-.03em; line-height:1; }
 
-.distRow:nth-child(3) .distTrack i { animation-delay:calc(var(--step) * 4); }
+.clusterCount small { color:var(--text-muted); font-size:var(--text-small); font-weight:600; }
 
-.distRow:nth-child(4) .distTrack i { animation-delay:calc(var(--step) * 6); }
+/* Boş görüş künyede, soluk; telefonda sayaç söylüyor. */
+.pulseEmptyStance { opacity:.75; }
 
-@keyframes dist-grow { from { transform:scaleX(0); } }
+.cells { display:grid; grid-template-columns:repeat(var(--cols, 7), min(84px, calc((100% - (var(--cols-max, 7) - 1) * 2px) / var(--cols-max, 7)))); gap:2px; margin:0; padding:0; list-style:none; }
 
-@media (prefers-reduced-motion: reduce) { .distTrack i { animation:none; } }
+.cell { display:flex; flex-direction:column; align-items:center; gap:2px; min-height:64px; padding:5px 2px 4px; border-radius:10px; text-align:center; transition:background-color 180ms var(--ease-brand); }
 
-/* Telefonda logolar yok (gerekçe "TELEFONDA LOGO SATIRLARI YOK", yukarıda);
-   satırlar — hap, sayı, pay, şerit — kalıyor, eski renk anahtarının yerine. */
-@media (max-width: 767px) {
-  .distLegend { row-gap:10px; }
-  .distLogos { display:none; }
+.cell b { margin-top:1px; color:var(--text-strong); font-family:var(--font-mono); font-size:var(--text-small); font-weight:600; line-height:1.1; transition:color 180ms var(--ease-brand); }
+
+.cellChange { color:var(--text-muted); font-size:var(--text-small); font-weight:700; line-height:1.1; letter-spacing:-.01em; white-space:nowrap; }
+
+.cellChange[data-tone="up"] { color:var(--up); }
+
+.cellChange[data-tone="down"] { color:var(--down); }
+
+.cell:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
+
+.cell:active { scale:.97; }
+
+.cell[data-card-open] { background:var(--primary-wash); }
+
+@media (hover:hover) and (pointer:fine) {
+  .cell:hover { background:var(--primary-tint); }
+  .cell:hover b { color:var(--primary-ink); }
 }
 
-/* 10 Kasım: telefonda dağılım satırının süzgeç etiketi 125 × 28 pikseldi
-   (dokunma hedefi < 44). Görünür ölçü aynı; hedef yukarı ve aşağı 8 piksel
-   büyür (satır aralığı 10, komşu satırla en çok 6 piksel örtüşür). */
-@media (max-width: 767px) {
-  label.distHead { position:relative; }
-  label.distHead::after { content:""; position:absolute; inset:-8px 0; }
+.clusterPending { display:flex; grid-column:1 / -1; align-items:center; gap:10px; min-width:0; margin:0; padding-top:8px; border-top:1px solid var(--line-soft); }
+
+.pendingSymbols { min-width:0; color:var(--text-muted); font-family:var(--font-mono); font-size:var(--text-small); font-weight:600; line-height:1.4; overflow-wrap:anywhere; }
+
+.pendingSymbols a:hover { color:var(--primary-ink); }
+
+.cellNote { margin:-4px 0 0; color:var(--text-muted); font-size:var(--text-small); line-height:1.45; }
+
+/* DAR KAP (768–1099: kolon 1024'te ~390, 768'de ~270 piksel). Logolu
+   hücre dört sütunda bile kümeyi iki satıra bölüyor ve kolon soldakinin
+   bir buçuk katına uzuyordu (ölçüldü, 1024: sol dip 496, sağ 912). Dar
+   kapta hücre yalnız SEMBOL + YÜZDE (logo ve şirket kartı yine bağlantıda,
+   adı erişilebilir etikette), sütun tavanı 5; 340'ın altında hap
+   hücrelerin üstüne iner, bekleyen satırı ve dipnot susar (bekleyen sayısı
+   sayaçta). */
+@container tech-cover (max-width:420px) {
+  .clusterCount b { font-size:22px; }
+  .cells { grid-template-columns:repeat(var(--cols-narrow, 5), calc((100% - (var(--cols-max-narrow, 5) - 1) * 2px) / var(--cols-max-narrow, 5))); }
+  .cell { min-height:40px; padding:4px 2px; gap:2px; }
+  .cell > :first-child { display:none; }
+  .cell b { margin-top:0; }
+  .clusterHead { padding-top:6px; }
 }
 
-/* Halka 6 piksel: dağılım halkası 160'lık görünüm kutusunda 128 piksel
-   (ölçek 0,8 → 7,5 birim), RSI kadranı 200'lük kutuda ~200 piksel. */
-.pulse[data-variant="directory"] .pulseDial svg { stroke-width:7.5; }
+@container tech-cover (max-width:339px) {
+  .clusters { grid-template-columns:minmax(0,1fr); }
+  .cluster { grid-template-columns:minmax(0,1fr); row-gap:4px; }
+  .clusterHead { flex-direction:row; align-items:center; gap:10px; padding-top:0; justify-self:start; }
+  .clusterPending, .cellNote { display:none; }
+}
+
+/* Telefonda yalnız sayaç ve şerit (gerekçe "TELEFONDA LOGO SATIRLARI YOK",
+   yukarıda): kümeler ve dipnot gizli, süzgeç hemen aşağıda. */
+@media (max-width:767px) {
+  .clusters, .cellNote, .pulseEmptyStance { display:none; }
+  .tallyCounts { display:grid; }
+}
