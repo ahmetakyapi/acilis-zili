@@ -3,7 +3,8 @@ import { etParts } from "../market-hours";
 import { fail, ok, responseDate, type ProviderResult } from "./types";
 import { withBody } from "./timeout";
 import { retryOnRateLimit } from "./rate-limit";
-import { noteProviderResponse } from "./usage";
+import { SAVING_REVALIDATE_SECONDS } from "./quota-guard";
+import { noteProviderResponse, providerSaving } from "./usage";
 import { parseOcc, type DailyClose, type OptionQuote } from "@/lib/expected-move";
 
 /**
@@ -31,6 +32,9 @@ function credentials(): { key: string; secret: string } | null {
 async function get<T>(path: string, params: Record<string, string>, revalidate: number, tag: string): Promise<ProviderResult<T>> {
   const creds = credentials();
   if (!creds) return fail("alpaca", "missing-key", "ALPACA_API_KEY_ID / ALPACA_API_SECRET_KEY tanımlı değil");
+  /* Kota koruması (lib/providers/quota-guard.ts): eldeki kayıt daha uzun taze, 429'da yeniden deneme yok. */
+  const saving = providerSaving("alpaca");
+  const ttl = saving ? Math.max(revalidate, SAVING_REVALIDATE_SECONDS) : revalidate;
   try {
     /* Süre sınırı gövdeyi de kapsıyor (`withBody`, lib/providers/timeout.ts).
        Kota `alpacaFetch` ile ORTAK (dakikada 200): yanıt sağlık izine
@@ -42,13 +46,13 @@ async function get<T>(path: string, params: Record<string, string>, revalidate: 
           "APCA-API-SECRET-KEY": creds.secret,
           accept: "application/json",
         },
-        next: { revalidate, tags: [tag] },
+        next: { revalidate: ttl, tags: [tag] },
       }),
       (r) => {
-        noteProviderResponse("alpaca", r);
+        noteProviderResponse("alpaca", r, new Date(), "options");
         return r.ok ? r.json() : null;
       },
-    ));
+    ), saving ? { retries: 0 } : {});
     if (res.status === 429) return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");
     if (res.status === 404) return fail("alpaca", "not-found", "Sembol bulunamadı");
     if (!res.ok) return fail("alpaca", "upstream-error", `Alpaca ${res.status}`);

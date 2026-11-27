@@ -11,7 +11,8 @@ import {
 } from "./types";
 import { withBody } from "./timeout";
 import { retryOnRateLimit } from "./rate-limit";
-import { noteProviderResponse } from "./usage";
+import { alpacaRequestKind, SAVING_REVALIDATE_SECONDS } from "./quota-guard";
+import { noteProviderResponse, providerSaving } from "./usage";
 
 /**
  * Alpaca Market Data — fiyat ve grafik barları.
@@ -104,6 +105,17 @@ async function alpacaFetch<T>(
   }
 
   const url = `${BASE}${path}?${new URLSearchParams(params).toString()}`;
+  const kind = alpacaRequestKind(url);
+  /* KOTA KORUMASI (27 Kasım; kural lib/providers/quota-guard.ts). Kalan
+     hak azken ya da 429'dan sonra pencere sıfırlanana kadar: önbelleksiz ek
+     istek hiç atılmaz (çağıran önbellekteki pakete düşer), önbellekli
+     istek eldeki kaydı en az `SAVING_REVALIDATE_SECONDS` taze sayar, 429'da
+     yeniden deneme yok. */
+  const saving = providerSaving("alpaca");
+  if (saving && opts.fresh) {
+    return fail("alpaca", "rate-limited", "Alpaca kotası korunuyor");
+  }
+  const revalidate = saving ? Math.max(opts.revalidate, SAVING_REVALIDATE_SECONDS) : opts.revalidate;
 
   try {
     /* Süre sınırı gövdeyi de kapsıyor — gerekçe lib/providers/timeout.ts'te
@@ -119,13 +131,13 @@ async function alpacaFetch<T>(
         },
         ...(opts.fresh
           ? { cache: "no-store" as const }
-          : { next: { revalidate: opts.revalidate, tags: opts.tags } }),
+          : { next: { revalidate, tags: opts.tags } }),
       }),
       (r) => {
-        noteProviderResponse("alpaca", r);
+        noteProviderResponse("alpaca", r, new Date(), kind);
         return r.ok ? r.json() : safeText(r);
       },
-    ));
+    ), saving ? { retries: 0 } : {});
 
     if (res.status === 429) {
       return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");

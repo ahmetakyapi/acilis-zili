@@ -47,6 +47,11 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
 
+- [ ] **Koşu Bekçisi (Görev Kontrolü) prompt'u yeniden yapıştırılmalı — sahibi
+      (27 Kasım).** `docs/claude-rutinler.md` § 8 → 4e: sağlık ucuna Alpaca
+      kota koruması alanları geldi (`saving`, `requestsLastHour`); bildirim
+      artık kotayı en çok yiyen iki istek türünü yazıyor. Yeniden
+      yapıştırılana dek eski prompt yeni alanları okumaz, bozulmaz.
 - [ ] **14 Kasım turundan kalanlar** (denetim raporları oturumda üretildi; özet burada):
       - **Sahibi teyit etmeli:** GitHub depo değişkeni `VPS_HOST_KEY` dolu mu
         (boşsa SSH adımları `accept-new` ile koşuyor); e-posta adresi onaylı

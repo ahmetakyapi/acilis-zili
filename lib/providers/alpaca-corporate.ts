@@ -3,7 +3,7 @@ import { canonicalSymbol } from "@/lib/symbols";
 import { fail, ok, responseDate, type ProviderResult } from "./types";
 import { withBody } from "./timeout";
 import { retryOnRateLimit } from "./rate-limit";
-import { noteProviderResponse } from "./usage";
+import { noteProviderResponse, providerSaving } from "./usage";
 
 /**
  * Alpaca kurumsal işlemler — nakit temettüler.
@@ -92,10 +92,10 @@ async function fetchPage(
         next: { revalidate: DIVIDEND_REVALIDATE_SECONDS, tags: ["dividends"] },
       }),
       (r) => {
-        noteProviderResponse("alpaca", r);
+        noteProviderResponse("alpaca", r, new Date(), "corporate");
         return r.ok ? r.json() : null;
       },
-    ));
+    ), providerSaving("alpaca") ? { retries: 0 } : {});
     if (res.status === 429) return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");
     if (!res.ok) return fail("alpaca", "upstream-error", `Alpaca kurumsal işlemler ${res.status}`);
     return ok(body as RawPage, "alpaca", { fetchedAt: responseDate(res) });
@@ -226,10 +226,10 @@ async function fetchSplitPage(params: Record<string, string>, creds: { key: stri
         cache: "no-store",
       }),
       (r) => {
-        noteProviderResponse("alpaca", r);
+        noteProviderResponse("alpaca", r, new Date(), "corporate");
         return r.ok ? r.json() : null;
       },
-    ));
+    ), providerSaving("alpaca") ? { retries: 0 } : {});
     if (res.status === 429) return fail("alpaca", "rate-limited", "Alpaca istek limiti aşıldı");
     if (!res.ok) return fail("alpaca", "upstream-error", `Alpaca kurumsal işlemler ${res.status}`);
     return ok(body as RawSplitPage, "alpaca", { fetchedAt: responseDate(res) });
