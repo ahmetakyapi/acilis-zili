@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getBarsMulti, getSnapshots } from "../lib/providers/alpaca";
+import { resetAlpacaMemoForTests } from "../lib/providers/alpaca";
+import { resetProviderUsageForTests } from "../lib/providers/usage";
 
 /**
  * Paketlere bölünen Alpaca isteklerinde yanıtın YAŞI (20 Ekim).
@@ -20,6 +22,8 @@ async function withProvider(handler: typeof fetch, run: () => Promise<void>) {
   const key = process.env.ALPACA_API_KEY_ID, secret = process.env.ALPACA_API_SECRET_KEY;
   process.env.ALPACA_API_KEY_ID = "fixture"; process.env.ALPACA_API_SECRET_KEY = "fixture";
   globalThis.fetch = handler;
+  resetAlpacaMemoForTests();
+  resetProviderUsageForTests();
   try { await run(); } finally {
     globalThis.fetch = fetchBefore;
     if (key === undefined) delete process.env.ALPACA_API_KEY_ID; else process.env.ALPACA_API_KEY_ID = key;

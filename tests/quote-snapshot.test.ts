@@ -1,6 +1,8 @@
 import test from "node:test";
 import assert from "node:assert/strict";
 import { getSnapshots } from "../lib/providers/alpaca";
+import { resetAlpacaMemoForTests } from "../lib/providers/alpaca";
+import { resetProviderUsageForTests } from "../lib/providers/usage";
 
 /**
  * Anlık görüntünün gün barı — bildirilen hatanın testi.
@@ -18,6 +20,8 @@ async function withFetch<T>(handler: typeof fetch, run: () => Promise<T>) {
   const key = process.env.ALPACA_API_KEY_ID;
   const secret = process.env.ALPACA_API_SECRET_KEY;
   globalThis.fetch = handler;
+  resetAlpacaMemoForTests();
+  resetProviderUsageForTests();
   process.env.ALPACA_API_KEY_ID = "fixture-key";
   process.env.ALPACA_API_SECRET_KEY = "fixture-secret";
   try {

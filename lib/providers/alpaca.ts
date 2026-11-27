@@ -1,6 +1,6 @@
 import { canonicalSymbol } from "../symbols";
 import { FEED_DELAY_MINUTES, SESSION_BOUNDS, etDateTimeToUtc, etParts, todayEt } from "../market-hours";
-import {
+import { type ProviderFail,
   fail,
   ok,
   type Bar,
@@ -12,6 +12,7 @@ import {
 import { withBody } from "./timeout";
 import { retryOnRateLimit } from "./rate-limit";
 import { alpacaRequestKind, SAVING_REVALIDATE_SECONDS } from "./quota-guard";
+import { ALPACA_BUDGET_PER_MINUTE, RequestBudget, SymbolMemo } from "./symbol-memo";
 import { noteProviderResponse, providerSaving } from "./usage";
 
 /**
@@ -70,6 +71,9 @@ export function isAlpacaConfigured(): boolean {
   return credentials() !== null;
 }
 
+/** Sağlayıcıya kesin giden isteklerin dakikalık bütçesi — süreç başına tek. */
+const alpacaBudget = new RequestBudget(ALPACA_BUDGET_PER_MINUTE);
+
 type FetchOpts = {
   revalidate: number;
   tags?: string[];
@@ -114,6 +118,12 @@ async function alpacaFetch<T>(
   const saving = providerSaving("alpaca");
   if (saving && opts.fresh) {
     return fail("alpaca", "rate-limited", "Alpaca kotası korunuyor");
+  }
+  /* ORTAK BÜTÇE (27 Kasım; gerekçe lib/providers/symbol-memo.ts):
+     önbelleksiz istek sağlayıcıya KESİN gider, dakikalık bütçeden düşer.
+     Bütçe bitince atılmaz; çağıran eldekine düşer. */
+  if (opts.fresh && !alpacaBudget.take(Date.now())) {
+    return fail("alpaca", "rate-limited", "Alpaca istek bütçesi doldu");
   }
   const revalidate = saving ? Math.max(opts.revalidate, SAVING_REVALIDATE_SECONDS) : opts.revalidate;
 
@@ -477,20 +487,56 @@ export async function getSnapshots(
   if (symbols.length === 0) return ok({}, "alpaca");
 
   const unique = [...new Set(symbols.map(canonicalSymbol))];
+  /* SEMBOL BAŞINA BELLEK ÖNBELLEĞİ (27 Kasım; gerekçe
+     lib/providers/symbol-memo.ts). Next'in adres başına önbelleği yerine:
+     taze sembol sağlayıcıya gitmez, eksikler tek istekte sorulur, aynı anda
+     gelen istek uçuşu paylaşır. Süre eskisi gibi `revalidate`. */
+  const memo = await snapshotMemo.get(unique, revalidate * 1000, fetchSnapshotsNow, { fresh: opts.fresh });
+  const quotes = memo.data;
+  if (Object.keys(quotes).length === 0 || memo.oldestAt === null) {
+    return memo.failure ?? fail("alpaca", "empty", "Hiçbir sembol için fiyat dönmedi");
+  }
+
+  for (const symbol of symbols) {
+    const quote = quotes[canonicalSymbol(symbol)];
+    if (quote && symbol !== quote.symbol) quotes[symbol] = { ...quote, symbol };
+  }
+  return ok(quotes, "alpaca", { fetchedAt: new Date(memo.oldestAt) });
+}
+
+const snapshotMemo = new SymbolMemo<Quote, ProviderFail>();
+
+/** Testler için: bellek önbellekleri ve bütçe sıfırlanır (süreç başına tek durum). */
+export function resetAlpacaMemoForTests(): void {
+  snapshotMemo.clear();
+  latestBarMemo.clear();
+  barsMemos.clear();
+  changeMemos.clear();
+  alpacaBudget.clear();
+}
+
+/**
+ * Eksik sembollerin anlık görüntüsü — sağlayıcıya, önbelleksiz.
+ *
+ * `BATCH_SIZE`lık paketlere bölünür. Eskiden tüm liste tek URL'ye
+ * diziliyordu; Şirketler dizini 513 sembolle çağırdığında sorgu dizesi 2200
+ * karakteri buluyordu. Paketlerden biri düşerse diğerleri yine döner:
+ * kısmi sonuç, hiç sonuç olmamasından iyidir. Hiçbiri dönmezse son hata.
+ */
+async function fetchSnapshotsNow(unique: string[]): Promise<{ ok: true; data: Record<string, Quote>; at: number } | { ok: false; failure: ProviderFail }> {
   const quotes: Record<string, Quote> = {};
   let fetchedAt: Date | undefined;
-  let lastFailure: ProviderResult<Record<string, Quote>> | null = null;
+  let lastFailure: ProviderFail | null = null;
 
   /* PAKETLER PARALEL. Döngü `await` ile sırayla bekliyordu: 670 sembollük
      şirketler dizini dört pakete bölünüyor ve dördü arka arkaya gidiyordu.
-     Ölçüldü — sayfanın yanıtı 2,8 saniye, tek başına bu döngüden. Paketler
-     birbirine bağlı değil; hiçbiri ötekinin sonucunu okumuyor. */
+     Ölçüldü — sayfanın yanıtı 2,8 saniye, tek başına bu döngüden. */
   const results = await Promise.all(
     batches(unique).map((batch) =>
       symbolBatchFetch<unknown>(
         "/snapshots",
         { symbols: batch.join(","), feed: SNAPSHOT_FEED },
-        { revalidate, tags: ["quotes"], fresh: opts.fresh },
+        { revalidate: 0, tags: ["quotes"], fresh: true },
       ).then((result) => ({ batch, result })),
     ),
   );
@@ -500,46 +546,24 @@ export async function getSnapshots(
       lastFailure = result;
       continue;
     }
-
     const snapshots = unwrapSnapshots(result.data);
     if (!snapshots) {
-      lastFailure = fail(
-        "alpaca",
-        "empty",
-        "Snapshot yanıtı beklenen biçimde değil",
-      );
+      lastFailure = fail("alpaca", "empty", "Snapshot yanıtı beklenen biçimde değil") as ProviderFail;
       continue;
     }
-
     for (const symbol of batch) {
       const snap = snapshots[symbol];
       if (!snap) continue;
       const quote = snapshotToQuote(symbol, snap);
       if (quote) quotes[symbol] = quote;
     }
-
-    /* EN ESKİ paketin damgası (20 Ekim). En yenisi alınıyordu: paketler
-       paralel gittiğinden beri yanıt TEK bir çekim değil, ve
-       stale-while-revalidate tazelemesi düşmüş tek bir 200'lük paket, taze
-       üç paketin yanında `packCurrent`in yaş sorusundan geçiyordu — gün
-       sorusu da paketteki en yeni işleme baktığı için onu görmüyordu. Yaş
-       "en geride kalan ne kadar geride" sorusu; eski paket varsa çağıran
-       bir kez önbelleksiz tekrarlıyor. */
-    if (!fetchedAt || result.fetchedAt < fetchedAt)
-      fetchedAt = result.fetchedAt;
+    /* EN ESKİ paketin damgası (20 Ekim): yaş "en geride kalan ne kadar
+       geride" sorusu; eski paket varsa çağıran bir kez tekrarlıyor. */
+    if (!fetchedAt || result.fetchedAt < fetchedAt) fetchedAt = result.fetchedAt;
   }
 
-  if (Object.keys(quotes).length === 0) {
-    return (
-      lastFailure ?? fail("alpaca", "empty", "Hiçbir sembol için fiyat dönmedi")
-    );
-  }
-
-  for (const symbol of symbols) {
-    const quote = quotes[canonicalSymbol(symbol)];
-    if (quote && symbol !== quote.symbol) quotes[symbol] = { ...quote, symbol };
-  }
-  return ok(quotes, "alpaca", { fetchedAt });
+  if (!fetchedAt) return { ok: false, failure: lastFailure ?? (fail("alpaca", "empty", "Hiçbir sembol için fiyat dönmedi") as ProviderFail) };
+  return { ok: true, data: quotes, at: fetchedAt.getTime() };
 }
 
 /**
@@ -560,15 +584,30 @@ export async function getLatestIexBars(
 ): Promise<ProviderResult<Record<string, { close: number; minute: Date }>>> {
   if (symbols.length === 0) return ok({}, "alpaca");
   const unique = [...new Set(symbols.map(canonicalSymbol))];
+  /* Sembol başına bellek önbelleği — gerekçe `getSnapshots`te. */
+  const memo = await latestBarMemo.get(unique, revalidate * 1000, fetchLatestIexNow, { fresh: opts.fresh });
+  if (memo.oldestAt === null) {
+    /* Hiç bar yoksa (seans dışı, IEX'te işlem yok) boş ama başarılı paket;
+       istek düştüyse hatası. */
+    return memo.failure ?? ok({}, "alpaca");
+  }
+  return ok(memo.data, "alpaca", { fetchedAt: new Date(memo.oldestAt) });
+}
+
+const latestBarMemo = new SymbolMemo<{ close: number; minute: Date }, ProviderFail>();
+
+async function fetchLatestIexNow(
+  unique: string[],
+): Promise<{ ok: true; data: Record<string, { close: number; minute: Date }>; at: number } | { ok: false; failure: ProviderFail }> {
   const out: Record<string, { close: number; minute: Date }> = {};
   let fetchedAt: Date | undefined;
-  let lastFailure: ProviderResult<Record<string, { close: number; minute: Date }>> | null = null;
+  let lastFailure: ProviderFail | null = null;
   const results = await Promise.all(
     batches(unique).map((batch) =>
       symbolBatchFetch<{ bars?: Record<string, AlpacaBar | null> }>(
         "/bars/latest",
         { symbols: batch.join(","), feed: "iex" },
-        { revalidate, tags: ["quotes"], fresh: opts.fresh },
+        { revalidate: 0, tags: ["quotes"], fresh: true },
       ),
     ),
   );
@@ -583,13 +622,11 @@ export async function getLatestIexBars(
       if (Number.isNaN(minute.getTime())) continue;
       out[symbol] = { close: bar.c, minute };
     }
-    /* EN ESKİ paketin damgası (20 Ekim) — gerekçe `getSnapshots`teki
-       damgada: `overlayRealtime`in yaş sorusu tazelemesi düşmüş tek paketi
-       görmeli ki önbelleksiz tekrar o paketin sembollerini de kapsasın. */
+    /* EN ESKİ paketin damgası (20 Ekim) — gerekçe `getSnapshots`te. */
     if (!fetchedAt || result.fetchedAt < fetchedAt) fetchedAt = result.fetchedAt;
   }
-  if (Object.keys(out).length === 0 && lastFailure) return lastFailure;
-  return ok(out, "alpaca", { fetchedAt });
+  if (!fetchedAt) return { ok: false, failure: lastFailure ?? (fail("alpaca", "empty", "IEX barı dönmedi") as ProviderFail) };
+  return { ok: true, data: out, at: fetchedAt.getTime() };
 }
 
 /* --------------------------------------------------------------------------
@@ -615,17 +652,39 @@ export async function getPeriodChanges(
 ): Promise<ProviderResult<Record<string, number>>> {
   if (symbols.length === 0) return ok({}, "alpaca");
 
+  /* SEMBOL BAŞINA BELLEK ÖNBELLEĞİ (27 Kasım; gerekçe `getBarsMulti` ve
+     lib/providers/symbol-memo.ts). Ölçüldü: hisse sayfasının sektör eşleri
+     için altı aylık değişim isteği (83 sembol, 126 seans) 2,15 MB; Next 2 MB
+     üstünü önbelleğe almadığı için HER hisse sayfası görüntülemesi bu isteği
+     yeniden atıyordu. Seans sayısı başına sembol sembol tutuluyor. */
   const unique = [...new Set(symbols.map(canonicalSymbol))];
+  let memo = changeMemos.get(sessions);
+  if (!memo) {
+    memo = new SymbolMemo<number, ProviderFail>();
+    changeMemos.set(sessions, memo);
+  }
+  const result = await memo.get(unique, revalidate * 1000, (missing) => fetchPeriodChangesNow(missing, sessions));
+  if (result.oldestAt === null) return result.failure ?? ok({}, "alpaca");
+  const changes = result.data;
+  for (const symbol of symbols) {
+    const value = changes[canonicalSymbol(symbol)];
+    if (value !== undefined) changes[symbol] = value;
+  }
+  return ok(changes, "alpaca", { fetchedAt: new Date(result.oldestAt) });
+}
+
+const changeMemos = new Map<number, SymbolMemo<number, ProviderFail>>();
+
+async function fetchPeriodChangesNow(
+  unique: string[],
+  sessions: number,
+): Promise<{ ok: true; data: Record<string, number>; at: number } | { ok: false; failure: ProviderFail }> {
   const lookbackDays = Math.max(12, sessions * 2 + 6);
-  const start = new Date(Date.now() - lookbackDays * 86400000)
-    .toISOString()
-    .slice(0, 10);
-
+  const start = new Date(Date.now() - lookbackDays * 86400000).toISOString().slice(0, 10);
   const changes: Record<string, number> = {};
-  let anyOk = false;
-  let lastFailure: ProviderResult<Record<string, number>> | null = null;
+  let lastFailure: ProviderFail | null = null;
+  let fetchedAt: Date | undefined;
 
-  /* Paketler PARALEL — gerekçe `getSnapshots` içinde. */
   const results = await Promise.all(
     batches(unique).map((batch) =>
       fetchBarPages(
@@ -638,7 +697,7 @@ export async function getPeriodChanges(
           feed: BAR_FEED,
           sort: "asc",
         },
-        { revalidate, tags: ["bars", `changes:${sessions}`] },
+        { revalidate: 0, tags: ["bars", `changes:${sessions}`], fresh: true },
       ),
     ),
   );
@@ -648,8 +707,7 @@ export async function getPeriodChanges(
       lastFailure = result;
       continue;
     }
-    anyOk = true;
-
+    if (!fetchedAt || result.fetchedAt < fetchedAt) fetchedAt = result.fetchedAt;
     for (const [symbol, bars] of Object.entries(result.data)) {
       if (bars.length < 2) continue;
       const last = bars[bars.length - 1];
@@ -660,13 +718,8 @@ export async function getPeriodChanges(
       changes[symbol] = ((last.c - base.c) / base.c) * 100;
     }
   }
-
-  if (!anyOk && lastFailure) return lastFailure;
-  for (const symbol of symbols) {
-    const change = changes[canonicalSymbol(symbol)];
-    if (change !== undefined) changes[symbol] = change;
-  }
-  return ok(changes, "alpaca");
+  if (!fetchedAt) return { ok: false, failure: lastFailure ?? (fail("alpaca", "empty", "Değişim barı dönmedi") as ProviderFail) };
+  return { ok: true, data: changes, at: fetchedAt.getTime() };
 }
 
 /* --------------------------------------------------------------------------
@@ -855,33 +908,51 @@ export async function getBarsMulti(
 ): Promise<ProviderResult<Record<string, Bar[]>>> {
   if (symbols.length === 0) return ok({}, "alpaca");
 
-  const spec = RANGE_SPECS[range];
-  /* SIRALI (20 Ekim). Liste çağıranın sırasıyla adrese yazılıyordu ve Next'in
-     veri önbelleği o adresi anahtar alıyor: karşılaştırmada NVDA,AMD ile
-     AMD,NVDA aynı barlar için iki ayrı Alpaca çağrısıydı. Sonuç sembole göre
-     anahtarlı, sırayı geri kuran çağıran (seri rengi adresteki yerden
-     türüyor — app/api/karsilastir/route.ts). */
+  /* SEMBOL BAŞINA BELLEK ÖNBELLEĞİ (27 Kasım; gerekçe
+     lib/providers/symbol-memo.ts). Ölçüldü: hisse sayfasının sektör eşleri
+     isteği (83 sembol, dokuz aylık günlük bar) 2,15 MB ve Next 2 MB üstünü
+     önbelleğe almıyor ("items over 2MB can not be cached"); üstelik eş
+     listesi her sayfada başka sırayla. Her hisse sayfası görüntülemesi
+     sayfalı birkaç Alpaca isteği atıyordu. Artık aralık başına sembol
+     sembol tutuluyor: aynı aralıkta istenen sembol, hangi listeyle
+     istenirse istensin, süresi içinde bir kez çekiliyor. */
   const unique = [...new Set(symbols.map(canonicalSymbol))].sort();
-  const perRequest = Math.max(
-    1,
-    Math.min(BATCH_SIZE, Math.floor(MAX_BARS_PER_REQUEST / spec.limit)),
-  );
+  let memo = barsMemos.get(range);
+  if (!memo) {
+    memo = new SymbolMemo<Bar[], ProviderFail>();
+    barsMemos.set(range, memo);
+  }
+  const result = await memo.get(unique, revalidate * 1000, (missing) => fetchBarsMultiNow(missing, range), { fresh: opts.fresh });
+  if (result.oldestAt === null) return result.failure ?? ok({}, "alpaca");
+  const out = result.data;
+  for (const symbol of symbols) {
+    const bars = out[canonicalSymbol(symbol)];
+    if (bars) out[symbol] = bars;
+  }
+  return ok(out, "alpaca", { fetchedAt: new Date(result.oldestAt) });
+}
+
+const barsMemos = new Map<ChartRange, SymbolMemo<Bar[], ProviderFail>>();
+
+/** Eksik sembollerin barları — sağlayıcıya, önbelleksiz (gerekçe `getBarsMulti`). */
+async function fetchBarsMultiNow(
+  unique: string[],
+  range: ChartRange,
+): Promise<{ ok: true; data: Record<string, Bar[]>; at: number } | { ok: false; failure: ProviderFail }> {
+  const spec = RANGE_SPECS[range];
+  /* SIRALI (20 Ekim): sonuç sembole göre anahtarlı, sırayı geri kuran
+     çağıran (seri rengi adresteki yerden türüyor — app/api/karsilastir/route.ts). */
+  const perRequest = Math.max(1, Math.min(BATCH_SIZE, Math.floor(MAX_BARS_PER_REQUEST / spec.limit)));
   const start = startDateFor(range, new Date());
 
   const out: Record<string, Bar[]> = {};
-  let anyOk = false;
-  let lastFailure: ProviderResult<Record<string, Bar[]>> | null = null;
+  let lastFailure: ProviderFail | null = null;
   let fetchedAt: Date | undefined;
 
-  /* PAKETLER PARALEL (20 Ekim) — gerekçe `getSnapshots` içinde. Bu döngü
-     sıralı kalmıştı: ana sayfanın favori özeti (10 sembol, 1G'de paket
-     başına 5) ve piyasa panoları iki Alpaca turunu arka arkaya bekliyordu.
-     Sayfalama paketin İÇİNDE sıralı kalıyor (`fetchBarPages`); paketler
-     birbirinin sonucunu okumuyor. */
+  /* PAKETLER PARALEL (20 Ekim) — gerekçe `fetchSnapshotsNow` içinde.
+     Sayfalama paketin İÇİNDE sıralı kalıyor (`fetchBarPages`). */
   const batchList: string[][] = [];
-  for (let i = 0; i < unique.length; i += perRequest) {
-    batchList.push(unique.slice(i, i + perRequest));
-  }
+  for (let i = 0; i < unique.length; i += perRequest) batchList.push(unique.slice(i, i + perRequest));
   const results = await Promise.all(
     batchList.map((batch) =>
       fetchBarPages(
@@ -889,14 +960,12 @@ export async function getBarsMulti(
           symbols: batch.join(","),
           timeframe: spec.timeframe,
           start,
-          limit: String(
-            Math.min(MAX_BARS_PER_REQUEST, spec.limit * batch.length),
-          ),
+          limit: String(Math.min(MAX_BARS_PER_REQUEST, spec.limit * batch.length)),
           adjustment: "split",
           feed: BAR_FEED,
           sort: "asc",
         },
-        { revalidate, tags: ["bars", `bars:${range}`], fresh: opts.fresh },
+        { revalidate: 0, tags: ["bars", `bars:${range}`], fresh: true },
       ),
     ),
   );
@@ -906,14 +975,8 @@ export async function getBarsMulti(
       lastFailure = result;
       continue;
     }
-    anyOk = true;
-    /* EN ESKİ paketin damgası — son paketinki değil. Damga her turda
-       üzerine yazılıyordu ve `getChartBarsMulti`nin yaş sorusu
-       (`barsCurrent`) yalnız SON paketi görüyordu: tazelemesi düşmüş ilk
-       paketin saatler önceki gün içi serisi canlı fiyatın yanına çiziliyordu.
-       Gerekçe `getSnapshots`teki damgayla aynı. */
+    /* EN ESKİ paketin damgası — gerekçe `fetchSnapshotsNow`teki damgayla aynı. */
     if (!fetchedAt || result.fetchedAt < fetchedAt) fetchedAt = result.fetchedAt;
-
     for (const [symbol, list] of Object.entries(result.data)) {
       let bars: Bar[] = list.map((b) => ({
         time: Math.floor(new Date(b.t).getTime() / 1000),
@@ -929,12 +992,8 @@ export async function getBarsMulti(
     }
   }
 
-  if (!anyOk && lastFailure) return lastFailure;
-  for (const symbol of symbols) {
-    const bars = out[canonicalSymbol(symbol)];
-    if (bars) out[symbol] = bars;
-  }
-  return ok(out, "alpaca", { fetchedAt });
+  if (!fetchedAt) return { ok: false, failure: lastFailure ?? (fail("alpaca", "empty", "Bar dönmedi") as ProviderFail) };
+  return { ok: true, data: out, at: fetchedAt.getTime() };
 }
 
 /**

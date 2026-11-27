@@ -80,6 +80,11 @@ export function noteProviderResponse(provider: UsageProvider, res: Response, now
   }
 }
 
+/** Testler için: iz sıfırlanır. */
+export function resetProviderUsageForTests(): void {
+  tracks.clear();
+}
+
 /**
  * Kota koruması açık mı (gerekçe lib/providers/quota-guard.ts). Alpaca
  * kapıları her istekten önce sorar.
