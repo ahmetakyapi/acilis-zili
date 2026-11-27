@@ -58,12 +58,17 @@
 .titleLink:hover { color: var(--primary); }
 /* Telefonda başlık bağlantısı 44 (10 Kasım, telefon turu; ölçüldü 390:
    144×20). Görünür başlık aynı; alan dikeyde eşit açılır. */
+@media (max-width: 639px) { .close { white-space: normal; } .close > * { white-space: nowrap; } }
 @media (max-width: 639px) { .titleLink { position: relative; display: inline-block; } .titleLink::after { content: ""; position: absolute; inset: 50% 0 auto; height: 44px; translate: 0 -50%; } }
 .titleLink:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 4px; }
+/* Telefonda künye sarar (27 Kasım: 390'da "Çarşamba Seansı · 25 Kasım
+   Kapanışı" kutusundan 20, 360'ta 50 piksel taşıyordu); parçalar kendi
+   içinde bölünmez. */
 .close {
   display: inline-flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: 8px;
+  gap: 2px 8px;
   margin: 0;
   white-space: nowrap;
   color: var(--text-muted);

@@ -72,6 +72,9 @@
 .date { display:flex; align-items:center; gap:7px; min-width:0; padding:0 6px; color:var(--text-strong); font-weight:600; white-space:nowrap; }
 .date > svg { flex:none; color:var(--text-muted); }
 .date small { font-size:12px; font-weight:500; color:var(--text-muted); }
+/* 360'ta "NY" künyesi gün seçicisinin kutusundan 6 piksel taşıyordu (27
+   Kasım ölçümü); o genişlikte düşer, tarih ve oklar kalır. */
+@media (max-width:379px) { .date small { display:none; } }
 .dayShort { display:none; }
 .todayButton { display:inline-flex; align-items:center; gap:6px; min-height:30px; margin:0 3px 0 6px; padding:0 12px; border-radius:10px; background:var(--primary-tint); color:var(--primary-ink); font-size:12px; font-weight:600; cursor:pointer; transition:background-color 180ms var(--ease-brand); }
 .todayButton:hover { background:var(--primary-wash); }

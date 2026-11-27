@@ -324,7 +324,10 @@ export const SKY_MODES = {
   wide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 124, minSide: 0.18, label: "full", labelCaps: 12, labelExtremes: 3, font: 12, logo: 30 },
   xwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 160, minSide: 0.18, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 32 },
   stripNarrow: { width: 330, rows: 2, maxRows: 3, gap: 1, districtGap: 8, minW: 1.4, minDistrictW: 40, half: 46, minSide: 0.16, label: "pin", labelCaps: 4, labelExtremes: 2, font: 11, logo: 18, compact: true, minRowH: 84, tiers: 3, maxLift: 40, maxShift: 12 },
-  stripMedium: { width: 900, rows: 1, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 96, half: 44, minSide: 0.2, label: "full", labelCaps: 10, labelExtremes: 2, font: 15, logo: 30 },
+  /* Sahne 900 → 830 birim (27 Kasım, ana sayfa ölçümü): 768'de sahne 672 piksele
+     ölçeklenip 15 birimlik etiketler 11,2 pikseldi (metin tabanı 12); şimdi 12,1.
+     Puntoyu büyütmek denendi: kenardaki değer etiketi sahneden taşıyordu. */
+  stripMedium: { width: 830, rows: 1, gap: 1.6, districtGap: 14, minW: 2.4, minDistrictW: 96, half: 44, minSide: 0.2, label: "full", labelCaps: 10, labelExtremes: 2, font: 15, logo: 30 },
   stripWide: { width: 1200, rows: 1, gap: 2, districtGap: 18, minW: 3, minDistrictW: 120, half: 42, minSide: 0.2, label: "full", labelCaps: 12, labelExtremes: 3, font: 11, logo: 26 },
   stripXwide: { width: 1680, rows: 1, gap: 2.4, districtGap: 24, minW: 3.6, minDistrictW: 140, half: 52, minSide: 0.2, label: "full", labelCaps: 14, labelExtremes: 3, font: 13, logo: 28 },
   og: { width: 1080, rows: 1, gap: 2, districtGap: 16, minW: 2.6, minDistrictW: 96, half: 118, minSide: 0.2, label: "full", labelCaps: 6, labelExtremes: 2, font: 15, logo: 26 },

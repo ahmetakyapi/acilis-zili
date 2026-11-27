@@ -701,6 +701,41 @@ export default async function TodayPage() {
             <LatestAnalyses locale={locale} t={t} />
           </Suspense>
         </DrawOnView>
+
+        {/* HAFTAYA BAKIŞ SOL KOLONDA (27 Kasım, sahibinin isteği: "ana sayfa
+            her ekran boyutunda iyi durmalı, alanları doğru kullanalım").
+            Sağ kolon Teknik Analiz panelinin "bugünkü durum" turuyla (24
+            Kasım) uzadı ve 1440'ta soldan ~480 piksel uzun bitiyordu; sol
+            kolonun yedek satırları tükenmişti (FillColumn açacak satır
+            bulamıyordu). Hafta kutusuz bir zaman çizelgesi, geniş kolonda
+            da tablette olduğu gibi tam genişlikte okunuyor; ölçüm
+            TodayExperience.module.css → "ARKA PLAN DENGESİ". */}
+        {/* ---- Ekonomik takvim: AKIŞA KATILDI (10 Kasım gecesi, düzen turu) ----
+             Burada "Bugünün Takvimi" paneli dururdu (9 Ekim'den beri boş
+             günde basılmıyordu; bir dönem ana kolondaydı, sonra haftaya
+             bakışın komşusu). Kaldırıldı: bugünün ekonomik verileri sayfanın
+             ikinci bloğu "Bugünün Akışı"nda saatleri, beklentisi ve sonucuyla
+             zaten duruyor (aynı `economic_events` satırları,
+             lib/day-flow-data.ts) ve panel aynı iki TÜFE satırını telefonda
+             9.700. pikselde ikinci kez okutuyordu (canlı, 10 Kasım). Bölünme
+             artık net: BUGÜN akışta, YARIN VE SONRASI aşağıdaki "Haftaya
+             Bakış"ta. Telefonda 173 piksel (390), rayda 121–241 piksel
+             kısalıyor. */}
+        {/* KUTUSUZ (14 Kasım, görsel tur): üç satırlık kısa liste, kutu
+            içeriğinden ağırdı. Üstte hairline, panel başlığı ölçüsünde
+            başlık, satırlar sayfa zemininde (gerekçe
+            TodayExperience.module.css → "ÜÇ KAT"). */}
+        <section data-home-section="week" className={styles.open}>
+          <PanelHeader
+            title={t.today.weekAhead}
+            tone="title"
+            className="!px-0"
+            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
+          />
+          <Suspense fallback={<ListSkeleton rows={3} />}>
+            <WeekAhead locale={locale} t={t} />
+          </Suspense>
+        </section>
       </div>
 
       {/* ================= Sağ kolon, alt parça: ARKA PLAN =================
@@ -742,32 +777,6 @@ export default async function TodayPage() {
           </Suspense>
         </DrawOnView>
 
-        {/* ---- Ekonomik takvim: AKIŞA KATILDI (10 Kasım gecesi, düzen turu) ----
-             Burada "Bugünün Takvimi" paneli dururdu (9 Ekim'den beri boş
-             günde basılmıyordu; bir dönem ana kolondaydı, sonra haftaya
-             bakışın komşusu). Kaldırıldı: bugünün ekonomik verileri sayfanın
-             ikinci bloğu "Bugünün Akışı"nda saatleri, beklentisi ve sonucuyla
-             zaten duruyor (aynı `economic_events` satırları,
-             lib/day-flow-data.ts) ve panel aynı iki TÜFE satırını telefonda
-             9.700. pikselde ikinci kez okutuyordu (canlı, 10 Kasım). Bölünme
-             artık net: BUGÜN akışta, YARIN VE SONRASI aşağıdaki "Haftaya
-             Bakış"ta. Telefonda 173 piksel (390), rayda 121–241 piksel
-             kısalıyor. */}
-        {/* KUTUSUZ (14 Kasım, görsel tur): üç satırlık kısa liste, kutu
-            içeriğinden ağırdı. Üstte hairline, panel başlığı ölçüsünde
-            başlık, satırlar sayfa zemininde (gerekçe
-            TodayExperience.module.css → "ÜÇ KAT"). */}
-        <section data-home-section="week" className={styles.open}>
-          <PanelHeader
-            title={t.today.weekAhead}
-            tone="title"
-            className="!px-0"
-            action={<PanelLink href="/takvim">{t.common.showAll}</PanelLink>}
-          />
-          <Suspense fallback={<ListSkeleton rows={3} />}>
-            <WeekAhead locale={locale} t={t} />
-          </Suspense>
-        </section>
 
         {/* ---- Hisseyi Bil (24 Ekim; 25 Ekim'de buraya indi) ----
              Bir dönem seans zilinin altında, ızgaranın DIŞINDA tam genişlik

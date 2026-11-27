@@ -755,6 +755,15 @@
      hafta, teknik | favoriler. Kısa olan panel erken bitiyor — boşluk
      esnetilmez (`align-items:start`). */
   .dashboard { grid-template-columns:repeat(2,minmax(0,1fr)); align-items:start; }
+  /* EŞSİZ YARIM PANEL KALMAZ (27 Kasım, sahibinin ekran görüntüsü, 1256:
+     "Son Kapanışın Hareketleri" yarım genişlikte, sağı boş). Çiftler DOM
+     sırasından kuruluyordu ve hareketlerin DOM'daki eşi teknik paneldi —
+     o tam genişlik; dünya piyasaları da tam genişlik Nabız/favorilerden
+     sonra tek kalıyordu (768–1279'un hepsinde ölçüldü: iki eşsiz panel).
+     `dense`: yarım panel kendinden önceki ilk boş yarıya oturur, yani
+     dünya hareketlerin yanına çıkar; tahvil | makro zaten çift. Okuma
+     sırası yalnız dünya için bir panel yukarı kayar. */
+  .dashboard { grid-auto-flow:row dense; }
   /* ÇİFTLER AYNI HATTA BİTER (30 Eylül, sahibinin kuralı: "yan yana olan
      kartlar aynı hizada bitmeli"). Yukarıdaki "kısa olan panel erken
      bitiyor" kararı iki SÜTUNLU bir akış içindi; burada paneller satır
