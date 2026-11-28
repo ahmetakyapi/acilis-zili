@@ -52,7 +52,6 @@ export const probabilitiesTr = {
   /* Fed paneli */
   fedTitle: "Fed'in Sıradaki Kararı",
   fedMeta: "{date} · {time}",
-  fedLeadLabel: "En Olası Sonuç",
   fedOutcomes: {
     cut50: "25 bp'den Büyük İndirim",
     cut25: "25 bp İndirim",
@@ -62,14 +61,12 @@ export const probabilitiesTr = {
   },
   fedSides: { cut: "İndirim", hold: "Sabit", hike: "Artış" },
   fedBarLabel: "Karar seçeneklerinin olasılıkları: {list}",
-  fedLineTitle: "Son 30 Gün",
   fedLineLabel: "Son 30 günde indirim, sabit ve artış olasılıkları",
   fedTarget: "Bugünkü Hedef Aralık",
   fedCountdown: "Karara",
   fedLinkCalendar: "Takvimde Gör",
   change24h: "24 Saatte",
   points: "{n} Puan",
-  noChange: "Değişmedi",
 
   /* Patika */
   pathTitle: "Beklenen Faiz Patikası",
@@ -90,15 +87,12 @@ export const probabilitiesTr = {
   electionMeta: "3 Kasım 2026",
   electionMetaDays: "3 Kasım · {n} Gün Kaldı",
   electionMetaToday: "3 Kasım · Seçim Günü",
-  electionDaysLeft: "Gün Kaldı",
-  electionToday: "Seçim Günü",
   electionPolls: "İlk sandıklar kapanıyor: {primary} · {secondary}",
   electionAfter: "Sonuçlar geliyor; kaynak bir meclisi sonuçlandırınca olasılığın yerine sonuç yazılır.",
   house: "Temsilciler Meclisi",
   senate: "Senato",
   parties: { dem: "Demokratlar", rep: "Cumhuriyetçiler" },
   majority: "Çoğunluk",
-  chamberLead: "Kazanma Olasılığı",
   resolved: "Sonuç",
   resolvedWinner: "{party} Kazandı",
   resolvedNote: "Kaynak bu piyasayı sonuçlandırdı; gösterilen olasılık değil, sonuç.",
@@ -213,7 +207,6 @@ export const probabilitiesEn: typeof probabilitiesTr = {
 
   fedTitle: "The Fed's Next Decision",
   fedMeta: "{date} · {time}",
-  fedLeadLabel: "Most Likely Outcome",
   fedOutcomes: {
     cut50: "Cut Above 25 bp",
     cut25: "25 bp Cut",
@@ -223,7 +216,6 @@ export const probabilitiesEn: typeof probabilitiesTr = {
   },
   fedSides: { cut: "Cut", hold: "Hold", hike: "Hike" },
   fedBarLabel: "Probabilities of the decision options: {list}",
-  fedLineTitle: "Last 30 Days",
   fedLineLabel: "Probabilities of a cut, hold and hike over the last 30 days",
   fedTarget: "Current Target Range",
   fedCountdown: "To the Decision",
@@ -231,7 +223,6 @@ export const probabilitiesEn: typeof probabilitiesTr = {
   change24h: "In 24 Hours",
   /* Yüzde puanı: "1 Points" tekil/çoğul derdi yok, kısaltma sabit. */
   points: "{n} pp",
-  noChange: "Unchanged",
 
   pathTitle: "Expected Rate Path",
   pathNote:
@@ -250,15 +241,12 @@ export const probabilitiesEn: typeof probabilitiesTr = {
   electionMeta: "November 3, 2026",
   electionMetaDays: "November 3 · {n} Days Left",
   electionMetaToday: "November 3 · Election Day",
-  electionDaysLeft: "Days Left",
-  electionToday: "Election Day",
   electionPolls: "First polls close: {primary} · {secondary}",
   electionAfter: "Results are coming in; once the source settles a chamber, the result replaces the probability.",
   house: "House",
   senate: "Senate",
   parties: { dem: "Democrats", rep: "Republicans" },
   majority: "Majority",
-  chamberLead: "Chance of Winning",
   resolved: "Result",
   resolvedWinner: "{party} Won",
   resolvedNote: "The source has settled this market; what you see is the result, not a probability.",

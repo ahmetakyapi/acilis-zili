@@ -8,7 +8,6 @@
 
 export const earningsDeskTr = {
   title: "Bilanço Masası",
-  homeTitle: "Bilanço Masası",
   session: "{date} Kapanışıyla",
   loading: "Claude portföyündeki bilançoları okuyor…",
   /* Kartlar var, Claude metni yok (anahtar, bütçe ya da denetim). */
@@ -48,14 +47,11 @@ export const earningsDeskTr = {
   },
   disclosure:
     "Notlar bilanço takviminden, son tamamlanmış seansın kapanışından ve pozisyonlarından Claude ile yazıldı; her gün ilk açılışta yenilenir. Saatler {zone} saatiyle. Yatırım tavsiyesi değildir.",
-  /* Ana sayfa kartının tek satırı. */
-  brief: { before: "{n} Yaklaşan", after: "{n} Açıklanan", open: "Masayı Aç" },
   zone: { tr: "Türkiye", en: "New York" },
 };
 
 export const earningsDeskEn: typeof earningsDeskTr = {
   title: "Earnings Desk",
-  homeTitle: "Earnings Desk",
   session: "As of {date} Close",
   loading: "Claude is reading the earnings in your portfolio…",
   noText: "The note could not be written right now; the figures are on the cards.",
@@ -92,6 +88,5 @@ export const earningsDeskEn: typeof earningsDeskTr = {
   },
   disclosure:
     "Notes are written by Claude from the earnings calendar, the last completed session's close and your positions; refreshed on the first visit each day. Times in {zone} time. Not investment advice.",
-  brief: { before: "{n} Coming Up", after: "{n} Reported", open: "Open the Desk" },
   zone: { tr: "Türkiye", en: "New York" },
 };

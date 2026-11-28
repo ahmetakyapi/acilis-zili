@@ -92,28 +92,3 @@
 .planText { color:var(--text-strong); font-size:var(--text-small); line-height:1.6; }
 
 .foot { display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:var(--text-tiny); line-height:1.55; }
-
-/* ---- Ana sayfa kartındaki özet ---- */
-.brief { display:flex; flex-direction:column; gap:10px; padding:14px; border:1px solid var(--primary-faint); border-radius:12px; background:var(--premium-surface); }
-.briefHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 10px; }
-.briefTitle { display:inline-flex; align-items:center; gap:6px; color:var(--text-strong); font-size:14px; font-weight:700; }
-.briefMeta { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
-.briefHeadline { color:var(--text-strong); font-size:16px; font-weight:700; letter-spacing:-.02em; line-height:1.3; text-wrap:balance; }
-.briefSummary { color:var(--text-body); font-size:var(--text-small); line-height:1.6; }
-.briefThemes { display:flex; flex-direction:column; gap:6px; }
-.briefThemes li { display:flex; min-width:0; align-items:center; gap:6px; color:var(--primary-ink); font-size:var(--text-tiny); }
-.briefThemeKind { flex:none; font-weight:700; }
-.briefThemeTitle { overflow:hidden; color:var(--text-body); font-weight:600; white-space:nowrap; text-overflow:ellipsis; }
-.briefPlans { display:flex; flex-direction:column; gap:8px; padding-top:10px; border-top:1px solid var(--line-soft); }
-.briefPlansHead { display:inline-flex; align-items:center; gap:8px; color:var(--text-strong); font-size:var(--text-tiny); font-weight:700; }
-.briefPlans ul { display:flex; flex-direction:column; gap:6px; }
-.briefPlans li { display:grid; grid-template-columns:48px max-content minmax(0,1fr); align-items:center; gap:8px; }
-.briefPlanSymbol { color:var(--text-strong); font-size:var(--text-small); font-weight:700; }
-.briefLevels { display:flex; flex-wrap:wrap; justify-content:flex-end; gap:2px 10px; color:var(--text-muted); font-size:var(--text-nano); font-weight:600; white-space:nowrap; }
-.briefLevels b { font-size:var(--text-tiny); font-weight:700; }
-.briefLevels [data-kind="tp"] b { color:var(--up); }
-.briefLevels [data-kind="sl"] b { color:var(--down); }
-.briefLink { display:inline-flex; min-height:44px; align-items:center; gap:4px; margin-block:-10px -12px; color:var(--primary); font-size:var(--text-small); font-weight:600; }
-.briefLink:hover { color:var(--primary-hover); }
-.briefLink svg { transition:translate 200ms var(--ease-brand); }
-.briefLink:hover svg { translate:3px 0; }

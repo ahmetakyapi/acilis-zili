@@ -191,29 +191,17 @@ const tr = {
   },
 
   directory: {
-    sectorPreview: "Dizinin En Geniş Sektörleri",
     earningsActivity: "Takvim Yoğunluğu",
     earningsBusiest: "En Yoğun Gün",
     reportsCount: "{n} Bilanço",
     reportsCountOne: "{n} Bilanço",
     marketLeaders: "Piyasanın Devleri",
     leadersByCap: "Piyasa Değerine Göre",
-    selectCompany: "Bir Şirket Seç",
-    exploreCompanies: "Şirketleri Keşfet",
-    openCompany: "Şirketi İncele",
-    earningsRadar: "Takvimde Öne Çıkanlar",
 
-    companiesEyebrow: "ABD Piyasalarının Şirketleri",
-    earningsEyebrow: "Finansal Sonuçlar ve Beklentiler",
     companyCount: "Dizindeki Şirket",
     sectorCount: "Sektör Grubu",
-    sectorDistribution: "Sektörlere Bir Bakış",
-    distributionUnit: "Şirket Sayısı",
-    reportingRhythm: "Önümüzdeki 7 Gün",
     scheduledReports: "Takvimdeki Bilanço",
     followedCompanies: "Takip Edilen Şirket",
-    publishedAnalyses: "Yayımlanmış Analiz",
-    reportingDays: "Açıklama Günü",
     analysisDescription: "Gerçekleşen sonuçlar, piyasanın beklentileri ve bir sonraki çeyreğe bakış.",
   },
 
@@ -225,7 +213,6 @@ const tr = {
 
     auto: "Otomatik Güncelleme",
     checked: "Son Kontrol",
-    updating: "Kontrol Ediliyor",
     retry: "Yeniden Dene",
     offline: "Güncelleme Bekleniyor",
     scheduled: "Planlandı",
@@ -261,7 +248,6 @@ const tr = {
     prevDay: "Önceki işlem günü",
     nextDay: "Sonraki işlem günü",
     backToToday: "Bugüne Dön",
-    loadingDay: "Gün yükleniyor",
     dayFailed: "Bu gün yüklenemedi. Yeniden dene ya da bugüne dön.",
     emptyDayTitle: "Bu Gün Planlanmış Açıklama Yok",
     emptyDayHint: "Önceki ya da sonraki günlere oklarla geçebilirsin.",
@@ -270,7 +256,6 @@ const tr = {
     previewLead: "Sıradaki işlem günü {day}: akışta {n} olay planlı.",
     /* Tek olay: Türkçede cümle aynı kalır, İngilizcede tekil ("1 event"). */
     previewLeadOne: "Sıradaki işlem günü {day}: akışta 1 olay planlı.",
-    previewRuler: "Sıradaki işlem gününün saat ekseni",
     previewHidden: "Eşiğin altında {count} bilanço daha var.",
     previewMore: "+{n} Olay Daha",
     previewOpen: "Günün Tamamını Gör",
@@ -297,7 +282,6 @@ const tr = {
     inline: "Beklentiye Eşit",
     scheduledHint: "Açıklandığında sonuçlar burada güncellenir.",
     pendingHint: "Açıklama saatinin gelmesi sonucun yayımlandığı anlamına gelmez. Kaynak verisi bekleniyor.",
-    analyzedHint: "Yayımlanan bilanço analizine şirketin yanındaki bağlantıdan ulaşabilirsin.",
     liveNote: "30 Saniyede Bir Kontrol",
     closed: "Seans Kapalı",
     updatedAnnouncement: "Günün akışı güncellendi.",
@@ -385,20 +369,14 @@ const tr = {
     countdownHours: "Saat",
     countdownMinutes: "Dakika",
     countdownSeconds: "Saniye",
-    countdownDescription: "Bir sonraki zile hazırlan. Gündem, şirketler ve bilançolar bir arada.",
-    flowTimeline: "Zaman Çizgisi",
     experienceEyebrow: "ABD Piyasalarına Açılan Penceren",
-    experienceHeading: "Piyasanın Ritmini",
-    experienceHeadingAccent: "Yakala.",
-    experienceDescription: "Endekslerden şirketlere, bilançolardan büyük resme. Piyasayı hareket ettiren her şey, tek yerde.",
-    experienceClock: "New York Saati",
     experienceOverview: "Piyasa Özeti",
-    experienceReading: "Gündemi Oku",
-    experienceReports: "Bilançolar",
-    experienceNews: "Haber Akışı",
     experienceIndexNote: "ABD Endekslerini İzleyen Fonlar",
     /* Endeks kartının yedek çizgisinin künyesi (lib/index-week.ts). */
     indexWeek: "5 Seans",
+    /* Teknik panelin rayda kümeyi tek satırda tutan "+N" karosunun künyesi (TechnicalPanel). */
+    technicalMore: "Tümü",
+    themeExtremesMeta: "En Güçlü ve En Zayıf Tema · Üye Medyanı",
     experienceFlowNote: "Veriler, bilançolar ve seansın dönüm noktaları.",
     /* Gün akışında okla başka güne geçilince başlık (21 Ekim): "Bugünün
        Akışı" dünü gösterirken yanlış söylüyordu; tarih kapsülde yazılı. */
@@ -456,7 +434,6 @@ const tr = {
     dayMoversEmpty: "Sıralama için yeterli fiyat verisi yok.",
 
     schedule: "Bugünün Takvimi",
-    scheduleEmpty: "Bugün için planlanmış ekonomik veri yok.",
     earningsToday: "Bugün Bilanço Açıklayanlar",
     earningsOn: "{day} Bilanço Açıklayanlar",
     /* Başlığın yanındaki sayaç: bugün kaç şirket açıklıyor ve kaçı
@@ -522,9 +499,6 @@ const tr = {
        bilmesi gereken şey: yön güvenilir, yüzde değil. */
     worldMarketsHint:
       "ABD'de dolar bazında işlem gören MSCI ülke fonlarının günlük değişimi. Yönü yerel endeksle aynı, yüzdesi kur ve seans farkıyla ayrışabilir.",
-    // Sayının ARDINDAN okunur: "1g 15sa 31dk açılış ziline kaldı".
-    untilBell: "Açılış Ziline Kaldı",
-    untilClose: "Kapanış Ziline Kaldı",
     // Geri sayımın kısa birimleri — "18 dk 42 sn"
     unitD: "g",
     unitH: "sa",
@@ -532,7 +506,6 @@ const tr = {
     unitS: "sn",
     macroSummary: "Makro",
     todayFlow: "Bugünün Akışı",
-    pageHeading: "Açılış Zili: ABD Piyasa Takibi",
     /* KAYNAK SATIRI BESLEMEYİ ADIYLA SÖYLÜYOR. Bir dönem "Alpaca IEX"
        yazıyordu ve o besleme konsolide hacmin yirmide birini görüyordu;
        gerekçe `lib/providers/alpaca.ts` başında. Gecikme de artık "olabilir"
@@ -576,7 +549,6 @@ const tr = {
     sectorsBreadth: "{up} Yükselen · {down} Düşen",
     sectorsBreadthLabel: "On bir sektörün {up} tanesi yükseliyor, {down} tanesi düşüyor",
     themesHeading: "Temalar",
-    themesMeta: "Üye Hisselerin Medyanı · Eşit Ağırlık",
     strongestTheme: "Günün En Güçlü Teması",
     weakestTheme: "Günün En Zayıf Teması",
     strongestLastClose: "Son Kapanışta En Güçlü Tema",
@@ -716,8 +688,6 @@ const tr = {
     reportDate: "Rapor Tarihi",
     revenueShort: "Gelir",
     epsFull: "EPS (Hisse Başına Kâr)",
-    epsExplainer:
-      "şirketin çeyrek boyunca kazandığı net kârın hisse sayısına bölünmüş hâlidir; bir hissenin o dönemde ne kadar kâr ürettiğini gösterir. Analistler her çeyrek için bir beklenti açıklar; gerçekleşen rakamın bu beklentinin ne kadar üstünde veya altında kaldığı sapmadır. Gelir (ciro) ise kârdan önceki toplam satıştır: piyasa çoğu zaman kâr beklentisini tutturup gelirde beklentinin altında kalan şirketin hissesini de satar, bu yüzden ikisi birlikte okunur.",
     spotlight: "Öne Çıkanlar",
     addToCalendar: "Takvime Ekle",
     alsoReporting: "Diğer Açıklayanlar",
@@ -757,7 +727,6 @@ const tr = {
     title: "Bilançolar",
     reportNavigation: "Rapor Bölümleri",
     reportOverview: "Genel Bakış",
-    reportInNumbers: "Rakamlarla Bu Çeyrek",
     reportOutlook: "İleriye Bakış",
     /* Bölüm adı = sekme adı (gerekçe `stock.chapterValuation` üstünde).
        "Detaylı Değerlendirme" sekmesi "Özet" panelinde açılıyordu. */
@@ -825,7 +794,6 @@ const tr = {
 
     summary: "Özet",
     detailed: "Detaylı Değerlendirme",
-    byTeam: "Claude",
     strengths: "Güçlü Yönler",
     risks: "Riskler",
     upcomingDev: "Beklenen Gelişmeler",
@@ -893,7 +861,6 @@ const tr = {
     trailing12m: "Son 12 Ay",
     afterHours: "Seans Sonrası",
     nextEarnings: "Sonraki Bilanço",
-    earningsOf: "{period} Bilançosu",
     /* BİLANÇO DETAYI, 24 Eylül. Potansiyel artık kapaktaki fiyattan
        ölçülüyor ve hangi fiyattan ölçüldüğü yazılı; hedefin kendisi
        bilanço günü ortalaması olarak künyeleniyor. */
@@ -966,9 +933,6 @@ const tr = {
       next: "Sıradaki",
       nextIn: "Sıradaki Yayına {d}",
     },
-    /* Görüş dağılımında boş görüş satırı (8 Kasım): "AL 0" grubunun logo
-       alanı boş kalmasın, nedenini söylesin. */
-    distributionEmpty: "Bu yayında {stance} görüşü yok.",
     /* Kapaktaki hücrelerin yüzdesi — kural `TechnicalPulse` → "KAPAĞIN SAĞ KOLONU". */
     pulseChangeNote: "Yüzdeler günün değişimi: seans sürerken anlık fiyattan, değilse son yayın anından.",
     /* Ana sayfa panelinde hissenin bugünkü durumu (24 Kasım;
@@ -1012,7 +976,6 @@ const tr = {
        Etiketin kendisi "15 Dakika Gecikmeli" olunca okuyucu fiyatın ne
        olduğunu değil yalnızca ne kadar geç olduğunu okuyordu. */
     currentPrice: "Güncel Fiyat",
-    thisEdition: "Bu Yayın",
     atAnalysis: "Analiz Anında",
     levelPassed: "Geçildi",
     levelBroken: "Kırıldı",
@@ -1021,10 +984,6 @@ const tr = {
        dar bandın sağda büyütülmüş hâli. Büyütme yalnız ≥ 1,5 katta yazılır. */
     lensTitle: "Seviye Bandı",
     lensZoom: "{n} Kat Yakın",
-    /* STOP ALTI KUŞAĞININ KÜNYESİ. Kuşak sessizdi ve kırmızı bir alan
-       tek başına "kötü" diyor, "ne" demiyor. Kısa tutuldu: 390 pikselde
-       tek satır kalmalı (ölçüldü). */
-    zoneBelowStop: "Bu Seviyenin Altı: Plan Geçersiz",
     target: "Hedef {n}",
     targetsLabel: "Hedefler",
     resistance: "Direnç",
@@ -1150,7 +1109,6 @@ const tr = {
        "listeye yeni eklendi" künyesiyle basılıyordu — daha önce onlarca kez
        yayımlanmış bir hisse için bu doğru değil. İki hâl artık ayrı
        cümleyle söyleniyor; ikisi de sessizce kaybolmuyor. */
-    lapsedLabel: "Yayın Gecikti",
     lapsedNoteOne:
       "{symbols} için son beş günde yeni yayın yok; kartı yeniden yayımlandığında görünecek.",
     lapsedNoteMany:
@@ -1167,11 +1125,8 @@ const tr = {
     planEntry: "Nereden Alınır",
     planTargets: "Nerede Satılır",
     planStop: "Nerede Vazgeçilir",
-    planSellLevels: "Tepkide Satış",
     planNearestSupport: "En Yakın Destek",
     planNearestResistance: "En Yakın Direnç",
-    /* SAT kartının üçüncü satırı: destek kırılırsa sıradaki seviye. */
-    planNextSupport: "Sonraki Destek",
     planNone: "Bu Yayında Yok",
     /* ---- Planı olmayan görüş (31 Ekim) ----
        Bölgesiz TUT ve SAT de "nereden alınır / nerede satılır" sorusuna
@@ -1270,11 +1225,7 @@ const tr = {
     /* ---- Fiyat haritası ---- */
     levelRationale: "Seviyelerin Dayanağı",
     priceMap: "Fiyat Haritası",
-    levelColumn: "Seviye",
     thesisLabel: "Görüşün Gerekçesi",
-    /* 31 Ekim: tablo merdivene döndü; aralıklar artık fiyat mesafesinin kendisi. */
-    priceLevelsNote: "Seviyeler fiyat ekseninde gerçek aralıklarıyla durur. Birbirine yakın etiketler okunsun diye yana itilir, ince çizgi seviyenin asıl yerini gösterir; uzaklıklar şu anki fiyattan ölçülür.",
-    priceMapNote: "Seviyeler fiyat sırasına göre dizilir, birbirine yakın olanlar okunabilsin diye ayrılır; uzaklıklar şu anki fiyattan ölçülür.",
     sectionsLabel: "Analiz Bölümleri",
     // Dağılım logosunun bilgi kartı, yayını bekleyen sembolde.
     pulseAwaiting: "Güncel analiz henüz yayımlanmadı.",
@@ -1285,17 +1236,12 @@ const tr = {
     /* Panoda son yayından eski bir kart — ayağında adıyla söyleniyor. */
     earlierEdition: "Önceki Yayın",
     /* SAT ve bölgesiz TUT kartının bacakları: fiyattan seviyeye uzaklık. */
-    planToSellLevel: "Tepkiye",
-    planToSupport: "Desteğe",
     planToResistance: "Dirence",
     /* Pano künyesi: kaç kart bölgede, bölgeye %1'den yakın, stopun altında. */
     proximityLabel: "Plana Göre Fiyat",
     proximityInZone: "Bölgede",
     proximityNear: "%1'den Yakın",
     proximityBelowStop: "Stop Altında",
-    /* Trend göstergesinin iki etiketi: 50 ve 200 günlük ortalama. */
-    ma50Short: "50G",
-    ma200Short: "200G",
     /* ---- Görüşler ne demek ----
        Görüş kartta tek kelime (AL/TUT/SAT) ve okuyucu onu bir emir gibi
        okuyordu: "şimdi hepsini al", "şimdi hepsini sat". Rutinin tanımı
@@ -1309,7 +1255,6 @@ const tr = {
       boardTitle: "AL, TUT, SAT Ne Demek?",
       boardLead:
         "Görüş bir emir değil, planın tek kelimelik özetidir. Üçü de aynı soruya cevap verir: bugünkü grafikte yeni bir alım için gerekçe var mı, varsa nereden alınır ve nerede vazgeçilir.",
-      boardLink: "Görüşler Ne Demek?",
       noPosition: "Pozisyonun Yoksa",
       hasPosition: "Pozisyonun Varsa",
       whatToDo: "Ne Yapmalı?",
@@ -1412,13 +1357,6 @@ const tr = {
     capLens: "{n} Kat Büyütülmüş",
     bandFromLow: "Dibin {value} Üstünde",
     bandFromHigh: "Zirvenin {value} Altında",
-    nextReportRow: "Sıradaki Bilanço",
-    experienceFundamentals: "Değerleme ve Beklentiler",
-    experienceFundamentalsHint: "Fiyatın ötesinde: şirketin finansal yapısı ve analistlerin bakışı.",
-    experienceEarnings: "Çeyrek Çeyrek Performans",
-    experienceEarningsHint: "Beklentiler, gerçekleşen sonuçlar ve rakamların anlattıkları.",
-    experienceContext: "Şirketin Gündemi",
-    experienceContextHint: "Sektördeki yeri, son gelişmeler ve büyük resmi tamamlayan analizler.",
     /* BÖLÜM ADI = SEKME ADI (23 Eylül). Sekmeler "Anahtar Metrikler" ve
        "Geçmiş Bilançolar" diyordu, tıklanınca açılan bölümler ise
        "Değerleme ve Beklentiler" ve "Çeyrek Çeyrek Performans": okuyucu
@@ -1441,7 +1379,6 @@ const tr = {
     /* Fiyat cetvelindeki çentik etiketi — dar, satırdaki adın kısası. */
     movingAverageShort: "{n}G",
     currentQuote: "Son Fiyat",
-    averageDistance: "Ortalamaya Göre Fark",
     analystReading: "12 Aylık Tavsiye Dağılımı",
     movingAveragesNote:
       "Son 50, 100 ve 200 işlem gününün kapanış ortalaması. Fiyat ortalamanın üstündeyse o dönemde alan taraf önde, altındaysa satan taraf; yanındaki yüzde aradaki farkı gösterir.",
@@ -1522,7 +1459,6 @@ const tr = {
     throttledHint:
       "Kısa sürede çok fazla farklı hisse açtın. Veri sağlayıcılarımızın ücretsiz kotasını korumak için bir dakika beklemen gerekiyor.",
     peers: "Aynı Sektörden Şirketler",
-    peersHint: "Alt Sektör",
     fundProfile: "Fon Künyesi",
     fundKind: "Tür",
     fundKindLabel: "Borsa Yatırım Fonu (ETF)",
@@ -1871,6 +1807,11 @@ const tr = {
     constituents: "Endeks Bileşenleri",
     constituentsMore: "{n} Şirket Daha",
     constituentsLess: "Daha Az Göster",
+    /* 28 Kasım 2026 (görsel tur 3): katlama her genişlikte; genişlik
+       panelinin medyan künyesi. */
+    constituentsAll: "Tümünü Gör",
+    indexSelect: "Endeks Seç",
+    medianOf: "{n} şirketin ortadaki değeri.",
     /* Telefonda sıralama şeridi (10 Kasım gece; BoardSortMenu.tsx): başlık
        satırı listede yok, sıralama tek butonda. */
     phoneSort: "Sırala",
@@ -1973,8 +1914,6 @@ const tr = {
     /* Şeridin başlığı "Nereden Başlamalı" diyordu ama sayfada başlamayı
        tek tuşla mümkün kılan hiçbir şey yoktu. */
     startFirst: "Baştan Başla",
-    curriculumHint:
-      "Dört konu bloğu kolaydan zora sıralı; hiç bilmeyen biri baştan sona bir müfredat gibi okuyabilir.",
     articleOne: "Yazı",
     articleMany: "Yazı",
     prevArticle: "Önceki Yazı",
@@ -2049,7 +1988,6 @@ const tr = {
     inThisArticle: "Bu Yazıda",
     sectionCountOne: "{count} Bölüm",
     sectionCountMany: "{count} Bölüm",
-    railLabel: "Yazı rehberi",
     tocLabel: "İçindekiler",
     sourceCountOne: "{count} Kaynak",
     sourceCountMany: "{count} Kaynak",
@@ -2082,7 +2020,6 @@ const tr = {
     pick: "Gösterge seç",
     history: "Geçmiş Gözlem",
     historyEmpty: "Geçmiş gözlemler henüz yeterli değil.",
-    groupsLabel: "Gösterge grubu",
     groupInflation: "Enflasyon",
     groupLabor: "İş Gücü",
     groupPolicy: "Para Politikası",
@@ -2224,7 +2161,6 @@ const tr = {
   legal: {
     eyebrow: "Yasal",
     privacyTitle: "KVKK Aydınlatma Metni ve Gizlilik",
-    disclaimerEyebrow: "Sorumluluk Reddi",
     disclaimerTitle: "Bu Site Ne Değildir",
     updatedAt: "Son güncelleme:",
     manageAccount: "Hesap Ayarlarına Git",
@@ -2236,7 +2172,6 @@ const tr = {
     title: "Menü",
     subtitle:
       "Ürünün bütün ekranları burada. Alt çubukta yer olmayan bölümlere de tek dokunuşla ulaşırsın.",
-    groupMarket: "Piyasa",
     groupAccount: "Hesap ve Site",
     guestTitle: "Misafir",
     guestHint: "Takip listesi tutmak için hesap açman yeterli.",
@@ -2754,8 +2689,6 @@ const tr = {
     mapSmall: "Diğer {count}",
     mapSmallTitle: "Haritada Küçük Kalanlar",
     mapShare: "Temadaki Payı",
-    mapOpen: "Şirkete Git",
-    benchTitle: "Ölçütle Kıyas",
     benchMedian: "Tema Medyanı",
     benchAbove: "Tema medyanı ölçütün {diff} puan üstünde.",
     benchBelow: "Tema medyanı ölçütün {diff} puan altında.",
@@ -2881,14 +2814,12 @@ const tr = {
   },
   portfolioScan: {
     title: "Günlük Portföy Taraması",
-    homeTitle: "Günün Taraması",
     by: "Claude",
     session: "{date} Kapanışıyla",
     loading: "Claude portföyünü son seansın kapanışıyla tarıyor…",
     unavailable: "Tarama metni şu an yazılamadı; ölçüler aşağıda.",
     partial: "{covered} pozisyonun {total} tanesi okunabildi; kalanın son seans verisi yok.",
     disclosure: "Bu tarama pozisyonlarından, son tamamlanmış seansın kapanışından, sitenin teknik analizlerinden ve son manşetlerden Claude ile yazıldı; her gün ilk açılışta yenilenir. Yatırım tavsiyesi değildir.",
-    openFull: "Taramanın Tamamı",
     portfolioDay: "Portföy · Son Seans",
     portfolioFive: "Portföy · 5 Seans",
     themesTitle: "Öne Çıkanlar",
@@ -3007,7 +2938,6 @@ const tr = {
     rulesTitle: "Kurallar",
     rulesMeta: "{n} Ölçülebilir Kural",
     rulesIntro: "Kurallar iki işe yarar: zayıf adayları baştan elemek ve güçlü adayları neden güçlü olduklarıyla göstermek. Eşikler yaygın büyüme hissesi taramalarının tabanlarıdır.",
-    whyLabel: "Neden",
     measureLabel: "Nasıl Ölçülüyor",
     stepsTitle: "Nasıl Kullanılır",
     steps: [
@@ -3213,7 +3143,6 @@ const tr = {
     earningsIn: "{days} Gün Sonra",
     earningsToday: "Bugün",
     linksLabel: "İlgili sayfalar",
-    openReport: "Raporu Aç",
     quickUnavailable: "Hızlı bakış şu an hesaplanamadı; tek tek semboller yine açılıyor.",
     otherTitle: "Başka Bir Hisse",
   },
@@ -3401,9 +3330,7 @@ const tr = {
     sumNext: "Sonraki bilanço {date} tarihinde {window} açıklanacak.",
     sumNextUnknown: "Sonraki bilanço {date} tarihinde bekleniyor; açıklama saati henüz belli değil.",
     sumPeers: "Aynı alt sektörde {n} endeks şirketi daha var.",
-    sumGuides: "İlgili Rehber",
     sumFactIndex: "Endeks Üyeliği",
-    sumFactSector: "Sektör",
     sumFactSub: "Alt Sektör",
     sumFactNext: "Sonraki Bilanço",
     sumFactPeers: "Aynı Alt Sektörde",
@@ -3633,7 +3560,6 @@ const tr = {
       notPositive: "Sıfırdan büyük bir sayı yaz.",
       notNegative: "Eksi bir tutar olamaz.",
       taxBase: "Matrah",
-      taxBaseHint: "Vergiye esas kazanç; net zararda sıfır.",
       bracketTableTitle: "{year} Gelir Vergisi Tarifesi",
       bracketTableHint:
         "Vergi dilim dilim hesaplanır: her oran yalnızca o dilime düşen kısma uygulanır. İşaretli satır, bu kazanç tek gelirinse matrahının düştüğü dilim.",
@@ -3644,7 +3570,6 @@ const tr = {
       bracketRate: "Oran",
       thresholdCarried: "{year} beyan sınırı henüz yayımlanmadı; {from} sınırı kullanılıyor, değiştirebilirsin.",
       bracket: "Dilim",
-      bracketHint: "{year} tarifesinde, bu kazanç tek gelirse.",
       rangeLow: "Alt Uç",
       rangeHigh: "Üst Uç · %{top}",
       rangeLabel: "Tahmini vergi aralığı: alt uç {low}, üst uç {high}",
@@ -3936,10 +3861,6 @@ const tr = {
       noQuote: "Fiyat Yok",
       totals: "Toplam",
       totalValue: "Toplam Değer",
-      totalPnlUsd: "Dolar K/Z",
-      totalPnlTl: "Lira K/Z",
-      fxEffect: "Kurun Katkısı",
-      fxEffectHint: "Lira K/Z ile dolar K/Z'nin bugünkü kurla çevrilmiş hâli arasındaki fark.",
       sectorTitle: "Sektör Ağırlığı",
       sectorHint: "Güncel dolar değerine göre.",
       otherSector: "Diğer",
@@ -3996,7 +3917,6 @@ const tr = {
       importAction: "PDF'ten İçe Aktar",
       edit: "Düzenle",
       editAria: "{symbol} pozisyonunu düzenle",
-      actionsAria: "{symbol} için işlemler",
       openStock: "Hisse Sayfası",
       undo: "Geri Al",
       toastAdded: "{symbol} portföye eklendi.",
@@ -4084,7 +4004,6 @@ const tr = {
         tradesCountOne: "{n} İşlem",
         selectedCount: "{n} Seçili",
         selectAll: "Tümünü Seç",
-        colInclude: "Dahil",
         colSymbol: "Sembol",
         colDate: "Tarih",
         colSide: "Yön",
@@ -4213,7 +4132,6 @@ const tr = {
       openCalendar: "Takvimin Tamamı",
       /* Takvim sekmesindeki bağlantı. */
       calendarLink: "Haftalık Takvim Görseli",
-      calendarLinkHint: "Gelecek haftanın bilançoları tek görselde, indirilebilir.",
       ogFooter: "Saatler Türkiye Saatiyle, Yaklaşık",
       ogMore: "+{count}",
     },
@@ -4981,10 +4899,7 @@ const tr = {
     loginHint: "Fiyat alarmı kurmak için giriş yap",
     created: "Alarm kuruldu.",
     hitBanner: "{n} Alarm Hedefe Ulaştı",
-    seeAll: "Alarmları Gör",
     colSymbol: "Hisse",
-    colTarget: "Hedef",
-    colNow: "Şu An",
     colStatus: "Durum",
     /* Yüzde alarmları (15 Ekim) — gerekçe lib/schema.ts → percentAlerts. */
     modePrice: "Fiyat Hedefi",
@@ -5061,7 +4976,6 @@ const tr = {
       "Türkiye'den ABD hissesi alınabilen kurumların ücretleri; her hücre kurumun kendi tarifesinden, kaynağıyla.",
     menuHint: "ABD Hissesi Ücretleri",
     tableTitle: "Kurum Kurum ABD Tarifesi",
-    tableMeta: "{count} Kurum",
     tableLead:
       "Satır sırası bir sıralama değil: yerli kurumlar önce, yabancı kurum sonda. Köşeli sayı hücrenin kaynağına götürür; kurumun resmî sayfasında bulunamayan bilgi için \"Belirtilmemiş\" yazar, tahmin yazılmaz.",
     tableRegion: "Aracı kurum tarifeleri tablosu; yana kaydırılabilir",
@@ -5080,16 +4994,9 @@ const tr = {
     sourceRef: "Kaynak {n}: {title}",
     counterparty: "Yurt Dışında: {name}",
     foreign: "Yurt Dışı Kurum",
-    scenarioTitle: "Tek Alımın Komisyonu",
-    scenarioLead:
-      "Aynı alım, her kurumun tarifesindeki komisyonla. Adet başına ücret alan kurumlarda hisse fiyatı {price} varsayıldı.",
-    scenarioRegion: "Senaryo tablosu; yana kaydırılabilir",
-    scenarioTrade: "{amount} Alım",
     notPriced: "Hesaplanmadı",
     scenarioIncluded:
       "Hesaba yalnız tarifedeki işlem komisyonu girdi. Kur farkı, saklama ücreti, borsa ve SEC ücretleri dahil değil. BSMV Garanti BBVA Yatırım'ın oranına dahil, Gedik'te %5 ayrıca ekleniyor, öteki kurumların tarifesi bunu belirtmiyor.",
-    scenarioPrice:
-      "Hisse fiyatı değişirse yalnız adet başına ücret alan kurumların (Gedik, Interactive Brokers) sonucu değişir. Çubuk yalnız büyüklüğü gösterir; bir kurumun iyi ya da kötü olduğunu söylemez. Her sütunun çubukları o sütunun en yüksek ücretine göre çizilir, iki sütunun çubuk boyları birbiriyle karşılaştırılmaz.",
     outsideTitle: "Tabloda Olmayanlar",
     outside: [
       {

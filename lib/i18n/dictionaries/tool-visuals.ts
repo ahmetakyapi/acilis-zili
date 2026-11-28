@@ -23,7 +23,6 @@ export const toolVisualsTr = {
     },
     summaryTitle: "Sonucun Görünümü",
     sectorMix: "Sektör Dağılımı",
-    sectorMixHint: "Şerit sonuç kümesinin sektörlerini gösterir; bir parçaya basınca liste o sektöre süzülür.",
     sectorAria: "{sector}: {n} hisse, kümenin %{p} payı",
     other: "Diğer {n} Sektör",
     swarmTitle: "{metric} Dağılımı",
@@ -67,7 +66,6 @@ export const toolVisualsTr = {
     zoneFrom: "{n}+",
     weightsHint: "Puan {n} üzerinden; her kategori cetvelde kendi payı kadar yer tutar.",
     weightPoints: "{n} Puan",
-    ringAria: "{symbol} uyum puanı {score} / 100",
   },
 };
 
@@ -83,7 +81,6 @@ export const toolVisualsEn: typeof toolVisualsTr = {
     },
     summaryTitle: "Result at a Glance",
     sectorMix: "Sector Mix",
-    sectorMixHint: "The strip shows the sectors in the result; tap a segment to narrow the list to that sector.",
     sectorAria: "{sector}: {n} stocks, {p}% of the result",
     other: "{n} Other Sectors",
     swarmTitle: "{metric} Distribution",
@@ -127,6 +124,5 @@ export const toolVisualsEn: typeof toolVisualsTr = {
     zoneFrom: "{n}+",
     weightsHint: "The score is out of {n}; each category takes up its share of the ruler.",
     weightPoints: "{n} Points",
-    ringAria: "{symbol} fit score {score} / 100",
   },
 };

@@ -59,7 +59,6 @@ export const stockPuzzleTr = {
   archiveEmpty: "Arşiv henüz boş; ilk bulmaca 24 Ekim 2026'da yayımlandı.",
   archiveDayNote: "Arşivden oynuyorsun; sonuç günlük serine sayılmaz.",
   backToToday: "Bugünün Bulmacası",
-  archiveSolved: "{n} Çözüldü",
   silhouetteNote: "Son bir yılın günlük kapanışları; eksen ve fiyat yok.",
   silhouetteMissing: "Grafik şu an alınamadı; ipucu bu turda atlandı.",
   revenueGrowthNote: "Son 12 Ay, Bir Önceki Yıla Göre",
@@ -247,7 +246,6 @@ export const stockPuzzleTr = {
      karoda sığmayan ipucu adlarının kısası (tam adı `clue`da). */
   placeholderShort: "NVDA, Nvidia…",
   slotNext: "Sıradaki",
-  candidatesPool: "{n} / {total} Aday",
   clueShort: { letters: "Harf Kalıbı" } as Partial<Record<"letters", string>>,
 };
 
@@ -303,7 +301,6 @@ export const stockPuzzleEn: typeof stockPuzzleTr = {
   archiveEmpty: "The archive is empty for now; the first puzzle ran on October 24, 2026.",
   archiveDayNote: "You are playing from the archive; the result does not count toward your daily streak.",
   backToToday: "Today's Puzzle",
-  archiveSolved: "{n} Solved",
   silhouetteNote: "Daily closes over the past year; no axes, no prices.",
   silhouetteMissing: "The chart could not be loaded; this clue is skipped for now.",
   revenueGrowthNote: "Trailing 12 Months, Year Over Year",
@@ -480,7 +477,6 @@ export const stockPuzzleEn: typeof stockPuzzleTr = {
   },
   placeholderShort: "NVDA, Nvidia…",
   slotNext: "Next",
-  candidatesPool: "{n} / {total} Candidates",
   clueShort: { letters: "Ticker Shape" },
 };
 

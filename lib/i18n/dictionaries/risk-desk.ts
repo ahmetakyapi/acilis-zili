@@ -74,8 +74,6 @@ export const riskDeskTr = {
     beta: "Ağırlıklı Beta",
     atr: "Ağırlıklı ATR%",
     vol: "Ağırlıklı 20g Oynaklık",
-    below200: "200 GO Altındaki Ağırlık",
-    below100: "100 GO Altındaki Ağırlık",
     topSector: "En Büyük Sektör",
     covered: "Ölçülen Ağırlık {v}",
     empty: "Portföyünde pozisyon yok. Pozisyon eklediğinde maruziyet burada görünür.",
@@ -225,7 +223,6 @@ export const riskDeskTr = {
     },
     alertsTitle: "Son Uyarılar",
     alertsEmpty: "Henüz tetiklenen kural yok.",
-    alertLead: "Kuralın tetiklendi",
     pushNote:
       "Kurallar her işlem günü kapanıştan sonra ve ertesi sabah değerlendirilir; Ayarlar'da bildirimleri açtıysan tetiklenen kural cihazına gelir. Koşul sürdükçe aynı kural yeniden bildirilmez.",
     presetNames: {
@@ -402,8 +399,6 @@ export const riskDeskEn: typeof riskDeskTr = {
     beta: "Weighted Beta",
     atr: "Weighted ATR%",
     vol: "Weighted 20D Volatility",
-    below200: "Weight Below the 200-Day",
-    below100: "Weight Below the 100-Day",
     topSector: "Largest Sector",
     covered: "Measured Weight {v}",
     empty: "Your portfolio has no positions. Exposure appears here once you add one.",
@@ -553,7 +548,6 @@ export const riskDeskEn: typeof riskDeskTr = {
     },
     alertsTitle: "Recent Alerts",
     alertsEmpty: "No rule has triggered yet.",
-    alertLead: "Your rule triggered",
     pushNote:
       "Rules are checked after every session's close and again the next morning; if you turned on notifications in Settings, a triggered rule reaches your device. While the condition holds, the same rule is not notified again.",
     presetNames: {

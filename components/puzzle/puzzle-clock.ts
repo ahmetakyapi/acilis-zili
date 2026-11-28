@@ -11,12 +11,21 @@ export const DAY_MS = 86_400_000;
 export function useNow(): number | null {
   const [now, setNow] = useState<number | null>(null);
   useEffect(() => {
+    /* Gizli sekmede tik atlanır, sekme görünür olunca hemen tazelenir
+       (28 Kasım, performans denetimi; kalıp `components/today/Countdown.tsx`). */
     const tick = () => setNow(Date.now());
-    const id = window.setInterval(tick, 1000);
+    const id = window.setInterval(() => {
+      if (!document.hidden) tick();
+    }, 1000);
     const first = window.setTimeout(tick, 0);
+    const onVisible = () => {
+      if (!document.hidden) tick();
+    };
+    document.addEventListener("visibilitychange", onVisible);
     return () => {
       window.clearInterval(id);
       window.clearTimeout(first);
+      document.removeEventListener("visibilitychange", onVisible);
     };
   }, []);
   return now;

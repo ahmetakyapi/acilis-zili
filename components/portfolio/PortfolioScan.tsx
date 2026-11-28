@@ -1,8 +1,7 @@
 "use client";
 
-import { useEffect, useRef, useState, type CSSProperties, type ReactNode } from "react";
+import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
-  ArrowRight,
   CalendarBlank,
   ChartLineUp,
   ChartPieSlice,
@@ -25,12 +24,13 @@ import styles from "./PortfolioScan.module.css";
 
 /**
  * GÜNLÜK PORTFÖY TARAMASI — arayüz (10 Kasım). Gerekçe ve doğruluk kuralları
- * lib/portfolio-scan.ts. İki görünüş, tek istek kalıbı:
+ * lib/portfolio-scan.ts.
  *  - `PortfolioScanPanel`: /portfoy'daki tam panel — başlık ve özet, tema
  *    karoları, pozisyon pozisyon notlar ve sunucunun çizdiği beş seanslık
  *    şerit; site sahibinde ek olarak Kişisel Plan.
- *  - `PortfolioScanBrief`: ana sayfa portföy kartının içindeki özet — başlık,
- *    özet, en çok üç tema, sahipte plan hapları; "Taramanın Tamamı".
+ *  - Ana sayfa portföy kartındaki özet (`PortfolioScanBrief`) 28 Kasım
+ *    2026'da silindi; o kartı artık `ClaudeBrief` çiziyor
+ *    (`components/today/home/PortfolioSlot.tsx`).
  * Panel görünüme yaklaşınca istenir (eski portföy notunun kalıbı); tarama o
  * günün ilk açılışında yazılır, sonrası önbellekten gelir.
  *
@@ -307,86 +307,5 @@ export function PortfolioScanPanel({ locale, labels }: { locale: Locale; labels:
         </>
       )}
     </Panel>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-
-export function PortfolioScanBrief({ locale, labels }: { locale: Locale; labels: Labels }) {
-  const { ref, state } = useScan(locale);
-  const scan = state.scan;
-  const text = scan?.text ?? null;
-  if (state.status === "failed" || (scan && !text)) return <div ref={ref} hidden />;
-  const plans = (scan?.plans ?? []).slice(0, 4);
-
-  let body: ReactNode;
-  if (!scan || !text) {
-    body = <ScanSkeleton lines={3} />;
-  } else {
-    body = (
-      <>
-        <p className={styles.briefHeadline}>{text.headline}</p>
-        <p className={styles.briefSummary}>{text.summary}</p>
-        {text.themes.length > 0 && (
-          <ul className={styles.briefThemes}>
-            {text.themes.slice(0, 3).map((theme, i) => {
-              const Icon = THEME_ICONS[theme.kind];
-              return (
-                <li key={i}>
-                  <Icon size={14} weight="duotone" aria-hidden />
-                  <span className={styles.briefThemeKind}>{labels.themeKinds[theme.kind]}</span>
-                  <span className={styles.briefThemeTitle}>{theme.title}</span>
-                </li>
-              );
-            })}
-          </ul>
-        )}
-        {plans.length > 0 && (
-          <div className={styles.briefPlans}>
-            <span className={styles.briefPlansHead}>
-              {labels.plan.title}
-              <span className={styles.planBadge}>{labels.plan.badge}</span>
-            </span>
-            <ul>
-              {plans.map((plan) => (
-                <li key={plan.symbol}>
-                  <span className={cn("numeral", styles.briefPlanSymbol)}>{plan.symbol}</span>
-                  <VerdictPill verdict={ACTION_VERDICT[plan.action]} label={labels.plan.actions[plan.action]} />
-                  <span className={styles.briefLevels}>
-                    {plan.takeProfit && (
-                      <span data-kind="tp">
-                        {labels.plan.takeProfit} <b className="numeral">{plan.takeProfit.label}</b>
-                      </span>
-                    )}
-                    {plan.stopLoss && (
-                      <span data-kind="sl">
-                        {labels.plan.stopLoss} <b className="numeral">{plan.stopLoss.label}</b>
-                      </span>
-                    )}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-      </>
-    );
-  }
-
-  return (
-    <div ref={ref} className={styles.brief} aria-busy={!scan}>
-      <div className={styles.briefHead}>
-        <span className={styles.briefTitle}>
-          <Sparkle size={16} weight="duotone" aria-hidden className={styles.spark} />
-          {labels.homeTitle}
-        </span>
-        {scan && <span className={styles.briefMeta}>{labels.session.replace("{date}", sessionDate(scan.session, locale))}</span>}
-      </div>
-      {body}
-      <Link href="/portfoy#tarama" prefetch={false} className={styles.briefLink}>
-        {labels.openFull}
-        <ArrowRight size={13} weight="bold" aria-hidden />
-      </Link>
-    </div>
   );
 }

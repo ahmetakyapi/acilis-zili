@@ -83,10 +83,7 @@ export const calendarVisualsTr = {
   /* Seans şeridi (10 Kasım, görsel kalite turu): bilanço kartında günün üç
      penceresi ve iki zil — `components/earnings/SessionLane.tsx`. */
   sessionLane: {
-    regular: "Seans İçi",
     open: "Açılış",
-    close: "Kapanış",
-    aria: "Bilanço penceresi: {window}. Açılış {open}, kapanış {close} ({zone}).",
   },
   /* Şirket bilanço sayfası (`/bilancolar/[symbol]`), aynı tur: künye
      şeridinin ölçüleri, beklentinin son çeyreğe göre farkı, analiz
@@ -120,6 +117,9 @@ export const calendarVisualsTr = {
     moveIndicative: "Gösterge Fiyat",
     lastTitle: "Son Bilanço",
     lastReported: "Açıklandı",
+    /* Tur 3 (28 Kasım): kahramanın büyük sayısı sürpriz; "ne zaman" künyeye iner. */
+    lastSurprise: "Hisse Başına Kâr Sürprizi",
+    lastReportedAgo: "{ago} Açıklandı",
     lastYesterday: "Dün",
     lastToday: "Bugün",
     lastDaysAgo: "{n} Gün Önce",
@@ -130,8 +130,6 @@ export const calendarVisualsTr = {
     lastRevenue: "Gelir",
     lastVsEstimate: "Beklentiye Göre",
     lastReaction: "Rapor Sonrası Tepki",
-    lastLead:
-      "{name} ({symbol}) son bilançosunu {date} günü açıkladı. Hisse başına kâr {actual}, beklenti {estimate} idi.",
     lastLeadPlain: "{name} ({symbol}) son bilançosunu {date} günü açıkladı.",
     lastNext: "Sıradaki Bilanço",
     lastNextEstimated: "Tahmini",
@@ -218,10 +216,7 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     moreLabel: "{count} more companies in the {day} list",
   },
   sessionLane: {
-    regular: "During Market",
     open: "Open",
-    close: "Close",
-    aria: "Earnings window: {window}. Opens {open}, closes {close} ({zone}).",
   },
   companyPage: {
     marketCap: "Market Cap",
@@ -251,6 +246,8 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     moveIndicative: "Indicative Price",
     lastTitle: "Latest Earnings",
     lastReported: "Reported",
+    lastSurprise: "EPS Surprise",
+    lastReportedAgo: "Reported {ago}",
     lastYesterday: "Yesterday",
     lastToday: "Today",
     lastDaysAgo: "{n} Days Ago",
@@ -261,8 +258,6 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     lastRevenue: "Revenue",
     lastVsEstimate: "vs Estimate",
     lastReaction: "Post-Report Reaction",
-    lastLead:
-      "{name} ({symbol}) reported its latest earnings on {date}. Earnings per share came in at {actual} against an estimate of {estimate}.",
     lastLeadPlain: "{name} ({symbol}) reported its latest earnings on {date}.",
     lastNext: "Next Earnings",
     lastNextEstimated: "Estimated",

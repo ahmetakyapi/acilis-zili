@@ -1,113 +1,11 @@
 import { DataError, EmptyState } from "@/components/ui/primitives";
-import { getEventsBetweenResult, getTodayEvents } from "@/lib/data";
+import { getEventsBetweenResult } from "@/lib/data";
 import { addEtDays, etDateTimeToUtc, todayEt } from "@/lib/market-hours";
 import { displayZone, readerDayOffset, timePair, zoneDateKey, zoneTag } from "@/lib/session-clock";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import type { EconomicEventRow } from "@/lib/schema";
-import { cn, formatEventValue, NO_VALUE } from "@/lib/utils";
+import { cn, NO_VALUE } from "@/lib/utils";
 import styles from "./WeekAhead.module.css";
-
-export async function ScheduleList({ locale, t }: { locale: Locale; t: Dictionary }) {
-  const events = await getTodayEvents();
-
-  if (events.length === 0) {
-    return <EmptyState compact title={t.today.scheduleEmpty} />;
-  }
-
-  return <ScheduleListView events={events} locale={locale} t={t} />;
-}
-
-type ScheduleEvent = Pick<
-  EconomicEventRow,
-  "id" | "eventDate" | "eventTimeEt" | "titleTr" | "titleEn" | "importance" | "forecast" | "actual" | "unit"
->;
-
-/**
- * Bugünün takvimi — saf görünüm (veri `ScheduleList`te; `olcum` skill'i:
- * yükleyici ile çizim ayrı).
- *
- * ÖNEM DOLGUYLA DEĞİL BASAMAKLA (10 Kasım, görsel tur). Yüksek önemli satır
- * `--down-wash` zemin taşıyordu: canlıda (10 Kasım, TÜFE günü) panelin iki
- * satırı da pembe doluydu ve liste "kötü haber" gibi okunuyordu — oysa
- * `down` bu sitede yalnız YÖN rengi (arayuz.md → "renk anlam taşır") ve
- * önem bir yön değil. Açıklanan değer de yüksek önemde kırmızı yazıyordu;
- * verinin beklentinin altında mı üstünde mi geldiği bile bilinmeden.
- * Artık satır nötr zeminde; önemi hemen altındaki "Haftaya Bakış" ile AYNI
- * üç basamaklı çubuk söylüyor (yüksek üçü, orta ikisi, düşük biri dolu;
- * `--impact-*` mürekkebi, basamak sayısı renk körlüğünde de okunur) ve
- * yüksek olayın saati ile adı kalın. Nokta (`ImpactDot`) kalktı: iki
- * komşu panel aynı ölçüyü iki ayrı imle anlatıyordu. Açıklanan değer güçlü
- * mürekkeple, beklenti gövde tonunda; hangisi olduğu altındaki künyede.
- * Ölçüm WeekAhead.module.css → "BUGÜNÜN TAKVİMİ".
- */
-export function ScheduleListView({
-  events,
-  locale,
-  t,
-}: {
-  events: readonly ScheduleEvent[];
-  locale: Locale;
-  t: Dictionary;
-}) {
-  const tags = zoneTag(locale);
-
-  return (
-    <ul className={styles.today}>
-      {events.map((event) => {
-        /* Büyük satır okuyucunun saati, altındaki küçük satır kaynağın
-           saati. TR'de sıra dönüyor: "16:30" üstte, "09:30 NY" altta. */
-        const times = event.eventTimeEt
-          ? timePair(event.eventDate, event.eventTimeEt, locale)
-          : null;
-        const importance = event.importance === "high" ? "high" : event.importance === "medium" ? "medium" : "low";
-        const high = importance === "high";
-        /* Biçim paylaşılan yardımcıdan: elden yazılan satır yüzdeyi İNGİLİZCE
-           kuralıyla sona koyuyordu ("3.46353%") ve ondalık ayracını
-           yerelleştirmiyordu — aynı sayı sayfanın üstündeki şeritte "%3,46"
-           yazıyordu. */
-        const forecast = formatEventValue(event.forecast, event.unit, locale);
-        const actual = formatEventValue(event.actual, event.unit, locale);
-        const level = `${t.calendar.impact}: ${
-          high ? t.calendar.impactHigh : importance === "medium" ? t.calendar.impactMedium : t.calendar.impactLow
-        }`;
-        return (
-          <li key={event.id} className={styles.todayRow} data-high={high || undefined}>
-            <span className={styles.todayTime}>
-              <span className="numeral">{times ? times.primary : NO_VALUE}</span>
-              {times && (
-                <small className="numeral">
-                  {times.secondary} {tags.secondary}
-                </small>
-              )}
-            </span>
-            <span className={styles.title}>{locale === "tr" ? event.titleTr : event.titleEn}</span>
-            {/* TEK SAYI SÜTUNU, İKİ DEĞİL. Kart ana kolondayken beklenti ve
-                gerçekleşen ayrı sütunlardaydı; yan kolona taşınınca (376px)
-                ikisi de çoğu satırda boş olduğu için yan yana iki tire
-                genişliğin üçte birini yiyor, olayın adı üç satıra
-                kırılıyordu. Gerçekleşen varsa o yazılıyor, yoksa beklenti —
-                ve altındaki künye hangisi olduğunu söylüyor. İkisini birden
-                görmek isteyen /takvim'e gidiyor. */}
-            {actual || forecast ? (
-              <span className={styles.todayValue} data-actual={actual ? "" : undefined}>
-                <span className="numeral">{actual ?? forecast}</span>
-                <small>{actual ? t.calendar.actual : t.calendar.forecast}</small>
-              </span>
-            ) : (
-              <span aria-hidden />
-            )}
-            <span className={styles.impact} data-level={importance} title={level}>
-              <i aria-hidden />
-              <i aria-hidden />
-              <i aria-hidden />
-              <span className="sr-only">{level}</span>
-            </span>
-          </li>
-        );
-      })}
-    </ul>
-  );
-}
 
 /* Sağ kolonun yedek kapasitesi — gerekçe `WeekAheadList` içinde. */
 const WEEK_AHEAD_BASE = 3;
@@ -162,7 +60,8 @@ type WeekAheadEvent = Pick<
  *    CSS'te düşüyor. Hiçbir açılış sırasında satır günsüz kalmaz.
  *  - ÖNEM ÇUBUĞU: sağda üç basamaklı çubuk — yüksek üçü, orta ikisi dolu,
  *    `--impact-high` / `--impact-med` tonunda. Renk tek taşıyıcı değil,
- *    basamak SAYISI da anlatıyor (ImpactDot'un renk körlüğü gerekçesi);
+ *    basamak SAYISI da anlatıyor (tonla "yüksek" kırmızı ile "düşük" gri
+ *    ayrılmıyor: parlaklık oranı koyu temada 1,01:1, açıkta 1,09:1);
  *    ekran okuyucuya "Etki: Yüksek". Yüksek olayın adı da kalın.
  *  - SAAT kendi sütununda; dört sütun `subgrid` ile bütün satırlarda aynı
  *    hatta (saat sütunu `max-content`, sıkışmaz). Tablo rakamı denendi:

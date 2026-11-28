@@ -43,7 +43,6 @@ export const feedVisualsTr = {
     binAbove: "{from} üstü",
     binBetween: "{from} ile {to} arası",
     mapAria: "{symbol} fiyat haritası: son 3 ayın kapanışları, senaryo tetikleri ve rapor fiyatı",
-    mapLegend: "Çizgi 3 ay · kesik çizgi tetik",
   },
   community: {
     symbolsLabel: "Yazıda geçen hisseler",
@@ -87,7 +86,6 @@ export const feedVisualsEn: typeof feedVisualsTr = {
     binAbove: "above {from}",
     binBetween: "{from} to {to}",
     mapAria: "{symbol} price map: last 3 months of closes, scenario triggers and the report price",
-    mapLegend: "Line 3 months · dashed trigger",
   },
   community: {
     symbolsLabel: "Stocks mentioned in the post",

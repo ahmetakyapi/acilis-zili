@@ -47,7 +47,7 @@
 /* Şerit tonu (`--kind`) ile hap yazısı (`--kind-ink`) ayrı: nötr türde
    (koru/izle) şerit `--line-strong`, ama aynı ton hap yazısında soluk ve
    "devre dışı" gibi okunuyordu (ölçüm turu, 1440). */
-.action, .briefActions li { --kind-ink:var(--text-body); }
+.action { --kind-ink:var(--text-body); }
 .action[data-kind="trim"], .action[data-kind="hedge"] { --kind:var(--down); --kind-ink:var(--down); }
 .action[data-kind="add"] { --kind:var(--up); --kind-ink:var(--up); }
 .action[data-kind="diversify"] { --kind:var(--primary); --kind-ink:var(--primary-ink); }
@@ -84,23 +84,6 @@
 .contrib b { font-size:var(--text-tiny); font-weight:700; white-space:nowrap; }
 
 .disclosure { padding-top:12px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:var(--text-tiny); line-height:1.55; }
-
-/* ---- Ana sayfa kartındaki özet ---- */
-.brief { display:flex; flex-direction:column; gap:10px; padding:14px; border:1px solid var(--primary-faint); border-radius:12px; background:var(--premium-surface); }
-.briefHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:6px 10px; }
-.briefTitle { display:inline-flex; align-items:center; gap:6px; color:var(--text-strong); font-size:14px; font-weight:700; }
-.briefHeadline { color:var(--text-strong); font-size:16px; font-weight:700; letter-spacing:-.02em; line-height:1.3; text-wrap:balance; }
-.briefActions { display:flex; flex-direction:column; gap:7px; }
-.briefActions li { display:flex; min-width:0; align-items:center; gap:8px; font-size:var(--text-small); --kind:var(--line-strong); }
-.briefActions li[data-kind="trim"], .briefActions li[data-kind="hedge"] { --kind:var(--down); --kind-ink:var(--down); }
-.briefActions li[data-kind="add"] { --kind:var(--up); --kind-ink:var(--up); }
-.briefActions li[data-kind="diversify"] { --kind:var(--primary); --kind-ink:var(--primary-ink); }
-.briefActions b { flex:none; color:var(--text-strong); font-weight:700; }
-.briefActionTitle { overflow:hidden; color:var(--text-body); white-space:nowrap; text-overflow:ellipsis; }
-.briefLink { display:inline-flex; min-height:44px; align-items:center; gap:4px; margin-block:-10px -12px; color:var(--primary); font-size:var(--text-small); font-weight:600; }
-.briefLink:hover { color:var(--primary-hover); }
-.briefLink svg { transition:translate 200ms var(--ease-brand); }
-.briefLink:hover svg { translate:3px 0; }
 
 /* ---- Danışmanla sohbet (11 Kasım) ----
    Notun altında, hairline ile ayrık; sohbet bileşenleri ortak

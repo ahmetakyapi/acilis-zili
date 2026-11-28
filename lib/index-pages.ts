@@ -29,8 +29,6 @@ export type IndexPageKey = IndexPage["key"];
 
 export const MARKETS_PATH = "/piyasalar";
 
-export const INDEX_PAGE_SLUGS: readonly string[] = INDEX_PAGES.map((page) => page.slug);
-
 /** Dil öneksiz yol: `/piyasalar/sp-500`. */
 export function indexPagePath(key: IndexPageKey): string {
   return `${MARKETS_PATH}/${INDEX_PAGES.find((page) => page.key === key)!.slug}`;

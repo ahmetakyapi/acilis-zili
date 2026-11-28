@@ -248,7 +248,7 @@ function HealthDot({ tone }: { tone: HealthTone }) {
  * kaydırılıyordu ve nokta ilk satırın 6 piksel altında, taban çizgisinde
  * duruyordu (pano, ölçüldü; Sistem listesinde 11 piksel). Kutunun
  * yüksekliği bir satır (`1lh`), nokta onun ortasında — punto değişse de
- * hizada kalır. Sitenin `ImpactDot`u aynı kalıpla çalışıyor.
+ * hizada kalır.
  */
 export function HealthMark({ tone }: { tone: HealthTone }) {
   return (

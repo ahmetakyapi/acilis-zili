@@ -2,7 +2,6 @@
 
 import { useEffect, useRef, useState, type CSSProperties } from "react";
 import {
-  ArrowRight,
   ArrowsSplit,
   Binoculars,
   Minus,
@@ -31,8 +30,8 @@ import styles from "./AdvisorDesk.module.css";
  *    azalt/çeşitlendir/sınırla sıcak, ekle yeşil, koru/izle nötr), riskler,
  *    önümüzdeki dönem; aylıkta 21 seansın karnesi (portföy vs S&P 500,
  *    getiriyi taşıyan/götüren pozisyonlar, katkı şeridi).
- *  - `AdvisorBrief`: ana sayfa portföy kartında günlük notun başlığı ve ilk
- *    iki eylemi + "Danışman Notunun Tamamı".
+ *  - Ana sayfa portföy kartındaki özet (`AdvisorBrief`) 28 Kasım 2026'da
+ *    silindi; o kartı artık `ClaudeBrief` çiziyor.
  * Sekme ilk açılışta istenir; ikincisi tıklanınca (aylık not ayda bir
  * yazılır, sonrası önbellekten).
  *
@@ -366,55 +365,5 @@ export function AdvisorDesk({ locale, labels }: { locale: Locale; labels: Labels
       )}
       <p className={styles.disclosure}>{labels.disclosure}</p>
     </Panel>
-  );
-}
-
-export function AdvisorBrief({ locale, labels }: { locale: Locale; labels: Labels }) {
-  const [entry, setEntry] = useState<Entry | null>(null);
-  const ref = useVisible<HTMLDivElement>(() => {
-    setEntry({ status: "loading" });
-    fetchReport("daily", locale).then(setEntry);
-  });
-  if (entry?.status === "failed") return <div ref={ref} hidden />;
-  const report = entry?.report;
-  return (
-    <div ref={ref} className={styles.brief} aria-busy={!report}>
-      <div className={styles.briefHead}>
-        <span className={styles.briefTitle}>
-          <Sparkle size={16} weight="duotone" aria-hidden className={styles.spark} />
-          {labels.homeTitle}
-        </span>
-        <span className={styles.badge}>{labels.badge}</span>
-      </div>
-      {!report ? (
-        <div className={styles.loading} aria-hidden>
-          <Skeleton className="h-5 w-4/5" />
-          <Skeleton className="h-4 w-full" />
-        </div>
-      ) : (
-        <>
-          <p className={styles.briefHeadline}>{report.text.headline}</p>
-          <ol className={styles.briefActions}>
-            {report.text.actions.slice(0, 3).map((a, i) => {
-              const Icon = KIND_ICON[a.kind];
-              return (
-                <li key={i} data-kind={a.kind}>
-                  <span className={styles.kind}>
-                    <Icon size={13} weight="bold" aria-hidden />
-                    {labels.kinds[a.kind]}
-                  </span>
-                  {a.symbol && <b className="numeral">{a.symbol}</b>}
-                  <span className={styles.briefActionTitle}>{a.title}</span>
-                </li>
-              );
-            })}
-          </ol>
-        </>
-      )}
-      <Link href="/portfoy/analiz#danisman" prefetch={false} className={styles.briefLink}>
-        {labels.openFull}
-        <ArrowRight size={13} weight="bold" aria-hidden />
-      </Link>
-    </div>
   );
 }

@@ -22,7 +22,6 @@ export const stockVisualsTr = {
   shiftUp: "Al tarafının payı {m} ayda {d} puan arttı: %{a}\u00a0→\u00a0%{b}.",
   shiftFlat: "Al tarafının payı {m} ayda değişmedi: %{b}.",
   stackLabel: "Aylara Göre Dağılım",
-  lineLabel: "Al Tarafı Payı",
   /** Sütunun ekran okuyucu adı ve dokunuşta açılan ayrıntının başlığı. */
   columnAria: "{month}: {n} analist, al tarafı %{share}",
   analysts: "{n} Analist",
@@ -86,7 +85,6 @@ export const stockVisualsEn: typeof stockVisualsTr = {
   shiftUp: "The buy-side share rose {d} points in {m} months: {a}%\u00a0→\u00a0{b}%.",
   shiftFlat: "The buy-side share held steady over {m} months: {b}%.",
   stackLabel: "Distribution by Month",
-  lineLabel: "Buy-Side Share",
   columnAria: "{month}: {n} analysts, buy side {share}%",
   analysts: "{n} Analysts",
   tableShow: "Table With Numbers",

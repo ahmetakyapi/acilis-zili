@@ -88,8 +88,8 @@
 .heroName { overflow:hidden; margin-top:2px; font-size:14px; line-height:1.4; color:var(--text-body); text-overflow:ellipsis; white-space:nowrap; }
 .heroWhen { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; min-width:0; min-height:32px; }
 .heroClock { font-size:13px; font-weight:600; color:var(--text-body); white-space:nowrap; }
-/* GÜN İMİ: günün üç penceresi süreleriyle orantılı (dakika; `SessionLane`in
-   oranları), 44 × 5 piksel; bilançonun penceresi dolu (`--bar-soft`:
+/* GÜN İMİ: günün üç penceresi süreleriyle orantılı (dakika; silinen
+   `SessionLane`in oranları), 44 × 5 piksel; bilançonun penceresi dolu (`--bar-soft`:
    konum dolgusu, yön değil), ötekiler kulvar. Saati belirsizde hiçbiri
    dolmaz. Süs değil: çipin sözle söylediğini günün içindeki YERİYLE söyler. */
 .windowMark { display:inline-flex; flex-shrink:0; gap:2px; width:44px; height:6px; }

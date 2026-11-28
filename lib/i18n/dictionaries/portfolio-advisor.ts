@@ -21,7 +21,6 @@ export const portfolioAdvisorTr = {
   detractors: "Getiriyi Götürenler",
   pointsUnit: "Puan",
   kinds: { trim: "Azalt", add: "Ekle", diversify: "Çeşitlendir", hedge: "Riski Sınırla", hold: "Koru", watch: "İzle" },
-  homeTitle: "Danışmanın Bugün",
   chat: {
     title: "Danışmanla Konuş",
     intro: "Notu birlikte eleştirelim: itiraz et, senaryo sor, alternatif iste. Claude yalnız pozisyonlarından ve son seansın verisinden yanıtlar; senaryo hesabını site yapar.",
@@ -51,7 +50,6 @@ export const portfolioAdvisorTr = {
       "Hangi pozisyon portföyümü en çok riske atıyor?",
     ],
   },
-  openFull: "Danışman Notunun Tamamı",
   disclosure:
     "Bu not yalnız senin hesabında görünür. Claude'un görüşüdür; pozisyonlarından, son tamamlanmış seanstan, sitenin teknik analizlerinden ve bir yıllık risk ölçülerinden yazıldı. Lisanslı yatırım danışmanlığı değildir, karar senin. Günlük not her gün, aylık not ayda bir yenilenir.",
 };
@@ -74,7 +72,6 @@ export const portfolioAdvisorEn: typeof portfolioAdvisorTr = {
   detractors: "Dragged the Return",
   pointsUnit: "pts",
   kinds: { trim: "Trim", add: "Add", diversify: "Diversify", hedge: "Hedge", hold: "Hold", watch: "Watch" },
-  homeTitle: "Your Advisor Today",
   chat: {
     title: "Talk to the Advisor",
     intro: "Let's challenge the note together: push back, ask for scenarios, ask for alternatives. Claude answers only from your positions and the last session's data; the site computes scenarios.",
@@ -103,7 +100,6 @@ export const portfolioAdvisorEn: typeof portfolioAdvisorTr = {
       "Which position puts my portfolio most at risk?",
     ],
   },
-  openFull: "The Full Advisor Note",
   disclosure:
     "This note is visible only on your account. It is Claude's view, written from your positions, the last completed session, the site's technical analyses and one-year risk measures. It is not licensed investment advice; the decision is yours. The daily note refreshes every day, the monthly one once a month.",
 };

@@ -54,7 +54,6 @@ export const earningsSeasonTr = {
     sourceNote:
       "Tarih ve pencere Finnhub takviminden; şirket duyurusuyla değişebilir. Pencere yalnızca açılış öncesi ya da kapanış sonrası olarak biliniyor, dakika bilinmiyor.",
     noneTitle: "Takvimde Tarih Yok",
-    analysesTitle: "Okunan Çeyrekler",
     storyLink: "Hikâye Kartları",
     /* Sıradaki bilanço çizimi (31 Ekim): yaprak + son rapordan bu yana geçen
        çeyrek çizgisi + beklentinin son çeyrekle yan yana çubuğu. */
@@ -99,15 +98,6 @@ export const earningsSeasonTr = {
     beatHint: "EPS beklentinin üstünde gelir",
     missHint: "EPS beklentinin altında kalır",
     signInHint: "Oy vermek için giriş yap; topluluğun dağılımı oy verince açılır.",
-    recordBeat: "Geçti",
-    recordMiss: "Kaçırdı",
-    recordInline: "Denk",
-    recordActual: "Gerçekleşen",
-    recordEstimate: "Beklenti",
-    /* Beklenti karnesi — hissenin son çeyreklerde EPS beklentisini kaç
-       kez geçtiği (oyun bağlamı; sonuçla aynı eşik). */
-    recordTitle: "Beklenti Karnesi",
-    recordNote: "Son {n} çeyrekte EPS beklentisini {beats} kez geçti.",
     /** Karne yokken sağ hücre: oyun sorusunun eşiği (`VoteThreshold`). */
     thresholdTitle: "Eşik: EPS Beklentisi",
     thresholdNote:
@@ -162,7 +152,6 @@ export const earningsSeasonTr = {
     scoreOf: "/ 100",
     verdict: "Görüş",
     footer: "Yatırım Tavsiyesi Değildir",
-    ogPortraitAlt: "{company} {period} · {card} (dikey kart)",
     ogLandscapeAlt: "{company} {period} · {card}",
   },
 };
@@ -209,7 +198,6 @@ export const earningsSeasonEn: typeof earningsSeasonTr = {
     sourceNote:
       "Date and window from the Finnhub calendar; they can change with the company's announcement. The window is known only as before the open or after the close, not to the minute.",
     noneTitle: "No Date on the Calendar",
-    analysesTitle: "Quarters We Read",
     storyLink: "Story Cards",
     estimatedDate: "Estimated Date",
     lastReport: "Last Report",
@@ -250,13 +238,6 @@ export const earningsSeasonEn: typeof earningsSeasonTr = {
     beatHint: "EPS comes in above the estimate",
     missHint: "EPS comes in below the estimate",
     signInHint: "Sign in to vote; the community split opens once you do.",
-    recordBeat: "Beat",
-    recordMiss: "Missed",
-    recordInline: "In Line",
-    recordActual: "Actual",
-    recordEstimate: "Estimate",
-    recordTitle: "Beat Record",
-    recordNote: "Beat the EPS estimate in {beats} of the last {n} quarters.",
     thresholdTitle: "The Bar: EPS Estimate",
     thresholdNote:
       "Reported EPS above this number means Beat wins; below it, Miss wins. A gap under half a cent counts as in line and is not scored.",
@@ -310,7 +291,6 @@ export const earningsSeasonEn: typeof earningsSeasonTr = {
     scoreOf: "/ 100",
     verdict: "View",
     footer: "Not Investment Advice",
-    ogPortraitAlt: "{company} {period} · {card} (portrait card)",
     ogLandscapeAlt: "{company} {period} · {card}",
   },
 };

@@ -15,21 +15,20 @@ import styles from "./EarningsDesk.module.css";
 
 /**
  * BİLANÇO MASASI — arayüz (11 Kasım). Gerekçe ve doğruluk kuralları
- * lib/portfolio-earnings-desk.ts. İki görünüş, tek istek kalıbı (portföy
- * taramasının, components/portfolio/PortfolioScan.tsx):
+ * lib/portfolio-earnings-desk.ts. İstek kalıbı portföy taramasının
+ * (components/portfolio/PortfolioScan.tsx):
  *  - `EarningsDesk`: /portfoy'daki tam panel — masanın başlığı, kart başına
  *    şirket, tarih ve pencere çipi, beklenti ölçüleri, Claude notu; site
  *    sahibinde bilanço görüşü (VerdictPill + seviyeler).
- *  - `EarningsDeskBrief`: ana sayfa portföy kartı için tek satır özet +
- *    "Masayı Aç".
+ *  - Ana sayfa kartının tek satırlık özeti (`EarningsDeskBrief`) 28 Kasım
+ *    2026'da silindi; o kartı artık `ClaudeBrief` çiziyor.
  *
  * MASA ÇOĞU GÜN BOŞ. Portföyde yaklaşan ya da yeni açıklanmış bilanço
- * yoksa uç `desk: null` döner ve iki görünüş de HİÇBİR ŞEY basmaz (yalnız
+ * yoksa uç `desk: null` döner ve panel HİÇBİR ŞEY basmaz (yalnız
  * görünmez gözlemci düğümü). Boş masa yanıtı yalnız veritabanı sorgusu,
  * hızlı gelir; iskelet bu yüzden GECİKMELİ (`SKELETON_DELAY`): boş masada
  * iskelet açılıp kapanmasın (yerleşim zıplaması), Claude'un yazdığı dolu
- * masada bekleme görünsün. Kompakt görünüş iskelet hiç basmaz: ana sayfa
- * kartının içinde zıplama daha pahalı.
+ * masada bekleme görünsün.
  *
  * ÇİZİM (kalın yatay şerit dili, `.claude/rules/arayuz.md`):
  *  - Sonrası: HBK ve gelirde gerçekleşen dolu çubuk (yönü renginde),
@@ -385,37 +384,6 @@ export function EarningsDesk({ locale, labels }: { locale: Locale; labels: Label
         {views.size > 0 && <p>{labels.view.disclosure}</p>}
       </div>
     </Panel>
-  );
-}
-
-/* ------------------------------------------------------------------ */
-
-export function EarningsDeskBrief({ locale, labels }: { locale: Locale; labels: Labels }) {
-  const { ref, state } = useDesk(locale);
-  const desk = state.desk ?? null;
-  if (!desk) return <div ref={ref} className={styles.sentinel} aria-hidden />;
-  const after = desk.cards.filter((c) => c.phase === "after").length;
-  const before = desk.cards.length - after;
-  const counts = [after > 0 && labels.brief.after.replace("{n}", String(after)), before > 0 && labels.brief.before.replace("{n}", String(before))].filter(Boolean).join(" · ");
-  /* Tek satır: Claude'un masa başlığı; yoksa (yazılamadı) sembol ve gün. */
-  const line =
-    desk.text?.headline ??
-    desk.cards.map((c) => `${c.symbol} ${shortDay(c.reportDate, locale)}`).join(" · ");
-  return (
-    <div ref={ref} className={styles.brief}>
-      <div className={styles.briefHead}>
-        <span className={styles.briefTitle}>
-          <Sparkle size={16} weight="duotone" aria-hidden className={styles.spark} />
-          {labels.homeTitle}
-        </span>
-        <span className={styles.briefMeta}>{counts}</span>
-      </div>
-      <p className={styles.briefLine}>{line}</p>
-      <Link href="/portfoy#bilanco-masasi" prefetch={false} className={styles.briefLink}>
-        {labels.brief.open}
-        <ArrowRight size={13} weight="bold" aria-hidden />
-      </Link>
-    </div>
   );
 }
 

@@ -122,14 +122,3 @@
 .links a:hover svg { translate:3px 0; }
 
 .foot { display:flex; flex-direction:column; gap:6px; padding-top:12px; border-top:1px solid var(--line-soft); color:var(--text-muted); font-size:var(--text-tiny); line-height:1.55; }
-
-/* ---- Ana sayfa kartı: tek satır özet ---- */
-.brief { display:flex; flex-direction:column; gap:8px; padding:14px; border:1px solid var(--primary-faint); border-radius:12px; background:var(--premium-surface); }
-.briefHead { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:4px 10px; }
-.briefTitle { display:inline-flex; align-items:center; gap:6px; color:var(--text-strong); font-size:14px; font-weight:700; }
-.briefMeta { color:var(--text-muted); font-size:var(--text-nano); font-weight:600; }
-.briefLine { display:-webkit-box; overflow:hidden; color:var(--text-body); font-size:var(--text-small); font-weight:600; line-height:1.5; -webkit-box-orient:vertical; -webkit-line-clamp:2; }
-.briefLink { display:inline-flex; min-height:44px; align-items:center; gap:4px; margin-block:-10px -12px; color:var(--primary); font-size:var(--text-small); font-weight:600; }
-.briefLink:hover { color:var(--primary-hover); }
-.briefLink svg { transition:translate 200ms var(--ease-brand); }
-.briefLink:hover svg { translate:3px 0; }

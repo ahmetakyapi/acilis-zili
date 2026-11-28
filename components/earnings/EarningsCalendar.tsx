@@ -17,7 +17,6 @@ import { verdictOf } from "@/lib/analysis";
 import { boardFor, buildVoteView, type VoteView } from "@/lib/earnings-vote";
 import type { VoteBoard } from "@/lib/earnings-vote-data";
 import type { Dictionary, Locale } from "@/lib/i18n";
-import type { SessionLaneWindow } from "@/components/earnings/SessionLane";
 import { AFTER_HOURS_MINUTES, closeMinutesFor, daysBetweenEt, SESSION_BOUNDS, type MarketHoliday } from "@/lib/market-hours";
 import { clockOf, timePair, zoneTag } from "@/lib/session-clock";
 import { epsSurprise } from "@/lib/earnings-week";
@@ -323,7 +322,11 @@ function dayTiers(rows: EarningsRow[], meta: Record<string, SymbolMeta>) {
   return { heroes, mid, heroSet, midSet };
 }
 
-/** Takvim satırının `hour` alanı → seans şeridinin penceresi. */
+/** Bilançonun günün hangi penceresine düştüğü (açılış öncesi · seans ·
+    kapanış sonrası); saati duyurulmamışta `null`. */
+type SessionLaneWindow = "bmo" | "dmh" | "amc" | null;
+
+/** Takvim satırının `hour` alanı → gün iminin penceresi. */
 function laneWindow(hour: string | null): SessionLaneWindow {
   const key = hour?.trim();
   return key === "bmo" || key === "amc" || key === "dmh" ? key : null;
@@ -353,8 +356,7 @@ function DaySection({
   holidays: readonly MarketHoliday[];
 }) {
   const { heroes, mid: midAll, heroSet, midSet } = dayTiers(rows, meta);
-  /* Günün iki zili okurun birincil saatiyle — baş kartın seans şeridi
-     (`SessionLane`). Gün başına bir kez; kapanış o günün kapanışı. */
+  /* Günün iki zili okurun birincil saatiyle — baş kartın penceresi. Gün başına bir kez; kapanış o günün kapanışı. */
   const closeMinutes = closeMinutesFor(date, [...holidays]);
   const bells = {
     open: timePair(date, clockOf(SESSION_BOUNDS.regularOpen), locale).primary,
@@ -553,8 +555,8 @@ function DaySection({
                  (bilançonun dilimi dolu; saati belirsizde im basılmaz) + Türkiye saati. Açılan yer
                  beklentilere verildi: üç ölçü satırın sağ yarısında eşit
                  sütunlarda, saç teliyle ayrılmış, günün bütün satırlarında
-                 AYNI x'te (alt ızgara). `SessionLane` bileşeni duruyor
-                 (kullanan kalmadı; ana oturuma not). Düzen ve ölçüm
+                 AYNI x'te (alt ızgara). `SessionLane` bileşeni 28 Kasım
+                 2026'da silindi (kullanan kalmamıştı). Düzen ve ölçüm
                  `EarningsCalendar.module.css` → `.heroCard`.
                  KALKAN ESKİ KARARLAR (kayıt için): sembol bloğunun 104
                  piksellik sabit genişliği (çipler kartlar arasında aynı
