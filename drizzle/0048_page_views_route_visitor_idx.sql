@@ -1,0 +1,1 @@
+CREATE INDEX "page_views_day_route_visitor_idx" ON "page_views" USING btree ("viewed_on","route","visitor_hash");

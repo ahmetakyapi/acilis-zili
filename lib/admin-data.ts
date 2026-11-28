@@ -1,4 +1,5 @@
 import { cache } from "react";
+import { unstable_cache } from "next/cache";
 import {
   and,
   asc,
@@ -48,6 +49,7 @@ import {
   lateLabel,
 } from "./admin-format";
 import { siteHost } from "./analytics";
+import { mergeDays, type DayCount } from "./admin-traffic";
 import { briefRevisionKey } from "./content-write";
 import { TR_ZONE, formatInZone } from "./session-clock";
 import {
@@ -163,22 +165,71 @@ function etWeekday(day: string): number {
   return new Date(Date.UTC(y, m - 1, d)).getUTCDay();
 }
 
+/* Ziyaretçi-günü tanımı ve `TrafficTotals` artık lib/admin-traffic.ts'te
+   (saf, testli); pencere toplamları oradaki `sumDays` ile. */
+
 /**
- * GERÇEK TEKİL KİŞİ SAYISI ÜRETİLEMEZ ve bu bilinçli bir tasarım sonucu:
- * `visitorHash` her gün döner (lib/schema.ts), yani iki günün kaydı
- * birbirine bağlanamaz — gizliliğin bedeli tam olarak bu. Dolayısıyla çok
- * günlük pencerede sayılan şey KİŞİ değil ZİYARETÇİ-GÜNÜ: her gün gelen on
- * sadık okuyucu doksan günlük pencerede 900 satır üretir.
+ * İSTEKLER ARASI ÖNBELLEK — YALNIZ TAMAMLANMIŞ GÜNLER (28 Kasım).
  *
- * Alan adı bunu söylüyor; ekran etiketleri de öyle (lib/admin-format.ts →
- * `METRIC`). Ölçüyü düzeltmek mümkün değilken adını düzeltmemek, sayının
- * yalan söylemesi demekti.
+ * Panelin her açılışı aynı geçmiş günleri yeniden sayıyordu; bot dalgasıyla
+ * (26 Kasım'dan beri günde ~44.000 satır) Özet ve Trafik "Yükleniyor"da
+ * kalmaya başladı. Dünde biten bir pencerenin sayısı bir daha DEĞİŞMEZ:
+ * `viewed_on` yazılırken o anın ET günü (lib/analytics.ts) ve silme yalnız
+ * bütün günleri götürüyor (cron → `lt(viewedOn, cutoff)`). Bu yüzden tam
+ * günlerin sonucu `unstable_cache`te; anahtar pencerenin uçlarını taşıyor,
+ * gün dönünce kendiliğinden yeni anahtar. Bugün her istekte canlı.
+ * `revalidate` yalnız emniyet: eski bir sonuç yanlış olmaz, ancak silinmiş
+ * en eski günü bir saat daha sayabilir.
+ *
+ * Hata önbelleğin DIŞINDA yakalanıyor (`oku`): fırlayan sorgu önbelleğe
+ * girmez, düşen veritabanının boş sonucu saklanmaz (veri-ve-onbellek).
+ * Anahtar sürümlü — dönen şekil değişirse sürümü artır.
  */
-type TrafficTotals = {
-  views: number;
-  /** Ziyaretçi-günü — aynı kişi her gün yeniden sayılır. */
-  visitorDays: number;
-};
+const PAST_REVALIDATE = 3600;
+
+/** Gün gün sayım — `from`–`to` (iki uç dahil), kayıtsız gün dönmez. */
+async function queryDays(from: string, to: string): Promise<DayCount[]> {
+  const rows = await db
+    .select({
+      day: pageViews.viewedOn,
+      views: count(),
+      visitors: countDistinct(pageViews.visitorHash),
+    })
+    .from(pageViews)
+    .where(and(gte(pageViews.viewedOn, from), lte(pageViews.viewedOn, to)))
+    .groupBy(pageViews.viewedOn)
+    .orderBy(asc(pageViews.viewedOn));
+  return rows.map((r) => ({ day: String(r.day), views: Number(r.views), visitors: Number(r.visitors) }));
+}
+
+/**
+ * Son `scanDays` tam gün + bugün, gün gün — Özet'in ve Trafik'in TEK trafik
+ * taraması. Kutular, kıyas pencereleri ve grafik bu diziden kesiliyor
+ * (`sumDays`, `getTrafficSeries`); aynı sayı iki yerde iki ayrı okumadan
+ * gelmiyor (veri-ve-onbellek § 3).
+ *
+ * `cache()`: istek içinde aynı `scanDays` bir kez koşar. Sorgu planı:
+ * `page_views_visitor_idx (viewed_on, visitor_hash)` üzerinde aralık
+ * taraması; satırlar gün ve özet sırasıyla geldiği için gün başına
+ * `count(distinct)` ayrı bir sıralama istemiyor. Eski pencere toplamı
+ * (`count(distinct)` bütün aralıkta) aralığın tamamını tek seferde
+ * sıralatıyordu.
+ */
+export const getTrafficDays = cache(async function getTrafficDays(
+  scanDays: number,
+): Promise<AdminResult<DayCount[]>> {
+  const today = todayEt();
+  const { from, to } = fullDayWindow(scanDays);
+  return oku("getTrafficDays", async () => {
+    const [past, live] = await Promise.all([
+      unstable_cache(() => queryDays(from, to), ["admin-traffic-days-v1", from, to], {
+        revalidate: PAST_REVALIDATE,
+      })(),
+      queryDays(today, today),
+    ]);
+    return mergeDays(past, live);
+  });
+});
 
 /**
  * Gün gün görüntüleme ve tekil ziyaretçi — grafiğin kaynağı.
@@ -192,51 +243,49 @@ type TrafficTotals = {
  */
 export async function getTrafficSeries(
   days: number,
+  /**
+   * Taranan pencere — `days`ten geniş olabilir. Trafik ekranının kutuları
+   * önceki dönemi de istiyor (`days × 2`); grafik aynı taramanın son
+   * `days` gününü çiziyor, ayrı sorgu atmıyor (28 Kasım).
+   */
+  scanDays: number = days,
 ): Promise<AdminResult<TrafficPoint[]>> {
   const today = todayEt();
   const { from } = fullDayWindow(days);
 
-  return oku("getTrafficSeries", async () => {
-    const [rows, holidays, range] = await Promise.all([
-      db
-        .select({
-          day: pageViews.viewedOn,
-          views: count(),
-          visitors: countDistinct(pageViews.visitorHash),
-        })
-        .from(pageViews)
-        .where(and(gte(pageViews.viewedOn, from), lte(pageViews.viewedOn, today)))
-        .groupBy(pageViews.viewedOn)
-        .orderBy(asc(pageViews.viewedOn)),
-      /* Tatiller `cache()`li ve bu istekte zaten okunmuş olabilir. */
-      getHolidays(),
-      getTrackingRange(),
-    ]);
+  const [counted, range, tatil] = await Promise.all([
+    getTrafficDays(Math.max(days, scanDays)),
+    getTrackingStart(),
+    /* Tatiller `cache()`li ve bu istekte zaten okunmuş olabilir. */
+    oku("getTrafficSeries", () => getHolidays()),
+  ]);
+  if (!counted.ok || !tatil.ok) return { ok: false };
+  const rows = counted.data;
+  const holidays = tatil.data;
 
-    /* Kayıt olmayan günler sorgudan HİÇ dönmez ve grafik o günleri atlayıp
-       çizgiyi yalancı bir eğime sokar. Boş günler sıfırla dolduruluyor —
-       ölçümün başladığı günden önceki sıfırlar ise `measured: false`. */
-    const found = new Map(rows.map((r) => [r.day, r]));
-    const tatiller = new Set(holidays.map((h) => h.date));
-    /* Aralık okunamadıysa ölçülmemiş gün İLAN EDİLMİYOR: seri aynı
-       tablodan az önce okundu, bilinmeyeni "yok" diye yazmak ikinci bir
-       uydurma olurdu. */
-    const firstDay = range.ok ? range.data.firstDay : null;
-    const series: TrafficPoint[] = [];
-    for (let day = from; day <= today; day = addEtDays(day, 1)) {
-      const row = found.get(day);
-      const gun = etWeekday(day);
-      series.push({
-        day,
-        views: Number(row?.views ?? 0),
-        visitors: Number(row?.visitors ?? 0),
-        isToday: day === today,
-        offDay: gun === 0 || gun === 6 || tatiller.has(day),
-        measured: !range.ok || (firstDay !== null && day >= firstDay),
-      });
-    }
-    return series;
-  });
+  /* Kayıt olmayan günler sorgudan HİÇ dönmez ve grafik o günleri atlayıp
+     çizgiyi yalancı bir eğime sokar. Boş günler sıfırla dolduruluyor —
+     ölçümün başladığı günden önceki sıfırlar ise `measured: false`. */
+  const found = new Map(rows.map((r) => [r.day, r]));
+  const tatiller = new Set(holidays.map((h) => h.date));
+  /* Aralık okunamadıysa ölçülmemiş gün İLAN EDİLMİYOR: seri aynı
+     tablodan az önce okundu, bilinmeyeni "yok" diye yazmak ikinci bir
+     uydurma olurdu. */
+  const firstDay = range.ok ? range.data.firstDay : null;
+  const series: TrafficPoint[] = [];
+  for (let day = from; day <= today; day = addEtDays(day, 1)) {
+    const row = found.get(day);
+    const gun = etWeekday(day);
+    series.push({
+      day,
+      views: row?.views ?? 0,
+      visitors: row?.visitors ?? 0,
+      isToday: day === today,
+      offDay: gun === 0 || gun === 6 || tatiller.has(day),
+      measured: !range.ok || (firstDay !== null && day >= firstDay),
+    });
+  }
+  return { ok: true, data: series };
 }
 
 /**
@@ -255,27 +304,9 @@ export function fullDayWindow(days: number): { from: string; to: string } {
   return { from: addEtDays(to, -(days - 1)), to };
 }
 
-/** Bir aralığın toplamı — ziyaretçi sayısı GÜN BAŞINA tekildir (bkz. tip). */
-export async function getTrafficTotals(
-  fromDay: string,
-  toDay: string,
-): Promise<AdminResult<TrafficTotals>> {
-  return oku("getTrafficTotals", async () => {
-    const [row] = await db
-      .select({
-        views: count(),
-        visitors: countDistinct(pageViews.visitorHash),
-      })
-      .from(pageViews)
-      .where(
-        and(gte(pageViews.viewedOn, fromDay), lte(pageViews.viewedOn, toDay)),
-      );
-    return {
-      views: Number(row?.views ?? 0),
-      visitorDays: Number(row?.visitors ?? 0),
-    };
-  });
-}
+/* `getTrafficTotals` KALKTI (28 Kasım): her pencere için ayrı tarama
+   atıyordu. Toplamlar artık `getTrafficDays` dizisinden `sumDays` ile
+   (lib/admin-traffic.ts). */
 
 type Breakdown = { key: string; views: number; visitors: number };
 
@@ -287,6 +318,17 @@ type Breakdown = { key: string; views: number; visitors: number };
  * sütunun tipini imza yapmak diğer beş çağrıyı derlemiyor. `SQL` de
  * alınıyor: rota ve yol okumada bir ifadeden geçiyor (`ROUTE_READ`,
  * `PATH_READ`).
+ *
+ * PENCERE HEP DÜNDE BİTER, sonuç istekler arası önbellekte (28 Kasım;
+ * gerekçe `PAST_REVALIDATE`): Trafik'in altı kırılımı 90 günlük pencerede
+ * her açılışta milyonlarca satırı yeniden gruplayıp sıralıyordu. Anahtar
+ * kaynağın adı + pencere + sınır; kaynak adı sütunu ve süzgeci tek başına
+ * belirliyor (yönlendirende sitenin kendi alanı da anahtarda).
+ *
+ * `visitors: false` — ziyaretçi-günü SORULMAZ. Cihaz ve dil kırılımları
+ * yalnız görüntülemeyi çiziyor (Trafik → Okuyucu); `count(distinct)` grup
+ * başına sıralama istiyor ve hiçbir yerde okunmuyordu. O satırlarda
+ * `visitors` sıfır döner, ekrana çıkmaz.
  */
 async function breakdownBy(
   kaynak: string,
@@ -295,39 +337,56 @@ async function breakdownBy(
   limit: number,
   onlyNotNull = false,
   extraWhere?: SQL,
+  { visitors = true, keyExtra = "" }: { visitors?: boolean; keyExtra?: string } = {},
 ): Promise<AdminResult<Breakdown[]>> {
   const { from, to } = fullDayWindow(days);
-  return oku(kaynak, async () => {
-    const inWindow = and(
-      gte(pageViews.viewedOn, from),
-      lte(pageViews.viewedOn, to),
-      extraWhere,
-    );
-    const where = onlyNotNull ? and(inWindow, isNotNull(column)) : inWindow;
+  return oku(kaynak, () =>
+    unstable_cache(
+      () => queryBreakdown(column, from, to, limit, onlyNotNull, extraWhere, visitors),
+      ["admin-breakdown-v1", kaynak, keyExtra, from, to, String(limit)],
+      { revalidate: PAST_REVALIDATE },
+    )(),
+  );
+}
 
-    const rows = await db
-      .select({
-        key: column,
-        views: count(),
-        visitors: countDistinct(pageViews.visitorHash),
-      })
-      .from(pageViews)
-      .where(where)
-      .groupBy(column)
-      /* EŞİTLİKTE ANAHTAR SIRASI. Yalnızca sayıya göre sıralanıyordu ve
-         eşit sayılı satırlar (7 günde `/teknik-analiz` ile `/teknik-analiz/[symbol]`,
-         ikisi de 63) her yüklemede yer değiştiriyordu — Postgres eşitlikte
-         bir sıra vaat etmiyor. Liste kesildiğinde (`limit`) hangi satırın
-         dışarıda kalacağı da buna bağlıydı. */
-      .orderBy(desc(count()), asc(column))
-      .limit(limit);
+async function queryBreakdown(
+  column: PgColumn | SQL,
+  from: string,
+  to: string,
+  limit: number,
+  onlyNotNull: boolean,
+  extraWhere: SQL | undefined,
+  withVisitors: boolean,
+): Promise<Breakdown[]> {
+  const inWindow = and(
+    gte(pageViews.viewedOn, from),
+    lte(pageViews.viewedOn, to),
+    extraWhere,
+  );
+  const where = onlyNotNull ? and(inWindow, isNotNull(column)) : inWindow;
 
-    return rows.map((r) => ({
-      key: r.key == null ? "—" : String(r.key),
-      views: Number(r.views),
-      visitors: Number(r.visitors),
-    }));
-  });
+  const rows = await db
+    .select({
+      key: column,
+      views: count(),
+      visitors: withVisitors ? countDistinct(pageViews.visitorHash) : sql<number>`0`,
+    })
+    .from(pageViews)
+    .where(where)
+    .groupBy(column)
+    /* EŞİTLİKTE ANAHTAR SIRASI. Yalnızca sayıya göre sıralanıyordu ve
+       eşit sayılı satırlar (7 günde `/teknik-analiz` ile `/teknik-analiz/[symbol]`,
+       ikisi de 63) her yüklemede yer değiştiriyordu — Postgres eşitlikte
+       bir sıra vaat etmiyor. Liste kesildiğinde (`limit`) hangi satırın
+       dışarıda kalacağı da buna bağlıydı. */
+    .orderBy(desc(count()), asc(column))
+    .limit(limit);
+
+  return rows.map((r) => ({
+    key: r.key == null ? "—" : String(r.key),
+    views: Number(r.views),
+    visitors: Number(r.visitors),
+  }));
 }
 
 /**
@@ -348,8 +407,14 @@ async function breakdownBy(
  * bilanço sayfası o gün geldi); yazma tarafı onu artık şablonluyor
  * (lib/analytics.ts). Okumada eski satır yok — sayfa yeni, ham kalmış
  * satır birikmedi; buraya desen eklenmiyor.
+ *
+ * DÜZENLİ İFADE YALNIZ ADAYDA (28 Kasım). İki `regexp_replace` her satırda
+ * koşuyordu; iki desen de yalnız `/teknik` ya da `/en/teknik` ile başlayan
+ * değeri yakalayabiliyor. Önce ucuz önek denetimi (`like`), ifade yalnız
+ * onu geçen satırda — sonuç birebir aynı, bot dalgasında satırların
+ * neredeyse hepsi ifadeye hiç girmiyor.
  */
-const ROUTE_READ = sql<string>`regexp_replace(regexp_replace(${pageViews.route}, '^(/en)?/teknik/[^/]+$', '\\1/teknik-analiz/[symbol]'), '^(/en)?/teknik$', '\\1/teknik-analiz')`;
+const ROUTE_READ = sql<string>`case when ${pageViews.route} like '/teknik%' or ${pageViews.route} like '/en/teknik%' then regexp_replace(regexp_replace(${pageViews.route}, '^(/en)?/teknik/[^/]+$', '\\1/teknik-analiz/[symbol]'), '^(/en)?/teknik$', '\\1/teknik-analiz') else ${pageViews.route} end`;
 
 /**
  * Yol OKUMADA sitenin kendi yazımına iniyor — `ROUTE_READ`ın yol karşılığı.
@@ -361,8 +426,15 @@ const ROUTE_READ = sql<string>`regexp_replace(regexp_replace(${pageViews.route},
  * yakalama grubunu büyütemediği için hisse dalı yolu son parçasından
  * bölüyor; teknik ve analiz adreslerinin tamamı zaten küçük harf
  * (`technicalHref`, `analysisHref`, dönem parçası `periodSlug`).
+ *
+ * İlk dal önek eleği (28 Kasım, `ROUTE_READ`la aynı gerekçe): aşağıdaki
+ * desenler yalnız `/hisse/`, `/teknik`, `/bilancolar/` ya da `/en/` ile
+ * başlayan yolu yakalar; ötekiler düzenli ifadeye girmeden kendisi döner.
  */
 const PATH_READ = sql<string>`case
+  when ${pageViews.path} not like '/hisse/%' and ${pageViews.path} not like '/teknik%'
+    and ${pageViews.path} not like '/bilancolar/%' and ${pageViews.path} not like '/en/%'
+    then ${pageViews.path}
   when ${pageViews.path} ~ '^(/en)?/hisse/[^/]+$'
     then regexp_replace(${pageViews.path}, '[^/]+$', '') || upper(substring(${pageViews.path} from '[^/]+$'))
   when ${pageViews.path} ~ '^(/en)?/(teknik(-analiz)?/[^/]+|bilancolar/[^/]+/[^/]+)$'
@@ -403,12 +475,14 @@ export const getTopReferrers = (days: number, limit = 10) => {
     limit,
     true,
     own ? ne(pageViews.referrerHost, own) : undefined,
+    { keyExtra: own ?? "" },
   );
 };
+/* Cihaz ve dil: yalnız görüntüleme okunuyor (Trafik → Okuyucu). */
 export const getDeviceSplit = (days: number) =>
-  breakdownBy("getDeviceSplit", pageViews.device, days, 5);
+  breakdownBy("getDeviceSplit", pageViews.device, days, 5, false, undefined, { visitors: false });
 export const getLocaleSplit = (days: number) =>
-  breakdownBy("getLocaleSplit", pageViews.locale, days, 5);
+  breakdownBy("getLocaleSplit", pageViews.locale, days, 5, false, undefined, { visitors: false });
 
 type SignedInShare = {
   /** Görüntüleme — girişli ve anonim. */
@@ -429,16 +503,24 @@ export async function getSignedInShare(
   days: number,
 ): Promise<AdminResult<SignedInShare>> {
   const { from, to } = fullDayWindow(days);
+  /* Tam günler — istekler arası önbellekte (gerekçe `PAST_REVALIDATE`). */
   return oku("getSignedInShare", async () => {
-    const rows = await db
-      .select({
-        signedIn: pageViews.signedIn,
-        views: count(),
-        visitors: countDistinct(pageViews.visitorHash),
-      })
-      .from(pageViews)
-      .where(and(gte(pageViews.viewedOn, from), lte(pageViews.viewedOn, to)))
-      .groupBy(pageViews.signedIn);
+    const rows = await unstable_cache(
+      async () =>
+        (
+          await db
+            .select({
+              signedIn: pageViews.signedIn,
+              views: count(),
+              visitors: countDistinct(pageViews.visitorHash),
+            })
+            .from(pageViews)
+            .where(and(gte(pageViews.viewedOn, from), lte(pageViews.viewedOn, to)))
+            .groupBy(pageViews.signedIn)
+        ).map((r) => ({ signedIn: Boolean(r.signedIn), views: Number(r.views), visitors: Number(r.visitors) })),
+      ["admin-signed-share-v1", from, to],
+      { revalidate: PAST_REVALIDATE },
+    )();
     const girisli = rows.find((r) => r.signedIn);
     const anonim = rows.find((r) => !r.signedIn);
     return {
@@ -463,23 +545,58 @@ export async function getSignedInShare(
  * bozuk olan tam da uyarması gereken şeydi. `ok` bu ayrım için vardı;
  * artık bütün okumaların biçimi bu.
  *
- * `cache()`: Trafik sayfası üç sınırdan soruyor (kutular, grafik,
- * `getTrafficSeries` içinden) ve Sistem sağlık listesi bir kez daha.
+ * İKİYE BÖLÜNDÜ (28 Kasım). Tek sorgu `min(viewed_on)` ile `count(*)`u
+ * birlikte soruyordu ve `count(*)` BÜTÜN tabloyu tarıyor: 180 günlük
+ * saklamayla ve günde ~44.000 bot satırıyla milyonlarca satır. Kutular,
+ * grafik ve Özet'in Dikkat kartı (sağlık listesi üzerinden) yalnız ilk günü
+ * istiyordu ama her biri tam taramayı bekliyordu.
+ *   - `getTrackingStart`: yalnız ilk gün. `min()` `page_views_day_idx`in
+ *     ilk girdisi — dizin ucundan tek okuma.
+ *   - `getTrackingRange`: ilk gün + kayıt sayısı (Trafik damgası, Sistem'in
+ *     "Sayfa Ölçümü" satırı). Sayının dünde biten kısmı istekler arası
+ *     önbellekte; anahtar ilk gün ve dün — gece silme işi en eski günü
+ *     götürünce ilk gün, gün dönünce dün değişir, yani eski sayı yeni
+ *     anahtara taşınmaz. Bugünün kısmı canlı ve dizin aralığında.
+ *
+ * `cache()`: aynı istekte birden çok sınır soruyor.
  */
+export const getTrackingStart = cache(async function getTrackingStart(): Promise<
+  AdminResult<{ firstDay: string | null }>
+> {
+  return oku("getTrackingStart", async () => {
+    const [row] = await db
+      .select({ firstDay: sql<string | null>`min(${pageViews.viewedOn})` })
+      .from(pageViews);
+    return { firstDay: row?.firstDay ? String(row.firstDay) : null };
+  });
+});
+
 export const getTrackingRange = cache(async function getTrackingRange(): Promise<
   AdminResult<{ firstDay: string | null; rows: number }>
 > {
-  return oku("getTrackingRange", async () => {
+  const start = await getTrackingStart();
+  if (!start.ok) return { ok: false };
+  const { firstDay } = start.data;
+  if (!firstDay) return { ok: true, data: { firstDay: null, rows: 0 } };
+  const today = todayEt();
+  const yesterday = addEtDays(today, -1);
+  const countRange = async (from: string, to: string) => {
     const [row] = await db
-      .select({
-        firstDay: sql<string | null>`min(${pageViews.viewedOn})`,
-        rows: count(),
-      })
-      .from(pageViews);
-    return {
-      firstDay: row?.firstDay ?? null,
-      rows: Number(row?.rows ?? 0),
-    };
+      .select({ rows: count() })
+      .from(pageViews)
+      .where(and(gte(pageViews.viewedOn, from), lte(pageViews.viewedOn, to)));
+    return Number(row?.rows ?? 0);
+  };
+  return oku("getTrackingRange", async () => {
+    const [past, live] = await Promise.all([
+      firstDay <= yesterday
+        ? unstable_cache(() => countRange(firstDay, yesterday), ["admin-tracking-rows-v1", firstDay, yesterday], {
+            revalidate: 24 * 3600,
+          })()
+        : Promise.resolve(0),
+      countRange(today, today),
+    ]);
+    return { firstDay, rows: past + live };
   });
 });
 

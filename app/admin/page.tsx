@@ -23,11 +23,12 @@ import {
   getHealthChecks,
   getMemberSummary,
   getTopRoutes,
-  getTrackingRange,
+  getTrackingStart,
+  getTrafficDays,
   getTrafficSeries,
-  getTrafficTotals,
   type HealthCheck,
 } from "@/lib/admin-data";
+import { sumDays } from "@/lib/admin-traffic";
 import { addEtDays, todayEt } from "@/lib/market-hours";
 import { PageHeader, PanelLink, Skeleton } from "@/components/ui/primitives";
 import {
@@ -116,8 +117,9 @@ export default async function AdminOverviewPage() {
             birlikte basılıyor — kutular inince hiçbir şey kaymıyor. */}
         <p className="text-small leading-relaxed text-muted">
           {METRIC.visitorDays} aynı kişiyi her gün yeniden sayar, yani yedi
-          günün toplamı kişi sayısı değildir. Yüzdeler önceki yedi tam günle
-          kıyaslanır; aktif üye sayısına yönetici hesapları girmez.
+          günün toplamı kişi sayısı değildir. Değişim önceki yedi tam günle
+          kıyaslanır; iki katı aşan artış kat olarak (×14) yazılır. Aktif üye
+          sayısına yönetici hesapları girmez.
         </p>
       </div>
 
@@ -156,13 +158,21 @@ async function Headline() {
      sayıyor ve iki sayı ayrı tanımlarla ayrı düşmüyor. */
   const last7Window = fullDayWindow(7);
   const previousFrom = addEtDays(last7Window.from, -7);
-  const [last7, prev7, members, range, series] = await Promise.all([
-    getTrafficTotals(last7Window.from, last7Window.to),
-    getTrafficTotals(previousFrom, addEtDays(last7Window.from, -1)),
+  /* TEK TARAMA (28 Kasım). İki pencere ayrı `count(distinct)` sorgularıydı;
+     ikisi de grafiğin otuz günlük gün gün sayımının içinde. Toplamlar o
+     diziden (`sumDays`) — kutu, küçük çizgi ve grafik aynı okumadan.
+     İlk gün yalnız `min()` (`getTrackingStart`); tablonun tam sayımı bu
+     ekranda artık hiç beklenmiyor. */
+  const [days, members, range, series] = await Promise.all([
+    getTrafficDays(30),
     getMemberSummary(),
-    getTrackingRange(),
+    getTrackingStart(),
     series30(),
   ]);
+  const totalsOf = (from: string, to: string) =>
+    days.ok ? ({ ok: true, data: sumDays(days.data, from, to) } as const) : ({ ok: false } as const);
+  const last7 = totalsOf(last7Window.from, last7Window.to);
+  const prev7 = totalsOf(previousFrom, addEtDays(last7Window.from, -1));
   /* KÜÇÜK ÇİZGİ KUTUNUN PENCERESİNDE (31 Ekim). Seriden bugün (yarım gün)
      atılıyor ve son 14 tam gün kalıyor: ilk yedisi kutunun kıyas
      penceresi, son yedisi kutunun sayısı. Ölçülmemiş gün `null` — çizgi

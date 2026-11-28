@@ -52,11 +52,40 @@ test("değişim: eksik ölçülmüş önceki dönemle kıyas yok", () => {
     deltaOf(2436, 756, { trackingFrom: "2026-08-13", previousFrom: "2026-07-25" }),
     null,
   );
-  const full = deltaOf(2436, 756, { trackingFrom: "2026-08-13", previousFrom: "2026-08-14" });
-  assert.equal(full?.text, "+%222");
-  assert.equal(full?.srLabel, "yüzde 222 arttı");
+  const full = deltaOf(1500, 756, { trackingFrom: "2026-08-13", previousFrom: "2026-08-14" });
+  assert.equal(full?.text, "+%98");
+  assert.equal(full?.srLabel, "yüzde 98 arttı");
   assert.equal(deltaOf(88, 100)?.srLabel, "yüzde 12 azaldı");
+  assert.equal(deltaOf(88, 100)?.text, "−%12");
   assert.equal(deltaOf(5, 0), null);
+});
+
+/* 28 Kasım: bot dalgası kutulara "+%1313", "+%440470" yazdırıyordu. */
+test("değişim: iki katı aşan artış kat olarak yazılır", () => {
+  assert.deepEqual(deltaOf(2436, 756), { text: "×3,2", tone: "up", srLabel: "3,2 katına çıktı" });
+  assert.equal(deltaOf(14130, 1000)?.text, "×14");
+  assert.equal(deltaOf(44057, 10)?.text, "×4.406");
+  assert.equal(deltaOf(200, 100)?.text, "×2");
+  /* 9,96 tek ondalıkta "10,0" olurdu — tam sayıya geçer. */
+  assert.equal(deltaOf(996, 100)?.text, "×10");
+  assert.equal(deltaOf(199, 100)?.text, "+%99");
+});
+
+test("değişim: düşüş yüzde kalır, en fazla −%100", () => {
+  assert.equal(deltaOf(0, 400)?.text, "−%100");
+  assert.equal(deltaOf(100, 400)?.text, "−%75");
+  assert.equal(deltaOf(100, 400)?.tone, "down");
+});
+
+test("değişim: 50'nin altındaki tabanda adet farkı", () => {
+  assert.deepEqual(deltaOf(17, 13), { text: "+4", tone: "up", srLabel: "4 arttı" });
+  assert.deepEqual(deltaOf(10, 13), { text: "−3", tone: "down", srLabel: "3 azaldı" });
+  assert.equal(deltaOf(13, 13)?.text, "Değişim Yok");
+  /* Küçük tabanda da iki kat kat olarak. */
+  assert.equal(deltaOf(30, 13)?.text, "×2,3");
+  /* Taban 50'de yüzdeye döner; %1'in altı gürültü. */
+  assert.equal(deltaOf(60, 50)?.text, "+%20");
+  assert.equal(deltaOf(1004, 1000)?.text, "Değişim Yok");
 });
 
 test("ET günü TR saatiyle yazın 07:00, kışın 08:00'de döner", () => {

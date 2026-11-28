@@ -818,6 +818,9 @@ export function RankList({
       : rows.length;
   const shown = rows.slice(0, cut);
   const rest = rows.slice(cut);
+  /* Sayı sütununun genişliği — gerekçe satırdaki yorumda. */
+  const longest = Math.max(...rows.map((r) => r.value.toLocaleString("tr-TR").length));
+  const valueWidth = `max(4rem, ${longest}ch)`;
 
   const renderRow = (row: RankRow) => {
     /* SIFIR SIFIR ÇİZİLİR. Taban `Math.max(2, …)` idi ve değeri sıfır
@@ -847,7 +850,16 @@ export function RankList({
               {shareLabel(row.value, total)}
             </span>
           )}
-          <span className="numeral w-16 shrink-0 text-right text-read font-bold text-strong">
+          {/* SÜTUN EN UZUN DEĞERE GÖRE (28 Kasım). Sabit `w-16` (64 piksel)
+              bot dalgasından önceki dört-beş haneli sayılara göreydi; 90
+              günlük pencerede "3.960.112" gibi yedi haneli değer sütundan
+              taşıp künyenin üstüne biniyordu. Genişlik listenin EN UZUN
+              değerinin `ch` cinsinden boyu (taban yine 4rem): sütun kenarı
+              satırdan satıra aynı kalıyor, zikzak geri gelmiyor. */}
+          <span
+            className="numeral shrink-0 text-right text-read font-bold text-strong"
+            style={{ width: valueWidth }}
+          >
             {row.value.toLocaleString("tr-TR")}
           </span>
         </span>

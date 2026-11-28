@@ -1483,6 +1483,10 @@ export const pageViews = pgTable(
     index("page_views_route_idx").on(t.viewedOn, t.route),
     index("page_views_path_idx").on(t.viewedOn, t.path),
     index("page_views_visitor_idx").on(t.viewedOn, t.visitorHash),
+    /* Bölümler listesi (gün × rota × tekil ziyaretçi) yalnız dizinden
+       okunsun (28 Kasım, 0048): bot dalgasıyla tablo günde ~44.000 satır
+       büyüyor; yönetim paneli ham satırları tarıyordu (lib/admin-data.ts). */
+    index("page_views_day_route_visitor_idx").on(t.viewedOn, t.route, t.visitorHash),
   ],
 );
 

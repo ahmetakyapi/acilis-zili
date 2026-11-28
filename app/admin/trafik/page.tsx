@@ -22,10 +22,12 @@ import {
   getTopReferrers,
   getTopRoutes,
   getTrackingRange,
+  getTrackingStart,
+  getTrafficDays,
   getTrafficSeries,
-  getTrafficTotals,
   fullDayWindow,
 } from "@/lib/admin-data";
+import { sumDays } from "@/lib/admin-traffic";
 import { addEtDays } from "@/lib/market-hours";
 import { METRIC, adminDayYear, deltaOf } from "@/lib/admin-format";
 import { dayBoundaryNote } from "@/lib/session-clock";
@@ -128,7 +130,9 @@ export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
       {/* "Dünkü Görüntüleme"nin künyesi telefonda iki satır: değişim ile
           taban ("+%1985", "Bir Hafta Önce 13") 145 piksel, künye alanı 136.
           Tek satırlık yer tutucu akış inince 20 piksel sıçrıyordu (390, üç
-          pencerede de ölçüldü). */}
+          pencerede de ölçüldü). Kat yazımıyla da (28 Kasım: "×4.406" +
+          "Bir Hafta Önce 10") 390'da iki satır, künye 38 piksel — yer
+          tutucu aynı kaldı (geçici rotada ölçüldü, iki tema). */}
       <Suspense key={`sum-${days}`} fallback={<StatGridSkeleton wrapOnPhone={[3]} />}>
         <Totals days={days} />
       </Suspense>
@@ -191,15 +195,22 @@ async function Totals({ days }: { days: WindowDays }) {
   const before = fullDayWindow(days * 2);
   const dun = now.to;
   const birHaftaOnce = addEtDays(dun, -7);
-  const [current, previous, range, yesterday, weekAgo] = await Promise.all([
-    getTrafficTotals(now.from, now.to),
-    /* Önceki pencere: iki katı geriden başlar, güncel pencerenin bir gün
-       öncesinde biter. */
-    getTrafficTotals(before.from, addEtDays(now.from, -1)),
-    getTrackingRange(),
-    getTrafficTotals(dun, dun),
-    getTrafficTotals(birHaftaOnce, birHaftaOnce),
-  ]);
+  /* DÖRT PENCERE, TEK TARAMA (28 Kasım). Dört ayrı `count(distinct)`
+     sorgusuydu ve 90 günlük pencerede aynı satırları dört kez okuyordu.
+     Gün gün sayım iki katı geriden (`days × 2`) bir kez iniyor; grafik
+     aynı diziden çiziliyor (`Chart` → `getTrafficSeries(days, days * 2)`),
+     `cache()` ikinci isteği aynı sonuca bağlıyor. */
+  const [counted, range] = await Promise.all([getTrafficDays(days * 2), getTrackingStart()]);
+  const totalsOf = (from: string, to: string) =>
+    counted.ok
+      ? ({ ok: true, data: sumDays(counted.data, from, to) } as const)
+      : ({ ok: false } as const);
+  const current = totalsOf(now.from, now.to);
+  /* Önceki pencere: iki katı geriden başlar, güncel pencerenin bir gün
+     öncesinde biter. */
+  const previous = totalsOf(before.from, addEtDays(now.from, -1));
+  const yesterday = totalsOf(dun, dun);
+  const weekAgo = totalsOf(birHaftaOnce, birHaftaOnce);
 
   /* Payda ziyaretçi-günü, yani günlük tekil ziyaretçilerin toplamı: sonuç
      bir ziyaretçinin BİR GÜNDE ortalama kaç sayfa okuduğu. Etiket "Ziyaret
@@ -386,7 +397,8 @@ function ReadersSkeleton() {
 }
 
 async function Chart({ days }: { days: WindowDays }) {
-  const series = await getTrafficSeries(days);
+  /* Kutularla aynı tarama (`days × 2`): ayrı sorgu yok (28 Kasım). */
+  const series = await getTrafficSeries(days, days * 2);
   return (
     <AdminPanel>
       {/* Seri kutuların penceresi + bugün (lib/admin-data.ts →

@@ -41,7 +41,39 @@ export function deltaOf(
   if (opts.trackingFrom && opts.previousFrom && opts.trackingFrom > opts.previousFrom) {
     return null;
   }
-  const change = ((current - previous) / previous) * 100;
+  const ratio = current / previous;
+
+  /* İKİ KATI AŞAN ARTIŞ KAT OLARAK (28 Kasım, sahibinin sözü: "sayıları
+     yüzdeleri falan daha okunaklı yapalım"). 26 Kasım'dan beri bot trafiği
+     günlük görüntülemeyi ~400'den ~44.000'e çıkardı ve kutular "+%1313",
+     "+%440470" yazıyordu: dört-altı haneli bir yüzdeyi okur kafasında kata
+     çeviriyordu. Artış %100'ü geçtiği anda cevap "kaç katı": "×14",
+     "×4.406". Ondan küçük kat tek ondalıkla ("×2,4"). Düşüş YÜZDE kalıyor:
+     en fazla −%100'dür ve "×0,1" düşüşü artıştan zor ayırt ettirir. */
+  if (ratio >= 2) {
+    const kat =
+      ratio < 9.95
+        ? ratio.toLocaleString("tr-TR", { maximumFractionDigits: 1 })
+        : Math.round(ratio).toLocaleString("tr-TR");
+    return { text: `×${kat}`, tone: "up", srLabel: `${kat} katına çıktı` };
+  }
+
+  /* KÜÇÜK TABANDA ADET FARKI (28 Kasım). Önceki dönem `SMALL_BASE`in
+     altındaysa her birim iki yüzde puanından fazladır; 13'ten 17'ye çıkış
+     "+%31" diye büyük bir hareket gibi duruyordu. Fark adetle yazılıyor:
+     "+4". */
+  if (previous < SMALL_BASE) {
+    const diff = current - previous;
+    if (diff === 0) return { text: "Değişim Yok", tone: "neutral", srLabel: "değişim yok" };
+    const n = Math.abs(diff).toLocaleString("tr-TR");
+    return {
+      text: `${diff > 0 ? "+" : "−"}${n}`,
+      tone: diff > 0 ? "up" : "down",
+      srLabel: `${n} ${diff > 0 ? "arttı" : "azaldı"}`,
+    };
+  }
+
+  const change = (ratio - 1) * 100;
   /* Yüzde bir puanın altındaki fark gürültüdür; okla göstermek yanlış bir
      hareket hissi verir. */
   if (Math.abs(change) < 1) {
@@ -65,6 +97,9 @@ export function deltaOf(
     srLabel: `yüzde ${Math.abs(rounded)} ${rounded > 0 ? "arttı" : "azaldı"}`,
   };
 }
+
+/** Bu tabanın altında değişim yüzdeyle değil adetle yazılır (`deltaOf`). */
+export const SMALL_BASE = 50;
 
 const MINUTE = 60_000;
 const HOUR = 60 * MINUTE;
