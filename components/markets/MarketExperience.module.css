@@ -945,6 +945,18 @@
 .heatSymbol { font-weight:700; }
 .heatPct { font-weight:600; }
 
+/* ---- Isı haritası: AÇIK KADEMELER, YALNIZ UÇLAR DOLU (28 Kasım 2026) ----
+   Sahibinin sözü (görsel tur 3): "aynı anda her yerde yeşil dolu öğeler göz
+   yoruyor". Yükselişle geçen bir günde 30 karonun 20'si %1,5'in üstünde ve
+   ortak kademeler (%30 / %50 karışım + dolu dördüncü) haritayı koyu yeşil
+   bir duvara çeviriyordu (canlı, 1440). Kademe sayısı ve eşikler aynı
+   (HeatScale ve lejant değişmedi); karışımlar bu haritada yarıya indi,
+   dolu zemin yalnız dördüncü kademede (|%| ≥ 3) — uçlar hâlâ bir bakışta
+   seçiliyor, gövde açık. Logo karo zemininde okunur kalıyor. Hover'da
+   BÜYÜME YOK kuralı yerinde (yukarıda, 10 Kasım; `hareket.md`). */
+.heatGrid, .heatSwatches { --heat-mix-1:6%; --heat-mix-2:13%; --heat-mix-3:24%; }
+.heatCell { box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--heat-tone) 16%, var(--line-soft)); }
+
 /* --------------------------------------------------------------------------
    ÖLÇÜM — 14 Kasım 2026, "Zil Defteri" (gerçek sayfa + sahte sağlayıcı;
    kapalı piyasa, açılış öncesi ve seans içi; TR ve EN; Nasdaq 100 / S&P 500

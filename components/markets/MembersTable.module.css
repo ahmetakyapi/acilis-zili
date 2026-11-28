@@ -91,6 +91,12 @@
 @media(min-width:768px) and (max-width:1023px) {
   .panel .table { --cell-pad:10px; --name-max:108px; --day-lane:56px; --week-lane:32px; --rank-display:none; --company-start:20px; }
 }
+/* 768–1023, Dow (Katkı sütunu varken): Haftalık da düşer. Ölçüldü 28 Kasım
+   2026, açılış öncesi: içerik 750 > kap 718 (kap 32 piksel kayıyordu);
+   Katkı Dow'un kendi ölçüsü, Haftalık şirketler dizininde de var. */
+@media(min-width:768px) and (max-width:1023px) {
+  .panel[data-contribution] :is(.weekHead, .weekCell) { display:none; }
+}
 /* 820–1023 (yatay telefon, küçük tablet): ad tavanı açılır — 844'te
    Şirket sütunu 266 piksel tutarken ad 108'de kesiliyordu. */
 @media(min-width:820px) and (max-width:1023px) {
@@ -286,3 +292,22 @@
    piksel (medyan 13); seans içinde kulvar 80, 3–25; 1280'de 72–88. 768'de
    kulvar hâlâ 32 (3–10 piksel): o genişlikte sütuna yer yok, açık kusur.
    Yerleşim değişmedi: satır 62 / 60, kap = içerik (0 taşma, altı genişlik). */
+
+/* ---- Katlama anahtarı: devamı bandının butonu gibi (28 Kasım 2026) ----
+   Tablo her genişlikte ilk on satırla açılıyor (MembersTable → `foldAt`).
+   Ortak anahtarın varsayılanı 12,5 piksellik mavi bir metin bağlantısı;
+   60 satırlık listenin tek kapısı olunca künye gibi kayboluyordu (1440,
+   ilk çekim). Görünüş `MoreBand`ın butonuyla aynı: kenarlı, 44 piksel,
+   güçlü mürekkep. Seçici etiketin `for`u: ortak modülün sınıfı bu
+   modülden görünmez. */
+.panel label[for="members-fold"] { margin:12px 20px 14px; padding-inline:16px; border:1px solid var(--line); border-radius:10px; background:var(--surface); color:var(--text-strong); font-size:var(--text-base); transition:border-color .18s var(--ease-brand), background-color .18s var(--ease-brand), scale .12s var(--ease-brand); }
+@media(hover:hover) and (pointer:fine) { .panel label[for="members-fold"]:hover { border-color:var(--primary-faint); background:var(--primary-tint); color:var(--text-strong); } }
+@media(max-width:639px) { .panel label[for="members-fold"] { margin-inline:16px; } }
+@media(prefers-reduced-motion:reduce) { .panel label[for="members-fold"] { transition:none; } }
+/* BÜYÜK HAREKET HAPI YALNIZ İLK ÜÇTE (28 Kasım). |%| ≥ 3 olan her satırda
+   yüzde yön yıkamasında hap alıyordu (ortak parça, `data-big`); yükselişle
+   geçen günde ilk kırk satırın hepsi yeşil haptı — sahibinin "aynı anda her
+   yerde yeşil dolu öğeler göz yoruyor" itirazı. Bu tabloda hap yalnız
+   sıralamanın ilk üç satırında (`data-lead`), ötekilerde renk sayıda ve
+   çubukta. Şirketler dizini ortak kuralla kalır. */
+.panel .table tbody tr:not([data-lead]) [data-big] { background:none; }

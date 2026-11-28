@@ -48,8 +48,20 @@ export type SortDir = "asc" | "desc";
  * (Aynı ölçü ve aynı gerekçe /sirketler dizininde de var.)
  */
 export const PAGE_STEP = 60;
-/** Telefonda bileşen tablosunun açık satırı; kalanı katlı (FoldToggle). */
-export const PHONE_ROWS = 15;
+/**
+ * Bileşen tablosunun açık satırı; kalanı katlı (FoldToggle, JS'siz).
+ *
+ * 3 Ekim: yalnız telefonda ilk 15 (`PHONE_ROWS`; tablo 390'da 60 satır,
+ * ~4.600 piksel). 28 Kasım 2026 (görsel tur 3; sahibinin sözü: "bazı
+ * ekranlarda çok bilgi yoğunluğu var, kullanımı zorlaştırıyor"): HER
+ * genişlikte ilk 10. 1440'ta 60 satırlık tablo 3.900 piksel tutuyor ve
+ * sayfanın 7.300 pikselinin yarısıydı; altındaki nabız, sektör ve emtia
+ * panolarına ulaşmak için tabloyu baştan sona geçmek gerekiyordu. Satırlar
+ * sunucuda YİNE basılıyor (sıralama 60'ın tamamında), fazlası katlı;
+ * "Daha Fazla Göster" ile derinliği artıran (`?adet=`) okur katlamayı
+ * görmez — istediği satırlar açık gelir (MembersTable → `foldAt`).
+ */
+export const FOLD_ROWS = 10;
 
 /**
  * Dow puan katkısı — YAKLAŞIK olduğu görünsün.

@@ -1456,6 +1456,8 @@ const en: typeof tr = {
     constituents: "Index Constituents",
     constituentsMore: "{n} More Companies",
     constituentsLess: "Show Less",
+    constituentsAll: "See All",
+    medianOf: "The middle value of {n} companies.",
     phoneSort: "Sort",
     phoneSortDesc: "High to low",
     phoneSortAsc: "Low to high",

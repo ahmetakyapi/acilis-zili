@@ -1,0 +1,191 @@
+/* --------------------------------------------------------------------------
+   Piyasalar — görsel tur 3 (28 Kasım 2026)
+
+   Karar kayıtları bileşenlerde: kapak `IndexCard.tsx` → "KAHRAMAN VE
+   SESSİZLER", genişlik paneli `IndexSelection.tsx`, karolar
+   `MoverPanel.tsx`, iki kolon `MarketsScreen.tsx` → "SEÇİM + HAREKETLER İKİ
+   KOLON". Eski düzenin kuralları `MarketExperience.module.css`te (kartın
+   çizim parçaları — eğri, taban künyesi, gün aralığı — oradan okunuyor;
+   burada yalnız yeni kaplar ve ölçüler). Ölçüm dosya sonunda, "ÖLÇÜM".
+   -------------------------------------------------------------------------- */
+
+/* ---- KAPAK: kahraman + üç sessiz kart ---- */
+.overview { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; min-width:0; }
+.rail { display:grid; grid-template-columns:minmax(0,1fr); gap:8px; min-width:0; }
+.heroLink, .quietLink { display:block; min-width:0; border-radius:var(--radius-panel); }
+.hero, .quiet { position:relative; height:100%; overflow:hidden; border-radius:var(--radius-panel); border-color:var(--line-soft); background:var(--premium-surface); transition:border-color .25s var(--ease-brand), background-color .25s var(--ease-brand); }
+.hero { display:flex; flex-direction:column; padding:18px 18px 16px; }
+.quiet { display:flex; flex-direction:column; justify-content:center; gap:6px; padding:12px 16px; }
+@media(hover:hover) and (pointer:fine) { .heroLink:hover :is(.hero, .quiet), .quietLink:hover .quiet { border-color:var(--primary); } }
+.heroLink:focus-visible .hero, .quietLink:focus-visible .quiet { border-color:var(--primary); }
+.heroLink:active .hero, .quietLink:active .quiet { background:var(--primary-wash); }
+
+.cardHead { display:flex; align-items:baseline; gap:8px; min-width:0; }
+.cardName { color:var(--text-strong); font-size:14px; font-weight:700; letter-spacing:-.02em; white-space:nowrap; }
+.cardProxy { display:inline-flex; align-items:center; gap:4px; color:var(--text-muted); font-size:12px; font-weight:600; }
+.cardProxy svg { color:var(--primary-ink); transition:transform 200ms var(--ease-brand); }
+@media(hover:hover) and (pointer:fine) { .heroLink:hover .cardProxy svg { transform:translate(2px,-2px); } }
+.hero .cardName { font-size:15px; }
+
+.heroReading { display:flex; flex-wrap:wrap; align-items:baseline; gap:6px 14px; margin-top:8px; }
+/* Kahramanın fiyatı sayfanın en büyük sayısı (sayfa başlığı 56'nın
+   altında kalır, öteki fiyatlar 22): "en büyük punto en anlamlı değere". */
+.heroPrice { color:var(--text-strong); font-size:clamp(40px,4.4vw,64px); font-weight:700; line-height:1; letter-spacing:-.03em; }
+.heroChange { display:inline-flex; align-items:center; gap:10px; font-size:15px; font-weight:700; letter-spacing:-.01em; white-space:nowrap; }
+.heroPill { font-size:13px; padding:3px 9px; }
+.hero .heroChart { flex:1 1 180px; min-height:170px; margin-top:16px; }
+.heroBase { font-size:12px; }
+.heroRange { grid-template-columns:auto auto minmax(0,1fr) auto; gap:10px; margin-top:14px; padding-top:12px; border-top:1px solid var(--line-soft); }
+.heroRangeLabel { color:var(--text-body); font-weight:600; }
+
+.quietBody { display:grid; grid-template-columns:minmax(0,1fr) minmax(72px,40%); align-items:center; gap:12px; min-width:0; }
+.quietReading { display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; min-width:0; }
+.quietPrice { color:var(--text-strong); font-size:22px; font-weight:700; line-height:1.1; letter-spacing:-.03em; }
+/* Eski kuralın telefondaki "eğri 32, kenar boşluğu 0" kalıbını ezmek için
+   çift sınıf (modüller arası sıra garanti değil). */
+.quietBody .quietChart { flex:none; height:44px; min-height:0; margin:0; }
+
+@media(min-width:768px) and (max-width:1199px) {
+ .rail { grid-template-columns:repeat(3,minmax(0,1fr)); }
+ .quietBody { grid-template-columns:minmax(0,1fr); gap:8px; }
+}
+@media(min-width:1200px) {
+ .overview { grid-template-columns:minmax(0,1fr) minmax(300px,30%); }
+ .rail { grid-template-rows:repeat(3,minmax(0,1fr)); }
+}
+@media(max-width:767px) {
+ /* Gün aralığı telefonda da: eski kartın kuralı onu ≤ 767'de gizliyordu;
+    kahramanın tek ölçüsü. Künye adı düşer (yer). */
+ .hero .heroRange { display:grid; grid-template-columns:auto minmax(0,1fr) auto; }
+ .hero .heroRangeLabel { display:none; }
+ .hero { padding:16px 16px 14px; }
+ .heroPrice { font-size:44px; }
+ .hero .heroChart { flex:none; height:132px; min-height:0; margin-top:12px; }
+ .quietPrice { font-size:20px; }
+}
+@media(max-width:359px) { .heroPrice { font-size:38px; } .quietPrice { font-size:18px; } }
+@media(prefers-reduced-motion:reduce) { .hero, .quiet, .cardProxy svg { transition:none; } }
+
+/* ---- SEÇİM + HAREKETLER ---- */
+.detail { display:grid; grid-template-columns:minmax(0,1fr); gap:var(--page-section-gap); min-width:0; }
+@media(min-width:1200px) {
+ .detail { grid-template-columns:minmax(320px,360px) minmax(0,1fr); align-items:start; }
+ .detail[data-solo] { grid-template-columns:minmax(320px,420px); }
+}
+
+/* Genişlik paneli: başlık + segment · ölçer · sayaçlar · medyan. */
+.breadthPanel { display:grid; grid-template-columns:minmax(0,1fr); grid-template-areas:"head" "gauge" "counts" "median"; overflow:visible; border-radius:var(--radius-panel); background:var(--premium-surface); }
+.breadthHead { grid-area:head; display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:10px 12px; padding:16px 18px 0; }
+.segment { display:inline-flex; gap:2px; padding:3px; border-radius:999px; background:var(--surface-sunken); box-shadow:var(--shadow-well); }
+.segmentItem { display:inline-flex; align-items:center; min-height:32px; padding:0 12px; border-radius:999px; color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; transition:color 180ms var(--ease-brand), background-color 180ms var(--ease-brand), scale 120ms var(--ease-brand); }
+.segmentItem[aria-current="page"] { background:var(--surface); color:var(--text-strong); box-shadow:var(--shadow-raised); }
+@media(hover:hover) and (pointer:fine) { .segmentItem:not([aria-current]):hover { color:var(--text-strong); } }
+.segmentItem:active { scale:.97; }
+.segmentItem:focus-visible { outline:2px solid var(--line-focus); outline-offset:1px; }
+
+.gaugeWrap { grid-area:gauge; display:grid; place-items:center; padding:18px 18px 4px; }
+.gauge { position:relative; width:100%; max-width:296px; margin:0; }
+.gauge svg { display:block; width:100%; height:auto; overflow:visible; }
+.gaugeTrack { stroke:var(--line-soft); }
+.gaugeRead { position:absolute; left:0; right:0; bottom:0; display:flex; flex-direction:column; align-items:center; gap:2px; }
+.gaugeRead strong { color:var(--text-strong); font-size:44px; font-weight:700; line-height:1; letter-spacing:-.03em; }
+.gaugeRead > span { color:var(--text-muted); font-size:12px; font-weight:600; }
+.gaugeSkeleton { width:220px; max-width:100%; aspect-ratio:220 / 120; border-radius:110px 110px 12px 12px; }
+.gaugeEmpty { padding:24px 0; color:var(--text-body); font-size:12px; }
+
+.gaugeCounts { grid-area:counts; display:flex; flex-wrap:wrap; justify-content:center; gap:4px 20px; padding:12px 18px 0; }
+.gaugeCounts > div { display:inline-flex; align-items:baseline; gap:6px; }
+.gaugeCounts > div::before { content:""; align-self:center; width:8px; height:8px; border-radius:50%; background:var(--line-strong); }
+.gaugeCounts > div[data-tone="up"]::before { background:var(--up); }
+.gaugeCounts > div[data-tone="down"]::before { background:var(--down); }
+.gaugeCounts dd { color:var(--text-strong); font-size:15px; font-weight:700; }
+.gaugeCounts dt { order:2; color:var(--text-body); font-size:12px; }
+
+.medianRow { grid-area:median; display:flex; flex-direction:column; gap:6px; margin:16px 18px 18px; padding:12px 14px; border-radius:12px; background:var(--surface-sunken); }
+.medianLine { display:flex; align-items:baseline; justify-content:space-between; gap:12px; color:var(--text-body); font-size:13px; font-weight:600; }
+.medianLine strong { font-size:20px; font-weight:700; letter-spacing:-.02em; }
+.medianNote { color:var(--text-muted); font-size:12px; line-height:1.5; }
+
+/* 640–1199: panel tam genişlikte; ölçer solda, sayaçlar ve medyan sağda
+   (tek kolonda 1000 piksellik bir panelin ortasında 260'lık yay kalıyordu). */
+@media(min-width:640px) and (max-width:1199px) {
+ .breadthPanel { grid-template-columns:minmax(220px,300px) minmax(0,1fr); grid-template-areas:"head head" "gauge counts" "gauge median"; align-items:end; }
+ .gaugeWrap { padding-bottom:18px; }
+ .gaugeCounts { justify-content:flex-start; align-self:end; padding-top:18px; }
+ .medianRow { max-width:520px; margin-left:0; }
+}
+@media(max-width:639px) {
+ .breadthHead { padding:14px 16px 0; }
+ .segment { width:100%; }
+ .segmentItem { flex:1 1 0; justify-content:center; min-height:44px; padding:0 6px; }
+ .gaugeCounts { padding-inline:16px; }
+ .medianRow { margin:14px 16px 16px; }
+}
+@media(prefers-reduced-motion:reduce) { .segmentItem { transition:none; } .segmentItem:active { scale:none; } }
+
+/* Hareket karoları: iki liste + ortak ölçek notu. */
+.movers { display:flex; flex-direction:column; gap:16px; min-width:0; }
+.mover { display:flex; flex-direction:column; gap:10px; min-width:0; }
+.moverHead { display:flex; flex-wrap:wrap; align-items:center; gap:4px 12px; min-height:28px; padding-inline:2px; }
+.moverHead h2 { display:flex; align-items:center; gap:8px; margin-right:auto; letter-spacing:-.02em; }
+.moverIcon { display:grid; place-items:center; flex:none; width:24px; height:24px; border-radius:7px; }
+.moverIcon[data-direction="up"] { color:var(--up); background:var(--up-wash); }
+.moverIcon[data-direction="down"] { color:var(--down); background:var(--down-wash); }
+.moverMeta { color:var(--text-muted); font-size:12px; }
+/* Ray çukur, karolar kabarık (`surface-sunken` → `premium-surface`):
+   derinlik tonla, gölgeyle değil. */
+.tiles { display:grid; grid-template-columns:repeat(5,minmax(0,1fr)); gap:6px; padding:6px; border-radius:var(--radius-panel); background:var(--surface-sunken); }
+.tiles > li { min-width:0; }
+.tile { display:flex; flex-direction:column; align-items:center; gap:4px; height:100%; padding:14px 10px 12px; border:1px solid var(--line-soft); border-radius:12px; background:var(--premium-surface); text-align:center; transition:border-color 180ms var(--ease-brand), background-color 180ms var(--ease-brand); }
+@media(hover:hover) and (pointer:fine) { a.tile:hover { border-color:var(--primary); } }
+a.tile:active { background:var(--primary-wash); }
+a.tile:focus-visible { outline:2px solid var(--line-focus); outline-offset:2px; }
+.tileLogo { width:36px !important; height:36px !important; margin-bottom:4px; border-radius:10px !important; }
+.tileSymbol { color:var(--text-strong); font-size:14px; font-weight:700; letter-spacing:.01em; }
+.tileName { display:block; max-width:100%; overflow:hidden; color:var(--text-muted); font-size:12px; line-height:1.3; white-space:nowrap; text-overflow:ellipsis; }
+.tilePct { margin-top:4px; font-size:18px; font-weight:700; line-height:1.15; letter-spacing:-.03em; white-space:nowrap; }
+.tileNote { color:var(--text-muted); font-size:12px; white-space:nowrap; }
+.tileLane { align-self:stretch; margin-top:auto; }
+.tilePct, .tileNote { margin-bottom:6px; }
+.tileNote { margin-top:-4px; }
+.moverScale { display:flex; flex-wrap:wrap; align-items:center; gap:4px 10px; padding-inline:2px; color:var(--text-muted); font-size:12px; line-height:1.5; }
+.moverScale > i { flex:none; width:26px; height:8px; border-radius:999px; background:var(--bar-soft, var(--line-strong)); }
+.moverScale > span:last-child { color:var(--text-body); font-weight:600; }
+@media(max-width:1023px) and (min-width:640px) { .tilePct { font-size:16px; } }
+/* Telefon: beş karo tek satırda (karo 62–66 piksel); ad düşer, logo 32,
+   yüzde 13 (en uzun "+%16,02" 13/700'de ~52 piksel, karo içi 56). */
+@media(max-width:639px) {
+ .moverHead { gap:2px 10px; }
+ .moverMeta { order:3; flex-basis:100%; }
+ .tiles { gap:4px; padding:4px; border-radius:14px; }
+ .tile { gap:3px; padding:10px 3px 9px; border-radius:10px; }
+ .tileLogo { width:30px !important; height:30px !important; margin-bottom:2px; border-radius:8px !important; }
+ .tileSymbol { font-size:12px; }
+ .tileName { display:none; }
+ .tilePct { margin-top:2px; font-size:13px; letter-spacing:-.04em; }
+ .tileNote { display:none; }
+ .tilePct { margin-bottom:4px; }
+}
+@media(prefers-reduced-motion:reduce) { .tile { transition:none; } }
+
+/* --------------------------------------------------------------------------
+   ÖLÇÜM — 28 Kasım 2026 (gerçek sayfa + sahte sağlayıcı, `olc.mjs`; seans
+   içi 13 Kas 18:00Z, açılış öncesi 13:00Z ve hafta sonu 14 Kas 15:00Z;
+   /piyasalar, /sp-500, /dow-jones; 1440 / 1280 / 1200 / 1024 / 768 / 390 /
+   360; iki tema). Önce = aynı sahte veriyle 55d372d.
+   - Sayfa boyu (seans içi): 1440 7.332 → 4.386 (S&P 500 7.332 → 4.386, Dow
+     5.462 → 4.424); 390 8.344 → 7.710; 360 8.668 → 8.068.
+   - Kolon dipleri (1440, son çocuk): genişlik paneli 1.075, karolar + ölçek
+     notu 1.098 → fark 23 (Dow 32; 1280 23; 1200 Dow 32). Kapak: kahraman
+     ile sessiz rayın dibi aynı piksel (568 / 568).
+   - Karolar: on yüzdenin dibi iki satırda aynı hatta (808 × 5, 1.030 × 5);
+     karosundan taşan yüzde 0 (360 dahil).
+   - Yatay taşma 0, tablo kabı kayması 0 (Dow 768 açılış öncesi önce 32 —
+     MembersTable.module.css), kırpık 0, < 12 piksel metin 0, < 44 hedef 0
+     (390 ve 360), h1 1, konsol 0. "taşan↕ 3" kapalı "Nasıl Okunur"
+     katlamalarının gövdesi (önce de 3; nabız, sektör, emtia).
+   - Hareket: 1440 animasyon 249 → 238; reducedMotion altında çalışan 0.
+     Ölçer yayı `data-motion-draw="arc"`, pay `RollingFigure`.
+   - Katlama: 60 satırın 10'u açık; anahtar 44 piksel, açınca 60'ı ve devamı
+     bandı görünür, kaydırma kayması 0; `?adet=120` adresinde katlama yok.
+   -------------------------------------------------------------------------- */

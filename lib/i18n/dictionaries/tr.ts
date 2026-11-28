@@ -1871,6 +1871,10 @@ const tr = {
     constituents: "Endeks Bileşenleri",
     constituentsMore: "{n} Şirket Daha",
     constituentsLess: "Daha Az Göster",
+    /* 28 Kasım 2026 (görsel tur 3): katlama her genişlikte; genişlik
+       panelinin medyan künyesi. */
+    constituentsAll: "Tümünü Gör",
+    medianOf: "{n} şirketin ortadaki değeri.",
     /* Telefonda sıralama şeridi (10 Kasım gece; BoardSortMenu.tsx): başlık
        satırı listede yok, sıralama tek butonda. */
     phoneSort: "Sırala",
