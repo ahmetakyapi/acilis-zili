@@ -1,3 +1,4 @@
+import { halfArcPath } from "@/lib/half-arc";
 import { ArrowDown, ArrowUp, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
 import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
@@ -251,11 +252,7 @@ function SectorGauge({
   const r = 46;
   const cx = 56;
   const cy = 54;
-  const point = (share: number) => {
-    const angle = Math.PI * (1 - share);
-    return `${(cx + r * Math.cos(angle)).toFixed(2)} ${(cy - r * Math.sin(angle)).toFixed(2)}`;
-  };
-  const arc = (from: number, to: number) => `M ${point(from)} A ${r} ${r} 0 0 1 ${point(to)}`;
+  const arc = (from: number, to: number) => halfArcPath({ cx, cy, r }, from, to);
   const upShare = up / total;
   const downShare = down / total;
   return (

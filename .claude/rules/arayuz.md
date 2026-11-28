@@ -146,6 +146,22 @@ kontrastlar sahibinin makinesindeki `~/dev-starter/knowledge/themes/acilis-zili.
   düğmeli im gibi okurun çözmesi gereken çizimler kullanılmaz; ayrıntı
   tabloya ya da haritaya gider. Piyasa değeri gibi büyüklükler doğrudan
   YAZILIR (aynı gün, Endeks Bileşenleri). Örnek `components/themes/ThemeStrip.tsx`.
+- **Yoğunluk ve tekrar** (28 Kasım, Görsel Tur 3; sahibinin sözü: "bazı
+  ekranlarda çok bilgi yoğunluğu var… mavi gradient temayı bozmayalım,
+  logolar gözüksün, görsel geçişler olsun, tekrar eden şeylerden
+  uzaklaşalım, sağ-sol dengeleri koruyalım"). Uzun liste ilk 5–10 satır +
+  yerinde açılan katlama (`FoldToggle` / `ExpandInPlace`); katlıyken başlık
+  sayacı yazılmaz, sayıyı anahtar söyler. Aynı künye kartlarda tekrarlanmaz,
+  hepsi aynıysa başlık satırına bir kez çıkar (`IndexLive`). Satır vurgu
+  zemini (dolu yeşil/kırmızı satır) yok; yön çubukta ve hapta. Aynı "satır +
+  çubuk + yüzde" kalıbı bir bölümde yinelenmez; pay yarım ay ölçerle
+  (yay `lib/half-arc.ts`, halka 6 piksel, dilim ucu düz), sıra logo
+  boyuyla, karne halkayla da okunabilir. En büyük punto sonuca gider
+  (bilanço sayfasında "4 Gün Önce" değil EPS sürprizi). Örnekler:
+  `components/today/home/MarketTexture.tsx` (`SectorGauge`),
+  `components/markets/IndexSelection.tsx`, `QuarterLedger.tsx`
+  (`KarneRing` — yalnız bu ekranda; ikinci ekran isterse ortak bileşene
+  terfi eder ve `KarneStrip` satırının yanına girer).
 - **Görselin etrafında çerçeve yok** — görsel kutunun kendisi
   (`overflow-hidden` + yarıçap). Kenarlık yalnız yer tutucularda.
 - **Tema** next-themes değil: `data-theme` + `az-theme` çerezi.

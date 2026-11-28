@@ -156,7 +156,7 @@ dosyayı işe başlamadan OKUR. Kural değişince orada güncellenir.
 | Alan | Dosya | Özü |
 |---|---|---|
 | Title Case | `.claude/rules/yazim.md` | Cümle olmayan her metin Title Case; `title()`/`capitalize` yok, `toLocaleLowerCase("tr-TR")` |
-| Arayüz | `.claude/rules/arayuz.md` | Ekran sırası (başlık → künye → görsel → ölçü → metin → künye → `DataStamp`), ölçmeden değiştirme, görsel dil (tonla derinlik, renk anlam taşır, ince grafik, `--ease-brand`, `VerdictPill`), `:::` blokları, mürekkep sahneleri ve zil |
+| Arayüz | `.claude/rules/arayuz.md` | Ekran sırası (başlık → künye → görsel → ölçü → metin → künye → `DataStamp`), ölçmeden değiştirme, görsel dil (tonla derinlik, renk anlam taşır, ince grafik, `--ease-brand`, `VerdictPill`), yoğunluk ve tekrar (uzun liste katlanır, künye bir kez, satır vurgu zemini yok, sağ-sol denge), `:::` blokları, mürekkep sahneleri ve zil |
 | Veri ve önbellek | `.claude/rules/veri-ve-onbellek.md` | Uydurma kesinlik yok, yüzde seansını kanıtlar, yazma katmanı bayat veri kullanmaz; saat TR önce (`lib/session-clock.ts`, ET↔UTC yalnız `lib/market-hours.ts`); `"use client"` sınırı, `cache()`/`unstable_cache`, keyParts sürümü |
 | İçerik | `.claude/rules/icerik-ve-rutinler.md` | Rutinler claude.ai'de; yazma yolu TEK `lib/content-write.ts`; uca alan = prompt da değişir; panel düzeltir, üretmez |
 | Site içi Claude | `.claude/rules/site-ici-claude.md` | Tek kapı `callClaude` + ortak bütçe; çıktıdaki sayı girdide geçmeli; tavsiye denetimi; dördüncü SDK yolu açma |

@@ -1,3 +1,4 @@
+import { halfArcPath } from "@/lib/half-arc";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Panel, Skeleton } from "@/components/ui/primitives";
 import { RollingFigure } from "@/components/ui/RollingFigure";
@@ -38,16 +39,7 @@ const ARC = { cx: 110, cy: 110, r: 92, stroke: 4.5 } as const;
 /** Dilimler arası boşluk, yayın kesri olarak (≈ 3 piksel). */
 const ARC_GAP = 0.012;
 
-function arcPoint(share: number) {
-  const angle = Math.PI * (1 - share);
-  return { x: ARC.cx + ARC.r * Math.cos(angle), y: ARC.cy - ARC.r * Math.sin(angle) };
-}
-
-function arcPath(from: number, to: number) {
-  const a = arcPoint(from);
-  const b = arcPoint(to);
-  return `M ${a.x.toFixed(2)} ${a.y.toFixed(2)} A ${ARC.r} ${ARC.r} 0 0 1 ${b.x.toFixed(2)} ${b.y.toFixed(2)}`;
-}
+const arcPath = (from: number, to: number) => halfArcPath(ARC, from, to);
 
 export type Breadth = { advancing: number; flat: number; declining: number };
 
