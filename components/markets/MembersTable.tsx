@@ -301,8 +301,12 @@ export function MembersTable({
           bilanço panelinde ve /mercek arşivinde de var. */}
       <PanelHeader
         title={t.markets.constituents}
+        /* KATLIYKEN SAYAÇ YOK (28 Kasım): tablo ilk on satırla açılırken
+           başlık "102 şirketin 60 tanesi" diyordu — ekranda 10 satır vardı.
+           Katlıyken sayıyı katlama anahtarı ("50 Şirket Daha") söylüyor,
+           açılınca dipteki devamı bandı ("102 şirketin 60 tanesi"). */
         meta={
-          hasMore
+          hasMore && folded === 0
             ? t.companies.showing
                 .replace("{n}", String(sorted.length))
                 .replace("{total}", String(ordered.length))

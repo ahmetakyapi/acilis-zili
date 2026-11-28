@@ -133,8 +133,6 @@ export const calendarVisualsTr = {
     lastRevenue: "Gelir",
     lastVsEstimate: "Beklentiye Göre",
     lastReaction: "Rapor Sonrası Tepki",
-    lastLead:
-      "{name} ({symbol}) son bilançosunu {date} günü açıkladı. Hisse başına kâr {actual}, beklenti {estimate} idi.",
     lastLeadPlain: "{name} ({symbol}) son bilançosunu {date} günü açıkladı.",
     lastNext: "Sıradaki Bilanço",
     lastNextEstimated: "Tahmini",
@@ -266,8 +264,6 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     lastRevenue: "Revenue",
     lastVsEstimate: "vs Estimate",
     lastReaction: "Post-Report Reaction",
-    lastLead:
-      "{name} ({symbol}) reported its latest earnings on {date}. Earnings per share came in at {actual} against an estimate of {estimate}.",
     lastLeadPlain: "{name} ({symbol}) reported its latest earnings on {date}.",
     lastNext: "Next Earnings",
     lastNextEstimated: "Estimated",

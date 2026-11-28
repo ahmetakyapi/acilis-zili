@@ -31,7 +31,10 @@ import styles from "./MarketsOverview.module.css";
    KENDİ adresine gider (14 Kasım; eski `?endeks=` 308). */
 
 /** Yay geometrisi — viewBox 220 × 120, merkez tabanın ortası. */
-const ARC = { cx: 110, cy: 110, r: 92, stroke: 16 } as const;
+/* Halka 6 piksel (arayuz.md → Ortak ölçüler; 28 Kasım incelemesi): viewBox
+   220 en çok 296 piksele çiziliyor, 4,5 birim ≈ 6 piksel. 16 birimde ~21
+   piksellik kalın yay öteki halkalardan ayrı bir dil konuşuyordu. */
+const ARC = { cx: 110, cy: 110, r: 92, stroke: 4.5 } as const;
 /** Dilimler arası boşluk, yayın kesri olarak (≈ 3 piksel). */
 const ARC_GAP = 0.012;
 
@@ -79,7 +82,9 @@ export function BreadthPanel({
         { key: "up", value: breadth.advancing, stroke: "var(--up)" },
         { key: "flat", value: breadth.flat, stroke: "var(--line-strong)" },
         { key: "down", value: breadth.declining, stroke: "var(--down)" },
-      ] as const).filter((part) => part.value > 0)
+      /* Boşluktan kısa dilim çizilmez (ters yönde küçük bir yay
+         basıyordu); sayısı aşağıdaki sayaçlarda yine yazılı. */
+      ] as const).filter((part) => part.value / total > ARC_GAP * 2)
     : [];
   let cursor = 0;
   const arcs = parts.map((part, index) => {
@@ -110,7 +115,7 @@ export function BreadthPanel({
             bir bölmeydi; artık panelin başlığında tek ray. Basış evin tek
             lehçesinde (0,97), dokunma hedefi telefonda 44. Üye sayısı
             seçili endeksin kartında ve tablonun künyesinde yazılı. */}
-        <nav className={styles.segment} aria-label={t.markets.breadth}>
+        <nav className={styles.segment} aria-label={t.markets.indexSelect}>
           {INDEX_TABS.map((entry) => (
             <Link
               key={entry.key}
@@ -144,7 +149,9 @@ export function BreadthPanel({
                   d={arc.d}
                   fill="none"
                   strokeWidth={ARC.stroke}
-                  strokeLinecap="round"
+                  /* Düz uç (28 Kasım): yuvarlak uç dilim sonunu yarım kalınlık
+                     aşıp komşuyu örtüyor, aradaki boşluk hiç görünmüyordu. */
+                  strokeLinecap="butt"
                   /* Yay görünüme girince uçtan uca çizilir (MotionExperience
                      `arc`, SentimentPulse ile aynı yol); JS yoksa tam çizili. */
                   pathLength={1}

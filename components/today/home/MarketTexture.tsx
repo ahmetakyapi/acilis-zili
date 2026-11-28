@@ -9,7 +9,6 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import { SECTOR_ETFS, loadBoardQuotes } from "@/lib/market-boards";
 import { quoteBasis } from "@/lib/market-hours";
 import { loadThemeBoard, type ThemeCard } from "@/lib/theme-board";
-import type { ThemePhase } from "@/lib/theme-stats";
 import { cn, directionOf, directionText, formatPercent, NO_VALUE } from "@/lib/utils";
 import styles from "./MarketTexture.module.css";
 import { RankBars, type RankRow } from "./RankBars";
@@ -376,10 +375,6 @@ export function SectorRibbonSkeleton({ locale, t }: { locale: Locale; t: Diction
    notunda. Sunucu en çok sekiz hücre basar. */
 const EXTREME_MEMBERS = 8;
 
-/** Pencereye göre sıralama künyesi — `ThemeRanking`in başlığıydı (lib/theme-stats.ts → themePhase). */
-const rankTitleOf = (phase: ThemePhase | null, t: Dictionary) =>
-  phase === "pre-market" ? t.themes.rankTitlePre : phase === "lastClose" ? t.themes.rankTitleClose : t.themes.rankTitle;
-
 /**
  * Temaların sırası — medyana göre, `/temalar`ın AYNI hesabından. Çubuk
  * yalnızca aynı seansı anlatan medyanlara basılıyor; ortak kümenin DIŞINDA
@@ -449,7 +444,9 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
 
   return (
     <ThemeFrame
-      meta={`${rankTitleOf(board.phase, t)} · ${t.themes.rankMeta}`}
+      /* Sıralama ana sayfadan kalktı (28 Kasım); künye yalnız iki uç kartı
+         anlatır. Seans (gün / son kapanış) kartların kendi başlığında. */
+      meta={t.today.themeExtremesMeta}
       breadth={
         counted.length > 0 ? (
           <Breadth
@@ -692,7 +689,7 @@ function ExtremeCard({
 export function ThemeSpotlightSkeleton({ t }: { locale: Locale; t: Dictionary }) {
   return (
     <ThemeFrame
-      meta={`${t.themes.rankTitle} · ${t.themes.rankMeta}`}
+      meta={t.today.themeExtremesMeta}
       extremes={
         <>
           <Skeleton className={styles.extremeSkeleton} />

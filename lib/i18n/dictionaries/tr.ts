@@ -401,6 +401,7 @@ const tr = {
     indexWeek: "5 Seans",
     /* Teknik panelin rayda kümeyi tek satırda tutan "+N" karosunun künyesi (TechnicalPanel). */
     technicalMore: "Tümü",
+    themeExtremesMeta: "En Güçlü ve En Zayıf Tema · Üye Medyanı",
     experienceFlowNote: "Veriler, bilançolar ve seansın dönüm noktaları.",
     /* Gün akışında okla başka güne geçilince başlık (21 Ekim): "Bugünün
        Akışı" dünü gösterirken yanlış söylüyordu; tarih kapsülde yazılı. */
@@ -1876,6 +1877,7 @@ const tr = {
     /* 28 Kasım 2026 (görsel tur 3): katlama her genişlikte; genişlik
        panelinin medyan künyesi. */
     constituentsAll: "Tümünü Gör",
+    indexSelect: "Endeks Seç",
     medianOf: "{n} şirketin ortadaki değeri.",
     /* Telefonda sıralama şeridi (10 Kasım gece; BoardSortMenu.tsx): başlık
        satırı listede yok, sıralama tek butonda. */
@@ -3409,7 +3411,6 @@ const tr = {
     sumPeers: "Aynı alt sektörde {n} endeks şirketi daha var.",
     sumGuides: "İlgili Rehber",
     sumFactIndex: "Endeks Üyeliği",
-    sumFactSector: "Sektör",
     sumFactSub: "Alt Sektör",
     sumFactNext: "Sonraki Bilanço",
     sumFactPeers: "Aynı Alt Sektörde",

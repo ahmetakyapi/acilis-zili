@@ -12,7 +12,9 @@ import { PanelHead } from "./PanelHead";
 import visuals from "./ReportVisuals.module.css";
 
 /** Bu uzunluğun altındaki bölüm gövdesi katlanmaz: dört satıra zaten sığar. */
-const FOLD_MIN_CHARS = 360;
+/* 520 (28 Kasım, inceleme): 1440'ta bölüm sütunu satırda ~120 harf; 4 satırlık
+   kesik ~480 harfe kadar metnin tamamını gösteriyor, 360'ta anahtar boşa çıkıyordu. */
+const FOLD_MIN_CHARS = 520;
 
 /** Okuma bölümü — özet ve detaylı değerlendirme; sayfa dosyasından taşındı. */
 export function ReportReading({
@@ -81,7 +83,20 @@ export function ReportReading({
                   ~800 piksel. Telefonda ilk satırları görünür, gerisi aynı
                   anahtarla açılır; 640 ve üstünde hiç katlanmaz (geniş
                   ekranda destek girişin yanında, sayfayı uzatmıyor). */}
-              {row.summary.length > 1 && (
+              {/* KISA DESTEK KATLANMAZ (28 Kasım, inceleme): maske ve
+                  anahtar her destekte açılıyordu; iki satırlık paragrafın son
+                  satırı soluyor, "Devamını Oku" hiçbir şey açmıyordu. Eşik
+                  bölümlerdekiyle aynı ölçü (`FOLD_MIN_CHARS`). */}
+              {row.summary.length > 1 && row.summary.slice(1).join(" ").length <= FOLD_MIN_CHARS && (
+                <div className={styles.summaryRest}>
+                  {row.summary.slice(1).map((paragraph, index) => (
+                    <p key={index} className="[text-wrap:pretty]">
+                      <RichText text={paragraph} linker={linker} />
+                    </p>
+                  ))}
+                </div>
+              )}
+              {row.summary.length > 1 && row.summary.slice(1).join(" ").length > FOLD_MIN_CHARS && (
                 <div className={visuals.restFold}>
                   <input type="checkbox" id="report-summary-more" className={cn("sr-only", visuals.sectionFoldInput)} />
                   <div className={cn(styles.summaryRest, visuals.restFoldBody)}>

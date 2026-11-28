@@ -234,6 +234,11 @@
 .indexDeck { min-width:0; padding-left:24px; border-left:1px solid var(--line); }
 .indexHeading { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:5px 15px; margin-bottom:10px; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
 .indexHeading h2 { color:var(--text-strong); font-size:var(--text-read); font-weight:700; }
+/* AKIŞ ZIPLAMASI YOK (28 Kasım, inceleme): başlık `IndexLive`ın flex/gap
+   kabına girince payı gap (10) veriyor; kendi alt boşluğu da kalınca
+   iskelete göre kartlar 10 piksel aşağı sıçrıyordu. İskelette başlık kardeş,
+   payı margin; ikisi aynı ölçü. */
+.indexLive > .indexHeading { margin-bottom:0; }
 /* Ortak seans künyesi ("Kapanış Sonrası") başlığın satırında, fon
    künyesinin ardında, bir kez — gerekçe IndexLive → "KÜNYE BİR KEZ". */
 .indexGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
@@ -843,6 +848,7 @@
   .heroMain { gap:16px; padding-top:14px; }
   .indexDeck { padding:12px 0 0; }
   .indexHeading { margin-bottom:8px; }
+  .indexLive { row-gap:8px; }
   .indexQuote { gap:2px 5px; margin-top:6px; }
   .indexQuote > p:nth-child(2) { font-size:var(--text-tiny); }
   .indexCard { min-height:106px; padding:10px; }

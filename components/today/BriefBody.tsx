@@ -392,7 +392,13 @@ export function BriefBody({
      katlanmaz (aynı kural). Ölçüm BriefCard'daki çağrının yanında. */
   const fullCut = briefPreviewCut(lines, openLines);
   const wideCut = widePreview ? briefPhoneCut(lines, fullCut, widePreview, 2) : fullCut;
-  const cut = lines.length - wideCut <= 1 ? fullCut : wideCut;
+  /* Kısa kuyruk kendi katlamasını hak etmez (28 Kasım, inceleme): masaüstü
+     kesmesindeki 240 harf kuralı geniş önizlemeye de uygulanır; yalnız
+     "tek satır" denetimi iki kısa maddeyi "Tümünü Gör" arkasına saklıyordu. */
+  const tailChars = lines
+    .slice(wideCut)
+    .reduce((sum, line) => sum + line.replace(/^\s*(?:##\s+|-\s+)/, "").replace(/\*\*/g, "").trim().length, 0);
+  const cut = lines.length - wideCut <= 1 || tailChars < 240 ? fullCut : wideCut;
   /* TELEFONDA İKİNCİ KESME (28 Eylül). Masaüstü önizlemesi en az 900
      karakter; telefonun dar sütununda kart 390'da 1.058, 360'ta 1.080
      piksel ölçüldü ve sayfanın en uzun bloğuydu. Telefon kesmesi giriş +
