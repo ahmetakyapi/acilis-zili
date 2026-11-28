@@ -1034,7 +1034,11 @@ type WatchlistWithItems = {
   items: { id: string; symbol: string; note: string | null }[];
 };
 
-export async function getUserWatchlists(
+/* İSTEK İÇİ BELLEK (28 Kasım, performans denetimi): giriş yapmış okurun ana
+   sayfasında `WatchlistSummary` ve `EarningsToday` aynı istekte ayrı ayrı
+   `getUserSymbols` çağırıyor, iki Neon sorgusu atılıyordu. Anahtar `userId`
+   (ilkel dize). Yazan server action'lar aynı istekte yeniden okumuyor. */
+export const getUserWatchlists = cache(async function getUserWatchlists(
   userId: string,
 ): Promise<WatchlistWithItems[]> {
   try {
@@ -1077,7 +1081,7 @@ export async function getUserWatchlists(
     yutuldu("getUserWatchlists", error);
     return [];
   }
-}
+});
 
 export async function getUserSymbols(userId: string): Promise<string[]> {
   const lists = await getUserWatchlists(userId);

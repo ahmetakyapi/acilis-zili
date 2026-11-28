@@ -86,13 +86,15 @@ export const generateMetadata = pageMetadata({
 const getPageTimestamp = cache(() => Date.now());
 
 export default async function TodayPage() {
-  const { locale, t } = await getI18n();
-  const status = await getStatus();
+  /* Üç bağımsız okuma tek turda (28 Kasım, performans denetimi): sırayla
+     beklenince soğuk başlangıçta tatil tablosu ve oturum parmak izi için
+     iki Neon gidiş-dönüşü üst üste biniyordu. */
+  const [{ locale, t }, status, session] = await Promise.all([getI18n(), getStatus(), auth()]);
   /* Favoriler panelinin YERİ oturuma bağlı (10 Kasım gecesi): giriş yapmış
      okuyucuda bugünün parçasında, misafirde davet satırı olarak en dipte.
      Oturum JWT çerezinden okunuyor (auth.ts → strategy "jwt"), veritabanı
      beklenmiyor; panelin kendi `auth()` çağrısıyla aynı sonuç. */
-  const signedIn = Boolean((await auth())?.user?.id);
+  const signedIn = Boolean(session?.user?.id);
 
   const sessionLabel: Record<string, string> = {
     regular: t.market.open,

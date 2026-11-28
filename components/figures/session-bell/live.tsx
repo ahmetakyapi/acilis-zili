@@ -368,7 +368,8 @@ export function SessionBellLive({
   React.useEffect(() => {
     if (!inView) return;
     const timer = window.setInterval(() => {
-      if (mode.current.kind !== "live") return;
+      // Gizli sekmede ibre beklemez (tarayıcı kısar ama durdurmaz; 28 Kasım).
+      if (document.hidden || mode.current.kind !== "live") return;
       const before = shown.current;
       shown.current = liveMinutes();
       const hit = still || !day.tradingToday ? undefined : strikesBetween(before, shown.current, day).at(-1);

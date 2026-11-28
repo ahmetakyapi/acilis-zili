@@ -88,8 +88,8 @@ export default async function EarningsPage(props: PageProps<"/bilancolar">) {
     redirect(range === "ay" ? "/bilancolar/takip?aralik=ay" : "/bilancolar/takip");
   }
 
-  const { locale, t } = await getI18n();
-  const session = await auth();
+  // İki bağımsız okuma tek turda (28 Kasım, performans denetimi).
+  const [{ locale, t }, session] = await Promise.all([getI18n(), auth()]);
   const today = todayEt();
   /* UFKUN HAFTASI ADRESTEN (8 Kasım, sahibinin isteği: "hafta hafta
      gezebilelim"). `?hafta=` Haftalık sekmeyle aynı parametre ve aynı
