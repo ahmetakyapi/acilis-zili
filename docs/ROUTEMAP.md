@@ -27,7 +27,7 @@ GitHub Actions → "Migrate DB" iş akışı, `check` modu (salt okunur).
 |---|---|
 | Sayfa rotası | 90 `page.tsx` (13'ü `/admin`; açık sayfalar `/en` önekiyle ikinci bir adreste daha) |
 | API ucu | 61 `route.ts` `app/api` altında (+ `app/` içinde paylaşım görselleri, RSS ve `llms.txt`) |
-| Veritabanı tablosu | 61 · 49 migration (0000–0047 üretimde uygulandı, 0045–0046: 14 Kasım, 0047 `portfolio_split_marks`: 24 Kasım; 0048 `page_views` dizini bekliyor) |
+| Veritabanı tablosu | 61 · 49 migration (0000–0048 üretimde uygulandı, 0045–0046: 14 Kasım, 0047 `portfolio_split_marks`: 24 Kasım, 0048 `page_views` dizini: 28 Kasım) |
 | Sağlayıcı | Alpaca · Finnhub · FRED · TCMB · TCMB EVDS (isteğe bağlı) · SEC EDGAR (13F, Form 4) · OpenFIGI · House Clerk · Federal Reserve · Kalshi · Cboe · ABD Hazinesi · ARK / Global X ETF dosyaları · GİB (`lib/providers/`) |
 | Ortam değişkeni | 38 (`.env.example`) |
 | Zamanlanmış iş | 9 uç `app/api/cron/*`: günlük senkron, alarmlar, bilanço hatırlatması, haberler + çeviri, pazar özeti postası, Telegram, olasılıklar, risk, Günün Grafiği yedeği. Saatleri tek yerde: `deploy/cron-install.sh` |
