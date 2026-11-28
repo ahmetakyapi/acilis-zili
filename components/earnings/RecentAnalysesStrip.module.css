@@ -55,7 +55,7 @@
   gap: 4px;
   margin-block: -8px;
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight: 600;
   white-space: nowrap;
   color: var(--primary);
   transition: color .2s var(--ease-brand);
@@ -98,12 +98,12 @@
 .item { width: 260px; }
 .identity { display: flex; align-items: center; gap: 10px; min-width: 0; }
 .names { display: grid; min-width: 0; line-height: 1.2; }
-.symbol { font-size: var(--text-base); font-weight: 750; color: var(--text-strong); white-space: nowrap; }
+.symbol { font-size: var(--text-base); font-weight: 700; color: var(--text-strong); white-space: nowrap; }
 .company { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; font-size: var(--text-tiny); color: var(--text-muted); }
 .period { align-self: flex-start; margin-left: auto; padding-left: 4px; font-size: var(--text-tiny); color: var(--text-muted); white-space: nowrap; }
 .foot { display: flex; align-items: center; gap: 12px; min-width: 0; padding-top: 10px; border-top: 1px solid var(--line-soft); }
 .reaction { display: grid; flex: 1; gap: 5px; min-width: 0; }
-.reactionHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: var(--text-nano); font-weight: 650; color: var(--text-muted); white-space: nowrap; }
+.reactionHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: var(--text-nano); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
 .reactionHead b { font-size: var(--text-tiny); font-weight: 800; }
 .noReaction { flex: 1; text-align: right; font-size: var(--text-nano); color: var(--text-muted); }
 

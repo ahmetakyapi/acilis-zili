@@ -31,7 +31,7 @@
 .miniCard dl { font-size:12px; line-height:1.6; }
 .day details > summary { min-height:44px; font-size:13px; }
 @media(hover:hover) and (pointer:fine) { .miniCard:hover,.heroCard:hover { border-color:var(--primary-faint); } }
-@media(max-width:639px) { .dateHeader h2 { font-size:23px; } .dateHeader > div { gap:8px; } .miniGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .miniCard { padding:13px; gap:12px; } .miniCard :global(.text-lead) { font-size:19px; } .heroCard { padding:18px; } .miniIdentity > :last-child { font-size:12px; } }
+@media(max-width:639px) { .dateHeader h2 { font-size:25px; } .dateHeader > div { gap:8px; } .miniGrid { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; } .miniCard { padding:13px; gap:12px; } .miniCard :global(.text-lead) { font-size:19px; } .heroCard { padding:18px; } .miniIdentity > :last-child { font-size:12px; } }
 @media(prefers-reduced-motion:reduce) { .miniCard,.heroCard { transition:none; } }
 /* OY SATIRI (24 Ekim) — kartın dibinde hairline ile ayrılmış tam genişlik
    satır. Hero kartında `flex-basis:100%` onu geniş ekranda kimlik ve ölçü
@@ -53,7 +53,9 @@
    çıktı (aşağıdaki `clamp`); degrade yerinde kaldı (sahibinin 24 Eylül
    kararı), kayma da yeni puntoyla sürüyor. */
 .dateHeader h2 ~ span { translate:0 calc(clamp(25px,2.8vw,36px) * -.12); }
-@media(max-width:639px) { .dateHeader h2 ~ span { translate:0 calc(23px * -.12); } }
+@media(max-width:639px) { .dateHeader h2 ~ span { translate:0 calc(25px * -.12); } }
+/* Telefonda 23 → 25 (28 Kasım, Tur 4): ortak bölüm başlığı ölçüsünün tabanı
+   25 (arayuz.md "Ortak ölçüler"); öteki rotalarda 390da 25 ölçülmüştü. */
 
 /* GÖRÜŞ ŞERİDİ — analizi yayımlanmış bilançonun kartında, tepede 3 piksel
    (sitenin kart dili; `RecentAnalysesStrip.module.css` → `.chip::before`
@@ -208,3 +210,8 @@
    SAYIMLAR (liste, 390 ve 360, iki tema): yatay taşma 0, < 12 piksel metin
    0, < 44 piksel dokunma hedefi 0 (`elementFromPoint` yoklaması), kırpılan
    metin 0; `reducedMotion: reduce` altında çalışan animasyon 0. */
+
+/* ŞERİDİN ANLAMI (28 Kasım, Tur 4; tasarım denetimi #9): kart dibindeki
+   5 piksellik şerit neyi ölçtüğünü söylemiyordu. İlk kartlı günün ızgarasının
+   altında tek satır künye; öteki günlerde tekrarlanmaz. */
+.capLegend { margin-top:10px; font-size:12px; line-height:1.5; color:var(--text-muted); }

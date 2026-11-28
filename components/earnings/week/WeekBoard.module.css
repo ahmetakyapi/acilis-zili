@@ -91,7 +91,7 @@
   white-space: nowrap;
   color: var(--text-strong);
   font-size: var(--text-small);
-  font-weight: 650;
+  font-weight: 600;
   letter-spacing: -0.01em;
 }
 
@@ -433,7 +433,7 @@
   border-radius: 0.7rem;
   color: var(--text-body);
   font-size: var(--text-tiny);
-  font-weight: 650;
+  font-weight: 600;
   list-style: none;
   cursor: pointer;
   transition:
@@ -814,12 +814,12 @@
   align-self: end;
   color: var(--text-body);
   font-size: var(--text-small);
-  font-weight: 650;
+  font-weight: 600;
 }
 
 .pulseDay[data-peak] .pulseCount {
   color: var(--primary-ink);
-  font-weight: 750;
+  font-weight: 700;
 }
 
 /* İNCE SÜTUN (31 Ekim, görsel denetim): sütunlar günün tüm genişliğini

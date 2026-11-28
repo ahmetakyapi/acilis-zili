@@ -8,7 +8,6 @@ import type { Metadata } from "next";
 import { analysisTitle } from "@/lib/seo-titles";
 import { ogImageUrl } from "@/lib/og-image";
 import { LogoTile } from "@/components/ui/primitives";
-import { quarterGaps } from "@/components/earnings/quarter-gaps";
 import type { RailMark } from "@/components/ui/PriceRail";
 import type { FooterStat } from "@/components/earnings/ChartFooter";
 import { articleAutoLinker } from "@/lib/autolink-data";
@@ -59,7 +58,6 @@ import {
   verdictOf,
 } from "@/lib/analysis";
 import { VerdictPill } from "@/components/ui/VerdictPill";
-import { reportLede } from "@/lib/analysis-visuals";
 import {
   industryFilterFor,
   sectorGroupLabel,
@@ -493,20 +491,15 @@ export default async function AnalysisDetailPage(
             : []),
         ];
 
-  /* TEPEDE VERİDEN TEK CÜMLE (25 Ekim görsel zirve). Şablon + kaydın üç
-     yapısal alanı (yıllık gelir, HBK sürprizi, ilk tepki); yazılmamış alan
-     cümleye girmez, hiçbiri yoksa cümle yok (`reportLede`, testli). Cümle
-     ARAYÜZ dilinde: sayılar dilden bağımsız alanlardan geliyor. */
-  const lede = reportLede(
-    {
-      revenueYoyPct: row.revenueYoyPct,
-      epsSurprisePct: row.epsSurprisePct,
-      reactionPct: row.reactionPct,
-    },
-    t.analysisVisuals.lede,
-    (value) => formatPercentPlain(value, locale, 1),
-    locale,
-  );
+  /* TEPEDEKİ VERİ CÜMLESİ KALKTI (28 Kasım, Tur 4; tasarım denetimi #2).
+     25 Ekim'de kapağa "Gelir yıllık %103,4 büyüdü, hisse başı kâr
+     beklentiyi %44,1 aştı; hisse ilk tepkide %1,0 yükseldi" cümlesi girmişti
+     (`reportLede`). Aynı üç sayı kapakta hemen altında birer kez duruyor
+     (iki öncü ölçünün künyesi ve Bilanço Günü Kapanışı hapı), Bilanço
+     Özeti'nin ilk maddesinde, görüş paragrafında ve Rakamlar'da yeniden:
+     canlı Dell 3Ç'de gelir rakamı altı yerde geçiyordu. Cümle tekrarın
+     yalnız ilk halkasıydı; ilk ekrandaki sayı ~25'ten düştü. `reportLede`
+     ve testi `lib/analysis-visuals.ts`te kalıyor (başka ekran isterse). */
 
   /* Yapışkan çubukta dönem kısa yazılıyor: "3Ç FY2026" → "3Ç FY26". */
   const shortPeriod = row.periodLabel.replace(/FY20(\d{2})/, "FY$1");
@@ -524,12 +517,11 @@ export default async function AnalysisDetailPage(
      ikinci kez basmaz (canlı Dell 3Ç FY2027: "▲ %1,0" iki yerde). */
   const repeatsReaction = (label: string) => row.reactionPct !== null && /tepki|reaction/i.test(label);
   const detailMetrics = (row.highlights ?? []).slice(2).filter((metric) => !repeatsReaction(metric.label));
-  const coverRevenue = (row.quarterlyRevenue ?? [])
-    .filter((bar) => !bar.projected && Number.isFinite(bar.value) && bar.value >= 0)
-    .slice(-5);
-  const coverRevenueMax = Math.max(0, ...coverRevenue.map((bar) => bar.value));
-  /* Kapaktaki mini grafikte eksik çeyrek — gerekçe `quarter-gaps.ts`. */
-  const coverGaps = quarterGaps(coverRevenue.map((bar) => bar.label));
+  /* KAPAKTAKİ MİNİ ÇEYREK GRAFİĞİ KALKTI (28 Kasım, Tur 4; denetim #2):
+     aynı beş çeyrek (27,01 → 54,94) "Rakamlar"daki Çeyreklik Gelir
+     panelinde aynı değerlerle, öngörü sütunu ve büyüme hapıyla çiziliyor.
+     Kapakta ikinci kopya ilk ekranın en kalabalık bloğuydu; büyük grafik
+     tek kaldı, kapağın iki öncü ölçüsü kutunun tamamını kullanıyor. */
 
   /* ---- Grafik künyeleri ----
      Karnede grafiklerin altında üçer mini ölçü duruyor ve kartı tamamlayan
@@ -720,17 +712,11 @@ export default async function AnalysisDetailPage(
         sinceReportPct={sinceReportPct}
         sinceReportText={sinceReportText}
         coverMetrics={coverMetrics}
-        coverRevenue={coverRevenue}
-        coverRevenueMax={coverRevenueMax}
-        coverGaps={coverGaps}
-        revenueScale={revenueScale}
-        revenueUnit={revenueUnit}
         verdict={verdict}
         upside={upside}
         targetText={targetText}
         closeText={closeText}
         ladderMarks={ladderMarks}
-        lede={lede}
         marketCap={marketCap}
         marketCapNote={marketCapNote}
         peRatio={peRatio}

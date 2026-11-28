@@ -1,5 +1,4 @@
-import { Fragment, type CSSProperties } from "react";
-import { ArrowDownRight, ArrowRight, CalendarBlank, Star } from "@phosphor-icons/react/dist/ssr";
+import { ArrowRight, CalendarBlank, Star } from "@phosphor-icons/react/dist/ssr";
 import { MorphTarget } from "@/components/motion/Morph";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { AddToCalendar } from "@/components/earnings/AddToCalendar";
@@ -31,7 +30,6 @@ import { FactRail } from "./FactRail";
 import { VerdictStrip } from "./VerdictStrip";
 import { PLATE_LABEL, type Upside } from "./shared";
 import { ExpectationLine } from "./ExpectationLine";
-import visuals from "./ReportVisuals.module.css";
 import { expectationReading } from "@/lib/analysis-visuals";
 
 /**
@@ -65,7 +63,6 @@ function coverLabel(label: string, locale: string): { main: string; sub: string 
 const LONG_NAME_CHARS = 24;
 
 type Highlight = NonNullable<EarningsAnalysisRow["highlights"]>[number];
-type RevenueBar = NonNullable<EarningsAnalysisRow["quarterlyRevenue"]>[number];
 
 /**
  * Kapak — kimlik, "şu an", çeyreğin iki öncü sonucu, görüş şeridi, fiyat
@@ -95,17 +92,11 @@ export function ReportCover({
   sinceReportPct,
   sinceReportText,
   coverMetrics,
-  coverRevenue,
-  coverRevenueMax,
-  coverGaps,
-  revenueScale,
-  revenueUnit,
   verdict,
   upside,
   targetText,
   closeText,
   ladderMarks,
-  lede,
   marketCap,
   marketCapNote,
   peRatio,
@@ -131,18 +122,11 @@ export function ReportCover({
   sinceReportPct: number | null;
   sinceReportText: string | null;
   coverMetrics: Highlight[];
-  coverRevenue: RevenueBar[];
-  coverRevenueMax: number;
-  coverGaps: boolean[];
-  revenueScale: number;
-  revenueUnit: string;
   verdict: VerdictKey;
   upside: Upside | null;
   targetText: string | null;
   closeText: string | null;
   ladderMarks: RailMark[];
-  /** Tepedeki veri cümlesi — sayfada `reportLede` ile kurulur; yoksa `null`. */
-  lede: string | null;
   marketCap: number | null;
   marketCapNote: string;
   peRatio: number | null;
@@ -428,22 +412,16 @@ export function ReportCover({
           )}
         </div>
 
-        {/* TEPEDE VERİDEN TEK CÜMLE (25 Ekim görsel zirve) — çeyreğin üç
-            sayısı tek okumada: gelir, beklentiye göre kâr, ilk tepki.
-            Kayıttaki rutin manşeti (`headline`) görüş şeridinde duruyor;
-            bu cümle yorum değil, sayıların özeti. */}
-        {lede && <p className={visuals.lede}>{lede}</p>}
+        {/* Tepedeki veri cümlesi ve mini çeyrek grafiği 28 Kasım'da (Tur 4)
+            kalktı; gerekçe sayfa dosyasında ("TEPEDEKİ VERİ CÜMLESİ",
+            "KAPAKTAKİ MİNİ ÇEYREK GRAFİĞİ"). */}
 
         {/* İlk kapakta dönem büyük bir manşetti; kullanıcı geri bildirimiyle
             görsel ağırlık çeyreğin sonuçlarına geçti. Etiketler ve notlar
             doğrudan analiz kaydından gelir; şirkete özgü ölçü tanımları
             (ürün geliri, düzeltilmiş kâr vb.) genelleştirilmez. */}
-        {(coverMetrics.length > 0 || coverRevenueMax > 0) && (
-          <div
-            className={styles.coverResults}
-            data-has-trend={coverRevenueMax > 0}
-            data-has-metrics={coverMetrics.length > 0}
-          >
+        {coverMetrics.length > 0 && (
+          <div className={styles.coverResults} data-has-trend={false} data-has-metrics>
             {coverMetrics.length > 0 && (
               /* BEKLENTİ ÇİZGİSİ dördüncü satır (25 Ekim): künyede açık bir
                  beklenti sayısı varsa değer ile beklenti ortak eksende
@@ -485,50 +463,6 @@ export function ReportCover({
                   </div>
                 ))}
               </dl>
-            )}
-            {coverRevenueMax > 0 && (
-              <figure className={styles.coverTrend}>
-                <figcaption>
-                  {/* `tap-44`: bağlantı 17 piksel yüksekliğindeydi (390'da
-                      ölçüldü) — sayfadaki en küçük dokunma hedefi. */}
-                  <a href="#report-figures" className={`${styles.coverTrendLink} tap-44`}>
-                    {t.analysis.quarterlyRevenue}
-                    <ArrowDownRight size={14} aria-hidden />
-                  </a>
-                  <span>{t.analysis.legendActual} · {revenueUnit}</span>
-                </figcaption>
-                {/* EKSİK ÇEYREK BOŞLUKLA GÖSTERİLİYOR. SPCX'in serisi 2Ç25,
-                    1Ç26, 2Ç26 ve üçü eşit aralıkla diziliyordu: ardışık
-                    çeyrekler gibi. Arada iki çeyrek yok; etiketlerden
-                    çözülen sıra bir adımdan büyükse araya kesikli bir
-                    kırılma çiziliyor (`quarterGaps`, RevenueColumns ile
-                    ortak). Etiket çözülemezse eski düzen. */}
-                <div data-motion-stagger className={styles.coverTrendPlot}>
-                  {coverRevenue.map((bar, index) => (
-                    <Fragment key={`${bar.label}-${index}`}>
-                      {coverGaps[index] && (
-                        <div className={styles.coverTrendGap}>
-                          <span className="sr-only">{t.analysis.missingQuarter}</span>
-                        </div>
-                      )}
-                      <div className={styles.coverTrendColumn} style={{ "--i": index } as CSSProperties}>
-                        <div className={styles.coverTrendTrack}>
-                          <div
-                            className={styles.coverTrendBar}
-                            data-latest={index === coverRevenue.length - 1}
-                            style={{ height: `${(bar.value / coverRevenueMax) * 100}%` }}
-                          >
-                            <span className="figure">
-                              {formatPrice(bar.value / revenueScale, locale, { digits: 2 })}
-                            </span>
-                          </div>
-                        </div>
-                        <span className={styles.coverTrendPeriod}>{bar.label}</span>
-                      </div>
-                    </Fragment>
-                  ))}
-                </div>
-              </figure>
             )}
           </div>
         )}

@@ -45,7 +45,7 @@
   font-size: clamp(2rem, 4.7vw, 4.5rem);
   line-height: 1.05;
   letter-spacing: -0.065em;
-  font-weight: 650;
+  font-weight: 600;
   text-wrap: balance;
   overflow-wrap: anywhere;
 }
@@ -154,13 +154,13 @@
 .coverLeadFacts dt {
   font-size: 0.8rem;
   color: var(--text-muted);
-  font-weight: 550;
+  font-weight: 600;
 }
 
 .coverLeadFacts dd:not(.coverMetricNote) {
   margin-top: 0;
   font-size: clamp(30px, 3.4vw, 49px);
-  font-weight: 550;
+  font-weight: 600;
   letter-spacing: -0.065em;
   line-height: 1.12;
   /* MAVİ DEĞİL (18 Ekim). İlk ölçü `--primary-ink` basılıyordu, ikincisi
@@ -186,82 +186,128 @@
   margin-top: 0;
   text-wrap: pretty;
   font-size: 0.75rem;
-  font-weight: 550;
+  font-weight: 600;
   line-height: 1.55;
 }
 
-.coverTrend {
-  min-width: 0;
+/* Kapaktaki mini çeyrek grafiği ve kuralları (eksik çeyrek boşluğu, `--bar`
+   çubuğu, ince sütun) 28 Kasım 2026'da kalktı (Tur 4: aynı seri Rakamlar
+   panelinde ikinci kez çiziliyordu; büyük grafik `RevenueColumns`). */
+
+.coverFacts { order: 3; }
+
+  /* Görüş şeridinin alt çizgisi ölçü katmanını zaten ayırıyor; ölçünün
+     kendi üst çizgisi 22 piksel altında ikinci bir çizgi çiziyordu. */
+  .cover .coverFacts {
+    border-top: 0;
+    padding-top: 0;
+  }
 }
 
-.coverTrend figcaption {
-  display: flex;
-  flex-wrap: wrap;
-  justify-content: space-between;
-  gap: 0.25rem 0.75rem;
-  font-size: 0.75rem;
-  color: var(--text-body);
-  font-weight: 550;
-}
-
-.coverTrend figcaption > span:last-child {
-  color: var(--text-muted);
-  font-size: 0.75rem;
-  font-weight: 450;
-}
-
-.coverTrendLink {
-  display: inline-flex;
+/* Sonuç kutusu çukur zeminde. Degrade (`--primary-tint` → saydam) bir
+   ışımaydı; kutuyu sayfadan ayıran şey ton ve saç teli. */
+.coverResults {
+  display: grid;
+  grid-template-columns: minmax(0, 1.5fr) minmax(0, 1fr);
   align-items: center;
-  gap: 0.4rem;
-  border-radius: 0.2rem;
-  transition: color 180ms var(--ease-brand);
+  gap: clamp(1.5rem, 3vw, 3rem);
+  padding: 24px;
+  border: 1px solid var(--line-soft);
+  border-radius: 18px;
+  background: var(--surface-sunken);
 }
 
-.coverTrendLink:hover {
-  color: var(--primary-ink);
+.coverResults[data-has-trend="false"],
+.coverResults[data-has-metrics="false"] {
+  grid-template-columns: minmax(0, 1fr);
 }
 
-.coverTrendLink:focus-visible {
-  outline: 2px solid var(--primary);
-  outline-offset: 4px;
-}
-
-.coverTrendPlot {
-  /* KAPAK GRAFİĞİ BÜYÜDÜ (6 Kasım, sahibinin sözü: "alanı güzel
-     kullanalım, minnacık kalmasınlar"). 1440'ta kapak hücresi ~560 piksel
-     ve solundaki iki ölçü ~200 piksel boydayken grafik 90 piksellik bir
-     şeritti, beş sütun 18 piksel: hücrenin üstü boş, sütunlar kıl gibi.
-     Kulvar 150 piksel, sütun hücrenin %44'ü (en çok 34), arkasında tam boy
-     soluk kulvar — rakamlar bölümündeki `RevenueColumns` ile aynı dil. */
-  --trend-track: 150px;
-  display: flex;
-  gap: clamp(0.6rem, 1.1vw, 1.1rem);
-  margin-top: 1.75rem;
-}
-
-.coverTrendColumn {
-  flex: 1;
+/* YAN YANA İKİ ÖLÇÜ AYNI SATIRDA BAŞLAR VE BİTER.
+   Her ölçü kendi içinde üç satırdı (etiket, sayı, künye) ve satırlar
+   birbirinden BAĞIMSIZDI: "Gelir (3. Çeyrek)" tek satıra sığarken "Hisse
+   Başı Kâr (Düzeltilmiş)" ikiye sarıyor ve yanındaki sayı 18 piksel aşağı
+   kayıyordu (ölçüldü, 390 ve 768). İki dev rakam farklı yükseklikte durunca
+   kapak, hizalanmamış iki ayrı karta bölünüyordu.
+   `subgrid` üç satırı ANA IZGARADAN alıyor: etiketler bir satırı, sayılar
+   ötekini, künyeler üçüncüyü paylaşıyor. Etiket kaç satıra sararsa sarsın
+   sayı hep aynı hatta. Satır arası eski `margin-top` yerine `row-gap`. */
+.coverLeadFacts {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-rows: auto auto auto;
+  column-gap: 24px;
+  row-gap: 0.65rem;
   min-width: 0;
-  text-align: center;
 }
 
-.coverTrendTrack {
+.coverLeadFacts > div {
   position: relative;
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
-  height: var(--trend-track);
-  border-bottom: 1px solid var(--line-strong);
+  display: grid;
+  grid-template-rows: subgrid;
+  grid-row: span 3;
+  min-width: 0;
+  justify-items: start;
+}
+
+/* Beklenti çizgisi dördüncü satır (25 Ekim) — gerekçe ReportCover. */
+.coverLeadFacts[data-rows="4"] { grid-template-rows: auto auto auto auto; }
+.coverLeadFacts[data-rows="4"] > div { grid-row: span 4; }
+.coverLeadFacts > div > dd.coverExpectation { margin: 0; width: 100%; font-size: 1rem; letter-spacing: normal; line-height: 1.3; }
+
+/* İki ölçü arasındaki saç teli ARALIĞIN ORTASINDA, ikinci ölçünün
+   dolgusunda değil: dolgu ikinci sayıyı ızgara çizgisinden 24 piksel
+   içeri itiyor ve altındaki rayla 6 piksellik bir yakın ıska
+   bırakıyordu (503 / 509, 1440). */
+.coverLeadFacts > div + div::before {
+  position: absolute;
+  inset-block: 0;
+  left: -12px;
+  width: 1px;
+  content: "";
+  background: var(--line);
+}
+
+.coverLeadFacts dt {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  font-weight: 600;
+}
+
+.coverLeadFacts dd:not(.coverMetricNote) {
+  margin-top: 0;
+  font-size: clamp(30px, 3.4vw, 49px);
+  font-weight: 600;
+  letter-spacing: -0.065em;
+  line-height: 1.12;
+  /* MAVİ DEĞİL (18 Ekim). İlk ölçü `--primary-ink` basılıyordu, ikincisi
+     düz mürekkep: aynı satırda iki eşdeğer sonuç, biri etkileşim renginde
+     (CLAUDE.md "Renk anlam taşır": veri panelinde mavi sayı hatadır).
+     Yanındaki ölçüyle aynı mürekkep; yön rengi altındaki künyede. */
+  color: var(--text-strong);
+  overflow-wrap: anywhere;
+}
+
+/* Etiketin ayrıntısı (parantez, GAAP) kendi satırında, küçük (gerekçe
+   ReportCover → `coverLabel`). */
+.coverLabelSub {
+  display: block;
+  margin-top: 1px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-muted);
+  opacity: 0.9;
+}
+
+.coverMetricNote {
+  margin-top: 0;
+  text-wrap: pretty;
+  font-size: 0.75rem;
+  font-weight: 600;
+  line-height: 1.55;
 }
 
 /* EKSİK ÇEYREK: 12 piksellik bir boşluk sütunu ve ortasında kesikli bir
    kırılma — gerekçe components/earnings/quarter-gaps.ts. */
-.coverTrendGap {
-  flex: 0 0 12px;
-  height: var(--trend-track);
-  background: repeating-linear-gradient(to bottom, var(--line-strong) 0 4px, transparent 4px 8px) center / 1px 100% no-repeat;
-}
 
 /* ÇUBUK `--bar` İLE, DEGRADEYLE DEĞİL. Eski çubuklar `--primary-faint` →
    `--primary-tint` degradesiydi ve çevresine karşı 1,09-1,32:1'e
@@ -274,63 +320,6 @@
    (18 px, tepe 4 px); taban düz, sıfır çizgisine oturuyor. Ölçüldü: beş
    çubuk 320/390/1280'de 18'er piksel; değer etiketleri arası en dar 12
    piksel (320), etiket çubuktan geniş ama komşusuna binmiyor. */
-.coverTrendTrack::before {
-  position: absolute;
-  inset: 0 auto 0 50%;
-  width: 44%;
-  max-width: 34px;
-  border-radius: 6px 6px 0 0;
-  background: var(--line-soft);
-  opacity: .4;
-  translate: -50% 0;
-  content: "";
-}
-
-.coverTrendBar {
-  position: relative;
-  width: 44%;
-  min-width: 12px;
-  max-width: 34px;
-  border-radius: 6px 6px 0 0;
-  background: var(--bar);
-  transform-origin: center bottom;
-}
-
-.coverTrendBar[data-latest="true"] {
-  background: var(--primary);
-}
-
-.coverTrendBar > span {
-  position: absolute;
-  bottom: calc(100% + 0.3rem);
-  left: 50%;
-  transform: translateX(-50%);
-  font-size: 0.8125rem;
-  font-weight: 600;
-  line-height: 1;
-  color: var(--text-body);
-  white-space: nowrap;
-}
-
-.coverTrendBar[data-latest="true"] > span {
-  font-weight: 650;
-  color: var(--primary-ink);
-}
-
-.coverTrendPeriod {
-  display: block;
-  margin-top: 0.45rem;
-  /* 0.58rem (9,3px) idi — sütun altındaki çeyrek etiketi metindir, künye
-     değil; ölçeğin metin tabanına çekildi. */
-  font-size: var(--text-tiny);
-  line-height: 1.35;
-  color: var(--text-muted);
-}
-
-.coverTrendColumn:last-child .coverTrendPeriod {
-  color: var(--primary-ink);
-  font-weight: 600;
-}
 
 .coverFacts {
   gap: 1.5rem;
@@ -403,7 +392,7 @@
   line-height: 1.75;
   letter-spacing: -0.025em;
   color: var(--text-strong);
-  font-weight: 550;
+  font-weight: 600;
   text-wrap: pretty;
 }
 
@@ -517,7 +506,7 @@
 .metricValue {
   color: var(--text-strong);
   font-size: clamp(1.8rem, 3vw, 2.75rem);
-  font-weight: 550;
+  font-weight: 600;
   letter-spacing: -0.065em;
   line-height: 1.1;
   align-self: start;
@@ -763,7 +752,7 @@
   max-width: 60ch;
   color: var(--text-strong);
   font-size: clamp(1.15rem, 2.2vw, 1.75rem);
-  font-weight: 450;
+  font-weight: 400;
   font-style: normal;
   letter-spacing: -0.04em;
   line-height: 1.48;
@@ -881,7 +870,7 @@
   left: 0;
   font-size: 16px;
   line-height: 1;
-  font-weight: 550;
+  font-weight: 600;
   letter-spacing: -0.025em;
 }
 
@@ -1011,8 +1000,6 @@
   }
 
   .coverResults > .coverLeadFacts { grid-column: 1 / 9; }
-  .coverResults > .coverTrend { grid-column: 9 / 13; }
-  .coverResults[data-has-metrics="false"] > .coverTrend,
   .coverResults[data-has-trend="false"] > .coverLeadFacts { grid-column: 1 / -1; }
 
   .verdictPanel {
@@ -1138,20 +1125,6 @@
   }
   .coverMetricNote [data-note-sep] { display: none; }
   .coverMetricNote [data-note-part] { display: block; }
-
-  .coverTrend {
-    padding-top: 18px;
-    border-top: 1px solid var(--line-soft);
-  }
-
-  .coverResults[data-has-metrics="false"] .coverTrend {
-    padding-top: 0;
-    border-top: 0;
-  }
-
-  .coverTrendPlot {
-    --trend-track: 62px;
-  }
 
   .coverFacts {
     gap: 16px;
@@ -1335,7 +1308,6 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
-  .coverTrendLink,
   .readoutLine,
   .axisNote > summary svg {
     transition: none;
@@ -1357,8 +1329,6 @@
 @media (max-width: 1023px) { .summaryRest, .summaryRest[class] { column-count:1; } }
 
 /* Çeyreklik gelir sütunlarının değeri okunur puntoda (11 → 13). */
-.coverTrendBar > span { font-size:0.8rem; font-weight:600; }
-.coverTrendBar[data-latest="true"] > span { font-size:0.875rem; }
 
 /* 27 Eylül: görüş, kapanış merdiveni ve oranlar tek değerlendirme yüzeyi.
    Önceki ayrı bantlar ve 12 kolonlu yerleşim kayıt olarak yukarıda durur.
@@ -1466,14 +1436,13 @@
      yukarı taşan bir payla bitiyor, etiket sütun oturunca görünüyor. */
 .coverLeadFacts > div { animation: cover-fact 700ms var(--ease-brand) 140ms backwards; }
 .coverLeadFacts > div + div { animation-delay: 240ms; }
-.coverTrendBar { animation: cover-bar 900ms var(--ease-brand) backwards; animation-delay: calc(260ms + var(--i, 0) * 70ms); }
 @keyframes cover-fact { from { transform: translate3d(0, 14px, 0); } }
 @keyframes cover-bar {
   from { clip-path: inset(100% -2em 0 -2em); }
   to { clip-path: inset(-2em -2em 0 -2em); }
 }
 @media (prefers-reduced-motion: reduce) {
-  .coverLeadFacts > div, .coverTrendBar { animation: none; }
+  .coverLeadFacts > div { animation: none; }
 }
 
 /* GELİR SÜTUNUNUN KULVARI (6 Kasım — gerekçe `RevenueColumns`). Sütun
@@ -1494,4 +1463,19 @@
   translate: -50% 0;
   content: "";
   pointer-events: none;
+}
+
+/* YARIM SATIR KALMAZ (28 Kasım, Tur 4; tasarım denetimi #10). Beş ölçü üç
+   sütunda 3 + 2 ve sağda boş hücre, telefonda üç ölçü iki sütunda 2 + 1 ve
+   boş hücre bırakıyordu; boş hücre eksik yükleme gibi okunuyor. Beş kart
+   altı birimlik ızgarada 3 + 2 (üstte ikişer, altta üçer birim; iki satır
+   da tam dolu); telefonda tek kalan son kart iki sütunu kaplar (KPI
+   ızgarasının Tur 3 kuralı, `ReportExtras.module.css`). */
+@media (min-width: 768px) {
+  .metricGrid[data-count="5"] { grid-template-columns: repeat(6, minmax(0, 1fr)); }
+  .metricGrid[data-count="5"] .metricItem { grid-column: span 2; }
+  .metricGrid[data-count="5"] .metricItem:nth-child(n + 4) { grid-column: span 3; }
+}
+@media (max-width: 767px) {
+  .metricGrid .metricItem:last-child:nth-child(odd) { grid-column: 1 / -1; }
 }

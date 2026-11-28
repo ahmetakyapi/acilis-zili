@@ -133,6 +133,13 @@ export const calendarVisualsTr = {
     lastLeadPlain: "{name} ({symbol}) son bilançosunu {date} günü açıkladı.",
     lastNext: "Sıradaki Bilanço",
     lastNextEstimated: "Tahmini",
+    /* Tur 4 (28 Kasım): beklentinin kaynağı ve takvimde olmayan tahmini
+       tarih (gerekçe `lib/earnings-consensus.ts`, sayfa yorumu). */
+    estimateSourceAnalysis: "Beklenti: Analiz Anındaki Konsensüs",
+    estimateSourceProvider: "Beklenti: Finnhub Konsensüsü",
+    ledgerNoteAnalysis: "Analizi yayımlanan çeyrekte beklenti, analizin yazıldığı gündeki konsensüs; öteki çeyrekler Finnhub.",
+    answerEstimated: "Şirket henüz tarih duyurmadı; son analizdeki tahmin {when}.",
+    nextUnannounced: "Şirket Henüz Duyurmadı",
     noneLeaf: "Tarih Yok",
     noneLast: "Son Rapor",
     signInCta: "Giriş Yap",
@@ -142,6 +149,8 @@ export const calendarVisualsTr = {
     largest: "En Büyükleri",
     open: "Tümünü Aç",
     close: "Kapat",
+    /* Tur 4 (28 Kasım): kart dibindeki şeridin anlamı, sayfada bir kez. */
+    capLegend: "Kartın dibindeki çubuk piyasa değeri; günün en büyük şirketine göre.",
   },
   dividends: {
     highlights: "Öne Çıkanlar",
@@ -261,6 +270,11 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     lastLeadPlain: "{name} ({symbol}) reported its latest earnings on {date}.",
     lastNext: "Next Earnings",
     lastNextEstimated: "Estimated",
+    estimateSourceAnalysis: "Estimate: Consensus at Analysis",
+    estimateSourceProvider: "Estimate: Finnhub Consensus",
+    ledgerNoteAnalysis: "For quarters with a published analysis the estimate is the consensus on the day it was written; other quarters use Finnhub.",
+    answerEstimated: "The company hasn't announced a date yet; the latest analysis estimates {when}.",
+    nextUnannounced: "Not Yet Announced",
     noneLeaf: "No Date",
     noneLast: "Last Report",
     signInCta: "Sign In",
@@ -270,6 +284,7 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     largest: "Largest",
     open: "Show All",
     close: "Close",
+    capLegend: "The bar at the foot of each card is market cap, relative to the day's largest company.",
   },
   dividends: {
     highlights: "Highlights",

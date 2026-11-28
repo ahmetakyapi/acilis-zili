@@ -109,7 +109,7 @@
   /* Renk burada YOK: görüş üçlüsü sınıfla gelir (`verdictTextClass`);
      katmansız modül kuralı Tailwind sınıfını ezerdi. */
   font-size: var(--text-read);
-  font-weight: 750;
+  font-weight: 700;
   letter-spacing: -0.02em;
 }
 

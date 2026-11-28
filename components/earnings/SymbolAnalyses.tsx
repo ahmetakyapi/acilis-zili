@@ -134,10 +134,17 @@ export function SymbolAnalyses({
                     <span className={cn("numeral", styles.date)}>
                       {formatEtDateLong(row.reportDate, locale)}
                     </span>
+                    {/* ETİKETLİ (28 Kasım, Tur 4; denetim #9): telefonda yalnız
+                        "▲%4,8" duruyordu ve gelir büyümesi mi sürpriz mi
+                        olduğu tahmine kalıyordu; masaüstünde sütun başlığı
+                        söylüyor, burada mikro etiket. */}
                     {row.reactionPct !== null && (
-                      <b className={cn("numeral", styles.reactionInline, row.reactionPct >= 0 ? "text-up" : "text-down")}>
-                        {row.reactionPct >= 0 ? "▲" : "▼"} {formatPercentPlain(row.reactionPct, locale, 1)}
-                      </b>
+                      <span className={styles.reactionInline}>
+                        <span className={styles.reactionInlineLabel}>{L.reaction}</span>
+                        <b className={cn("numeral", row.reactionPct >= 0 ? "text-up" : "text-down")}>
+                          {row.reactionPct >= 0 ? "▲" : "▼"} {formatPercentPlain(row.reactionPct, locale, 1)}
+                        </b>
+                      </span>
                     )}
                   </span>
                   {/* Manşet iki satıra kadar açılıyor. Tek satıra kırpılmıştı

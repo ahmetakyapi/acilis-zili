@@ -295,7 +295,7 @@ export function CycleLine({
           kopya `ce-draw` silindi. Nokta modülde kaldı: ortak
           `.spark-dot` `.experience` içinde koşulsuz kapalı
           (PremiumMotion.module.css; ölçüldü, `animation-name: none`). */}
-      <span className={css.cycleLane}>
+      <span className={css.cycleLane} data-draw>
         <span
           className={cn(css.cycleFill, "bar-fill")}
           style={{ width: `${cycle * 100}%`, transformOrigin: "left center" }}
@@ -359,10 +359,21 @@ export function ExpectCell({
     return (
       <span className={css.expectRow} data-strong={strong || undefined}>
         <span className={css.expectRowLabel}>{label}</span>
+        {/* TEK RENK DİLİ (28 Kasım, Tur 4; denetim #8): "signal" EPS şeridi
+            her pozitif değerde yeşil, yanındaki gelir şeridi mavi
+            basılıyordu; Dell'de ikisi de beklentiyi aşmışken "gelir iyi
+            değil mi?" diye okunuyordu. Çubuk büyüklüktür, yargı değil
+            (arayuz.md): renk yalnız İŞARET bilgi taşıdığında gelir (zarardan
+            kâra ya da zarar); iki değer de pozitifse iki hücre aynı nötr
+            tonda, yargı "Beklentiye Göre" künyesinde ve sonuç hapında.
+            `data-draw`: telefonda hücre ilk ekranın altında kalıyor ve çizim
+            görünmeden bitiyordu (390, Tur 3 ölçümü: 4 şerit ekran dışında
+            `finished`). */}
         <span aria-hidden className={css.expectLane} data-signed={signed || undefined}>
           <span
             className={cn(css.expectFill, "bar-fill")}
-            data-tone={tone === "signal" ? (negative ? "down" : "up") : "neutral"}
+            data-draw
+            data-tone={tone === "signal" && (signed || negative) ? (negative ? "down" : "up") : "neutral"}
             style={
               signed
                 ? {

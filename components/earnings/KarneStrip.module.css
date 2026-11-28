@@ -18,8 +18,10 @@
 
 /* ŞERİT BÜTÜN OLARAK AÇILIR: kırpma soldan sağa, bir kez (yalnız
    `clip-path`, kompozitör). Bekleyen şerit (veri yolda) oynamaz; veri
-   gelince öğe yeniden kurulur ve o an çizilir. Lejant örneği oynamaz. */
+   gelince öğe yeniden kurulur ve o an çizilir. Lejant örneği oynamaz.
+   28 Kasım (Tur 4): süre 520 ms → `--draw` (merdiven dışıydı) ve şerit
+   `data-draw` taşır; /bilancolar 390da ekranın altında oynayıp bitiyordu. */
 @media (prefers-reduced-motion: no-preference) {
-  .strip:not([data-pending], [data-size="key"]) { animation: karne-open 520ms var(--ease-brand) both; animation-delay: var(--karne-delay, 0ms); }
+  .strip:not([data-pending], [data-size="key"]) { animation: karne-open var(--draw, 700ms) var(--ease-brand) both; animation-delay: var(--karne-delay, 0ms); }
 }
 @keyframes karne-open { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }

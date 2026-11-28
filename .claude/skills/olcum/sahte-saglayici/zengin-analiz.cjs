@@ -10,7 +10,7 @@ module.exports = function zengin(last, NOW_ISO, s) {
     report_date: last, timing: "bmo", next_period_label: "4Ç 2026", next_report_estimate: "~Şubat 2027",
     score: s(72), verdict: "buy", headline: "Home Depot üçüncü çeyrekte 44,6 milyar dolar gelirle beklentiyi %1,4 aştı; düzeltilmiş hisse başına kâr 4,02 dolarla beklentinin %1,8 üzerinde kaldı ve yıl sonu hedefi korundu.",
     price: s(386.2), reaction_pct: s(2.4), market_cap: s(384e9), return_1y_pct: s(-4.2), target_price: s(428.5), upside_pct: s(10.9), analyst_count: s(31),
-    revenue: s(44.6e9), revenue_yoy_pct: s(6.1), eps: s(4.02), eps_surprise_pct: s(1.8), eps_ttm: s(15.1), growth_pct: s(6.5), growth_basis: "ileriye dönük 3 yıl",
+    revenue: s(44.6e9), revenue_yoy_pct: s(6.1), eps: s(4.02), eps_surprise_pct: s(4.6), eps_ttm: s(15.1), growth_pct: s(6.5), growth_basis: "ileriye dönük 3 yıl",
     summary: JSON.stringify([
       "Home Depot üçüncü çeyrekte 44,6 milyar dolar gelir açıkladı. Yıllık artış %6,1, piyasa beklentisinin %1,4 üzerinde. Düzeltilmiş hisse başı kâr 4,02 dolar ile beklentiyi %1,8 aştı. Yıl sonu hedefi korundu; büyümenin motoru profesyonel müşteri satışları.",
       P(3), P(3),

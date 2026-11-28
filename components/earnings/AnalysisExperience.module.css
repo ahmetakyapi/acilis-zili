@@ -5,7 +5,7 @@
 .overviewHeading a { color: var(--primary-ink); font-weight: 600; padding-block: 4px; }
 .distribution { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 20px; }
 .distribution > div { display: grid; gap: 5px; font-size: 12px; font-weight: 600; }
-.distribution b { color: var(--text-strong); font-size: 26px; line-height: 1; letter-spacing: -.05em; font-weight: 550; }
+.distribution b { color: var(--text-strong); font-size: 26px; line-height: 1; letter-spacing: -.05em; font-weight: 600; }
 .distributionTrack { height: var(--lane-h, 5px); overflow: hidden; border-radius: 999px; background: var(--rail-track); }
 /* Kapak görseli KARDEŞLERİ GİBİ kendini çiziyor (14 Ekim): takvim
    sekmesinin yoğunluk çubukları ve hafta nabzı yüklemede kademeyle
@@ -106,7 +106,7 @@
    (dizin sayfasının `.page a:focus-visible` kuralını geçmesi için iki sınıf). */
 .feature .featureLink:focus-visible { outline: none; }
 .featureMetaLine { margin-top: 6px; overflow-wrap: anywhere; font-size: 12px; line-height: 1.5; color: var(--text-muted); }
-.featurePeriod { font-size: 13px; font-weight: 550; color: var(--primary-ink); white-space: nowrap; }
+.featurePeriod { font-size: 13px; font-weight: 600; color: var(--primary-ink); white-space: nowrap; }
 .featureSector { color: var(--text-muted); }
 
 .featureVerdict { grid-area: verdict; display: flex; align-items: center; gap: 12px; min-width: 0; }
@@ -129,7 +129,7 @@
 .featureFigures > div { display: grid; grid-template-rows: subgrid; grid-row: span 2; gap: 8px; min-width: 0; }
 .featureFigures > div + div { padding-left: 18px; border-left: 1px solid var(--line-soft); }
 .featureFigures dt { font-size: 12px; line-height: 1.5; color: var(--text-muted); }
-.featureFigures dd { font-size: clamp(24px, 2vw, 30px); font-weight: 550; line-height: 1.1; letter-spacing: -.04em; overflow-wrap: anywhere; }
+.featureFigures dd { font-size: clamp(24px, 2vw, 30px); font-weight: 600; line-height: 1.1; letter-spacing: -.04em; overflow-wrap: anywhere; }
 
 @media (hover: hover) {
   .feature:hover { border-color: var(--primary-faint); }
@@ -234,7 +234,7 @@
   letter-spacing: .02em;
   color: var(--primary-ink);
 }
-.dateTile b { flex: 1; display: grid; place-items: center; font-size: 15px; font-weight: 750; letter-spacing: -.02em; color: var(--text-strong); }
+.dateTile b { flex: 1; display: grid; place-items: center; font-size: 15px; font-weight: 700; letter-spacing: -.02em; color: var(--text-strong); }
 .dateTile::after {
   position: absolute;
   left: 0;
