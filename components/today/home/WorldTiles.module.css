@@ -1,0 +1,100 @@
+/* DÜNYA PİYASALARI — BAYRAKLI KAROLAR (28 Kasım, Görsel Tur 4; gerekçe
+   WorldStrip.tsx → WorldStripView, "DÖRDÜNCÜ TUR").
+
+   Izgara iki sütun: ilk karo (Türkiye) iki sütunu kaplar ve tek satırdır
+   [bayrak | ad / künye | değer]; ötekiler 2 × 2 ve üç kattır
+   [bayrak · ad / künye / değer]. Künye karonun tam eninde (bayrağın
+   altından başlar): 390'da Çin'in "MCHI Şanghay, Hong Kong"u ad
+   kolonunda üç satıra kırılıyordu, tam enle iki. Değer karonun en büyük
+   puntosu (22/700).
+   Zemin: nötr çökük ton + yönün wash'ı, doygunluk `--heat` (0,3–1);
+   `--heat` 0 olan karo (son kapanış, yatay) yalnız nötr tonda.
+   Kontrast (ölçüldü, sahte veri, karo zemini pikseli): açıkta en düşük
+   4,52:1 (en doygun yeşil karo), kırmızı 5,18; koyuda 6,08–8,74. Değer
+   22/700 büyük metin (eşik 3:1), künye ve ad nötr mürekkepte.
+
+   ÖLÇÜM (28 Kasım; gerçek sayfa + sahte sağlayıcı, MOCK_NOW seans içi,
+   reducedMotion, iki tema aynı; .tmp-ana.mjs + olc.mjs):
+     panel boyu        1440: 453 → 479 (Çin künyesi iki satır) · 390: 479
+     1024 çifti        liste ile dipnot arası ölü pay 84 → 0 (karolar uzar;
+                       panel Hareketler'le aynı 518)
+     1440 kolon dipleri sol 5514 / sağ 5536 → 22 (≤ 40)
+     yatay taşma 0, kutusundan taşan / kırpılan karo öğesi 0
+     (1440/1024/768/390/360, TR ve EN). */
+.panel { min-width: 0; }
+.grid {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  padding: 2px 16px 16px;
+}
+@media (min-width: 640px) { .grid { padding-inline: 20px; } }
+.grid > li { display: flex; min-width: 0; }
+.grid > li[data-lead] { grid-column: 1 / -1; }
+
+.tile {
+  --tone-wash: transparent;
+  position: relative;
+  display: grid;
+  flex: 1;
+  grid-template-columns: 28px minmax(0, 1fr);
+  grid-template-rows: auto auto 1fr;
+  grid-template-areas: "flag name" "meta meta" "value value";
+  align-items: center;
+  gap: 4px 10px;
+  min-width: 0;
+  padding: 10px 12px 12px;
+  border-radius: var(--radius-sm);
+  background:
+    linear-gradient(color-mix(in srgb, var(--tone-wash) calc(var(--heat, 0) * 100%), transparent) 0 0),
+    var(--surface-sunken);
+  transition: box-shadow 180ms var(--ease-brand);
+}
+.tile[data-tone="up"] { --tone-wash: var(--up-wash); }
+.tile[data-tone="down"] { --tone-wash: var(--down-wash); }
+/* Lider karo tek satır: değer sağda, adla aynı hatta. */
+.grid > li[data-lead] .tile {
+  grid-template-columns: 28px minmax(0, 1fr) auto;
+  grid-template-rows: auto auto;
+  grid-template-areas: "flag name value" "flag meta value";
+  row-gap: 0;
+  padding-block: 10px;
+}
+.grid > li[data-lead] .value { justify-items: end; text-align: right; }
+
+.flag {
+  grid-area: flag;
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 7px;
+  background: var(--surface);
+  font-size: 17px;
+  line-height: 1;
+}
+.name { grid-area: name; min-width: 0; color: var(--text-strong); font-size: var(--text-read); font-weight: 600; letter-spacing: -0.01em; line-height: 1.25; overflow-wrap: anywhere; }
+.meta { grid-area: meta; min-width: 0; display: flex; flex-wrap: wrap; gap: 0 6px; color: var(--text-muted); font-size: var(--text-tiny); line-height: 1.4; }
+.symbol { font-family: var(--font-mono); font-weight: 600; letter-spacing: 0.01em; }
+.value { grid-area: value; align-self: end; display: grid; gap: 2px; min-width: 0; margin-top: 6px; }
+.grid > li[data-lead] .value { align-self: center; margin-top: 0; }
+.pct { font-size: 22px; font-weight: 700; letter-spacing: -0.03em; line-height: 1.05; white-space: nowrap; }
+.pct[data-quiet] { color: var(--text-muted); }
+.note { color: var(--text-muted); font-size: var(--text-tiny); font-weight: 600; line-height: 1.3; }
+
+/* Geri bildirim tonla ve kenarla (hareket.md: hover'da kaldırma yok). */
+@media (hover: hover) and (pointer: fine) {
+  .tile:hover { box-shadow: inset 0 0 0 1px var(--line-strong); }
+}
+.tile:focus-visible { outline: 2px solid var(--line-focus); outline-offset: 2px; }
+.tile:active { scale: 0.992; }
+@media (prefers-reduced-motion: reduce) { .tile { transition: none; } .tile:active { scale: none; } }
+
+/* TABLET ÇİFTİ (768–1279): panel Hareketler'in boyuna gerili (PanelPair
+   `.fill` sütun flex'i). Izgara aradaki payı alır, karolar satırları eşit
+   paylaşır (lider karo içeriği kadar); karonun içinde ad üstte, değer
+   dipte (`align-content: space-between`). Pay panel araları değil karonun
+   kendisi. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .grid { flex: 1; grid-template-rows: auto; grid-auto-rows: 1fr; }
+}

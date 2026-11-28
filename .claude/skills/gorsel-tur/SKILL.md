@@ -138,4 +138,13 @@ gelirse ortak bileşene sen terfi ettirirsin (birleştirmeden sonra).
   sonra inceleme ATLANMAZ.
 - 28 Kasım: katlanan tabloda başlık sayacı ("102 şirketin 60 tanesi")
   ekrandaki 10 satırla çelişti; katlıyken sayacı anahtar söyler.
+- 28 Kasım (Tur 4): yayından sonra canlıda iki denetim (dev-starter
+  `design-reviewer` + `gorsel-denetci`) Tur 3'ün kendi kuralını çiğnediği
+  yerleri buldu (16 kartta aynı künye, aynı çeyreğe iki farklı EPS
+  sürprizi, üç birincil buton). Ekran ajanı kendi ekranını ölçer; ekranlar
+  arası ve veri tutarlılığı ancak canlıya bakan ayrı denetimle çıkıyor.
+- 28 Kasım: modül CSS'inde betikle yorum değiştirirken kesim yanlış yerden
+  yapıldı, dosyanın bir parçası ikilendi; `npm run check` CSS'i ayrıştırmadığı
+  için geçti, `npm run build` düştü. CSS'e dokunan her düzenlemeden sonra
+  `build` koş (CLAUDE.md'deki sıra), `check` yetmez.
 

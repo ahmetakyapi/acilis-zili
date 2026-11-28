@@ -1,5 +1,5 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { HomeLane, LaneAxis } from "@/components/today/home/HomeLane";
+import type { CSSProperties } from "react";
 import { DataError, DataStamp, Panel, PanelHeader } from "@/components/ui/primitives";
 import { getStatus } from "@/lib/data";
 import { quoteBasis } from "@/lib/market-hours";
@@ -7,8 +7,8 @@ import { getQuotes } from "@/lib/providers";
 import { WORLD_MARKETS } from "@/db/seed/symbols";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { sharedLaneScale, WORLD_LANE_FLOOR } from "@/lib/home-figures";
-import { cn, directionOf, directionText, formatPercent, formatPercentPlain } from "@/lib/utils";
-import styles from "./HomeLanes.module.css";
+import { cn, directionOf, directionText, formatPercent } from "@/lib/utils";
+import tiles from "./WorldTiles.module.css";
 import pair from "./PanelPair.module.css";
 
 /**
@@ -138,6 +138,30 @@ type WorldRow = {
  * ölçeğe girmiyor — başka bir günün hareketi bugünün cetveline konmaz.
  * Hepsi son kapanıştaysa (hafta sonu) çubuklar çizilir: hepsi aynı günü
  * anlatıyor, dönemi dipnot söylüyor.
+ *
+ * DÖRDÜNCÜ TUR (28 Kasım, Görsel Tur 4 — bayraklı karolar). Sağ kolonda
+ * Hareketler, Dünya Piyasaları ve Dünün Grafiği üst üste aynı "kimlik +
+ * yüzde + altında kalın çubuk" satırını konuşuyordu; sol kolondaki sektör
+ * sıralaması da (`arayuz.md` → "Aynı 'satır + çubuk + yüzde' kalıbı bir
+ * bölümde yinelenmez"). Hareketler tek gerçek sıralı liste olarak çubukta
+ * kaldı; dünya KARO ızgarasına döndü: beş ülke bir bakışta harita gibi
+ * okunuyor, sıralama gibi değil. Kurallar:
+ * - Türkiye karosu iki sütunu kaplıyor (okurun kendi piyasası; 1 + 2 + 2
+ *   ızgarada boş hücre kalmıyor). Ötekiler 2 × 2.
+ * - Değer karonun en büyük puntosu (22/700, yön renginde); bayrak 28
+ *   piksellik karo, ad 14/600, altında sembol · yerel endeks künyesi.
+ * - BÜYÜKLÜK ZEMİNİN DOYGUNLUĞUNDA: zemin yönün wash'ı, doygunluğu
+ *   |yüzde| / ortak ölçek (`sharedLaneScale`, taban ±%1; en az %30). Isı
+ *   Haritası karosunun küçük kardeşi; ölçek tek, renk yalnız işaretten.
+ *   Satır vurgu zemini değil: karo bir veri hücresi, bütün karolar boyalı.
+ * - SON KAPANIŞ karosu (karışık günde): zemin nötr, yüzde soluk, altında
+ *   "Son Kapanış" künyesi; ortak ölçeğe girmiyor (üçüncü turun kuralı).
+ * - Tablette (768–1279) Hareketler'le çift: ızgara panelin boyuna uzar,
+ *   karolar satırları eşit paylaşır; dipnot ile liste arasındaki 84
+ *   piksellik ölü pay karoların içine dağıldı. Rayda (≥1280) ve telefonda
+ *   karo içeriği kadar.
+ * Eksen (`LaneAxis`) kalktı: çubuk yoksa eksen de yok. Ölçüm
+ * WorldTiles.module.css başında.
  */
 function WorldStripView({
   locale,
@@ -156,97 +180,60 @@ function WorldStripView({
   fetchedAt?: Date | string | null;
   stale?: boolean;
 }) {
-  /** Bu satır ortak cetvelde mi: karışık günde son kapanıştaki ülke değil. */
+  /** Bu karo ortak ölçekte mi: karışık günde son kapanıştaki ülke değil. */
   const onScale = (row: WorldRow) => row.changePct !== null && (allLastClose || !row.lastClose);
   const scale = sharedLaneScale(
     rows.map((row) => (onScale(row) ? row.changePct : null)),
     WORLD_LANE_FLOOR,
   );
   return (
-    /* Tablette Hareketler'le çift: künye dibe yaslı (11 Kasım; gerekçe
-       PanelPair.module.css). */
-    <Panel className={pair.fill}>
+    /* Tablette Hareketler'le çift: künye dibe yaslı, ızgara arada uzar
+       (gerekçe PanelPair.module.css, WorldTiles.module.css). */
+    <Panel className={cn(pair.fill, tiles.panel)}>
       <PanelHeader title={t.today.worldMarkets} tone="title" />
-      <div className={styles.desk} data-draw>
-        <LaneAxis
-          scale={scale}
-          locale={locale}
-          label={t.homeDesk.scale.replace("{value}", formatPercentPlain(scale, locale, 1))}
-          className="px-4 sm:px-5"
-        />
-        <ul>
+      <ul className={tiles.grid} data-world-grid>
         {rows.map((market, index) => {
-          const lastClose = market.lastClose;
           const drawn = onScale(market);
           const tone = directionOf(market.changePct);
           const value = formatPercent(market.changePct, locale);
+          /* Doygunluk: %30 taban (en sakin karo da yönünü söylesin), üstü
+             büyüklükle; ölçek dışı ve yatay karo boyanmaz. */
+          const heat =
+            drawn && market.changePct !== null && tone !== "flat"
+              ? 0.3 + 0.7 * Math.min(1, Math.abs(market.changePct) / scale)
+              : 0;
           return (
-            <li key={market.symbol}>
+            <li key={market.symbol} data-lead={index === 0 || undefined}>
               <Link
                 href={`/hisse/${market.symbol}`}
                 aria-label={`${t.homeDesk.rowAria
                   .replace("{name}", market.name)
                   .replace("{symbol}", market.symbol)
-                  .replace("{value}", lastClose ? `${value} (${t.market.lastClose})` : value)}. ${market.tracks}`}
-                className={cn(styles.row, "border-t border-line-soft px-4 py-[7px] transition-colors hover:bg-primary-tint sm:px-5")}
+                  .replace("{value}", market.lastClose ? `${value} (${t.market.lastClose})` : value)}. ${market.tracks}`}
+                className={tiles.tile}
+                data-tone={heat > 0 ? tone : undefined}
+                style={{ "--heat": heat.toFixed(2) } as CSSProperties}
               >
-                <span aria-hidden className={styles.lead}>
-                  <span className={styles.flag}>{market.flag}</span>
+                <span aria-hidden className={tiles.flag}>{market.flag}</span>
+                <span aria-hidden className={tiles.name}>{market.name}</span>
+                <span aria-hidden className={tiles.meta}>
+                  <span className={tiles.symbol}>{market.symbol}</span>
+                  <span>{market.index}</span>
                 </span>
-                <span className={styles.main}>
-                  {/* KÜNYE KISA VE ADIN YANINDA (8 Kasım). Burada iki satıra
-                      saran uzun cümle vardı ("MSCI Japonya · Nikkei'yi
-                      izleyen ABD fonu"; kararı: dar ekranda sarar, kesilmez,
-                      12 punto). 390'da satırı 80 piksele çıkarıyordu ve
-                      Çin'inki yine de kesiliyordu; 768'de beşi, 1440'ta
-                      üçü kesikti. Vekil olduğu bilgisi kaybolmuyor: dipnot
-                      söylüyor, uzun cümle `aria-label`da. Künye ÖBEK
-                      olarak sarar (HomeLanes `.ident`), kesilmez; 12 punto
-                      tabanı korunuyor. */}
-                  <span className={styles.ident}>
-                    <span className={styles.name}>{market.name}</span>
-                    <span className={styles.symbol}>{market.symbol}</span>
-                    <span className={styles.identMeta}>{market.index}</span>
-                  </span>
-                </span>
-                {/* Satırın değeri YALNIZCA yüzde.
-                    Burada bir süre fonun dolar fiyatı da (38,70 gibi)
-                    büyük puntoyla yazıyordu. O sayı yanlış değildi ama
-                    okuyucunun etiketten beklediği büyüklük DEĞİLDİ: "Türkiye
-                    38,70" satırında 38,70 bir piyasa seviyesi değil, ABD'de
-                    işlem gören bir MSCI fonunun fiyatı — BIST 100 on
-                    binlerde. Alttaki açıklama bunu kurtarmıyordu; aynı
-                    gerekçeyle Brent metriği de kaldırılmıştı (bkz.
-                    CLAUDE.md → veri dürüstlüğü). Yüzde ise gerçekten
-                    anlamlı: fonun o günkü yönü.
-                    HAP (8 Kasım): yön zemini wash'ta; son kapanış ve %0,00
-                    nötr zeminde — bu seansın yönü değil (veri dürüstlüğü 4).
-                    10 Kasım gece: HAP KALKTI — yön renginde 17/700 sayı.
-                    Renk son kapanışta da işaretten (15 Ekim kararı, bantla
-                    aynı); cetvele girmeyen satırda sayı soluk. */}
-                <span aria-hidden className={styles.value}>
+                <span aria-hidden className={tiles.value}>
                   <span
-                    className={cn("numeral", styles.pct, tone === "flat" ? "text-muted" : directionText(tone))}
+                    className={cn("numeral", tiles.pct, tone === "flat" ? "text-muted" : directionText(tone))}
                     data-quiet={!drawn || undefined}
                   >
                     {value}
                   </span>
+                  {!drawn && market.changePct !== null && <span className={tiles.note}>{t.market.lastClose}</span>}
                 </span>
-                {market.changePct !== null && (
-                  <span className={styles.laneCell}>
-                    {drawn ? (
-                      <HomeLane change={market.changePct} scale={scale} index={index} />
-                    ) : (
-                      <span aria-hidden className={styles.laneNote}>{t.market.lastClose}</span>
-                    )}
-                  </span>
-                )}
               </Link>
             </li>
           );
         })}
-        </ul>
-      </div>
+      </ul>
       {/* DAMGA BURADA DA VAR. Künye fonun neyi vekil ettiğini söylüyordu ama
           yüzdelerin yaşını söyleyen hiçbir şey yoktu; panel tam da bayat
           veriyi büyük puntoyla göstermenin yasak olduğu yerdi. */}

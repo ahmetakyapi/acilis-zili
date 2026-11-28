@@ -2,6 +2,8 @@ import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { Panel, PanelHeader, PanelLink } from "@/components/ui/primitives";
 import { ChartThumb } from "@/components/daily-chart/ChartThumb";
 import styles from "@/components/daily-chart/DailyChart.module.css";
+import columns from "@/components/daily-chart/ChartColumns.module.css";
+import { cn } from "@/lib/utils";
 import { getLatestDailyChart } from "@/lib/daily-chart-data";
 import { getChartLogos } from "@/lib/daily-chart-day";
 import { checkChartBlock, dailyChartHref } from "@/lib/daily-chart";
@@ -51,6 +53,11 @@ export async function DailyChartPanel({ locale, t, nowMs }: { locale: Locale; t:
  * eksikse) sayaç; karışık grafik iki grup — gerekçe `ChartThumb.tsx`.
  * Kart dışa açık: önizleme rotası sahte kayıtla ölçebilsin.
  *
+ * 28 Kasım (Görsel Tur 4): gövde grafiğin küçük RESMİ — dikey sütunlar,
+ * logolar, ortak sıfır çizgisi (gerekçe `ChartColumns.tsx`); kimliksiz
+ * kalemli, pay ve öncesi grafikleri satır listesinde kalıyor. Tablette
+ * (768–1279, panel tam genişlik) başlık solda, resim sağda.
+ *
  * Grafik başlığının altında bloğun etiketi ("Nasdaq 100'ün En Çok
  * Düşenleri, Günlük Değişim %"): satırların neyi ölçtüğünü söyleyen tek
  * yer (sayfada `caption`).
@@ -78,7 +85,7 @@ export function DailyChartCard({
         meta={formatEtDateLong(chart.chartDate, locale)}
         action={<PanelLink href="/gunun-grafigi">{t.dailyChart.homeAll}</PanelLink>}
       />
-      <div className={styles.homeBody} lang={chart.locale}>
+      <div className={cn(styles.homeBody, columns.body)} lang={chart.locale}>
         <div className={styles.homeHead}>
           <Link href={href} className={styles.homeTitle}>
             {chart.title}

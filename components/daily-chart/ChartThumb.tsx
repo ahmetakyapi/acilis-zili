@@ -8,11 +8,12 @@ import type { DailyChartLabels } from "@/lib/i18n/dictionaries/daily-chart";
 import { formatPercent } from "@/lib/utils";
 import { SECTOR_ICONS } from "./sector-icons";
 import styles from "./DailyChart.module.css";
+import { ChartColumns } from "./ChartColumns";
 
 /** `oncesi` değişimi tek ondalık (sayfanın `ShiftTiles`ıyla aynı). */
 const DELTA_DIGITS = 1;
 
-type ThumbRow = {
+export type ThumbRow = {
   name: string;
   display: string;
   /** Kulvardaki çubuk: alanın yüzdesi olarak başlangıç ve boy. */
@@ -27,10 +28,15 @@ type ThumbRow = {
   bare?: boolean;
   /** Grafiğin öznesi: karışık grafikte bir yanda TEK kalan kalem. */
   subject?: "up" | "down";
+  /** Bloktaki ham değer (sütun görünümü ölçeği kendisi kurar). */
+  value?: number;
 };
 
 /** Sunucunun bastığı en çok satır; tabanın üstü `hidden` + `data-fill`. */
 const ROW_CAP = 12;
+
+/** Sütun görünümünde en çok sütun (360'lık telefonda sütun ~45 piksel). */
+const COLUMN_CAP = 6;
 
 type ThumbGroup = {
   /** Karışık grafikte yönün başlığı; tek listede yok. */
@@ -98,8 +104,9 @@ type ThumbGroup = {
  *     satırlar iki yana paylaştırılır (`splitRows`), azınlık yan hiç
  *     düşmez.
  *   · Bir yanda TEK kalem, ötekinde en az iki kalem varsa o kalem grafiğin
- *     ÖZNESİ ("Nvidia Ters Yönde Geriledi"): satır yön yıkamasıyla vurgulu,
- *     adının üstünde "Tek Düşen" / "Tek Yükselen".
+ *     ÖZNESİ ("Nvidia Ters Yönde Geriledi"): adının üstünde "Tek Düşen" /
+ *     "Tek Yükselen" (28 Kasım'a dek satır yön yıkamasıyla da vurguluydu;
+ *     satır vurgu zemini kalktı, DailyChart.module.css → ÖZNE).
  *   · Ortadaki bağlantı YOK. Sığmayan satır varsa dipte sakin bir sayaç
  *     ("5 / 6 Kalem") ve her zaman grafiğin sayfasına giden tek buton.
  *     Sayaç CSS sayacı: `FillColumn` kolonda yer bulup satır açtığında
@@ -143,6 +150,8 @@ export function ChartThumb({
   let zero: number | null = null;
   let strip: ReactNode = null;
   let foot: ReactNode = null;
+  /* Sütun görünümüne uygun mu (28 Kasım, aşağıda): yönlü, ölçekli çubuk blok. */
+  let columnsOk = false;
 
   if (block.kind === "share") {
     /* Pay: bütün TEK şeritte (dilimler arası 2 piksel zemin), satırda
@@ -170,6 +179,7 @@ export function ChartThumb({
     oneSided = board.trend !== "mixed" || !board.signed;
     const peak = Math.max(...board.tiles.map((tile) => Math.abs(tile.value)), 0);
     zero = !oneSided && board.scale ? board.scale.zero : null;
+    columnsOk = board.signed && !block.unscaled;
     items = board.tiles.map((tile) => ({
       name: tile.name,
       display: tile.display,
@@ -178,6 +188,7 @@ export function ChartThumb({
       dir: board.signed ? tile.dir : "flat",
       fund: tile.fund,
       symbol: tile.symbol,
+      value: tile.value,
     }));
   } else {
     /* `oncesi` yön taşımıyor (iki hâlin büyüklüğü): iki çubuk da nötr ton;
@@ -231,6 +242,36 @@ export function ChartThumb({
   } else {
     groups = [{ dir: null, total: items.length, rows: items, base: Math.min(items.length, rows) }];
   }
+  /* SÜTUN GÖRÜNÜMÜ (28 Kasım, Görsel Tur 4 — gerekçe ChartColumns.tsx).
+     Her kalemin bir kimliği varsa (logo ya da sektör simgesi) grafik
+     küçük resmiyle çizilir; kimliksiz kalem, pay ve öncesi blokları satır
+     listesinde kalır. Seçim grupların kuralıyla: karışıkta iki yana
+     paylaştırılır (`splitRows`), kesim her grubun ılımlı ucundan. */
+  if (columnsOk && items.length >= 3 && items.every((item) => item.symbol || item.fund)) {
+    let picked: ThumbRow[];
+    if (mixed) {
+      const [upBase, downBase] = splitRows(ups.length, downs.length, COLUMN_CAP);
+      const spare = Math.max(0, COLUMN_CAP - upBase - downBase);
+      /* Soldan sağa yüksekten düşüğe: yükselenler, sıfırdakiler, düşenler
+         (en sert düşüş en sağda; `downs` en serti başta tutuyor). */
+      picked = [...ups.slice(0, upBase), ...flats.slice(0, spare), ...downs.slice(0, downBase).reverse()];
+    } else {
+      picked = items.slice(0, COLUMN_CAP);
+    }
+    return (
+      <ChartColumns
+        columns={picked}
+        all={items}
+        total={items.length}
+        labels={labels}
+        href={href}
+        label={label}
+        locale={locale}
+        renderMark={(item) => <Mark item={item} logos={logos} locale={locale} />}
+      />
+    );
+  }
+
   /* Tavan: tabanın üstündeki yedek satırlar sırayla dağıtılır (önce
      yükselenler), toplam `ROW_CAP`i geçmez. */
   let budget = ROW_CAP - groups.reduce((sum, group) => sum + group.base, 0);

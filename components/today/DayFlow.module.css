@@ -286,9 +286,13 @@
    (20/700) iner ve açıklaması aynı satıra, künye tonunda yerleşir; künye
    şeridinin kıl çizgisi düşer. Boş durum gömük tonda tek satırlık bir
    şerit: ikon 28, başlık ve cümle aynı satırda (sığmazsa sarar). Seçici
-   sayfanın `.sectionHeading h2` kuralını özgüllükle yener (0,3,1). */
+   sayfanın `.sectionHeading h2` kuralını özgüllükle yener (0,3,1).
+   28 KASIM AKŞAM (Görsel Tur 4, ölçüm raporu): 20/700 ara basamaktı —
+   ana sayfanın öteki on üç panel başlığı `PanelHeader` ölçüsünde (16/700,
+   −0,015em); sessiz günde akış bir panel şeridi, başlığı da o ölçüde.
+   Bölüm basamağı (36/600) olaylı günde aynen. */
 .flow[data-quiet] .toolbar { align-items:center; padding-bottom:0; margin-bottom:0; border-bottom:0; }
-.flow[data-quiet] .headingRow h2 { font-size:20px; font-weight:700; letter-spacing:-.025em; line-height:1.2; }
+.flow[data-quiet] .headingRow h2 { font-size:16px; font-weight:700; letter-spacing:-.015em; line-height:1.25; }
 .flow[data-quiet] .headingRow p:not(.summary) { color:var(--text-muted); font-size:12px; }
 .flow[data-quiet] .empty { gap:12px; margin-top:14px; padding:10px 14px; border-radius:12px; background:var(--surface-sunken); }
 .flow[data-quiet] .empty > span { width:28px; height:28px; border-radius:9px; }

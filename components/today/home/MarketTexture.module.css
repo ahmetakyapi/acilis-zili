@@ -100,13 +100,18 @@
    çubuklu). Mavi etkileşimin rengi; başlık kendi puntosu ve ağırlığıyla
    ayrışıyor (19/700, 9 Ekim'in ölçüsü yerinde). */
 /* YARIM AY ÖLÇER (28 Kasım) — gerekçe MarketTexture.tsx → SectorGauge.
-   Yay 112 piksel, halka 6 (ortak ölçü), uçlar yuvarlak; kulvar
-   `--line-soft`. Ortada yükselen / toplam: bandın en iri sayısı (26/700),
+   Yay 112 piksel, halka 6 (ortak ölçü); kulvar `--line-soft`.
+   UÇLAR DÜZ (28 Kasım, Görsel Tur 4 — ölçüm raporu): ilk sürümde
+   `stroke-linecap: round` dilimlerde de vardı; yükselen ile düşen birlikte
+   çizilince yuvarlak uç her dilimi yay boyunca 3 piksel uzatıp komşusunun
+   üstüne biniyordu (kural `arayuz.md` → "dilim ucu düz", hareket.md
+   kataloğu). Kulvar da düz: yuvarlak kulvar ucu düz dilimin ardından 3
+   piksellik gri bir tırnak bırakırdı. Ortada yükselen / toplam: bandın en iri sayısı (26/700),
    payda soluk. Yanında genişlik sözü bir kademe büyük (15/600). */
 .gaugeRow { display:flex; align-items:center; gap:18px; min-width:0; padding:4px 0 6px; }
 .gauge { position:relative; flex:none; width:112px; height:60px; }
 .gauge svg { display:block; width:100%; height:100%; overflow:visible; }
-.gauge path { fill:none; stroke-width:6; stroke-linecap:round; }
+.gauge path { fill:none; stroke-width:6; stroke-linecap:butt; }
 .gaugeLane { stroke:var(--line-soft); }
 .gaugeUp { stroke:var(--up); }
 .gaugeDown { stroke:var(--down); }
@@ -136,6 +141,12 @@
    Liste yanlardan 10 piksel taşar: uç satırın tonlu zemini ve üzerine
    gelme zemini metni içeri itmeden başlıkla aynı hatta kalsın. */
 .rb { --zero:0%; display:flex; flex-direction:column; margin:0 -10px; padding:0; list-style:none; }
+/* YER OLDUKÇA AÇILAN SATIR (28 Kasım, Görsel Tur 4): `SectorFill` tema
+   kolonunun boyuna sığan katlı satırlara `data-band-open` yazar. Seçici
+   katlamanınkinden (`.foldInput:not(:checked) ~ * [data-fold]`, 0-3-0)
+   bir öğe ağır; hepsi açıldıysa anahtar gizlenir. */
+.rb > li[data-fold][data-band-open] { display:block; }
+.partSectors[data-band-all] label { display:none; }
 .rbRow {
   display:grid; grid-template-columns:minmax(0,1fr) auto; grid-template-areas:"name value" "track track";
   align-items:baseline; gap:5px 12px; padding:6px 10px 9px; border-radius:10px; color:inherit;
