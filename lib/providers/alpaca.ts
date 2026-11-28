@@ -523,8 +523,9 @@ export function resetAlpacaMemoForTests(): void {
  * karakteri buluyordu. Paketlerden biri düşerse diğerleri yine döner:
  * kısmi sonuç, hiç sonuç olmamasından iyidir. Hiçbiri dönmezse son hata.
  */
-async function fetchSnapshotsNow(unique: string[]): Promise<{ ok: true; data: Record<string, Quote>; at: number } | { ok: false; failure: ProviderFail }> {
+async function fetchSnapshotsNow(unique: string[]): Promise<{ ok: true; data: Record<string, Quote>; at: number; covered: string[] } | { ok: false; failure: ProviderFail }> {
   const quotes: Record<string, Quote> = {};
+  const covered: string[] = [];
   let fetchedAt: Date | undefined;
   let lastFailure: ProviderFail | null = null;
 
@@ -551,6 +552,7 @@ async function fetchSnapshotsNow(unique: string[]): Promise<{ ok: true; data: Re
       lastFailure = fail("alpaca", "empty", "Snapshot yanıtı beklenen biçimde değil") as ProviderFail;
       continue;
     }
+    covered.push(...batch);
     for (const symbol of batch) {
       const snap = snapshots[symbol];
       if (!snap) continue;
@@ -563,7 +565,7 @@ async function fetchSnapshotsNow(unique: string[]): Promise<{ ok: true; data: Re
   }
 
   if (!fetchedAt) return { ok: false, failure: lastFailure ?? (fail("alpaca", "empty", "Hiçbir sembol için fiyat dönmedi") as ProviderFail) };
-  return { ok: true, data: quotes, at: fetchedAt.getTime() };
+  return { ok: true, data: quotes, at: fetchedAt.getTime(), covered };
 }
 
 /**
@@ -598,24 +600,26 @@ const latestBarMemo = new SymbolMemo<{ close: number; minute: Date }, ProviderFa
 
 async function fetchLatestIexNow(
   unique: string[],
-): Promise<{ ok: true; data: Record<string, { close: number; minute: Date }>; at: number } | { ok: false; failure: ProviderFail }> {
+): Promise<{ ok: true; data: Record<string, { close: number; minute: Date }>; at: number; covered: string[] } | { ok: false; failure: ProviderFail }> {
   const out: Record<string, { close: number; minute: Date }> = {};
   let fetchedAt: Date | undefined;
   let lastFailure: ProviderFail | null = null;
+  const covered: string[] = [];
   const results = await Promise.all(
     batches(unique).map((batch) =>
       symbolBatchFetch<{ bars?: Record<string, AlpacaBar | null> }>(
         "/bars/latest",
         { symbols: batch.join(","), feed: "iex" },
         { revalidate: 0, tags: ["quotes"], fresh: true },
-      ),
+      ).then((result) => ({ batch, result })),
     ),
   );
-  for (const result of results) {
+  for (const { batch, result } of results) {
     if (!result.ok) {
       lastFailure = result;
       continue;
     }
+    covered.push(...batch);
     for (const [symbol, bar] of Object.entries(result.data?.bars ?? {})) {
       if (!bar || typeof bar.c !== "number" || !Number.isFinite(bar.c) || bar.c <= 0) continue;
       const minute = new Date(bar.t);
@@ -626,7 +630,7 @@ async function fetchLatestIexNow(
     if (!fetchedAt || result.fetchedAt < fetchedAt) fetchedAt = result.fetchedAt;
   }
   if (!fetchedAt) return { ok: false, failure: lastFailure ?? (fail("alpaca", "empty", "IEX barı dönmedi") as ProviderFail) };
-  return { ok: true, data: out, at: fetchedAt.getTime() };
+  return { ok: true, data: out, at: fetchedAt.getTime(), covered };
 }
 
 /* --------------------------------------------------------------------------
@@ -678,7 +682,7 @@ const changeMemos = new Map<number, SymbolMemo<number, ProviderFail>>();
 async function fetchPeriodChangesNow(
   unique: string[],
   sessions: number,
-): Promise<{ ok: true; data: Record<string, number>; at: number } | { ok: false; failure: ProviderFail }> {
+): Promise<{ ok: true; data: Record<string, number>; at: number; covered: string[] } | { ok: false; failure: ProviderFail }> {
   const lookbackDays = Math.max(12, sessions * 2 + 6);
   const start = new Date(Date.now() - lookbackDays * 86400000).toISOString().slice(0, 10);
   const changes: Record<string, number> = {};
@@ -698,15 +702,17 @@ async function fetchPeriodChangesNow(
           sort: "asc",
         },
         { revalidate: 0, tags: ["bars", `changes:${sessions}`], fresh: true },
-      ),
+      ).then((result) => ({ batch, result })),
     ),
   );
 
-  for (const result of results) {
+  const covered: string[] = [];
+  for (const { batch, result } of results) {
     if (!result.ok) {
       lastFailure = result;
       continue;
     }
+    covered.push(...batch);
     if (!fetchedAt || result.fetchedAt < fetchedAt) fetchedAt = result.fetchedAt;
     for (const [symbol, bars] of Object.entries(result.data)) {
       if (bars.length < 2) continue;
@@ -719,7 +725,7 @@ async function fetchPeriodChangesNow(
     }
   }
   if (!fetchedAt) return { ok: false, failure: lastFailure ?? (fail("alpaca", "empty", "Değişim barı dönmedi") as ProviderFail) };
-  return { ok: true, data: changes, at: fetchedAt.getTime() };
+  return { ok: true, data: changes, at: fetchedAt.getTime(), covered };
 }
 
 /* --------------------------------------------------------------------------
@@ -938,7 +944,7 @@ const barsMemos = new Map<ChartRange, SymbolMemo<Bar[], ProviderFail>>();
 async function fetchBarsMultiNow(
   unique: string[],
   range: ChartRange,
-): Promise<{ ok: true; data: Record<string, Bar[]>; at: number } | { ok: false; failure: ProviderFail }> {
+): Promise<{ ok: true; data: Record<string, Bar[]>; at: number; covered: string[] } | { ok: false; failure: ProviderFail }> {
   const spec = RANGE_SPECS[range];
   /* SIRALI (20 Ekim): sonuç sembole göre anahtarlı, sırayı geri kuran
      çağıran (seri rengi adresteki yerden türüyor — app/api/karsilastir/route.ts). */
@@ -966,15 +972,17 @@ async function fetchBarsMultiNow(
           sort: "asc",
         },
         { revalidate: 0, tags: ["bars", `bars:${range}`], fresh: true },
-      ),
+      ).then((result) => ({ batch, result })),
     ),
   );
 
-  for (const result of results) {
+  const covered: string[] = [];
+  for (const { batch, result } of results) {
     if (!result.ok) {
       lastFailure = result;
       continue;
     }
+    covered.push(...batch);
     /* EN ESKİ paketin damgası — gerekçe `fetchSnapshotsNow`teki damgayla aynı. */
     if (!fetchedAt || result.fetchedAt < fetchedAt) fetchedAt = result.fetchedAt;
     for (const [symbol, list] of Object.entries(result.data)) {
@@ -993,7 +1001,7 @@ async function fetchBarsMultiNow(
   }
 
   if (!fetchedAt) return { ok: false, failure: lastFailure ?? (fail("alpaca", "empty", "Bar dönmedi") as ProviderFail) };
-  return { ok: true, data: out, at: fetchedAt.getTime() };
+  return { ok: true, data: out, at: fetchedAt.getTime(), covered };
 }
 
 /**

@@ -38,7 +38,12 @@ export default function robots(): MetadataRoute.Robots {
       {
         userAgent: "*",
         allow: ["/", "/api/takvim?"],
-        disallow: ["/api/"],
+        /* 28 Kasım (bot dalgası, lib/bot-guard.ts): sorgulu karşılaştırma
+           (`?semboller=` her kombinasyon ayrı adres, sağlayıcıdan bar
+           çeker) ve giriş/kayıt (her sayfadan `?devam=` ile bağlı) taramaya
+           kapalı. Küratörlü çift sayfaları (`/karsilastir/nvda-amd`) ve
+           karşılaştırma dizini açık. */
+        disallow: ["/api/", "/karsilastir?", "/en/karsilastir?", "/giris", "/en/giris", "/kayit", "/en/kayit"],
       },
     ],
     sitemap: `${SITE_URL}/sitemap.xml`,

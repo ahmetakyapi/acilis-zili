@@ -99,3 +99,32 @@ test("bütçe kayan pencerede sınırlar", () => {
   assert.equal(budget.used(30_000), 3);
   assert.equal(budget.take(60_000), true);
 });
+
+test("düşen paketin sembolü 'yok' sayılmaz, eldeki fiyat durur (28 Kasım, portföyde SHAZ)", async () => {
+  const t = setup();
+  await t.memo.get(["MU", "SHAZ"], TTL, t.fetcher, { now: t.now });
+  t.tick(TTL + 1);
+  /* İkinci paket düştü: yanıt yalnız MU'yu kapsıyor. */
+  t.setNext(() => ({ ok: true, data: { MU: 9 }, at: 2_000_000, covered: ["MU"] }));
+  const r = await t.memo.get(["MU", "SHAZ"], TTL, t.fetcher, { now: t.now });
+  assert.deepEqual(r.data, { MU: 9, SHAZ: 4 });
+});
+
+test("'yok' eldeki iyi fiyatın üstüne yazılmaz; boş kayıtta 'yok' en çok bir dakika", async () => {
+  const t = setup();
+  await t.memo.get(["SHAZ"], TTL, t.fetcher, { now: t.now });
+  t.tick(TTL + 1);
+  t.setNext(() => ({ ok: true, data: {}, at: 2_000_000 }));
+  const kept = await t.memo.get(["SHAZ"], TTL, t.fetcher, { now: t.now });
+  assert.deepEqual(kept.data, { SHAZ: 4 });
+  /* Hiç kaydı olmayan sembol: "yok" tutulur ama uzun önbellek süresinde bile bir dakikada yeniden sorulur. */
+  const long = 30 * 60_000;
+  await t.memo.get(["ZZZZ"], long, t.fetcher, { now: t.now });
+  const before = t.calls.length;
+  t.tick(30_000);
+  await t.memo.get(["ZZZZ"], long, t.fetcher, { now: t.now });
+  assert.equal(t.calls.length, before);
+  t.tick(31_000);
+  await t.memo.get(["ZZZZ"], long, t.fetcher, { now: t.now });
+  assert.equal(t.calls.length, before + 1);
+});

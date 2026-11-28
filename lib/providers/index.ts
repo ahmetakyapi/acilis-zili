@@ -456,6 +456,28 @@ async function fetchQuotes(
   status: MarketStatus,
   opts: { fresh?: boolean } = {},
 ): Promise<ProviderResult<Record<string, Quote>>> {
+  const result = await fetchQuotesCore(symbolList, status, opts);
+  if (!result.ok) return result;
+  /* PAKETTE EKSİK KALAN SEMBOL SON BİLİNEN FİYATLA (28 Kasım, sahibinin
+     ekran görüntüsü: portföyde SHAZ "Fiyat Yok"). Paket başarılı dönse de
+     bir sembol eksik kalabiliyor (o sembolün paketi düştü, sağlayıcı o anda
+     anlık görüntü vermedi); eskiden pozisyon "Fiyat Yok" diyordu. Eksik
+     sembol veritabanındaki son kotasyonla tamamlanır — satır kendi işlem
+     anını (`tradedAt`) taşıdığı için ekran onu seansın fiyatı diye değil
+     "son fiyat" künyesiyle basar (veri dürüstlüğü 4). Önbelleğe GERİ
+     yazılmaz (gerekçe `persistQuotes`). */
+  const absent = [...new Set(symbolList)].filter((symbol) => !result.data[symbol]);
+  if (absent.length === 0) return result;
+  const cached = await quotesFromCache(absent);
+  if (Object.keys(cached.quotes).length === 0) return result;
+  return { ...result, data: { ...cached.quotes, ...result.data } };
+}
+
+async function fetchQuotesCore(
+  symbolList: string[],
+  status: MarketStatus,
+  opts: { fresh?: boolean } = {},
+): Promise<ProviderResult<Record<string, Quote>>> {
   if (symbolList.length === 0) return ok({}, "alpaca");
 
   const unique = [...new Set(symbolList)];

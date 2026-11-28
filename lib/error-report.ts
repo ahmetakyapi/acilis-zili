@@ -13,9 +13,37 @@
 
 const reported = new Set<string>();
 
+/**
+ * ESKİ SÜRÜMÜN PARÇASI (28 Kasım). Yönetimdeki hata listesinde "Failed to
+ * load chunk /_next/static/chunks/….css" iki günde ~40 kez: yeni sürüm
+ * yayına çıkınca eski sürümün dosyaları sunucudan kalkıyor, açık kalmış
+ * sekme sayfa değiştirirken eski parçayı istiyor ve hata ekranına düşüyor.
+ * Okurun yapacağı tek şey sayfayı yenilemek; bunu biz bir kez yaparız.
+ */
+export function isChunkLoadError(message: string): boolean {
+  return /Failed to load chunk|ChunkLoadError|Loading (CSS )?chunk [^ ]+ failed/i.test(message);
+}
+
+const CHUNK_RELOAD_KEY = "az-chunk-reload";
+/** Aynı sekmede bu süre içinde ikinci yenileme yapılmaz (döngü olmasın); hata o zaman bildirilir. */
+const CHUNK_RELOAD_WINDOW_MS = 60_000;
+
+function reloadOnceForChunk(): boolean {
+  try {
+    const last = Number(window.sessionStorage.getItem(CHUNK_RELOAD_KEY) ?? 0);
+    if (Date.now() - last < CHUNK_RELOAD_WINDOW_MS) return false;
+    window.sessionStorage.setItem(CHUNK_RELOAD_KEY, String(Date.now()));
+  } catch {
+    return false;
+  }
+  window.location.reload();
+  return true;
+}
+
 export function reportClientError(error: Error & { digest?: string }): void {
   if (typeof window === "undefined" || error.digest) return;
   const message = error.message || error.name || "Error";
+  if (isChunkLoadError(message) && reloadOnceForChunk()) return;
   const key = `${window.location.pathname}\n${message}`;
   if (reported.has(key)) return;
   reported.add(key);

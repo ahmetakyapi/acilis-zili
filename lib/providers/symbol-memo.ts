@@ -41,6 +41,8 @@
 export const ALPACA_BUDGET_PER_MINUTE = 150;
 /** İstek düşünce dönülebilecek en eski kayıt. */
 export const STALE_MAX_MS = 10 * 60_000;
+/** "Yok" kaydının süresi: dönmeyen sembol (işlem görmemiş, fiyatı kurulamamış) en çok bu kadar sorulmaz. */
+export const NEGATIVE_TTL_MS = 60_000;
 /** Bellek tavanı: bunu aşınca bir saatten eski kayıtlar atılır. */
 const MAX_ENTRIES = 6000;
 const PRUNE_AGE_MS = 60 * 60_000;
@@ -71,7 +73,8 @@ export class RequestBudget {
     önbelleğinden gelmiş eski bir `Date` kaydı erken düşürmesin). */
 type Entry<V> = { value: V | null; at: number; storedAt: number };
 
-export type FetchOutcome<V, F> = { ok: true; data: Record<string, V>; at: number } | { ok: false; failure: F };
+/** `covered`: yanıtı GERÇEKTEN gelen semboller (düşen paketin sembolleri yok); verilmezse istenenlerin hepsi. */
+export type FetchOutcome<V, F> = { ok: true; data: Record<string, V>; at: number; covered?: readonly string[] } | { ok: false; failure: F };
 
 export type MemoResult<V, F> = {
   data: Record<string, V>;
@@ -97,7 +100,7 @@ export class SymbolMemo<V, F> {
     const missing: string[] = [];
     for (const symbol of new Set(symbols)) {
       const entry = this.entries.get(symbol);
-      if (!opts.fresh && entry && start - entry.storedAt < ttlMs) continue;
+      if (!opts.fresh && entry && start - entry.storedAt < (entry.value === null ? Math.min(ttlMs, NEGATIVE_TTL_MS) : ttlMs)) continue;
       const flying = this.inflight.get(symbol);
       if (flying) waits.push(flying);
       else missing.push(symbol);
@@ -109,7 +112,19 @@ export class SymbolMemo<V, F> {
         (outcome) => {
           if (outcome.ok) {
             const storedAt = now();
-            for (const symbol of missing) this.entries.set(symbol, { value: outcome.data[symbol] ?? null, at: outcome.at, storedAt });
+            /* 28 Kasım düzeltmesi (portföyde SHAZ "Fiyat Yok"): yalnız yanıtı
+               gerçekten gelen semboller yazılır — düşen paketin sembolleri
+               "yok" sayılmaz, eldeki kayıt durur. "Yok" eldeki iyi fiyatın
+               üstüne de yazılmaz; o fiyat eski damgasıyla dönmeye devam eder,
+               süresi dolduğu için sembol bir sonraki çağrıda yine sorulur. */
+            const covered = new Set(outcome.covered ?? missing);
+            for (const symbol of missing) {
+              if (!covered.has(symbol)) continue;
+              const value = outcome.data[symbol] ?? null;
+              const held = this.entries.get(symbol);
+              if (value === null && held && held.value !== null) continue;
+              this.entries.set(symbol, { value, at: outcome.at, storedAt });
+            }
             this.prune(now());
           } else failure = outcome.failure;
         },

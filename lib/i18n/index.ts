@@ -36,25 +36,52 @@ export function getDictionary(locale: Locale): Dictionary {
  * Önek yoksa çerez okunur: yıllardır İngilizce tercihiyle gezen biri
  * önekSİZ adreslerde varsayılana düşmesin diye.
  */
-export async function getLocale(): Promise<Locale> {
-  const headerStore = await headers();
-  const fromPath = localeFromHeader(headerStore.get(LOCALE_HEADER));
-  if (fromPath) return fromPath;
+/**
+ * İSTEMCİ BAĞLANTIYI KESTİKTEN SONRAKİ RENDER (28 Kasım). Next, bağlantı
+ * kapanınca kalan Suspense parçalarını "after" evresinde render ediyor ve
+ * orada `headers()`/`cookies()` hata atıyor ("used `headers()` inside
+ * `after()`"). Yönetimdeki hata listesinin tepesi buydu: yığın
+ * `CompanyCards` gibi dili soran bileşenlerden `getLocale`e iniyordu ve
+ * kaynak 26 Kasım'dan beri gelen, yanıtı beklemeden kopan bot istekleriydi
+ * (lib/bot-guard.ts). Yanıt çoktan gitmiş olduğu için o render'ın dili
+ * hiçbir okura ulaşmıyor; YALNIZ bu hata varsayılana düşer. Derlemenin
+ * dinamik işaret hatası ve diğerleri aynen yükselir (yutulursa sayfa yanlış
+ * yerde statikleşirdi).
+ */
+function isAfterPhaseError(error: unknown): boolean {
+  return error instanceof Error && error.message.includes("inside `after()`");
+}
 
-  const store = await cookies();
-  const value = store.get(LOCALE_COOKIE)?.value;
-  return isLocale(value) ? value : DEFAULT_LOCALE;
+export async function getLocale(): Promise<Locale> {
+  try {
+    const headerStore = await headers();
+    const fromPath = localeFromHeader(headerStore.get(LOCALE_HEADER));
+    if (fromPath) return fromPath;
+
+    const store = await cookies();
+    const value = store.get(LOCALE_COOKIE)?.value;
+    return isLocale(value) ? value : DEFAULT_LOCALE;
+  } catch (error) {
+    if (isAfterPhaseError(error)) return DEFAULT_LOCALE;
+    throw error;
+  }
 }
 
 export async function getTheme(): Promise<Theme> {
-  /* Gömülü parça temayı adresten alır (proxy başlığa çeviriyor); başka
-     sitenin çerçevesine çerez gitmiyor. Gerekçe `lib/embed.ts`. */
-  const embedded = (await headers()).get(EMBED_THEME_HEADER);
-  if (isTheme(embedded)) return embedded;
+  try {
+    /* Gömülü parça temayı adresten alır (proxy başlığa çeviriyor); başka
+       sitenin çerçevesine çerez gitmiyor. Gerekçe `lib/embed.ts`. */
+    const embedded = (await headers()).get(EMBED_THEME_HEADER);
+    if (isTheme(embedded)) return embedded;
 
-  const store = await cookies();
-  const value = store.get(THEME_COOKIE)?.value;
-  return isTheme(value) ? value : DEFAULT_THEME;
+    const store = await cookies();
+    const value = store.get(THEME_COOKIE)?.value;
+    return isTheme(value) ? value : DEFAULT_THEME;
+  } catch (error) {
+    /* Gerekçe `getLocale`in üstünde. */
+    if (isAfterPhaseError(error)) return DEFAULT_THEME;
+    throw error;
+  }
 }
 
 /** Sayfaların çoğu ikisini birlikte ister. */
