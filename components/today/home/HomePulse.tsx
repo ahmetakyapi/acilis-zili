@@ -155,7 +155,7 @@ export function HomePulseView({
             const up = score >= SCORE_MAX / 2;
             const span = Math.abs(score - SCORE_MAX / 2);
             return (
-              <li key={reading.key}>
+              <li key={reading.key} title={hints[reading.key]}>
                 <span className={styles.name}>{names[reading.key]}</span>
                 <b className="numeral" data-tone={up ? "up" : "down"}>{Math.round(reading.score)}</b>
                 <span className={`value-lane ${styles.lane}`} aria-hidden="true">

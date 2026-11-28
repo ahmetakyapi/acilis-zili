@@ -426,19 +426,21 @@ export function EarningsTodayView({
     şeridiyle aynı sınır mantığı, `MemberMarks`). */
 const FLOW_NOTE_SYMBOLS = 3;
 
-/** Geniş kapta piyasa değeri: yazılı değer + listenin en büyüğüne göre
-    kalın şerit (büyüklük, yargı değil — ton `--bar-soft`). */
+/** Geniş kapta piyasa değeri: yazılı değer.
+    ŞERİT KALKTI (28 Kasım, görsel tur 3). Satırda listenin en büyüğüne göre
+    mavi bir piyasa değeri şeridi vardı; panel hemen altındaki "Son Bilanço
+    Analizleri" tablosuyla (satır başına üç ölçü çubuğu) arka arkaya iki
+    çubuklu tablo okunuyordu ve büyüklük sıralamanın kendisinde zaten
+    duruyor (liste piyasa değerine göre sıralı). Kural: "piyasa değeri gibi
+    büyüklükler doğrudan YAZILIR" (`.claude/rules/arayuz.md` → Görsel Dil).
+    `max` yalnız boş değer kararı için. */
 function CapCell({ value, max, label, locale }: { value: number | null; max: number; label: string; locale: Locale }) {
   if (value === null || !(max > 0)) return <span aria-hidden className={styles.capEmpty} />;
-  const share = Math.max(0.02, Math.min(1, value / max));
   return (
     <span className={styles.cap}>
       <span className={styles.capHead}>
         <span className={cn("numeral", styles.capValue)}>{formatMoneyCompact(value, locale, "USD")}</span>
         <span className={styles.figureNote}>{label}</span>
-      </span>
-      <span className="value-lane" data-draw>
-        <i className="value-bar bar-fill" data-end="end" style={{ left: 0, width: `${(share * 100).toFixed(1)}%` }} />
       </span>
     </span>
   );

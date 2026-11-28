@@ -358,3 +358,21 @@
   .next[data-wide] .expect { grid-template-columns:repeat(2,minmax(0,1fr)); gap:0 40px; padding-left:0; border-left:0; }
   .next[data-wide] .expectCell,.next[data-wide] .expectCell:first-child { padding-top:20px; border-top:1px solid var(--line-soft); }
 }
+
+/* ==========================================================================
+   TUR 3 (28 Kasım 2026) — hiyerarşi ve denge. Gerekçeler işaretlemenin
+   yanında (`page.tsx` → "KISA AD, ÖLÇÜLÜ PUNTO"; `LastReport.tsx` → "EN
+   BÜYÜK PUNTO SONUCA").
+   ========================================================================== */
+
+/* Başlık puntosu bir kademe: 34–56 → 30–44 (telefonda 34 → 28). Değişken
+   başlık kartında ezilir; ortak `--heading-page` (globals.css) dokunulmadı. */
+.masthead { --heading-page: clamp(30px, 3.1vw, 44px); }
+@media (max-width: 767px) { .masthead { --heading-page: 28px; } }
+
+/* Tek sayıda künyenin sonuncusu (Son Okunan Çeyrek + görüş hapı) telefonda
+   iki sütunu kaplar: 360 piksellik ekranda yarım sütuna sığmıyor, hap
+   hücresinden 7 piksel taşıyordu (ölçüldü, olc.mjs taşan↔ 1 → 0). */
+@media (max-width: 639px) {
+  .identityFacts > div:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}

@@ -24,7 +24,7 @@ import {
   Panel,
   PanelHeader,
 } from "@/components/ui/primitives";
-import { buildPastQuarters } from "@/components/stock/past-quarters";
+import { buildPastQuarters, epsSurprise, formatEpsSurprise } from "@/components/stock/past-quarters";
 import { analysisHref, verdictLabel, verdictOf } from "@/lib/analysis";
 import { companySector } from "@/lib/company-sector";
 import {
@@ -62,6 +62,7 @@ import { getDailyCloses } from "@/lib/providers/alpaca-options";
 import { getEarningsSurprises } from "@/lib/providers/finnhub";
 import { sectorLabel } from "@/lib/sectors";
 import { pageAlternates } from "@/lib/site";
+import { shortCompanyName } from "@/lib/seo-titles";
 import type { EarningsRow } from "@/lib/schema";
 import {
   formatEtDateCompact,
@@ -222,6 +223,7 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
   const v = t.earningsSeason.vote;
   const { when, copy } = textsOf(data, symbol, locale, t);
   const href = earningsHref(symbol);
+  const heading = c.title.replace("{name}", shortCompanyName(data.name) || data.name).replace("{symbol}", symbol);
   const session = await auth();
   const userId = session?.user?.id ?? null;
 
@@ -316,6 +318,12 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
         : "none";
   const lastOutcome = data.previous ? voteOutcome(data.previous.epsActual, data.previous.epsEstimate) : null;
   const lastTiming = data.previous ? timingOf(data.previous.hour?.trim() || null, t) : null;
+  /* Kahramanın büyük sayısı (gerekçe `LastReport.tsx`): defterin satırlarıyla
+     aynı hesap ve aynı biçim (`epsSurprise` / `formatEpsSurprise`). */
+  const lastSurpriseRaw = data.previous ? epsSurprise(data.previous.epsEstimate, data.previous.epsActual) : null;
+  const lastSurprise = lastSurpriseRaw
+    ? { text: formatEpsSurprise(lastSurpriseRaw, locale, currency), tone: lastSurpriseRaw.direction }
+    : null;
   /* SEKTÖR ÇEVRİLİ (14 Kasım): künye şeridi ham GICS adını basıyordu
      ("Information Technology"); hisse sayfası aynı şirkete "Bilgi
      Teknolojileri" diyor. Aynı yardımcı (`companySector`), aynı sonuç;
@@ -346,7 +354,16 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
           (`/teknik-analiz`, `/bilancolar`, `/rehber`: `PageHeader share=`). Yol
           satırında başlık kartının DIŞINDA duruyordu (24 Ekim denetimi). */}
       <PageHeader
-        title={copy.title}
+        /* KISA AD, ÖLÇÜLÜ PUNTO (28 Kasım, Tur 3). "Dell Technologies Inc
+           Bilançosu Ne Zaman?" 56 piksellik display başlıkta 1440'ta ancak
+           tek satıra sığıyor, uzun adlı şirkette (The Home Depot, Inc.)
+           kartın sağ ucuna dayanıyordu; 390'da dört satırdı. `h1` teknik
+           analiz sayfasıyla aynı kırpmayı okur (`shortCompanyName`: tüzel ek
+           düşer), `<title>` ve paylaşım metni tam adla kalır. Başlık
+           puntosu bu sayfada bir kademe iner (`.masthead`): sayfanın asıl
+           kahramanı başlık değil, altındaki sonuç sayısı. */
+        title={heading}
+        className={css.masthead}
         subtitle={copy.answer}
         share={<PageShare compactOnMobile align="right" path={href} title={copy.title} locale={locale} t={t} />}
         /* KÜNYE ŞERİDİ BAŞLIK KARTININ İÇİNDE (31 Ekim). Kartın altında,
@@ -473,11 +490,14 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
                   : null
               }
               reactionPct={reactions.get(data.previous.reportDate) ?? null}
+              surprise={lastSurprise}
               next={data.next ? { date: data.next.reportDate, estimated: when.estimated } : null}
               today={data.today}
               locale={locale}
               labels={{
                 reported: p.lastReported,
+                reportedAgo: p.lastReportedAgo,
+                surprise: p.lastSurprise,
                 today: p.lastToday,
                 yesterday: p.lastYesterday,
                 daysAgo: p.lastDaysAgo,
@@ -496,7 +516,10 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
               }}
             >
               <p className={css.lead}>
-                {(data.previous.epsEstimate !== null ? p.lastLead : p.lastLeadPlain)
+                {/* Sayısız kalıp (28 Kasım, Tur 3): "Hisse başına kâr 4,02 $,
+                    beklenti 3,95 $ idi" cümlesi hemen yanındaki EPS hücresinin
+                    iki sayısını ve kahramanın sürprizini üçüncü kez yazıyordu. */}
+                {p.lastLeadPlain
                   .replace("{name}", data.name)
                   .replace("{symbol}", symbol)
                   .replace("{date}", formatEtDateLong(data.previous.reportDate, locale))

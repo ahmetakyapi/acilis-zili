@@ -120,3 +120,20 @@
 /* Künye kolonun dibinde: yan kolon uzunsa aradaki fark künyenin ÜSTÜNDE
    kalır, kutunun içine dağılmaz. */
 .disclosure { margin: auto 0 0; padding-top: 10px; border-top: 1px solid var(--line-soft); font-size: var(--text-small); line-height: 1.45; color: var(--text-muted); }
+
+/* AÇILIŞ KARTLARI DÜZ SATIR (28 Kasım 2026, görsel tur 3 — sahibinin sözü:
+   "bazı ekranlarda çok bilgi yoğunluğu var… minimal estetik dokunuşlar").
+   Ortak sohbet kartı (components/ai/chat → `variant="card"`) bu kolonda
+   panelin içinde kenarlıklı, gri zeminli dört kutu yığını oluşturuyordu:
+   kart içinde kart, yanındaki hafta kartının gömülü zemini de eklenince
+   panelde altı ayrı kutu. Burada (yalnız bu kolonda) kutu kalkıyor: satırlar
+   aralarında kıl çizgiyle düz bir liste, ikon karosu zeminsiz pirinç im,
+   üzerine gelince ton. Ortak bileşen ve öteki sohbet yüzeyleri aynen.
+   Dokunma hedefi değişmedi (satır ≥ 52). Seçiciler ortak bileşenin yapısına
+   bağlı (li > a/button > span ikon / span metin / svg ok; oturumsuz okurda bağlantı): yapı değişirse
+   burası sessizce varsayılana döner, bozulmaz. */
+.starters { gap: 0; border-top: 1px solid var(--line-soft); }
+.starters > li { border-bottom: 1px solid var(--line-soft); }
+.starters > li > :is(a, button) { border: 0; border-radius: 10px; background: transparent; padding-inline: 4px 8px; }
+.starters > li > :is(a, button):hover:not(:disabled) { background: var(--surface-sunken); }
+.starters > li > :is(a, button) > span:first-child { width: 24px; background: transparent; color: var(--brass-ink); }

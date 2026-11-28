@@ -485,7 +485,16 @@ function DayFlow({ initial, locale, labels, railLabels, heading, otherHeadings, 
     setSelection(openId === id ? { kind: "closed" } : { kind: "picked", id, tour: false });
   }
 
-  return <div ref={ref} className={styles.flow} data-day-flow>
+  /* SESSİZ GÜN TEK SATIR (28 Kasım, görsel tur 3). Bugün boş, işlem günü
+     değil (hafta sonu, tatil) ve sıradaki günün önizlemesi de yoksa panel
+     36 puntoluk display başlık + açıklama + kıl çizgi + ikonlu boş durumla
+     1440'ta ~190 piksel tutuyordu (canlı, 28 Kasım Cumartesi) ve söylediği
+     tek cümleydi. O hâlde başlık panel ölçüsüne iner, açıklama ve kıl çizgi
+     düşer, boş durum başlığın altında tek satır olur (DayFlow.module.css →
+     "SESSİZ GÜN"). Eksenli boş işlem günü ve önizlemeli gün eskisi gibi. */
+  const quiet = viewingToday && events.length === 0 && !shown.tradingDay && !(preview && preview.events.length > 0) && dayState.phase !== "error";
+
+  return <div ref={ref} className={styles.flow} data-day-flow data-quiet={quiet || undefined}>
     {/* BAŞLIK VE KÜNYE TEK SATIR (24 Eylül). Bölümün başlığı ayrı bir
         satırda, altında bir kıl çizgi ve ONUN altında künye satırı
         (piyasa günü, otomatik güncelleme) duruyordu: 1440'ta içerik

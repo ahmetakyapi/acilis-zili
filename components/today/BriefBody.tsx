@@ -315,6 +315,7 @@ export function BriefBody({
   size = "card",
   openLines = OPEN_LINES,
   phonePreview = false,
+  widePreview,
   refs,
   tocLabel,
 }: {
@@ -330,6 +331,9 @@ export function BriefBody({
   openLines?: number;
   /** Telefonda (≤767) daha kısa ikinci bir önizleme — ana sayfa kartı. */
   phonePreview?: boolean;
+  /** Geniş ekranda da kısa önizleme: okunur karakter bütçesi (girişten
+   *  sonra en az iki satır açık) — ana sayfa kartı, gerekçe aşağıda. */
+  widePreview?: number;
   /** Kayıt Defteri bağları (`ledgerRefs`) — bant basıldıysa. */
   refs?: readonly LedgerRef[];
   /** Verilirse ve sayıda iki ya da daha çok ara başlık varsa bölüm dizini. */
@@ -377,7 +381,24 @@ export function BriefBody({
      katlama, kendi düğmesi kadar yer tutuyor ve okuyucuya hiçbir şey
      kazandırmıyor — üstelik "arkada çok şey var" diye yanlış bir izlenim
      bırakıyor. Kural iki bülten türüne de aynı işliyor. */
-  const cut = briefPreviewCut(lines, openLines);
+  /* GENİŞ EKRANDA DA KISA ÖNİZLEME (28 Kasım, görsel tur 3). Masaüstü
+     kesmesi "en az 900 karakter ve liste bütün kalır" diyordu; günlük
+     bülten giriş + yedi maddelik TEK liste olduğunda kesme hiç
+     düşmüyordu: kart 1440'ta 1.078 piksel, maddeler ~600 piksel metin ve
+     sol kolon sağ raydan ~350 piksel aşağı sarkıyordu (canlı, 28 Kasım;
+     sahte veride aynı). `widePreview` verilirse kesme girişin ardından ilk
+     maddelerde (bütçe dolunca, en az iki satır); gerisi aynı "Tümünü Gör"
+     katlamasında, bastığın yerde açılır. Tek satırlık kuyruk yine
+     katlanmaz (aynı kural). Ölçüm BriefCard'daki çağrının yanında. */
+  const fullCut = briefPreviewCut(lines, openLines);
+  const wideCut = widePreview ? briefPhoneCut(lines, fullCut, widePreview, 2) : fullCut;
+  /* Kısa kuyruk kendi katlamasını hak etmez (28 Kasım, inceleme): masaüstü
+     kesmesindeki 240 harf kuralı geniş önizlemeye de uygulanır; yalnız
+     "tek satır" denetimi iki kısa maddeyi "Tümünü Gör" arkasına saklıyordu. */
+  const tailChars = lines
+    .slice(wideCut)
+    .reduce((sum, line) => sum + line.replace(/^\s*(?:##\s+|-\s+)/, "").replace(/\*\*/g, "").trim().length, 0);
+  const cut = lines.length - wideCut <= 1 || tailChars < 240 ? fullCut : wideCut;
   /* TELEFONDA İKİNCİ KESME (28 Eylül). Masaüstü önizlemesi en az 900
      karakter; telefonun dar sütununda kart 390'da 1.058, 360'ta 1.080
      piksel ölçüldü ve sayfanın en uzun bloğuydu. Telefon kesmesi giriş +

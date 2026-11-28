@@ -51,6 +51,19 @@
 .lane { grid-column:1 / -1; }
 .lane > :global(.value-bar) { animation-delay:calc(var(--i, 0) * var(--step, 40ms)); }
 .list small { grid-column:1 / -1; color:var(--text-muted); font-size:var(--text-small); line-height:1.4; }
+/* RAYDA İKİ SÜTUNLU KAROLAR (28 Kasım, görsel tur 3). Sağ ray üç panelde
+   aynı kalıbı yineliyordu (Nabız, Dünya Piyasaları, Dünün Grafiği: ad +
+   değer + tam satır çubuk + künye); Nabız'ın beş göstergesi 1440'ta 579
+   piksel. Rayda göstergeler artık ikişerli karo: ad (iki satıra kadar),
+   puan, çubuk; açıklama cümlesi görünmez (ekran okuyucu ve `title` onu
+   okur, tam açıklama "Ayrıntılar"da). Tek kalan son karo tam satır. */
+@container home-pulse (max-width:639px) {
+  .list { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:18px; }
+  .list > li { grid-template-columns:minmax(0,1fr) auto; grid-template-rows:1fr auto; align-items:end; gap:8px 8px; padding-block:12px 10px; }
+  .list > li:last-child:nth-child(odd) { grid-column:1 / -1; }
+  .list .name { font-size:var(--text-small); line-height:1.25; text-wrap:balance; }
+  .list small { position:absolute; width:1px; height:1px; overflow:hidden; clip-path:inset(50%); white-space:nowrap; }
+}
 
 /* GENİŞ KAP (tablet, panel tam genişlikte): okuma solda sabit sütun,
    göstergeler sağda iki sütun; rayın kalıbı 700+ pikselde gerilmesin. */

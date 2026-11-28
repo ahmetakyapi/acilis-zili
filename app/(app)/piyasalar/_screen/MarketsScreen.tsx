@@ -2,7 +2,7 @@ import { PageShare } from "@/components/article/PageShare";
 import { HeroAccent } from "@/components/motion/HeroAccent";
 import { QueryTransition } from "@/components/layout/QueryTransition";
 import { LoadingFallback } from "@/components/ui/LoadingState";
-import { Suspense } from "react";
+import { Suspense, type ReactNode } from "react";
 import { SectionMasthead } from "@/components/motion/SectionMasthead";
 import { MotionExperience, ScrollProgress } from "@/components/motion/PremiumMotion";
 import styles from "@/components/markets/MarketExperience.module.css";
@@ -10,15 +10,16 @@ import { CommodityBoard, SectorPerformance, parseSectorSort } from "@/components
 import { SentimentPulse } from "@/components/markets/SentimentPulse";
 import boardStyles from "@/components/markets/MarketBoards.module.css";
 import { IndexHeat } from "@/components/markets/IndexHeat";
-import { BreadthSummary, IndexIdentity, IndexTabs } from "@/components/markets/IndexSelection";
+import { BreadthPanel } from "@/components/markets/IndexSelection";
+import overview from "@/components/markets/MarketsOverview.module.css";
 import { BoardTableSkeleton } from "@/components/markets/BoardTable";
 import { MembersTable } from "@/components/markets/MembersTable";
 import { MoverPanel } from "@/components/markets/MoverPanel";
 import {
+  FOLD_ROWS,
   HEAT_MAX,
   INDEX_TABS,
   PAGE_STEP,
-  PHONE_ROWS,
   SORT_KEYS,
   type Row,
   type SortDir,
@@ -78,6 +79,14 @@ import {
  * içi genişlik (kaç hisse artıda), en çok hareket edenler ve tam bileşen
  * listesi gösterilir. Üyelik statik, kotasyonlar canlı; hesaplanan her sayı
  * elimizdeki fiyatlardan türer — tahmin yok.
+ *
+ * 28 KASIM 2026 (görsel tur 3; sahibinin sözü: "bazı ekranlarda çok bilgi
+ * yoğunluğu var, kullanımı zorlaştırıyor… tekrar eden şeylerden
+ * uzaklaşalım"). Sıra: kapak (seçili endeks kahraman, öteki üçü sessiz) →
+ * solda genişlik paneli (seçici + tek yarım daire ölçer + medyan), sağda
+ * artan/düşen logo karoları → ısı haritası (açık kademeler) → bileşen
+ * tablosu (ilk 10 satır + katlama) → nabız, sektör, emtia. Sayfa 1440'ta
+ * 7.332 → 4.386 piksel; ölçüm components/markets/MarketsOverview.module.css.
  */
 
 
@@ -251,16 +260,12 @@ export async function MarketsScreen({
            düğmeler basılıyor: sekme değişirken satır kaybolmuyor, yalnızca
            yanındaki pay bekliyor. */
         fallback={
-          <>
-            <IndexTabs tab={tab} locale={locale} t={t}
-              identity={<IndexIdentity tab={tab} proxy={active.proxy} median={null} phase={null} locale={locale} t={t} loading />}
-              aside={<div className={styles.share} aria-hidden="true">
-                <div className={styles.shareBody}><Skeleton className="h-3 w-28" /><Skeleton className="h-8 w-16" /><Skeleton className="h-2 w-full" /></div>
-                <div className={styles.shareCounts}>{[0, 1, 2].map((key) => <Skeleton key={key} className="h-5 w-16" />)}</div>
-              </div>}
-            />
-            <LoadingFallback label={t.common.loading}><DetailSkeleton rows={Math.min(active.members.length, limit)} contribution={tab === "dow"} /></LoadingFallback>
-          </>
+          <DetailSkeleton
+            selector={<BreadthPanel tab={tab} breadth={null} median={null} phase={null} memberCount={0} loading locale={locale} t={t} />}
+            rows={Math.min(active.members.length, limit > PAGE_STEP ? limit : FOLD_ROWS)}
+            contribution={tab === "dow"}
+            label={t.common.loading}
+          />
         }
       >
         <IndexDetail
@@ -364,55 +369,68 @@ async function IndexCards({
      (`sessionDomain`): dört kart aynı günü aynı ölçekte anlatır. */
   const rail = sessionDomain(status);
 
-  // The selected index occupies the first visual position. Keep DOM and
-  // keyboard order aligned with that position; the toolbar keeps its order.
-  // Keep all three positions stable when the active index changes.
-  const orderedTabs: readonly { key: string; label: string; proxy: string; tab: boolean }[] = [
+  /* KAHRAMAN + ÜÇ SESSİZ KART (28 Kasım 2026, görsel tur 3; gerekçe
+     components/markets/IndexCard.tsx → "KAHRAMAN VE SESSİZLER"). Seçili
+     endeks solda büyür ve fonun sayfasına gider (seçiciyi zaten taşıyor:
+     sayfa O endeksin sayfası); öteki ikisi ve Russell 2000 sağda alt alta,
+     tıklayınca kendi endeks sayfalarına geçer ve orada kahraman olur. Sessiz
+     kartların sırası sabit (`INDEX_TABS` + Russell); seçim değişince yalnız
+     hangisinin solda olduğu değişir. */
+  const entries: readonly { key: string; label: string; proxy: string; tab: boolean }[] = [
     ...INDEX_TABS.map((entry) => ({ key: entry.key, label: entry.label, proxy: entry.proxy, tab: true })),
     ...HERO_EXTRA.map((entry) => ({ ...entry, tab: false })),
   ];
+  const heroEntry = entries.find((entry) => entry.tab && entry.key === activeTab) ?? entries[0];
+  const quietEntries = entries.filter((entry) => entry !== heroEntry);
+
+  const card = (entry: (typeof entries)[number], order: number, hero: boolean) => {
+    const quote = quotesResult.data[entry.proxy] ?? null;
+    /* ÇİZGİ SEANS EKSENİNDE, TABAN ÖNCEKİ KAPANIŞ (14 Ekim). Barlar
+       yalnızca değerle eşlenip eksensiz çiziliyordu: %0,05'lik kıpırtı
+       kartı dolduruyor, x ekseni bar SIRASI olunca ön seans günü yarım
+       gösteriyordu — Sparkline'ın kendi karar kaydının ana sayfada
+       ölçüp düzelttiği hata buradaydı. Ana sayfanın kuralının aynısı:
+       zaman + `sessionDomain` + `prevClose` tabanı + açılışta yarım
+       ton; sayı o seansa ait değilse (`quoteBasis === "lastClose"`)
+       şekil HİÇ çizilmiyor (veri dürüstlüğü 3-4). Kartın kendisi
+       18 Ekim'den beri components/markets/IndexCard.tsx. */
+    const points = (bars[entry.proxy] ?? []).map((bar) => ({
+      time: bar.time,
+      value: bar.close,
+    }));
+    return (
+      <IndexCard
+        key={entry.key}
+        /* Sessiz seçici kart endeksin KENDİ adresine gider (14 Kasım);
+           sıralama yalnız varsayılandan farklıysa taşınır ki kartın adresi
+           sayfanın canonical'ıyla aynı kalsın. Kahraman ve Russell fonun
+           sayfasına (grafik orada). */
+        href={entry.tab && !hero
+          ? `${indexPagePath(entry.key as TabKey)}${sort === "degisim" && dir === "desc" ? "" : `?sirala=${sort}&yon=${dir}`}`
+          : `/hisse/${entry.proxy}`}
+        external={hero || !entry.tab}
+        label={entry.label}
+        proxy={entry.proxy}
+        quote={quote}
+        points={points}
+        sparkOk={quote ? quoteBasis(quote, status) !== "lastClose" : false}
+        rail={rail}
+        selected={hero}
+        variant={hero ? "hero" : "quiet"}
+        order={order}
+        locale={locale}
+        t={t}
+      />
+    );
+  };
 
   return (
     <div className={styles.indexOverview}>
-    <div className={styles.indexGrid}>
-      {orderedTabs.map((entry, order) => {
-        const quote = quotesResult.data[entry.proxy] ?? null;
-        /* ÇİZGİ SEANS EKSENİNDE, TABAN ÖNCEKİ KAPANIŞ (14 Ekim). Barlar
-           yalnızca değerle eşlenip eksensiz çiziliyordu: %0,05'lik kıpırtı
-           kartı dolduruyor, x ekseni bar SIRASI olunca ön seans günü yarım
-           gösteriyordu — Sparkline'ın kendi karar kaydının ana sayfada
-           ölçüp düzelttiği hata buradaydı. Ana sayfanın kuralının aynısı:
-           zaman + `sessionDomain` + `prevClose` tabanı + açılışta yarım
-           ton; sayı o seansa ait değilse (`quoteBasis === "lastClose"`)
-           şekil HİÇ çizilmiyor (veri dürüstlüğü 3-4). Kartın kendisi
-           18 Ekim'den beri components/markets/IndexCard.tsx. */
-        const points = (bars[entry.proxy] ?? []).map((bar) => ({
-          time: bar.time,
-          value: bar.close,
-        }));
-        return (
-          <IndexCard
-            key={entry.key}
-            /* Seçici kart endeksin KENDİ adresine gider (14 Kasım); sıralama
-               yalnız varsayılandan farklıysa taşınır ki kartın adresi
-               sayfanın canonical'ıyla aynı kalsın. */
-            href={entry.tab
-              ? `${indexPagePath(entry.key as TabKey)}${sort === "degisim" && dir === "desc" ? "" : `?sirala=${sort}&yon=${dir}`}`
-              : `/hisse/${entry.proxy}`}
-            external={!entry.tab}
-            label={entry.label}
-            proxy={entry.proxy}
-            quote={quote}
-            points={points}
-            sparkOk={quote ? quoteBasis(quote, status) !== "lastClose" : false}
-            rail={rail}
-            selected={entry.tab && entry.key === activeTab}
-            order={order}
-            locale={locale}
-            t={t}
-          />
-        );
-      })}
+    <div className={overview.overview}>
+      {card(heroEntry, 0, true)}
+      <div className={overview.rail}>
+        {quietEntries.map((entry, index) => card(entry, index + 1, false))}
+      </div>
     </div>
     <div className={styles.indexStamp}>
       <div className={styles.indexContext}>
@@ -620,8 +638,6 @@ async function IndexDetail({
   const staleNote =
     stale && stampAt ? ` · ${staleMark(t.data.mayBeStale, stampAt, locale)}` : "";
 
-  const share = withChange.length > 0 ? (advancing / withChange.length) * 100 : 0;
-
   /* ŞİRKET KARTI (components/ui/CompanyCard). Isı haritasının hücreleri
      kendi kartlarını sunucuda taşıyordu (30 hücre × tam kart işaretlemesi,
      `HeatmapGrid` konum ve Escape sarmalı); artık hücre, hareket satırı ve
@@ -668,50 +684,28 @@ async function IndexDetail({
         status={status}
         extras={Object.fromEntries(cardRows.map((row) => [row.member.symbol, cardFacts(row)]))}
       />
-      <IndexTabs
-        tab={tab}
-        locale={locale}
-        t={t}
-        identity={<IndexIdentity tab={tab} proxy={proxy} median={medianMove} phase={medianPhase} moves={memberMoves?.values ?? null} locale={locale} t={t} />}
-        aside={
-          withChange.length > 0 ? (
-            <BreadthSummary
-              share={share}
-              advancing={advancing}
-              flat={flat}
-              declining={declining}
-              locale={locale}
-              t={t}
-            />
-          ) : undefined
-        }
-      />
-      <IndexHeat
-        total={withChange.length}
-        memberCount={members.length}
-        heat={heatRows}
-        moves={heatMoves}
-        locale={locale}
-        t={t}
-      >
-        {source && <DataStamp labels={t.data} source={source} at={stampAt} stale={stale} locale={locale}
-          note={status.session === "pre-market" || status.session === "after-hours" ? t.data.extendedNote : undefined} />}
-      </IndexHeat>
-
-      {withQuote.length > 0 && (
-        <>
-          {/* TEK PANEL, İKİ YARI (14 Kasım 2026, görsel tur). Artanlar ve
-              düşenler iki ayrı paneldi, ortak ölçek notu ise ikisinin
-              DIŞINDA, sayfa zemininde yetim bir satırdı ("notu panele
-              bağla"). İki liste aynı ölçeği paylaşan tek bir okuma: artık
-              tek panelin iki yarısı (aralarında saç çizgisi), not panelin
-              künye bandı — 6 Kasım'ın "not iki panelin ORTAK ölçeğini
-              söylüyor" kararının yeri değişmedi, kabı geldi. */}
-          <Panel id="market-movers" className={styles.movers}>
-            {/* Künye SEÇKİNİN PAYDASINI söylüyor: "Günün En Çok Artanları"
-                beş satır basıyor ama hangi kümenin beşi olduğunu yazmıyordu.
-                Endeks 102 şirketse "102 şirketin 5 tanesi" — aynı kalıp
-                bileşen tablosunda ve ana sayfadaki bilanço panelinde de var. */}
+      {/* SEÇİM + HAREKETLER İKİ KOLON (28 Kasım 2026, görsel tur 3). Önce:
+          tam genişlikte üç bölmeli seçim şeridi (202 piksel), altında ısı
+          haritası, onun altında iki yarılı hareket paneli. Sonra: solda dar
+          genişlik paneli (seçici + tek ölçer + medyan), sağda iki karo
+          rayı; ikisi aynı hatta biter (ölçüm MarketsOverview.module.css →
+          "ÖLÇÜM"). Isı haritası tam genişlikte altlarında. */}
+      <div className={overview.detail} data-solo={withQuote.length === 0 || undefined}>
+        <BreadthPanel
+          tab={tab}
+          breadth={withChange.length > 0 ? { advancing, flat, declining } : null}
+          median={medianMove}
+          phase={medianPhase}
+          memberCount={memberMoves?.values.length ?? 0}
+          locale={locale}
+          t={t}
+        />
+        {withQuote.length > 0 && (
+          /* İKİ LİSTE, TEK OKUMA (14 Kasım'dan beri tek kap; 28 Kasım'da
+             karo rayları). Künye SEÇKİNİN PAYDASINI söylüyor ("102 şirketin
+             5 tanesi"); ölçek notu iki listenin ORTAK ölçeğini (6 Kasım) ve
+             ölçeğin kendisini (10 Kasım, "Tam Şerit %6,93") yazıyor. */
+          <div id="market-movers" className={overview.movers}>
             <MoverPanel
               title={t.markets.topGainers}
               kind="up"
@@ -742,26 +736,26 @@ async function IndexDetail({
                   .replace("{total}", String(withChange.length)) + staleNote
               }
             />
-            {/* ÖLÇEK NOTU İKİ PANELİN DİBİNDE (6 Kasım). İki hareket
-                panelinin üstünde tek başına bir satırdı; sonra ısı haritasının
-                künye bandına taşınmıştı ("bant hemen altındaki iki panelin
-                künyesi"). Orada üç parçalı bandın ortasında kendi panelinden
-                kopuk, haritayı anlatıyormuş gibi duruyordu. Not iki panelin
-                ORTAK ölçeğini söylüyor; yeri ikisinin altında, iki kolonu
-                kaplayan tek satır. */}
-            {/* 10 Kasım: not ölçeğin KENDİSİNİ de yazıyor ("Tam Şerit %6,93").
-                "Aynı ölçek" deniyordu ama ölçeğin ne olduğu yazmıyordu; tam
-                boydaki şeridin hangi yüzde olduğu artık notta, başında
-                şeridin küçük bir örneğiyle. */}
-            <p className={styles.movementScale}>
+            <p className={overview.moverScale}>
               <i aria-hidden />
               <span>{t.markets.movementScale}</span>
               <span className="numeral">{t.markets.movementScaleFull.replace("{pct}", formatPercentPlain(movementScale, locale))}</span>
             </p>
-          </Panel>
-        </>
-      )}
+          </div>
+        )}
+      </div>
 
+      {/* Isı haritasının künye bandı yalnız kapsamı söyler (28 Kasım): aynı
+          damga (kaynak · saat · gecikme) kapakta ve tablonun dibinde de
+          basılıyordu — üç kez aynı satır. Damga artık tablonun dibinde. */}
+      <IndexHeat
+        total={withChange.length}
+        memberCount={members.length}
+        heat={heatRows}
+        moves={heatMoves}
+        locale={locale}
+        t={t}
+      />
 
       <MembersTable
         tab={tab}
@@ -813,68 +807,76 @@ async function IndexDetail({
  * düzeni, aynı ızgara. Böylece içerik uzayıp kısaldıkça iskelet de onunla
  * birlikte kayıyor ve elle ayarlanmış piksel sayıları eskimiyor.
  */
-function DetailSkeleton({ rows, contribution }: { rows: number; contribution: boolean }) {
+function DetailSkeleton({ selector, rows, contribution, label }: {
+  /** Seçici panel yükleniyor hâliyle: çipler beklerken de basılabilir. */
+  selector: ReactNode;
+  rows: number;
+  contribution: boolean;
+  label: string;
+}) {
   return (
-    <div className={styles.detailSkeleton} aria-hidden="true">
-      {/* 27 Eylül: eski kimlik/çubuk maketi yerine gerçek 30 karolu geometri.
-          Seçici ve genişlik özeti yukarıda, yüklenirken de aynı konumda. */}
-      <Panel className={styles.breadth}>
-        <div className={styles.breadthOverview}>
-          <div className={styles.heat}>
-            <div className={styles.heatHead}>
-              <Skeleton className="h-5 w-20" />
-              <Skeleton className={cn(styles.heatHint, "h-3 w-full max-w-72")} />
-              <Skeleton className={cn(styles.heatLegend, "h-10")} />
-            </div>
-            <div className={styles.heatGrid}>
-              {Array.from({ length: HEAT_MAX }, (_, i) => (
-                <div key={i} className={styles.heatCell} data-heat-level="0">
-                  <Skeleton className="size-[26px] rounded-lg" />
-                  <Skeleton className="h-3 w-7" />
-                  <Skeleton className="h-3 w-8" />
+    <div className={styles.detailSkeleton}>
+      {/* 28 Kasım: gerçek düzenin aynısı — solda genişlik paneli (seçici
+          canlı, ölçer bekliyor), sağda iki karo rayı; altında 30 karolu
+          harita ve tablonun açık satırları. */}
+      <div className={overview.detail}>
+        {selector}
+        <LoadingFallback label={label}>
+          <div className={overview.movers}>
+            {[0, 1].map((panel) => (
+              <div key={panel} className={overview.mover}>
+                <div className={overview.moverHead}><Skeleton className="h-5 w-48" /></div>
+                <ul className={overview.tiles}>
+                  {Array.from({ length: 5 }, (_, i) => (
+                    <li key={i}>
+                      <div className={overview.tile}>
+                        <Skeleton className="size-9 rounded-lg" />
+                        <Skeleton className="h-3.5 w-12" />
+                        <Skeleton className={cn(overview.tileName, "h-3 w-20")} />
+                        <Skeleton className="h-5 w-16" />
+                        {contribution && <Skeleton className="h-3 w-14" />}
+                        <Skeleton className={cn(overview.tileLane, "h-[5px] w-full")} />
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+            <div className={overview.moverScale}><Skeleton className="h-3 w-72 max-w-full" /></div>
+          </div>
+        </LoadingFallback>
+      </div>
+      <LoadingFallback label={label}>
+        <div className={styles.detailSkeleton}>
+          <Panel className={styles.breadth}>
+            <div className={styles.breadthOverview}>
+              <div className={styles.heat}>
+                <div className={styles.heatHead}>
+                  <Skeleton className="h-5 w-20" />
+                  <Skeleton className={cn(styles.heatHint, "h-3 w-full max-w-72")} />
+                  <Skeleton className={cn(styles.heatLegend, "h-10")} />
                 </div>
-              ))}
+                <div className={styles.heatGrid}>
+                  {Array.from({ length: HEAT_MAX }, (_, i) => (
+                    <div key={i} className={styles.heatCell} data-heat-level="0">
+                      <Skeleton className="size-[26px] rounded-lg" />
+                      <Skeleton className="h-3 w-7" />
+                      <Skeleton className="h-3 w-8" />
+                    </div>
+                  ))}
+                </div>
+              </div>
             </div>
-          </div>
-        </div>
-        <div className={cn(styles.breadthStamp, styles.stampSkeleton)}>
-          <Skeleton className="h-3 w-72 max-w-full" />
-          <Skeleton className="h-3 w-52 max-w-full" />
-          <Skeleton className="h-3 w-80 max-w-full" />
-        </div>
-      </Panel>
-
-      <Panel className={styles.movers}>
-        {[0, 1].map((panel) => (
-          <div key={panel} className={styles.mover}>
-            <div className={styles.moverSkeletonHead}>
-              <Skeleton className="h-5 w-40" /><Skeleton className="h-3 w-24" />
+            <div className={cn(styles.breadthStamp, styles.stampSkeleton)}>
+              <Skeleton className="h-3 w-80 max-w-full" />
             </div>
-            <ul>
-              {Array.from({ length: 5 }, (_, i) => (
-                <li key={i} className={styles.moverSkeletonRow}>
-                  <Skeleton className="size-6 rounded-md" />
-                  <div className={styles.moverSkeletonCompany}><Skeleton className="h-[18px] w-12" /><Skeleton className="h-[14px] w-full" /></div>
-                  <Skeleton className={cn(styles.moverSkeletonValue, "h-5 w-16")} />
-                  <Skeleton className={cn(styles.moverSkeletonBar, "h-[5px] w-full")} />
-                  {contribution && <Skeleton className={cn(styles.moverSkeletonBar, "h-4 w-20")} />}
-                </li>
-              ))}
-            </ul>
-          </div>
-        ))}
-        <div className={styles.movementScale}><Skeleton className="h-3 w-72 max-w-full" /></div>
-      </Panel>
-
-      {/* Satır boyu gerçek tabloyla aynı (10 Kasım: 46 piksel, telefonda
-          48 ve ilk on beş — MembersTable.module.css); eski yer tutucu 54
-          piksellik genel satırdı ve telefonda altmış satırın hepsini
-          basıyordu (gerçeği on beş).
-          10 Kasım (gece): tablo pano satırına geçti (62 piksel, telefonda
-          56, logo 40 / 32); iskelet ortak parçadan (`BoardTableSkeleton`,
-          components/markets/BoardTable.tsx) — Şirketler dizini de aynısını
-          basıyor. Telefonda yine ilk on beş. */}
-      <BoardTableSkeleton rows={rows} phoneRows={PHONE_ROWS} />
+          </Panel>
+          {/* Satır boyu gerçek tabloyla aynı (pano satırı 62, telefonda 56;
+              ortak parça `BoardTableSkeleton`). 28 Kasım: tablo her
+              genişlikte ilk `FOLD_ROWS` satırla açılıyor; iskelet de o kadar. */}
+          <BoardTableSkeleton rows={rows} />
+        </div>
+      </LoadingFallback>
     </div>
   );
 }

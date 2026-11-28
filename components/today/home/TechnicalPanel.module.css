@@ -63,6 +63,12 @@
 .cellChange[data-tone="down"] { color:var(--down); }
 .cell:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
 .cell:active { scale:.97; }
+/* "+N" karosu: logo karosunun ölçüsünde (26) gömük tonda, sayı mürekkep
+   renginde; altında künye. Rayda kümenin altıncı hücresi (gerekçe
+   TechnicalPanel.tsx → "RAYDA KÜME TEK SATIR"). */
+.cells > [data-extra] { display:none; }
+.moreTile { display:grid; place-items:center; width:26px; height:26px; border-radius:var(--radius-sm); background:var(--surface-sunken); color:var(--text-strong); font-size:var(--text-small); font-weight:700; letter-spacing:-.01em; }
+.moreCell .cell b { font-family:inherit; color:var(--primary-ink); }
 @media (hover:hover) and (pointer:fine) {
   .cell:hover { background:var(--primary-tint); }
   .cell:hover b { color:var(--primary-ink); }
@@ -98,6 +104,8 @@
    olmaz: üç sütun doğal genişliğinde, şerit tam satır. Künye tek satır. */
 @container technical-home (min-width:640px) {
   .cells { grid-template-columns:repeat(auto-fill,minmax(64px,1fr)); }
+  .cells > [data-extra] { display:list-item; list-style:none; }
+  .moreCell { display:none; }
   .counts { grid-template-columns:repeat(3,minmax(0,160px)); }
   .editions { grid-template-columns:repeat(2,minmax(0,1fr)); column-gap:32px; }
 }

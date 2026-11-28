@@ -86,13 +86,15 @@ export const generateMetadata = pageMetadata({
 const getPageTimestamp = cache(() => Date.now());
 
 export default async function TodayPage() {
-  const { locale, t } = await getI18n();
-  const status = await getStatus();
+  /* Üç bağımsız okuma tek turda (28 Kasım, performans denetimi): sırayla
+     beklenince soğuk başlangıçta tatil tablosu ve oturum parmak izi için
+     iki Neon gidiş-dönüşü üst üste biniyordu. */
+  const [{ locale, t }, status, session] = await Promise.all([getI18n(), getStatus(), auth()]);
   /* Favoriler panelinin YERİ oturuma bağlı (10 Kasım gecesi): giriş yapmış
      okuyucuda bugünün parçasında, misafirde davet satırı olarak en dipte.
      Oturum JWT çerezinden okunuyor (auth.ts → strategy "jwt"), veritabanı
      beklenmiyor; panelin kendi `auth()` çağrısıyla aynı sonuç. */
-  const signedIn = Boolean((await auth())?.user?.id);
+  const signedIn = Boolean(session?.user?.id);
 
   const sessionLabel: Record<string, string> = {
     regular: t.market.open,
@@ -137,6 +139,10 @@ export default async function TodayPage() {
      ekseni okuyor — `sessionDomain`, gerekçe index-feed.ts'te. */
   const rail = sessionDomain(status);
   const tags = zoneTag(locale);
+  /* `text-read`: punto modülde (14px) ama genel `main h2` mürekkebi boyu
+     sınıftan okuyor; sınıfsız başlık geniş degradeyi alıyordu ve açık ucu
+     14 pikselde AA'nın altında (globals.css notu). */
+  const indexHeading = <h2 id="hero-indices" className="text-read">{t.today.indices}</h2>;
   /* KAPANIŞTAN AÇILIŞA (31 Ekim): piyasa kapalıyken şeridin altında son
      kapanıştan sıradaki açılışa akan çizgi — gerekçe SessionRail.tsx →
      WaitLine. Uçlar okuyucunun saatiyle ve gün adıyla ("Cum 23:00"):
@@ -278,7 +284,10 @@ export default async function TodayPage() {
                 küçük kalmış"). Başlığın sağı da aday oldu ama İngilizce
                 başlık satırı dolduruyor (3–25 piksel kalıyor). Çipin sağı
                 her dilde ve genişlikte boş; ölçü CSS'te. */}
-            <div className={styles.heroTopRow}>
+            {/* `data-long`: seans içinde başlık uzun ("Kapanış Ziline Kalan");
+                zilin boyu başlığın bıraktığı yerden (28 Kasım, gerekçe
+                TodayExperience.module.css → "BOYU BAŞLIĞIN BIRAKTIĞI YERDEN"). */}
+            <div className={styles.heroTopRow} data-long={trading || undefined}>
               {/* SON SEANS KAROSU KAHRAMANDAN ÇIKTI (25 Ekim, sahibinin
                   itirazı: "kötü gözüküyor, görsel bütünlüğü bozuyor"). Çipin
                   altındaki karo geri sayımı aşağı itiyor ve kahramanın tek
@@ -347,11 +356,20 @@ export default async function TodayPage() {
             </div>
           </div>
           <section className={styles.indexDeck} aria-labelledby="hero-indices">
-            {/* `text-read`: punto modülde (14px) ama genel `main h2` mürekkebi
-                boyu sınıftan okuyor; sınıfsız başlık geniş degradeyi alıyordu
-                ve açık ucu 14 pikselde AA'nın altında (globals.css notu). */}
-            <div className={styles.indexHeading}><h2 id="hero-indices" className="text-read">{t.today.indices}</h2><span>{t.today.experienceIndexNote}</span></div>
-            <Suspense fallback={<IndexSkeleton />}><IndexStrip locale={locale} t={t} /></Suspense>
+            {/* Başlık satırı destenin İÇİNDE çiziliyor (28 Kasım): dört
+                kartın ortak seans künyesi ("Kapanış Sonrası") başlığın
+                yanına bir kez yazılıyor — gerekçe IndexLive → "KÜNYE BİR
+                KEZ". Yükleme yedeği aynı satırı basıyor. */}
+            <Suspense
+              fallback={
+                <>
+                  <div className={styles.indexHeading}>{indexHeading}<span>{t.today.experienceIndexNote}</span></div>
+                  <IndexSkeleton />
+                </>
+              }
+            >
+              <IndexStrip locale={locale} t={t} heading={indexHeading} headingNote={t.today.experienceIndexNote} />
+            </Suspense>
           </section>
         </div>
       </header>

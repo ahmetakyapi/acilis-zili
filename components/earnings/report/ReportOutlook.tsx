@@ -44,6 +44,8 @@ export function ReportOutlook({
           strengths: t.analysis.strengths,
           risks: t.analysis.risks,
           count: t.analysisVisuals.balanceCount,
+          more: t.analysisVisuals.pointsMore,
+          less: t.analysisVisuals.foldLess,
         }}
         linker={linker}
         lang={row.locale}

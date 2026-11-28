@@ -11,10 +11,7 @@
 .summary { display:flex; flex-direction:column; gap:16px; min-width:0; }
 .score { display:flex; flex-direction:column; gap:6px; min-width:0; }
 /* Panelin en büyük sayısı: display sayı 700, −0,03em (ortak ölçü). */
-.scoreValue { font-size:56px; font-weight:700; letter-spacing:-.03em; line-height:1; color:var(--text-strong); }
-.scoreValue > span { font-size:28px; color:var(--text-muted); }
 .scoreLabel { font-size:13px; font-weight:600; line-height:1.35; color:var(--text-body); }
-.scoreStrip { margin-top:6px; max-width:14rem; }
 .fact { display:flex; align-items:baseline; justify-content:space-between; gap:12px; margin:0; padding-top:12px; border-top:1px solid var(--line-soft); }
 .fact dt { font-size:12px; font-weight:600; color:var(--text-muted); }
 .fact dd { margin:0; font-size:17px; font-weight:700; letter-spacing:-.02em; color:var(--text-strong); }
@@ -93,8 +90,6 @@
 }
 @media(max-width:639px) {
   .ledger { padding:0 16px 16px; }
-  .scoreValue { font-size:44px; }
-  .scoreValue > span { font-size:22px; }
 }
 
 /* ÖLÇÜM (14 Kasım, gerçek sayfa + sahte sağlayıcı, TR/EN, açık/koyu; NVDA
@@ -108,3 +103,56 @@
    0, < 44 hedef 0, kutudan taşan 0. Hareket: `bar-fill` satır başına bir
    kez (`getAnimations()`: şirket sayfasında 11 şerit), `reduce` altında
    çalışan animasyon 0. */
+
+/* ==========================================================================
+   TUR 3 (28 Kasım 2026): karne halkası ve tam genişlik künye. Gerekçe
+   QuarterLedger.tsx → "KARNE HALKASI".
+   ========================================================================== */
+.score { flex-direction: row; align-items: center; gap: 16px; }
+.scoreLabel { max-width: 9rem; font-size: 14px; font-weight: 700; color: var(--text-strong); }
+.ring { position: relative; flex: none; width: 96px; height: 96px; }
+.ringSvg { display: block; width: 100%; height: 100%; rotate: -90deg; overflow: visible; }
+/* Halka 6 piksel (ortak ölçü): 100 birimlik görünümde 96 piksel → 6,25. */
+.ringTrack, .ringArc { fill: none; stroke-width: 6.25; }
+.ringTrack { stroke: var(--line-soft); }
+.ringArc { stroke: var(--line-strong); stroke-linecap: butt; }
+.ringArc[data-mark="beat"] { stroke: var(--up); }
+.ringArc[data-mark="miss"] { stroke: var(--down); }
+.ringValue { position: absolute; inset: 0; display: grid; place-items: center; grid-auto-flow: column; justify-content: center; align-content: center; font-size: 30px; font-weight: 700; letter-spacing: -.03em; line-height: 1; color: var(--text-strong); }
+.ringValue > span { font-size: 16px; color: var(--text-muted); }
+/* Yaylar sırayla belirir (en eskiden en yeniye); kademe merdivenden,
+   dört yayda 240 ms. Ekranın altındayken `data-draw` kapısı bekletir. */
+@media (prefers-reduced-motion: no-preference) {
+  .ringArc { animation: ql-arc var(--draw, 700ms) var(--ease-brand) both; animation-delay: calc(var(--i, 0) * var(--step, 40ms) * 2); }
+}
+@keyframes ql-arc { from { opacity: .15; } }
+
+/* Künye defterin altında, iki sütunu kapsar. */
+.ledger > .note { grid-column: 1 / -1; max-width: none; margin-top: 0; }
+@media (min-width: 1100px) { .ledger { row-gap: 18px; } }
+@media (max-width: 639px) {
+  .ring { width: 76px; height: 76px; }
+  .ringTrack, .ringArc { stroke-width: 7.9; }
+  .ringValue { font-size: 24px; }
+  .ringValue > span { font-size: 13px; }
+}
+
+/* BEKLENEN HAREKET YOKSA (`data-compact`, ör. WMT: rapor ufukta değil,
+   geçmiş hareket ölçülemedi) özet halka + ortalama sapmadan ibaret ve
+   1440'ta satırların dibinden 166 piksel önce bitiyordu. Geniş ekranda
+   halka büyür (96 → 160) ve etiket altına iner: özetin tek çizimi sütunu
+   doldurur, boşluk esnetilmez. */
+@media (min-width: 1100px) {
+  .ledger[data-compact] .score { flex-direction: column; align-items: flex-start; gap: 12px; }
+  .ledger[data-compact] .ring { width: 160px; height: 160px; }
+  .ledger[data-compact] .ringTrack, .ledger[data-compact] .ringArc { stroke-width: 4.4; }
+  .ledger[data-compact] .ringValue { font-size: 48px; }
+  .ledger[data-compact] .ringValue > span { font-size: 24px; }
+  .ledger[data-compact] .scoreLabel { max-width: none; }
+}
+
+/* ÖLÇÜM (28 Kasım, Tur 3; gerçek sayfa + sahte sağlayıcı, 1440, son çocuğun
+   dibi): özet ↔ satırlar HD 1102 / 1145, NVDA 1110 / 1153, RKLB 1222 /
+   1240, WMT (data-compact) 1131 / 1202 (önce 1036 / 1202); 1280 aynı
+   farklar. Halka yayları `getAnimations()`: 4 (dört çeyrek), `reduce`
+   altında çalışan 0. 390 ve 360: taşma 0, < 12 metin 0, < 44 hedef 0. */

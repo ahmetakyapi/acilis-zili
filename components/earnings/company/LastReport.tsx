@@ -38,6 +38,7 @@ export function LastReport({
   eps,
   revenue,
   reactionPct,
+  surprise,
   next,
   today,
   locale,
@@ -56,9 +57,13 @@ export function LastReport({
   revenue: { actual: Money; estimate: Money | null } | null;
   /** Raporun ertesindeki ilk seansın değişimi; ölçülmediyse null. */
   reactionPct: number | null;
+  /** EPS sürprizi, defterle AYNI hesap (`epsSurprise`); beklenti yoksa null. */
+  surprise: { text: string; tone: "up" | "down" | "flat" } | null;
   locale: string;
   labels: {
     reported: string;
+    reportedAgo: string;
+    surprise: string;
     today: string;
     yesterday: string;
     daysAgo: string;
@@ -106,9 +111,19 @@ export function LastReport({
               <span className={css.leafWeekday}>{leaf.weekday}</span>
             </div>
           </div>
+          {/* EN BÜYÜK PUNTO SONUCA (28 Kasım, Tur 3; brif: "4 Gün Önce dev
+              puntoda — en büyük punto en anlamlı değere gitmeli"). Rapor
+              açıklandıktan sonra okurun sorusu "ne zaman" değil "ne çıktı":
+              büyük sayı EPS sürprizi (defterin ilk satırıyla aynı hesap,
+              `epsSurprise`), ne zaman açıklandığı hapın yanında künye ("Dün
+              Açıklandı"); tarih zaten yaprakta. Beklenti yoksa eski hâl:
+              büyük sayı "Dün". EPS hücresindeki "Beklentiye Göre" farkı bu
+              durumda basılmaz (aynı sayı iki kez). */}
           <div className={css.countHead}>
-            <p className={css.countLabel}>{labels.reported}</p>
-            <p className={cn("figure", css.countValue)}>{agoText}</p>
+            <p className={css.countLabel}>{surprise ? labels.surprise : labels.reported}</p>
+            <p className={cn("figure", css.countValue)} data-tone={surprise?.tone}>
+              {surprise ? surprise.text : agoText}
+            </p>
             <div className={css.windowRow}>
               {outcome && (
                 <span className={css.outcomePill} data-outcome={outcome}>
@@ -116,6 +131,7 @@ export function LastReport({
                   {outcome === "beat" ? labels.beat : outcome === "miss" ? labels.miss : labels.inline}
                 </span>
               )}
+              {surprise && <span className={css.reactionNote}>{labels.reportedAgo.replace("{ago}", agoText)}</span>}
               {timing && <TimingChip tone={timing.tone}>{timing.label}</TimingChip>}
               {reactionPct !== null && (
                 <span className={css.reactionNote}>
@@ -153,7 +169,7 @@ export function LastReport({
               primary={cell.figure.actual}
               compare={cell.figure.estimate}
               rowLabels={{ primary: labels.actual, compare: labels.estimate }}
-              changeLabel={labels.vsEstimate}
+              changeLabel={surprise && cell.key === "eps" ? undefined : labels.vsEstimate}
               tone={cell.tone}
               locale={locale}
             />

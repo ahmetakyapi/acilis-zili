@@ -5,6 +5,7 @@ import { RichText } from "@/components/earnings/RichText";
 import type { AutoLinker } from "@/lib/autolink";
 import { splitPoint } from "@/lib/analysis-visuals";
 import { splitLeadingDate } from "@/lib/earnings-report";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import { cn } from "@/lib/utils";
 import styles from "./ReportVisuals.module.css";
 
@@ -21,6 +22,9 @@ import styles from "./ReportVisuals.module.css";
  * Madde "baş; açıklama" kalıbındaysa baş kalın kısa başlık olur
  * (`splitPoint`); kalıp yoksa başlık UYDURULMAZ, madde tek parça kalır.
  */
+/** Telefonda katlanmadan görünen madde sayısı (sütun başına). */
+const PHONE_POINTS = 3;
+
 export function OutlookBalance({
   title,
   strengths,
@@ -32,7 +36,7 @@ export function OutlookBalance({
   title: string;
   strengths: string[];
   risks: string[];
-  labels: { strengths: string; risks: string; count: string };
+  labels: { strengths: string; risks: string; count: string; more: string; less: string };
   linker: AutoLinker;
   lang: string;
 }) {
@@ -67,11 +71,22 @@ export function OutlookBalance({
                 <h3 className="text-base">{columnTitle}</h3>
                 <span className={cn(styles.balanceCount, "numeral")}>{points.length}</span>
               </div>
+              {/* TELEFONDA İLK ÜÇ MADDE (28 Kasım, Tur 3): altı güçlü yön
+                  ve altı risk 390'da ~900 piksel alt alta liste oluyordu.
+                  Fazlası sunucuda basılı, `data-fold` ile katlı; 640 ve
+                  üstünde iki sütun yan yana zaten kısa, anahtar yok. */}
+              <FoldToggle
+                id={`report-balance-${key}`}
+                hiddenCount={Math.max(0, points.length - PHONE_POINTS)}
+                more={labels.more.replace("{n}", String(points.length - PHONE_POINTS))}
+                less={labels.less}
+                phone
+              >
               <ol className={styles.balanceList} data-motion-stagger>
                 {points.map((point, index) => {
                   const { lead, rest } = splitPoint(point);
                   return (
-                    <li key={index} style={{ "--i": index } as CSSProperties}>
+                    <li key={index} style={{ "--i": index } as CSSProperties} data-more={index >= PHONE_POINTS || undefined}>
                       <span aria-hidden className={styles.balanceBullet}>
                         <Icon weight="fill" size={11} />
                       </span>
@@ -89,6 +104,7 @@ export function OutlookBalance({
                   );
                 })}
               </ol>
+              </FoldToggle>
             </div>
           ))}
         </div>

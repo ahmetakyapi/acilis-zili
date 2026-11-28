@@ -338,8 +338,9 @@ export function ExpectCell({
   /** Kıyas; yoksa şerit basılmaz, yalnız sayı. */
   compare: { text: string; value: number } | null;
   rowLabels: { primary: string; compare: string };
-  /** Farkın künyesi: "Son Çeyreğe Göre", "Beklentiye Göre". */
-  changeLabel: string;
+  /** Farkın künyesi: "Son Çeyreğe Göre", "Beklentiye Göre". Verilmezse fark
+      basılmaz (aynı sayı kahramanda büyük yazılıysa; `LastReport`). */
+  changeLabel?: string;
   tone: "signal" | "neutral";
   locale: string;
 }) {
@@ -381,7 +382,7 @@ export function ExpectCell({
     <div className={css.expectCell}>
       <dt>
         <span>{title}</span>
-        {change !== null && Math.abs(change) >= 0.05 && (
+        {changeLabel && change !== null && Math.abs(change) >= 0.05 && (
           <span className={css.expectChange} data-dir={change > 0 ? "up" : "down"}>
             <span className={css.expectChangeLabel}>{changeLabel}</span>
             <b className="figure">

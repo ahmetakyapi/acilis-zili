@@ -30,7 +30,7 @@ import { weekLine, type WeekLine } from "@/lib/index-week";
  * barları veriyor, seans içinde istemci `/api/endeks`ten tazeliyor.
  * Paket `loadIndexFeed` — alt şeridin de okuduğu aynı `getQuotes` anahtarı.
  */
-export async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary }) {
+export async function IndexStrip({ locale, t, heading, headingNote }: { locale: Locale; t: Dictionary; heading?: React.ReactNode; headingNote?: string }) {
   const status = await getStatus();
   /* Barlar TEK istekte: sembol başına ayrı çağrı hem dört Alpaca isteği
      hem dört `candles_cache` yazması demekti. */
@@ -41,9 +41,12 @@ export async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary 
 
   if (!feed.ok) {
     return (
-      <Panel>
-        <DataError message={t.data.failed} hint={t.data.failedHint} />
-      </Panel>
+      <>
+        {heading && <div className={styles.indexHeading}>{heading}<span>{headingNote}</span></div>}
+        <Panel>
+          <DataError message={t.data.failed} hint={t.data.failedHint} />
+        </Panel>
+      </>
     );
   }
 
@@ -90,6 +93,8 @@ export async function IndexStrip({ locale, t }: { locale: Locale; t: Dictionary 
 
   return (
     <IndexLive
+      heading={heading}
+      headingNote={headingNote}
       symbols={INDEX_STRIP}
       initial={feed}
       bars={points}

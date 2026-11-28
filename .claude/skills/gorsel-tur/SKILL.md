@@ -123,3 +123,19 @@ gelirse ortak bileşene sen terfi ettirirsin (birleştirmeden sonra).
   ölçmüştü. Aynı gün ortak dosya genişletildi (`olcum` → senaryo tablosu,
   `MOCK_NOW`, `olc.mjs`). Kural duruyor: ajan sahte veriye eki scratchpad'de
   bırakmaz, yamayı ortak dosya için verir; birleşik ölçüm `olc.mjs` ile.
+- 28 Kasım (Tur 3): sahibine önce statik HTML maketle önce/sonra
+  gösterildi (iki tur: "sakin, degradesiz" beğenilmedi; "mavi kimlik +
+  logolar + geçiş + az yoğunluk" onaylandı), sonra koda geçildi. Kimlik
+  yönü belirsizken koddan önce maket turu ucuz; maket brifine mevcut
+  degrade tokenlarını ve gerçek logo yolunu (`public/logos/`) yaz, yoksa
+  maket kimliği kaybeder.
+- 28 Kasım: dört ekran ajanı ortak brif dosyasıyla (`scratchpad/…BRIF.md`)
+  ve kendi portunda koştu, yamalar `git apply --3way` ile çakışmasız
+  birleşti (sözlükte farklı ad alanları). Birleşik hâlde `code-review`
+  üç gerçek kusur buldu (katlanmayan kısa metne maske, yarım ay ölçerde
+  yuvarlak uçların dilimleri örtmesi, akışla gelen başlıkta 10 piksel
+  sıçrama); ekran ajanının kendi ölçümü bunları görmedi. Birleştirmeden
+  sonra inceleme ATLANMAZ.
+- 28 Kasım: katlanan tabloda başlık sayacı ("102 şirketin 60 tanesi")
+  ekrandaki 10 satırla çelişti; katlıyken sayacı anahtar söyler.
+

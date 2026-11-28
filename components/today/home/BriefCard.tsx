@@ -49,6 +49,13 @@ import { TR_ZONE, displayZone } from "@/lib/session-clock";
 const KISA_BILANCO_ESIGI = 3;
 const OZET_TABAN_SATIR = 4;
 const OZET_EK_SATIR = 4;
+/* GENİŞ EKRAN ÖNİZLEMESİ (28 Kasım, görsel tur 3; gerekçe BriefBody →
+   `widePreview`). Okunur karakter bütçesi: giriş paragrafı (tipik
+   220–320) ve ilk iki madde açık, gerisi "Tümünü Gör"de. Yukarıdaki "kısa
+   günde uzama" kararı yine `openLines` ile duruyor ama tek listeli günlük
+   bültende hiç devreye girmiyordu (liste bütün kalıyor); kolonların dengesi
+   artık `FillColumn`ın yedek satırlarında. */
+const BRIEF_WIDE_PREVIEW = 700;
 
 export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }) {
   const today = todayEt();
@@ -185,6 +192,7 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
               openLines={acikSatir}
               /* Telefonda ikinci, kısa kesme — gerekçe ve ölçüm BriefBody. */
               phonePreview
+              widePreview={BRIEF_WIDE_PREVIEW}
               refs={dailyLedger ? ledgerRefs(dailyLedger) : undefined}
             />
           </LedgerLinker>
@@ -201,6 +209,7 @@ export async function BriefCard({ locale, t }: { locale: Locale; t: Dictionary }
               openLines={acikSatir}
               /* Telefonda ikinci, kısa kesme — gerekçe ve ölçüm BriefBody. */
               phonePreview
+              widePreview={BRIEF_WIDE_PREVIEW}
               markdown={weekly.bodyMd}
               moreLabel={t.common.showAll}
               lessLabel={t.common.less}

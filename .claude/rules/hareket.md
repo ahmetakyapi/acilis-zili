@@ -63,6 +63,7 @@ paths:
 | Süre ve kademe | `--draw` (700 ms), `--mark` (200 ms), `--step` (40 ms) — globals.css "HAREKET MERDİVENİ" | Modülde elle süre yazma; kademe toplamı ~400 ms'yi aşmaz |
 | Şirket satırlı tablo (başlık, kimlik, kalın çubuk, devamı bandı, iskelet) | `components/markets/BoardTable.tsx` + `.module.css` | Değişkenle ayarlanır (`--row-h`, `--logo`…); satır kademesi `rowStep(index)`, ≤ 400 ms. Yeni tablo yazmadan önce bak |
 | Sayfa geçişi | `app/(app)/template.tsx` → `.page-enter` | Kabuk yerinde kalır |
+| Yarım ay ölçer (pay, genişlik) | Yol `lib/half-arc.ts`; yay `pathLength={1}` + `data-motion-draw="arc"` (`MotionExperience`) | Halka 6 piksel, dilim ucu düz (yuvarlak uç komşuyu örter); örnek `IndexSelection.tsx`, `MarketTexture.tsx` → `SectorGauge`. Piyasa Nabzı `SentimentPulse` puan ekseninde kendi geometrisini taşır |
 | Seçim imi (sekme, segment) | `SELECTION_TRANSITION` (`lib/motion.ts`) | Hedefinde durur, yaylanmaz |
 | JS'te eğri | `EASE_BRAND`, `EASE_BRAND_POINTS` (`lib/motion.ts`) | `element.animate` CSS değişkeni çözmez |
 | Hareket tercihi (istemci) | `components/motion/useMotionPreference.ts` | Açıkken değişen tercihi de yakalar |

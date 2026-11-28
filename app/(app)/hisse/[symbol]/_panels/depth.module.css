@@ -652,3 +652,10 @@
    görünmez dokunma alanı panel kutusunun dışına 9 piksel taşar ve
    `.panel`in kırpması onu 26 piksele indiriyordu (390, ölçüldü). */
 .summaryPanel.summaryPanel { overflow:visible; }
+
+/* TELEFONDA ALTI LOGO (28 Kasım 2026, görsel tur 3). Logo şeridi 5 → 8'e
+   çıktı (StockSummary.tsx → PEER_LOGOS); telefonda logolar 44'lük hedef
+   için 46 piksel adımlı (26 + 20) ve sekizi 368 piksel istiyor, sağdaki
+   değer sütunu ~300: sekizinci logo tek başına ikinci satıra düşüyordu
+   (390, görüldü). Telefonda ilk altı (6 × 46 = 276), tek satır. */
+@media(max-width:639px) { .summaryPeers > a:nth-child(n + 7) { display:none; } }

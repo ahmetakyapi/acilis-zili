@@ -21,7 +21,7 @@ import { BoardSortHead, BoardSortMenu, CompanyCell, MoreBand, MoveFigure, RangeF
 import {
   INDEX_TABS,
   PAGE_STEP,
-  PHONE_ROWS,
+  FOLD_ROWS,
   approxPoints,
   bodySpan,
   type Row,
@@ -261,6 +261,12 @@ export function MembersTable({
     active: sort === key,
   }));
   const shownShare = (sorted.length / ordered.length) * 100;
+  /* KATLAMA HER GENİŞLİKTE (28 Kasım 2026; gerekçe index-shared.ts →
+     `FOLD_ROWS`). Derinliği kendisi artıran okur (`?adet=` > 60) katlı
+     tablo görmez: "Daha Fazla Göster"e basıp ilk on satıra dönmek kırık
+     görünürdü. Katlı kalan satır yoksa anahtar hiç basılmaz. */
+  const foldAt = limit > PAGE_STEP ? Infinity : FOLD_ROWS;
+  const folded = Math.max(0, sorted.length - foldAt);
 
   return (
     <Panel
@@ -270,6 +276,7 @@ export function MembersTable({
       data-range={showRange || undefined}
       data-week={showWeek || undefined}
       data-share={shareOf ? "" : undefined}
+      data-contribution={showContribution || undefined}
     >
       <CompanyCards
         symbols={fresh.map((row) => row.member.symbol)}
@@ -294,8 +301,12 @@ export function MembersTable({
           bilanço panelinde ve /mercek arşivinde de var. */}
       <PanelHeader
         title={t.markets.constituents}
+        /* KATLIYKEN SAYAÇ YOK (28 Kasım): tablo ilk on satırla açılırken
+           başlık "102 şirketin 60 tanesi" diyordu — ekranda 10 satır vardı.
+           Katlıyken sayıyı katlama anahtarı ("50 Şirket Daha") söylüyor,
+           açılınca dipteki devamı bandı ("102 şirketin 60 tanesi"). */
         meta={
-          hasMore
+          hasMore && folded === 0
             ? t.companies.showing
                 .replace("{n}", String(sorted.length))
                 .replace("{total}", String(ordered.length))
@@ -337,7 +348,8 @@ export function MembersTable({
           ~4.600 piksel ölçüldü; altındaki bölümlere ulaşmak için yüz kez
           kaydırmak gerekiyordu. Satırlar sunucuda yine çiziliyor, on beşin
           ötesi katlı geliyor ve JS'siz anahtar açıyor (FoldToggle `phone`);
-          640'tan itibaren katlama yok. */}
+          640'tan itibaren katlama yok.
+          28 Kasım 2026: her genişlikte ilk on (`FOLD_ROWS`, index-shared.ts). */}
       {/* Telefonda başlık satırının yerinde sıralama şeridi (640+ yok). */}
       <BoardSortMenu
         items={sortItems}
@@ -349,9 +361,14 @@ export function MembersTable({
       />
       <FoldToggle
         id="members-fold"
-        phone
-        hiddenCount={Math.max(0, sorted.length - PHONE_ROWS)}
-        more={t.markets.constituentsMore.replace("{n}", String(Math.max(0, sorted.length - PHONE_ROWS)))}
+        narrow={false}
+        hiddenCount={folded}
+        /* "Tümünü Gör" yalnız gerçekten tümü açılacaksa (Dow 30); sekmenin
+           üyeleri basılandan fazlaysa sayı söylenir, devamı açılınca
+           `MoreBand`ta. */
+        more={hasMore
+          ? t.markets.constituentsMore.replace("{n}", String(folded))
+          : `${t.markets.constituentsAll} · ${ordered.length}`}
         less={t.markets.constituentsLess}
       >
       <ScrollEdges
@@ -489,7 +506,7 @@ export function MembersTable({
                 <tr
                   key={row.member.symbol}
                   data-row={row.member.symbol}
-                  data-fold={index >= PHONE_ROWS || undefined}
+                  data-fold={index >= foldAt || undefined}
                   /* İLK ÜÇ, yalnız değişime göre sıralıyken: günün (ya da
                      haftanın) en çok artan/düşen üçünde sıra numarası güçlü
                      mürekkebe geçer. Süs yok; ada ya da piyasa değerine göre
@@ -581,6 +598,24 @@ export function MembersTable({
           </tbody>
         </table>
       </ScrollEdges>
+      {/* DEVAMI BANDI KATLAMANIN İÇİNDE (28 Kasım): tablo katlıyken
+          "102 şirketin 60 tanesi · Daha Fazla Göster" ilk on satırın altında
+          anlamsız; bant katlama açılınca, son satırın dibinde görünür.
+          Katlama yoksa (derinlik artırılmış) her zaman görünür. */}
+      {hasMore && (
+        <div>
+          <div data-fold={folded > 0 || undefined}>
+            <MoreBand
+              count={t.companies.showing
+                .replace("{n}", String(sorted.length))
+                .replace("{total}", String(ordered.length))}
+              share={shownShare}
+              href={moreHref}
+              label={t.companies.showMore}
+            />
+          </div>
+        </div>
+      )}
       </FoldToggle>
       {/* Sayaç + devamı — /sirketler dizinindeki ölçünün aynısı.
           scroll={false}: okuyucu tablonun dibinde, yeni satırlar geldiğinde
@@ -591,16 +626,6 @@ export function MembersTable({
           anlaşılıyordu. Şimdi sayaç, 5 piksellik ilerleme şeridi ve buton
           tek grupta, solda; şerit açılan payı gösteriyor.
           10 Kasım (gece): bant ortak parça (`MoreBand`), şerit kalın. */}
-      {hasMore && (
-        <MoreBand
-          count={t.companies.showing
-            .replace("{n}", String(sorted.length))
-            .replace("{total}", String(ordered.length))}
-          share={shownShare}
-          href={moreHref}
-          label={t.companies.showMore}
-        />
-      )}
 
       {/* KÜNYE (10 Kasım): tablonun kendi söylemediği üç şey tek düz
           paragrafta — şeridin ölçeği (tam boyu yazılı; gece turundan beri

@@ -1272,8 +1272,15 @@ export function PriceChart({
               </span>
             )}
           </>
-        ) : (
+        ) : state.phase === "loading" ? (
           <span className="skeleton h-7 w-40" />
+        ) : (
+          /* HATADA İSKELET YOK (28 Kasım 2026, görsel tur 3). Bar gelmeyince
+             (sahte BE, "Veri alınamadı") okuma satırının iskeleti yerinde
+             kalıyor, gri bir hap boş grafiğin üstünde "hâlâ yükleniyor"
+             diyordu. Satırın yüksekliği (h-7) korunuyor, görünür bir şey
+             yok: aralık değişip veri gelince satır zıplamaz. */
+          <span aria-hidden className="h-7" />
         )}
       </div>
 

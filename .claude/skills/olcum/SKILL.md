@@ -52,7 +52,7 @@ sembolünü aç.
 | Rota | Sembol → durum |
 |---|---|
 | `/hisse/…` | `NVDA` dolu sayfa · `ZETA` eksik verili küçük şirket (F/K yok, içeriden işlem, analiz ve bilanço yok, katalog dışı) · `BE` gün barı yok (boş grafik) · `SNDK` 60 seans · `SPY` fon |
-| `/bilancolar/…` | `NVDA` haftanın salısı açıklıyor, iki analiz · `HD` son işlem günü açıkladı, aştı, sıradaki yok · `WMT` kaçırdı, sıradaki 95 gün, saat belirsiz · `TSN` takvimde hiç yok · `PDD` yalnız tahmini tarih · `RKLB` zarar eden |
+| `/bilancolar/…` | `NVDA` haftanın salısı açıklıyor, iki analiz · `HD` son işlem günü açıkladı, aştı, sıradaki yok · `WMT` kaçırdı, sıradaki 95 gün, saat belirsiz · `TSN` takvimde hiç yok · `PDD` yalnız tahmini tarih · `RKLB` zarar eden · `/bilancolar/HD/3c-2026` zengin analiz okuması (canlı yoğunlukta beş bölüm, ekler, dokuz kaynak; `zengin-analiz.cjs`) |
 | `/teknik-analiz/…` | `AMD` AL (bölge, stop, üç hedef; dün TUT'tan döndü) · `MU` AL, tek seviye · `TSLA` bölgeli TUT · `AAPL` bölgesiz TUT · `NVDA`, `INTC` SAT (plan yok) · `PLTR` yayını hiç yok · `MRVL` yayını bayat (panodan düşer) · `BE` fotoğraf boş · `SNDK` 100/200 günlük ortalama yok. Her sembolde 15 yayınlık geçmiş; `NVDA` ve `AMD`de EN metni var |
 | `/sirketler?q=solventum` | `SOLV`, `VLTO`, `KVUE`: piyasa değeri yok ("–" satırı) |
 | `/takvim`, `/takvim/fomc` | tohumdaki TÜFE/FOMC/istihdam + PCE + haftalık başvurular; geçmişte gerçekleşen değer, son başvuru satırı "bekleniyor", saatsiz Fed konuşması (+5 gün), çok uzun adlı olay (+12 gün) |

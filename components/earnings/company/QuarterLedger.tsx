@@ -1,5 +1,5 @@
 import type { CSSProperties } from "react";
-import { KarneStrip, type KarneStripMark } from "@/components/earnings/KarneStrip";
+import type { KarneStripMark } from "@/components/earnings/KarneStrip";
 import { MetricStrip } from "@/components/earnings/MetricStrip";
 import { epsSurprise, formatEpsSurprise, type PastQuarter } from "@/components/stock/past-quarters";
 import type { Locale } from "@/lib/i18n";
@@ -135,15 +135,22 @@ export function QuarterLedger({
   const showMove = move !== null && moveScale > 0;
 
   return (
-    <div className={css.ledger} data-reaction={hasReaction || undefined}>
+    <div className={css.ledger} data-reaction={hasReaction || undefined} data-compact={!showMove || undefined}>
       <aside className={css.summary}>
+        {/* KARNE HALKASI (28 Kasım, Tur 3). Özet "3/4" sayısı + dört
+            parçalı karne şeridiydi; şerit, hemen sağdaki dört satırın
+            renklerini aynı sırayla bir kez daha diziyordu (aynı bilgi iki
+            kez, iki çizimle). Halka özetin kendi çizimi: her çeyrek bir yay,
+            en eskiden saat yönünde; sayı ortada. Renk yalnız yönden
+            (`--up` / `--down`, denk `--line-strong`), renk tek taşıyıcı
+            değil: sayı ve satırların işaretli sapması yazılı. Halka kalınlığı
+            ortak ölçü (6 piksel, `--ring` dili; `ScoreRing`le aynı yarıçap
+            oranı). Çizim yay yay soldan dolar (`data-draw` + `ring-fill`
+            DEĞİL: ortak sınıf tek yay için; burada yay başına kendi
+            ofseti). */}
         <div className={css.score}>
-          <p className={cn("figure", css.scoreValue)}>
-            {beats}
-            <span>/{rows.length}</span>
-          </p>
+          <KarneRing marks={marks} beats={beats} total={rows.length} />
           <p className={css.scoreLabel}>{labels.beats}</p>
-          <KarneStrip marks={marks} size="lg" className={css.scoreStrip} />
         </div>
         {avg !== null && (
           <dl className={css.fact}>
@@ -240,8 +247,45 @@ export function QuarterLedger({
             );
           })}
         </ol>
-        <p className={css.note}>{labels.note}</p>
       </div>
+      {/* Künye iki sütunun ALTINDA tam genişlikte (28 Kasım, Tur 3): sağ
+          sütunun dibindeydi ve sol özet ondan ~100 piksel önce bitiyordu
+          (1440'ta özet dibi 1120, künye dibi 1225). Şimdi iki sütunun dibi
+          satırların ve özetin kendisi; künye ikisinin altında tek hat. */}
+      <p className={css.note}>{labels.note}</p>
+    </div>
+  );
+}
+
+/** Karne halkası: yay başına bir çeyrek (en eskiden saat yönünde). */
+function KarneRing({ marks, beats, total }: { marks: readonly KarneStripMark[]; beats: number; total: number }) {
+  const r = 42;
+  const circumference = 2 * Math.PI * r;
+  /* Yaylar arası boşluk sabit (çevrenin %2,5'i); tek çeyrekte boşluk yok. */
+  const gap = marks.length > 1 ? circumference * 0.025 : 0;
+  const arc = circumference / marks.length - gap;
+  return (
+    <div className={css.ring}>
+      <svg viewBox="0 0 100 100" aria-hidden data-draw className={css.ringSvg}>
+        <circle cx="50" cy="50" r={r} className={css.ringTrack} />
+        {marks.map((mark, index) => (
+          <circle
+            key={index}
+            cx="50"
+            cy="50"
+            r={r}
+            className={css.ringArc}
+            data-mark={mark}
+            strokeDasharray={`${arc} ${circumference - arc}`}
+            strokeDashoffset={-(index * (circumference / marks.length) + gap / 2)}
+            style={{ "--i": index } as CSSProperties}
+          />
+        ))}
+      </svg>
+      <p className={cn("figure", css.ringValue)}>
+        {beats}
+        <span>/{total}</span>
+      </p>
     </div>
   );
 }

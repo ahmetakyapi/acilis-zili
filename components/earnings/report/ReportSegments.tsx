@@ -59,6 +59,12 @@ export function ReportSegments({
         ? x.segmentsTitle
         : x.kpisTitle;
   const { rows, total } = segmentShares(segments);
+  /* TEK KAYNAK BİR KEZ (28 Kasım, Tur 3): beş kartın beşi de dibinde
+     "Basın Bülteni" yazıyordu; aynı künye beş kez. Bütün ölçüler aynı
+     belgedense kaynak panelin künye satırına iner, kartta yalnız değişim
+     kalır. Kaynaklar farklıysa her kart kendi belgesini söylemeye devam
+     eder (`kpiNote`: "her birinin yanında hangi belge olduğu yazılı"). */
+  const kpiSource = kpis.length > 0 && kpis.every((kpi) => kpi.source === kpis[0].source) ? kpis[0].source : null;
   const differs = segmentTotalDiffers(total, revenue);
 
   return (
@@ -148,9 +154,11 @@ export function ReportSegments({
                         {yoyText(kpi.yoyPct, locale)} {x.yearly}
                       </span>
                     )}
-                    <span className={styles.kpiSource}>
-                      {x.sources[kpi.source as keyof typeof x.sources]}
-                    </span>
+                    {!kpiSource && (
+                      <span className={styles.kpiSource}>
+                        {x.sources[kpi.source as keyof typeof x.sources]}
+                      </span>
+                    )}
                   </p>
                 </li>
               ))}
@@ -173,7 +181,13 @@ export function ReportSegments({
               )}
             </p>
           )}
-          {kpis.length > 0 && <p>{x.kpiNote}</p>}
+          {kpis.length > 0 && !(kpiSource && rows.length > 0 && extras.segmentsSource === kpiSource) && (
+            <p>
+              {kpiSource
+                ? `${x.sourceLabel}: ${x.sources[kpiSource as keyof typeof x.sources]}.`
+                : x.kpiNote}
+            </p>
+          )}
         </div>
       </Panel>
     </Reveal>
