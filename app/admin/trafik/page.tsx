@@ -130,8 +130,8 @@ export default async function TrafficPage(props: PageProps<"/admin/trafik">) {
       {/* "Dünkü Görüntüleme"nin künyesi telefonda iki satır: değişim ile
           taban ("+%1985", "Bir Hafta Önce 13") 145 piksel, künye alanı 136.
           Tek satırlık yer tutucu akış inince 20 piksel sıçrıyordu (390, üç
-          pencerede de ölçüldü). Kat yazımıyla da (28 Kasım: "×4.406" +
-          "Bir Hafta Önce 10") 390'da iki satır, künye 38 piksel — yer
+          pencerede de ölçüldü). Küçük tabanda adet yazımıyla da (28 Kasım:
+          "+44.047" + "Bir Hafta Önce 10") 390'da iki satır, künye 38 piksel — yer
           tutucu aynı kaldı (geçici rotada ölçüldü, iki tema). */}
       <Suspense key={`sum-${days}`} fallback={<StatGridSkeleton wrapOnPhone={[3]} />}>
         <Totals days={days} />
@@ -260,6 +260,16 @@ async function Totals({ days }: { days: WindowDays }) {
       ? "Önceki Dönem Eksik"
       : windowSub;
   const okunamadi = current.ok ? undefined : ("unavailable" as const);
+  /* Değişim varken künye kıyasın tabanını yazar ("Önceki 30 Gün 12.400"):
+     büyük yüzde neye göre olduğunu söylemeden okunmuyordu (28 Kasım). */
+  const viewsDelta =
+    current.ok && previous.ok ? deltaOf(current.data.views, previous.data.views, kiyas) : null;
+  const visitorsDelta =
+    current.ok && previous.ok
+      ? deltaOf(current.data.visitorDays, previous.data.visitorDays, kiyas)
+      : null;
+  const baseSub = (delta: ReturnType<typeof deltaOf>, prev: number | null) =>
+    delta && prev !== null ? `Önceki ${days} Gün ${prev.toLocaleString("tr-TR")}` : compareSub;
 
   /* DÜN — ölçüm başlangıcı yerine (23 Eylül denetimi). Dördüncü kutu bir
      kurulum bilgisiydi ("Ölçüm Başlangıcı 13.08.2026"), her gün aynı; o
@@ -292,12 +302,8 @@ async function Totals({ days }: { days: WindowDays }) {
         label={METRIC.views}
         value={current.ok ? current.data.views.toLocaleString("tr-TR") : "—"}
         state={okunamadi}
-        sub={compareSub}
-        delta={
-          current.ok && previous.ok
-            ? deltaOf(current.data.views, previous.data.views, kiyas)
-            : null
-        }
+        sub={baseSub(viewsDelta, previous.ok ? previous.data.views : null)}
+        delta={viewsDelta}
       />
       {/* KÜNYE TEK SATIR. "30 Tam Gün · Aynı Kişi Her Gün Yeniden Sayılır"
           üç satıra sarıyor ve ızgara satırını 159 piksele geriyordu, öteki
@@ -307,12 +313,8 @@ async function Totals({ days }: { days: WindowDays }) {
         label={METRIC.visitorDays}
         value={current.ok ? current.data.visitorDays.toLocaleString("tr-TR") : "—"}
         state={okunamadi}
-        sub={compareSub}
-        delta={
-          current.ok && previous.ok
-            ? deltaOf(current.data.visitorDays, previous.data.visitorDays, kiyas)
-            : null
-        }
+        sub={baseSub(visitorsDelta, previous.ok ? previous.data.visitorDays : null)}
+        delta={visitorsDelta}
       />
       <StatBox
         label={`${METRIC.dailyVisitors} Başı Sayfa`}

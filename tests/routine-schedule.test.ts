@@ -161,3 +161,24 @@ test("senkron: pazartesi sabahı son borç cuma koşumu", () => {
   assert.equal(lastCronDue(mondayMorning).toISOString(), "2026-09-25T10:30:00.000Z");
   assert.equal(cronState(new Date("2026-09-25T10:32:00Z"), mondayMorning).state, "waiting");
 });
+
+test("bugünün akışı: işlem gününde bülten ve üç teknik nöbet, TR saat sırasıyla", async () => {
+  const { routineAgenda } = await import("../lib/routine-schedule");
+  const { formatInZone, TR_ZONE } = await import("../lib/session-clock");
+  /* Çarşamba 2 Aralık 2026, 19:00 TR (kış saati: ET +8). */
+  const now = new Date("2026-12-02T16:00:00Z");
+  const items = routineAgenda(now, []);
+  assert.deepEqual(
+    items.map((i) => `${formatInZone(i.at, TR_ZONE)} ${i.label} ${i.past ? "geçti" : "sırada"}`),
+    ["16:45 Teknik geçti", "17:00 Günlük Bülten geçti", "20:45 Teknik sırada", "22:45 Teknik sırada"],
+  );
+});
+
+test("bugünün akışı: hafta sonu yalnız bülten, pazartesi haftalık da", async () => {
+  const { routineAgenda } = await import("../lib/routine-schedule");
+  const saturday = routineAgenda(new Date("2026-11-28T10:00:00Z"), []);
+  assert.deepEqual(saturday.map((i) => i.key), ["dailyBrief"]);
+  const monday = routineAgenda(new Date("2026-11-30T05:00:00Z"), []);
+  assert.equal(monday[0]?.key, "weeklyBrief");
+  assert.ok(monday.some((i) => i.key === "technical-premarket"));
+});

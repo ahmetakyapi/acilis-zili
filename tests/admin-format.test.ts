@@ -8,6 +8,7 @@ import {
   adminWeekRange,
   agoLabel,
   deltaOf,
+  roundPercent,
 } from "../lib/admin-format";
 import { dayBoundaryNote, etDayRolloverTr, zoneWallTime } from "../lib/session-clock";
 
@@ -60,15 +61,24 @@ test("değişim: eksik ölçülmüş önceki dönemle kıyas yok", () => {
   assert.equal(deltaOf(5, 0), null);
 });
 
-/* 28 Kasım: bot dalgası kutulara "+%1313", "+%440470" yazdırıyordu. */
-test("değişim: iki katı aşan artış kat olarak yazılır", () => {
-  assert.deepEqual(deltaOf(2436, 756), { text: "×3,2", tone: "up", srLabel: "3,2 katına çıktı" });
-  assert.equal(deltaOf(14130, 1000)?.text, "×14");
-  assert.equal(deltaOf(44057, 10)?.text, "×4.406");
-  assert.equal(deltaOf(200, 100)?.text, "×2");
-  /* 9,96 tek ondalıkta "10,0" olurdu — tam sayıya geçer. */
-  assert.equal(deltaOf(996, 100)?.text, "×10");
-  assert.equal(deltaOf(199, 100)?.text, "+%99");
+/* 28 Kasım: bot dalgası kutulara "+%1313", "+%440470" yazdırıyordu; kat yazımı da ("×14") geri alındı. */
+test("değişim: büyük artış yüzde kalır, iki anlamlı haneye yuvarlanır", () => {
+  assert.deepEqual(deltaOf(2436, 756), { text: "+%222", tone: "up", srLabel: "yüzde 222 arttı" });
+  assert.equal(deltaOf(14130, 1000)?.text, "+%1.300");
+  assert.equal(deltaOf(44966, 3211)?.text, "+%1.300");
+  assert.equal(deltaOf(44057, 100)?.text, "+%44.000");
+  assert.equal(deltaOf(44057, 100)?.srLabel, "yüzde 44.000 arttı");
+  assert.equal(deltaOf(200, 100)?.text, "+%100");
+  assert.equal(deltaOf(1099, 100)?.text, "+%999");
+  assert.equal(deltaOf(1104, 100)?.text, "+%1.000");
+});
+
+test("yüzde yuvarlama", () => {
+  assert.equal(roundPercent(999.4), 999);
+  assert.equal(roundPercent(1313), 1300);
+  assert.equal(roundPercent(1360), 1400);
+  assert.equal(roundPercent(440470), 440000);
+  assert.equal(roundPercent(-75), -75);
 });
 
 test("değişim: düşüş yüzde kalır, en fazla −%100", () => {
@@ -81,8 +91,9 @@ test("değişim: 50'nin altındaki tabanda adet farkı", () => {
   assert.deepEqual(deltaOf(17, 13), { text: "+4", tone: "up", srLabel: "4 arttı" });
   assert.deepEqual(deltaOf(10, 13), { text: "−3", tone: "down", srLabel: "3 azaldı" });
   assert.equal(deltaOf(13, 13)?.text, "Değişim Yok");
-  /* Küçük tabanda da iki kat kat olarak. */
-  assert.equal(deltaOf(30, 13)?.text, "×2,3");
+  /* Küçük tabanda büyük artış da adetle: "+%4.400" on görüntülemelik tabanı saklardı. */
+  assert.equal(deltaOf(30, 13)?.text, "+17");
+  assert.equal(deltaOf(44057, 10)?.text, "+44.047");
   /* Taban 50'de yüzdeye döner; %1'in altı gürültü. */
   assert.equal(deltaOf(60, 50)?.text, "+%20");
   assert.equal(deltaOf(1004, 1000)?.text, "Değişim Yok");

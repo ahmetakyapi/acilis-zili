@@ -118,7 +118,7 @@ export default async function AdminOverviewPage() {
         <p className="text-small leading-relaxed text-muted">
           {METRIC.visitorDays} aynı kişiyi her gün yeniden sayar, yani yedi
           günün toplamı kişi sayısı değildir. Değişim önceki yedi tam günle
-          kıyaslanır; iki katı aşan artış kat olarak (×14) yazılır. Aktif üye
+          kıyaslanır; dört haneyi aşan yüzde yuvarlanır (%1.313 → %1.300). Aktif üye
           sayısına yönetici hesapları girmez.
         </p>
       </div>
@@ -202,6 +202,16 @@ async function Headline() {
     previousFrom,
   };
   const yeniUye = members.ok ? members.data.last30 : 0;
+  /* KÜNYE KIYASIN TABANINI YAZAR (28 Kasım). "+%1.300" tek başına neye göre
+     olduğunu söylemiyordu; değişim varken künye önceki pencerenin sayısını
+     veriyor ("Önceki 7 Gün 3.211"). Kutunun kendi penceresi sayfa
+     başlığında ("Son yedi günün…"). Değişim yoksa pencere adı kalır. */
+  const subOf = (delta: ReturnType<typeof deltaOf>, prev: number | null) =>
+    delta && prev !== null ? `Önceki 7 Gün ${prev.toLocaleString("tr-TR")}` : "Son 7 Tam Gün";
+  const viewsDelta =
+    last7.ok && prev7.ok ? deltaOf(last7.data.views, prev7.data.views, kiyas) : null;
+  const visitorsDelta =
+    last7.ok && prev7.ok ? deltaOf(last7.data.visitorDays, prev7.data.visitorDays, kiyas) : null;
 
   return (
     <StatGrid>
@@ -209,10 +219,8 @@ async function Headline() {
         label={METRIC.views}
         value={last7.ok ? last7.data.views.toLocaleString("tr-TR") : "—"}
         state={last7.ok ? undefined : "unavailable"}
-        sub="Son 7 Tam Gün"
-        delta={
-          last7.ok && prev7.ok ? deltaOf(last7.data.views, prev7.data.views, kiyas) : null
-        }
+        sub={subOf(viewsDelta, prev7.ok ? prev7.data.views : null)}
+        delta={viewsDelta}
         visual={sparkOf((p) => p.views, "görüntüleme")}
       />
       {/* "Tekil Ziyaretçi" DEĞİL: özet her gün döndüğü için çok günlük
@@ -222,12 +230,8 @@ async function Headline() {
         label={METRIC.visitorDays}
         value={last7.ok ? last7.data.visitorDays.toLocaleString("tr-TR") : "—"}
         state={last7.ok ? undefined : "unavailable"}
-        sub="Son 7 Tam Gün"
-        delta={
-          last7.ok && prev7.ok
-            ? deltaOf(last7.data.visitorDays, prev7.data.visitorDays, kiyas)
-            : null
-        }
+        sub={subOf(visitorsDelta, prev7.ok ? prev7.data.visitorDays : null)}
+        delta={visitorsDelta}
         visual={sparkOf((p) => p.visitors, "ziyaretçi-günü")}
       />
       {/* YALIN "0" YOK. Değişim yuvası yeni üye sayısını pencere adı olmadan

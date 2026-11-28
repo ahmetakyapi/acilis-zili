@@ -10,6 +10,7 @@ import {
 import { adminStamp } from "@/lib/admin-format";
 import { ERROR_RETENTION_DAYS } from "@/lib/error-log-core";
 import type { ErrorGroup, ErrorRead } from "@/lib/error-log";
+import { mergeErrorGroups } from "@/lib/error-summary";
 
 /**
  * Uygulama hataları — Sistem sekmesinin paneli, çapası `#hatalar`
@@ -27,6 +28,16 @@ import type { ErrorGroup, ErrorRead } from "@/lib/error-log";
  *
  * Tablo 760 pikselin altında kendi kabında kayıyor, rota sütunu sabit
  * ("Kaydırma saklanmaz", CLAUDE.md).
+ *
+ * SATIR TEK SATIR (28 Kasım, sahibinin isteği: "alt satıra kaymasın, daha
+ * anlaşılabilir okunabilir dursun"). Ham mesaj iki satıra kadar basılıyor,
+ * altında kimlik, görülme hücresinde gün sayısı ayrı satırdaydı; bir hata
+ * 87–117 piksel tutuyordu ve aynı hata farklı kimliklerle üç kez alt alta
+ * duruyordu. Artık mesaj kısa bir ada iniyor (lib/error-summary.ts), aynı
+ * ada düşen gruplar birleşiyor, görülme ile gün yan yana. Satırın kendisi
+ * bir `<details>` özeti: basınca ham mesaj ve kimlikler altında açılıyor —
+ * "şu kodu aldım" diyen bildirim yine bulunuyor. Ölçüldü (geçici rota, 1024
+ * ve 1440): her satır 45 piksel, eskiden 87–117.
  */
 export function ErrorGroupsPanel({
   result,
@@ -60,24 +71,49 @@ export function ErrorGroupsPanel({
           stickyFirst
           align="top"
         >
-          {result.data.map((group) => (
+          {mergeErrorGroups(result.data).map((group) => (
             <AdminRow key={`${group.kind}:${group.route}:${group.fingerprint}`}>
               <AdminCell rowHeader>
-                <code className="text-small">{group.route}</code>
+                <code className="whitespace-nowrap text-small">{group.route}</code>
               </AdminCell>
               <AdminCell>
-                <span className="line-clamp-2 break-words">{group.message}</span>
-                {group.digest && (
-                  <span className="mt-0.5 block text-tiny text-muted">
-                    Kimlik <code className="numeral">{group.digest}</code>
-                  </span>
-                )}
+                <details className="group/err">
+                  <summary className="flex cursor-pointer list-none items-baseline gap-2 [&::-webkit-details-marker]:hidden">
+                    <span className="shrink-0 whitespace-nowrap font-semibold text-strong">{group.summary.title}</span>
+                    {group.summary.detail && (
+                      <span className="min-w-0 truncate text-small text-muted">{group.summary.detail}</span>
+                    )}
+                    <span
+                      aria-hidden
+                      className="ml-auto shrink-0 text-tiny text-primary transition-transform duration-200 ease-brand group-open/err:rotate-180"
+                    >
+                      ▾
+                    </span>
+                    <span className="sr-only">Ham mesajı göster</span>
+                  </summary>
+                  <div className="mt-2 flex flex-col gap-1.5 rounded-(--radius-sm) bg-surface-sunken px-3 py-2 text-small text-muted">
+                    {group.messages.map((message) => (
+                      <p key={message} className="break-words">
+                        {message}
+                      </p>
+                    ))}
+                    {group.digests.length > 0 && (
+                      <p className="text-tiny">
+                        {group.digests.length === 1 ? "Kimlik" : `${group.digests.length} Kimlik`}{" "}
+                        <code className="numeral">{group.digests.join(" · ")}</code>
+                      </p>
+                    )}
+                  </div>
+                </details>
               </AdminCell>
               <AdminCell>{group.kind === "server" ? "Sunucu" : "Tarayıcı"}</AdminCell>
               <AdminCell numeral>
-                {group.count.toLocaleString("tr-TR")}
-                <span className="block text-tiny text-muted">
-                  {group.days === 1 ? "Tek Gün" : `${group.days} Günde`}
+                <span className="whitespace-nowrap">
+                  <span className="font-semibold text-strong">{group.count.toLocaleString("tr-TR")}</span>
+                  <span className="text-small text-muted">
+                    {" · "}
+                    {group.days === 1 ? "Tek Gün" : `${group.days} Gün`}
+                  </span>
                 </span>
               </AdminCell>
               <AdminCell align="right">

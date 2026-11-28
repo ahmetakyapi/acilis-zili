@@ -43,21 +43,6 @@ export function deltaOf(
   }
   const ratio = current / previous;
 
-  /* İKİ KATI AŞAN ARTIŞ KAT OLARAK (28 Kasım, sahibinin sözü: "sayıları
-     yüzdeleri falan daha okunaklı yapalım"). 26 Kasım'dan beri bot trafiği
-     günlük görüntülemeyi ~400'den ~44.000'e çıkardı ve kutular "+%1313",
-     "+%440470" yazıyordu: dört-altı haneli bir yüzdeyi okur kafasında kata
-     çeviriyordu. Artış %100'ü geçtiği anda cevap "kaç katı": "×14",
-     "×4.406". Ondan küçük kat tek ondalıkla ("×2,4"). Düşüş YÜZDE kalıyor:
-     en fazla −%100'dür ve "×0,1" düşüşü artıştan zor ayırt ettirir. */
-  if (ratio >= 2) {
-    const kat =
-      ratio < 9.95
-        ? ratio.toLocaleString("tr-TR", { maximumFractionDigits: 1 })
-        : Math.round(ratio).toLocaleString("tr-TR");
-    return { text: `×${kat}`, tone: "up", srLabel: `${kat} katına çıktı` };
-  }
-
   /* KÜÇÜK TABANDA ADET FARKI (28 Kasım). Önceki dönem `SMALL_BASE`in
      altındaysa her birim iki yüzde puanından fazladır; 13'ten 17'ye çıkış
      "+%31" diye büyük bir hareket gibi duruyordu. Fark adetle yazılıyor:
@@ -81,7 +66,17 @@ export function deltaOf(
        yanında duruyor. `srLabel` cümle olduğu için küçük kalıyor. */
     return { text: "Değişim Yok", tone: "neutral", srLabel: "değişim yok" };
   }
-  const rounded = Math.round(change);
+  /* BÜYÜK YÜZDE YUVARLANIR, KAT YAZILMAZ (28 Kasım, sahibinin sözü:
+     "çarpı yerine yüzde kullanalım ama daha güzel gözüksün"). 26 Kasım'dan
+     beri bot trafiği günlük görüntülemeyi ~400'den ~44.000'e çıkardı;
+     kutular önce "+%1313" yazdı, sonra bir gün "×14" kat yazımına geçti —
+     ama panelin geri kalanı yüzde konuşuyor ve kat ayrı bir okuma biçimi
+     istiyordu. Artık yüzde kalıyor, okunur hâlde: dört haneyi aşan yüzde
+     iki anlamlı haneye yuvarlanıp binlik ayraçla yazılıyor ("+%1.300",
+     "+%44.000") — son hanelerin kesinliği zaten yok. Tabanı küçük kıyas
+     yukarıdaki adet kuralına düşüyor; yüzdenin neye göre olduğunu kutunun
+     künyesi yazıyor ("Önceki 7 Gün 3.211"). */
+  const rounded = roundPercent(change);
   /* İŞARET METİNDE. `Math.abs` eksiyi siliyordu ve düşüş de artış da
      "%12" diye yazılıyordu — yönü YALNIZCA renk taşıyordu. Panelin kendi
      kuralı bunun tersini söylüyor ("Renk tek başına bilgi taşımıyor");
@@ -92,10 +87,18 @@ export function deltaOf(
      SESLETİM DE ÖYLE: "yüzde 222 arttı". "222 yüzde arttı" yazılıyordu —
      ekrandaki "%222" ile aynı sırada okunmuyordu. */
   return {
-    text: `${rounded > 0 ? "+" : "−"}%${Math.abs(rounded)}`,
+    text: `${rounded > 0 ? "+" : "−"}%${Math.abs(rounded).toLocaleString("tr-TR")}`,
     tone: rounded > 0 ? "up" : "down",
-    srLabel: `yüzde ${Math.abs(rounded)} ${rounded > 0 ? "arttı" : "azaldı"}`,
+    srLabel: `yüzde ${Math.abs(rounded).toLocaleString("tr-TR")} ${rounded > 0 ? "arttı" : "azaldı"}`,
   };
+}
+
+/** Dört haneye kadar tam sayı; üstü iki anlamlı haneye (1.313 → 1.300, 440.470 → 440.000). */
+export function roundPercent(value: number): number {
+  const r = Math.round(value);
+  if (Math.abs(r) < 1000) return r;
+  const step = 10 ** (Math.floor(Math.log10(Math.abs(r))) - 1);
+  return Math.round(r / step) * step;
 }
 
 /** Bu tabanın altında değişim yüzdeyle değil adetle yazılır (`deltaOf`). */

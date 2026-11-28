@@ -403,3 +403,44 @@ export function routineReports(
     },
   ];
 }
+
+/* ---------------------------------------------------------------------------
+   Bugünün akışı — Sistem › Rutinler panelinin dibindeki şerit
+   --------------------------------------------------------------------------- */
+
+export type AgendaItem = {
+  key: string;
+  label: string;
+  at: Date;
+  /** Yayın anı geçti mi — yazılıp yazılmadığını DEĞİL saati söyler; durum satırlarda. */
+  past: boolean;
+};
+
+/**
+ * İstanbul'da BUGÜN planlı rutin anları, saat sırasıyla (28 Kasım,
+ * sahibinin isteği: Sistem'de "sağ sol dengeli olsun"). Rutinler paneli
+ * Veri Sağlığı'ndan iki satır kısaydı ve dibinde boşluk kalıyordu; boşluk
+ * esnetilmedi, günün takvimiyle dolduruldu.
+ *
+ * Gün TR günü; ET karşılığı aynı tarih — rutinlerin hepsi 08:45–14:45 ET
+ * arasında, yani TR'de aynı günün öğleden sonrası ve akşamı (ET→UTC
+ * aritmetiği `briefPublishAt`/`slotInstant`te, market-hours üzerinden).
+ * Koşullu rutinler (mercek, bilanço analizi) saate bağlı değil, burada yok.
+ */
+export function routineAgenda(now: Date, holidays: MarketHoliday[]): AgendaItem[] {
+  const day = trDateOf(now);
+  const items: Omit<AgendaItem, "past">[] = [
+    { key: "dailyBrief", label: "Günlük Bülten", at: dailyBriefDueAt(day) },
+  ];
+  const weekly = briefPublishAt(weekAnchor(day), "weekly");
+  if (trDateOf(weekly) === day) items.push({ key: "weeklyBrief", label: "Haftalık Bülten", at: weekly });
+  if (getMarketStatus(slotInstant(day, "premarket"), holidays).tradingToday) {
+    for (const slot of expectedSlots(day, holidays)) {
+      items.push({ key: `technical-${slot}`, label: "Teknik", at: slotInstant(day, slot) });
+    }
+  }
+  return items
+    .filter((item) => trDateOf(item.at) === day)
+    .sort((a, b) => a.at.getTime() - b.at.getTime())
+    .map((item) => ({ ...item, past: item.at.getTime() <= now.getTime() }));
+}

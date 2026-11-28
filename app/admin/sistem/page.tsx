@@ -22,7 +22,9 @@ import {
   type HealthCheck,
 } from "@/lib/admin-data";
 import { requireAdmin } from "@/lib/admin";
-import { getStatus } from "@/lib/data";
+import { getHolidays, getStatus } from "@/lib/data";
+import { routineAgenda } from "@/lib/routine-schedule";
+import { TodayAgenda } from "@/components/admin/TodayAgenda";
 import { adminStamp, agoLabel } from "@/lib/admin-format";
 import { formatInZone, TR_ZONE, zoneDateKey } from "@/lib/session-clock";
 import { addEtDays, ET_ZONE } from "@/lib/market-hours";
@@ -326,7 +328,9 @@ function CheckList({ items }: { items: HealthCheck[] }) {
 }
 
 async function Checks() {
-  const checks = await getHealthChecks();
+  const [checks, holidays] = await Promise.all([getHealthChecks(), getHolidays()]);
+  const now = new Date();
+  const agenda = routineAgenda(now, holidays);
   const keys = bySeverity(checks.filter((c) => c.group === "key"));
   const data = checks.filter((c) => c.group === "data");
   const routines = checks.filter((c) => c.group === "routine");
@@ -345,13 +349,15 @@ async function Checks() {
           değer aynı bakışta. Rutinler yine önce — solda, telefonda üstte:
           sitenin yazılı içeriğini kod dışında koşan beş rutin üretiyor ve
           biri durduğunda ana sayfa eski metni göstermeye devam ediyor.
-          `items-start`: kısa liste uzun olanın boyuna gerilmiyor. */}
-      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2 lg:items-start">
-        <AdminPanel id="rutinler" tone={panelTone(routines)}>
+          28 Kasım: `items-start` kalktı — kısa panel artık gerilip
+          dibine günün akışını alıyor (`TodayAgenda`); iki panel aynı hatta. */}
+      <div className="grid grid-cols-[minmax(0,1fr)] gap-6 lg:grid-cols-2">
+        <AdminPanel id="rutinler" tone={panelTone(routines)} className="flex flex-col">
           <AdminPanelTitle hint="İçeriği Yazan claude.ai Görevleri · Saatler TR">
             Rutinler
           </AdminPanelTitle>
           <CheckList items={routines} />
+          <TodayAgenda items={agenda} now={now} />
         </AdminPanel>
 
         <AdminPanel id="veri" tone={panelTone(data)}>

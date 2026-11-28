@@ -434,10 +434,15 @@ export function StatBox({
         <div className="mt-2 flex min-w-0 flex-wrap items-start gap-x-2 gap-y-0.5 text-small">
           {!unavailable && delta && (
             <span
+              /* HAP (28 Kasım, "daha güzel gözüksün, okunaklı"). Değişim
+                 künyeyle aynı satırda düz renkli metindi ve "Son 7 Tam Gün"den
+                 ayrışmıyordu. Tonun yıkama zemini onu künyeden ayırıyor;
+                 işaret metinde kaldığı için renk yine tek başına bilgi
+                 taşımıyor. Yükseklik satırı aşmasın diye dikey dolgu yok. */
               className={cn(
-                "numeral shrink-0 font-semibold",
-                delta.tone === "up" && "text-up",
-                delta.tone === "down" && "text-down",
+                "numeral shrink-0 rounded-[var(--radius-sm)] px-1.5 font-semibold",
+                delta.tone === "up" && "bg-up-wash text-up",
+                delta.tone === "down" && "bg-down-wash text-down",
                 delta.tone === "neutral" && "text-muted",
               )}
             >
