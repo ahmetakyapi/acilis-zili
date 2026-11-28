@@ -24,6 +24,21 @@ export type HeavyKind = "compare" | "auth";
 export const HEAVY_LIMIT_PER_MINUTE = 40;
 export const HEAVY_WINDOW_MS = 60_000;
 
+/**
+ * Yalnız TAM SAYFA yüklemesi sayılır (28 Kasım, duman testi düştü):
+ * her sayfanın gezinme bağlantıları oturumsuz okur için `/giris?devam=…`e
+ * gidiyor ve Next onları arka planda önceden yüklüyor (prefetch); sayfa
+ * içi gezinme de RSC isteği atıyor. Bunlar sayılınca birkaç sayfa gezen
+ * gerçek misafir 429'a düşüyordu. Bot dalgası tam sayfa yüklüyor.
+ */
+export function isDocumentRequest(headers: { get(name: string): string | null }): boolean {
+  if (headers.get("rsc") === "1" || headers.get("next-router-prefetch") !== null) return false;
+  const purpose = `${headers.get("purpose") ?? ""} ${headers.get("sec-purpose") ?? ""}`.toLowerCase();
+  if (purpose.includes("prefetch")) return false;
+  const dest = headers.get("sec-fetch-dest");
+  return dest === null || dest === "document";
+}
+
 /** Dil öneki atılmış yol ağır sayfaysa türü; değilse null. Küratörlü çift sayfaları (`/karsilastir/nvda-amd`) hafif. */
 export function heavyKind(path: string): HeavyKind | null {
   const clean = path.replace(/\/+$/, "") || "/";

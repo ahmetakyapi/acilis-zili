@@ -8,7 +8,7 @@ import {
 import { EMBED_THEME_PARAM, embedThemeFromParam, isEmbedPath } from "@/lib/embed";
 import { LOCALE_HEADER, splitLocale, withLocale } from "@/lib/i18n/routing";
 import { getToken } from "next-auth/jwt";
-import { HEAVY_LIMIT_PER_MINUTE, HEAVY_WINDOW_MS, heavyKind } from "@/lib/bot-guard";
+import { HEAVY_LIMIT_PER_MINUTE, HEAVY_WINDOW_MS, heavyKind, isDocumentRequest } from "@/lib/bot-guard";
 import { forwardedKey, rateLimit } from "@/lib/rate-limit";
 import { PREVIEW_PARAM, PREVIEW_THEME_PARAM, isPreviewablePath } from "@/lib/preview";
 
@@ -111,10 +111,11 @@ export async function proxy(request: NextRequest) {
   const signedIn = hasSessionCookie(request);
 
   /* AĞIR SAYFALARA IP BAŞINA SINIR (28 Kasım; gerekçe lib/bot-guard.ts).
-     Oturumlu okur ve GET dışı istekler (giriş formunun kendi sınırı var)
-     muaf; aşan istek gövdesiz değil kısa bir metinle 429 alır. */
+     Oturumlu okur, GET dışı istekler (giriş formunun kendi sınırı var) ve
+     önceden yükleme / sayfa içi gezinme (`isDocumentRequest`) muaf; aşan
+     istek gövdesiz değil kısa bir metinle 429 alır. */
   const heavy = heavyKind(path);
-  if (heavy && !signedIn && (request.method === "GET" || request.method === "HEAD")) {
+  if (heavy && !signedIn && (request.method === "GET" || request.method === "HEAD") && isDocumentRequest(request.headers)) {
     const verdict = rateLimit(forwardedKey(`heavy:${heavy}`, request.headers.get("x-forwarded-for")), HEAVY_LIMIT_PER_MINUTE, HEAVY_WINDOW_MS);
     if (!verdict.allowed) {
       return new NextResponse("Çok fazla istek. Lütfen bir dakika sonra yeniden deneyin. / Too many requests.", {
