@@ -119,13 +119,16 @@ Many commission-free US brokers route orders not to an exchange but to a market 
 
 ## Session Hours
 
-The US market runs in three parts. Türkiye doesn't observe daylight saving and the US does, so Istanbul times shift by an hour twice a year: summer runs from mid-March to early November, winter from early November to mid-March.
+The US market runs in four parts on weekdays: from December 7, 2026, exchanges led by Nasdaq and NYSE Arca trade 23 hours a day (23x5). Türkiye doesn't observe daylight saving and the US does, so Istanbul times shift by an hour twice a year: summer runs from mid-March to early November, winter from early November to mid-March.
 
 | Session | New York | Istanbul (Summer) | Istanbul (Winter) | Character |
 |---|---|---|---|---|
+| Overnight | 21:00 – 4:00 | 4:00 – 11:00 | 5:00 – 12:00 | Limit orders only, very thin |
 | Pre-market | 4:00 – 9:30 | 11:00 – 16:30 | 12:00 – 17:30 | Thin, jumpy, wide spreads |
 | **Regular session** | **9:30 – 16:00** | 16:30 – 23:00 | 17:30 – 00:00 | Nearly all the volume |
 | After-hours | 16:00 – 20:00 | 23:00 – 03:00 | 00:00 – 04:00 | Earnings reactions live here |
+
+After the evening session the exchanges pause for an hour (20:00–21:00 New York); trades after the break count toward the next trading day. There is no overnight session on Friday evenings or before holidays — the week opens on Sunday evening. Overnight access depends on your broker. More: [US Market Hours](/abd-borsasi-saatleri)
 
 The two busiest minutes of the day are the open and the close. In the closing auction, index funds settle the day's inflows and outflows — which is why huge volume prints in the final minute.
 

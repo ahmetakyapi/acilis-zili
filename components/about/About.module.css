@@ -35,6 +35,8 @@
 .track { position:relative; height:5px; margin-top:22px; overflow:hidden; border-radius:999px; background:var(--line-soft); }
 .track > span { position:absolute; top:0; bottom:0; border-radius:999px; background:var(--primary-faint); transform-origin:left center; animation:window-grow var(--draw) var(--ease-brand) both; animation-delay:calc(var(--i, 0) * var(--step)); }
 .track > span[data-kind="regular"] { background:var(--primary); }
+/* 23x5 gece seansı: kenar seanslardan açık (28 Kasım). */
+.track > span[data-kind="overnight"] { opacity:.5; }
 @keyframes window-grow { from { transform:scaleX(0); } }
 .ticks { position:relative; height:16px; margin-top:6px; font-size:12px; color:var(--text-muted); }
 .ticks > span { position:absolute; top:0; translate:-50% 0; }
@@ -44,6 +46,7 @@
 .legend li { display:inline-flex; align-items:center; gap:6px; }
 .legend li::before { content:""; width:10px; height:5px; border-radius:999px; background:var(--primary-faint); }
 .legend li[data-kind="regular"]::before { background:var(--primary); }
+.legend li[data-kind="overnight"]::before { opacity:.5; }
 
 .lede { max-width:40em; font-size:clamp(18px,1.8vw,21px); line-height:1.5; letter-spacing:-.015em; font-weight:400; color:var(--text-strong); text-wrap:pretty; }
 

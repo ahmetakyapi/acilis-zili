@@ -143,9 +143,11 @@ export default async function AboutPage() {
   const open = timePair(day, clockOf(SESSION_BOUNDS.regularOpen), locale);
   const close = timePair(day, clockOf(closeMinutes), locale);
   /* Şerit okuyucunun BİRİNCİL saatiyle: pencere dizesi "16:30–23:00". */
-  const windowLabel = { pre: a.clockPre, regular: a.clockRegular, after: a.clockAfter } as const;
+  /* 23x5 (7 Aralık 2026'dan): gece seansı işlem gördüğü için kadranda;
+     borsa arası ve 23x5 öncesi gece (işlem yok) dışarıda. */
+  const windowLabel = { overnight: a.clockOvernight, pre: a.clockPre, regular: a.clockRegular, after: a.clockAfter } as const;
   const windows = sessionWindows(day, locale, closeMinutes).filter(
-    (window): window is SessionWindow & { key: keyof typeof windowLabel } => window.key !== "overnight",
+    (window): window is SessionWindow & { key: keyof typeof windowLabel } => window.traded && window.key !== "pause",
   );
   const segments = windows.flatMap((window) => {
     const [from, to] = window.primary.split(/[–-]/);

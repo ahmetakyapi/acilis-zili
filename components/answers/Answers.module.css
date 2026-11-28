@@ -36,6 +36,9 @@
 .seg { min-width:0; }
 .segBar { display:block; height:8px; border-radius:999px; background:var(--bar-soft); }
 .seg[data-key="regular"] .segBar { background:var(--primary); }
+/* 23x5 gece seansı (28 Kasım): kenar seanslardan da açık — işlem var ama
+   endeks ve kapanış orada oluşmuyor; büyüklük yine bandın eniyle okunuyor. */
+.seg[data-key="overnight"] .segBar { background:var(--bar-soft); opacity:.5; }
 .segName { display:block; margin-top:8px; font-size:var(--text-tiny); line-height:1.3; font-weight:600; color:var(--text-strong); white-space:nowrap; }
 .segTime { display:block; font-size:var(--text-tiny); line-height:1.4; color:var(--text-muted); white-space:nowrap; }
 @media (max-width: 639px) {

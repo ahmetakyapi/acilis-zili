@@ -47,6 +47,20 @@ gerçek değerlerin bulunduğu `docs/rutinler.local.md` gitignore'da.
 
 Sıra öncelikli değil, hepsinin bilinçli olarak beklediği yerler.
 
+- [ ] **23x5 ikinci aşama — 7 Aralık 2026 sabahı (TR 05:00 sonrası) ölçülecek.**
+      Birinci aşama canlıda (28 Kasım): `MarketStatus.overnightOpen`, seans
+      pencereleri (`sessionWindows`, 6 Aralık 21:00 ET'den beş pencere),
+      rozetler, saatler sayfasındaki 23x5 paneli, Hakkında kadranı, hisse
+      grafiği lejantı ve rehber tablosu. Fiyat katmanı BİLEREK eski hâlinde:
+      gece işlemi `isOvernightTrade` ile eleniyor, `session` gece "closed".
+      Ölçülecekler: (1) `delayed_sip` anlık görüntüsünde 21:00 ET sonrası
+      `latestTrade` geliyor mu, gün barı (`dailyBar.t`) hangi güne yazılıyor
+      — ertesi işlem gününe yazılırsa `snapshotToQuote`un gece dalı o günü
+      "kapanış" sanar; (2) `sip` 1 dakikalık barlarda gece barları; (3) IEX
+      gece yok (gerçek zamanlı melez fiyat gece düşer, 15 dk gecikme).
+      Sonra: `session`a gece türü, `sessionDate` 21:00'de ertesi güne,
+      `isSessionTrade` işlemi kendi işlem gününe bağlar; gece fiyatı "Gece
+      Seansı" künyesiyle; grafik notu ("henüz grafikte yok") kalkar.
 - [ ] **Koşu Bekçisi (Görev Kontrolü) prompt'u yeniden yapıştırılmalı — sahibi
       (27 Kasım).** `docs/claude-rutinler.md` § 8 → 4e: sağlık ucuna Alpaca
       kota koruması alanları geldi (`saving`, `requestsLastHour`); bildirim

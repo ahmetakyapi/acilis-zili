@@ -1,7 +1,7 @@
 import styles from "./Answers.module.css";
 
 export type SessionBandSegment = {
-  key: "pre" | "regular" | "after";
+  key: "overnight" | "pre" | "regular" | "after";
   name: string;
   /** Okura yazılan aralık — "17:30–00:00". */
   time: string;

@@ -1163,6 +1163,7 @@ export function PriceChart({
     regular: labels.sessionRegular,
     after: labels.sessionAfter,
     overnight: labels.sessionOvernight,
+    pause: labels.sessionPause,
   };
 
   /* Okunan fiyat: kotasyon varsa o, yoksa son barın kapanışı. Yüzde ise
@@ -1401,10 +1402,16 @@ export function PriceChart({
            orada eski dört sütunlu düzen duruyor. */
         <details className={styles.sessions} open={!compact}>
           <summary className={styles.sessionSummary}>{labels.sessionHours}<span aria-hidden>+</span></summary>
-        <div className="mt-3 flex flex-col gap-1 border-t border-line-soft pt-3 sm:grid sm:grid-cols-4 sm:gap-x-4 sm:gap-y-3">
+        {/* 23x5 (7 Aralık 2026'dan): beş pencere — gece seansı işlem görüyor
+            ve adı "Gece Seansı"; borsa arası işlem görmeyen tek dilim. Gece
+            fiyatları bu aşamada grafikte yok, notu bunu söylüyor
+            (lib/market-hours.ts → OVERNIGHT_FIRST_SESSION). */}
+        <div className={cn("mt-3 flex flex-col gap-1 border-t border-line-soft pt-3 sm:grid sm:gap-x-4 sm:gap-y-3", windows.length === 5 ? "sm:grid-cols-5" : "sm:grid-cols-4")}>
           {windows.map((window) => {
-            const shaded = window.key === "pre" || window.key === "after";
-            const dark = window.key === "overnight";
+            const liveNight = window.key === "overnight" && window.traded;
+            const shaded = window.key === "pre" || window.key === "after" || liveNight;
+            const dark = !window.traded;
+            const note = window.key === "overnight" ? (liveNight ? labels.sessionOvernightLiveNote : labels.sessionOvernightNote) : null;
             return (
               <div
                 key={window.key}
@@ -1427,7 +1434,7 @@ export function PriceChart({
                       dark && "border-dashed border-line-strong",
                     )}
                   />
-                  <span className="truncate">{sessionName[window.key]}</span>
+                  <span className="truncate">{liveNight ? labels.sessionOvernightLive : sessionName[window.key]}</span>
                 </span>
                 <span className="numeral text-tiny leading-tight text-strong">
                   {window.primary}
@@ -1438,11 +1445,11 @@ export function PriceChart({
                 <span className="numeral ml-auto text-nano leading-tight text-muted sm:ml-0">
                   {window.secondary} {zoneTag(locale).secondary}
                 </span>
-                {dark && (
+                {note && (
                   /* Not KENDİ SATIRINDA: tek satıra sıkıştırılınca saatleri
                      ikinci satıra itiyordu. */
                   <span className="basis-full text-nano leading-[14px] text-muted sm:basis-auto">
-                    {labels.sessionOvernightNote}
+                    {note}
                   </span>
                 )}
               </div>

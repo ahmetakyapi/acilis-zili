@@ -120,13 +120,16 @@ ABD'de birçok komisyonsuz aracı kurum, emirlerini borsaya değil bir piyasa ya
 
 ## Seans Saatleri
 
-ABD piyasası üç bölümde çalışır. Türkiye yaz saati uygulamaz, ABD uygular: Türkiye saatleri yılda iki kez bir saat kayar. Yaz dönemi Mart ortasından Kasım başına, kış dönemi Kasım başından Mart ortasına kadardır.
+ABD piyasası hafta içi dört bölümde çalışır: 7 Aralık 2026'dan itibaren Nasdaq ve NYSE Arca başta olmak üzere borsalar günde 23 saat işlem görür (23x5). Türkiye yaz saati uygulamaz, ABD uygular: Türkiye saatleri yılda iki kez bir saat kayar. Yaz dönemi Mart ortasından Kasım başına, kış dönemi Kasım başından Mart ortasına kadardır.
 
 | Bölüm | New York | Türkiye (Yaz) | Türkiye (Kış) | Karakteri |
 |---|---|---|---|---|
+| Gece seansı | 21:00 – 04:00 | 04:00 – 11:00 | 05:00 – 12:00 | Yalnız limit emir, likidite çok düşük |
 | Açılış öncesi | 04:00 – 09:30 | 11:00 – 16:30 | 12:00 – 17:30 | İnce, oynak, spread geniş |
 | **Ana seans** | 09:30 – 16:00 | **16:30 – 23:00** | **17:30 – 00:00** | Hacmin neredeyse tamamı |
 | Kapanış sonrası | 16:00 – 20:00 | 23:00 – 03:00 | 00:00 – 04:00 | Bilanço tepkileri burada |
+
+Akşam seansından sonra borsa bir saat durur (New York 20:00–21:00); bu aradan sonraki işlemler bir sonraki işlem gününe yazılır. Gece seansı cuma akşamı ve tatil öncesi açılmaz; hafta pazar akşamı başlar. Gece saatlerine erişim aracı kurumun desteğine bağlıdır. Ayrıntı: [ABD Borsası Saatleri](/abd-borsasi-saatleri)
 
 Günün en yoğun iki dakikası açılış ve kapanıştır. Kapanış müzayedesinde endeks fonları gün içindeki para giriş-çıkışını dengeler; bu yüzden son dakikada büyük hacimler görünür.
 

@@ -33,6 +33,8 @@ function statusAt(session: MarketSession, secondsToTransition: number): MarketSt
     nextOpen: new Date(now + secondsToTransition * 1000),
     nextClose: new Date(now + secondsToTransition * 1000),
     nextTransition: new Date(now + secondsToTransition * 1000),
+    overnightOpen: false,
+    overnightSessionDate: null,
   };
 }
 

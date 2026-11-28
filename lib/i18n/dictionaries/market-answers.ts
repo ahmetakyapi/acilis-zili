@@ -73,15 +73,30 @@ export const marketHoursTr = {
 
   /* Seans tablosu ve şeridi. */
   sessionsTitle: "Seans Saatleri",
-  sessionsBandLabel: "Günün üç seansı, süreleriyle orantılı",
+  sessionsBandLabel: "Günün seansları, süreleriyle orantılı",
   colSession: "Seans",
   colTr: "Türkiye Saati",
   colNy: "New York Saati",
   sessionPre: "Ön Seans",
   sessionRegular: "Asıl Seans",
   sessionAfter: "Akşam Seansı",
+  sessionOvernight: "Gece Seansı",
+  sessionPause: "Borsa Arası",
   sessionsNote:
     "Endeksler ve kapanış fiyatları asıl seansta oluşur. Ön seans ve akşam seansında işlem hacmi düşük, alım satım farkı geniştir; her aracı kurum bu saatlerde emir kabul etmez.",
+
+  /* 23x5 gece seansı (lib/market-hours.ts → OVERNIGHT_FIRST_SESSION). Saatler hesaplanır. */
+  overnightTitle: "23x5: Gece Seansı",
+  overnightLeadSoon:
+    "{date} itibarıyla Nasdaq ve NYSE Arca başta olmak üzere ABD borsaları hafta içi 23 saat işlem görecek. Her işlem günü bir önceki akşam Türkiye saatiyle {open}'te gece seansıyla başlayacak ve {close}'de ön seansa bağlanacak (New York {openNy}–{closeNy}).",
+  overnightLeadLive:
+    "ABD borsaları hafta içi 23 saat işlem görüyor. Her işlem günü bir önceki akşam Türkiye saatiyle {open}'te gece seansıyla başlıyor ve {close}'de ön seansa bağlanıyor (New York {openNy}–{closeNy}).",
+  overnightPoints: [
+    "Borsalar her gece Türkiye saatiyle {pauseFrom}–{pauseTo} arasında bir saat duruyor; bu aradan sonraki işlemler bir sonraki işlem gününe yazılıyor.",
+    "Gece seansında yalnız limit emir geçiyor; bu saatlere erişim aracı kurumun desteğine bağlı.",
+    "Likidite düşük, alım satım farkı geniş, fiyat oynaklığı yüksek olabilir. Endeksler ve kapanış fiyatları yine asıl seansta oluşuyor.",
+    "Cuma akşamı ve tatil öncesi gece seansı açılmıyor; hafta pazar akşamı başlıyor.",
+  ],
 
   /* Yaz saati. */
   dstTitle: "Yaz Saati Geçişleri",
@@ -158,15 +173,29 @@ export const marketHoursEn: typeof marketHoursTr = {
   halfDayTag: "Half Day",
 
   sessionsTitle: "Session Hours",
-  sessionsBandLabel: "The day's three sessions, drawn to scale",
+  sessionsBandLabel: "The day's sessions, drawn to scale",
   colSession: "Session",
   colTr: "Türkiye Time",
   colNy: "New York Time",
   sessionPre: "Pre-Market",
   sessionRegular: "Regular Session",
   sessionAfter: "After Hours",
+  sessionOvernight: "Overnight Session",
+  sessionPause: "Exchange Break",
   sessionsNote:
     "Index levels and closing prices are set in the regular session. Pre-market and after-hours trading is thin and spreads are wide; not every broker accepts orders in those hours.",
+
+  overnightTitle: "23x5: The Overnight Session",
+  overnightLeadSoon:
+    "From {date}, US exchanges led by Nasdaq and NYSE Arca will trade 23 hours a weekday. Each trading day opens the evening before with an overnight session at {open} Türkiye time and runs into pre-market at {close} (New York {openNy}–{closeNy}).",
+  overnightLeadLive:
+    "US exchanges trade 23 hours a weekday. Each trading day opens the evening before with an overnight session at {open} Türkiye time and runs into pre-market at {close} (New York {openNy}–{closeNy}).",
+  overnightPoints: [
+    "Exchanges pause for an hour every night, {pauseFrom}–{pauseTo} Türkiye time; trades after the break count toward the next trading day.",
+    "Only limit orders are accepted overnight, and access depends on your broker.",
+    "Liquidity is thin, spreads wide and prices can be volatile. Index levels and closing prices are still set in the regular session.",
+    "There is no overnight session on Friday evenings or before holidays; the week opens on Sunday evening.",
+  ],
 
   dstTitle: "Daylight Saving Shifts",
   dstLead:

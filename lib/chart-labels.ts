@@ -46,6 +46,9 @@ export type ChartLabels = {
   sessionAfter: string;
   sessionOvernight: string;
   sessionOvernightNote: string;
+  sessionOvernightLive: string;
+  sessionOvernightLiveNote: string;
+  sessionPause: string;
   /** 1G'deki önceki kapanış çizgisinin eksen etiketi. */
   prevCloseShort: string;
   /* TL görünümü — gerekçe PriceChart → `tlActive`. */
@@ -81,6 +84,9 @@ export function chartLabels(t: Dictionary): ChartLabels {
     sessionAfter: t.chart.sessionAfter,
     sessionOvernight: t.chart.sessionOvernight,
     sessionOvernightNote: t.chart.sessionOvernightNote,
+    sessionOvernightLive: t.chart.sessionOvernightLive,
+    sessionOvernightLiveNote: t.chart.sessionOvernightLiveNote,
+    sessionPause: t.chart.sessionPause,
     prevCloseShort: t.chart.prevCloseShort,
     currencyGroup: t.lira.chart.currencyGroup,
     usd: t.lira.chart.usd,

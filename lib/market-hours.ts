@@ -33,6 +33,38 @@ export const SESSION_BOUNDS = {
 export const AFTER_HOURS_MINUTES =
   SESSION_BOUNDS.afterHoursClose - SESSION_BOUNDS.regularClose;
 
+/**
+ * 23x5: GECE SEANSI (28 Kasım, sahibinin isteği: "bizim sistem buna hazır
+ * mı" → "hepsini yapalım"). Nasdaq ve NYSE Arca (ve EDGX, 24X, MEMX)
+ * 6 Aralık 2026 Pazar 21:00 ET'de (TR 7 Aralık 05:00) gece seansını
+ * açıyor: her işlem gününün seansı ÖNCEKİ takvim gününün 21:00'inde
+ * başlıyor ve 04:00'te ön seansa bağlanıyor; 20:00–21:00 arası borsa arası.
+ * 21:00 sonrası işlemler borsada SONRAKİ işlem gününe yazılıyor. SEC
+ * onayı 10 Nisan 2026; tarih SIP hazırlığına bağlı bir hedef — kayarsa
+ * yalnız `OVERNIGHT_FIRST_SESSION` değişir.
+ *
+ * İKİ AŞAMA. Bu aşama GÖSTERİMİ kuruyor: `MarketStatus.overnightOpen`,
+ * seans pencereleri, rozet ve metinler. `session` alanı gece boyunca
+ * "closed" kalıyor ve fiyat/önbellek/alarm mantığı (yüzdeyi seansa
+ * bağlayan `sessionDate`, `isOvernightTrade` koruması) değişmiyor: o
+ * katmanın gece verisini nasıl tarihleyeceği (gün barı hangi güne
+ * yazılıyor, gecikme) ancak 7 Aralık sabahı gerçek veriyle ölçülebilir.
+ * Ölçmeden yüzde mantığını değiştirmek veri dürüstlüğü kuralına aykırı.
+ */
+export const OVERNIGHT_FIRST_SESSION = "2026-12-07";
+/** Gece seansının açılışı, ÖNCEKİ takvim gününün ET dakikası (21:00). */
+export const OVERNIGHT_OPEN_MINUTES = 21 * 60;
+
+/** Bu işlem gününün seansı bir gece seansıyla mı başlıyor? (Gün bir işlem günü olmalı.) */
+export function hasOvernightSession(sessionDate: string, holidays: MarketHoliday[]): boolean {
+  return sessionDate >= OVERNIGHT_FIRST_SESSION && isTradingDay(sessionDate, holidays);
+}
+
+/** `sessionDate` işlem gününün gece seansının açılış anı (önceki takvim günü 21:00 ET). */
+export function overnightOpenOf(sessionDate: string): Date {
+  return etDateWithMinutes(addEtDays(sessionDate, -1), OVERNIGHT_OPEN_MINUTES);
+}
+
 export type MarketSession =
   | "pre-market"
   | "regular"
@@ -123,6 +155,14 @@ export type MarketStatus = {
    * `nextTransition <= countdownTarget` her koşulda doğrudur.
    */
   nextTransition: Date;
+  /**
+   * 23x5 GECE SEANSI ŞU AN AÇIK MI (21:00 → 04:00 ET). Gerekçe
+   * `OVERNIGHT_FIRST_SESSION` üzerinde: bu aşamada YALNIZ gösterim okur;
+   * `session` gece boyunca "closed" kalıyor.
+   */
+  overnightOpen: boolean;
+  /** Gece seansı açıksa yazıldığı işlem günü (yarının seansı); değilse null. */
+  overnightSessionDate: string | null;
 };
 
 /* --------------------------------------------------------------------------
@@ -424,6 +464,26 @@ export function getMarketStatus(
   const geceYarisi = etDateWithMinutes(addEtDays(dateStr, 1), 0);
   if (geceYarisi < nextTransition) nextTransition = geceYarisi;
 
+  /* GECE SEANSI (23x5) — 21:00'den sonra yarının, 04:00'ten önce bugünün
+     işlem günü. Seansın iki ucu da bir geçiş: 21:00 rozeti "Gece Seansı"na,
+     04:00 "Açılış Öncesi"ne çeviriyor (04:00 zaten yukarıdaki sınırlarda). */
+  const overnightDay =
+    minutes >= OVERNIGHT_OPEN_MINUTES
+      ? addEtDays(dateStr, 1)
+      : minutes < SESSION_BOUNDS.preMarketOpen
+        ? dateStr
+        : null;
+  const overnightSessionDate =
+    overnightDay && hasOvernightSession(overnightDay, holidays) ? overnightDay : null;
+  for (let i = 0, day = dateStr; i < 14; i++, day = addEtDays(day, 1)) {
+    if (!hasOvernightSession(day, holidays)) continue;
+    const opens = overnightOpenOf(day);
+    if (opens.getTime() > now.getTime()) {
+      if (opens < nextTransition) nextTransition = opens;
+      break;
+    }
+  }
+
   const sessionEnd = sessionEndOf(sessionDate, holidays);
 
   return {
@@ -441,6 +501,8 @@ export function getMarketStatus(
     nextOpen,
     nextClose,
     nextTransition,
+    overnightOpen: overnightSessionDate !== null,
+    overnightSessionDate,
   };
 }
 

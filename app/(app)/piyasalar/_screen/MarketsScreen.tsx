@@ -418,7 +418,7 @@ async function IndexCards({
       <div className={styles.indexContext}>
         <span className={styles.sessionBadge} data-open={status.isRegularOpen}>
           <i aria-hidden />
-          {status.session === "regular" ? t.market.open : status.session === "pre-market" ? t.market.preMarket : status.session === "after-hours" ? t.market.afterHours : t.market.closed}
+          {status.session === "regular" ? t.market.open : status.session === "pre-market" ? t.market.preMarket : status.session === "after-hours" ? t.market.afterHours : status.overnightOpen ? t.market.overnight : t.market.closed}
         </span>
         <span>{t.today.experienceIndexNote} · <strong>USD</strong></span>
       </div>

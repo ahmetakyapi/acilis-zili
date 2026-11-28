@@ -3,6 +3,8 @@ import {
   ET_ZONE,
   SESSION_BOUNDS,
   etDateTimeToUtc,
+  OVERNIGHT_FIRST_SESSION,
+  OVERNIGHT_OPEN_MINUTES,
 } from "./market-hours";
 import type { Locale } from "./i18n/config";
 
@@ -237,7 +239,7 @@ export function clockOf(minutes: number): string {
   ).padStart(2, "0")}`;
 }
 
-export type SessionKey = "pre" | "regular" | "after" | "overnight";
+export type SessionKey = "pre" | "regular" | "after" | "overnight" | "pause";
 
 export type SessionWindow = {
   key: SessionKey;
@@ -245,6 +247,8 @@ export type SessionWindow = {
   primary: string;
   /** Diğer saatle "09:30–16:00". */
   secondary: string;
+  /** Pencerede borsada işlem var mı — 23x5 öncesi gece ve 23x5'in borsa arası `false`. */
+  traded: boolean;
 };
 
 const DASH = "–";
@@ -271,20 +275,36 @@ export function sessionWindows(
 ): SessionWindow[] {
   const closeEt = clockOf(closeMinutes);
   const afterEnd = clockOf(closeMinutes + AFTER_HOURS_MINUTES);
-  const bounds: [SessionKey, string, string][] = [
-    ["pre", clockOf(SESSION_BOUNDS.preMarketOpen), clockOf(SESSION_BOUNDS.regularOpen)],
-    ["regular", clockOf(SESSION_BOUNDS.regularOpen), closeEt],
-    ["after", closeEt, afterEnd],
-    ["overnight", afterEnd, clockOf(SESSION_BOUNDS.preMarketOpen)],
-  ];
+  const preOpen = clockOf(SESSION_BOUNDS.preMarketOpen);
+  /* 23x5 (7 Aralık 2026'dan, lib/market-hours.ts → OVERNIGHT_FIRST_SESSION):
+     günün seansı önceki akşam 21:00'de gece seansıyla başlıyor, akşam
+     seansından sonra 21:00'e kadar borsa arası. Sıra okuyucunun gününe
+     göre: TR'de 05:00 gece → 12:00 ön → 17:30 ana → 00:00 kapanış sonrası
+     → 04:00 ara. Öncesinde gece penceresi işlem görmeyen tek dilim. */
+  const overnight = dateEt >= OVERNIGHT_FIRST_SESSION;
+  const bounds: [SessionKey, string, string, boolean][] = overnight
+    ? [
+        ["overnight", clockOf(OVERNIGHT_OPEN_MINUTES), preOpen, true],
+        ["pre", preOpen, clockOf(SESSION_BOUNDS.regularOpen), true],
+        ["regular", clockOf(SESSION_BOUNDS.regularOpen), closeEt, true],
+        ["after", closeEt, afterEnd, true],
+        ["pause", afterEnd, clockOf(OVERNIGHT_OPEN_MINUTES), false],
+      ]
+    : [
+        ["pre", preOpen, clockOf(SESSION_BOUNDS.regularOpen), true],
+        ["regular", clockOf(SESSION_BOUNDS.regularOpen), closeEt, true],
+        ["after", closeEt, afterEnd, true],
+        ["overnight", afterEnd, preOpen, false],
+      ];
 
-  return bounds.map(([key, from, to]) => {
+  return bounds.map(([key, from, to, traded]) => {
     const start = timePair(dateEt, from, locale);
     const end = timePair(dateEt, to, locale);
     return {
       key,
       primary: `${start.primary}${DASH}${end.primary}`,
       secondary: `${start.secondary}${DASH}${end.secondary}`,
+      traded,
     };
   });
 }

@@ -196,11 +196,14 @@ async function Pulse() {
     "pre-market": "Ön Seans",
     "after-hours": "Akşam Seansı",
     // Yarım günde `holiday` erken kapanış kaydı taşır; tatil değil.
-    closed: status.holiday && !status.tradingToday
-      ? `Tatil · ${status.holiday.nameTr}`
-      : status.isWeekend
-        ? "Hafta Sonu"
-        : "Kapalı",
+    // 23x5 gece seansı (21:00–04:00 ET): `session` "closed" ama borsa açık.
+    closed: status.overnightOpen
+      ? "Gece Seansı"
+      : status.holiday && !status.tradingToday
+        ? `Tatil · ${status.holiday.nameTr}`
+        : status.isWeekend
+          ? "Hafta Sonu"
+          : "Kapalı",
   };
 
   const now = new Date();

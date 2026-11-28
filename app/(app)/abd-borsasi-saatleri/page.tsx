@@ -26,6 +26,8 @@ import {
 } from "@/lib/market-answers";
 import {
   AFTER_HOURS_MINUTES,
+  OVERNIGHT_FIRST_SESSION,
+  OVERNIGHT_OPEN_MINUTES,
   SESSION_BOUNDS,
   closeMinutesFor,
   todayEt,
@@ -158,19 +160,52 @@ export default async function MarketHoursPage() {
      Türkiye, ikincil New York (bu sayfanın sırası, yukarıdaki not). */
   const closeMinutes = closeMinutesFor(shown.date, holidays);
   const minutesOf: Record<SessionBandSegment["key"], number> = {
+    overnight: 24 * 60 - OVERNIGHT_OPEN_MINUTES + SESSION_BOUNDS.preMarketOpen,
     pre: SESSION_BOUNDS.regularOpen - SESSION_BOUNDS.preMarketOpen,
     regular: closeMinutes - SESSION_BOUNDS.regularOpen,
     after: AFTER_HOURS_MINUTES,
   };
   const names: Record<SessionBandSegment["key"], string> = {
+    overnight: L.sessionOvernight,
     pre: L.sessionPre,
     regular: L.sessionRegular,
     after: L.sessionAfter,
   };
-  const windows = sessionWindows(shown.date, "tr", closeMinutes).flatMap((window) =>
-    window.key === "overnight"
-      ? []
-      : [{ key: window.key, name: names[window.key], tr: window.primary, ny: window.secondary, minutes: minutesOf[window.key] }],
+  /* 23x5 günlerinde gece seansı şeritte ve tabloda; borsa arası yalnız
+     tabloda (şeritte bir saatlik boşluk okunmuyor, sözle daha açık). */
+  const allWindows = sessionWindows(shown.date, "tr", closeMinutes);
+  const windows = allWindows.flatMap((window) =>
+    window.traded && window.key !== "pause"
+      ? [{ key: window.key, name: names[window.key], tr: window.primary, ny: window.secondary, minutes: minutesOf[window.key] }]
+      : [],
+  );
+  const pause = allWindows.find((window) => window.key === "pause");
+  const tableRows = [
+    ...windows,
+    ...(pause ? [{ key: "pause" as const, name: L.sessionPause, tr: pause.primary, ny: pause.secondary, minutes: 60 }] : []),
+  ];
+
+  /* 23x5 PANELİ (28 Kasım). Gece seansının saatleri o günün tarihiyle
+     hesaplanıyor (yaz saatinde TR 04:00–11:00, kışın 05:00–12:00); geçişten
+     önce "itibarıyla" cümlesi, sonra "işlem görüyor". Saatler ilk gece
+     seansının günü için: geçişten önce bugünün saatiyle yanlış olabilirdi. */
+  const overnightDay = shown.date >= OVERNIGHT_FIRST_SESSION ? shown.date : OVERNIGHT_FIRST_SESSION;
+  const nightWindows = sessionWindows(overnightDay, "tr", closeMinutesFor(overnightDay, holidays));
+  const night = nightWindows.find((window) => window.key === "overnight");
+  const nightPause = nightWindows.find((window) => window.key === "pause");
+  const split = (range: string | undefined) => (range ?? "").split(/[–-]/);
+  const [nightOpen, nightClose] = split(night?.primary);
+  const [nightOpenNy, nightCloseNy] = split(night?.secondary);
+  const [pauseFrom, pauseTo] = split(nightPause?.primary);
+  const overnightLead = fill(
+    todayEt(now) >= OVERNIGHT_FIRST_SESSION || status.overnightOpen ? L.overnightLeadLive : L.overnightLeadSoon,
+    {
+      date: longDate(OVERNIGHT_FIRST_SESSION, locale, { year: true, weekday: true }),
+      open: nightOpen,
+      close: nightClose,
+      openNy: nightOpenNy,
+      closeNy: nightCloseNy,
+    },
   );
 
   /* Yaz saati: bu yıl ve gelecek yıl. Türkiye için aynı hesap boş dönerse
@@ -217,8 +252,8 @@ export default async function MarketHoursPage() {
             </tr>
           </thead>
           <tbody>
-            {windows.map((w) => (
-              <tr key={w.key}>
+            {tableRows.map((w) => (
+              <tr key={w.key} data-past={w.key === "pause" || undefined}>
                 <td data-strong>{w.name}</td>
                 <td data-strong data-num className="numeral">{w.tr}</td>
                 <td data-num className="numeral">{w.ny}</td>
@@ -227,6 +262,16 @@ export default async function MarketHoursPage() {
           </tbody>
         </table>
         <p className={styles.note}>{L.sessionsNote}</p>
+      </Panel>
+
+      <Panel>
+        <PanelHeader title={L.overnightTitle} />
+        <p className={styles.prose}>{overnightLead}</p>
+        <ul className={styles.notes}>
+          {L.overnightPoints.map((point) => (
+            <li key={point}>{fill(point, { pauseFrom, pauseTo })}</li>
+          ))}
+        </ul>
       </Panel>
 
       {shifts.length > 0 && (

@@ -103,11 +103,16 @@ export default async function TodayPage() {
        13:00 + tradingToday=true ve geri sayım aynı günün 17:30 TR açılışına
        sayarken rozet "Resmî Tatil" yazıyordu; 18:30 ET'de ve 24 Aralık
        17:00 ET sonrasında da aynısı. Tatil yalnızca işlem günü DEĞİLSE. */
-    closed: status.holiday && !status.tradingToday
-      ? t.market.holiday
-      : status.isWeekend
-        ? t.market.weekend
-        : t.market.closed,
+    /* 23x5 gece seansı (7 Aralık 2026'dan, 21:00–04:00 ET) — `session`
+       bu aşamada "closed" kalıyor ama borsa açık; rozet bunu söylüyor.
+       Pazar 21:00 hafta sonu sayılıyor, o yüzden önce bu soruluyor. */
+    closed: status.overnightOpen
+      ? t.market.overnight
+      : status.holiday && !status.tradingToday
+        ? t.market.holiday
+        : status.isWeekend
+          ? t.market.weekend
+          : t.market.closed,
   };
 
   const trading = status.session === "regular";
@@ -168,7 +173,11 @@ export default async function TodayPage() {
     future: flowHeadingOf(t.today.futureFlow, t.today.futureFlowNote),
   };
   const sessionState =
-    status.session === "regular" ? "regular" : status.session === "closed" ? "closed" : "extended";
+    status.session === "regular"
+      ? "regular"
+      : status.session === "closed" && !status.overnightOpen
+        ? "closed"
+        : "extended";
   /* Kahramanın zili seansı anlatıyor: kapalıyken uyukluyor, ön ve akşam
      seansında bekliyor, asıl seansta çalıyor (lib/ink/scenes.ts). */
   const heroScene =

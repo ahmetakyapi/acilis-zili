@@ -172,6 +172,8 @@ const tr = {
     closed: "Piyasa Kapalı",
     preMarket: "Açılış Öncesi",
     afterHours: "Kapanış Sonrası",
+    /* 23x5 gece seansı (21:00–04:00 ET) — rozet. */
+    overnight: "Gece Seansı",
     holiday: "Resmî Tatil",
     weekend: "Hafta Sonu",
     live: "Canlı",
@@ -1612,6 +1614,10 @@ const tr = {
     sessionAfter: "Akşam Seansı",
     sessionOvernight: "Gece",
     sessionOvernightNote: "Gece seansı konsolide veri akışında yok",
+    /* 23x5 (7 Aralık 2026'dan): gece seansı işlem görüyor, 20:00–21:00 ET borsa arası. */
+    sessionOvernightLive: "Gece Seansı",
+    sessionOvernightLiveNote: "Gece fiyatları henüz grafikte yok",
+    sessionPause: "Borsa Arası",
     /* 1G grafiğindeki kesikli çizginin eksen etiketi — dar, kısaltılmış. */
     prevCloseShort: "Önc. Kapanış",
   },
@@ -2349,6 +2355,7 @@ const tr = {
     clockPre: "Ön Seans",
     clockRegular: "Ana Seans",
     clockAfter: "Kapanış Sonrası",
+    clockOvernight: "Gece Seansı",
     clockAria: "Günün 24 saati içinde seans pencereleri",
     footerLink: "Hakkında",
     whoTitle: "Kim Yapıyor",
