@@ -357,55 +357,7 @@
   border-top: 1px solid var(--line-soft);
 }
 
-/* ---- Okuma dizini ---- */
-.readingIndex {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  margin: 0 0 18px;
-}
-
-.readingIndex a {
-  display: inline-flex;
-  min-height: 36px;
-  max-width: 100%;
-  align-items: center;
-  gap: 8px;
-  padding: 6px 12px 6px 6px;
-  border: 1px solid var(--line);
-  border-radius: var(--radius-md);
-  background: var(--surface);
-  font-size: var(--text-small);
-  font-weight: 600;
-  color: var(--text-strong);
-  transition: border-color 160ms, background-color 160ms;
-}
-
-.readingIndex a:hover { border-color: var(--line-strong); background: var(--surface-elevated); }
-
-.readingIndex a > span:first-child {
-  display: inline-flex;
-  width: 24px;
-  height: 24px;
-  flex: none;
-  align-items: center;
-  justify-content: center;
-  border-radius: var(--radius-xs);
-  background: var(--surface-elevated);
-  font-size: var(--text-tiny);
-  font-weight: 700;
-}
-
-.readingIndex a > span:last-child {
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-
-@media (max-width: 639px) {
-  .readingIndex { flex-direction: column; }
-  .readingIndex a { min-height: 44px; }
-}
+/* Okuma dizini (`.readingIndex`) 28 Kasım'da kalktı — gerekçe ReportReading.tsx → "BÖLÜM DİZİNİ". */
 
 /* ---- Kaynak kartları ---- */
 .sources {
@@ -469,3 +421,72 @@ a.source:hover { border-color: var(--line-strong); background: var(--surface-ele
 }
 
 a.source > svg:last-child { flex: none; color: var(--primary-ink); }
+
+/* ==========================================================================
+   TUR 3 (28 Kasım 2026) — yoğunluk. Gerekçeler TSX'te yanlarında.
+   ========================================================================== */
+
+/* DETAYLI DEĞERLENDİRME: bölüm gövdesi dört satır, anahtarla tam metin
+   (`ReportReading.tsx` → "KATLI GÖVDE"). Kutu `relative`: gizli onay
+   kutusu düğmenin hizasında (`.foldInput` kuralı, FoldToggle.module.css). */
+.sectionFold { position: relative; min-width: 0; }
+.sectionFoldInput { bottom: 0; left: 0; }
+.sectionFoldBody {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 4;
+  overflow: hidden;
+}
+.sectionFoldInput:checked ~ .sectionFoldBody { display: block; -webkit-line-clamp: unset; overflow: visible; }
+.sectionFoldButton {
+  display: inline-flex;
+  min-height: 44px;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: -10px;
+  color: var(--primary-ink);
+  font-size: var(--text-small);
+  font-weight: 600;
+  cursor: pointer;
+  transition: color 180ms var(--ease-brand), scale 120ms var(--ease-brand);
+}
+.sectionFoldButton:active { scale: .97; }
+.sectionFoldIcon { flex: none; transition: transform 220ms var(--ease-brand); }
+.sectionFoldInput:checked ~ .sectionFoldButton .sectionFoldIcon { transform: rotate(-180deg); }
+.sectionFoldInput:checked ~ .sectionFoldButton .sectionFoldMore,
+.sectionFoldInput:not(:checked) ~ .sectionFoldButton .sectionFoldLess { display: none; }
+.sectionFoldInput:focus-visible ~ .sectionFoldButton { outline: 2px solid var(--line-focus); outline-offset: 2px; border-radius: 8px; }
+@media (hover: hover) and (pointer: fine) { .sectionFoldButton:hover { color: var(--primary-hover); } }
+@media (prefers-reduced-motion: reduce) { .sectionFoldButton, .sectionFoldIcon { transition: none; } .sectionFoldButton:active { scale: none; } }
+
+/* ÖZETİN DESTEK PARAGRAFLARI: yalnız telefonda katlı (`ReportReading.tsx`
+   → "TELEFONDA DESTEK KATLI"). Birden çok paragraf satır sınırıyla
+   kesilemiyor; yükseklik sınırı + alt kenarda solan maske (maske yalnız
+   saydamlığı okur; renk değil). 640 ve üstünde kap görünmez bir sarıcı. */
+.restFold { position: relative; min-width: 0; }
+@media (min-width: 640px) {
+  .restFold > .sectionFoldInput, .restFoldButton { display: none; }
+}
+@media (max-width: 639px) {
+  .restFold > .sectionFoldInput:not(:checked) ~ .restFoldBody {
+    max-height: calc(1rem * 1.8 * 5);
+    overflow: hidden;
+    mask-image: linear-gradient(to bottom, var(--text-strong) 55%, transparent);
+  }
+}
+/* Geniş ekranda sarıcı ızgarada yer tutmaz: destek sütunu `summaryProse`
+   ızgarasının hücresi kalır (EarningsReport.module.css). */
+@media (min-width: 640px) { .restFold { display: contents; } }
+
+/* GÜÇLÜ YÖN / RİSK: telefonda ilk üç madde (`OutlookCards.tsx`). Anahtar
+   `FoldToggle` (telefon kipi); gizleme burada, `data-fold` ile DEĞİL: onun
+   geniş ekran kuralı `display: revert` maddeyi ızgaradan çıkarıp liste
+   öğesine döndürüyordu (1440 çekiminde madde imi metnin üstüne kaydı). */
+@media (max-width: 639px) {
+  input:not(:checked) ~ .balanceList > li[data-more] { display: none; }
+}
+
+/* ÖLÇÜM (28 Kasım, Tur 3; zengin sahte analiz, canlı Dell yoğunluğu):
+   sayfa boyu 390'da 14.357 → 10.330, 360'ta 15.071 → 10.538, 1440'ta
+   7.382 → 6.448. Okuma bölümü 390'da 5.084 → 1.995, rakamlar 3.147 → 2.610, ileriye bakış 1.018 → 902, kaynaklar 685 → 399; bölüm gövdesi
+   kapalı 101, açık 605 piksel (390). Taşma, < 12 metin, < 44 hedef 0. */

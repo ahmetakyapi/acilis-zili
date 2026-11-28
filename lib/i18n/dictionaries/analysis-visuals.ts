@@ -24,9 +24,12 @@ export const analysisVisualsTr = {
   actual: "Gerçekleşen",
   balanceTitle: "Güçlü Yönler ve Riskler",
   balanceCount: "{strengths} Güçlü Yön · {risks} Risk",
-  readingIndex: "Bölümler",
   ceoTopics: "Çağrıda Öne Çıkanlar",
   sourceDocument: "Belge",
+  /* Tur 3 (28 Kasım): telefonda katlanan listeler. */
+  pointsMore: "{n} Madde Daha",
+  sourcesMore: "{n} Kaynak Daha",
+  foldLess: "Daha Az Göster",
   list: {
     view: "Görünüm",
     cards: "Kart",
@@ -56,9 +59,11 @@ export const analysisVisualsEn: typeof analysisVisualsTr = {
   actual: "Actual",
   balanceTitle: "Strengths and Risks",
   balanceCount: "{strengths} Strengths · {risks} Risks",
-  readingIndex: "Sections",
   ceoTopics: "Highlighted on the Call",
   sourceDocument: "Document",
+  pointsMore: "{n} More",
+  sourcesMore: "{n} More Sources",
+  foldLess: "Show Less",
   list: {
     view: "View",
     cards: "Cards",

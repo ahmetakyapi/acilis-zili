@@ -845,8 +845,8 @@
   .summaryRest { padding-left: calc(clamp(2rem, 3.5vw, 3.5rem) / 2); margin-left: calc(clamp(2rem, 3.5vw, 3.5rem) / -2); border-left: 1px solid var(--line-soft); }
   .summaryRest > p { max-width: none; font-size: 1rem; }
   /* Tek paragraflık özet: giriş kartın tamamında, ama satır 44em'de. */
-  .summaryProse:not(:has(> .summaryRest)) { grid-template-columns: minmax(0, 1fr); }
-  .summaryProse:not(:has(> .summaryRest)) .summaryLead { max-width: 44em; }
+  .summaryProse:not(:has(.summaryRest)) { grid-template-columns: minmax(0, 1fr); }
+  .summaryProse:not(:has(.summaryRest)) .summaryLead { max-width: 44em; }
 }
 @media (min-width: 1280px) {
   .summaryLead { font-size: 1.35rem; }

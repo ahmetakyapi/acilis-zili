@@ -1,4 +1,4 @@
-import { Article, Scales } from "@phosphor-icons/react/dist/ssr";
+import { Article, CaretDown, Scales } from "@phosphor-icons/react/dist/ssr";
 import { Panel } from "@/components/ui/primitives";
 import { ChapterHeading } from "@/components/ui/ChapterHeading";
 import { RichText } from "@/components/earnings/RichText";
@@ -11,8 +11,8 @@ import { cn } from "@/lib/utils";
 import { PanelHead } from "./PanelHead";
 import visuals from "./ReportVisuals.module.css";
 
-/** Dizin bu kadar bölümden itibaren basılır; iki bölümlük metin dizinsiz okunur. */
-const INDEX_MIN_SECTIONS = 3;
+/** Bu uzunluğun altındaki bölüm gövdesi katlanmaz: dört satıra zaten sığar. */
+const FOLD_MIN_CHARS = 360;
 
 /** Okuma bölümü — özet ve detaylı değerlendirme; sayfa dosyasından taşındı. */
 export function ReportReading({
@@ -76,13 +76,26 @@ export function ReportReading({
                   <RichText text={row.summary[0]} linker={linker} />
                 </p>
               )}
+              {/* TELEFONDA DESTEK KATLI (28 Kasım, Tur 3): giriş kendi
+                  başına özetin cevabı; altındaki iki destek paragrafı 390'da
+                  ~800 piksel. Telefonda ilk satırları görünür, gerisi aynı
+                  anahtarla açılır; 640 ve üstünde hiç katlanmaz (geniş
+                  ekranda destek girişin yanında, sayfayı uzatmıyor). */}
               {row.summary.length > 1 && (
-                <div className={styles.summaryRest}>
-                  {row.summary.slice(1).map((paragraph, index) => (
-                    <p key={index} className="[text-wrap:pretty]">
-                      <RichText text={paragraph} linker={linker} />
-                    </p>
-                  ))}
+                <div className={visuals.restFold}>
+                  <input type="checkbox" id="report-summary-more" className={cn("sr-only", visuals.sectionFoldInput)} />
+                  <div className={cn(styles.summaryRest, visuals.restFoldBody)}>
+                    {row.summary.slice(1).map((paragraph, index) => (
+                      <p key={index} className="[text-wrap:pretty]">
+                        <RichText text={paragraph} linker={linker} />
+                      </p>
+                    ))}
+                  </div>
+                  <label htmlFor="report-summary-more" className={cn(visuals.sectionFoldButton, visuals.restFoldButton)}>
+                    <span className={visuals.sectionFoldMore}>{t.analysis.readMore}</span>
+                    <span className={visuals.sectionFoldLess}>{t.analysis.readLess}</span>
+                    <CaretDown size={14} weight="bold" aria-hidden className={visuals.sectionFoldIcon} />
+                  </label>
                 </div>
               )}
             </div>
@@ -96,25 +109,15 @@ export function ReportReading({
                   yarışıyordu; ne yaptığını söyleyen hâli ("Claude ile
                   Hazırlandı") alt bilgideki uyarının yanında. */}
               <PanelHead icon={Scales} title={t.analysis.detailed} />
-              {/* BÖLÜM DİZİNİ (25 Ekim görsel zirve). Detaylı değerlendirme
-                  1440'ta 1.100, telefonda 3.000 pikselden uzun ve başlıklar
-                  ancak kaydırınca görünüyordu. Dizin başlıkları tek bakışta
-                  veriyor; her biri kendi bölümüne atlıyor (çapa yapışkan
-                  çubuğun altında kalsın diye `scroll-mt`). */}
-              {row.analysis.length >= INDEX_MIN_SECTIONS && (
-                <nav aria-label={t.analysisVisuals.readingIndex} lang={row.locale}>
-                  <ol className={visuals.readingIndex}>
-                    {row.analysis.map((section, index) => (
-                      <li key={index} className="min-w-0 max-w-full">
-                        <a href={`#report-section-${index + 1}`}>
-                          <span aria-hidden className="numeral">{index + 1}</span>
-                          <span>{section.title.replace(/[.。]$/, "")}</span>
-                        </a>
-                      </li>
-                    ))}
-                  </ol>
-                </nav>
-              )}
+              {/* BÖLÜM DİZİNİ (25 Ekim görsel zirve) — DEĞİŞTİ (28 Kasım,
+                  Tur 3): KALKTI. Dizin, detaylı değerlendirme 1440'ta 1.100,
+                  telefonda 3.000 pikselden uzunken başlıkları tek bakışta
+                  vermek içindi. Bölümler artık katlı (aşağıda "KATLI GÖVDE";
+                  1440'ta bölüm satırı ~250, panel ~700 piksel) ve başlıklar
+                  dizinin hemen altında zaten tek bakışta görünüyor: dizin
+                  aynı beş başlığı ikinci kez, hap hap yazıyordu (1440'ta iki
+                  satır, telefonda ~250 piksel). Çapa kimlikleri
+                  (`report-section-N`) bölümlerde duruyor. */}
               {/* ---- Bölümler: ızgara, sütun AKIŞI değil ----
                   Bir süre çok sütunlu (multicol) dizildi ve okuma sırası
                   sütun sütun aşağı iniyordu: soldaki bölüm 1'i okuyup
@@ -154,9 +157,36 @@ export function ReportReading({
                     <h3 className="mb-2 text-base font-bold leading-[20px] tracking-[-0.015em] text-strong [text-wrap:balance]">
                       {section.title}
                     </h3>
-                    <p className="text-base leading-[22px] text-body [text-wrap:pretty]">
-                      <RichText text={section.body} linker={linker} />
-                    </p>
+                    {/* KATLI GÖVDE (28 Kasım, Tur 3; sahibinin sözü: "bazı
+                        ekranlarda çok bilgi yoğunluğu var, kullanımı
+                        zorlaştırıyor"). Beş bölüm telefonda ~4.000, 1440'ta
+                        ~1.300 piksel düz metindi; başlıklar ve ilk dört satır
+                        artık görünür, gerisi bölümün kendi anahtarıyla açılır.
+                        Metin sunucuda TAM basılı (arama motoru ve ekran
+                        okuyucu bütününü okur); JS'siz onay kutusu
+                        (`FoldToggle` gerekçesi), açılış bastığın yerde
+                        (`ExpandInPlace`, label[for]). Kısa bölüm katlanmaz. */}
+                    {section.body.length > FOLD_MIN_CHARS ? (
+                      <div className={visuals.sectionFold}>
+                        <input
+                          type="checkbox"
+                          id={`report-section-${index + 1}-more`}
+                          className={cn("sr-only", visuals.sectionFoldInput)}
+                        />
+                        <p className={cn(visuals.sectionFoldBody, "text-base leading-[22px] text-body [text-wrap:pretty]")}>
+                          <RichText text={section.body} linker={linker} />
+                        </p>
+                        <label htmlFor={`report-section-${index + 1}-more`} className={visuals.sectionFoldButton}>
+                          <span className={visuals.sectionFoldMore}>{t.analysis.readMore}</span>
+                          <span className={visuals.sectionFoldLess}>{t.analysis.readLess}</span>
+                          <CaretDown size={14} weight="bold" aria-hidden className={visuals.sectionFoldIcon} />
+                        </label>
+                      </div>
+                    ) : (
+                      <p className="text-base leading-[22px] text-body [text-wrap:pretty]">
+                        <RichText text={section.body} linker={linker} />
+                      </p>
+                    )}
                   </section>
                 ))}
               </div>

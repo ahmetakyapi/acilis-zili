@@ -120,6 +120,9 @@ export const calendarVisualsTr = {
     moveIndicative: "Gösterge Fiyat",
     lastTitle: "Son Bilanço",
     lastReported: "Açıklandı",
+    /* Tur 3 (28 Kasım): kahramanın büyük sayısı sürpriz; "ne zaman" künyeye iner. */
+    lastSurprise: "Hisse Başına Kâr Sürprizi",
+    lastReportedAgo: "{ago} Açıklandı",
     lastYesterday: "Dün",
     lastToday: "Bugün",
     lastDaysAgo: "{n} Gün Önce",
@@ -251,6 +254,8 @@ export const calendarVisualsEn: typeof calendarVisualsTr = {
     moveIndicative: "Indicative Price",
     lastTitle: "Latest Earnings",
     lastReported: "Reported",
+    lastSurprise: "EPS Surprise",
+    lastReportedAgo: "Reported {ago}",
     lastYesterday: "Yesterday",
     lastToday: "Today",
     lastDaysAgo: "{n} Days Ago",

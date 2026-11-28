@@ -431,12 +431,18 @@ export function RevenueColumns({
           const chip = (
             <li
               key={`${bar.label}-growth-${index}`}
-              className={cn("flex justify-center", bar.projected && PROJECTED_INSET)}
+              className={cn("flex justify-center", bar.projected && PROJECTED_INSET, bar.projected && "max-sm:pl-0")}
             >
               {change !== null && (
                 <span
                   className={cn(
-                    "numeral whitespace-nowrap rounded-xs px-1 text-nano font-bold leading-[18px]",
+                    /* Telefonda dolgu 0 ve sıkı
+                       aralık (28 Kasım, Tur 3): 360'ta "+ %13,5" çipi
+                       sütununu 4,7, kesik kenarlı öngörü çipi 5,3 piksel
+                       aşıyordu (ölçüldü, olc.mjs taşan↔ 390'da 2 → 0,
+                       360'ta 5 → 0). Öngörü çipinin hücresi telefonda soldan dolgusuz
+                       (`max-sm:pl-0`). Punto 12'nin altına inmez. */
+                    "numeral whitespace-nowrap rounded-xs px-1 text-nano font-bold leading-[18px] max-sm:px-0 max-sm:tracking-[-0.03em]",
                     bar.projected
                       ? "border border-dashed border-primary text-primary"
                       : change >= 0

@@ -254,3 +254,19 @@
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* TELEFONDA İKİ SÜTUN (28 Kasım, Tur 3): 12,5rem tabanlı otomatik ızgara
+   390'da tek sütundu; beş ölçü kartı alt alta ~600 piksel. İki sütunda
+   kart ~170 piksel: sayı (1,25rem) ve tek satırlık değişim sığıyor; uzun
+   sayma birimi zaten kırılabilir (`.kpiValue`). Kart dolgusu bir kademe
+   iner. */
+@media (max-width: 639px) {
+  .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.6rem; }
+  .kpi { padding: 0.85rem 0.9rem; }
+}
+
+/* Tek sayıda kartın sonuncusu iki sütunu kaplar (beş kart: 2 + 2 + 1 ve
+   yanında boş hücre). */
+@media (max-width: 639px) {
+  .kpi:last-child:nth-child(odd) { grid-column: 1 / -1; }
+}

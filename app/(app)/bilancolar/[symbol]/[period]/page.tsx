@@ -517,7 +517,13 @@ export default async function AnalysisDetailPage(
      Mini grafik yalnızca gerçekleşen gelirleri içerir; öngörüleri gerçek
      sonuç gibi göstermemek için projected öğeler burada yer almaz. */
   const coverMetrics = (row.highlights ?? []).slice(0, 2);
-  const detailMetrics = (row.highlights ?? []).slice(2);
+  /* TEPKİ KARTI KAPAKTA ZATEN VAR (28 Kasım, Tur 3). Rutin "Hisse Tepkisi"
+     kartını metrik listesine de yazıyor; aynı yüzde kapağın "Bilanço Günü
+     Kapanışı" satırında büyük punto ve yön hapıyla duruyor (`reactionPct`,
+     aynı kayıt). Kayıtta tepki yüzdesi varsa metrik ızgarası o kartı
+     ikinci kez basmaz (canlı Dell 3Ç FY2027: "▲ %1,0" iki yerde). */
+  const repeatsReaction = (label: string) => row.reactionPct !== null && /tepki|reaction/i.test(label);
+  const detailMetrics = (row.highlights ?? []).slice(2).filter((metric) => !repeatsReaction(metric.label));
   const coverRevenue = (row.quarterlyRevenue ?? [])
     .filter((bar) => !bar.projected && Number.isFinite(bar.value) && bar.value >= 0)
     .slice(-5);

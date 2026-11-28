@@ -61,10 +61,15 @@ export function ChartFooter({
           key={stat.label}
           className={cn(
             "min-w-0",
-            stats.length >= 3 && "py-2 first:pt-0 last:pb-0 sm:py-0",
+            /* TELEFONDA SATIR (28 Kasım, Tur 3): etiket üstte, değer altta
+               üç ölçü 390'da ~210 piksel tutuyordu. Künye rayının telefon
+               kalıbı (`FactRail`): solda ad, sağda değer, tek satır; etiket
+               yine kırpılmaz, değer sağa yaslı. */
+            stats.length >= 3 &&
+              "py-2 first:pt-0 last:pb-0 max-sm:flex max-sm:items-baseline max-sm:justify-between max-sm:gap-3 sm:py-0",
           )}
         >
-          <dt className="truncate text-tiny font-medium text-muted">
+          <dt className="min-w-0 truncate text-tiny font-medium text-muted">
             {stat.label}
           </dt>
           {/* Değerin KENDİSİ tona boyanıyor, karnedeki gibi: "▲ %372"
@@ -78,6 +83,7 @@ export function ChartFooter({
           <dd
             className={cn(
               "numeral mt-px flex flex-wrap items-baseline gap-x-1.5 text-read font-bold",
+              stats.length >= 3 && "max-sm:shrink-0 max-sm:justify-end max-sm:text-right",
               SIGNED_VALUE.test(stat.value) && stat.tone === "up"
                 ? "text-up"
                 : SIGNED_VALUE.test(stat.value) && stat.tone === "down"

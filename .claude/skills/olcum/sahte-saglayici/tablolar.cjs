@@ -147,9 +147,13 @@ function kur() {
     analysis("NVDA", "NVIDIA Corporation", "2c-fy2027", "2Ç FY2027", "2026-08-26", 84, "buy", 106, 4.3, -1.2, "NVIDIA'nın ikinci çeyrek geliri bir yılda iki katından fazlasına, 96,22 milyar dolara çıktı; veri merkezi 89 milyar dolara ulaştı ve 108 milyar dolarlık üçüncü çeyrek öngörüsü piyasa beklentisinin %3,8 üzerinde.", 96.2e9, 2.22),
     analysis("NVDA", "NVIDIA Corporation", "1c-fy2027", "1Ç FY2027", "2026-05-20", 88, "buy", 85, 5.6, -1.8, "NVIDIA mali yılın ilk çeyreğinde 81,62 milyar dolar gelir açıkladı; yıllık %85 artışla yeni bir rekor kırdı.", 81.6e9, 1.87),
   ];
+  // Zengin analiz okuması (canlı Dell yoğunluğu): /bilancolar/HD/3c-2026 — zengin-analiz.cjs.
+  const zen = require("./zengin-analiz.cjs")(last, NOW_ISO, s);
+  earnings_analyses.push(zen.row);
 
   return {
     symbols, symbol_metrics, earnings_calendar, earnings_analyses,
+    earnings_analysis_extras: [zen.extras],
     market_holidays: HOLIDAYS,
     economic_events: economicEvents(now),
     technical_analyses: teknik.rows(),

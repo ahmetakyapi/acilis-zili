@@ -1,6 +1,10 @@
 import { ArrowUpRight, FileText } from "@phosphor-icons/react/dist/ssr";
 import { sourceHost } from "@/lib/analysis-visuals";
+import { FoldToggle } from "@/components/ui/FoldToggle";
 import visuals from "./ReportVisuals.module.css";
+
+/** Telefonda katlanmadan görünen kaynak kartı sayısı. */
+const PHONE_SOURCES = 4;
 import styles from "@/components/earnings/EarningsReport.module.css";
 import type { Dictionary } from "@/lib/i18n";
 import type { EarningsAnalysisRow } from "@/lib/schema";
@@ -48,6 +52,17 @@ export function ReportFooter({
                 paragraf gibi akıyordu; her kaynak artık kendi kartında: belge
                 adı, altında alan adı (nereye gideceğini bağlantıya basmadan
                 söylüyor), 56 piksel dokunma yüksekliği. Adres süzgeci aynı. */}
+            {/* TELEFONDA DÖRT KAYNAK (28 Kasım, Tur 3): dokuz kart 390'da
+                ~600 piksel, sayfanın en dibinde tek tek kart. Fazlası
+                sunucuda basılı, `data-fold` ile katlı; 640 ve üstünde
+                ızgara zaten kısa, anahtar yok. */}
+            <FoldToggle
+              id="report-sources-more"
+              hiddenCount={Math.max(0, sources.length - PHONE_SOURCES)}
+              more={t.analysisVisuals.sourcesMore.replace("{n}", String(sources.length - PHONE_SOURCES))}
+              less={t.analysisVisuals.foldLess}
+              phone
+            >
             <ul className={visuals.sources}>
               {sources.map((source, index) => {
                 /* ADRES SÜZGEÇTEN GEÇER. Kaynak listesi `/api/analiz` POST
@@ -69,7 +84,7 @@ export function ReportFooter({
                   </>
                 );
                 return (
-                  <li key={`${source.label}-${index}`} className="min-w-0">
+                  <li key={`${source.label}-${index}`} className="min-w-0" data-fold={index >= PHONE_SOURCES || undefined}>
                     {href ? (
                       <a href={href} target="_blank" rel="noopener noreferrer nofollow" className={visuals.source}>
                         {body}
@@ -82,6 +97,7 @@ export function ReportFooter({
                 );
               })}
             </ul>
+            </FoldToggle>
           </>
         )}
       </footer>
