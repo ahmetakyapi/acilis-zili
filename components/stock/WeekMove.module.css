@@ -133,6 +133,8 @@
 .loading { display: inline-flex; align-items: center; gap: 6px; margin: 0; font-size: var(--text-small); color: var(--text-muted); }
 .loadingIcon { color: var(--brass); animation: wm-glint 1.4s var(--ease-brand) infinite; }
 .line { height: 12px; border-radius: 6px; }
+/* Bekleme ışıltısının kapısı — gerekçe WeekMoveCard.tsx (28 Kasım 2026). */
+.note[data-quiet] :global(.skeleton)::after, .note[data-quiet] .loadingIcon { animation: none; }
 
 /* 10 Kasım: metin kaymıyor, yalnız beliriyor (not sonradan geliyor: durum
    geçişi); çizgi 1,1 sn → 0,7 sn. Sayfanın tek merdiveni: beliriş 200,

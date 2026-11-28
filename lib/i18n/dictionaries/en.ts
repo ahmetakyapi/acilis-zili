@@ -706,6 +706,7 @@ const en: typeof tr = {
     changedToHold: "Turned Hold",
     changedToSell: "Turned Sell",
     stanceLabel: "Technical Stance",
+    stockCardSource: "Daily Technical View",
     readAnalysis: "Read Analysis",
     shareTitle: "Share This Analysis",
     now: "15-Min Delayed",

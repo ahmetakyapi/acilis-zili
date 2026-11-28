@@ -16,10 +16,19 @@ import styles from "./ClaudeEntryChip.module.css";
  * ölçümü). Okur Claude'un bu hisse hakkında ne dediğini ya da yeni bir
  * analiz başlatabileceğini ancak sayfanın dibine inince öğreniyordu.
  *
- * Bu çip tek satırlık, İKİNCİL bir giriş: ekranın birincil eylemi yine
- * tam karttaki düğme (ClaudeCta), kart yerinde kalıyor. Çip ya son raporu
- * açar ("Claude Raporu · TUT · Aç") ya da yeni analize götürür ("Claude
- * ile Analiz"); ikisini birden basmaz.
+ * Bu çip tek satırlık, İKİNCİL bir giriş: ekranın birincil eylemi
+ * teknik kartın dibindeki düz mavi Claude butonu (`ClaudeAction`; 28 Kasım
+ * 2026'dan beri Şirket Analizi bandının butonu da ikincil, gerekçe
+ * AskStock.tsx). Çip ya son raporu açar ("Claude Raporu · 1–2 Hafta · TUT
+ * · Aç") ya da yeni analize götürür ("Claude ile Analiz"); ikisini birden
+ * basmaz.
+ *
+ * GÖRÜŞÜN UFKU ÇİPTE (28 Kasım 2026, Görsel Tur 4). Şirket sayfasında aynı
+ * hisse için dört görüş duruyordu (Claude çipi, teknik kart, analist
+ * dağılımı, Şirket Analizi satırları) ve çip hangi ufku anlattığını
+ * söylemiyordu: "TUT" teknik kartın "SAT"ının yanında çelişki gibi
+ * okunuyordu. Raporun vadesi (`horizon`: 1–2 Hafta / 3–6 Ay) artık görüşün
+ * önünde; telefonda şerit dar, ufuk orada erişilebilir adda kalıyor.
  *
  * Kim neyi görür — ClaudeCta'nın kuralıyla BİREBİR (orada `claudeState`;
  * dışa açık olmadığı için aynı iki `cache`li sorgu burada da soruluyor,
@@ -76,12 +85,13 @@ export async function ClaudeEntryChip({
 
   if (latest) {
     const verdict = dict.aiAnalysis.verdicts[latest.verdict];
+    const horizon = dict.aiAnalysis[latest.horizon];
     return (
       <Link
         href={`${base}?sekme=rapor&rapor=${encodeURIComponent(latest.id)}`}
         rel="nofollow"
         prefetch={false}
-        aria-label={t.claudeReportLabel.replace("{verdict}", verdict)}
+        aria-label={t.claudeReportLabel.replace("{horizon}", horizon).replace("{verdict}", verdict)}
         className={cn("tap-44", styles.chip, className)}
         data-verdict={latest.verdict}
       >
@@ -90,6 +100,8 @@ export async function ClaudeEntryChip({
             yanındaki çipin kenar solması görünmüyordu (EN 239/250 piksel). */}
         <span className={cn(styles.label, styles.long)}>{t.claudeReport}</span>
         <span className={cn(styles.label, styles.short)}>{t.claudeShort}</span>
+        <span aria-hidden className={cn(styles.dot, styles.horizonDot)}>·</span>
+        <span className={styles.horizon}>{horizon}</span>
         <span aria-hidden className={styles.dot}>·</span>
         <b className={styles.verdict}>{verdict}</b>
         <span aria-hidden className={cn(styles.dot, styles.goDot)}>·</span>

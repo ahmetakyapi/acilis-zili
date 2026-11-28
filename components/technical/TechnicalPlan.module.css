@@ -483,3 +483,13 @@
    SAT Ne Demek?" bölümünde; kapak rayındaki aynı kural (`.coverRail`).
    Ölçüm (390, SAT kartı; önce canlı): 379 → 340 piksel. */
 @media (max-width:639px) { .card .riskHead:has(.railWhy) { display:none; } }
+
+/* 28 Kasım 2026 (Görsel Tur 4): SAT cümlesi geniş ekranda da karttan
+   kalktı. Canlıda on SAT kartının onunda birebir aynıydı (denetim, 1440);
+   cümle artık "Hisse Planları" başlığının altında bir kez (page.tsx,
+   `.boardNote`) ve yalnız Tümü/SAT süzgecinde. Karışık satırda (SAT
+   yanında TUT) SAT kartının rayı satırın DİBİNE oturuyor: TUT kartının
+   "Risk / Getiri" künyesi kadar boşluk rayın üstünde, fiyat ile ray
+   arasında kalıyor ve raylar komşu kartla aynı hatta başlıyor (ölçüm
+   `TechnicalDirectory.module.css` → `.cardPlan[data-verdict="sell"]`). */
+.cardPlan[data-verdict="sell"] .riskHead:has(.railWhy) { display:none; }

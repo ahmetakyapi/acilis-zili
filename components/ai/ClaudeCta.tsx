@@ -69,14 +69,19 @@ export async function editionNote(symbol: string, locale: "tr" | "en") {
  * süren rapor ve dolan kota Claude sayfasının kendi ekranındadır
  * (`ClaudeWorkbench`); band onlar için sorgu yapmaz.
  */
-export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; locale: "tr" | "en"; focus: AnalysisFocus | "both" }) {
+export async function ClaudeCta({ symbol, locale, focus, actionVariant = "primary" }: {
+  symbol: string; locale: "tr" | "en"; focus: AnalysisFocus | "both";
+  /** Bandın eylem butonu. Şirket sayfası "ghost" verir: orada ekranın tek
+   *  birincil butonu teknik kartın Claude butonu (28 Kasım 2026). */
+  actionVariant?: "primary" | "ghost";
+}) {
   const { canGenerate, signedIn, latestOf } = await claudeState(symbol);
   const focuses: AnalysisFocus[] = focus === "both" ? ["technical", "selection"] : [focus];
   // Misafire de: düğme Claude sayfasına, o sayfa girişi ister. Hakkı olmayan oturumlu okuyucuya boş vitrin yok.
   const canAsk = canGenerate || !signedIn;
   if (!canAsk && focuses.every(f => !latestOf(f))) return null;
   const edition = focuses.includes("technical") ? await editionNote(symbol, locale) : null;
-  return <ClaudeCtaView symbol={symbol} locale={locale} focus={focus} canAsk={canAsk} edition={edition}
+  return <ClaudeCtaView symbol={symbol} locale={locale} focus={focus} canAsk={canAsk} edition={edition} actionVariant={actionVariant}
     reports={focuses.flatMap(f => { const latest = latestOf(f); return latest ? [{ focus: f, latest }] : []; })} />;
 }
 
@@ -107,8 +112,9 @@ export async function ClaudeCta({ symbol, locale, focus }: { symbol: string; loc
  *
  * Ölçüm modül CSS'inde (`Claude.module.css` → "Claude paneli").
  */
-export function ClaudeCtaView({ symbol, locale, focus, reports, canAsk, edition }: {
+export function ClaudeCtaView({ symbol, locale, focus, reports, canAsk, edition, actionVariant = "primary" }: {
   symbol: string; locale: "tr" | "en"; focus: AnalysisFocus | "both";
+  actionVariant?: "primary" | "ghost";
   /** Raporu olan odaklar, basılacak sırayla. */
   reports: { focus: AnalysisFocus; latest: ReportSummary }[];
   canAsk: boolean;
@@ -124,12 +130,12 @@ export function ClaudeCtaView({ symbol, locale, focus, reports, canAsk, edition 
       title={t.cta.title}
       meta={<span className={styles.ctaTool}>{t.cta.tool}</span>}
       action={canAsk && !empty
-        ? <ButtonLink href={claudeHref(symbol, askFocus, "yeni")} rel="nofollow" variant="primary" size="sm">{t.cta.newAnalysis}</ButtonLink>
+        ? <ButtonLink href={claudeHref(symbol, askFocus, "yeni")} rel="nofollow" variant={actionVariant} size="sm">{t.cta.newAnalysis}</ButtonLink>
         : undefined}
     />
     {empty ? <div className={styles.ctaEmpty}>
       <p>{focus === "both" ? t.cta.companyHint : t.cta.hint}</p>
-      <ButtonLink href={claudeHref(symbol, askFocus, "yeni")} rel="nofollow" variant="primary" size="sm">{t.cta.create}</ButtonLink>
+      <ButtonLink href={claudeHref(symbol, askFocus, "yeni")} rel="nofollow" variant={actionVariant} size="sm">{t.cta.create}</ButtonLink>
     </div> : <ul className={styles.ctaRows}>
       {reports.map(({ focus: f, latest }) => <li key={f} className={styles.ctaRow}>
         {latest.score !== null

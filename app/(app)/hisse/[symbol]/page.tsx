@@ -746,7 +746,9 @@ export default async function StockPage(
           Bölüm şirketin ölçülerini okutuyor; ikinci görüş onların ardından.
           Yedek yok: hak ve rapor yoksa panel hiç basılmıyor, iskelet zıplatır. */}
       <Suspense fallback={null}>
-        <ClaudeCta symbol={symbol} locale={locale} focus="both" />
+        {/* Bandın butonu ikincil: ekranın tek birincil butonu teknik kartın
+            Claude butonu (28 Kasım 2026, Görsel Tur 4; gerekçe AskStock.tsx). */}
+        <ClaudeCta symbol={symbol} locale={locale} focus="both" actionVariant="ghost" />
       </Suspense>
 
         </ScrollStage>

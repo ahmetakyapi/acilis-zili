@@ -31,6 +31,10 @@
 /* 390'da hap sağdan kesiliyordu (31 Ekim, görsel denetim). Dar ekranda
    "· Aç" düşer; ok ve erişilebilir ad ("… raporunu aç") eylemi taşıyor. */
 @media (max-width: 479px) { .go, .goDot { display: none; } }
+/* Raporun ufku (28 Kasım 2026; gerekçe ClaudeEntryChip.tsx): künye tonunda,
+   görüşten bir kademe sessiz. Telefonda şerit dar; ufuk erişilebilir adda. */
+.horizon { color: var(--text-muted); }
+@media (max-width: 479px) { .horizon, .horizonDot { display: none; } }
 .dot { color: var(--text-muted); }
 .verdict { color: var(--text-strong); font-weight: 700; letter-spacing: .01em; }
 .chip[data-verdict="buy"] .verdict { color: var(--up); }

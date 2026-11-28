@@ -63,3 +63,12 @@
   .time { font-size:14px; }
   .slot { font-size:12px; }
 }
+
+/* 360'TA ETİKET DÜĞÜMÜNDEN TAŞIYORDU (28 Kasım 2026, Görsel Tur 4). Dört
+   düğümlü şeritte (hafta sonu, son yayın "Kapanış Öncesi") düğüm ~72
+   piksel, "Son Yayın" etiketi 4,1 piksel taşıyordu (olc.mjs, 360 iki tema;
+   canlı denetimde de). İç pay 8 → 5, harf aralığı 0: etiket düğüme
+   sığıyor, metin bölünmüyor. */
+@media (max-width: 379px) {
+  .tag { padding-inline:5px; letter-spacing:0; }
+}

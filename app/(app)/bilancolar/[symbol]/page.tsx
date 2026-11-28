@@ -289,9 +289,8 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
      6,75 $), aynı sayfanın analiz satırında ve analiz sayfasında "%44,1"
      (kayıt, 6,56 $) yazıyordu. Analizi olmayan çeyrek sağlayıcıda kalır;
      defterin künyesi hangi çeyreğin nereden geldiğini söyler. Hisse
-     sayfasının Geçmiş Bilançolar tablosu aynı `buildPastQuarters`ı okuyor
-     ama başka ekranın dosyası; aynı uzlaştırma oraya da girmeli (rapor,
-     "Ana Oturuma"). */
+     sayfasının Geçmiş Bilançolar tablosu aynı uzlaştırmadan geçiyor
+     (`PastEarnings.tsx`). */
   const reconciled = pastQuarters.map((quarter) => {
     const pair = reconcileEps(quarter, analysisForQuarter(data.analyses, quarter));
     return { ...quarter, epsActual: pair.epsActual, epsEstimate: pair.epsEstimate, source: pair.source };
