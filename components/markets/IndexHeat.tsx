@@ -49,7 +49,9 @@ export function IndexHeat({ total, memberCount, heat, moves, locale, t, children
                 arayla, opaklık ve hafif ölçekle oturuyor; toplam 0,7 sn'nin
                 altında, JS beklemiyor. Büyüklük sırası (piyasa değeri)
                 soldan sağa okunduğu için kademe de o sırada. */}
-            <div className={styles.heatGrid}>
+            {/* Karolar ekrana girince belirir (`data-draw`, 28 Kasım ölçüm denetimi:
+                30 karo ekranın altında kimse görmeden oynayıp bitiyordu). */}
+            <div className={styles.heatGrid} data-draw>
               {heat.map((row, i) => {
                 const change = row.changePct;
                 const fresh = moves !== null && moves.included[i] && change !== null;

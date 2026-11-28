@@ -84,7 +84,14 @@ const BAND_ARCS = SENTIMENT_BANDS.map((band, index) => {
   };
 });
 
+/* HALKA 6 PİKSEL, İKİ BOYDA DA (28 Kasım, ölçüm denetimi): viewBox 200 tek
+   kalınlıkla ana sayfada ~177 piksele (5,3 px), piyasalarda 260–300 piksele
+   (7,8–9 px) ölçekleniyordu; ortak ölçü 6 px (arayuz.md). Kalınlık boya göre
+   kullanıcı biriminde ayarlanır: 6 × 200 / çizim genişliği. */
+const STROKE_BY_SIZE = { full: 4.4, compact: 6.8 } as const;
+
 function Gauge({ score, label, size }: { score: number | null; label: string; size: "full" | "compact" }) {
+  const stroke = STROKE_BY_SIZE[size];
   const marker = score !== null ? point(score) : null;
   const active = score !== null ? sentimentBand(score).key : null;
   return (
@@ -99,7 +106,7 @@ function Gauge({ score, label, size }: { score: number | null; label: string; si
           key={band.key}
           d={band.path}
           fill="none"
-          strokeWidth={GAUGE.stroke}
+          strokeWidth={stroke}
           strokeLinecap="round"
           opacity={active === null || active === band.key ? 1 : 0.42}
           /* Kadran görünüme girince bantlar uçtan uca çiziliyor
@@ -117,7 +124,7 @@ function Gauge({ score, label, size }: { score: number | null; label: string; si
         <circle
           cx={marker.x}
           cy={marker.y}
-          r={GAUGE.stroke / 2 + 2.5}
+          r={stroke / 2 + 2.5}
           className={cn("spark-dot", styles.gaugeMarker)}
         />
       )}

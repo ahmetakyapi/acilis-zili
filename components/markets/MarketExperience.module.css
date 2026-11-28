@@ -243,7 +243,7 @@
    (`--primary-tint`) ve kenarlık (`--primary-faint`) — 24 Eylül'ün "seçim
    tonla işaretli" kuralı. Şerit kartın tepesinde DURUM anlatan kartların
    (bilanço, teknik, risk) dili; seçim bir durum değil. */
-.price { font-size:32px; font-weight:650; letter-spacing:-.045em; }
+.price { font-size:32px; font-weight:600; letter-spacing:-.045em; }
 .indexStamp { font-size:12px; line-height:1.5; }
 .heatHead h2 { display:flex; align-items:center; gap:8px; font-size:18px; line-height:1.3; letter-spacing:-.025em; }
 .heatHead h2 svg { color:var(--primary-ink); flex:none; }
@@ -279,7 +279,7 @@
 
 /* Kapanış fiyatı ile canlı seans birbirine karışmasın; birim ortak künyede. */
 .indexContext { display:flex; flex-wrap:wrap; align-items:center; gap:6px 12px; }
-.indexContext strong { font-weight:650; color:var(--text-body); }
+.indexContext strong { font-weight:600; color:var(--text-body); }
 .sessionBadge { display:inline-flex; align-items:center; gap:6px; color:var(--text-body); font-size:12px; font-weight:600; }
 .sessionBadge > i { width:6px; height:6px; border-radius:50%; background:var(--text-muted); }
 .sessionBadge[data-open="true"] > i { background:var(--up); }
@@ -324,9 +324,9 @@
    sağa yaslı, eğrinin son noktasının ters yanında. Zemini yarı saydam:
    gün içi çizgi künyenin arkasından geçtiğinde (768'de ölçüldü) künye
    okunur kalıyor ama çizgi SİLİNMİYOR — veri künyenin altında kaybolmaz. */
-.baseLabel { position:absolute; right:0; display:inline-flex; gap:4px; padding:0 4px; border-radius:4px; background:color-mix(in oklab, var(--premium-surface) 72%, transparent); color:var(--text-muted); font-size:12px; font-weight:550; line-height:1.3; white-space:nowrap; transform:translateY(calc(-100% - 2px)); pointer-events:none; }
+.baseLabel { position:absolute; right:0; display:inline-flex; gap:4px; padding:0 4px; border-radius:4px; background:color-mix(in oklab, var(--premium-surface) 72%, transparent); color:var(--text-muted); font-size:12px; font-weight:400; line-height:1.3; white-space:nowrap; transform:translateY(calc(-100% - 2px)); pointer-events:none; }
 .baseLabel[data-side="below"] { transform:translateY(3px); }
-.baseLabel b { color:var(--text-body); font-weight:650; }
+.baseLabel b { color:var(--text-body); font-weight:600; }
 .dayRange { margin-top:12px; }
 /* Kapanıştan fiyata uzanan dolgu ve kapanış çentiği — eğrinin tabanıyla
    aynı referans; renk yalnız işaretten. */
@@ -463,7 +463,7 @@
 .nowLine { position:absolute; right:0; height:0; margin-top:-.75px; border-top:1.5px dotted var(--text-muted); opacity:.75; pointer-events:none; }
 .nowLine[data-tone="up"] { border-top-color:var(--up); }
 .nowLine[data-tone="down"] { border-top-color:var(--down); }
-.chartAxis { position:relative; height:14px; margin-top:3px; color:var(--text-muted); font-size:12px; font-weight:550; line-height:14px; }
+.chartAxis { position:relative; height:14px; margin-top:3px; color:var(--text-muted); font-size:12px; font-weight:400; line-height:14px; }
 .chartAxis > span { position:absolute; top:0; translate:-50% 0; white-space:nowrap; }
 .chartAxis > span::before { content:""; position:absolute; left:50%; top:-4px; width:1px; height:4px; background:var(--line-strong); }
 @media(prefers-reduced-motion:no-preference) {
@@ -495,8 +495,8 @@
 .heatGrid { gap:6px; margin-top:14px; }
 .heatCell { gap:4px; min-height:72px; padding:8px 3px; border-radius:12px; box-shadow:inset 0 0 0 1px color-mix(in oklab, var(--heat-tone) 22%, transparent); transition:box-shadow .18s var(--ease-brand), scale .12s var(--ease-brand); }
 .heatLogo { width:28px !important; height:28px !important; }
-.heatSymbol { font-size:12px; font-weight:750; letter-spacing:.015em; }
-.heatPct { font-weight:650; }
+.heatSymbol { font-size:12px; font-weight:700; letter-spacing:.015em; }
+.heatPct { font-weight:600; }
 .heatCell[data-heat-tone="up"]:not([data-heat-level="4"]) .heatPct { color:color-mix(in oklab, var(--up) 62%, var(--text-strong)); }
 .heatCell[data-heat-tone="down"]:not([data-heat-level="4"]) .heatPct { color:color-mix(in oklab, var(--down) 62%, var(--text-strong)); }
 .heatCell[data-heat-tone="flat"] .heatPct { color:var(--text-body); }
