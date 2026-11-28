@@ -35,8 +35,10 @@ import styles from "./MarketTexture.module.css";
  * ölçüde çubuk HİÇ basılmaz"). Yerinde sakin bir künye durur (`note`,
  * "Son Kapanış").
  *
- * UÇLAR. Sıralamanın ilk ve son çubuklu satırı yönünün hafif tonunda bir
- * zemin alıyor: en güçlü ve en zayıf tek bakışta seçiliyor.
+ * UÇLAR. Sıralamanın ilk ve son çubuklu satırının adı kalın. Bir dönem
+ * yönünün hafif tonunda dolu bir zemin de alıyordu; 28 Kasım'da kalktı
+ * (görsel tur 3: "satır vurgu zeminleri göz yoruyor" — yön rengi çubukta
+ * ve yüzdede, zemin nötr).
  *
  * HAREKET: çubuk `bar-fill` (globals; `scaleX`), liste `data-draw` ile
  * ekrana girince bir kez; kademe `--step`, toplamı 440 ms (12 satır).
@@ -64,6 +66,7 @@ export function RankBars({
   locale,
   foldId,
   phoneEnds,
+  everywhere = false,
   more,
   less,
 }: {
@@ -74,6 +77,8 @@ export function RankBars({
   foldId: string;
   /** Telefonda (<640) iki uçtan bu kadar satır açık; ortası katlı. */
   phoneEnds: number;
+  /** Katlama her genişlikte (yalnız telefonda değil). */
+  everywhere?: boolean;
   /** Katlama anahtarının iki sözü (`t.compact`). */
   more: string;
   less: string;
@@ -93,7 +98,7 @@ export function RankBars({
   const hidden = rows.filter((_, index) => !phoneShown(index)).length;
 
   return (
-    <FoldToggle id={foldId} hiddenCount={hidden} more={more} less={less} phone>
+    <FoldToggle id={foldId} hiddenCount={hidden} more={more} less={less} phone={!everywhere} narrow={false}>
       <ol className={styles.rb} data-draw style={{ "--zero": `${zero}%` } as CSSProperties}>
         {rows.map((row, index) => {
           const drawn = row.bar && row.value !== null && row.value !== 0;

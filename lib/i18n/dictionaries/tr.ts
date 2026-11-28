@@ -399,6 +399,8 @@ const tr = {
     experienceIndexNote: "ABD Endekslerini İzleyen Fonlar",
     /* Endeks kartının yedek çizgisinin künyesi (lib/index-week.ts). */
     indexWeek: "5 Seans",
+    /* Teknik panelin rayda kümeyi tek satırda tutan "+N" karosunun künyesi (TechnicalPanel). */
+    technicalMore: "Tümü",
     experienceFlowNote: "Veriler, bilançolar ve seansın dönüm noktaları.",
     /* Gün akışında okla başka güne geçilince başlık (21 Ekim): "Bugünün
        Akışı" dünü gösterirken yanlış söylüyordu; tarih kapsülde yazılı. */

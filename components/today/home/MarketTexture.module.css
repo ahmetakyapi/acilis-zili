@@ -99,6 +99,22 @@
    başlık dilinin dördüncü deyimiydi (display degrade, panel başlığı, plaka,
    çubuklu). Mavi etkileşimin rengi; başlık kendi puntosu ve ağırlığıyla
    ayrışıyor (19/700, 9 Ekim'in ölçüsü yerinde). */
+/* YARIM AY ÖLÇER (28 Kasım) — gerekçe MarketTexture.tsx → SectorGauge.
+   Yay 112 piksel, halka 6 (ortak ölçü), uçlar yuvarlak; kulvar
+   `--line-soft`. Ortada yükselen / toplam: bandın en iri sayısı (26/700),
+   payda soluk. Yanında genişlik sözü bir kademe büyük (15/600). */
+.gaugeRow { display:flex; align-items:center; gap:18px; min-width:0; padding:4px 0 6px; }
+.gauge { position:relative; flex:none; width:112px; height:60px; }
+.gauge svg { display:block; width:100%; height:100%; overflow:visible; }
+.gauge path { fill:none; stroke-width:6; stroke-linecap:round; }
+.gaugeLane { stroke:var(--line-soft); }
+.gaugeUp { stroke:var(--up); }
+.gaugeDown { stroke:var(--down); }
+.gauge b { position:absolute; inset-inline:0; bottom:-2px; color:var(--text-strong); font-size:26px; font-weight:700; letter-spacing:-.03em; line-height:1; text-align:center; }
+.gauge b small { color:var(--text-muted); font-size:15px; font-weight:600; letter-spacing:-.01em; }
+.gaugeCopy { min-width:0; }
+.gaugeCopy .breadth { font-size:15px; white-space:normal; }
+.gaugeCopy .breadth b { font-size:17px; }
 .partMeta { grid-column:1 / -1; display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 12px; margin:0; color:var(--text-muted); font-size:12px; line-height:1.5; }
 .partLink { justify-self:end; }
 .breadth { color:var(--text-body); font-size:12px; font-weight:600; white-space:nowrap; }
@@ -126,9 +142,9 @@
   transition:background-color 180ms var(--ease-brand);
 }
 .rbRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2px; }
-/* UÇLAR: en güçlü ve en zayıf satır yönünün hafif tonunda. */
-.rbRow[data-end][data-sign="up"] { background:var(--up-wash); }
-.rbRow[data-end][data-sign="down"] { background:var(--down-wash); }
+/* UÇLARIN TONLU ZEMİNİ KALKTI (28 Kasım, görsel tur 3): ilk ve son satır
+   yeşil/kırmızı dolu bir şeritti; aynı anda bandın her yerinde yeşil dolu
+   öğe göz yoruyordu. Uç satırın yalnız adı kalın (aşağıda). */
 @media (hover:hover) and (pointer:fine) {
   .rbRow:hover { background:var(--primary-tint); }
   .rbRow:hover .rbName > span:first-child { color:var(--primary-ink); }
@@ -188,8 +204,10 @@
    şerit; pembe/yeşil dolgu değil). İçerik sırası: künye → ad ve display
    medyan (bandın en iri sayısı: en anlamlı değer) → üyeler → yükselen /
    düşen şeridi. */
-.extremes { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:12px; min-width:0; }
-@media (min-width:768px) { .extremes { gap:16px; } }
+/* 28 KASIM: kartlar tema kolonunun İÇİNDE, alt alta (sektörlerin yanında;
+   gerekçe MarketTexture.tsx → ThemeFrame). Telefonda yine yan yana iki
+   yarım kart (aşağıda, "TELEFON: İKİ YARIM KART"). */
+.extremes { display:grid; grid-template-columns:minmax(0,1fr); gap:12px; min-width:0; }
 .extreme {
   position:relative; display:flex; flex-direction:column; gap:14px; min-width:0;
   padding:19px 20px 18px; border-radius:16px; background:var(--surface-sunken); color:inherit;
@@ -207,6 +225,7 @@ a.extreme:active { transform:scale(.992); }
    adla arasında 40 piksel boşluk kalıyordu (1440, ölçüldü): 50 puntoluk
    rakam satırı açıyordu. */
 .extremeHead { display:grid; grid-template-columns:minmax(0,1fr) auto; align-items:end; gap:4px 16px; min-width:0; }
+.extremeHead > .extremeFigure { align-self:start; }
 .extremeId { display:grid; gap:5px; min-width:0; }
 /* 1024'ün altında künye kendi satırında, tam genişlikte: 320 piksellik
    kartta "Son Kapanışta En Güçlü Tema" rakamın yanında iki satıra
@@ -215,6 +234,18 @@ a.extreme:active { transform:scale(.992); }
   .extremeId { display:contents; }
   .extremeTop { grid-column:1 / -1; }
 }
+/* ≥1024 KART İKİ SATIR KISALDI (28 Kasım). Kartlar artık sektörlerin
+   yanında alt alta ve iki kartın boyu sıralamanın boyuyla yarışıyor
+   (ilk çekimde tema kolonu 1440'ta 130 piksel uzun bitti). Künye ile ad
+   tek satırda (künye adın taban çizgisinde, önünde), yükselen/düşen sözü
+   şeridin sağında aynı satırda. Kart ~232 → ~186 piksel. */
+@media (min-width:1024px) {
+  .extreme { gap:12px; }
+  .extremeHead { align-items:center; }
+  .extremeId { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; }
+  .split { grid-template-columns:minmax(0,1fr) auto; align-items:center; column-gap:16px; }
+  .splitLegend { justify-content:flex-end; gap:14px; }
+}
 .extremeTop { display:flex; align-items:center; gap:6px; min-width:0; }
 .extremeLabel { color:var(--text-muted); font-size:12px; font-weight:600; line-height:1.4; }
 .extreme[data-tone="up"] .extremeLabel { color:var(--up); }
@@ -222,20 +253,22 @@ a.extreme:active { transform:scale(.992); }
 /* Dış bağlantı oku ortak ölçüde: (2,−2), 200 ms. */
 .extremeArrow { flex-shrink:0; color:var(--primary); transition:transform 200ms var(--ease-brand); }
 @media (hover:hover) { .extreme:hover .extremeArrow { transform:translate(2px,-2px); } }
-.extremeTitle { min-width:0; color:var(--text-strong); font-size:22px; font-weight:700; letter-spacing:-.03em; line-height:1.15; text-wrap:balance; }
-/* Display sayı ortak ölçüde: 700, −0,03em (önce 650 / −0,06em). */
-.extremeFigure { flex-shrink:0; font-size:clamp(34px,3.5vw,50px); font-weight:700; line-height:.95; letter-spacing:-.03em; translate:0 -.04em; }
+.extremeTitle { min-width:0; color:var(--text-strong); font-size:19px; font-weight:700; letter-spacing:-.025em; line-height:1.2; text-wrap:balance; }
+/* MEDYAN HAPTA (28 Kasım): 34–50 puntoluk display sayı → ortak değişim hapı
+   (`ChangePill`, 12/700). Kartın kahramanı üyelerin logoları. */
+.extremeFigure { flex-shrink:0; justify-self:end; }
 
 /* ÜYELER: tek satır ızgara. `auto-fill` sığan kadar sütun açar; ikinci
    satır sıfır boyda ve kap `overflow:hidden`: sığmayan üye basılmaz,
    bindirme ve "+N" çipi yok. Hücre: 36 piksellik logo, sembol, yüzde. */
-.members { display:grid; grid-template-columns:repeat(auto-fill,minmax(62px,1fr)); grid-template-rows:auto; grid-auto-rows:0; column-gap:8px; overflow:hidden; min-width:0; }
+.members { display:grid; grid-template-columns:repeat(auto-fill,minmax(56px,1fr)); grid-template-rows:auto; grid-auto-rows:0; column-gap:6px; overflow:hidden; min-width:0; }
 .member { display:flex; flex-direction:column; align-items:flex-start; gap:2px; min-width:0; }
 .memberLogo { display:inline-flex; margin-bottom:5px; }
 /* Karo `lg` (44, `rounded-lg`) olarak basılıyor; boyu ve köşesi burada.
    Seçici `> span` ki Tailwind'in tek sınıflık `size-11`ini özgüllükle
    yensin (8 Kasım'daki 40'lık kuralın aynısı). */
-.memberLogo > span { width:36px; height:36px; border-radius:var(--radius-md); }
+/* 28 Kasım: logo kartın kahramanı, 36 → 40. */
+.memberLogo > span { width:40px; height:40px; border-radius:var(--radius-md); }
 .memberSym { color:var(--text-body); font-family:var(--font-mono); font-size:12px; font-weight:600; letter-spacing:.02em; line-height:1.3; }
 .memberPct { font-size:13px; font-weight:700; letter-spacing:-.01em; line-height:1.3; white-space:nowrap; }
 
@@ -254,13 +287,13 @@ a.extreme:active { transform:scale(.992); }
 .splitIcon { display:none; }
 
 /* Yedek, gerçek kartın boyunda (ölçüm dosyanın sonunda). */
-.extremeSkeleton { height:233px; border-radius:16px; }
+.extremeSkeleton { height:176px; border-radius:16px; }
 @media (max-width:767px) {
   .band { gap:18px; padding:18px 16px 16px; }
   .extreme { gap:12px; padding:17px 16px 16px; }
   .extreme::after { left:16px; right:16px; }
-  .extremeTitle { font-size:19px; }
-  .extremeSkeleton { height:234px; }
+  .extremeTitle { font-size:17px; }
+  .extremeSkeleton { height:176px; }
 }
 /* TELEFON: İKİ YARIM KART (10 Kasım gece). 390'da kart 154 piksel, içi 130.
    Tam kartın içeriği oraya sığmaz; yarım kart ELER, sıkıştırmaz:
@@ -273,12 +306,12 @@ a.extreme:active { transform:scale(.992); }
      aynı hatta durur (30 Eylül'ün kararı).
    Dokunma hedefi kartın tamamı (154 × ~215). */
 @media (max-width:639px) {
-  .extremes { gap:10px; grid-template-rows:repeat(5,auto); }
+  .extremes { grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; grid-template-rows:repeat(5,auto); }
   .extreme { display:grid; grid-template-rows:subgrid; grid-row:span 5; gap:0; padding:15px 12px 13px; border-radius:14px; }
   .extreme::after { left:12px; right:12px; }
   .extremeHead, .extremeId { display:contents; }
   .extremeTop { grid-row:1; align-items:flex-start; justify-content:space-between; }
-  .extremeFigure { grid-row:2; margin-top:7px; font-size:28px; line-height:1.1; translate:none; }
+  .extremeFigure { grid-row:2; justify-self:start; margin-top:8px; }
   .extremeTitle { grid-row:3; margin-top:3px; font-size:15px; line-height:1.25; letter-spacing:-.015em; }
   .members { grid-row:4; grid-template-columns:repeat(3,minmax(0,1fr)); column-gap:4px; margin-top:11px; }
   .memberLogo { margin-bottom:3px; }

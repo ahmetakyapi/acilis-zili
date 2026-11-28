@@ -326,6 +326,7 @@ const en: typeof tr = {
     experienceNews: "News Feed",
     experienceIndexNote: "Funds Tracking US Indices",
     indexWeek: "5 Sessions",
+    technicalMore: "All",
     experienceFlowNote: "Economic releases, earnings and the moments that shape the session.",
     pastFlow: "Earlier Day",
     pastFlowNote: "Releases, earnings and results from the selected day.",

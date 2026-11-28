@@ -281,6 +281,24 @@
 .empty p { margin-top:3px; max-width:65ch; color:var(--text-body); font-size:13px; line-height:1.65; }
 .emptyLink { display:inline-flex; align-items:center; gap:3px; color:var(--primary-ink); font-weight:600; white-space:nowrap; }
 .emptyLink:hover { color:var(--primary-hover); }
+/* SESSİZ GÜN (28 Kasım, görsel tur 3) — gerekçe DayFlow.tsx → `quiet`.
+   Başlık bölüm basamağından (36/600) küçük kart başlığının bir üstüne
+   (20/700) iner ve açıklaması aynı satıra, künye tonunda yerleşir; künye
+   şeridinin kıl çizgisi düşer. Boş durum gömük tonda tek satırlık bir
+   şerit: ikon 28, başlık ve cümle aynı satırda (sığmazsa sarar). Seçici
+   sayfanın `.sectionHeading h2` kuralını özgüllükle yener (0,3,1). */
+.flow[data-quiet] .toolbar { align-items:center; padding-bottom:0; margin-bottom:0; border-bottom:0; }
+.flow[data-quiet] .headingRow h2 { font-size:20px; font-weight:700; letter-spacing:-.025em; line-height:1.2; }
+.flow[data-quiet] .headingRow p:not(.summary) { color:var(--text-muted); font-size:12px; }
+.flow[data-quiet] .empty { gap:12px; margin-top:14px; padding:10px 14px; border-radius:12px; background:var(--surface-sunken); }
+.flow[data-quiet] .empty > span { width:28px; height:28px; border-radius:9px; }
+.flow[data-quiet] .empty > div { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 10px; min-width:0; }
+.flow[data-quiet] .empty h3 { font-size:14px; font-weight:700; }
+.flow[data-quiet] .empty p { margin-top:0; font-size:13px; line-height:1.5; }
+@media (min-width:640px) {
+  .flow[data-quiet] .headingRow { grid-template-columns:auto minmax(0,1fr); align-items:baseline; }
+  .flow[data-quiet] .headingRow p:not(.summary) { grid-column:2; grid-row:1; }
+}
 /* SIRADAKİ GÜNE BAKIŞ (31 Ekim) — gerekçe DayFlow.tsx → DayPreview.
    Üst kıl çizgi yok: künye şeridinin alt çizgisi 15 piksel yukarıda ve
    boş durumdaki ikinci çizgi 1440'ta çift hat gibi okunuyordu.

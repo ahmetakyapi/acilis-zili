@@ -1,14 +1,14 @@
 import { ArrowDown, ArrowUp, ArrowUpRight } from "@phosphor-icons/react/dist/ssr";
+import type { CSSProperties } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
-import { RollingFigure } from "@/components/themes/RollingFigure";
 import { CompanyCards } from "@/components/ui/CompanyCards";
-import { DataStamp, LogoTile, PanelLink, Skeleton } from "@/components/ui/primitives";
+import { ChangePill, DataStamp, LogoTile, PanelLink, Skeleton } from "@/components/ui/primitives";
 import { themeTitle } from "@/content/themes";
 import { getStatus } from "@/lib/data";
 import type { Dictionary, Locale } from "@/lib/i18n";
 import { SECTOR_ETFS, loadBoardQuotes } from "@/lib/market-boards";
 import { quoteBasis } from "@/lib/market-hours";
-import { loadThemeBoard, themePlaceholders, type ThemeCard } from "@/lib/theme-board";
+import { loadThemeBoard, type ThemeCard } from "@/lib/theme-board";
 import type { ThemePhase } from "@/lib/theme-stats";
 import { cn, directionOf, directionText, formatPercent, NO_VALUE } from "@/lib/utils";
 import styles from "./MarketTexture.module.css";
@@ -77,8 +77,6 @@ import { RankBars, type RankRow } from "./RankBars";
  * günün sakinliğini kendisi söylüyor.
  */
 const SECTOR_SCALE_FLOOR = 1;
-/** Tema medyanları için aynı gerekçe, aynı taban. */
-const THEME_SCALE_FLOOR = 1;
 
 /**
  * TELEFONDA ALTI SEKTÖR (14 Ekim, sahibinin isteği: "6 tane gözüksün").
@@ -87,9 +85,11 @@ const THEME_SCALE_FLOOR = 1;
  * sıralamanın dışında, uç sayılmıyor. 10 Kasım: karolar satıra döndü
  * (`RankBars`), sayı aynı.
  */
+/* 28 KASIM: AYNI ALTI SATIR HER GENİŞLİKTE (`everywhere`). Masaüstünde on
+   bir satırın tamamı açıktı ve bant 1440'ta 913 piksel tutuyordu; sahibinin
+   telefon için seçtiği sayı (3 + 3) artık her genişlikte, ortası aynı
+   "Tümünü Gör" katlamasında, bastığın yerde açılır. */
 const SECTOR_PHONE_ENDS = 3;
-/** Telefonda temaların iki ucundan açık satır (9 Ekim: bant 1.217 pikseldi). */
-const THEME_PHONE_ENDS = 2;
 
 /**
  * On bir sektör fonu, günün hareketine göre SIRALI (10 Ekim, sahibinin
@@ -179,24 +179,30 @@ export function SectorRibbonView({ entries, locale, t }: { entries: readonly Sec
     <SectorFrame
       t={t}
       meta={allLastClose ? `${x.sectorsMeta} · ${t.market.lastClose}` : `${x.sectorsMeta} · ${t.today.sectorsWeight}`}
-      breadth={
-        /* Genişlik künyesi yalnızca METİN (10 Ekim; yanındaki 72 piksellik
-           bölünmüş çubuk kalkmıştı: sıralamanın kendisi aynı bilgiyi
-           çiziyor). */
-        <Breadth
-          t={t}
+    >
+      {/* GENİŞLİK YARIM AY ÖLÇERDE (28 Kasım, görsel tur 3). Genişlik
+          künyesi başlığın altındaki 12 puntoluk satırdaydı ve bandın tek
+          "kaç fon aynı yöne gitti" okuması sıralamanın gölgesinde
+          kalıyordu; artık listenin başında bir ölçer: yayın yeşil payı
+          yükselen, kırmızı payı düşen fon (eldeki `counted` kümesi, yeni
+          veri yok). Söz yanında, sayılar yön renginde. */}
+      {counted.length > 0 && (
+        <SectorGauge
           up={risers}
           down={fallers}
+          total={counted.length}
           label={t.today.sectorsBreadthLabel.replace("{up}", String(risers)).replace("{down}", String(fallers))}
-        />
-      }
-    >
+        >
+          <Breadth t={t} up={risers} down={fallers} />
+        </SectorGauge>
+      )}
       <RankBars
         rows={rows}
         floor={SECTOR_SCALE_FLOOR}
         locale={locale}
         foldId="sektor-siralamasi"
         phoneEnds={SECTOR_PHONE_ENDS}
+        everywhere
         more={t.compact.showAll}
         less={t.compact.showLess}
       />
@@ -220,6 +226,58 @@ function Breadth({ t, up, down, label }: { t: Dictionary; up: number; down: numb
         )}
       </span>
     </span>
+  );
+}
+
+/**
+ * Yarım ay ölçer: yükselen fonların payı soldan yeşil, düşenlerinki sağdan
+ * kırmızı, yatay kalanlar arada çizgi tonunda. Halka ortak ölçüde (6
+ * piksel); ortada "yükselen / toplam". Yay görününce bir kez çizilir
+ * (`MotionExperience` → `data-motion-draw="arc"`, Piyasa Nabzı'nın yayıyla
+ * aynı yol); JS yoksa ve hareket azaltılmışsa tam çizili.
+ */
+function SectorGauge({
+  up,
+  down,
+  total,
+  label,
+  children,
+}: {
+  up: number;
+  down: number;
+  total: number;
+  label: string;
+  children: React.ReactNode;
+}) {
+  const r = 46;
+  const cx = 56;
+  const cy = 54;
+  const point = (share: number) => {
+    const angle = Math.PI * (1 - share);
+    return `${(cx + r * Math.cos(angle)).toFixed(2)} ${(cy - r * Math.sin(angle)).toFixed(2)}`;
+  };
+  const arc = (from: number, to: number) => `M ${point(from)} A ${r} ${r} 0 0 1 ${point(to)}`;
+  const upShare = up / total;
+  const downShare = down / total;
+  return (
+    <div className={styles.gaugeRow} role="img" aria-label={label}>
+      <span className={styles.gauge} aria-hidden="true">
+        <svg viewBox="0 0 112 60">
+          <path d={arc(0, 1)} className={styles.gaugeLane} pathLength={1} />
+          {upShare > 0 && (
+            <path d={arc(0, upShare)} className={styles.gaugeUp} pathLength={1} data-motion-draw="arc" style={{ strokeDasharray: 1 } as CSSProperties} />
+          )}
+          {downShare > 0 && (
+            <path d={arc(1 - downShare, 1)} className={styles.gaugeDown} pathLength={1} data-motion-draw="arc" style={{ strokeDasharray: 1 } as CSSProperties} />
+          )}
+        </svg>
+        <b className="numeral">
+          {up}
+          <small>/{total}</small>
+        </b>
+      </span>
+      <span className={styles.gaugeCopy} aria-hidden="true">{children}</span>
+    </div>
   );
 }
 
@@ -295,6 +353,7 @@ export function SectorRibbonSkeleton({ locale, t }: { locale: Locale; t: Diction
         locale={locale}
         foldId="sektor-siralamasi"
         phoneEnds={SECTOR_PHONE_ENDS}
+        everywhere
         more={t.compact.showAll}
         less={t.compact.showLess}
       />
@@ -400,17 +459,6 @@ export async function ThemeSpotlight({ locale, t }: { locale: Locale; t: Diction
           />
         ) : undefined
       }
-      ranking={
-        <RankBars
-          rows={rows}
-          floor={THEME_SCALE_FLOOR}
-          locale={locale}
-          foldId="tema-siralamasi"
-          phoneEnds={THEME_PHONE_ENDS}
-          more={t.compact.showAll}
-          less={t.compact.showLess}
-        />
-      }
       extremes={
         <>
           {/* Logoların üzerine gelince açılan şirket kartı (components/ui/
@@ -492,21 +540,28 @@ function extremeMembers(card: ThemeCard | null, end: "top" | "bottom"): ExtremeM
 function ThemeFrame({
   meta,
   breadth,
-  ranking,
   extremes,
   stamp,
   t,
 }: {
   meta: string;
   breadth?: React.ReactNode;
-  ranking: React.ReactNode;
   extremes: React.ReactNode;
   stamp: React.ReactNode;
   t: Dictionary;
 }) {
-  /* `display: contents` (CSS): sıralama sektörlerin YANINA, uç kartları ve
-     damga iki kolonun altına tam genişlikte iner. Temalar tek Suspense
-     sınırı (tek `loadThemeBoard`), bant ızgarası üç öğe görür. */
+  /* `display: contents` (CSS): tema kolonu sektörlerin YANINA, damga iki
+     kolonun altına tam genişlikte iner. Temalar tek Suspense sınırı (tek
+     `loadThemeBoard`), bant ızgarası iki öğe görür.
+     TEMA SIRALAMASI ANA SAYFADAN KALKTI (28 Kasım, görsel tur 3 —
+     sahibinin sözü: "bazı ekranlarda çok bilgi yoğunluğu var… tekrar eden
+     şeylerden uzaklaşalım"). Bant iki kalın çubuk listesiydi (11 + 10
+     satır, 1440'ta 913 piksel) ve altında iki uç kart; aynı "ad + çubuk +
+     yüzde" kalıbı yirmi bir kez. Şimdi sektörler sıralamada (ölçer + iki
+     uçtan üçer satır, gerisi katlı), temalar iki uç kartla sektörlerin
+     YANINDA: kartın kahramanı üye logoları, medyan küçük bir hapta. Tam
+     sıralama `/temalar`da ("Tüm Temalar"); genişlik künyesi başlıkta
+     duruyor. */
   return (
     <div className={styles.themesPart}>
       <div className={cn(styles.part, styles.partThemes)}>
@@ -520,9 +575,8 @@ function ThemeFrame({
             </PanelLink>
           }
         />
-        {ranking}
+        <div className={styles.extremes}>{extremes}</div>
       </div>
-      <div className={styles.extremes}>{extremes}</div>
       <div className={styles.stampRow}>{stamp}</div>
     </div>
   );
@@ -566,9 +620,11 @@ function ExtremeCard({
           </span>
           <h3 className={styles.extremeTitle}>{themeTitle(card.theme, locale)}</h3>
         </span>
-        <span className={cn("numeral", styles.extremeFigure, directionText(tone))}>
-          <RollingFigure value={formatPercent(card.median, locale)} />
-        </span>
+        {/* MEDYAN HAPTA (28 Kasım): kartın 50 puntoluk display sayısı
+            bandın en iri öğesiydi ve iki kartta "+%4,15 / +%0,46" logo
+            satırını gölgede bırakıyordu. Medyan ortak değişim hapına
+            (`ChangePill`) indi; kartın kahramanı üyeler. */}
+        <ChangePill changePct={card.median} locale={locale} className={styles.extremeFigure} />
       </span>
       {members.length > 0 && (
         <span className={styles.members} aria-hidden>
@@ -630,24 +686,13 @@ function ExtremeCard({
 }
 
 /**
- * Temaların yedeği: sıralama on iki satırıyla ve editoryal sırayla (adlar
- * durağan), uç kartları gerçek kartın taban boyunda.
+ * Temaların yedeği: başlık ve iki uç kart, gerçek kartın taban boyunda
+ * (`locale` imzada kalıyor: sayfa iki yedeği aynı biçimde çağırıyor).
  */
-export function ThemeSpotlightSkeleton({ locale, t }: { locale: Locale; t: Dictionary }) {
+export function ThemeSpotlightSkeleton({ t }: { locale: Locale; t: Dictionary }) {
   return (
     <ThemeFrame
       meta={`${t.themes.rankTitle} · ${t.themes.rankMeta}`}
-      ranking={
-        <RankBars
-          rows={themeRows(themePlaceholders(), null, locale)}
-          floor={THEME_SCALE_FLOOR}
-          locale={locale}
-          foldId="tema-siralamasi"
-          phoneEnds={THEME_PHONE_ENDS}
-          more={t.compact.showAll}
-          less={t.compact.showLess}
-        />
-      }
       extremes={
         <>
           <Skeleton className={styles.extremeSkeleton} />

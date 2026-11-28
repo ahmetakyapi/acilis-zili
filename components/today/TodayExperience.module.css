@@ -192,9 +192,30 @@
    (1280'de başlık 691'de, kolon 717'de bitiyor) ve telefonda Türkçe
    başlık da zilin kenarına değiyor (292 / 289); oralarda zil eskisi gibi
    kendi satırında. */
+/* ZİL KAHRAMANIN İMZASI (28 Kasım, görsel tur 3 — sahibinin sözü: "ilk
+   ekranda zzz çıkan zil ikonu kullanalım"). 92 piksel tavanla zil 1440'ta
+   başlığın sağındaki 212 piksellik boşluğun 93'ünü tutuyor, 108 puntoluk
+   rakamların yanında bir dipnot gibi duruyordu. Tavan 92 → 132, oran
+   12 → 17cqi: zil hâlâ başlığın sağındaki boşlukta (çipin ve başlığın iki
+   satırını birlikte kaplıyor), satırın boyu yine çipin boyu. Başlığa ve
+   rakamlara değmiyor; ölçüm aşağıdaki "Ölçüm (28 Kasım)" notunda.
+   BOYU BAŞLIĞIN BIRAKTIĞI YERDEN. Seans içinde başlık "Kapanış Ziline
+   Kalan" (8,7 em; "Açılış Ziline Kalan" 7,5 em) ve 1280'de satırın 592 /
+   652 pikselini tutuyor: sabit oranlı zil (eskisi 83 piksel, 633'te)
+   başlığın son harfinin ÜSTÜNE biniyordu (ölçüldü; 1440'ta yeni boyla da
+   677 / 676). Zilin boyu artık üç sınırın en küçüğü: 132 tavanı, 17cqi ve
+   kolonun başlıktan artanı (`100cqi − em × başlık puntosu − 24`, en ve
+   boy oranı 160/150). Artan yer zile yetmiyorsa (uzun başlıkta kap 720'nin,
+   kısa başlıkta 440'ın altında) zil eskisi gibi kendi satırında. */
 @media (min-width:1024px) {
-  .heroTopRow:lang(tr) { align-items:flex-start; }
-  .heroTopRow:lang(tr) .heroBell { --bell:clamp(64px,12cqi,92px); margin-top:-6px; margin-bottom:calc(28px - var(--bell)); }
+  @container hero-copy (min-width:440px) {
+    .heroTopRow:lang(tr):not([data-long]) { align-items:flex-start; }
+    .heroTopRow:lang(tr):not([data-long]) .heroBell { --bell:max(64px, min(132px, 17cqi, (100cqi - 7.7 * min(10.75cqi, 68px) - 24px) * .9375)); margin-top:-8px; margin-bottom:calc(28px - var(--bell)); }
+  }
+  @container hero-copy (min-width:720px) {
+    .heroTopRow:lang(tr)[data-long] { align-items:flex-start; }
+    .heroTopRow:lang(tr)[data-long] .heroBell { --bell:max(64px, min(132px, 17cqi, (100cqi - 8.8 * min(10.75cqi, 68px) - 24px) * .9375)); margin-top:-8px; margin-bottom:calc(28px - var(--bell)); }
+  }
 }
 /* Ölçüm (22 Eylül, TR, başsız Chrome, `.tmp-sep22b-home-hero-after.mjs`):
    - 1440 / 1280: kahraman 436 (değişmedi). Rozet 199 = "Endeksler" 199
@@ -213,6 +234,8 @@
 .indexDeck { min-width:0; padding-left:24px; border-left:1px solid var(--line); }
 .indexHeading { display:flex; justify-content:space-between; align-items:baseline; flex-wrap:wrap; gap:5px 15px; margin-bottom:10px; font-size:var(--text-tiny); font-weight:600; color:var(--text-muted); }
 .indexHeading h2 { color:var(--text-strong); font-size:var(--text-read); font-weight:700; }
+/* Ortak seans künyesi ("Kapanış Sonrası") başlığın satırında, fon
+   künyesinin ardında, bir kez — gerekçe IndexLive → "KÜNYE BİR KEZ". */
 .indexGrid { display:grid; grid-template-columns:repeat(2,minmax(0,1fr)); gap:10px; }
 .indexLink { min-width:0; display:block; border-radius:12px; }
 .indexLink:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
@@ -835,10 +858,14 @@
      298'de başlıyor, başlık 292'de bitiyor (430: 338 / 324, 375: 285 /
      280, 360: 273 / 267). Kolon 280 pikselin altında (320'lik ekran) pay
      kalmıyor; orada zil eskisi gibi kendi satırında. YALNIZ TÜRKÇE:
-     İngilizce başlık satırı dolduruyor. Kazanç: sayaç 29 piksel yukarı. */
+     İngilizce başlık satırı dolduruyor. Kazanç: sayaç 29 piksel yukarı.
+     28 KASIM: YALNIZ KISA BAŞLIKTA (`:not([data-long])`). Seans içinde
+     başlık "Kapanış Ziline Kalan" (8,7 em) 390'da ~301 piksel ve zilin
+     298'de başlayan kutusunun altına giriyordu; o hâlde zil kendi
+     satırında (İngilizcedeki gibi). */
   @container hero-copy (min-width:280px) {
-    .heroTopRow:lang(tr) { align-items:flex-start; }
-    .heroTopRow:lang(tr) .heroBell { --bell:clamp(44px,16.5cqi,52px); margin-top:-4px; margin-bottom:calc(22px - var(--bell)); }
+    .heroTopRow:lang(tr):not([data-long]) { align-items:flex-start; }
+    .heroTopRow:lang(tr):not([data-long]) .heroBell { --bell:clamp(44px,16.5cqi,52px); margin-top:-4px; margin-bottom:calc(22px - var(--bell)); }
   }
   .hero + .flowPanel { margin-top:-6px; }
   .flowPanel { padding:16px 14px 0; }
@@ -852,6 +879,12 @@
   .storySpotlight h3 { font-size:25px; line-height:1.2; text-wrap:pretty; }
   .storyLead h3 + p { margin-top:10px; font-size:var(--text-read); line-height:1.65; }
   .storyLead .storyFigure:not([data-kind="stats"]) { border-radius:12px; padding:14px; gap:10px; }
+  /* TELEFONDA İKİ RAKAM (28 Kasım, görsel tur 3). "Sayılarla" dört karo
+     390'da ~240 piksel tutuyordu ve hemen üstündeki manşet + girişle aynı
+     sayıları ikinci kez sayıyordu; telefonda ilk iki karo (yazının en
+     önemli iki rakamı, rutinin yazdığı sırayla), dördü yazının kendisinde.
+     Masaüstünde dördü yerinde. */
+  .storyLead .storyFigure[data-kind="stats"] [data-part="cell"]:nth-child(n+3) { display:none; }
   .storyLeadFoot { margin-top:18px; }
   .storyRow { grid-template-columns:36px minmax(0,1fr); padding:16px 12px; }
   .storyRowLogo { width:36px; }

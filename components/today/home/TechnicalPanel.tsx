@@ -202,10 +202,19 @@ export function TechnicalPanelView({
      BUGÜNÜN YÜZDESİ SEMBOLÜN ALTINDA (24 Kasım, sahibinin isteği: "bugünkü
      durumları yazmak gibi, biraz eksik hissettiriyor"): yayın anındaki
      günlük değişim, yön renginde, tek ondalık. Seans işlemi yoksa "–". */
+  /* RAYDA KÜME TEK SATIR (28 Kasım, görsel tur 3). SAT 10 hisseyle iki
+     satır, TUT 6 ile bir satır: rayda 16 logo + sembol + yüzde hücresi ve
+     panelin en yoğun bloğu (1440: 828 piksel). Rayda (dar kap) kümenin
+     ilk beşi açık, altıncı hücre "+N" karosu: kalanlar teknik analiz
+     panosunda. Hücrelerin hepsi yine basılıyor (`data-extra` gizli); geniş
+     kapta (tablet, tam genişlik) satıra 10+ hücre sığdığı için hepsi açık
+     ve karo yok (CSS). Sıra görüş içinde yayının sırası; hiçbir hisse
+     kümesinden düşmüyor, yalnız katlanıyor. */
+  const RAIL = 6;
   const cells = (items: readonly PanelItem[], label: string) => (
-    <ul className={styles.cells} style={{ "--cols": items.length <= 6 ? 6 : Math.ceil(items.length / Math.ceil(items.length / 6)) } as CSSProperties}>
-      {items.map((item) => (
-        <li key={item.symbol}>
+    <ul className={styles.cells} style={{ "--cols": RAIL } as CSSProperties}>
+      {items.map((item, index) => (
+        <li key={item.symbol} data-extra={items.length > RAIL && index >= RAIL - 1 ? "" : undefined}>
           <Link
             href={technicalHref(item.symbol)}
             prefetch={false}
@@ -222,6 +231,14 @@ export function TechnicalPanelView({
           </Link>
         </li>
       ))}
+      {items.length > RAIL && (
+        <li className={styles.moreCell}>
+          <Link href="/teknik-analiz" prefetch={false} className={styles.cell} aria-label={`${label} · ${stockCount(items.length - (RAIL - 1))} · ${t.common.showAll}`}>
+            <span className={styles.moreTile} aria-hidden="true">+{items.length - (RAIL - 1)}</span>
+            <b aria-hidden="true">{t.today.technicalMore}</b>
+          </Link>
+        </li>
+      )}
     </ul>
   );
   /* ÖNE ÇIKANLAR (24 Kasım): planın neresinde durduğu dikkat isteyen

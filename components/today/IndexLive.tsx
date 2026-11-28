@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { SpotlightCard } from "@/components/motion/PremiumMotion";
 import { DataStamp, type DataStampLabels } from "@/components/ui/primitives";
@@ -73,7 +73,13 @@ export function IndexLive({
   session,
   locale,
   labels,
+  heading,
+  headingNote,
 }: {
+  /** Destenin başlığı (sayfadan, `h2`); yanında künye ve ortak seans
+   *  künyesi — gerekçe aşağıda, "KÜNYE BİR KEZ". */
+  heading?: ReactNode;
+  headingNote?: string;
   symbols: readonly string[];
   initial: Extract<IndexFeed, { ok: true }>;
   bars: Bars;
@@ -193,8 +199,30 @@ export function IndexLive({
     window.dispatchEvent(new CustomEvent<IndexTickerPatch>(INDEX_EVENT, { detail: patch }));
   }, [feed, locale, symbols]);
 
+  /* KÜNYE BİR KEZ (28 Kasım, görsel tur 3). Yüzdenin hangi seansı
+     anlattığı ("Kapanış Sonrası") dört kartın dördünde ayrı satırdı ve
+     paket tek kaynaktan geldiği için hep aynı söz: 1440'ta dört kez 15
+     piksel, kartların ortasında aynı gri satır. Dört kart aynı künyeyi
+     taşıyorsa künye başlık satırına bir kez çıkar ve kartlar fiyat + yüzde
+     + çizgiye iner; künyeler farklıysa (biri "Son Kapanış") her kart
+     kendininkini yazmaya devam eder — dürüstlük kuralı aynen (Veri
+     dürüstlüğü 4). */
+  const notes = symbols.map((symbol) => {
+    const quote = feed.quotes[symbol];
+    return quote ? basisNote(quote, labels) : undefined;
+  });
+  const shared = notes.length > 0 && notes.every((note) => note !== undefined && note === notes[0]) ? notes[0] ?? null : null;
+
   return (
     <div className={cn("flex flex-col gap-2.5", styles.indexLive)}>
+      {heading && (
+        <div className={styles.indexHeading}>
+          {heading}
+          {/* Tek metin düğümü: dar ekranda künye ile seans sözü birlikte
+              sarar, ortadaki nokta satır başına düşmez (390, bakıldı). */}
+          <span>{[headingNote, shared].filter(Boolean).join(" · ")}</span>
+        </div>
+      )}
       {/* Önceki yan kolon ölçümünde 1024'te dört sütunlu düzenin
           kartları 84 piksele düşüyor ve başlıklar "N…", "S&…", "Do…" diye
           kırpılıyordu. Kartlar her genişlikte 2×2 kalıyor. */}
@@ -229,6 +257,7 @@ export function IndexLive({
               locale={locale}
               labels={labels}
               flash={flash[symbol]}
+              hideNote={shared !== null}
             />
           );
         })}
@@ -256,7 +285,9 @@ function IndexCard({
   locale,
   labels,
   flash,
+  hideNote = false,
 }: {
+  hideNote?: boolean;
   symbol: string;
   quote: IndexQuote;
   stale: boolean;
@@ -276,14 +307,7 @@ function IndexCard({
      yön rengi düşüyor, künye "Son Kapanış" diyor. */
   const lastClose = quote.basis === "lastClose";
   const tone = directionOf(quote.changePct);
-  const note =
-    quote.basis === "pre-market"
-      ? labels.preMarket
-      : quote.basis === "after-hours"
-        ? labels.afterHours
-        : lastClose
-          ? labels.lastClose
-          : null;
+  const note = hideNote ? null : basisNote(quote, labels);
   /* KIVILCIM ÇİZGİSİ SAYIYLA AYNI SEANSI ANLATMALI — gerekçe
      `app/(app)/page.tsx` → IndexStrip. Çizgi paket önbellekten geldiyse ya
      da bu seansta işlem yoksa hiç çizilmiyor. Çizginin son noktası
@@ -382,6 +406,17 @@ function IndexCard({
       </SpotlightCard>
     </Link>
   );
+}
+
+/** Yüzdenin seans künyesi; asıl seansta yok (`null`). */
+function basisNote(quote: IndexQuote, labels: IndexLiveLabels): string | null {
+  return quote.basis === "pre-market"
+    ? labels.preMarket
+    : quote.basis === "after-hours"
+      ? labels.afterHours
+      : quote.basis === "lastClose"
+        ? labels.lastClose
+        : null;
 }
 
 /**
