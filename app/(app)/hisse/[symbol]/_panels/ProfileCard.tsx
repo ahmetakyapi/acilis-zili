@@ -1,7 +1,7 @@
-import { Bank, Flag, GlobeHemisphereWest, LinkSimple } from "@phosphor-icons/react/dist/ssr";
 import styles from "../stock.module.css";
+import cover from "./cover.module.css";
 import { exchangeLabel } from "@/components/stock/exchange-label";
-import { DataError, DataStamp, PanelHeader } from "@/components/ui/primitives";
+import { DataError, DataStamp, LogoTile, PanelHeader } from "@/components/ui/primitives";
 import { RollingFigure } from "@/components/ui/RollingFigure";
 import { getStatus, getCompanies, getSymbolNames, liveMarketCap } from "@/lib/data";
 import { type Dictionary, type Locale } from "@/lib/i18n";
@@ -107,6 +107,8 @@ export async function ProfileCard({
       ? { name: "Nasdaq 100", symbols: new Set(NDX_MEMBERS.map((m) => m.symbol)) }
       : null;
   const pool = rankPool ? listed.filter((row) => rankPool.symbols.has(row.symbol)) : listed;
+  /* Merdivenin logoları (28 Kasım 2026) — aynı dizin satırından, yeni tur yok. */
+  const logoOf = new Map(listed.map((row) => [row.symbol, row.logoUrl] as const));
   const rankInfo = (() => {
     if (marketCap === null || !pool.some((row) => row.symbol === symbol)) return null;
     const others = pool.filter((row) => row.symbol !== symbol);
@@ -140,6 +142,7 @@ export async function ProfileCard({
       value: row.marketCap as number,
       share: (row.marketCap as number) / scale,
       self: row.symbol === symbol,
+      logoUrl: logoOf.get(row.symbol) ?? (row.symbol === symbol ? (meta[symbol]?.logoUrl ?? null) : null),
     });
     /* YAKIN PLAN (1 Ekim). Kopuk pencerede komşular en büyüğe oranla
        çiziliyordu ve 43. sıradaki SNDK'da sekiz sütunun hepsi taban
@@ -262,35 +265,20 @@ export async function ProfileCard({
        Özeti'nde tarih ve pencere duruyor, bölüme bağlantı da artık orada
        (StockSummary). */
   ];
-  /* SATIRIN İKONU (26 Eylül). Profil etiket-değer satırlarından ibaretti ve
-     "düz sayfa" gibi okunuyordu. Her satırın başında ne anlattığını
-     gösteren küçük bir karo var; göz etiketi okumadan satırı buluyor.
-     Eşleme etikete göre: satırlar koşullu eklendiği için sıra değil ad
-     tanımlayıcı. Eşlenmeyen satır ikonsuz kalır, kaymaz. */
-  const rowIcon = new Map<string, typeof Bank>([
-    [t.stock.country, GlobeHemisphereWest],
-    [t.stock.exchange, Bank],
-    [t.stock.ipoDate, Flag],
-    [t.stock.website, LinkSimple],
-  ]);
-  /* KÜNYE KAROLARI (30 Eylül). Etiket-değer ızgarası kıl çizgilerle
-     bölünmüş bir form gibi okunuyordu ("çok karmaşık"). Her bilgi artık
-     kendi karosu: solda ikon kutusu, sağda etiket ve değer; karolar arası
-     boşluk ayraç görevi görüyor, çizgi yok. İkon satırı etiketi okumadan
-     buldurmaya devam ediyor. */
-  const fact = (label: string, value: React.ReactNode, key = label) => {
-    const Icon = rowIcon.get(label);
-    return (
-      <div key={key} className={styles.factTile}>
-        <span className={styles.factIcon} aria-hidden>
-          {Icon && <Icon size={16} weight="duotone" />}
-        </span>
-        <dt>{label}</dt>
-        <dd>{value}</dd>
-      </div>
-    );
-  };
-
+  /* SATIRIN İKONU (26 Eylül) ve KÜNYE KAROLARI (30 Eylül) KALKTI (28 Kasım
+     2026, görsel tur 3). Karolar ikonlu dört kutuydu, sonra kenarlıklı bir
+     levha: grafik panelinin yanındaki kartın içinde ikinci bir kart
+     (sahibinin sözü: "bazı ekranlarda çok bilgi yoğunluğu var… minimal
+     estetik dokunuşlar"). Künye artık DÜZ meta satırı: soluk etiket, güçlü
+     değer, aynı satırda yan yana; sığmayan alt satıra sarar. Kutu, ikon,
+     iç kenarlık yok — üstteki kıl çizgi bloğu açıklamadan ayırıyor.
+     Ölçüm cover.module.css → "DÜZ KÜNYE". */
+  const fact = (label: string, value: React.ReactNode, key = label) => (
+    <div key={key} className={cover.metaItem}>
+      <dt>{label}</dt>
+      <dd>{value}</dd>
+    </div>
+  );
   /* KÜNYE BAŞLIĞIN SAĞINDA. "Finnhub · 22 Eylül 21:52 Güncellendi" kartın
      dibinde tek başına bir satır tutuyordu; başlık satırının sağı ise
      boştu. Aynı damga orada, satır harcamadan. */
@@ -414,12 +402,21 @@ export async function ProfileCard({
                   sıra. Dar kapta (telefon) sembol sütuna sığmıyor; orada
                   gizleniyor ve alttaki künye (şirket · en büyük) okumayı
                   taşıyor. */}
-              <span aria-hidden className={styles.capLadderNames}>
+              {/* LOGOLU SIRA (28 Kasım 2026, görsel tur 3 — sahibinin sözü:
+                  "logolar gözükmeye devam etsin"). Sütunların altındaki
+                  semboller 12 pikselde sığmadığı için BİR ATLAYARAK
+                  yazılıyordu (10 Kasım): on iki sütunun altısı adsızdı ve
+                  telefonda sıra tümden gizliydi. Merdiven (30 Eylül kararı,
+                  "görsel olarak zirve") aynen; her sütunun altında artık o
+                  şirketin LOGOSU — 22 piksel, sütun daralırsa sütun kadar.
+                  On ikisi de görünür, telefonda da. Ad ve değer sütunun
+                  `title`ında; çizim `aria-hidden`, sıra metinde. */}
+              <span aria-hidden className={cn(styles.capLadderNames, cover.ladderLogos)}>
                 {rankInfo.ladder.map((segment, si) => (
                   <span key={si} className={styles.capLadderRun} data-gap={si > 0 || undefined} data-lens-names={si > 0 && rankInfo.lens ? true : undefined}>
                     {segment.map((bar) => (
-                      <b key={bar.symbol} data-self={bar.self || undefined}>
-                        {bar.symbol}
+                      <b key={bar.symbol} data-self={bar.self || undefined} title={bar.symbol}>
+                        <LogoTile symbol={bar.symbol} logoUrl={bar.logoUrl} size="xs" className={cover.ladderLogo} />
                       </b>
                     ))}
                   </span>
@@ -488,7 +485,7 @@ export async function ProfileCard({
           üç satıra iniyor (tek sayıda kalırsa sonuncusu iki sütunu kaplıyor,
           boş hücre yok); ikonlar etiketin önünde, karo değil. Satır
           sırası ve koşulları aynı. */}
-      <dl className={styles.factTiles} data-motion-stagger>
+      <dl className={cover.metaList}>
         {rows.map(([label, value]) => fact(label, value))}
         {/* Adres sağlayıcıdan geliyor; şeması süzülmeden href'e konmaz. */}
         {websiteHref &&

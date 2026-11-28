@@ -1,0 +1,29 @@
+/* ==========================================================================
+   KAPAK, GÖRSEL TUR 3 (28 Kasım 2026). Sahibinin sözü: "bazı ekranlarda çok
+   bilgi yoğunluğu var… minimal estetik dokunuşlar; logolar gözükmeye devam
+   etsin, tekrar eden şeylerden uzaklaşalım." Bu dosya yalnız tur 3'ün YENİ
+   sınıflarını taşır; eski sınıfları ezen kurallar stock.module.css'in
+   sonundaki "GÖRSEL TUR 3" bloğunda.
+   ========================================================================== */
+
+/* LOGOLU SIRA — merdivenin altında her sütunun logosu (gerekçe
+   ProfileCard.tsx). `capLadderNames` 380 pikselin altındaki kapta gizliydi
+   (adlar sığmıyordu); logo sütun kadar küçülebildiği için her genişlikte
+   açık. Çift sınıf: stock.module.css'teki tek sınıflık `display:none` ve
+   kapsayıcı sorgusunu, yükleme sırasından bağımsız ezer. */
+.ladderLogos.ladderLogos { display:flex; margin-top:2px; }
+.ladderLogos b { display:flex; justify-content:center; }
+/* 10 Kasım'ın "bir atlayarak" kuralı adı `visibility:hidden` ile saklıyordu;
+   görünürlük kalıtılır, logo kendi görünürlüğünü geri alır. */
+.ladderLogo { visibility:visible; width:min(22px, 100%); height:auto; aspect-ratio:1; opacity:.78; transition:opacity .18s var(--ease-brand); }
+.ladderLogos b[data-self] .ladderLogo { opacity:1; outline:2px solid var(--primary); outline-offset:1px; }
+
+/* DÜZ KÜNYE — ülke, borsa, halka arz, web sitesi (gerekçe ProfileCard.tsx).
+   Etiket soluk 12, değer güçlü 13; öğeler yan yana sarar. Ölçüm (NVDA,
+   sahte sağlayıcı, açık tema; kıl çizgi dahil): 1440'ta künye bloğu ~104 → 57
+   piksel, 390'da ~156 → 57 piksel; yatay taşma 0, kırpık 0. */
+.metaList { display:flex; flex-wrap:wrap; gap:8px 20px; margin:0; padding-top:12px; border-top:1px solid var(--line-soft); }
+.metaItem { display:inline-flex; min-width:0; align-items:baseline; gap:6px; }
+.metaItem > dt { color:var(--text-muted); font-size:12px; font-weight:600; white-space:nowrap; }
+.metaItem > dd { min-width:0; margin:0; color:var(--text-strong); font-size:13px; font-weight:600; line-height:1.35; overflow-wrap:anywhere; }
+.metaItem > dd a { min-height:0; }

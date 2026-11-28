@@ -1683,3 +1683,39 @@ a.peerRow:focus-visible { outline:2px solid var(--line-focus); outline-offset:-2
   .fundamentalsGrid .metricsList:is([data-count="3"],[data-count="4"]) { grid-template-columns:repeat(2,minmax(0,1fr)); }
   .fundamentalsGrid .metricsList[data-count="3"] > div:last-child { grid-column:1 / -1; }
 }
+
+/* ==========================================================================
+   GÖRSEL TUR 3 (28 Kasım 2026). Sahibinin sözü: "bazı ekranlarda çok bilgi
+   yoğunluğu var, kullanımı zorlaştırıyor… minimal estetik dokunuşlar; mavi
+   gradient temayı bozmayalım; tekrar eden şeylerden uzaklaşalım."
+   Yukarıdaki kurallar karar kaydı; bu blok onları eziyor. Yeni sınıflar
+   _panels/cover.module.css'te.
+   ========================================================================== */
+
+/* KİMLİK ARAÇLARI TEK RAY (≥640). Favori, alarm, portföy ve paylaş dört
+   ayrı gri daireydi; adın sağında dört nokta, başlığın en kalabalık yeri
+   (sahibinin listesi: "dört ikon buton + rozetler kalabalık"). Dördü de
+   kalıyor (paylaş 30 Eylül, kompakt eylemler 25 Ekim kararı) ama tek bir
+   gömülü ray içinde, zeminsiz ikonlar: göz dört öğe değil tek bir araç
+   kutusu görüyor. Ray `--shadow-well` (gölge merdiveni: "alan ve ray");
+   seçili favori yine `--primary-wash`. Telefonda (<640) 44'lük adımlı
+   daireler aynen (14 Kasım ölçümü). */
+@media(min-width:640px) {
+  .companyOverview .identityMeta { gap:2px; padding:3px; border-radius:999px; background:var(--surface-sunken); box-shadow:var(--shadow-well); }
+  .companyOverview .identityMeta :is(button,a) { background:transparent; color:var(--text-muted); }
+  .companyOverview .identityMeta :is(button,a):hover { background:var(--panel-fixed); color:var(--primary-ink); }
+  .companyOverview .identityMeta :is(button,a)[aria-pressed="true"] { background:var(--primary-wash); color:var(--primary-ink); }
+}
+
+/* YAKLAŞAN BİLANÇO, BEKLENTİSİZ (≥768). Beklenti satırı (`dl`) yalnız
+   sağlayıcı EPS ya da gelir beklentisi verdiğinde basılıyor; vermediğinde
+   kart üç sütunlu kaldı ve orta sütun boş bir 400 piksellik bant oldu
+   (sahte NVDA, 1440, görüldü: tarih solda, karne sağda, arası boş). Eksik
+   veri yer bırakmaz: o durumda iki sütun, karne ortaya değil sola yakın,
+   ikinci sütunu doldurur. `:has()` kökte değil kartın kendisinde. */
+@media(min-width:768px) {
+  .chapter .upcomingPanel:not(:has(> dl)) { grid-template-columns:minmax(0,1fr) minmax(0,2fr); }
+  .chapter .upcomingPanel:not(:has(> dl)) > div:last-child:not(.eventKicker) { grid-column:2; }
+}
+/* Rayın yedeği gerçeğin ölçüsünde: 4 × 34 + 3 × 2 + 2 × 3 = 148 × 40 (ölçüldü, 1440). */
+@media(min-width:640px) { .companyOverview .identityMetaSkeleton { width:148px; height:40px; } }

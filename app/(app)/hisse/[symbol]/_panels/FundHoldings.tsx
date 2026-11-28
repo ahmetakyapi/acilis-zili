@@ -1,6 +1,6 @@
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { ScaleBar } from "@/components/markets/CompareScale";
-import { EmptyState, LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
+import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
 import { getSymbolNames } from "@/lib/data";
 import { getEtfHoldings, type EtfHoldings, type HoldingsSource } from "@/lib/etf-holdings-data";
 import type { Dictionary, Locale } from "@/lib/i18n";
@@ -45,11 +45,17 @@ export async function FundHoldings({ symbol, locale, t }: { symbol: string; loca
   if (holdings === null) return null;
   const H = t.fundHoldings;
 
+  /* HATA TEK SATIR (28 Kasım 2026, görsel tur 3). Ortalı `EmptyState`,
+     1320 piksellik panelin ortasında tek cümleyle 126 piksellik boş bir
+     kutu açıyordu (sahte SPY, 1440, ölçüldü) — kırık görünen boş durum.
+     Mesaj artık başlığın altında, panelin girintisinde soluk bir satır;
+     panel başlığı kalıyor ki okur fonun içeriğinin burada olacağını bilsin.
+     `EmptyState` cümle düzeninde mesajdır; satır da öyle. */
   if (holdings === "error") {
     return (
       <Panel>
         <PanelHeader title={H.title} />
-        <EmptyState title={H.error} className="px-4 py-6 sm:px-5" />
+        <p className="px-4 pb-4 text-sm text-muted sm:px-5">{H.error}</p>
       </Panel>
     );
   }

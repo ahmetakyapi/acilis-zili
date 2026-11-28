@@ -1,4 +1,4 @@
-import { Buildings, CalendarBlank, Stack, TreeStructure, UsersThree } from "@phosphor-icons/react/dist/ssr";
+import { CalendarBlank, Stack, TreeStructure, UsersThree } from "@phosphor-icons/react/dist/ssr";
 import type { ReactNode } from "react";
 import { LocaleLink as Link } from "@/components/layout/LocaleLink";
 import { LogoTile, Panel, PanelHeader } from "@/components/ui/primitives";
@@ -33,8 +33,13 @@ import styles from "./depth.module.css";
  * altında. Izgaranın son satırında tek kalırsa panel tam genişliğe yayılıyor
  * ve künye sütunları çoğalıyor (depth.module.css).
  */
-/** Logo şeridindeki en büyük alt sektör şirketi. */
-const PEER_LOGOS = 5;
+/** Logo şeridindeki en büyük alt sektör şirketi.
+ *  5 → 8 (28 Kasım 2026, görsel tur 3): Sektör hücresi kalkınca (aşağıda)
+ *  künye dört hücreye indi ve son hücre 1440'ta ~310 piksele genişledi;
+ *  beş logo hücrenin yarısında bitiyordu. Sekiz logo (8 × 32) hücreye
+ *  sığıyor, telefonda iki satıra sarar. Sahibinin sözü: "logolar gözükmeye
+ *  devam etsin". */
+const PEER_LOGOS = 8;
 
 const INDEX_NAMES = [
   { name: "S&P 500", members: SPX_MEMBERS },
@@ -143,9 +148,12 @@ export async function StockSummary({ symbol, locale, t }: { symbol: string; loca
       meta: facts.indices.length > 1 ? facts.indices.slice(1).join(" · ") : undefined,
     });
   }
-  if (facts.sector) {
-    cells.push({ key: "sector", icon: <Buildings size={16} weight="duotone" />, label: d.sumFactSector, value: facts.sector });
-  }
+  /* SEKTÖR HÜCRESİ KALKTI (28 Kasım 2026, görsel tur 3 — sahibinin sözü:
+     "tekrar eden şeylerden uzaklaşalım"). Aynı GICS sektörü bu panelin 300
+     piksel üstünde, kapağın kimlik satırında (sembolün yanında, ikonuyla)
+     zaten yazılı; ProfileCard aynı gerekçeyle sektör satırını 30 Eylül'de
+     kaldırmıştı. Alt sektör kalıyor: daha dar ve kimlikte yok. Sektör
+     cümlesi (`sentences`) arama motoru açıklamasında duruyor. */
   if (facts.sub) {
     cells.push({ key: "sub", icon: <TreeStructure size={16} weight="duotone" />, label: d.sumFactSub, value: facts.sub });
   }
