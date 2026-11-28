@@ -88,7 +88,13 @@ const SECTOR_SCALE_FLOOR = 1;
 /* 28 KASIM: AYNI ALTI SATIR HER GENİŞLİKTE (`everywhere`). Masaüstünde on
    bir satırın tamamı açıktı ve bant 1440'ta 913 piksel tutuyordu; sahibinin
    telefon için seçtiği sayı (3 + 3) artık her genişlikte, ortası aynı
-   "Tümünü Gör" katlamasında, bastığın yerde açılır. */
+   "Tümünü Gör" katlamasında, bastığın yerde açılır.
+   28 KASIM AKŞAM (Görsel Tur 4, TASARIM-RAPOR #10): iki kolonlu bantta
+   (≥ 640) sektörler temalardan kısa bitiyordu — canlıda 1024'te ~80, sahte
+   veriyle 1440'ta 23, 1024'te 61, 768'de 55 piksel. Katlı satırlar artık
+   yer oldukça açılıyor (`SectorFill`, `FillColumn`ın bant içi küçük
+   kardeşi): sıra iki uçtan içeri, tema kolonunun dibini geçmeden. Taban
+   3 + 3 (JS'siz ve telefonda) aynı. */
 const SECTOR_PHONE_ENDS = 3;
 
 /**
@@ -316,7 +322,7 @@ function SectorFrame({
   children: React.ReactNode;
 }) {
   return (
-    <div className={cn(styles.part, styles.partSectors)}>
+    <div className={cn(styles.part, styles.partSectors)} data-band-part="sectors">
       <PartHead
         title={t.today.sectorsHeading}
         meta={meta}
@@ -558,7 +564,7 @@ function ThemeFrame({
      duruyor. */
   return (
     <div className={styles.themesPart}>
-      <div className={cn(styles.part, styles.partThemes)}>
+      <div className={cn(styles.part, styles.partThemes)} data-band-part="themes">
         <PartHead
           title={t.today.themesHeading}
           meta={meta}

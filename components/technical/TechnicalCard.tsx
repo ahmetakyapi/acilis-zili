@@ -7,7 +7,6 @@ import type { Dictionary, Locale } from "@/lib/i18n";
 import type { Quote } from "@/lib/providers/types";
 import type { TechnicalAnalysisRow } from "@/lib/schema";
 import {
-  editionTime,
   planPosition,
   slotLabel,
   stanceChangeLabel,
@@ -236,15 +235,19 @@ export function TechnicalCard({
             anından beri anlamlı ölçüde yol aldıysa (o anın fiyatı; yukarıdaki
             23 Eylül kaydının asıl gerekçesi, ONDS örneği). İkisi de yoksa
             cümlenin anı başlıktaki künyeyle aynı ve satır yer kaplamıyor. */}
+        {/* 28 Kasım 2026 (Görsel Tur 4): güncel kartta yayının ADI ve SAATİ
+            de kalktı. Fiyat seans içinde hep yol aldığı için ikinci hâl
+            neredeyse her kartta tetikleniyordu ve "Seans İçi · 20:45 TR"
+            canlıda 16 kartın 16'sında yine aynıydı (denetim, 1440 ve 390).
+            Yayının adı artık "Hisse Planları" başlığının altında bir kez
+            (page.tsx, `.boardStamp`); kartta yalnız farklı olan kalıyor:
+            o anın fiyatı ("Analiz Anında 637,10 $"). Önceki yayından kalan
+            kart adını ve tarihini taşımayı sürdürüyor. */}
         {(stale || snapshotPrice !== null) && (
           <p className={styles.thesisStamp}>
-            {stale ? (
+            {stale && (
               <span className={styles.staleTag}>
                 {t.technical.earlierEdition} · {formatEtDateCompact(row.sessionDate, locale)} · {slotLabel(row.slot, t)}
-              </span>
-            ) : (
-              <span>
-                {slotLabel(row.slot, t)} · <span className="numeral">{editionTime(row.sessionDate, row.slot, locale)}</span>
               </span>
             )}
             {snapshotPrice !== null && (

@@ -74,9 +74,11 @@
 @media (min-width: 640px) { .thumbRow { padding-inline: 20px; } }
 /* ÖZNE (10 Kasım): bir yanda tek kalan kalem. Yönün yıkama tonu kenardan
    kenara (panonun vurgulu kartıyla aynı ton, ChartBoard.module.css →
-   `.tile[data-emph]`), adının üstünde yön renginde küçük etiket. */
-.thumbRow[data-subject="down"] { background: var(--down-wash); }
-.thumbRow[data-subject="up"] { background: var(--up-wash); }
+   `.tile[data-emph]`), adının üstünde yön renginde küçük etiket.
+   28 KASIM (Görsel Tur 4): YIKAMA ZEMİNİ KALKTI — "Tek Düşen" satırı dolu
+   kırmızı bir şerit gibi duruyordu; `arayuz.md` → "Satır vurgu zemini
+   (dolu yeşil/kırmızı satır) yok; yön çubukta ve hapta". Özneyi etiket
+   ve çubuk söylüyor. Sütun görünümünde (ChartColumns) künye satırı. */
 .thumbRole { display: block; margin-bottom: 1px; color: var(--up); font-size: var(--text-nano); font-weight: 700; line-height: 1.25; letter-spacing: 0; }
 .thumbRole[data-tone="down"] { color: var(--down); }
 /* Değer adın hattında (etiketin değil): iki satırlık ad hücresinin dibine. */

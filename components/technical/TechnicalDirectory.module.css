@@ -613,3 +613,40 @@
 .headGauge + .headStats { margin-top:12px; padding-top:0; border-top:0; }
 
 .boardTitle { color:var(--text-strong); }
+
+/* ---- Pano künyesi bir kez (28 Kasım 2026, Görsel Tur 4) ----
+   Canlıda "Seans İçi · 20:45 TR" 16 kartın 16'sında, "Görüş SAT: alım
+   planı yok, yükselişler satış için izlenir." 10 SAT kartının 10'unda
+   aynıydı (denetim; telefonda ~700 piksel tekrar). Kural `arayuz.md` →
+   "Yoğunluk ve tekrar": hepsi aynıysa başlık satırına bir kez. Künye
+   başlığın altında 12/600 (`text-body`), SAT cümlesi aynı satırda kıl
+   ayraçlı düz metin; ikisi de Title Case/cümle kuralına göre. SAT cümlesi
+   yalnız Tümü ve SAT süzgecinde anlamlı: AL ya da TUT seçiliyken susuyor. */
+.boardStamp { display:flex; flex-wrap:wrap; align-items:baseline; gap:2px 12px; margin:0; font-size:12px; line-height:1.45; color:var(--text-muted); }
+
+.boardStamp b { font-weight:600; color:var(--text-body); }
+
+.boardNote { padding-left:12px; border-left:1px solid var(--line); }
+
+.board:has(input[value="buy"]:checked) .boardNote,
+.board:has(input[value="hold"]:checked) .boardNote { display:none; }
+
+/* Telefonda araç çubuğu `display:contents` (yukarıda); künye başlıkla
+   süzgeç arasında akışta kalıyor, SAT cümlesi kendi satırına iniyor.
+   640'ın altında SAT cümlesi hiç basılmıyor: karttaki kopyası da orada
+   zaten basılmıyordu (9 Kasım kararı, `TechnicalPlan.module.css` →
+   "Telefonda SAT kartının genel cümlesi"); anlamı panonun altındaki "AL,
+   TUT, SAT Ne Demek?" bölümünde. Künyenin kendisi de telefonda yok: yayın
+   şeridi ("Son Yayın" etiketiyle) hemen üstte, başlık kartında; ikinci kez
+   yazmak 19 piksel daha ekliyordu (390, sahte veri: 9700 → 9737 → 9700). */
+@media (max-width:767px) {
+  .boardStamp { margin-top:-4px; }
+  .boardNote { flex-basis:100%; padding-left:0; border-left:0; }
+}
+@media (max-width:639px) { .boardStamp { display:none; } }
+
+/* SAT kartının rayı plan satırının dibinde — gerekçe
+   `TechnicalPlan.module.css` sonunda (28 Kasım 2026). Yalnız alt ızgarada
+   (≥ 640): telefonda kart esnek sütun ve `align-self` yatay ekseni
+   daraltıp rayı kısaltıyordu (390, ölçüldü: SAT kartı 319 → 338). */
+@media (min-width:640px) { .cardPlan[data-verdict="sell"] { align-self:end; } }

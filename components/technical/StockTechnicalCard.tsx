@@ -99,6 +99,12 @@ export async function StockTechnicalCard({
           <VerdictPill verdict={verdict} label={verdictLabel(verdict, t)} size="custom" className={parts.stancePill} />
           <span className="sr-only"> · {symbol} {t.technical.title}</span>
         </Link>
+        {/* GÖRÜŞÜN KAYNAĞI VE UFKU (28 Kasım 2026, Görsel Tur 4). Şirket
+            sayfasında dört görüş var (Claude çipi "1–2 Hafta · TUT", bu
+            kart, analist dağılımı, Şirket Analizi satırları); bu hap sitenin
+            günde üç kez yenilenen teknik yayınından. Ufku uydurmuyoruz:
+            rutin vade söylemiyor, "günlük" yayının kendisi (künyede saati). */}
+        <span className={styles.stockCardSource}>{t.technical.stockCardSource}</span>
         {change && (
           <span className={cn(parts.change, changeToneClass(verdict))}>{change}</span>
         )}

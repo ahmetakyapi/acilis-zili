@@ -1,0 +1,157 @@
+/* GRAFİĞİN KÜÇÜK RESMİ — dikey sütunlar (28 Kasım, Görsel Tur 4; gerekçe
+   ChartColumns.tsx).
+
+   Sütun üç kat: çizim (değer etiketi + sütun), logo karosu (26), sembol
+   (12/600 mono). Çizimin yüksekliği `--H` (rayda ve telefonda 112, tablette
+   128) + iki etiket payı: etiket artıda sütunun üstünde, ekside altında;
+   pay yalnız o yön çizimde varsa açılır (`data-has-up` / `-down`).
+   Sıfır çizgisi her sütunun çiziminde aynı y'de (`--z` ortak) ve sütunlar
+   arasında aralık yok: çizgi kesintisiz okunur. Sütun 12 piksel — satırın
+   kahramanı olan çubuğun kalınlığı (`arayuz.md`: 12–14); ilk denemede 22
+   pikseldi ve sahibinin 10 Ekim itirazındaki "tablo programı" bloklarına
+   döndü. Eksen tarafı düz, uzak ucu 3 piksel yuvarlak (RankBars'ın "eksen
+   tarafı düz" kuralının dikeyi).
+
+   ÖLÇÜM (28 Kasım; gerçek sayfa + sahte sağlayıcı, reducedMotion): rapor ve
+   ChartThumb/DailyChartPanel yorumlarında. */
+.wrap { display: flex; flex-direction: column; min-width: 0; }
+.cols {
+  --H: 112px;
+  --top: 4px;
+  --bot: 4px;
+  display: grid;
+  grid-template-columns: repeat(var(--n), minmax(0, 1fr));
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.cols[data-has-up] { --top: 20px; }
+.cols[data-has-down] { --bot: 20px; }
+.cols > li { display: flex; min-width: 0; }
+
+.col {
+  display: flex;
+  flex: 1;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  min-width: 0;
+  padding-bottom: 6px;
+  border-radius: var(--radius-sm);
+  transition: background-color 180ms var(--ease-brand);
+}
+a.col:hover { background: var(--primary-tint); }
+a.col:focus-visible { outline: 2px solid var(--line-focus); outline-offset: -2px; }
+a.col:active { scale: 0.992; }
+
+.plot {
+  position: relative;
+  display: block;
+  width: 100%;
+  height: calc(var(--H) + var(--top) + var(--bot));
+}
+/* Sıfır çizgisi (`--line-strong`, ortak ölçü): sütunlar arası aralık yok,
+   komşu çizimlerin çizgileri tek hat. */
+.plot::after {
+  content: "";
+  position: absolute;
+  inset-inline: 0;
+  top: calc(var(--top) + var(--H) * var(--z));
+  height: 1px;
+  background: var(--line-strong);
+}
+.bar {
+  position: absolute;
+  left: 50%;
+  width: 12px;
+  height: max(2px, calc(var(--H) * var(--f)));
+  translate: -50% 0;
+  animation: col-rise var(--draw) var(--ease-brand) both;
+  animation-delay: calc(var(--i, 0) * var(--step));
+}
+.bar[data-dir="up"] {
+  top: calc(var(--top) + var(--H) * (var(--z) - var(--f)));
+  border-radius: 3px 3px 0 0;
+  background: var(--up);
+  transform-origin: center bottom;
+}
+.bar[data-dir="down"] {
+  top: calc(var(--top) + var(--H) * var(--z));
+  border-radius: 0 0 3px 3px;
+  background: var(--down);
+  transform-origin: center top;
+}
+/* Modüle özgü dikey çizim: katalogdaki `bar-fill` yalnız yatay (scaleX). */
+@keyframes col-rise { from { transform: scaleY(0); } }
+
+.value {
+  position: absolute;
+  left: 50%;
+  top: calc(var(--top) + var(--H) * (var(--z) - var(--f)) - 3px);
+  translate: -50% -100%;
+  color: var(--text-strong);
+  font-size: var(--text-tiny);
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  line-height: 1.2;
+  white-space: nowrap;
+}
+.value[data-dir="up"] { color: var(--up); }
+.value[data-dir="down"] {
+  top: calc(var(--top) + var(--H) * (var(--z) + var(--f)) + 3px);
+  translate: -50% 0;
+  color: var(--down);
+}
+
+.mark { display: grid; place-items: center; width: 26px; height: 26px; }
+.code {
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--text-body);
+  font-family: var(--font-mono);
+  font-size: var(--text-tiny);
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  line-height: 1.2;
+  text-overflow: clip;
+  white-space: nowrap;
+}
+
+.subject { margin: 6px 0 0; color: var(--text-body); font-size: var(--text-tiny); font-weight: 600; line-height: 1.4; }
+.subject > span { margin-right: 6px; font-weight: 700; }
+.subject > span[data-dir="up"] { color: var(--up); }
+.subject > span[data-dir="down"] { color: var(--down); }
+
+.end {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-top: 10px;
+  padding-top: 10px;
+  border-top: 1px solid var(--line-soft);
+}
+.count { color: var(--text-muted); font-size: var(--text-tiny); line-height: 1.3; white-space: nowrap; }
+.count > i { color: var(--text-body); font-style: normal; font-weight: 600; }
+.open { margin-left: auto; }
+
+/* TABLETTE (768–1279) panel tam genişlik (976'ya kadar): başlık solda,
+   küçük resim sağda (DailyChartPanel → `.body`); sütunlar biraz uzun.
+   Ölçüldü (1024, sahte grafik): panel 448 → 371 piksel. */
+@media (min-width: 768px) and (max-width: 1279px) {
+  .cols { --H: 128px; }
+  div.body { display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 1.25fr); grid-template-rows: auto auto 1fr; align-items: start; column-gap: 32px; }
+  /* Başlık kolonu boş kalmasın: özne künyesi ve dip (sayaç + buton) sola,
+     başlığın altına; resim sağda üç satırı kaplar. `.wrap` kutusuz
+     (`display: contents`), çizim kapısı bu yüzden `ol`de. */
+  div.body .wrap { display: contents; }
+  div.body .cols { grid-column: 2; grid-row: 1 / span 3; }
+  div.body .subject { grid-column: 1; grid-row: 2; margin: 0; }
+  div.body .end { grid-column: 1; grid-row: 3; align-self: end; margin: 0; padding-top: 0; border-top: 0; }
+  div.body .open { margin-left: 0; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .bar { animation: none; }
+  .col { transition: none; }
+  a.col:active { scale: none; }
+}

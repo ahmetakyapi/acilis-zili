@@ -136,9 +136,12 @@ export function ReportSegments({
             )}
             {/* Sütun sayısı kart sayısından (31 Ekim, görsel denetim): auto-fill
                 altı kartı 5+1 diziyor, altıncı tek başına kalıyordu. Geniş
-                ekranda satırlar eşit dolar: 6 → 3+3, 8 → 4+4, 5 → 3+2. */}
+                ekranda satırlar eşit dolar: 6 → 3+3, 8 → 4+4. 5 → 3+2 boş
+                hücre bırakıyordu; 28 Kasım'dan (Tur 4) beri beşte 2+3 altı
+                birimlik ızgarada (`data-count`, ReportExtras.module.css). */}
             <ul
               className={styles.kpis}
+              data-count={kpis.length}
               data-motion-stagger
               style={{ "--kpi-cols": kpis.length <= 4 ? kpis.length : kpis.length % 4 === 0 ? 4 : 3 } as CSSProperties}
             >

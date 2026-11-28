@@ -174,7 +174,7 @@
   color: var(--text-muted);
 }
 .rail[data-size="md"] .label { font-size: var(--text-small); line-height: 16px; }
-.labelValue { font-weight: 650; color: var(--text-strong); }
+.labelValue { font-weight: 600; color: var(--text-strong); }
 
 .label[data-rn="above"] { bottom: calc(100% + 4px); }
 .label[data-rn="below"] { top: calc(100% + 4px); }

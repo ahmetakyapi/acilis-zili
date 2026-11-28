@@ -38,8 +38,10 @@
    analiz listelerinin dili; ölçek panelin ortak ölçeği). */
 .reaction { display: none; }
 .reactionHead { display: flex; align-items: baseline; justify-content: space-between; gap: 8px; font-size: var(--text-nano); font-weight: 600; color: var(--text-muted); white-space: nowrap; }
-.reactionHead b, .reactionInline { font-size: var(--text-tiny); font-weight: 800; }
-.reactionInline { margin-left: auto; white-space: nowrap; }
+.reactionHead b, .reactionInline b { font-size: var(--text-tiny); font-weight: 700; }
+/* Telefonda etiket + yüzde (Tur 4, gerekçe bileşende "ETİKETLİ"). */
+.reactionInline { display: inline-flex; align-items: baseline; gap: 6px; margin-left: auto; white-space: nowrap; }
+.reactionInlineLabel { font-size: var(--text-nano); font-weight: 600; color: var(--text-muted); }
 .arrow { display: none; }
 
 /* Sütunlar KABIN genişliğinden (panel hisse sayfasında da duruyor, orada

@@ -4,16 +4,8 @@
    şeridi); görüş, güçlü yön ve risk mürekkep tonunda. Her giriş bir kez ve
    `--ease-brand`; hareketi azaltana son kare. */
 
-/* ---- Tepe cümlesi ---- */
-.lede {
-  max-width: 68ch;
-  margin: 0;
-  font-size: var(--text-read);
-  line-height: 1.55;
-  font-weight: 550;
-  color: var(--text-strong);
-  text-wrap: pretty;
-}
+/* Tepe cümlesi (`.lede`) 28 Kasım'da (Tur 4) kapaktan kalktı; gerekçe
+   bilanço dönem sayfasında, "TEPEDEKİ VERİ CÜMLESİ". */
 
 /* ---- Beklenti çizgisi ---- */
 .expectation {
@@ -85,7 +77,7 @@
   gap: 2px 10px;
   white-space: nowrap;
   font-size: var(--text-nano);
-  font-weight: 550;
+  font-weight: 600;
   color: var(--text-muted);
 }
 
@@ -262,7 +254,7 @@
 }
 
 .balanceText > b {
-  font-weight: 650;
+  font-weight: 600;
   color: var(--text-strong);
 }
 

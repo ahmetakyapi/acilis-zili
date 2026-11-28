@@ -27,6 +27,7 @@ import {
   nextEdition,
   pendingSymbols,
   slotInstant,
+  slotLabel,
 } from "@/lib/technical";
 import { getPublishedSymbols, getTechnicalBoard } from "@/lib/technical-data";
 import { atlasSummary } from "@/lib/technical-visuals";
@@ -252,6 +253,21 @@ export default async function TechnicalPage() {
               <h2 id="technical-board" className={styles.boardTitle}>{t.technical.boardTitle}</h2>
               {/* Üç sayılık pano künyesi 10 Kasım'da başlık kartına çıktı
                   (`.headStats`, yukarıda); çubukta başlık ve süzgeç kaldı. */}
+              {/* KARTLARIN ORTAK KÜNYESİ BURADA, BİR KEZ (28 Kasım 2026,
+                  Görsel Tur 4). Yayının adı ve saati kartların hepsinde aynıydı
+                  (canlı: 16/16) ve SAT cümlesi her SAT kartında (10/10); ikisi
+                  karttan kalktı (`TechnicalCard` → künye, `TechnicalPlan.module.css`
+                  → SAT cümlesi). Eski yayından kalan kart kendi adını yine
+                  taşıyor. SAT cümlesi yalnız SAT kartı varken. Telefonda
+                  (< 640) satır yok: yayın şeridi hemen üstte (gerekçe ve
+                  ölçüm `TechnicalDirectory.module.css` → `.boardStamp`). */}
+              <p className={styles.boardStamp}>
+                <span>
+                  {t.technical.latestEdition}:{" "}
+                  <b className="numeral">{slotLabel(latest.slot, t)}{"\u00A0· "}{editionTime(latest.sessionDate, latest.slot, locale)}</b>
+                </span>
+                {counts.sell > 0 && <span className={styles.boardNote}>{t.technical.openPlan.whySell}</span>}
+              </p>
             </div>
             <div className={styles.filterBar} data-sticky-bar>
               {/* EŞİT BÖLMELİ, KAYAN BAŞPARMAKLI. Dört kelime gri bir izin

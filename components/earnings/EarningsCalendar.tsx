@@ -94,7 +94,7 @@ export function timingOf(
  * piyasa değeri öne çıkar — kartın en büyük yerinde bir "—" ya da hiçbir şey
  * görmek bilgi taşımıyordu. Sıranın gerekçesi aşağıda.
  */
-type Figure = { label: string; value: string };
+type Figure = { label: string; value: string; empty?: boolean };
 
 function cardFigures(
   row: EarningsRow,
@@ -180,10 +180,25 @@ function cardFigures(
      Künye yalnızca manşet ya da ikincil listede ZATEN yoksa basılıyor:
      beklentisi olmayan kartlarda piyasa değeri manşete çıkıyor ve aynı sayı
      iki kez yazılmamalı. */
-  const rest = short ? tumu.slice(0, 1) : tumu;
-  const capNote =
-    short && cap && headline !== cap && !rest.includes(cap) ? cap : null;
-  return { headline, rest, capNote };
+  /* MİNİ KARTTA MANŞET YUVASI SABİT: GELİR (28 Kasım, Tur 4; tasarım
+     denetimi #9). Yukarıdaki sıra (gelir → EPS → piyasa değeri) yan yana
+     duran kartlarda aynı büyük puntoyu bir kartta "Gelir 439 Mn $", yanında
+     "PD 1,80 Mr $" yaptırıyordu (canlı, 30 Kasım: RBRK · USA · NNE · GORO):
+     göz geliri piyasa değeriyle kıyaslıyordu. Mini kartlar bir satırda
+     karşılaştırılmak için dizildiğinden yuva her kartta aynı ölçü: gelir
+     beklentisi. Yoksa yuvada "–" (`text-muted`, ortak boş değer) ve altında
+     EPS satırı ya da "Beklenti Yok"; piyasa değeri HER kartta dipteki
+     künyede, şeridin hemen üstünde. Satır sayısı yine her kartta üç.
+     Baş kartlar (`short: false`) geniş ve ölçüleri adlı sütunlarda, sıra
+     orada eski hâliyle. */
+  if (short) {
+    return {
+      headline: shownRevenue ?? { label: t.earnings.revenueShort, value: "–", empty: true },
+      rest: eps ? [eps] : [],
+      capNote: cap,
+    };
+  }
+  return { headline, rest: tumu, capNote: null };
 }
 
 type CalendarProps = {
@@ -253,6 +268,15 @@ export function EarningsCalendar({
     return [...heroes, ...mid].map((row) => row.symbol);
   });
 
+  /* Şeridin anlamı sayfada BİR KEZ, ilk mini kartlı günün altında (Tur 4;
+     künye kartlarda ya da her günde tekrarlanmaz — arayuz.md "Yoğunluk ve
+     tekrar"). */
+  const legendDate = [...byDay.entries()].find(([, dayRows]) => {
+      const { heroes, mid } = dayTiers(dayRows, meta);
+      /* DaySection'ın satır düzeni eşiğiyle aynı: az şirketli günde ızgara yok. */
+      return mid.length > 0 && heroes.length + mid.length > ROW_MODE_MAX;
+    })?.[0] ?? null;
+
   return (
     <>
       <Suspense fallback={null}>
@@ -271,6 +295,7 @@ export function EarningsCalendar({
           t={t}
           vote={vote}
           holidays={holidays}
+          legend={date === legendDate}
         />
       ))}
     </>
@@ -343,7 +368,10 @@ function DaySection({
   t,
   vote,
   holidays,
+  legend = false,
 }: {
+  /** Kart dibindeki şeridin anlamı bu günün altında yazılır (sayfada bir kez). */
+  legend?: boolean;
   date: string;
   today: string;
   rows: EarningsRow[];
@@ -843,7 +871,7 @@ function DaySection({
                       <p className="plate text-nano">
                         {headline.label}
                       </p>
-                      <p className="figure mt-[3px] truncate text-lead font-bold leading-none tracking-[-0.03em] text-strong">
+                      <p className={cn("figure mt-[3px] truncate text-lead font-bold leading-none tracking-[-0.03em]", headline.empty ? "text-muted" : "text-strong")}>
                         {headline.value}
                       </p>
                     </>
@@ -901,11 +929,17 @@ function DaySection({
                       sessiz satır söylüyor. Kart yüksekliği alt ızgaradan
                       geldiği için komşularıyla aynı; fark kartın dibinde
                       bir satırlık pay. */}
-                  {!capNote && rest.length === 0 && headline && (
+                  {/* Tur 4: yuva sabit (`cardFigures`); gelir de EPS de yoksa
+                      "–" yuvasının altında neden yazılı, PD künyeden önce. */}
+                  {headline?.empty && rest.length === 0 && (
                     <p className={styles.noEstimate}>{t.earnings.noEstimate}</p>
                   )}
+                  {/* `data-draw` (28 Kasım, Tur 4): şeritler ekranın altında
+                      oynayıp bitiyordu (Tur 3 ölçümü: 24 `bar-fill` ekran
+                      dışında `finished`). Anlamı sayfada bir kez yazılı
+                      (`capLegend`, ilk kartlı günün altında). */}
                   {capRatio !== null && (
-                    <span aria-hidden className={styles.capLane}>
+                    <span aria-hidden data-draw className={styles.capLane}>
                       <span className="bar-fill" style={{ width: `${Math.max(3, capRatio * 100)}%` }} />
                     </span>
                   )}
@@ -943,6 +977,7 @@ function DaySection({
           {also}
         </div>
       )}
+      {legend && mid.length > 0 && <p className={styles.capLegend}>{t.calendarVisuals.dayList.capLegend}</p>}
 
       {/* ---- Katman 3: kalanlar ----
            Çipler artık sunucuda ÇİZİLMİYOR, veri olarak geçiyor: kapalı bir

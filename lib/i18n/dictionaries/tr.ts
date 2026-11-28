@@ -965,6 +965,10 @@ const tr = {
     changedToHold: "Tuta Döndü",
     changedToSell: "Sata Döndü",
     stanceLabel: "Teknik Görünüm",
+    /* Şirket sayfasındaki teknik kartta görüşün kaynağı ve ufku (28 Kasım
+       2026, Görsel Tur 4): aynı ekranda Claude, analist ve teknik görüş yan
+       yana; hangisinin ne olduğu hapın yanında yazıyor. */
+    stockCardSource: "Günlük Teknik Görünüm",
     readAnalysis: "Analizi Oku",
     shareTitle: "Bu Analizi Paylaş",
     /* "Şu An" DEĞİL: kotasyon Alpaca'nın 15 dakika gecikmeli SIP akışı ve aynı

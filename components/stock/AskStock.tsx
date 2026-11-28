@@ -374,7 +374,13 @@ export function AskStock({
             )}
           </div>
           <div className={styles.signIn}>
-            <ButtonLink href={signInHref(symbol)} variant="primary" rel="nofollow">
+            {/* İKİNCİL (28 Kasım 2026, Görsel Tur 4). Şirket sayfasında üç
+                dolgulu mavi buton vardı (Claude kartı, bu buton, Şirket
+                Analizi bandı); ekranda tek birincil kalır: teknik kartın
+                dibindeki Claude butonu (sahibinin 11 Ekim isteğiyle düz
+                mavi, `ClaudeAction`). Giriş yine bir tık: soru kartlarının
+                her biri de giriş sayfasına gidiyor. */}
+            <ButtonLink href={signInHref(symbol)} variant="ghost" rel="nofollow">
               {labels.signIn}
             </ButtonLink>
             <span className={styles.memberQuota}>{labels.memberQuota.replace("{limit}", String(limit))}</span>

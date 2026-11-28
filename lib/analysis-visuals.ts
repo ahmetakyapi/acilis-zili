@@ -99,54 +99,6 @@ export function expectationReading(
 }
 
 /* ---------------------------------------------------------------------------
-   Tepedeki tek cümle
-
-   Şablon + veri. Yalnızca kayıtta olan üç yapısal alan: yıllık gelir
-   büyümesi, HBK sürprizi, ilk tepki. Hiçbiri yoksa cümle yok.
-   --------------------------------------------------------------------------- */
-
-export type LedeTemplates = {
-  revenueUp: string;
-  revenueDown: string;
-  epsBeat: string;
-  epsMiss: string;
-  epsInline: string;
-  reactionUp: string;
-  reactionDown: string;
-  reactionFlat: string;
-};
-
-export function reportLede(
-  figures: { revenueYoyPct: number | null; epsSurprisePct: number | null; reactionPct: number | null },
-  templates: LedeTemplates,
-  formatPct: (value: number) => string,
-  locale: string,
-): string | null {
-  const fill = (template: string, value: number) => template.replace("{pct}", formatPct(Math.abs(value)));
-  const facts: string[] = [];
-  const { revenueYoyPct: rev, epsSurprisePct: eps, reactionPct: react } = figures;
-  if (rev !== null && Number.isFinite(rev)) facts.push(fill(rev >= 0 ? templates.revenueUp : templates.revenueDown, rev));
-  if (eps !== null && Number.isFinite(eps)) {
-    facts.push(
-      Math.abs(eps) < INLINE_PCT
-        ? templates.epsInline
-        : fill(eps > 0 ? templates.epsBeat : templates.epsMiss, eps),
-    );
-  }
-  const reaction =
-    react !== null && Number.isFinite(react)
-      ? Math.abs(react) < INLINE_PCT
-        ? templates.reactionFlat
-        : fill(react > 0 ? templates.reactionUp : templates.reactionDown, react)
-      : null;
-  if (facts.length === 0 && reaction === null) return null;
-  const head = facts.join(", ");
-  const sentence = head && reaction ? `${head}; ${reaction}` : head || (reaction as string);
-  /* Yalnız ilk harf büyür; `capitalize` değil, dile göre (i → İ). */
-  return `${sentence.charAt(0).toLocaleUpperCase(locale === "tr" ? "tr-TR" : "en-US")}${sentence.slice(1)}.`;
-}
-
-/* ---------------------------------------------------------------------------
    Madde başlığı
 
    Güçlü yön / risk maddeleri tek cümle. Rutin bir kısmını "baş; açıklama"

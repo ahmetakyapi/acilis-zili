@@ -156,3 +156,15 @@
    1240, WMT (data-compact) 1131 / 1202 (önce 1036 / 1202); 1280 aynı
    farklar. Halka yayları `getAnimations()`: 4 (dört çeyrek), `reduce`
    altında çalışan 0. 390 ve 360: taşma 0, < 12 metin 0, < 44 hedef 0. */
+
+/* KOLON DİBİ (28 Kasım, Tur 4; ölçüm raporu: Dell 1440'ta özet ↔ satırlar
+   son çocuk farkı 25–42 piksel, Tur 3 ölçümünde HD 43 / NVDA 43). Fark hep
+   aynı yönde: dört çeyrek satırı özetten uzun. Boşluk esnetilmez, doldurulur
+   (arayuz.md): özetin tek çizimi, halka, geniş ekranda 96 → 124 piksel
+   (+28). Sayılar ölçüm tablosunda, dosyanın sonunda (Tur 4). */
+@media (min-width: 1100px) {
+  .ledger:not([data-compact]) .ring { width: 124px; height: 124px; }
+  .ledger:not([data-compact]) .ringTrack, .ledger:not([data-compact]) .ringArc { stroke-width: 4.85; }
+  .ledger:not([data-compact]) .ringValue { font-size: 36px; }
+  .ledger:not([data-compact]) .ringValue > span { font-size: 18px; }
+}

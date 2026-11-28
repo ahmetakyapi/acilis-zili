@@ -13,7 +13,7 @@ export const stockEntryTr = {
   claudeOpen: "Aç",
   claudeCreate: "Claude ile Analiz",
   /** Ekran okuyucu adı: görünür yazıyı bölmeden içerir (WCAG 2.5.3). */
-  claudeReportLabel: "Claude Raporu: {verdict}, Aç",
+  claudeReportLabel: "Claude Raporu, {horizon}: {verdict}, Aç",
   ask: "Bu Hisseye Sor",
   flagsMore: "{n} Bayrak Daha",
   flagsLess: "Daha Az Göster",
@@ -24,7 +24,7 @@ export const stockEntryEn: typeof stockEntryTr = {
   claudeShort: "Claude",
   claudeOpen: "Open",
   claudeCreate: "Analyze with Claude",
-  claudeReportLabel: "Claude Report: {verdict}, Open",
+  claudeReportLabel: "Claude Report, {horizon}: {verdict}, Open",
   ask: "Ask About This Stock",
   flagsMore: "{n} More Flags",
   flagsLess: "Show Less",

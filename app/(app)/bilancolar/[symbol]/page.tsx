@@ -29,12 +29,15 @@ import { analysisHref, verdictLabel, verdictOf } from "@/lib/analysis";
 import { companySector } from "@/lib/company-sector";
 import {
   getAnalyses,
+  getAnalysis,
   getEarningsForSymbol,
   getHolidays,
   getStatus,
   getSymbolNames,
   isKnownSymbol,
 } from "@/lib/data";
+import { analysisForQuarter, reconcileEps } from "@/lib/earnings-consensus";
+import { estimateIsPast } from "@/lib/earnings-report";
 import { companyCopy, companyWhen, dayMonth, earningsHref, lockLabel } from "@/lib/earnings-company";
 import { storyGuaranteed } from "@/lib/earnings-story";
 import {
@@ -233,14 +236,34 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
      uçtan (`getEarningsSurprises`, altı saat önbellekli; iki sayfa tek
      tur). Sağlayıcı düşerse karne basılmaz, panel yine çizilir. */
   const daysLeft = data.next ? daysBetweenEt(data.today, data.next.reportDate) : null;
-  const [board, record, surprises, moves] = await Promise.all([
+  /* TAKVİMDE TARİH YOKSA ANALİZİN TAHMİNİ (28 Kasım, Tur 4; denetim #5).
+     Dell sayfası "Takvimde henüz tarih yok" derken 3Ç analizinin künyesi
+     "Sonraki Bilanço: 4Ç FY27 · ~Şubat 2027" diyordu: sitenin bildiği
+     cevap sayfanın ana sorusuna gelmiyordu. En yeni analizin serbest metin
+     tahmini (`nextReportEstimate`, "~Şubat 2027") yalnız şu durumda
+     okunur: takvimde sıradaki tarih yok, analiz son raporun analizi (daha
+     eski bir çeyreğin tahmini sıradakini anlatmaz) ve tahmin geride
+     kalmamış (`estimateIsPast`, analiz sayfasının aynı kuralı). Metin
+     `~` taşıdığı gibi yazılır, "Tahmini · Şirket Henüz Duyurmadı" künyesiyle;
+     uydurma gün yok. Takvime ekleme butonu basılmaz (gün yok). */
+  const latestIndex = data.analyses[0] ?? null;
+  const readEstimate =
+    !data.next &&
+    latestIndex !== null &&
+    (data.previous === null || latestIndex.reportDate >= addEtDays(data.previous.reportDate, -3));
+  const [board, record, surprises, moves, latestRecord] = await Promise.all([
     voteTargets.length > 0
       ? getVoteBoard(userId, voteTargets[0].reportDate, voteTargets.at(-1)!.reportDate, [symbol])
       : Promise.resolve(null),
     userId ? getVoteAccuracy(userId, Number(data.today.slice(0, 4))) : Promise.resolve(null),
     getEarningsSurprises(symbol).catch(() => null),
     loadMoves(symbol, data.next, daysLeft, data.today),
+    readEstimate && latestIndex ? getAnalysis(symbol, latestIndex.period, locale) : Promise.resolve(null),
   ]);
+  const nextEstimate =
+    latestRecord?.nextReportEstimate && !estimateIsPast(latestRecord.nextReportEstimate, data.today)
+      ? { text: latestRecord.nextReportEstimate.trim(), period: latestRecord.nextPeriodLabel?.trim() || null }
+      : null;
   /* `beatQuarters`: son çeyreğin gerçekleşen EPS'i (aşağıda, beklentinin
      yanındaki şerit) oyun sonucuyla aynı eşikten. 14 Kasım'a dek karne
      hücreleri de bu diziden kuruluyordu (`BeatRecordCard`, kalktı); karne
@@ -260,7 +283,20 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
         data.today,
       )
     : [];
-  const ledgerRows = pastQuarters.filter((row) => row.epsActual !== null && row.epsEstimate !== null);
+  /* BEKLENTİNİN TEK KAYNAĞI (28 Kasım, Tur 4; gerekçe
+     `lib/earnings-consensus.ts`). Analizi yayımlanmış çeyrekte EPS çifti
+     analiz kaydından: Dell 3Ç FY2027 bu sayfada "+%40,1" (Finnhub, beklenti
+     6,75 $), aynı sayfanın analiz satırında ve analiz sayfasında "%44,1"
+     (kayıt, 6,56 $) yazıyordu. Analizi olmayan çeyrek sağlayıcıda kalır;
+     defterin künyesi hangi çeyreğin nereden geldiğini söyler. Hisse
+     sayfasının Geçmiş Bilançolar tablosu aynı uzlaştırmadan geçiyor
+     (`PastEarnings.tsx`). */
+  const reconciled = pastQuarters.map((quarter) => {
+    const pair = reconcileEps(quarter, analysisForQuarter(data.analyses, quarter));
+    return { ...quarter, epsActual: pair.epsActual, epsEstimate: pair.epsEstimate, source: pair.source };
+  });
+  const anyFromAnalysis = reconciled.some((quarter) => quarter.source === "analysis");
+  const ledgerRows = reconciled.filter((row) => row.epsActual !== null && row.epsEstimate !== null);
   const reactions = new Map<string, number>();
   for (const move of moves?.history ?? []) {
     if (move.movePct !== null) reactions.set(move.date, move.movePct);
@@ -316,11 +352,16 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
       : data.next && daysLeft !== null
         ? "next"
         : "none";
-  const lastOutcome = data.previous ? voteOutcome(data.previous.epsActual, data.previous.epsEstimate) : null;
+  /* Kahramanın EPS çifti defterle AYNI uzlaştırmadan (yukarıda): rapor
+     gününün analizi varsa kayıttan. */
+  const lastPair = data.previous
+    ? reconcileEps(data.previous, analysisForQuarter(data.analyses, { reportDate: data.previous.reportDate }))
+    : null;
+  const lastOutcome = lastPair ? voteOutcome(lastPair.epsActual, lastPair.epsEstimate) : null;
   const lastTiming = data.previous ? timingOf(data.previous.hour?.trim() || null, t) : null;
   /* Kahramanın büyük sayısı (gerekçe `LastReport.tsx`): defterin satırlarıyla
      aynı hesap ve aynı biçim (`epsSurprise` / `formatEpsSurprise`). */
-  const lastSurpriseRaw = data.previous ? epsSurprise(data.previous.epsEstimate, data.previous.epsActual) : null;
+  const lastSurpriseRaw = lastPair ? epsSurprise(lastPair.epsEstimate, lastPair.epsActual) : null;
   const lastSurprise = lastSurpriseRaw
     ? { text: formatEpsSurprise(lastSurpriseRaw, locale, currency), tone: lastSurpriseRaw.direction }
     : null;
@@ -364,7 +405,7 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
            kahramanı başlık değil, altındaki sonuç sayısı. */
         title={heading}
         className={css.masthead}
-        subtitle={copy.answer}
+        subtitle={nextEstimate ? t.calendarVisuals.companyPage.answerEstimated.replace("{when}", nextEstimate.text) : copy.answer}
         share={<PageShare compactOnMobile align="right" path={href} title={copy.title} locale={locale} t={t} />}
         /* KÜNYE ŞERİDİ BAŞLIK KARTININ İÇİNDE (31 Ekim). Kartın altında,
            sayfa zemininde ayrı bir satırdı; kartlarla hizasız duruyor ve
@@ -462,14 +503,21 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
               timing={lastTiming}
               outcome={lastOutcome}
               eps={
-                data.previous.epsActual !== null
+                lastPair && lastPair.epsActual !== null
                   ? {
-                      actual: { text: formatPrice(data.previous.epsActual, locale, { currency }), value: data.previous.epsActual },
+                      actual: { text: formatPrice(lastPair.epsActual, locale, { currency }), value: lastPair.epsActual },
                       estimate:
-                        data.previous.epsEstimate !== null
-                          ? { text: formatPrice(data.previous.epsEstimate, locale, { currency }), value: data.previous.epsEstimate }
+                        lastPair.epsEstimate !== null
+                          ? { text: formatPrice(lastPair.epsEstimate, locale, { currency }), value: lastPair.epsEstimate }
                           : null,
                     }
+                  : null
+              }
+              estimateSource={
+                lastPair && lastPair.epsEstimate !== null
+                  ? lastPair.source === "analysis"
+                    ? p.estimateSourceAnalysis
+                    : p.estimateSourceProvider
                   : null
               }
               revenue={
@@ -523,8 +571,7 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
                   .replace("{name}", data.name)
                   .replace("{symbol}", symbol)
                   .replace("{date}", formatEtDateLong(data.previous.reportDate, locale))
-                  .replace("{actual}", formatPrice(data.previous.epsActual, locale, { currency }))
-                  .replace("{estimate}", formatPrice(data.previous.epsEstimate, locale, { currency }))}
+}
               </p>
             </LastReport>
           )}
@@ -566,6 +613,20 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
               />
             </div>
           )}
+          {!data.next && nextEstimate && (
+            <div className={css.heroFoot}>
+              <p className={css.heroNext}>
+                <span>{p.lastNext}</span>
+                <b className="figure">
+                  {nextEstimate.period ? `${nextEstimate.period} · ` : ""}
+                  {nextEstimate.text}
+                </b>
+                <span className={css.heroNextTag}>
+                  {p.lastNextEstimated} · {p.nextUnannounced}
+                </span>
+              </p>
+            </div>
+          )}
         </div>
       </Panel>
 
@@ -574,7 +635,7 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
         <Panel>
           <PanelHeader title={p.ledgerTitle} meta={p.ledgerMeta.replace("{n}", String(Math.min(ledgerRows.length, 8)))} />
           <QuarterLedger
-            quarters={pastQuarters}
+            quarters={reconciled}
             reactions={reactions}
             move={
               moves && (moves.implied !== null || moves.average)
@@ -593,7 +654,7 @@ export default async function CompanyEarningsPage(props: PageProps<"/bilancolar/
               estimate: p.ledgerEstimate,
               actual: p.ledgerActual,
               reactionShort: p.ledgerReactionShort,
-              note: p.ledgerNote,
+              note: anyFromAnalysis ? `${p.ledgerNote} ${p.ledgerNoteAnalysis}` : p.ledgerNote,
               aria: p.ledgerAria,
               moveTitle: p.moveTitle,
               moveImplied: p.moveImplied,

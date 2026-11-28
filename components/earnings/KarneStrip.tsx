@@ -42,7 +42,7 @@ export function KarneStrip({
   className?: string;
 }) {
   return (
-    <span aria-hidden className={cn(styles.strip, className)} data-size={size} data-pending={pending || undefined}>
+    <span aria-hidden data-draw={size === "key" ? undefined : true} className={cn(styles.strip, className)} data-size={size} data-pending={pending || undefined}>
       {marks.map((mark, index) => (
         <i key={index} data-mark={mark} />
       ))}

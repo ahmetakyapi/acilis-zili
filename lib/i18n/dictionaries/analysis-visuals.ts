@@ -4,22 +4,11 @@
  * kaynak kartları ve analiz listesinin kart görünümü. Ayrı dosyada:
  * birleştirmede iki büyük sözlükte çakışma alanı küçük kalsın.
  *
- * Başlıklar Title Case; cümle parçaları cümle düzeninde. Tepe cümlesinin
- * parçaları `lib/analysis-visuals.ts` → `reportLede` ile birleşiyor:
- * "{gelir}, {hbk}; {tepki}." — yalnız kayıtta olan parçalar.
+ * Başlıklar Title Case. Tepe cümlesi (`reportLede`) 28 Kasım 2026'da
+ * kalktı: aynı üç sayı kapakta hemen altında duruyordu (dönem sayfası).
  */
 
 export const analysisVisualsTr = {
-  lede: {
-    revenueUp: "gelir yıllık {pct} büyüdü",
-    revenueDown: "gelir yıllık {pct} geriledi",
-    epsBeat: "hisse başı kâr beklentiyi {pct} aştı",
-    epsMiss: "hisse başı kâr beklentinin {pct} altında kaldı",
-    epsInline: "hisse başı kâr beklentiyle aynı geldi",
-    reactionUp: "hisse ilk tepkide {pct} yükseldi",
-    reactionDown: "hisse ilk tepkide {pct} düştü",
-    reactionFlat: "hisse ilk tepkide yerinde kaldı",
-  },
   expected: "Beklenti",
   actual: "Gerçekleşen",
   balanceTitle: "Güçlü Yönler ve Riskler",
@@ -45,16 +34,6 @@ export const analysisVisualsTr = {
 };
 
 export const analysisVisualsEn: typeof analysisVisualsTr = {
-  lede: {
-    revenueUp: "revenue grew {pct} year over year",
-    revenueDown: "revenue fell {pct} year over year",
-    epsBeat: "EPS beat the estimate by {pct}",
-    epsMiss: "EPS missed the estimate by {pct}",
-    epsInline: "EPS matched the estimate",
-    reactionUp: "the stock rose {pct} in its first reaction",
-    reactionDown: "the stock fell {pct} in its first reaction",
-    reactionFlat: "the stock was flat in its first reaction",
-  },
   expected: "Estimate",
   actual: "Actual",
   balanceTitle: "Strengths and Risks",

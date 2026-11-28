@@ -3,6 +3,7 @@ import page from "../stock.module.css";
 import { getEarningsForSymbol, type AnalysisIndexRow } from "@/lib/data";
 import { fiscalLabel, fiscalOf } from "@/lib/fiscal";
 import { EpsTrack } from "@/components/stock/EpsTrack";
+import { analysisForQuarter, reconcileEps } from "@/lib/earnings-consensus";
 import { buildPastQuarters, epsSurprise, formatEpsSurprise, type EpsSurprise, type PastQuarter } from "@/components/stock/past-quarters";
 import { type Dictionary, type Locale } from "@/lib/i18n";
 import { getEarningsSurprises } from "@/lib/providers/finnhub";
@@ -59,7 +60,14 @@ export async function PastEarnings({
 
   let rows: PastQuarter[];
   if (surprises.ok) {
-    rows = buildPastQuarters(surprises.data, calRows, analyses, locale, today);
+    /* BEKLENTİNİN TEK KAYNAĞI (28 Kasım, Tur 4; gerekçe
+       `lib/earnings-consensus.ts`): analizi yayımlanmış çeyrekte EPS çifti
+       analiz kaydından, bilanço sayfasının defteriyle aynı. Yoksa Dell 3Ç
+       burada +%40,1 (sağlayıcı), bilanço sayfasında %44,1 yazıyordu. */
+    rows = buildPastQuarters(surprises.data, calRows, analyses, locale, today).map((quarter) => {
+      const pair = reconcileEps(quarter, analysisForQuarter(analyses, quarter));
+      return { ...quarter, epsActual: pair.epsActual, epsEstimate: pair.epsEstimate };
+    });
   } else {
     // Surprises yoksa takvimden devam: satır zaten açıklama gününe bağlı.
     rows = calRows

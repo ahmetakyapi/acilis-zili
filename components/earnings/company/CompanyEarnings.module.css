@@ -22,7 +22,7 @@
    altında iki sütun; düğme kimlik satırının sağında kalır. */
 .identityFacts { display:flex; flex-wrap:wrap; align-items:stretch; gap:10px 0; margin:0; min-width:0; }
 .identityFacts > div { display:flex; flex-direction:column; justify-content:center; gap:3px; min-width:0; padding-inline:24px; border-left:1px solid var(--line-soft); }
-.identityFacts dt { font-size:12px; font-weight:500; line-height:1.2; color:var(--text-muted); white-space:nowrap; }
+.identityFacts dt { font-size:12px; font-weight:400; line-height:1.2; color:var(--text-muted); white-space:nowrap; }
 .identityFacts dd { display:flex; align-items:center; gap:8px; margin:0; font-size:13.5px; font-weight:700; line-height:1.25; letter-spacing:-.01em; color:var(--text-strong); white-space:nowrap; }
 .identityRead { display:inline-flex; align-items:center; gap:8px; border-radius:6px; transition:color .2s var(--ease-brand); }
 .identityRead:focus-visible { outline:2px solid var(--line-focus); outline-offset:3px; }
@@ -47,7 +47,7 @@
    dolu mavi şerit; tahmini tarih kesik kenar ve soluk şerit. */
 .leaf { display:flex; flex-direction:column; width:132px; overflow:hidden; border:1px solid var(--line); border-radius:var(--radius-lg); background:var(--surface-solid); text-align:center; line-height:1; }
 .leafBand { padding:7px 6px 6px; background:var(--primary); font-size:12px; font-weight:700; letter-spacing:.03em; color:var(--on-primary); }
-.leafDay { display:block; padding:12px 0 4px; font-size:60px; font-weight:800; letter-spacing:-.04em; color:var(--text-strong); }
+.leafDay { display:block; padding:12px 0 4px; font-size:60px; font-weight:700; letter-spacing:-.04em; color:var(--text-strong); }
 .leafWeekday { padding:0 6px 12px; font-size:12.5px; font-weight:600; color:var(--text-muted); }
 .leaf[data-estimated] { border-style:dashed; border-color:var(--line-strong); }
 .leaf[data-estimated] .leafBand { background:var(--primary-wash); color:var(--primary-ink); }
@@ -58,7 +58,7 @@
 .countLabel { font-size:12px; font-weight:600; color:var(--text-muted); }
 /* KALAN GÜN KAHRAMAN: 44 → 64 piksel (telefonda 32 → 40). Panelin sorusu
    "ne zaman"; cevabın en kısa hâli bu sayı. */
-.countValue { font-size:64px; font-weight:800; letter-spacing:-.045em; line-height:1; color:var(--text-strong); }
+.countValue { font-size:64px; font-weight:700; letter-spacing:-.045em; line-height:1; color:var(--text-strong); }
 .windowRow { display:flex; flex-wrap:wrap; align-items:center; gap:6px 10px; margin-top:8px; }
 
 /* ÇEYREK ÇİZGİSİ — kulvar `--line-soft`, geçen yol 5 piksel `--primary`
@@ -102,7 +102,7 @@
 .cycleEnds { display:flex; justify-content:space-between; gap:12px; font-size:12.5px; font-weight:600; color:var(--text-strong); }
 .cycleEnds > span { display:flex; flex-direction:column; gap:2px; }
 .cycleEnds > span:last-child { text-align:right; }
-.cycleEndLabel { font-size:12px; font-weight:500; color:var(--text-muted); }
+.cycleEndLabel { font-size:12px; font-weight:400; color:var(--text-muted); }
 
 /* BEKLENTİ IZGARASI — iki ölçü aynı hatta biter (CLAUDE.md "Ölçü
    ızgarası"); ton farkıyla ayrılmış hücre, kenarlık yok. Altında
@@ -111,7 +111,7 @@
 .expectCell { display:grid; grid-template-rows:subgrid; grid-row:span 3; row-gap:6px; padding:14px 0 0; border-top:1px solid var(--line-soft); }
 .expectCell dt { display:flex; flex-wrap:wrap; align-items:baseline; justify-content:space-between; gap:2px 12px; font-size:12px; font-weight:600; color:var(--text-muted); }
 /* Beklentinin son çeyreğe göre farkı: yön renkte VE glifte (▲ ▼). */
-.expectChange { display:inline-flex; align-items:baseline; gap:6px; font-weight:500; white-space:nowrap; }
+.expectChange { display:inline-flex; align-items:baseline; gap:6px; font-weight:400; white-space:nowrap; }
 .expectChange b { font-weight:700; color:var(--text-body); }
 .expectChange[data-dir="up"] b { color:var(--up); }
 .expectChange[data-dir="down"] b { color:var(--down); }
@@ -307,6 +307,8 @@
 .outcomePill[data-outcome="beat"] { background:color-mix(in srgb, var(--up) 12%, transparent); color:var(--up); }
 .outcomePill[data-outcome="miss"] { background:color-mix(in srgb, var(--down) 12%, transparent); color:var(--down); }
 .reactionNote { font-size:13px; color:var(--text-muted); white-space:nowrap; }
+/* Beklentinin kaynak künyesi (28 Kasım, Tur 4; gerekçe `LastReport.tsx`). */
+.estimateSource { margin-top:6px; font-size:12px; line-height:1.4; color:var(--text-muted); }
 .reactionNote b { font-weight:700; color:var(--text-body); }
 .reactionNote b[data-tone="up"] { color:var(--up); }
 .reactionNote b[data-tone="down"] { color:var(--down); }

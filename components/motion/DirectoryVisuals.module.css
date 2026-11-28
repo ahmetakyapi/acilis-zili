@@ -4,5 +4,5 @@
    dolgusu 16/20 — gövde aynı hatta başlıyor. */
 .visualHeader { display:flex; align-items:center; justify-content:space-between; gap:8px; color:var(--primary-ink); }
 /* 13 → 16 (9 Ekim): öteki panel başlıklarıyla aynı kademe ("Piyasanın Devleri" ile yan yana iki kapak aynı başlık ölçüsünde). */
-.visualHeader h2 { font-size:var(--text-lead); font-weight:650; letter-spacing:-.015em; }
+.visualHeader h2 { font-size:var(--text-lead); font-weight:700; letter-spacing:-.015em; }
 .visualHeader > svg { opacity:.7; flex-shrink:0; }

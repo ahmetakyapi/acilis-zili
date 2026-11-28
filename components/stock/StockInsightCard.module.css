@@ -209,6 +209,10 @@
 .figure { animation: si-rise .2s var(--ease-brand) both; }
 .loadingText { display: inline-flex; align-items: center; gap: 6px; }
 .loadingIcon { color: var(--brass); animation: si-glint 1.4s var(--ease-brand) infinite; }
+/* Bekleme ışıltısının kapısı — gerekçe StockInsightCard.tsx (28 Kasım 2026). */
+.loading[data-quiet] :global(.skeleton)::after, .loading[data-quiet] .loadingIcon { animation: none; }
+/* Hareket filminin döngüleri (MoveFilm) görüş alanına girene dek bekler. */
+.loading[data-quiet] *, .loading[data-quiet] *::before, .loading[data-quiet] *::after { animation-play-state: paused; }
 @media (prefers-reduced-motion: reduce) {
   .dayBar, .metricBar, .summary, .point, .disclosure, .figure, .move, .heroValue, .heroSub, .pathSvg, .dot, .marketDot, .loadingIcon { animation: none !important; }
 }

@@ -108,7 +108,10 @@ export function VerdictPill({
       <span className="text-center tracking-[0.03em]" style={{ minWidth: LABEL_SLOT[TR_LABELS.has(label) ? "tr" : "en"] }}>
         {label}
       </span>
-      {hasScore && <span className="figure min-w-[2ch] text-right font-semibold opacity-75">{score}</span>}
+      {/* Skor opaklıksız (28 Kasım, iki denetim): `opacity-75` açık temada
+          3,05–3,16:1, koyuda 3,83–4,45:1 basıyordu (AA altı). Etiketten
+          ayrım ağırlıkla (skor 400). */}
+      {hasScore && <span className="figure min-w-[2ch] text-right font-normal">{score}</span>}
     </span>
   );
 }

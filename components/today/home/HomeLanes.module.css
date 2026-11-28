@@ -55,7 +55,13 @@
      soluk ve ölçeğe girmez — bandın kararının aynısı (`RankBars` → `bar:
      false`; önce `--flat` renginde %60 opak çubuktu). Hepsi son kapanıştaysa
      çubuklar çizilir, dönemi dipnot söyler.
-   Ölçüm dosyanın sonunda, "ÖLÇÜM 2". */
+   Ölçüm dosyanın sonunda, "ÖLÇÜM 2".
+
+   28 KASIM (Görsel Tur 4): DÜNYA PİYASALARI BU DOSYADAN ÇIKTI — bayraklı
+   karolar (WorldTiles.module.css, gerekçe WorldStrip.tsx). Burada yalnız
+   Hareketler'in satırı kaldı; dünyaya özgü kurallar (bayrak karosu,
+   künye öbeği `.identMeta`, "Son Kapanış" künyesi `.laneNote`) silindi.
+   Aşağıdaki dünya ölçümleri tarihçedir. */
 
 .desk { container-type: inline-size; }
 
@@ -83,22 +89,6 @@
    bloğun ortasında yüzmüyor. */
 .laneCell { grid-column: 2 / -1; grid-row: 2; }
 
-/* BAYRAK KAROSU — logo karosu (`LogoTile md`, 32 px, rounded-md) boyunda.
-   Görselin etrafında çerçeve yok: karo zemini tonla (`surface-sunken`),
-   bayrak glifi içinde 20 punto. Glifi karoyu dolduracak kadar büyütüp
-   kırpmak denendi: platformların bayrak çizimleri farklı oranlı (Apple
-   dikdörtgen, Noto dalgalı), kırpma birinde boşluk bırakıyordu. */
-.flag {
-  display: grid;
-  place-items: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-md);
-  background: var(--surface-sunken);
-  font-size: 20px;
-  line-height: 1;
-}
-
 /* Kimlik satırı — ad, sembol, künye; sığmazsa künye ÖBEK olarak alta iner,
    kelime ortasından kesilmez.
    SATIR BAŞINDA AYIRICI YOK: 390'da Çin'in künyesi ("Şanghay, Hong Kong")
@@ -122,18 +112,6 @@
 .ident > .symbol { padding-left: 6px; }
 /* Ülke adı 15/600 (gece; önce 14/600). */
 .name { color: var(--text-strong); font-size: 15px; font-weight: 600; letter-spacing: -0.01em; }
-.identMeta {
-  position: relative;
-  padding-left: 12px;
-  white-space: nowrap;
-  color: var(--text-muted);
-  font-size: var(--text-tiny);
-}
-.identMeta::before {
-  content: "·";
-  position: absolute;
-  left: 4px;
-}
 
 /* Hareketler: sembol + ad tek satırda, ad kesilebilir (tam adı satırın
    `aria-label`ında) — şirket adları 40 harfi bulabiliyor. Sembol 15/700,
@@ -220,9 +198,6 @@
    zemininde: çubuğun içinde bir boşluk. */
 .bar[data-over]::after { content: ""; position: absolute; top: 0; bottom: 0; right: 4px; width: 2px; background: var(--premium-surface); }
 .bar[data-over][data-dir="down"]::after { right: auto; left: 4px; }
-/* Çubuksuz satırın künyesi ("Son Kapanış"): kulvarın yerinde, aynı boyda
-   bir kat (satır boyu öteki satırlarla aynı kalır). */
-.laneNote { display: block; color: var(--text-muted); font-size: 12px; font-weight: 600; line-height: 10px; white-space: nowrap; }
 
 /* ---- Eksen ---- */
 .axisRow { grid-template-rows: auto; }
@@ -271,7 +246,6 @@
   .value { grid-column: 4; align-self: center; }
   .axis { grid-column: 3; }
   .groupLabel { grid-column: 2 / 4; }
-  .laneNote { line-height: 16px; }
 }
 
 /* ÖLÇÜM 2 — 10 Kasım 2026 gece (gerçek sayfa + sahte sağlayıcı, TR ve EN,

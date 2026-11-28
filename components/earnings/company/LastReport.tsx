@@ -39,12 +39,17 @@ export function LastReport({
   revenue,
   reactionPct,
   surprise,
+  estimateSource,
   next,
   today,
   locale,
   labels,
   children,
 }: {
+  /** Beklentinin kaynağı ("Beklenti: Analiz Anındaki Konsensüs"); büyük
+      sayının altında künye (28 Kasım, Tur 4; gerekçe
+      `lib/earnings-consensus.ts`). Beklenti yoksa null. */
+  estimateSource?: string | null;
   /** Sıradaki rapor biliniyorsa çeyrek çizgisi çizilir (nokta başta). */
   next: { date: string; estimated: boolean } | null;
   today: string;
@@ -142,6 +147,10 @@ export function LastReport({
                 </span>
               )}
             </div>
+            {/* KAYNAK KÜNYESİ: aynı çeyreğin sürprizi sitede iki ayrı
+                konsensüsle yazılabiliyordu (Dell 3Ç: %40,1 / %44,1). Sayı
+                artık tek kaynaktan; künye hangisi olduğunu söyler. */}
+            {surprise && estimateSource && <p className={css.estimateSource}>{estimateSource}</p>}
           </div>
         </div>
         {/* Sol sütun sağ sütunla aynı boyda dursun diye DEĞİL, bilgi olduğu

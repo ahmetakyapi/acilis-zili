@@ -271,6 +271,18 @@
  .directoryHeader > :last-child { display:flex; }
  .directoryHeader .pulse[data-variant="directory"] { flex:1; }
  .directoryHeader .pulse[data-variant="directory"] > .pulseChanges { align-self:end; }
+ /* DİPNOT KOLONUN DİBİNDE (28 Kasım 2026, Görsel Tur 4). İki kolonun son
+    çocukları arasında canlıda 44 (1440) ve 65 piksel (1024) fark vardı:
+    dağılım üç kümeyle kısa kalıyor, fark dipnotun altında boş bant olarak
+    duruyordu (denetim, `heroCopy` 514 ↔ `heroVisual` 469). Yukarıdaki
+    kaydın dersiyle aynı yerde: fark iki okunacak şeyin ARASINA değil,
+    kümeler ile dipnot arasına iniyor — dipnot kolonun künyesi, dipte
+    durması okumayı bölmüyor. Kap esnek sütun (ızgara `align-content:start`
+    fazlayı en alta yığıyordu); `.pulseChanges` yatayda yine tam genişlik. */
+ .directoryHeader .pulse[data-variant="directory"] { display:flex; flex-direction:column; }
+ .directoryHeader .pulse[data-variant="directory"] > .clusters { margin-bottom:-4px; }
+ .directoryHeader .pulse[data-variant="directory"] > .cellNote { margin-top:auto; }
+ .directoryHeader .pulse[data-variant="directory"] > .pulseChanges { align-self:stretch; }
 }
 
 
@@ -551,8 +563,15 @@
 
 .tallyCounts dd small { color:var(--text-muted); font-size:var(--text-small); font-weight:600; letter-spacing:0; }
 
-/* Boş görüş yerinde durur ama susar: "AL 0" okunur, satır ve cümle tutmaz. */
-.tallyCounts > [data-empty] :is(dt, dd) { color:var(--text-muted); opacity:.6; }
+/* Boş görüş yerinde durur ama susar: "AL 0" okunur, satır ve cümle tutmaz.
+   28 Kasım 2026 (Görsel Tur 4): opaklık kalktı. `text-muted` × .6 açıkta
+   2,49:1, koyuda 2,95:1 ölçülüyordu (denetim, 390; büyük metnin 3:1
+   eşiğinin de altı). Sakinliği artık renk ve ağırlık veriyor: etiket ve
+   sayı `text-muted`, sayı 600 (dolu görüşler 700); "0"ın kendisi zaten
+   boşu söylüyor. Ölçüm (390, sahte veri): açık 2,49 → 5,0+, koyu 2,95 → 5,7+. */
+.tallyCounts > [data-empty] :is(dt, dd) { color:var(--text-muted); }
+
+.tallyCounts > [data-empty] dd { font-weight:600; }
 
 .tallyCounts > [data-verdict="pending"] :is(dt, dd) { color:var(--text-muted); }
 
@@ -585,8 +604,16 @@
 
 .clusterCount small { color:var(--text-muted); font-size:var(--text-small); font-weight:600; }
 
-/* Boş görüş künyede, soluk; telefonda sayaç söylüyor. */
-.pulseEmptyStance { opacity:.75; }
+/* Boş görüş künyede; telefonda sayaç söylüyor. 28 Kasım 2026: opaklık
+   (.75) kalktı, künyenin kendi `text-muted` rengi yeterince sakin (açıkta
+   3,29:1 → 5,0+ ölçüldü). */
+.pulseEmptyStance { color:var(--text-muted); }
+
+/* "Görüş Dağılımı" başlığı ortak modülden 650 alıyordu
+   (`DirectoryVisuals.module.css` → `.visualHeader h2`; ortak dosya, ana
+   oturuma yama önerildi). Ortak ölçü panel h2 16/700: bu sayfada yerinde
+   düzeltiliyor (28 Kasım 2026). Özgüllük `.visualHeader h2`yi (0,1,1) geçer. */
+.pulse[data-variant] h2 { font-weight:700; }
 
 .cells { display:grid; grid-template-columns:repeat(var(--cols, 7), min(84px, calc((100% - (var(--cols-max, 7) - 1) * 2px) / var(--cols-max, 7)))); gap:2px; margin:0; padding:0; list-style:none; }
 
@@ -639,7 +666,14 @@
   .clusters { grid-template-columns:minmax(0,1fr); }
   .cluster { grid-template-columns:minmax(0,1fr); row-gap:4px; }
   .clusterHead { flex-direction:row; align-items:center; gap:10px; padding-top:0; justify-self:start; }
-  .clusterPending, .cellNote { display:none; }
+  /* 28 Kasım 2026 (Görsel Tur 4): bekleyenler satırı ve dipnot dar kapta
+     da basılıyor. Bu kap yalnız iki kolonlu tablet düzeninde (768–~900)
+     oluşuyor (telefonda kümeler ve dipnot zaten gizli, aşağıda); ikisi
+     gizliyken dağılım kolonu başlık kolonundan 89 piksel kısa kalıyor,
+     altı boş zemin oluyordu (768, sahte veri). Boşluk esnetilmez,
+     doldurulur: dipnot kolonun dibinde (yukarıda, `.cellNote` →
+     `margin-top:auto`). */
+  .clusterPending { flex-wrap:wrap; row-gap:4px; }
 }
 
 /* Telefonda yalnız sayaç ve şerit (gerekçe "TELEFONDA LOGO SATIRLARI YOK",

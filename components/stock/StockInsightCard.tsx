@@ -326,6 +326,22 @@ export function StockInsightCard({
     return () => observer.disconnect();
   }, [symbol, kind, state.status]);
 
+  /* BEKLEME IŞILTISI YALNIZ YÜKLENİRKEN VE GÖRÜNÜRKEN (28 Kasım 2026,
+     Görsel Tur 4; `WeekMoveCard` ile aynı kural ve gerekçe). Hafta sonu
+     şirket sayfasında bilanço notunun iskeleti ekranın 4.000 piksel
+     altında, istek atılmadan ("idle") 27 sonsuz animasyonla dönüyordu
+     (sahte veri, NVDA 1024/390). Artık iskelet duruk; ışıltı yalnız istek
+     uçuşta ve kart görüş alanındayken (`data-quiet` → CSS). 27 → 0. */
+  const [inView, setInView] = useState(false);
+  const waiting = state.status === "idle" || state.status === "loading";
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !waiting || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => setInView(entries.some((entry) => entry.isIntersecting)));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [waiting]);
+
   const title = kind === "move" ? labels.moveTitle : kind === "earnings" ? labels.earningsTitle : labels.previewTitle;
   const insight = state.insight;
   const text: InsightText | undefined = insight ? insight.text[locale] : undefined;
@@ -418,7 +434,7 @@ export function StockInsightCard({
           <p className={styles.disclosure}>{labels.disclosure}</p>
         </div>
       ) : (
-        <div className={styles.loading} data-kind={kind}>
+        <div className={styles.loading} data-kind={kind} data-quiet={state.status === "loading" && inView ? undefined : true}>
           {kind === "move" ? (
             <>
               {/* Film ekran okuyucudan gizli (gerekçe MoveFilm'de); yerine

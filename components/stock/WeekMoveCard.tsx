@@ -81,6 +81,24 @@ export function WeekMoveCard({
     status: noteEnabled ? "idle" : "failed",
   });
   const points = useRef<HTMLDetailsElement>(null);
+  /* BEKLEME IŞILTISI YALNIZ YÜKLENİRKEN VE GÖRÜNÜRKEN (28 Kasım 2026,
+     Görsel Tur 4). İskeletin yedi çizgisi ve kıvılcım (`skeleton`,
+     `wm-glint`) sonsuz döngü; kart ≤ 1024'te ilk ekranın altında ve not
+     istenmeden ("idle") de dönüyordu: ölçüm 8 sonsuz animasyon, 25 sn
+     sonra da sürüyor (denetim, 1024/768/390/360). Hareket kuralı "sonsuz
+     döngü yalnız yerleşik canlı imde" ve ekran dışında çizim yok
+     (`hareket.md`). Artık iskelet duruk bekliyor; ışıltı yalnız istek
+     uçuştayken ve kart görüş alanındayken (`data-quiet` → CSS). Ölçüm
+     sonrası: ilk ekranda kart yokken 8 → 0. */
+  const [inView, setInView] = useState(false);
+  const waiting = state.status === "idle" || state.status === "loading";
+  useEffect(() => {
+    const el = ref.current;
+    if (!el || !waiting || typeof IntersectionObserver === "undefined") return;
+    const observer = new IntersectionObserver((entries) => setInView(entries.some((entry) => entry.isIntersecting)));
+    observer.observe(el);
+    return () => observer.disconnect();
+  }, [waiting]);
   /* ETKENLER MASAÜSTÜNDE AÇIK GELİR (24 Kasım, sahibinin isteği: "sağdaki
      panel de iyileşsin, biraz uzayabilir duruma göre"). İki kolonlu
      panelde sağ kolon sohbetin yanında kısa kalıyor, özetin altı boş
@@ -257,7 +275,7 @@ export function WeekMoveCard({
         </div>
       )}
       {noteEnabled && (
-        <div className={styles.note} data-state={state.status} aria-live="polite">
+        <div className={styles.note} data-state={state.status} data-quiet={state.status === "loading" && inView ? undefined : true} aria-live="polite">
           {state.status === "done" && text ? (
             <>
               <p className={styles.summary}>{text.summary}</p>

@@ -43,6 +43,7 @@ import {
   ThemeSpotlightSkeleton,
 } from "@/components/today/home/MarketTexture";
 import textureStyles from "@/components/today/home/MarketTexture.module.css";
+import { SectorFill } from "@/components/today/home/SectorFill";
 
 import { pageMetadata } from "@/lib/page-meta";
 import { PuzzleTeaser } from "@/components/puzzle/PuzzleTeaser";
@@ -493,6 +494,9 @@ export default async function TodayPage() {
         <Suspense fallback={<ThemeSpotlightSkeleton locale={locale} t={t} />}>
           <ThemeSpotlight locale={locale} t={t} />
         </Suspense>
+        {/* Sektör sıralamasını tema kolonunun boyuna açar; hiçbir şey çizmez
+            (28 Kasım, Görsel Tur 4 — gerekçe SectorFill.tsx). */}
+        <SectorFill />
       </Panel>
 
       {/* ================= Sol kolon, üst parça: GÜNÜN VE HAFTANIN ÖZETİ =================

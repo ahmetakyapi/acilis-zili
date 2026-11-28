@@ -44,6 +44,9 @@
 
 .stockCardStance { display:flex; flex-wrap:wrap; align-items:center; gap:8px 10px; }
 
+/* Görüşün kaynağı (28 Kasım 2026; gerekçe TSX): künye tonunda 12/600. */
+.stockCardSource { font-size:12px; font-weight:600; color:var(--text-muted); }
+
 .stockCardLink { display:inline-flex; color:inherit; }
 
 .stockCardLink::after { content:""; position:absolute; inset:0; z-index:1; border-radius:inherit; }
